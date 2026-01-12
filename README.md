@@ -36,60 +36,74 @@ This software is tailored to answer the following research questions:
 - Extracts and processes metadata from SOMEF results.
 - Filters information relevant to specific research questions.
 - Outputs the results as structured JSON files for easy review and further analysis.
+- **Custom Loading Animation**: Visual feedback during processing.
 
 ## Installation
+
+This project uses [Poetry](https://python-poetry.org/) for dependency management and requires Python 3.10
 
 1. Clone this repository:
 
    ```bash
-   git clone [https://github.com/yourusername/your-repo-name.git](https://github.com/Anas-Elhounsri/Metadata-Adoption-Quantify.git
+   git clone https://github.com/Anas-Elhounsri/Metadata-Adoption-Quantify.git
    cd Metadata-Adoption-Quantify
-  
-2. Install requirements
+   ```
+
+2. Install the package and its dependencies:
+
    ```bash
-   pip install -r requirements.txt
-   
+   poetry install
+   ```
+
+3. Set up SoMEF where you will be prompted to enter your GitHub authentication token optionally if you wish to have more rate limit per hour. More information can be found [here](https://github.com/KnowledgeCaptureAndDiscovery/somef)
+
+   ```bash
+   somef configure
+   ```
+
 ## Usage
 
-You can extract SOMEF output (Already extracted) with:
+The tool is accessible via the `quantify` command. All commands should be prefixed with `poetry run` if you are not in the poetry shell.
 
-  ```bash
-  python run_somef.py
-  ```
-In order to use, you can run every RQ individually using the `main.py`:
+### Available Commands
 
-   ```bash
-   python main.py
-   ```
-And it will prompt you the following:
+#### 1. Run SoMEF on Repositories
+Extracts metadata from a list of GitHub repositories provided in a JSON file.
+```bash
+poetry run quantify somef --input repos.json --output-dir somef_outputs --threshold 0.8
+```
 
-  ```bash
-=== Main Menu ===
-1. Run RQ scripts
-2. Calculate results
-exit. Quit
-Choose an option (1/2/exit): 
-  ```
-If you choose 1. you will be able to choose which research question you wish to answer:
+#### 2. Run RQ Analysis
+Analyzes SoMEF outputs to answer specific research questions.
+```bash
+poetry run quantify rqs --somef-dir somef_outputs --input-repos repos.json --output-dir rq_results --cluster default
+```
+*Note: `--input-repos` is required for RQ2 analysis.*
 
-  ```bash
-Available RQ scripts:
-1. rq1.py
-2. rq2.py
-3. rq3.py
-4. rq4.py
-5. rq5.py
-Enter RQ number (1-5) or 'back': 
- ```
-Once you choose an RQ, you will be prompted to put some input regarding the naming of the files, the directories etc... (You need to follow the same naming of the already existing files if you wish to use `count_results.py` to iterate through the results of analysis and calculate the final results, for example for rq1, you should name the output for envri `analysis_envri_rq1.json`, check the rest of the files to follow the naming convention)
+The input (in the case of the example that would be `repos.json`) should be a JSON file with the following format:
+```json
+[
+    {
+        "github_url": "https://github.com/foo/bar"
+    },
+    {
+        "github_url": "https://github.com/dgarijo/Widoco/"
+    }
+]
+```
+#### 3. Calculate Final Results
+Calculates the final percentages and insights for each RQ.
+```bash
+poetry run quantify calculate --input repos.json --rq-results-dir rq_results --results-dir final_results --cluster default
+```
 
-If in the main menu you choose 2. you will be prompted to fill in the directory of the results, and the cluster you wish to calculate for:
-  ```bash
-Running results calculation...
-Input the research question (rq1, rq2, rq3, rq4, rq5) or type 'exit' to quit: 
+### Main Menu (Alternative)
+You can still access help for any command by running:
+```bash
+poetry run quantify --help
 ```
 ## Output
-If you choose to get the somef results of RQ1 and input the prompts accordingly, you get this result for RQ1 from one cluster (This is ESCAPE)
+After running the `rqs` command for RQ1, you get a result like this:
 ```bash
 {
     "citation.cff": {
@@ -178,7 +192,7 @@ If you choose to get the somef results of RQ1 and input the prompts accordingly,
 > [!WARNING]
 > Should be noted, that due to the large size of the files for `temp_analysis`, this directory is not be available on this repository, it is impossible to upload it on GitHub, you can extract using `SoMEF` (it automatically keeps the `temp_files`). From these results, we can answer all RQs.
 
-If you choose to calculate the results of the cluster you will get the following output:
+After running the `calculate` command for a cluster, you get the final summary:
 
 ```bash
 {

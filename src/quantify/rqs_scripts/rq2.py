@@ -85,13 +85,5 @@ def rq2(input_file, token, output_file, output_directory):
         json.dump(result, f, indent=4)
     print(f"Results saved to {output_path}")
 
-def main():
-
-    input_file = input("Enter the name of the JSON file with GitHub links (in the same directory): ")
-    output_file = input("Please input the name of the output file: ")
-    output_directory = input("Enter the output directory: ")
-
-    rq2(input_file, token, output_file, output_directory)
-
 if __name__ == "__main__":
-    main()
+    pass

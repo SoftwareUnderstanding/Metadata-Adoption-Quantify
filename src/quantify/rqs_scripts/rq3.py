@@ -122,12 +122,6 @@ def save_results(output_directory, result, consistency_results, output_release_c
     print(f"Results saved to {output_release_class_analysis} and {output_release_const_analysis}")
 
 
-directory = input("Please enter the directory: ")
-missing_key = "somef_missing_categories"
-output_release_class_analysis = input("Please name your release output classification file: ")
-output_release_const_analysis = input("Please name your release output consistency file: ")
-output_directory = input("Please input your output directory: ")
 
-result = rq3(directory, missing_key)
-consistency_results = process_versions(directory, result)
-save_results(output_directory, result, consistency_results, output_release_class_analysis, output_release_const_analysis) 
+if __name__ == "__main__":
+    pass

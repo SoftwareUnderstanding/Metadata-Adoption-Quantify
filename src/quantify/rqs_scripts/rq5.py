@@ -48,13 +48,6 @@ def rq5(directory, missing_key, output_file, output_directory):
     
     print("Successfully extracted the necessary information!")
 
-def main():
-    directory = input("Please input the directory where the SOMEF outputs are: ")
-    missing_key = "somef_missing_categories"
-    output_file = input("Please name your output file: ")
-    output_directory = input("Please input your output directory: ")
-
-    rq5(directory, missing_key, output_file, output_directory)
 
 if __name__ == "__main__":
-    main()
+    pass
