@@ -3,8 +3,7 @@ import os
 import json
 import tempfile
 import shutil
-from unittest.mock import patch
-import rq5
+from quantify.rqs_scripts import rq5
 
 class TestRQ5Function(unittest.TestCase):
 
@@ -46,18 +45,13 @@ class TestRQ5Function(unittest.TestCase):
         
         self.create_test_json_file('output_test1.json', test_data)
         
-        # This is a mock input to avoid manual input during testing
-        with patch('builtins.input', side_effect=[
+        # Call rq5 function
+        rq5.rq5(
             self.temp_input_dir, 
+            'somef_missing_categories', 
             'test_output_citation_bib_rq5.json', 
             self.temp_output_dir
-        ]):
-            rq5.rq5(
-                self.temp_input_dir, 
-                'somef_missing_categories', 
-                'test_output_citation_bib_rq5.json', 
-                self.temp_output_dir
-            )
+        )
         
         # This is  to verify output file was created
         output_path = os.path.join(self.temp_output_dir,'test_output_citation_bib_rq5.json')
@@ -88,18 +82,13 @@ class TestRQ5Function(unittest.TestCase):
         
         self.create_test_json_file('output_test2.json', test_data)
         
-        # This is a mock input to avoid manual input during testing
-        with patch('builtins.input', side_effect=[
+        # Call rq5 function
+        rq5.rq5(
             self.temp_input_dir, 
+            'somef_missing_categories', 
             'test_output_citation_cff_rq5.json', 
             self.temp_output_dir
-        ]):
-            rq5.rq5(
-                self.temp_input_dir, 
-                'somef_missing_categories', 
-                'test_output_citation_cff_rq5.json', 
-                self.temp_output_dir
-            )
+        )
         
         # This is  to verify output file was created
         output_path = os.path.join(self.temp_output_dir,'test_output_citation_cff_rq5.json')
@@ -128,18 +117,13 @@ class TestRQ5Function(unittest.TestCase):
         
         self.create_test_json_file('output_test3.json', test_data)
         
-        # This is a mock input to avoid manual input during testing
-        with patch('builtins.input', side_effect=[
+        # Call rq5 function
+        rq5.rq5(
             self.temp_input_dir, 
+            'somef_missing_categories', 
             'test_output_citation_readme_rq5.json', 
             self.temp_output_dir
-        ]):
-            rq5.rq5(
-                self.temp_input_dir, 
-                'somef_missing_categories', 
-                'test_output_citation_readme_rq5.json', 
-                self.temp_output_dir
-            )
+        )
         
         # This is  to verify output file was created
         output_path = os.path.join(self.temp_output_dir,'test_output_citation_readme_rq5.json')

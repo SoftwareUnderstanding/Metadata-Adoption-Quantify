@@ -3,8 +3,7 @@ import os
 import json
 import tempfile
 import shutil
-from unittest.mock import patch
-import rq4
+from quantify.rqs_scripts import rq4
 
 class TestRQ4Function(unittest.TestCase):
 
@@ -46,18 +45,13 @@ class TestRQ4Function(unittest.TestCase):
         
         self.create_test_json_file('output_test1.json', test_data)
         
-        # This is a mock input to avoid manual input during testing
-        with patch('builtins.input', side_effect=[
+        # Call rq4 function
+        rq4.rq4(
             self.temp_input_dir, 
-            'test_output_installation_bib_rq4.json', 
+            'somef_missing_categories', 
+            'test_output_installation_rq4.json', 
             self.temp_output_dir
-        ]):
-            rq4.rq4(
-                self.temp_input_dir, 
-                'somef_missing_categories', 
-                'test_output_installation_rq4.json', 
-                self.temp_output_dir
-            )
+        )
         
         # This is  to verify output file was created
         output_path = os.path.join(self.temp_output_dir,'test_output_installation_rq4.json')
@@ -91,18 +85,13 @@ class TestRQ4Function(unittest.TestCase):
         
         self.create_test_json_file('output_test2.json', test_data)
         
-        # This is a mock input to avoid manual input during testing
-        with patch('builtins.input', side_effect=[
+        # Call rq4 function
+        rq4.rq4(
             self.temp_input_dir, 
+            'somef_missing_categories', 
             'test_output_requirements_rq4.json', 
             self.temp_output_dir
-        ]):
-            rq4.rq4(
-                self.temp_input_dir, 
-                'somef_missing_categories', 
-                'test_output_requirements_rq4.json', 
-                self.temp_output_dir
-            )
+        )
         
         # This is  to verify output file was created
         output_path = os.path.join(self.temp_output_dir,'test_output_requirements_rq4.json')
@@ -137,18 +126,13 @@ class TestRQ4Function(unittest.TestCase):
         
         self.create_test_json_file('output_test3.json', test_data)
         
-        # This is a mock input to avoid manual input during testing
-        with patch('builtins.input', side_effect=[
+        # Call rq4 function
+        rq4.rq4(
             self.temp_input_dir, 
-            'test_output_citation_readme_rq5.json', 
+            'somef_missing_categories', 
+            'test_output_download_rq4.json', 
             self.temp_output_dir
-        ]):
-            rq4.rq4(
-                self.temp_input_dir, 
-                'somef_missing_categories', 
-                'test_output_download_rq4.json', 
-                self.temp_output_dir
-            )
+        )
         
         # This is  to verify output file was created
         output_path = os.path.join(self.temp_output_dir,'test_output_download_rq4.json')
@@ -180,18 +164,13 @@ class TestRQ4Function(unittest.TestCase):
         
         self.create_test_json_file('output_test4.json', test_data)
         
-        # This is a mock input to avoid manual input during testing
-        with patch('builtins.input', side_effect=[
+        # Call rq4 function
+        rq4.rq4(
             self.temp_input_dir, 
+            'somef_missing_categories', 
             'test_output_documentation_rq4.json', 
             self.temp_output_dir
-        ]):
-            rq4.rq4(
-                self.temp_input_dir, 
-                'somef_missing_categories', 
-                'test_output_documentation_rq4.json', 
-                self.temp_output_dir
-            )
+        )
         
         # This is  to verify output file was created
         output_path = os.path.join(self.temp_output_dir,'test_output_documentation_rq4.json')
@@ -233,18 +212,13 @@ class TestRQ4Function(unittest.TestCase):
         
         self.create_test_json_file('output_test5.json', test_data)
         
-        # This is a mock input to avoid manual input during testing
-        with patch('builtins.input', side_effect=[
+        # Call rq4 function
+        rq4.rq4(
             self.temp_input_dir, 
+            'somef_missing_categories', 
             'test_output_spdx_rq4.json', 
             self.temp_output_dir
-        ]):
-            rq4.rq4(
-                self.temp_input_dir, 
-                'somef_missing_categories', 
-                'test_output_spdx_rq4.json', 
-                self.temp_output_dir
-            )
+        )
         
         # This is  to verify output file was created
         output_path = os.path.join(self.temp_output_dir,'test_output_spdx_rq4.json')
@@ -276,18 +250,13 @@ class TestRQ4Function(unittest.TestCase):
         
         self.create_test_json_file('output_test6.json', test_data)
         
-        # This is a mock input to avoid manual input during testing
-        with patch('builtins.input', side_effect=[
+        # Call rq4 function
+        rq4.rq4(
             self.temp_input_dir, 
+            'somef_missing_categories', 
             'test_output_no_spdx_rq4.json', 
             self.temp_output_dir
-        ]):
-            rq4.rq4(
-                self.temp_input_dir, 
-                'somef_missing_categories', 
-                'test_output_no_spdx_rq4.json', 
-                self.temp_output_dir
-            )
+        )
         
         # This is  to verify output file was created
         output_path = os.path.join(self.temp_output_dir,'test_output_no_spdx_rq4.json')
@@ -323,18 +292,13 @@ class TestRQ4Function(unittest.TestCase):
         
         self.create_test_json_file('output_test7.json', test_data)
         
-        # This is a mock input to avoid manual input during testing
-        with patch('builtins.input', side_effect=[
+        # Call rq4 function
+        rq4.rq4(
             self.temp_input_dir, 
+            'somef_missing_categories', 
             'test_output_no_license_rq4.json', 
             self.temp_output_dir
-        ]):
-            rq4.rq4(
-                self.temp_input_dir, 
-                'somef_missing_categories', 
-                'test_output_no_license_rq4.json', 
-                self.temp_output_dir
-            )
+        )
         
         # This is  to verify output file was created
         output_path = os.path.join(self.temp_output_dir,'test_output_no_license_rq4.json')
