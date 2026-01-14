@@ -189,8 +189,6 @@ After running the `rqs` command for RQ1, you get a result like this:
     }
 }
 ```
-> [!WARNING]
-> Should be noted, that due to the large size of the files for `temp_analysis`, this directory is not be available on this repository, it is impossible to upload it on GitHub, you can extract using `SoMEF` (it automatically keeps the `temp_files`). From these results, we can answer all RQs.
 
 After running the `calculate` command for a cluster, you get the final summary:
 
