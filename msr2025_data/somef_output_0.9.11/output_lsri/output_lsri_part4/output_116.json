@@ -1,0 +1,241 @@
+{
+  "code_repository": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/samansalike/DR-thermo"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_created": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2019-02-05T13:47:24Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_updated": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2024-04-12T12:17:20Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "description": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "The DR-thermo algorithm can be used to curate experimental thermodynamic data from different sources to generate reliable data-banks such that all measurements are modified to be thermodynamically consistent and any missing reaction or formation Gibbs energies can be predicted either directly or using group contributions. The algorithm can also be used to identify \u201cunobservable\u201d reaction and formation Gibbs energies, which can be targets for future experiments. MATLAB (preferably the latest version) is required to execute the code"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 0.9415840894429794,
+      "result": {
+        "original_header": "DR-thermo",
+        "type": "Text_excerpt",
+        "value": "The DR-thermo algorithm can be used to curate experimental thermodynamic data from different sources to generate reliable data-banks such that all measurements are modified to be thermodynamically consistent and any missing reaction or formation Gibbs energies can be predicted either directly or using group contributions. The algorithm can also be used to identify \u201cunobservable\u201d reaction and formation Gibbs energies, which can be targets for future experiments. MATLAB (preferably the latest version) is required to execute the code \nTo run DR-Thermo, save the reaction set in KEGG format and the relevant experimental values of reaction and formation energies into the \"data\" folder ( as well as pKa information and group decomposition matrix ) and run main.m from the \"Main\" folder. Refer to the Folder information given below for more information.  \nData:  \nThe reaction set in KEGG format (representing the thermodynamic constraints) should be saved in reactions.txt file in the \u2018reactions\u2019 folder. Each reaction in this file is identified by the Reaction ID (RID) and each compound in the reaction is identified by the Compound ID (CID). The corresponding thermodynamic data for standard transformed reaction Gibbs free energies (dG\u2019_r) and formation Gibbs free energies (dG\u2019_f) corresponding to each RID and CID should be saved in the \u2018reaction_dG.txt\u2019 and \u2018formation_dG.txt\u2019 files respectively. When there are multiple Gibbs free energy measurements for the same reaction (or compound), either under the same or different reaction conditions, they should be included in the data with the same RID (or CID). The presence of such replicates would increase the redundancy of the DR algorithm. The pKa values should be saved as a pKa.mat file. The group decomposition matrix should be saved as G.mat.\n \nMain: \nMain.m is the file to be used to run DR-thermo. It generates all \u201cchemical energy\u201d measurements using the inverse Legendre transform and reads the reaction set to determine the constraint matrix (stoichiometric matrix S). From the available measurement data, it then determines the missing reaction and formation Gibbs energies. Thereafter, all available measurements are reconciled and the unavailable measurements are categorised as either observable or unobservable. For the unobservable variables, the group contribution estimates are generated using all available data and imputed onto the estimation step in the coaptation problem. Thereafter, all the reconciled data, in the form of standard Gibbs energies of reaction and formation corresponding to each reaction and compound in the RIDs and CIDs arrays, is compiled and stored in a \u201cresult\u201d structure array. The RIDs and the CIDs corresponding the unobservable reactions and compound Gibbs energies are also displayed. When an unobservable variable cannot be estimated by group contributions, its resulting value in the result structure array will be represented by \u201cNaN\u201d. The RIDs and CIDs corresponding to these unobservable variables are stored in the RIDS_GC_NA and CIDS_GC_NA arrays. If these arrays are not present in the result, it means that group contribution estimates have been imputed for all unobservable variables.  \nThe folder Misc contains different files that can be used to test the data reconciliation algorithm. Here, 2 reaction sets are given with the corresponding files for reactions.txt,  reaction_dG.txt, formation_dG.txt, G.mat, for those reaction sets. The files should be copied into the \"data\" folder to run the algorithm for the corresponding reaction set. The default files present in the \"data\" folder are from the 87 reaction set.  \nThis reaction set of 87 reactions between 84 compounds is a subset of the reactions from the NIST-DECR database (as well as 13 additional redox potentials)  consisting of only those reactions which involve compounds whose formation energy values are available in the Alberty (2005) table of experimentally obtained Gibbs free energies of formation. This represents an example of a reaction set for which experimental data is completely available for all reaction and formation Gibbs energies (thus fully measured).  \nThis reaction set of 473 reactions between 566 compounds consists of all reactions from the NIST-DECR database (as well as 13 additional redox potentials). The formation_dG.txt file here is obtained from the Alberty (2005) table and includes experimental formation energies for 225 compounds (117 of which are present in the 473 reactions). The G.mat file here is the group decomposition matrix for those 117 compounds.  \nGiven below are discriptions for various \".m files\" used in the repository.  \nThe main file to run data reconciliation for Gibbs free energy estimation. It reads the reactions from reaction_file (txt file with all the reactions in CIDS), measured apparent reaction and formation Gibbs free energies and generates the input data for recon_l.m. The apparent Gibbs energies are transformed into standard form using inverse Legendre transform ( see legendretransformF.m and legendretransfromR.m ) and the stoichiometric matrix is generated using parseKeggModel.m. Thereafter, the indices of the missing Gibbs energies are found by matching the available RIDS and CIDS from the measured Gibbs free energy data with the RIDS and CIDS from the reaction set (reaction_file). When there are replicates, the average of the values obtained after performing inverse Legendre transform is used. The variance of the values is used for constructing variance matrix. In the absence of replicates, the corresponding value in the variance matrix is unity. After performing reconciliation using recon_l.m, the results are sorted into the result.mat structure matrix which stores all the reconciled estimates, the unobservable CIDS and RIDS, and those not estimable using group contributions.  \n\t\u2022\tresult.mat with vectors:\n\t\u2043\tdG0r_standard: The standard reaction Gibbs free energy estimates obtained from data reconciliation\n\t\u2043\tdG0f_Standard: The standard formation Gibbs free energy estimates obtained from data reconciliation\n\t\u2043\tCIDS_GC_NA: the CIDS corresponding to the compounds for which the modified group contribution method could not provide estimates ( due to insufficient measured data )\n\t\u2043\tRIDS_GC_NA: the RIDS corresponding to the reactions for which  the modified group contribution method could not provide estimates ( due to insufficient measured data )\n\t\u2043\trids -  all RIDS present in the reaction set\n\t\u2043\tcids - all CIDS present in the reaction set \nParses the reaction file with each line representing a reaction in KEGG format to obtain S, CIDS and RIDS \n\t\u2022\tReactionStrings - cell array of each reaction in KEGG format\n\t\u2022\tarrow - arrow in the reaction (default is '=') \n\t\u2022\tS - Stoichiometric matrix\n\t\u2022\tcids - CIDS of all compounds in the reaction set\n\t\u2022\trids - RIDS of all compounds in the reaction set \nInputs:\n \n\t\u2022\tm - number of formation energies\n\t\u2022\tkegg_pKa - contains the relevant pKa, nH, charge etc information for each compound\n\t\u2022\tcids_m - CIDS of the formation energies that are to be inverse transformed\n\t\u2022\tpH - vector containing the pH values for each apparent Gibbs energy of formation measurement.\n\t\u2022\tT - vector containing the temperature values for each apparent Gibbs energy of formation measurement.\n\t\u2022\tI - vector containing the ionic strength values for each apparent Gibbs energy of formation measurement.\n\t\u2022\tdG0f_prime - the transformed Gibbs free energy of formation value that is to be converted to standard form ( or \"chemical energy\". \n\t\u2022\tdG0 - The measured standard Gibbs free energies of formation obtained after performing the inverse Legendre transform\n\t\u2022\treverse_ddG0s - The difference between the standard  transformed ( or apparent) Gibbs free energies of formation and theGibbs free energies of formation. \nInputs:\n\t \n\t\u2022\tS - stoichiometric matrix\n\t\u2022\tkegg_pKa - contains the relevant pKa, nH, charge etc information for each compound\n\t\u2022\tcids_m - CIDS of the formation energies that are to be inverse transformed\n\t\u2022\tpH - vector containing the pH values for each apparent Gibbs energy of reaction measurement.\n\t\u2022\tT - vector containing the temperature values for each apparent Gibbs energy of reaction measurement.\n\t\u2022\tI - vector containing the ionic strength values for each apparent Gibbs energy of reaction measurement.\n\t\u2022\tdG0r_prime - the transformed Gibbs free energy of reaction value that is to be converted to standard form  \n\t\u2022\tdG0 - The measured standard Gibbs free energies of reaction obtained after performing the inverse Legendre transform\n\t\u2022\treverse_ddG0s - The difference between the standard  transformed ( or apparent) Gibbs free energies of reaction and theGibbs free energies of reaction. \nThis file is used to perform the linear data reconciliation for Gibbs free energies. It calculates reconciled estimates for all measured Gibbs energies and computes prediction estimates for the unmeasured observable Gibbs energies. If prompted, it imputes the group contribution estimates for the unobservable Gibbs energies. It requires Gibbs free energy measurements, thermodynamic constraints (Stoichiometric matrix S), variance matrix (Sigma) and indices of the measured reaction and formation Gibbs energies corresponding to the columns and rows of S.   \nInputs: \n\t\u2022\t S - The (m x n) stoichiometric matrix for the n reactions between m compounds obtained from the reactions.txt file that represents the thermodynamic constraints for the available data \n\t\u2022\t y - vector of consisting of all measured reaction and formation Gibbs energies.\n\t\u2022\tindex_rm -  indices of the \"n\" reaction Gibbs energies corresponding to the columns of S that are measured\n\t\u2022\tindex_fm -  indices of the \"m\" formation Gibbs energies corresponding to the rows of S that are measured \nOutputs:\n\t\u2022\tRecon_var= A vector of dimensions (m+n) x 1 representing the reconciled estimates. When the estimate is not available, the corresponding value is \"NaN\"\n\t\u2022\tindex_unobservable= indices from the range 1:(m+n) that represent the unobservable Gibbs energies.  \nThis file is used to perform the modified group contribution method. By using all the available measured data, the thermodynamic constraints between them, estimates are obtained for all the group contributions using the constrained optimisation function fmincon.  \n\t\u2022\tx - vector consisting of reconciled estimates of reaction, formation Gibbs energies and group contributions.\n\t\u2022\tb - vector consisting of measured reaction Gibbs energies\n\t\u2022\tGf_m - vector consisting of measured formation Gibbs energies\n\t\u2022\tG_m - group decomposition matrix for the measured formation Gibbs energies \n\t\u2022\tJ - The average sum squared error between measurements and estimates \n"
+      },
+      "source": "https://raw.githubusercontent.com/samansalike/DR-thermo/master/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "download_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/samansalike/DR-thermo/releases"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 1
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/samansalike/DR-thermo/forks"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "samansalike/DR-thermo"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_title": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "DR-thermo"
+      },
+      "source": "https://raw.githubusercontent.com/samansalike/DR-thermo/master/README.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "invocation": [
+    {
+      "confidence": 0.8607418954229008,
+      "result": {
+        "original_header": "DR-thermo",
+        "type": "Text_excerpt",
+        "value": "\nFile: main.m \nFile: parseKeggModel.m (&  reaction2sparse.m) \nFile: legendretransformF.m  \n\nFile: legendretransformR.m  \n\nFile: recon_l.m \nFile: Groupcontributions.m \n"
+      },
+      "source": "https://raw.githubusercontent.com/samansalike/DR-thermo/master/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "issue_tracker": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/samansalike/DR-thermo/issues"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "keywords": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": ""
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "license": [
+    {
+      "confidence": 1,
+      "result": {
+        "name": "MIT License",
+        "spdx_id": "MIT",
+        "type": "License",
+        "url": "https://api.github.com/licenses/mit",
+        "value": "https://api.github.com/licenses/mit"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "File_dump",
+        "value": "MIT License\n\nCopyright (c) 2019 samansalike\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.\n"
+      },
+      "source": "https://raw.githubusercontent.com/samansalike/DR-thermo/master/LICENSE",
+      "technique": "file_exploration"
+    }
+  ],
+  "name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "DR-thermo"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "owner": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "User",
+        "value": "samansalike"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "programming_languages": [
+    {
+      "confidence": 1,
+      "result": {
+        "name": "MATLAB",
+        "size": 21333,
+        "type": "Programming_language",
+        "value": "MATLAB"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "readme_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/samansalike/DR-thermo/master/README.md"
+      },
+      "technique": "file_exploration"
+    }
+  ],
+  "somef_missing_categories": [
+    "installation",
+    "citation",
+    "acknowledgement",
+    "run",
+    "download",
+    "requirements",
+    "contact",
+    "contributors",
+    "documentation",
+    "usage",
+    "faq",
+    "support",
+    "identifier",
+    "has_build_file",
+    "executable_example"
+  ],
+  "somef_provenance": {
+    "date": "2024-11-04 01:57:07",
+    "somef_schema_version": "1.0.0",
+    "somef_version": "0.9.5"
+  },
+  "stargazers_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 2
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "type": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "non-software"
+      },
+      "technique": "software_type_heuristics"
+    }
+  ]
+}

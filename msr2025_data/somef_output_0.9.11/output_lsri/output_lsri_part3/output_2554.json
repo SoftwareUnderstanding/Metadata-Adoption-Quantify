@@ -1,0 +1,694 @@
+{
+  "citation": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Semi-supervised cell type classification using cell atlas references",
+        "parent_header": [
+          "scNym - Semi-supervised adversarial neural networks for single cell classification",
+          "Tutorials"
+        ],
+        "type": "Text_excerpt",
+        "value": "This tutorial demonstrates how to train a semi-supervised `scNym` model using a pre-prepared cell atlas as a training data set and a new data set as the target.\nYou can upload your own data through Google Drive to classify cell types in a new experiment.\n\n[**Transfering labels from a cell atlas**](https://colab.research.google.com/drive/1-xEwHXq4INTSyqWo8RMT_pzCMZXNalex?usp=sharing)\n\n<a href=\"https://colab.research.google.com/drive/1-xEwHXq4INTSyqWo8RMT_pzCMZXNalex?usp=sharing\"><img src=\"https://colab.research.google.com/img/colab_favicon_256px.png\" width=\"128\"></a>\n"
+      },
+      "source": "https://raw.githubusercontent.com/calico/scnym/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Training and predicting with Cell Atlas References",
+        "parent_header": [
+          "Usage"
+        ],
+        "type": "Text_excerpt",
+        "value": "We also provide a set of preprocessed cell atlas references for [human](https://pubmed.ncbi.nlm.nih.gov/32214235/), [mouse](https://pubmed.ncbi.nlm.nih.gov/30283141), and [rat](https://pubmed.ncbi.nlm.nih.gov/32109414/), as well as pretrained weights for each.\n\nIt's easy to use the scNym API to transfer labels from these atlases to your own data.\n"
+      },
+      "source": "https://raw.githubusercontent.com/calico/scnym/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Semi-supervised training with cell atlas references",
+        "parent_header": [
+          "Usage",
+          "Training and predicting with Cell Atlas References"
+        ],
+        "type": "Text_excerpt",
+        "value": "The best way to transfer labels is by training an scNym model using your data as the target dataset for semi-supervised learning.\nBelow, we demonstrate how to train a model on a cell atlas with your data as the target.\n\nWe provide access to cell atlases for the mouse and rat through the scNym API, but we encourage users to thoughfully consider which training data are most appropriate for their experiments.\n\n```python\nimport anndata\nfrom scnym.api import scnym_api, atlas2target\n\n# load your data\nadata = anndata.read_h5ad(path_to_your_data)\n\n# first, we create a single object with both the cell\n# atlas and your data\n# `atlas2target` will take care of passing annotations\njoint_adata = atlas2target(\n    adata=adata,\n    species='mouse',\n    key_added='annotations',\n)\n\n# now train an scNym model as above\nscnym_api(\n    adata=joint_adata,\n    task='train',\n    groupby='annotations',\n    out_path='./scnym_output',\n    config='new_identity_discovery',\n)\n```\n"
+      },
+      "source": "https://raw.githubusercontent.com/calico/scnym/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Multi-domain training",
+        "parent_header": [
+          "Usage",
+          "Training and predicting with Cell Atlas References"
+        ],
+        "type": "Text_excerpt",
+        "value": "By default, scNym treats training cells as one domain, and target cells as another.\nscNym also offers the ability to integrate across multiple training and target domains through the domain adversary.\nThis feature can be enabled by providing domain labels for each training cell in the `AnnData` object and passing the name of the relevant anntotation column to scNym.\n\n```python\n# load multiple training and target datasets\n# ...\n# set unique labels for each domain\ntraining_adata_00.obs['domain_label'] = 'train_0'\ntraining_adata_01.obs['domain_label'] = 'train_1'\n\ntarget_adata_00.obs['domain_label'] = 'target_0'\ntarget_adata_01.obs['domain_label'] = 'target_1'\n\n# set target annotations to \"Unlabeled\"\ntarget_adata_00.obs['annotations'] = 'Unlabeled'\ntarget_adata_01.obs['annotations'] = 'Unlabeled'\n\n# concatenate \nadata = training_adata_00.concatenate(\n    training_adata_01,\n    target_adata_00,\n    target_adata_01,\n)\n\n# provide the `domain_groupby` argument to `scnym_api`\nscnym_api(\n    adata=adata,\n    task='train',\n    groupby='annotations',\n    domain_groupby='domain_label',\n    out_path='./scnym_output',\n    config='no_new_identity',\n)\n```\n"
+      },
+      "source": "https://raw.githubusercontent.com/calico/scnym/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Advanced configuration options",
+        "parent_header": [
+          "Usage",
+          "Training and predicting with Cell Atlas References"
+        ],
+        "type": "Text_excerpt",
+        "value": "We provide two configurations for scNym model training, as noted above. \nHowever, users may wish to experiment with different configuration options for new applications of scNym models.\n\nTo experiment with custom configuration options, users can simply copy one of the pre-defined configurations and modify as desired.\nAll pre-defined configurations are stored as Python dictionaries in `scnym.api.CONFIGS`.\n\n```python\nimport scnym\nconfig = scnym.api.CONFIGS[\"no_new_identity\"]\n# increase the number of training epochs\nconfig[\"n_epochs\"] = 500\n# increase the weight of the domain adversary 0.1 -> 0.3\nconfig[\"ssl_kwargs\"][\"dan_max_weight\"] = 0.3\n\n# descriptions of all parameters and their default values\n\"default\": {\n    \"n_epochs\": 100, # number of training epochs\n    \"patience\": 40, # number of epochs to wait before early stopping\n    \"lr\": 1.0, # learning rate\n    \"optimizer_name\": \"adadelta\", # optimizer\n    \"weight_decay\": 1e-4, # weight decay for the optimizer\n    \"batch_size\": 256, # minibatch size\n    \"mixup_alpha\": 0.3, # shape parameter for MixUp: lambda ~ Beta(alpha, alpha)\n    \"unsup_max_weight\": 1.0, # maximum weight for the MixMatch loss\n    \"unsup_mean_teacher\": False, # use a mean teacher for MixMatch pseudolabeling\n    \"ssl_method\": \"mixmatch\", # semi-supervised learning method to use\n    \"ssl_kwargs\": {\n        \"augment_pseudolabels\": False, # perform augmentations before pseudolabeling\n        \"augment\": \"log1p_drop\", # augmentation to use if `augment_pseudolabels`\n        \"unsup_criterion\": \"mse\", # criterion fxn for MixMatch loss\n        \"n_augmentations\": 1, # number of augmentations per observation\n        \"T\": 0.5, # temperature scaling parameter\n        \"ramp_epochs\": 100, # number of epochs to ramp up the MixMatch loss\n        \"burn_in_epochs\": 0, # number of epochs to wait before ramping MixMatch\n        \"dan_criterion\": True, # use a domain adversary\n        \"dan_ramp_epochs\": 20, # ramp epochs for the adversarial loss\n        \"dan_max_weight\": 0.1, # max weight for the adversarial loss\n        \"min_epochs\": 20, # minimum epochs to train before saving a best model\n    },\n    \"model_kwargs\": {\n        \"n_hidden\": 256, # number of hidden units per hidden layer\n        \"n_layers\": 2, # number of hidden layers\n        \"init_dropout\": 0.0, # dropout on the initial layer\n        \"residual\": False, # use residual layers\n    },\n    # save logs for tensorboard. enables nice visualizations, but can slow down \n    # training if filesystem I/O is limiting.\n    \"tensorboard\": False,\n}\n```\n"
+      },
+      "source": "https://raw.githubusercontent.com/calico/scnym/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": "Kimmel, Jacob C. and Kelley, David R.",
+        "doi": "10.1101/gr.268581.120",
+        "format": "bibtex",
+        "title": "Semi-supervised adversarial neural networks for single-cell classification",
+        "type": "Text_excerpt",
+        "url": "https://genome.cshlp.org/content/early/2021/02/24/gr.268581.120",
+        "value": "@article{kimmel_scnym_2021,\n    pmid = {33627475},\n    langid = {english},\n    date = {2021-02-24},\n    urldate = {2021-02-26},\n    author = {Kimmel, Jacob C. and Kelley, David R.},\n    shortjournal = {Genome Res.},\n    journaltitle = {Genome Research},\n    pages = {gr.268581.120},\n    doi = {10.1101/gr.268581.120},\n    url = {https://genome.cshlp.org/content/early/2021/02/24/gr.268581.120},\n    issn = {1088-9051, 1549-5469},\n    title = {Semi-supervised adversarial neural networks for single-cell classification},\n}"
+      },
+      "source": "https://raw.githubusercontent.com/calico/scnym/master/README.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "code_repository": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/calico/scnym"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_created": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2019-07-29T23:15:01Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_updated": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2024-09-05T02:58:12Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "description": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "Semi-supervised adversarial neural networks for classification of single cell transcriptomics data"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 0.9750784499823064,
+      "result": {
+        "original_header": "scNym - Semi-supervised adversarial neural networks for single cell classification",
+        "type": "Text_excerpt",
+        "value": "`scNym` is a neural network model for predicting cell types from single cell profiling data (e.g. scRNA-seq) and deriving cell type representations from these models. \nWhile cell type classification is the main use case, these models can map single cell profiles to arbitrary output classes (e.g. experimental conditions). \nWe've described `scNym` in detail in a recent paper in *Genome Research*.  \nPlease cite our work if you find this tool helpful.  \nWe also have a research website that describes `scNym` in brief -- [https://scnym.research.calicolabs.com](https://scnym.research.calicolabs.com) \n"
+      },
+      "source": "https://raw.githubusercontent.com/calico/scnym/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9423845501148427,
+      "result": {
+        "original_header": "Model",
+        "type": "Text_excerpt",
+        "value": "The `scNym` model is a neural network leveraging modern best practices in architecture design.\nGene expression vectors are transformed by non-linear functions at each layer in the network.\nEach of these functions have parameters that are learned from data. \n`scNym` uses the MixMatch semi-supervision framework [(Berthelot et. al. 2019)](https://papers.nips.cc/paper/8749-mixmatch-a-holistic-approach-to-semi-supervised-learning) and domain adversarial training to take advantange of both labeled training data and unlabeled target data to learn these parameters.\nGiven a labeled dataset `X` and an unlabeled dataset `U`, `scNym` uses the model to guess \"pseudolabels\" for each unlabeled observation.\nAll observations are then augmented using the \"MixUp\" weighted averaging method prior to computing losses. \nWe also introduce a domain adversarial network [(Ganin et. al. 2016)](https://arxiv.org/abs/1505.07818) that predicts the domain of origin (e.g. `{target, train}` or `{method_A, method_B, method_C}`) for each observation.\nWe invert the adversary's gradients during backpropogation so the model learns to \"compete\" with the adversary by adapting across domains.\nModel parameters are then trained to minimize a supervised cross-entropy loss applied to the labeled examples, an unsupervised mean squared error loss applied to the unlabeled examples, and a classification loss across domains for the domain adversary. \n"
+      },
+      "source": "https://raw.githubusercontent.com/calico/scnym/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9848646009429205,
+      "result": {
+        "original_header": "Transferring annotations across technologies in human PBMCs",
+        "type": "Text_excerpt",
+        "value": "This tutorial shows how to use scNym to transfer annotations across experiments using different sequencing technologies.\nWe use human peripheral blood mononuclear cell profiles generated with different versions of the 10x Genomics chemistry for demonstration. \n"
+      },
+      "source": "https://raw.githubusercontent.com/calico/scnym/master/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "download_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/calico/scnym/releases"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "executable_example": [
+    {
+      "confidence": 1,
+      "result": {
+        "format": "jupyter_notebook",
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/calico/scnym/master/notebooks/scnym_classif_tutorial.ipynb"
+      },
+      "source": "https://raw.githubusercontent.com/calico/scnym/master/notebooks/scnym_classif_tutorial.ipynb",
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://colab.research.google.com/drive/1-xEwHXq4INTSyqWo8RMT_pzCMZXNalex?usp=sharing"
+      },
+      "source": "https://raw.githubusercontent.com/calico/scnym/master/README.md",
+      "technique": "regular_expression"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://colab.research.google.com/drive/1qI7HGWvem6kz5KVfnVTFFtupEXodFBT3?usp=sharing"
+      },
+      "source": "https://raw.githubusercontent.com/calico/scnym/master/README.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "forks_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 11
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/calico/scnym/forks"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "calico/scnym"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_title": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "scNym - Semi-supervised adversarial neural networks for single cell classification"
+      },
+      "source": "https://raw.githubusercontent.com/calico/scnym/master/README.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "has_script_file": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/calico/scnym/master/demo_script.sh"
+      },
+      "technique": "file_exploration"
+    }
+  ],
+  "images": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/calico/scnym/master/assets/scnym_mmdan_diagram.png"
+      },
+      "source": "https://raw.githubusercontent.com/calico/scnym/master/README.md",
+      "technique": "regular_expression"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://colab.research.google.com/img/colab_favicon_256px.png"
+      },
+      "source": "https://raw.githubusercontent.com/calico/scnym/master/README.md",
+      "technique": "regular_expression"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://colab.research.google.com/img/colab_favicon_256px.png"
+      },
+      "source": "https://raw.githubusercontent.com/calico/scnym/master/README.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "installation": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Installation",
+        "parent_header": [
+          "scNym - Semi-supervised adversarial neural networks for single cell classification"
+        ],
+        "type": "Text_excerpt",
+        "value": "First, clone the repository:\n\nWe recommend creating a virtual environment for use with `scNym`. \nThis is easily accomplished using `virtualenv` or `conda`.\nWe recommend using `python=3.8` for `scNym`, as some of our dependencies don't currently support the newest Python versions.\n\n```bash\n$ python3 -m venv scnym_env # python3 is python3.8\n$ source scnym_env/bin/activate\n```\n\nor \n\n```bash\n$ conda create -n scnym_env -c conda-forge python=3.8\n$ conda activate scnym_env\n```\n\nOnce the environment is set up, simply run:\n\n```bash\n$ cd scnym\n$ pip install -e ./\n```\n\nAfter installation completes, you should be able to import `scnym` in Python and run `scNym` as a command line tool:\n\n```bash\n$ python -c \"import scnym; print(scnym.__file__)\"\n$ scnym --help\n```\n"
+      },
+      "source": "https://raw.githubusercontent.com/calico/scnym/master/README.md",
+      "technique": "header_analysis"
+    }
+  ],
+  "issue_tracker": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/calico/scnym/issues"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "keywords": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "adversarial-training, rna-seq, semi-supervised, single-cell, single-cell-genomics"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "license": [
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Apache License 2.0",
+        "spdx_id": "Apache-2.0",
+        "type": "License",
+        "url": "https://api.github.com/licenses/apache-2.0",
+        "value": "https://api.github.com/licenses/apache-2.0"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "File_dump",
+        "value": "Apache License\n\nVersion 2.0, January 2004\n\nhttp://www.apache.org/licenses/\n\nTERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION\n\n1. Definitions.\n\n\"License\" shall mean the terms and conditions for use, reproduction, and distribution as defined by Sections 1 through 9 of this document.\n\n\"Licensor\" shall mean the copyright owner or entity authorized by the copyright owner that is granting the License.\n\n\"Legal Entity\" shall mean the union of the acting entity and all other entities that control, are controlled by, or are under common control with that entity. For the purposes of this definition, \"control\" means (i) the power, direct or indirect, to cause the direction or management of such entity, whether by contract or otherwise, or (ii) ownership of fifty percent (50%) or more of the outstanding shares, or (iii) beneficial ownership of such entity.\n\n\"You\" (or \"Your\") shall mean an individual or Legal Entity exercising permissions granted by this License.\n\n\"Source\" form shall mean the preferred form for making modifications, including but not limited to software source code, documentation source, and configuration files.\n\n\"Object\" form shall mean any form resulting from mechanical transformation or translation of a Source form, including but not limited to compiled object code, generated documentation, and conversions to other media types.\n\n\"Work\" shall mean the work of authorship, whether in Source or Object form, made available under the License, as indicated by a copyright notice that is included in or attached to the work (an example is provided in the Appendix below).\n\n\"Derivative Works\" shall mean any work, whether in Source or Object form, that is based on (or derived from) the Work and for which the editorial revisions, annotations, elaborations, or other modifications represent, as a whole, an original work of authorship. For the purposes of this License, Derivative Works shall not include works that remain separable from, or merely link (or bind by name) to the interfaces of, the Work and Derivative Works thereof.\n\n\"Contribution\" shall mean any work of authorship, including the original version of the Work and any modifications or additions to that Work or Derivative Works thereof, that is intentionally submitted to Licensor for inclusion in the Work by the copyright owner or by an individual or Legal Entity authorized to submit on behalf of the copyright owner. For the purposes of this definition, \"submitted\" means any form of electronic, verbal, or written communication sent to the Licensor or its representatives, including but not limited to communication on electronic mailing lists, source code control systems, and issue tracking systems that are managed by, or on behalf of, the Licensor for the purpose of discussing and improving the Work, but excluding communication that is conspicuously marked or otherwise designated in writing by the copyright owner as \"Not a Contribution.\"\n\n\"Contributor\" shall mean Licensor and any individual or Legal Entity on behalf of whom a Contribution has been received by Licensor and subsequently incorporated within the Work.\n\n2. Grant of Copyright License. Subject to the terms and conditions of this License, each Contributor hereby grants to You a perpetual, worldwide, non-exclusive, no-charge, royalty-free, irrevocable copyright license to reproduce, prepare Derivative Works of, publicly display, publicly perform, sublicense, and distribute the Work and such Derivative Works in Source or Object form.\n\n3. Grant of Patent License. Subject to the terms and conditions of this License, each Contributor hereby grants to You a perpetual, worldwide, non-exclusive, no-charge, royalty-free, irrevocable (except as stated in this section) patent license to make, have made, use, offer to sell, sell, import, and otherwise transfer the Work, where such license applies only to those patent claims licensable by such Contributor that are necessarily infringed by their Contribution(s) alone or by combination of their Contribution(s) with the Work to which such Contribution(s) was submitted. If You institute patent litigation against any entity (including a cross-claim or counterclaim in a lawsuit) alleging that the Work or a Contribution incorporated within the Work constitutes direct or contributory patent infringement, then any patent licenses granted to You under this License for that Work shall terminate as of the date such litigation is filed.\n\n4. Redistribution. You may reproduce and distribute copies of the Work or Derivative Works thereof in any medium, with or without modifications, and in Source or Object form, provided that You meet the following conditions:\n\nYou must give any other recipients of the Work or Derivative Works a copy of this License; and\nYou must cause any modified files to carry prominent notices stating that You changed the files; and\nYou must retain, in the Source form of any Derivative Works that You distribute, all copyright, patent, trademark, and attribution notices from the Source form of the Work, excluding those notices that do not pertain to any part of the Derivative Works; and\nIf the Work includes a \"NOTICE\" text file as part of its distribution, then any Derivative Works that You distribute must include a readable copy of the attribution notices contained within such NOTICE file, excluding those notices that do not pertain to any part of the Derivative Works, in at least one of the following places: within a NOTICE text file distributed as part of the Derivative Works; within the Source form or documentation, if provided along with the Derivative Works; or, within a display generated by the Derivative Works, if and wherever such third-party notices normally appear. The contents of the NOTICE file are for informational purposes only and do not modify the License. You may add Your own attribution notices within Derivative Works that You distribute, alongside or as an addendum to the NOTICE text from the Work, provided that such additional attribution notices cannot be construed as modifying the License.\n\nYou may add Your own copyright statement to Your modifications and may provide additional or different license terms and conditions for use, reproduction, or distribution of Your modifications, or for any such Derivative Works as a whole, provided Your use, reproduction, and distribution of the Work otherwise complies with the conditions stated in this License.\n5. Submission of Contributions. Unless You explicitly state otherwise, any Contribution intentionally submitted for inclusion in the Work by You to the Licensor shall be under the terms and conditions of this License, without any additional terms or conditions. Notwithstanding the above, nothing herein shall supersede or modify the terms of any separate license agreement you may have executed with Licensor regarding such Contributions.\n\n6. Trademarks. This License does not grant permission to use the trade names, trademarks, service marks, or product names of the Licensor, except as required for reasonable and customary use in describing the origin of the Work and reproducing the content of the NOTICE file.\n\n7. Disclaimer of Warranty. Unless required by applicable law or agreed to in writing, Licensor provides the Work (and each Contributor provides its Contributions) on an \"AS IS\" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied, including, without limitation, any warranties or conditions of TITLE, NON-INFRINGEMENT, MERCHANTABILITY, or FITNESS FOR A PARTICULAR PURPOSE. You are solely responsible for determining the appropriateness of using or redistributing the Work and assume any risks associated with Your exercise of permissions under this License.\n\n8. Limitation of Liability. In no event and under no legal theory, whether in tort (including negligence), contract, or otherwise, unless required by applicable law (such as deliberate and grossly negligent acts) or agreed to in writing, shall any Contributor be liable to You for damages, including any direct, indirect, special, incidental, or consequential damages of any character arising as a result of this License or out of the use or inability to use the Work (including but not limited to damages for loss of goodwill, work stoppage, computer failure or malfunction, or any and all other commercial damages or losses), even if such Contributor has been advised of the possibility of such damages.\n\n9. Accepting Warranty or Additional Liability. While redistributing the Work or Derivative Works thereof, You may choose to offer, and charge a fee for, acceptance of support, warranty, indemnity, or other liability obligations and/or rights consistent with this License. However, in accepting such obligations, You may act only on Your own behalf and on Your sole responsibility, not on behalf of any other Contributor, and only if You agree to indemnify, defend, and hold each Contributor harmless for any liability incurred by, or claims asserted against, such Contributor by reason of your accepting any such warranty or additional liability.\n\nEND OF TERMS AND CONDITIONS"
+      },
+      "source": "https://raw.githubusercontent.com/calico/scnym/master/LICENSE",
+      "technique": "file_exploration"
+    }
+  ],
+  "logo": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/calico/scnym/master/assets/scnym_icon.png"
+      },
+      "source": "https://raw.githubusercontent.com/calico/scnym/master/README.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "scnym"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "owner": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Organization",
+        "value": "calico"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "programming_languages": [
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Python",
+        "size": 496162,
+        "type": "Programming_language",
+        "value": "Python"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Jupyter Notebook",
+        "size": 361167,
+        "type": "Programming_language",
+        "value": "Jupyter Notebook"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "R",
+        "size": 14268,
+        "type": "Programming_language",
+        "value": "R"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Shell",
+        "size": 1859,
+        "type": "Programming_language",
+        "value": "Shell"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "readme_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/calico/scnym/master/README.md"
+      },
+      "technique": "file_exploration"
+    }
+  ],
+  "related_documentation": [
+    {
+      "confidence": 1,
+      "result": {
+        "format": "readthedocs",
+        "type": "Url",
+        "value": "https://anndata.readthedocs.io/"
+      },
+      "source": "https://raw.githubusercontent.com/calico/scnym/master/README.md",
+      "technique": "regular_expression"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "format": "readthedocs",
+        "type": "Url",
+        "value": "https://scanpy.readthedocs.io/"
+      },
+      "source": "https://raw.githubusercontent.com/calico/scnym/master/README.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "related_papers": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://arxiv.org/abs/1906.10670"
+      },
+      "source": "https://raw.githubusercontent.com/calico/scnym/master/README.md",
+      "technique": "regular_expression"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://arxiv.org/abs/1505.07818"
+      },
+      "source": "https://raw.githubusercontent.com/calico/scnym/master/README.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "releases": [
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "jacobkimmel",
+          "type": "User"
+        },
+        "date_created": "2020-11-25T20:38:18Z",
+        "date_published": "2020-11-30T18:40:39Z",
+        "description": "This release improves upon v0.2 by (\"Pre-print release\") by API endpoints for multi-domain training, integrated gradient computation, and hyperparameter optimization.",
+        "html_url": "https://github.com/calico/scnym/releases/tag/v0.3",
+        "name": "v0.3 - Multi-domain training and integrated gradients",
+        "release_id": 34434590,
+        "tag": "v0.3",
+        "tarball_url": "https://api.github.com/repos/calico/scnym/tarball/v0.3",
+        "type": "Release",
+        "url": "https://api.github.com/repos/calico/scnym/releases/34434590",
+        "value": "https://api.github.com/repos/calico/scnym/releases/34434590",
+        "zipball_url": "https://api.github.com/repos/calico/scnym/zipball/v0.3"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "jacobkimmel",
+          "type": "User"
+        },
+        "date_created": "2020-06-07T03:56:35Z",
+        "date_published": "2020-06-13T04:08:52Z",
+        "description": "* Adds semi-supervised learning with MixUp and domain adversarial training to scNym\r\n* Adds a user-facing API for interactive use\r\n* Adds integration with pre-trained models and existing cell atlas references ",
+        "html_url": "https://github.com/calico/scnym/releases/tag/v0.1.10",
+        "name": "Pre-print release",
+        "release_id": 27515691,
+        "tag": "v0.1.10",
+        "tarball_url": "https://api.github.com/repos/calico/scnym/tarball/v0.1.10",
+        "type": "Release",
+        "url": "https://api.github.com/repos/calico/scnym/releases/27515691",
+        "value": "https://api.github.com/repos/calico/scnym/releases/27515691",
+        "zipball_url": "https://api.github.com/repos/calico/scnym/zipball/v0.1.10"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "somef_missing_categories": [
+    "acknowledgement",
+    "run",
+    "download",
+    "requirements",
+    "contact",
+    "contributors",
+    "documentation",
+    "faq",
+    "support",
+    "identifier",
+    "has_build_file"
+  ],
+  "somef_provenance": {
+    "date": "2024-10-06 09:20:59",
+    "somef_schema_version": "1.0.0",
+    "somef_version": "0.9.5"
+  },
+  "stargazers_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 74
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "type": [
+    {
+      "confidence": 0.82,
+      "result": {
+        "type": "String",
+        "value": "commandline-application"
+      },
+      "technique": "software_type_heuristics"
+    }
+  ],
+  "usage": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Tutorials",
+        "parent_header": [
+          "scNym - Semi-supervised adversarial neural networks for single cell classification"
+        ],
+        "type": "Text_excerpt",
+        "value": "The best way to become acquainted with `scNym` is to walk through one of our interactive tutorials.\nWe've prepared tutorials using [Google Colab](https://colab.research.google.com/) so that all computation can be performed using free GPUs. \nYou can even analyze data on your cell phone!\n"
+      },
+      "source": "https://raw.githubusercontent.com/calico/scnym/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Data Preprocessing",
+        "parent_header": [
+          "Usage"
+        ],
+        "type": "Text_excerpt",
+        "value": "Data inputs for scNym should be `log(CPM + 1)` normalized counts, where CPM is Counts Per Million and `log` is the natural logarithm.\nThis transformation is crucial if you would like to use any of our pre-trained model weights, provided in the tutorials above.\n\nFor the recommended Python API interface, data should be formatted as an [AnnData](https://anndata.readthedocs.io/en/stable/) object with normalized counts in the main `.X` observations attribute.\n\nFor the command line tool, data can be stored as a dense `[Cells, Genes]` CSV of normalized counts, an [AnnData](https://anndata.readthedocs.io/en/stable/) `h5ad` object, or a [Loompy](http://loompy.org/) `loom` object.\n"
+      },
+      "source": "https://raw.githubusercontent.com/calico/scnym/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Python API",
+        "parent_header": [
+          "Usage"
+        ],
+        "type": "Text_excerpt",
+        "value": "We recommend users take advantange of our Python API for scNym, suitable for use in scripts and Jupyter notebooks.\nThe API follows the [`scanpy` functional style](https://scanpy.readthedocs.io/en/stable/index.html) and has a single end-point for training and prediction.\n\nTo begin with the Python API, load your training and test data into `anndata.AnnData` objects using [`scanpy`](https://scanpy.readthedocs.io/en/stable/index.html).\n"
+      },
+      "source": "https://raw.githubusercontent.com/calico/scnym/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Training",
+        "parent_header": [
+          "Usage",
+          "Python API"
+        ],
+        "type": "Text_excerpt",
+        "value": "Training an scNym model using the Python API is simple.\nWe provide an example below.\n\n```python\nfrom scnym.api import scnym_api\n\nscnym_api(\n    adata=adata,\n    task='train',\n    groupby='cell_ontology_class',\n    out_path='./scnym_output',\n    config='no_new_identity',\n)\n```\n\nThe `groupby` keyword specifies a column in `adata.obs` containing annotations to use for model training.\nThis API supports semi-supervised adversarial training using a special token in the annotation column.\nAny cell with the annotation `\"Unlabeled\"` will be treated as part of the target dataset and used for semi-supervised and adversarial training.\n\nWe also provide two predefined configurations for model training.\n\n1. `no_new_identity` -- This configuration assumes every cell in the target set belongs to one of the classes in the training set. This assumption improves performance, but can lead to erroneously high confidence scores if new cell types are present in the target data.\n2. `new_identity_discovery` -- This configuration is useful for experiments where new cell type discoveries may occur. It uses pseudolabel thresholding to avoid the assumption above. If new cell types are present in the target data, they correctly receive low confidence scores. \n"
+      },
+      "source": "https://raw.githubusercontent.com/calico/scnym/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Prediction",
+        "parent_header": [
+          "Usage",
+          "Python API"
+        ],
+        "type": "Text_excerpt",
+        "value": "```python\nfrom scnym.api import scnym_api\n\nscnym_api(\n    adata=adata,\n    task='predict',\n    key_added='scNym',\n    trained_model='./scnym_output',\n    out_path='./scnym_output',\n    config='no_new_identity',\n)\n```\n\nThe prediction task adds a key to `adata.obs` that contains the scNym annotation predictions, as well as the associated confidence scores.\nThe key is defined by `key_added` and the confidence scores are stored as `adata.obs[key_added + '_confidence']`.\n\nThe prediction task also extracts the activations of the penultimate scNym layer as an embedding and stores the result in `adata.obsm[\"X_scnym\"]`.\n"
+      },
+      "source": "https://raw.githubusercontent.com/calico/scnym/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Interpretation",
+        "parent_header": [
+          "Usage",
+          "Python API"
+        ],
+        "type": "Text_excerpt",
+        "value": "scNym models can be interpreted using the expected gradients technique to estimate Shapley values [(Erion et. al. 2020)](https://arxiv.org/abs/1906.10670). Briefly, expected gradient estimation computes the gradient on the predicted output class score with respect to an input vector, where the input vector is a random interpolation between an observation `x` and some reference vector `x'`.  \nIntuitively, we are using gradients on the input vector to highlight important genes that influence class predictions.\nWe can then rank the importance of various genes using the resulting expected gradient value.\n\nComputing expected gradients in scNym is accomplished with the `scnym_interpret` API endpoint.\n\n```python\nfrom scnym.api import scnym_interpret\n\nexpected_gradients = scnym_interpret(\n    adata=adata,\n    groupby=\"cell_type\",\n    target=\"target_cell_type\",\n    source=\"all\", # use all data except target cells as a reference    \n    trained_model=PATH_TO_TRAINED_MODEL,\n    config=CONFIG_USED_FOR_TRAINING,\n)\n\n# `expected_gradients[\"saliency\"]` is a pandas.Series ranking genes by their mean\n# expected gradient across cells\n# `expected_gradients[\"gradients\"]` is a pd.DataFrame [Cells, Features] table of expected\n# gradient estimates for each feature in each `target` cell\n```\n"
+      },
+      "source": "https://raw.githubusercontent.com/calico/scnym/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Multi-domain training",
+        "parent_header": [
+          "Usage",
+          "Training and predicting with Cell Atlas References"
+        ],
+        "type": "Text_excerpt",
+        "value": "By default, scNym treats training cells as one domain, and target cells as another.\nscNym also offers the ability to integrate across multiple training and target domains through the domain adversary.\nThis feature can be enabled by providing domain labels for each training cell in the `AnnData` object and passing the name of the relevant anntotation column to scNym.\n\n```python\n# load multiple training and target datasets\n# ...\n# set unique labels for each domain\ntraining_adata_00.obs['domain_label'] = 'train_0'\ntraining_adata_01.obs['domain_label'] = 'train_1'\n\ntarget_adata_00.obs['domain_label'] = 'target_0'\ntarget_adata_01.obs['domain_label'] = 'target_1'\n\n# set target annotations to \"Unlabeled\"\ntarget_adata_00.obs['annotations'] = 'Unlabeled'\ntarget_adata_01.obs['annotations'] = 'Unlabeled'\n\n# concatenate \nadata = training_adata_00.concatenate(\n    training_adata_01,\n    target_adata_00,\n    target_adata_01,\n)\n\n# provide the `domain_groupby` argument to `scnym_api`\nscnym_api(\n    adata=adata,\n    task='train',\n    groupby='annotations',\n    domain_groupby='domain_label',\n    out_path='./scnym_output',\n    config='no_new_identity',\n)\n```\n"
+      },
+      "source": "https://raw.githubusercontent.com/calico/scnym/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Advanced configuration options",
+        "parent_header": [
+          "Usage",
+          "Training and predicting with Cell Atlas References"
+        ],
+        "type": "Text_excerpt",
+        "value": "We provide two configurations for scNym model training, as noted above. \nHowever, users may wish to experiment with different configuration options for new applications of scNym models.\n\nTo experiment with custom configuration options, users can simply copy one of the pre-defined configurations and modify as desired.\nAll pre-defined configurations are stored as Python dictionaries in `scnym.api.CONFIGS`.\n\n```python\nimport scnym\nconfig = scnym.api.CONFIGS[\"no_new_identity\"]\n# increase the number of training epochs\nconfig[\"n_epochs\"] = 500\n# increase the weight of the domain adversary 0.1 -> 0.3\nconfig[\"ssl_kwargs\"][\"dan_max_weight\"] = 0.3\n\n# descriptions of all parameters and their default values\n\"default\": {\n    \"n_epochs\": 100, # number of training epochs\n    \"patience\": 40, # number of epochs to wait before early stopping\n    \"lr\": 1.0, # learning rate\n    \"optimizer_name\": \"adadelta\", # optimizer\n    \"weight_decay\": 1e-4, # weight decay for the optimizer\n    \"batch_size\": 256, # minibatch size\n    \"mixup_alpha\": 0.3, # shape parameter for MixUp: lambda ~ Beta(alpha, alpha)\n    \"unsup_max_weight\": 1.0, # maximum weight for the MixMatch loss\n    \"unsup_mean_teacher\": False, # use a mean teacher for MixMatch pseudolabeling\n    \"ssl_method\": \"mixmatch\", # semi-supervised learning method to use\n    \"ssl_kwargs\": {\n        \"augment_pseudolabels\": False, # perform augmentations before pseudolabeling\n        \"augment\": \"log1p_drop\", # augmentation to use if `augment_pseudolabels`\n        \"unsup_criterion\": \"mse\", # criterion fxn for MixMatch loss\n        \"n_augmentations\": 1, # number of augmentations per observation\n        \"T\": 0.5, # temperature scaling parameter\n        \"ramp_epochs\": 100, # number of epochs to ramp up the MixMatch loss\n        \"burn_in_epochs\": 0, # number of epochs to wait before ramping MixMatch\n        \"dan_criterion\": True, # use a domain adversary\n        \"dan_ramp_epochs\": 20, # ramp epochs for the adversarial loss\n        \"dan_max_weight\": 0.1, # max weight for the adversarial loss\n        \"min_epochs\": 20, # minimum epochs to train before saving a best model\n    },\n    \"model_kwargs\": {\n        \"n_hidden\": 256, # number of hidden units per hidden layer\n        \"n_layers\": 2, # number of hidden layers\n        \"init_dropout\": 0.0, # dropout on the initial layer\n        \"residual\": False, # use residual layers\n    },\n    # save logs for tensorboard. enables nice visualizations, but can slow down \n    # training if filesystem I/O is limiting.\n    \"tensorboard\": False,\n}\n```\n"
+      },
+      "source": "https://raw.githubusercontent.com/calico/scnym/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "CLI",
+        "parent_header": [
+          "Usage"
+        ],
+        "type": "Text_excerpt",
+        "value": "Models can be also trained using the included command line interface, `scnym`.\nThe CLI allows for more detailed model configuration, but should only be used for experimentation.\n\nThe CLI accepts configuration files in YAML or JSON formats, with parameters carrying the same names as command line arguments.\n\nTo see a list of command line arguments/configuration parameters, run:\n\n```bash\n$ scnym -h\n```\n\nA sample configuration is included as `default_config.txt`.\n"
+      },
+      "source": "https://raw.githubusercontent.com/calico/scnym/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Demo Script",
+        "parent_header": [
+          "Usage",
+          "CLI"
+        ],
+        "type": "Text_excerpt",
+        "value": "A CLI demo shell script is provided that downloads data from the [*Tabula Muris*](https://tabula-muris.ds.czbiohub.org/) and trains an `scnym` model.\n\nTo execute the script, run:\n\n```bash\nchmod +x demo_script.sh\nsource demo_script.sh\n```\n\nin the repository directory.\n"
+      },
+      "source": "https://raw.githubusercontent.com/calico/scnym/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Processed Data",
+        "parent_header": [
+          "Usage"
+        ],
+        "type": "Text_excerpt",
+        "value": "We provide [processed data](assets/processed_data.md) we used to evaluate `scNym` in the common `AnnData` format.\n"
+      },
+      "source": "https://raw.githubusercontent.com/calico/scnym/master/README.md",
+      "technique": "header_analysis"
+    }
+  ]
+}

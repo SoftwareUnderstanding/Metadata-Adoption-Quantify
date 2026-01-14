@@ -1,0 +1,378 @@
+{
+  "code_repository": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/BimberLab/cellhashR"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_created": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2020-11-30T15:59:44Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_updated": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2024-09-17T23:09:23Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "description": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "An R package designed to demultiplex cell hashing data"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 0.9563035154017064,
+      "result": {
+        "original_header": "cellhashR",
+        "type": "Text_excerpt",
+        "value": "An R package designed to demultiplex cell hashing data. [Please see our documentation for more detail](https://bimberlab.github.io/cellhashR/).\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/BimberLab/cellhashR/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9735494831251676,
+      "result": {
+        "original_header": "<a name=\"overview\">Overview</a>",
+        "type": "Text_excerpt",
+        "value": "Cell hashing is a method that allows sample multiplexing or super-loading within single-cell RNA-seq platforms, such as 10x genomics, originally developed at New York Genome Center in collaboration with the Satija lab. [See here for more detail on the technique](https://cite-seq.com/cell-hashing/). The general idea is that cells are labeled with a staining reagent (such as an antibody) tagged with a short nucleotide barcode. Other staining methods have been published, such as the lipid-based Multi-Seq ([https://www.ncbi.nlm.nih.gov/pubmed/31209384](https://www.ncbi.nlm.nih.gov/pubmed/31209384)).  In all methods, the hashtag oligo/barcode is sequenced in parallel with cellular mRNA, creating a separate cell hashing library. After sequencing, the cell barcode and hashing index are parsed using tools like Cite-seq-Count ([https://github.com/Hoohm/CITE-seq-Count](https://github.com/Hoohm/CITE-seq-Count)), creating a count matrix with the total hash tag counts per cell.  \nOnce the count matrix is created, an algorithm must be used to demultiplex cells and assign them to hash tags (i.e. sample). This is where cellhashR comes in. This package provides several functions:\n- Quality control reports for the cell hashing library, covering read counts and normalization. Think [FASTQC](https://www.bioinformatics.babraham.ac.uk/projects/fastqc/), except for cell hashing data.\n- A single interface to run one or more demutiplexing algorithms, including the novel demultiplexing algorithms BFF_raw and BFF_cluster.  Each algorithm has pros and cons, and will perform better or worse under certain conditions (though in our experience, of the algorithms we have tested, the BFF algorithms work most consistently and under the widest variety of conditions). If you select multiple algorithms (our default workflow), cellhashR will score cells using the consensus call from the set. Various QC summaries are produced during this process as well, if debugging is needed.  In addition to the BFF demultiplexing algorithms, other algorithms that can be run from cellhashR include:\n    - [GMM-Demux](https://github.com/CHPGenetics/GMM-Demux)\n    - [demuxEM](https://github.com/klarman-cell-observatory/demuxEM) [(see extra requirements below)](#h5file)\n    - [demuxmix](https://github.com/huklein/demuxmix) [(see extra requirements below)](#h5file)\n    - [deMULTIplex](https://github.com/chris-mcginnis-ucsf/MULTI-seq)\n    - [HTODemux from Seurat](https://satijalab.org/seurat/v3.1/hashing_vignette.html)\n    - [hashedDrops from DropletUtils](https://github.com/MarioniLab/DropletUtils)\n- The workflow produces a unified table with the results of each caller and the consensus call. Final QC plots and summaries are created.  \nEach step of the workflow can either be run interactively in R (through the terminal or RStudio), or it can be executed as a pipeline that runs all commands and creates the call table and an HTML report.  \n"
+      },
+      "source": "https://raw.githubusercontent.com/BimberLab/cellhashR/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9788615106348493,
+      "result": {
+        "original_header": "<a name=\"consensus\">Consensus Calling</a>",
+        "type": "Text_excerpt",
+        "value": "In addition to allowing one to run multiple demuliplexing algorithms to compare results, cellhashR can generate a consensus call based on those scores. This can be useful,\nsince some algorithms will perform better or worse under some conditions. This is automatically built into the dataframe returned by GenerateCellHashingCalls(). Some additional parameters that might be worth considering are:\n- There are separate arguments for 'methods' (i.e. which algorithms will be run), and 'methodsForConsensus', which determined the subset that will be used for the consensus call.\n- majorityConsensusThreshold: This applies to calculating a consensus call when multiple algorithms are used. If NULL, then all non-negative calls must agree or that cell is marked discordant. If non-NULL, then the number of algorithms returning the top call is divided by the total number of non-negative calls. If this ratio is above the majorityConsensusThreshold, that value is selected. For example, when majorityConsensusThreshold=0.6 and the calls are: HTO-1,HTO-1,Negative,HTO-2, then 2/3 calls are for HTO-1, giving 0.66. This is greater than the majorityConsensusThreshold of 0.6, so HTO-1 is returned. This can be useful for situations where most algorithms agree, but a single caller fails.\n- callerDisagreementThreshold: If provided, the agreement rate will be calculated between each caller and the simple majority call, ignoring discordant and no-call cells. If any caller has an disagreement rate above this threshold, it will be dropped and the consensus call re-calculated. The general idea is to drop a caller that is systematically discordant.\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/BimberLab/cellhashR/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9232719939016337,
+      "result": {
+        "original_header": "<a name=\"example\">Example Usage</a>",
+        "type": "Text_excerpt",
+        "value": "Below are the primary functions of cellhashR needed to QC and score hashing data:\n```r\n# Example 1: parse CITE-seq-Count output, printing QC\nbarcodeData <- ProcessCountMatrix(rawCountData = 'myCountDir/umi_count', minCountPerCell = 5)\n\n# Example 2: parse CITE-seq-Count output, providing a barcode whitelist. \nbarcodeData <- ProcessCountMatrix(rawCountData = 'myCountDir/umi_count', minCountPerCell = 5, barcodeWhitelist = c('HTO-1', 'HTO-2', 'HTO-3', 'HTO-4', 'HTO-6'))\n\n# Create QC plots of barcode normalization\nPlotNormalizationQC(barcodeData)\n\n# Generate the final cell hashing calls\ncalls <- GenerateCellHashingCalls(barcodeMatrix = barcodeData, methods = c('multiseq', 'htodemux'))\n\n# Inspect negative cells:\nSummarizeCellsByClassification(calls = calls, barcodeMatrix = barcodeData)\n\n\n``` \n"
+      },
+      "source": "https://raw.githubusercontent.com/BimberLab/cellhashR/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9312381401370096,
+      "result": {
+        "original_header": "<a name=\"installation\">Installation</a>",
+        "type": "Text_excerpt",
+        "value": "```{r}\n# Make sure to update your Rprofile to include Bioconductor repos, such as adding this line to ~/.Rprofile:\nlocal({options(repos = BiocManager::repositories())})\n\n#Latest version:\ndevtools::install_github(repo = 'bimberlab/cellhashR', ref = 'master', dependencies = TRUE, upgrade = 'always')\n```\n    \nPre-packaged Docker images with all needed dependencies installed can be found on our [GitHub Packages page](https://github.com/orgs/BimberLab/packages/container/package/cellhashr). We recommend using a specific release, which you can do using tags:    \n```\ndocker pull ghcr.io/bimberlab/cellhashr:latest\n```\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/BimberLab/cellhashR/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9137357187727886,
+      "result": {
+        "original_header": "<a name=\"issues\">Known Issues</a>",
+        "type": "Text_excerpt",
+        "value": "If you receive an error along the lines of:\n```\n\"ERROR; return code from pthread_create() is 22\\n\"\n```\nPlease manually install preprocessCore with threading disabled:\nBASH2* \n"
+      },
+      "source": "https://raw.githubusercontent.com/BimberLab/cellhashR/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9628319406984102,
+      "result": {
+        "original_header": "<a name=\"developers\">Development Guidelines</a>",
+        "type": "Text_excerpt",
+        "value": "* New development should occur on a branch, and go through a Pull Request before merging into the master branch.  [See here for information on the pull request workflow](https://guides.github.com/introduction/flow/).  Ideally PRs would be reviewed by another person.  For the PR, please review the set of changed files carefully to make sure you are only merging the changes you intend.    \n* As part of each PR, you should run 'devtools::document()' to update documentation and include these changes with your commits. \n* New features should ideally have at least a basic test (see [R testthat](http://r-pkgs.had.co.nz/tests.html)).  There is existing test data in ./tests/testdata.  This can be expanded, but please be conscious about file size and try to reuse data across tests if appropriate. \n"
+      },
+      "source": "https://raw.githubusercontent.com/BimberLab/cellhashR/master/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "download_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/BimberLab/cellhashR/releases"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 6
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/BimberLab/cellhashR/forks"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "BimberLab/cellhashR"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_title": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "cellhashR"
+      },
+      "source": "https://raw.githubusercontent.com/BimberLab/cellhashR/master/README.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "has_build_file": [
+    {
+      "confidence": 1,
+      "result": {
+        "format": "dockerfile",
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/BimberLab/cellhashR/master/Dockerfile"
+      },
+      "source": "https://raw.githubusercontent.com/BimberLab/cellhashR/master/Dockerfile",
+      "technique": "file_exploration"
+    }
+  ],
+  "identifier": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://zenodo.org/badge/latestdoi/317274382"
+      },
+      "source": "https://raw.githubusercontent.com/BimberLab/cellhashR/master/README.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "installation": [
+    {
+      "confidence": 0.9999999999828901,
+      "result": {
+        "original_header": "<a name=\"installation\">Installation</a>",
+        "type": "Text_excerpt",
+        "value": "```{r}\n# Make sure to update your Rprofile to include Bioconductor repos, such as adding this line to ~/.Rprofile:\nlocal({options(repos = BiocManager::repositories())})\n\n#Latest version:\ndevtools::install_github(repo = 'bimberlab/cellhashR', ref = 'master', dependencies = TRUE, upgrade = 'always')\n```\n    \nPre-packaged Docker images with all needed dependencies installed can be found on our [GitHub Packages page](https://github.com/orgs/BimberLab/packages/container/package/cellhashr). We recommend using a specific release, which you can do using tags:    \n```\ndocker pull ghcr.io/bimberlab/cellhashr:latest\n```\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/BimberLab/cellhashR/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9206788383133093,
+      "result": {
+        "original_header": "<a name=\"developers\">Development Guidelines</a>",
+        "type": "Text_excerpt",
+        "value": "* New development should occur on a branch, and go through a Pull Request before merging into the master branch.  [See here for information on the pull request workflow](https://guides.github.com/introduction/flow/).  Ideally PRs would be reviewed by another person.  For the PR, please review the set of changed files carefully to make sure you are only merging the changes you intend.    \n* As part of each PR, you should run 'devtools::document()' to update documentation and include these changes with your commits. \n* It is a good idea to run 'R CMD check' locally to make sure your changes will pass.  [See here for more information](http://r-pkgs.had.co.nz/check.html) \n* Code should only be merged after the build and tests pass.  The master branch should always be stable. \n"
+      },
+      "source": "https://raw.githubusercontent.com/BimberLab/cellhashR/master/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "issue_tracker": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/BimberLab/cellhashR/issues"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "keywords": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": ""
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "cellhashR"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "owner": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Organization",
+        "value": "BimberLab"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "programming_languages": [
+    {
+      "confidence": 1,
+      "result": {
+        "name": "R",
+        "size": 177230,
+        "type": "Programming_language",
+        "value": "R"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Dockerfile",
+        "size": 951,
+        "type": "Programming_language",
+        "value": "Dockerfile"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "readme_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/BimberLab/cellhashR/master/README.md"
+      },
+      "technique": "file_exploration"
+    }
+  ],
+  "releases": [
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "bbimber",
+          "type": "User"
+        },
+        "date_created": "2024-08-07T18:23:20Z",
+        "date_published": "2024-08-07T18:25:07Z",
+        "description": "The primary updates in this release are:\r\n\r\n* Update to SeuratObject 5.x by @bbimber in https://github.com/BimberLab/cellhashR/pull/131\r\n* Add optional check to flag/skip omit callers with abnormally high doublet rates by @bbimber in https://github.com/BimberLab/cellhashR/pull/140\r\n\r\n**Full Changelog**: https://github.com/BimberLab/cellhashR/compare/1.04...1.2.0",
+        "html_url": "https://github.com/BimberLab/cellhashR/releases/tag/1.2.0",
+        "name": "Version 1.2.0",
+        "release_id": 169176309,
+        "tag": "1.2.0",
+        "tarball_url": "https://api.github.com/repos/BimberLab/cellhashR/tarball/1.2.0",
+        "type": "Release",
+        "url": "https://api.github.com/repos/BimberLab/cellhashR/releases/169176309",
+        "value": "https://api.github.com/repos/BimberLab/cellhashR/releases/169176309",
+        "zipball_url": "https://api.github.com/repos/BimberLab/cellhashR/zipball/1.2.0"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "bbimber",
+          "type": "User"
+        },
+        "date_created": "2023-02-15T18:30:28Z",
+        "date_published": "2023-03-08T14:08:59Z",
+        "description": "This release includes a number of improvements since the publication, including support of demuxmix.\r\n\r\n## What's Changed\r\n* Bioc 3.15 by @bbimber in https://github.com/BimberLab/cellhashR/pull/96\r\n* Add new option to discard callers with high disagreement from majority by @bbimber in https://github.com/BimberLab/cellhashR/pull/97\r\n* Improve caller accuracy reporting by @bbimber in https://github.com/BimberLab/cellhashR/pull/98\r\n* Add additional QC plot by @bbimber in https://github.com/BimberLab/cellhashR/pull/103\r\n* Update github actions by @bbimber in https://github.com/BimberLab/cellhashR/pull/104\r\n* Update docker github workflow by @bbimber in https://github.com/BimberLab/cellhashR/pull/106\r\n* Switch to ubuntu 22.04 in CI by @bbimber in https://github.com/BimberLab/cellhashR/pull/107\r\n* Update sklearn to fix gmmdemux install by @bbimber in https://github.com/BimberLab/cellhashR/pull/108\r\n* Add option to skip tSNE plots by @bbimber in https://github.com/BimberLab/cellhashR/pull/109\r\n* Add support for demuxmix by @bbimber in https://github.com/BimberLab/cellhashR/pull/112\r\n* Try to revert prior numpy version now that pegasys is updated by @bbimber in https://github.com/BimberLab/cellhashR/pull/113\r\n* Allow import of 10x data with multiple assays by @bbimber in https://github.com/BimberLab/cellhashR/pull/115\r\n* Simplify arguments to provide h5file by @bbimber in https://github.com/BimberLab/cellhashR/pull/117\r\n* Support filtering of HTOs during CallAndGenerateReport by @bbimber in https://github.com/BimberLab/cellhashR/pull/119\r\n* Fully support 10x multi-assay data by @bbimber in https://github.com/BimberLab/cellhashR/pull/122\r\n\r\n\r\n**Full Changelog**: https://github.com/BimberLab/cellhashR/compare/1.0.3...1.04",
+        "html_url": "https://github.com/BimberLab/cellhashR/releases/tag/1.04",
+        "name": "Version 1.04",
+        "release_id": 94933215,
+        "tag": "1.04",
+        "tarball_url": "https://api.github.com/repos/BimberLab/cellhashR/tarball/1.04",
+        "type": "Release",
+        "url": "https://api.github.com/repos/BimberLab/cellhashR/releases/94933215",
+        "value": "https://api.github.com/repos/BimberLab/cellhashR/releases/94933215",
+        "zipball_url": "https://api.github.com/repos/BimberLab/cellhashR/zipball/1.04"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "bbimber",
+          "type": "User"
+        },
+        "date_created": "2022-03-31T15:57:13Z",
+        "date_published": "2022-03-31T15:58:03Z",
+        "description": "This is the cellhashR version used in Boggy et al.",
+        "html_url": "https://github.com/BimberLab/cellhashR/releases/tag/1.0.3",
+        "name": "Version 1.0.3",
+        "release_id": 63283926,
+        "tag": "1.0.3",
+        "tarball_url": "https://api.github.com/repos/BimberLab/cellhashR/tarball/1.0.3",
+        "type": "Release",
+        "url": "https://api.github.com/repos/BimberLab/cellhashR/releases/63283926",
+        "value": "https://api.github.com/repos/BimberLab/cellhashR/releases/63283926",
+        "zipball_url": "https://api.github.com/repos/BimberLab/cellhashR/zipball/1.0.3"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "somef_missing_categories": [
+    "citation",
+    "acknowledgement",
+    "run",
+    "download",
+    "requirements",
+    "contact",
+    "contributors",
+    "documentation",
+    "license",
+    "usage",
+    "faq",
+    "support",
+    "executable_example"
+  ],
+  "somef_provenance": {
+    "date": "2024-10-06 00:06:01",
+    "somef_schema_version": "1.0.0",
+    "somef_version": "0.9.5"
+  },
+  "stargazers_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 27
+      },
+      "technique": "GitHub_API"
+    }
+  ]
+}

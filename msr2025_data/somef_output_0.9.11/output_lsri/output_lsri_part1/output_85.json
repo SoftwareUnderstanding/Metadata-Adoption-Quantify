@@ -1,0 +1,307 @@
+{
+  "code_repository": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/aaronphillips7493/CLAW"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_created": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2021-05-11T01:33:00Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_updated": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2024-07-24T09:07:24Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "description": [
+    {
+      "confidence": 0.9989967346208233,
+      "result": {
+        "original_header": "About CLAW",
+        "type": "Text_excerpt",
+        "value": "CLAW (Chloroplast Long-read Assembly Workflow) is an mostly-automated Snakemake-based workflow for the assembly of chloroplast genomes. CLAW uses chloroplast long-reads, which are baited out of larger read libraries (e.g., an Oxford Nanopore Technologies MinION read library derived from photosynthetic tissue), for assembly with Flye and/or Unicycler. CLAW was designed with the novice bioinformatician in mind - it is easy to install and easy to use, requiring only minimal user input. \n"
+      },
+      "source": "https://raw.githubusercontent.com/aaronphillips7493/CLAW/main/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9491132215901376,
+      "result": {
+        "original_header": "Steps",
+        "type": "Text_excerpt",
+        "value": "\t\tsnakemake --profile profiles/slurm --use-conda --keep-going\n\t\n\t#note: profiles/slurm may not be appropriate for your PC. If this is the case, please run CLAW after specifying your profile (slurm, pbs, or local).  \nThis test should complete with no errors, and should generate a rotated choloroplast fasta file (\"chloro_assembly/{sample}~{assembler}_chloroplast.fasta\") derived from Flye and/or Unicycler. If outside network access is problematic, run downloadReference.sh to download the reference genome. Alternatively, download your reference genome of interest manually and save it into the directory  \n\ta) modify \"config.yml\":\n\t\n\t\ti) ncbi_reference_accession = change this to the NCBI accession number for the reference chloroplast genome of interest. Default = NC_008155.1 (O. sativa). If outside network access is problematic, run downloadReference.sh to download the reference genome. Alternatively, download your reference genome of interest manually and save it into the directory \"chloro_assembly/reference/{file_name}_single.fasta\". Make sure to change this parameter even if you do not use CLAW to download the reference genome.\n\t\t\n\t\tii) my_Email = provide an email address. Neccessary for the automated download of genomes from NCBI - prevents system abuse.\n\t\t\n\t\tiii) fast_file = declare whether your read file is in FASTA (\"fasta\"/\"fasta.gz\") or FASTQ (\"fastq\"/\"fastq.gz\") format.\n\t\t\n\t\tiv) randseed = you can supply a seed (integer) here if you wish to re-run read extraction the same way with each redo, or leave this blank to let CLAW randomly generate a seed each time it is run. Change this parameter if assembly fails, and re-run random read subsampling.\n\t\t\n\t\tv) numberReads = declare the max. number of reads CLAW will subsample. Change value if assembly fails or to increase or decrease genome coverage. Default = 3000.\n\t\t\n\t\tvi) readMinLength = declare the smallest read to be used in the assembly. Default = 5000 bp.\n\t\t\n\t\tvii) flyeParameter = tell Flye what kind of reads you are using as input (raw, corrected or HQ ONT long reads, or raw, corrected, or HIFI PacBio long reads). Default = --nano-raw.\n\t\t\n\t\tviii) minimap2Parameter = tell minimap2 what kinds of reads you are using (ONT, PacBio, or HIFI). Default = map-ont. \n\t\tiX) read_quality = mapq read quality score; if users want more stringent read filtering (i.e., reads with higher mapping quality) they can increase this number (e.g., 10 = 90%; 20 = 99%).\n\t\t\n\t\tX) chloroplastSize = the expected size of the chloroplast genome to be assembled. This is usually set as the size of the reference chloroplast genome. Default = 135000.\n\t\t\n\t\tXi) cpus = declare the number of CPUs to use. Default = 4.\n\t\t\n\tb) make sure you have saved your reads in the directory:\n\t\t\n\t\tchloro_assembly/reads\n\t\t\n\tc) make sure you have saved your reference genome in the directory:\n\t\t\n\t\tchloro_assembly/reference\n\t\t\n\td) run CLAW (remember to specify the correct profile based on our system!):\n\t\t\n\t\tsnakemake --profile profiles/slurm --use-conda --keep-going\n\t\t\n4. If {The Workflow} fails, try modifying \"randSeed\" and/or \"numberReads\" in config.yml. You will need to delete the files in the following directories to re-run {The Workflow}: \nUsers can check read mapping and/or coverage of the genomes (whether that be to the single or 'circular' reference genome, or to the CLAW-assembled genome) by loading the genome of interest and its associated BAM/BigWig files into any genome browser (e.g., IGV). Read depth may help you diagnose issues in your assembly, if you have any. \nWhile the read library used for chloroplast genome assembly is enriched for chloroplast reads, there is a possibility that the library will also contain mitochondrial reads because of high sequence similarity between mitochondrial and chloroplast genomes. Thus, it is possible for CLAW to assemble mitochondrial (likely fragmented) contigs too. CLAW makes no attempt to resolve this, so users will have to manually check the assembled contigs for similarity to chloroplast and/or mitochondrial sequences. \nWhile we report on the successful runs of CLAW here, there were several instances in which CLAW failed to complete or when chloroplast genome assembly failed. Typically, CLAW failed to complete due to insufficient memory allocation for certain steps of CLAW. These steps were commonly the read mapping and genome assembly steps. In this case, we were able to overcome this issue by modifying the memory allocation in the \u201ccluster-configs/default.yaml\u201d file. Future releases should aim to integrate dynamic memory allocations to further minimise user input for the successful completion of CLAW. When genome assembly failed, we found that re-running CLAW with a different seed (randomly generated as part of the CLAW, unless specified by the user in \u201cconfig.yaml\u201d) resulted in successful completion of genome assembly. We also found it necessary to, on occasion, adjust the number of chloroplast reads used for genome assembly as too many reads (and therefore too high genome coverage) could cause the assemblers to fail. Thus, by modifying the random seed and the number of reads used for assembly we were able to generate assemblies for all 19 test datasets. \n \n"
+      },
+      "source": "https://raw.githubusercontent.com/aaronphillips7493/CLAW/main/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "download": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Download and Install",
+        "type": "Text_excerpt",
+        "value": "1. Clone Git repository:\n\t\n\tgit clone https://github.com/aaronphillips7493/CLAW\n\n2. Move into the directory:\n\t\n\t\tcd CLAW\n\n3. Install conda (if not already present):\n\nhttps://docs.conda.io/projects/conda/en/latest/user-guide/install/linux.html\n\nYou may need to add the approproate channels for accessing CLAW dependencies:\n\n```\nconda config --add channels conda-forge\n```\n\n```\nconda config --add channels bioconda \n```\n \n4. Make sure you have snakemake and Biopython installed. We use Mamba for increased speed:\n\n\ta) Create a conda environment:\n\n\t\tconda create --name snakemake\n\n\tb) Activate the conda environment:\n\n\t\tconda activate snakemake\n\n\tc) Install mamba in the environment:\n\n\t\tconda install mamba\n\n\td) Install snakemake and biopython in the environment:\n\n\t\tmamba install snakemake biopython\n\n\te) OPTIONAL: create all environments needed for CLAW:\n\n\t\tsnakemake -j 1 --conda-create-envs-only --use-conda\n\n---------------------------------------------------------\n"
+      },
+      "source": "https://raw.githubusercontent.com/aaronphillips7493/CLAW/main/README.md",
+      "technique": "header_analysis"
+    }
+  ],
+  "download_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/aaronphillips7493/CLAW/releases"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 0
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/aaronphillips7493/CLAW/forks"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "aaronphillips7493/CLAW"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_title": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": ""
+      },
+      "source": "https://raw.githubusercontent.com/aaronphillips7493/CLAW/main/README.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "has_script_file": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/aaronphillips7493/CLAW/main/downloadReference.sh"
+      },
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/aaronphillips7493/CLAW/main/profiles/pbs/jobscript.sh"
+      },
+      "technique": "file_exploration"
+    }
+  ],
+  "installation": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Download and Install",
+        "type": "Text_excerpt",
+        "value": "1. Clone Git repository:\n\t\n\tgit clone https://github.com/aaronphillips7493/CLAW\n\n2. Move into the directory:\n\t\n\t\tcd CLAW\n\n3. Install conda (if not already present):\n\nhttps://docs.conda.io/projects/conda/en/latest/user-guide/install/linux.html\n\nYou may need to add the approproate channels for accessing CLAW dependencies:\n\n```\nconda config --add channels conda-forge\n```\n\n```\nconda config --add channels bioconda \n```\n \n4. Make sure you have snakemake and Biopython installed. We use Mamba for increased speed:\n\n\ta) Create a conda environment:\n\n\t\tconda create --name snakemake\n\n\tb) Activate the conda environment:\n\n\t\tconda activate snakemake\n\n\tc) Install mamba in the environment:\n\n\t\tconda install mamba\n\n\td) Install snakemake and biopython in the environment:\n\n\t\tmamba install snakemake biopython\n\n\te) OPTIONAL: create all environments needed for CLAW:\n\n\t\tsnakemake -j 1 --conda-create-envs-only --use-conda\n\n---------------------------------------------------------\n"
+      },
+      "source": "https://raw.githubusercontent.com/aaronphillips7493/CLAW/main/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 0.9556838496186257,
+      "result": {
+        "original_header": "Steps",
+        "type": "Text_excerpt",
+        "value": "\t\tsnakemake --profile profiles/slurm --use-conda --keep-going\n\t\n\t#note: profiles/slurm may not be appropriate for your PC. If this is the case, please run CLAW after specifying your profile (slurm, pbs, or local).  \nThis test should complete with no errors, and should generate a rotated choloroplast fasta file (\"chloro_assembly/{sample}~{assembler}_chloroplast.fasta\") derived from Flye and/or Unicycler. If outside network access is problematic, run downloadReference.sh to download the reference genome. Alternatively, download your reference genome of interest manually and save it into the directory  \n2. Run your samples through CLAW. \n\t\tiX) read_quality = mapq read quality score; if users want more stringent read filtering (i.e., reads with higher mapping quality) they can increase this number (e.g., 10 = 90%; 20 = 99%).\n\t\t\n\t\tX) chloroplastSize = the expected size of the chloroplast genome to be assembled. This is usually set as the size of the reference chloroplast genome. Default = 135000.\n\t\t\n\t\tXi) cpus = declare the number of CPUs to use. Default = 4.\n\t\t\n\tb) make sure you have saved your reads in the directory:\n\t\t\n\t\tchloro_assembly/reads\n\t\t\n\tc) make sure you have saved your reference genome in the directory:\n\t\t\n\t\tchloro_assembly/reference\n\t\t\n\td) run CLAW (remember to specify the correct profile based on our system!):\n\t\t\n\t\tsnakemake --profile profiles/slurm --use-conda --keep-going\n\t\t\n4. If {The Workflow} fails, try modifying \"randSeed\" and/or \"numberReads\" in config.yml. You will need to delete the files in the following directories to re-run {The Workflow}: \nYou may also need to delete the file: \n"
+      },
+      "source": "https://raw.githubusercontent.com/aaronphillips7493/CLAW/main/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "invocation": [
+    {
+      "confidence": 0.871041252511976,
+      "result": {
+        "original_header": "Steps",
+        "type": "Text_excerpt",
+        "value": "1. Test CLAW. We provide a test read file containing ONT reads from _Oryza sativa_ (\"chloro_assembly/reads/DRR196880_subset.fastq\") and the reference _Oryza sativa_ chloroplast genome (\"chloro_assembly/reference/NC_008155.1_single.fasta\"). \n"
+      },
+      "source": "https://raw.githubusercontent.com/aaronphillips7493/CLAW/main/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "issue_tracker": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/aaronphillips7493/CLAW/issues"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "keywords": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": ""
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "logo": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/aaronphillips7493/CLAW/main/profiles/CLAW_icon.png?raw=true"
+      },
+      "source": "https://raw.githubusercontent.com/aaronphillips7493/CLAW/main/README.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "CLAW"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "owner": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "User",
+        "value": "aaronphillips7493"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "programming_languages": [
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Python",
+        "size": 20764,
+        "type": "Programming_language",
+        "value": "Python"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Shell",
+        "size": 9005,
+        "type": "Programming_language",
+        "value": "Shell"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "readme_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/aaronphillips7493/CLAW/main/README.md"
+      },
+      "technique": "file_exploration"
+    }
+  ],
+  "run": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "note: profiles/slurm may not be appropriate for your PC. If this is the case, please run CLAW after specifying your profile (slurm, pbs, or local).",
+        "type": "Text_excerpt",
+        "value": "---------------------------------------------------------\n\nAbout CLAW\n---------------------------------------------------------\n\nCLAW (Chloroplast Long-read Assembly Workflow) is an mostly-automated Snakemake-based workflow for the assembly of chloroplast genomes. CLAW uses chloroplast long-reads, which are baited out of larger read libraries (e.g., an Oxford Nanopore Technologies MinION read library derived from photosynthetic tissue), for assembly with Flye and/or Unicycler. CLAW was designed with the novice bioinformatician in mind - it is easy to install and easy to use, requiring only minimal user input.\n\n---------------------------------------------------------\n\nDownload and Install\n---------------------------------------------------------\n\n1. Clone Git repository:\n\t\n\tgit clone https://github.com/aaronphillips7493/CLAW\n\n2. Move into the directory:\n\t\n\t\tcd CLAW\n\n3. Install conda (if not already present):\n\nhttps://docs.conda.io/projects/conda/en/latest/user-guide/install/linux.html\n\nYou may need to add the approproate channels for accessing CLAW dependencies:\n\n```\nconda config --add channels conda-forge\n```\n\n```\nconda config --add channels bioconda \n```\n \n4. Make sure you have snakemake and Biopython installed. We use Mamba for increased speed:\n\n\ta) Create a conda environment:\n\n\t\tconda create --name snakemake\n\n\tb) Activate the conda environment:\n\n\t\tconda activate snakemake\n\n\tc) Install mamba in the environment:\n\n\t\tconda install mamba\n\n\td) Install snakemake and biopython in the environment:\n\n\t\tmamba install snakemake biopython\n\n\te) OPTIONAL: create all environments needed for CLAW:\n\n\t\tsnakemake -j 1 --conda-create-envs-only --use-conda\n\n---------------------------------------------------------\n\nSteps\n---------------------------------------------------------\n\n1. Test CLAW. We provide a test read file containing ONT reads from _Oryza sativa_ (\"chloro_assembly/reads/DRR196880_subset.fastq\") and the reference _Oryza sativa_ chloroplast genome (\"chloro_assembly/reference/NC_008155.1_single.fasta\").\n\n\t\tsnakemake --profile profiles/slurm --use-conda --keep-going\n\t\n\t#note: profiles/slurm may not be appropriate for your PC. If this is the case, please run CLAW after specifying your profile (slurm, pbs, or local). \n\nThis test should complete with no errors, and should generate a rotated choloroplast fasta file (\"chloro_assembly/{sample}~{assembler}_chloroplast.fasta\") derived from Flye and/or Unicycler. If outside network access is problematic, run downloadReference.sh to download the reference genome. Alternatively, download your reference genome of interest manually and save it into the directory \n\n\t\"chloro_assembly/reference/{NCBI_accession_number}_single.fasta\"\n\n2. Run your samples through CLAW.\n\n\ta) modify \"config.yml\":\n\t\n\t\ti) ncbi_reference_accession = change this to the NCBI accession number for the reference chloroplast genome of interest. Default = NC_008155.1 (O. sativa). If outside network access is problematic, run downloadReference.sh to download the reference genome. Alternatively, download your reference genome of interest manually and save it into the directory \"chloro_assembly/reference/{file_name}_single.fasta\". Make sure to change this parameter even if you do not use CLAW to download the reference genome.\n\t\t\n\t\tii) my_Email = provide an email address. Neccessary for the automated download of genomes from NCBI - prevents system abuse.\n\t\t\n\t\tiii) fast_file = declare whether your read file is in FASTA (\"fasta\"/\"fasta.gz\") or FASTQ (\"fastq\"/\"fastq.gz\") format.\n\t\t\n\t\tiv) randseed = you can supply a seed (integer) here if you wish to re-run read extraction the same way with each redo, or leave this blank to let CLAW randomly generate a seed each time it is run. Change this parameter if assembly fails, and re-run random read subsampling.\n\t\t\n\t\tv) numberReads = declare the max. number of reads CLAW will subsample. Change value if assembly fails or to increase or decrease genome coverage. Default = 3000.\n\t\t\n\t\tvi) readMinLength = declare the smallest read to be used in the assembly. Default = 5000 bp.\n\t\t\n\t\tvii) flyeParameter = tell Flye what kind of reads you are using as input (raw, corrected or HQ ONT long reads, or raw, corrected, or HIFI PacBio long reads). Default = --nano-raw.\n\t\t\n\t\tviii) minimap2Parameter = tell minimap2 what kinds of reads you are using (ONT, PacBio, or HIFI). Default = map-ont.\n\n\t\tiX) read_quality = mapq read quality score; if users want more stringent read filtering (i.e., reads with higher mapping quality) they can increase this number (e.g., 10 = 90%; 20 = 99%).\n\t\t\n\t\tX) chloroplastSize = the expected size of the chloroplast genome to be assembled. This is usually set as the size of the reference chloroplast genome. Default = 135000.\n\t\t\n\t\tXi) cpus = declare the number of CPUs to use. Default = 4.\n\t\t\n\tb) make sure you have saved your reads in the directory:\n\t\t\n\t\tchloro_assembly/reads\n\t\t\n\tc) make sure you have saved your reference genome in the directory:\n\t\t\n\t\tchloro_assembly/reference\n\t\t\n\td) run CLAW (remember to specify the correct profile based on our system!):\n\t\t\n\t\tsnakemake --profile profiles/slurm --use-conda --keep-going\n\t\t\n4. If {The Workflow} fails, try modifying \"randSeed\" and/or \"numberReads\" in config.yml. You will need to delete the files in the following directories to re-run {The Workflow}:\n\n\t\tchloro_assembly/assemblies\n\t\n\t\tchloro_assembly/subReads\n\t\n\t\tchloro_assembly/alignments\n\t\n\t\tchloro_assembly/dotPlots\n\nYou may also need to delete the file:\n\n\tchloro_assembly/{sample}~{assembler}_chloroplast.fasta\n\n---------------------------------------------------------\n"
+      },
+      "source": "https://raw.githubusercontent.com/aaronphillips7493/CLAW/main/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Notes",
+        "parent_header": [
+          "note: profiles/slurm may not be appropriate for your PC. If this is the case, please run CLAW after specifying your profile (slurm, pbs, or local)."
+        ],
+        "type": "Text_excerpt",
+        "value": "Users can check read mapping and/or coverage of the genomes (whether that be to the single or 'circular' reference genome, or to the CLAW-assembled genome) by loading the genome of interest and its associated BAM/BigWig files into any genome browser (e.g., IGV). Read depth may help you diagnose issues in your assembly, if you have any.\n\nWhile the read library used for chloroplast genome assembly is enriched for chloroplast reads, there is a possibility that the library will also contain mitochondrial reads because of high sequence similarity between mitochondrial and chloroplast genomes. Thus, it is possible for CLAW to assemble mitochondrial (likely fragmented) contigs too. CLAW makes no attempt to resolve this, so users will have to manually check the assembled contigs for similarity to chloroplast and/or mitochondrial sequences.\n\nWhile we report on the successful runs of CLAW here, there were several instances in which CLAW failed to complete or when chloroplast genome assembly failed. Typically, CLAW failed to complete due to insufficient memory allocation for certain steps of CLAW. These steps were commonly the read mapping and genome assembly steps. In this case, we were able to overcome this issue by modifying the memory allocation in the \u201ccluster-configs/default.yaml\u201d file. Future releases should aim to integrate dynamic memory allocations to further minimise user input for the successful completion of CLAW. When genome assembly failed, we found that re-running CLAW with a different seed (randomly generated as part of the CLAW, unless specified by the user in \u201cconfig.yaml\u201d) resulted in successful completion of genome assembly. We also found it necessary to, on occasion, adjust the number of chloroplast reads used for genome assembly as too many reads (and therefore too high genome coverage) could cause the assemblers to fail. Thus, by modifying the random seed and the number of reads used for assembly we were able to generate assemblies for all 19 test datasets. \n"
+      },
+      "source": "https://raw.githubusercontent.com/aaronphillips7493/CLAW/main/README.md",
+      "technique": "header_analysis"
+    }
+  ],
+  "somef_missing_categories": [
+    "citation",
+    "acknowledgement",
+    "requirements",
+    "contact",
+    "contributors",
+    "documentation",
+    "license",
+    "usage",
+    "faq",
+    "support",
+    "identifier",
+    "has_build_file",
+    "executable_example"
+  ],
+  "somef_provenance": {
+    "date": "2024-10-03 23:13:59",
+    "somef_schema_version": "1.0.0",
+    "somef_version": "0.9.5"
+  },
+  "stargazers_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 5
+      },
+      "technique": "GitHub_API"
+    }
+  ]
+}

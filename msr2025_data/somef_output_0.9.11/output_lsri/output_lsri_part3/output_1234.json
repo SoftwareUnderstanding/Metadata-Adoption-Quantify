@@ -1,0 +1,745 @@
+{
+  "code_repository": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/MRCIEU/CheckSumStats"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_created": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2021-03-23T15:36:40Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_updated": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2024-04-15T14:30:08Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "description": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "1.3 Check for errors or analytical issues in the summary data",
+        "parent_header": [
+          "Example 1. Genome-wide association study of glioma"
+        ],
+        "type": "Text_excerpt",
+        "value": "To identify potential errors or analytical issues in the summary data,\nwe next compare the expected and reported effect sizes. In this example\nwe include two groups of SNPs: those associated with glioma in the GWAS\ncatalog (\u201cGWAS catalog associations\u201d) and those associated with glioma\nin the test dataset (\u201ctest GWAS top hits\u201d). Typically these two sets of\nSNPs will strongly overlap but this is not necessarily always the case\n(and lack of overlap is itself a sign of potential problems). First, we\nmake a list of SNPs corresponding to the GWAS catalog associations. Then\nwe use the extract\\_snps() function to extract those SNPs from the test\ndataset. We also set the argument \u201cget\\_sig\\_snps\u201d to TRUE, which tells\nthe function to additionally extract GWAS significant SNPs from the test\ndataset (default p value is 5e-8). We then generate the expected effect\nsizes. Since the reported effect sizes correspond to log odds ratios, we\nuse the predict\\_lnor\\_sh() function. This function was developed by\n[Sean\nHarrison](https://seanharrisonblog.com/2020/04/11/estimating-an-odds-ratio-from-a-gwas-only-reporting-the-p-value).\n\n``` r\n\ngwas_catalog<-gwas_catalog_hits(efo=NULL,efo_id=EFO$efo_id,trait=NULL,map_association_to_study=TRUE)\nsnplist<-gwas_catalog$rsid\n\nFile<-system.file(\"extdata\", \"glioma_test_dat.txt\", package = \"CheckSumStats\")\n\ngli<-extract_snps(snplist=snplist,path_to_target_file=File,path_to_target_file_sep=\"\\t\",get_sig_snps=TRUE, p_val_col_number=7)\n```\n\nIf the extract\\_snps() doesn\u2019\u2019t work we recommend you use the fread\nfunction from the data.table package to load the summary data and\nthereforeafter extract the relevant SNPs.\n\n``` r\ngli<-data.table::fread(File)\nPos1<-which(gli$p<5e-8)\nPos2<-which(gli$Locus %in% snplist)\nPos<-unique(c(Pos1,Pos2))\ngli<-gli[Pos,]\nDat<-format_data(dat=gli,outcome=\u201cGlioma\u201d,population=\u201cEuropean\u201d,pmid=22886559,study=\u201cGliomaScan\u201d,ncase=\u201ccases\u201d,ncontrol=\u201ccontrols\u201d,rsid=\u201cLocus\u201d,effect_allele=\u201cAllele1\u201d,other_allele=\u201cAllele2\u201d,or=\u201cOR\u201d,or_lci=\u201cOR_95._CI_l\u201d,or_uci=\u201cOR_95._CI_u\u201d,eaf=\u201ceaf.controls\u201d,p=\u201cp\u201d,efo=\u201cglioma\u201d)\nPred<-predict_lnor_sh(dat=Dat)\nPlot4<-make_plot_pred_effect(dat=Pred) \nPlot4 \n```\n![\u201cREADME-example1\\_predplot1.png\u201d](/man/figures/README-example1_predplot1.png)\n\n\nThe plot shows a strong positive correlation between the expected and\nreported effect sizes, an intercept close to zero and a slope that is\nclose to 1. This is reasonably close to what we\u2019\u2019d expect to see in the\nabsence of major analytical issues or errors in the summary data.\nGenetic association results for [arachidonic acid](#ara), [basal cell\ncarcinoma](#bcc) and [colorectal cancer](#crc) provide examples where\nmajor discrepancies between the reported and expected effect sizes are\nidentified.\n\nNote that the predict\\_lnor\\_sh can be quite slow, so you may want to\nclump your results prior to using it, especially if you have \\>100 SNPs.\nBelow is how you would clump your results using the ieugwasr\npackage.\n\n``` r\nClump<-ieugwasr::ld_clump(clump_r2 = 0.01,clump_p=1e-8,dplyr::tibble(rsid=Dat$rsid, pval=Dat$p, id=Dat$id),pop=\"EUR\")\nDat<-Dat[Dat$rsid %in% Clump$rsid,]\nPred<-predict_lnor_sh(dat=Dat)\nPlot4<-make_plot_pred_effect(dat=Pred)\n```\n\nWe can also plot the relative bias, i.e.\u00a0the percentage deviation of the\nexpected from the reported effect size.\n\n``` r\nPlot5<-make_plot_pred_effect(dat=Pred,bias=TRUE)\nPlot5\n```\n\n![\u201cREADME-example1\\_predplot2.png\u201d](/man/figures/README-example1_predplot2.png)\n\nOverall the relative bias seems small and mostly varies from -10.9% to\n-13.8%, which seems reasonable. Given that genetic effect sizes tend to\nbe small, a relative bias of 10% will be very small on an absolute scale\n(e.g.\u00a0scaling an odds ratio of 1.10 up by 10% is\n1.11).\n"
+      },
+      "source": "https://raw.githubusercontent.com/MRCIEU/CheckSumStats/main/README.Rmd",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "2.1. Extract and format the summary data for arachidonic acid",
+        "parent_header": [
+          "<a id=\"ara\"></a>Example 2. Check the results and metadata from a genome-wide association study of arachidonic acid."
+        ],
+        "type": "Text_excerpt",
+        "value": "``` r\nlibrary(CheckSumStats)\nEFO<-get_efo(trait=\"arachidonic acid\")\ngwas_catalog<-gwas_catalog_hits(efo=NULL,efo_id=EFO$efo_id[1],trait=\"Plasma omega-6 polyunsaturated fatty acid levels (arachidonic acid)\",map_association_to_study=TRUE)\nsnplist1<-unique(gwas_catalog$rsid)\n\nutils::data(\"refdat_1000G_superpops\")\nsnplist2<-unique(refdat_1000G_superpops$SNP)\nsnplist<-c(snplist1,snplist2)\n\nFile<-system.file(\"extdata\", \"ara_test_dat.txt\", package = \"CheckSumStats\")\nara<-extract_snps(snplist=snplist,path_to_target_file=File)\n```\n\nIf the extract\\_snps function does not work, we recommend you use the\nfread function from the data.table package.\n\n``` r\nara<-data.table::fread(File)\nara<-ara[ara$snp %in% snplist,]\nDat<-format_data(dat=ara,trait=\"arachidonic\nacid\",population=\"European\",ncontrol=\"n\",rsid=\"snp\",effect_allele=\"effect_allele\",other_allele=\"other_allele\",beta=\"beta\",se=\"se\",eaf=\"effect_allele_freq\",p=\"p\")\n``` "
+      },
+      "source": "https://raw.githubusercontent.com/MRCIEU/CheckSumStats/main/README.Rmd",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "2.4 Check for errors or analytical issues in the summary data",
+        "parent_header": [
+          "<a id=\"ara\"></a>Example 2. Check the results and metadata from a genome-wide association study of arachidonic acid."
+        ],
+        "type": "Text_excerpt",
+        "value": "Next, we check the summary data for potential errors or analytical\nissues. For this step, we extract summary data for \u201ctop hits\u201d in the\ntest\ndataset.\n\n``` r\nFile<-system.file(\"extdata\", \"ara_test_dat.txt\", package = \"CheckSumStats\")\nara<-extract_sig_snps(path_to_target_file=File,p_val_col_number=7)\n```\n\nIf the extract\\_sig\\_snps function doesn\u2019\u2019t work, use the fread function\nfrom the data.table package.\n\n``` r\nara<-data.table::fread(File)\nara<-ara[ara$p<5e-8,]\nDat<-format_data(dat=ara,trait=\"arachidonic\nacid\",population=\"European\",ncontrol=\"n\",rsid=\"snp\",effect_allele=\"effect_allele\",other_allele=\"other_allele\",beta=\"beta\",se=\"se\",eaf=\"effect_allele_freq\",p=\"p\")\ndim(Dat)\n#> [1] 1064 19 \n```\n\n\n1064 SNPs were extracted. It\u2019s useful to clump the results to ensure\nindependence amongst SNPs and to speed up the next steps. We call the\nieugwasr package to perform the clumping.\n\n``` r\n\nClump<-ieugwasr::ld_clump(clump_r2 = 0.01,clump_p=1e-8,dplyr::tibble(rsid=Dat$rsid, pval=Dat$p, id=Dat$id),pop=\"EUR\")\n#> Please look at vignettes for options on running this locally if you need to run many instances of this command.\n#> Clumping , 1064 variants, using EUR population reference\n#> Removing 969 of 1064 variants due to LD with other variants or absence from LD reference panel\nDat<-Dat[Dat$rsid %in% Clump$rsid,]\n```\n\nNow we generate expected effect sizes and plot these against the\nreported effect sizes.\n\n``` r\nDat<-predict_beta_sd(dat=Dat)\nPlot3<-make_plot_pred_effect(dat=Dat,pred_beta = \"beta_sd\",pred_beta_se=\"se_sd\",beta=\"beta\",se=\"se\")\nPlot3\n```\n\n![\u201cexample3\\_predplot1.png\u201d](/man/figures/README-example3_predplot1.png)\n\nWe see a slope of 0.548 and non-linear correlation pattern, indicating\nthat the SNPs have unusual effect sizes and the presence of summary data\nerrors or major analytical issues.\n\nWe can also plot the relative bias - the relative deviation of the\nreported from the expected effect\nsizes.\n\n``` r\nPlot4<-make_plot_pred_effect(dat=Dat,pred_beta = \"beta_sd\",pred_beta_se=\"se_sd\",beta=\"beta\",se=\"se\",bias=TRUE)\nPlot4\n```\n\n![\u201cexample3\\_predplot2.png\u201d](/man/figures/README-example3_predplot2.png)\n\nThe SNPs with the most bias tend to have lower minor allele\nfrequencies.\n"
+      },
+      "source": "https://raw.githubusercontent.com/MRCIEU/CheckSumStats/main/README.Rmd",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 0.9920634117257914,
+      "result": {
+        "original_header": "CheckSumStats",
+        "type": "Text_excerpt",
+        "value": "CheckSumStats is an R package for the identification of errors and\nanalytical issues in the results and metadata of genome-wide association\nstudies (GWAS). The package was developed for the Fatty Acids in Cancer\nMendelian Randomization Collaboration (FAMRC). See our pre-print\ndescribing application of the package here: [Design and quality control\nof large-scale two-sample Mendelian randomisation\nstudies](https://www.medrxiv.org/content/10.1101/2021.07.30.21260578v1)\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/MRCIEU/CheckSumStats/main/README.Rmd",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9546447952380825,
+      "result": {
+        "original_header": "General overview",
+        "type": "Text_excerpt",
+        "value": "CheckSumStats exploits three groups of single nucleotide polymorphisms\n(SNPs) in order to identify potential errors or issues: \n1)  **a 1000 genomes reference set**. This is a set of 2297 SNPs that\n    have the same minor allele across the 1000 genomes super populations\n    and that have a minor allele frequency between 0.1 and 0.3;\n2)  **GWAS catalog associations**. These are SNPs that are associated\n    with the trait of interest in the GWAS catalog; and\n3)  the **test GWAS top hits**. These are SNPs that are strongly\n    associated with the trait of interest in the target GWAS of\n    interest. \nOur objective is to extract summary data for these three groups of SNPs\nfrom the target GWAS of interest (we call this the test dataset) in\norder to perform the following tests: \n1)  confirm the identity of the effect allele frequency column\n2)  confirm the identity of the effect allele column  \n3)  identify errors or analytical issues in the summary data\n4)  infer ancestry\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/MRCIEU/CheckSumStats/main/README.Rmd",
+      "technique": "supervised_classification"
+    }
+  ],
+  "download_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/MRCIEU/CheckSumStats/releases"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "faq": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "1.3 Check for errors or analytical issues in the summary data",
+        "parent_header": [
+          "Example 1. Genome-wide association study of glioma"
+        ],
+        "type": "Text_excerpt",
+        "value": "To identify potential errors or analytical issues in the summary data,\nwe next compare the expected and reported effect sizes. In this example\nwe include two groups of SNPs: those associated with glioma in the GWAS\ncatalog (\u201cGWAS catalog associations\u201d) and those associated with glioma\nin the test dataset (\u201ctest GWAS top hits\u201d). Typically these two sets of\nSNPs will strongly overlap but this is not necessarily always the case\n(and lack of overlap is itself a sign of potential problems). First, we\nmake a list of SNPs corresponding to the GWAS catalog associations. Then\nwe use the extract\\_snps() function to extract those SNPs from the test\ndataset. We also set the argument \u201cget\\_sig\\_snps\u201d to TRUE, which tells\nthe function to additionally extract GWAS significant SNPs from the test\ndataset (default p value is 5e-8). We then generate the expected effect\nsizes. Since the reported effect sizes correspond to log odds ratios, we\nuse the predict\\_lnor\\_sh() function. This function was developed by\n[Sean\nHarrison](https://seanharrisonblog.com/2020/04/11/estimating-an-odds-ratio-from-a-gwas-only-reporting-the-p-value).\n\n``` r\n\ngwas_catalog<-gwas_catalog_hits(efo=NULL,efo_id=EFO$efo_id,trait=NULL,map_association_to_study=TRUE)\nsnplist<-gwas_catalog$rsid\n\nFile<-system.file(\"extdata\", \"glioma_test_dat.txt\", package = \"CheckSumStats\")\n\ngli<-extract_snps(snplist=snplist,path_to_target_file=File,path_to_target_file_sep=\"\\t\",get_sig_snps=TRUE, p_val_col_number=7)\n```\n\nIf the extract\\_snps() doesn\u2019\u2019t work we recommend you use the fread\nfunction from the data.table package to load the summary data and\nthereforeafter extract the relevant SNPs.\n\n``` r\ngli<-data.table::fread(File)\nPos1<-which(gli$p<5e-8)\nPos2<-which(gli$Locus %in% snplist)\nPos<-unique(c(Pos1,Pos2))\ngli<-gli[Pos,]\nDat<-format_data(dat=gli,outcome=\u201cGlioma\u201d,population=\u201cEuropean\u201d,pmid=22886559,study=\u201cGliomaScan\u201d,ncase=\u201ccases\u201d,ncontrol=\u201ccontrols\u201d,rsid=\u201cLocus\u201d,effect_allele=\u201cAllele1\u201d,other_allele=\u201cAllele2\u201d,or=\u201cOR\u201d,or_lci=\u201cOR_95._CI_l\u201d,or_uci=\u201cOR_95._CI_u\u201d,eaf=\u201ceaf.controls\u201d,p=\u201cp\u201d,efo=\u201cglioma\u201d)\nPred<-predict_lnor_sh(dat=Dat)\nPlot4<-make_plot_pred_effect(dat=Pred) \nPlot4 \n```\n![\u201cREADME-example1\\_predplot1.png\u201d](/man/figures/README-example1_predplot1.png)\n\n\nThe plot shows a strong positive correlation between the expected and\nreported effect sizes, an intercept close to zero and a slope that is\nclose to 1. This is reasonably close to what we\u2019\u2019d expect to see in the\nabsence of major analytical issues or errors in the summary data.\nGenetic association results for [arachidonic acid](#ara), [basal cell\ncarcinoma](#bcc) and [colorectal cancer](#crc) provide examples where\nmajor discrepancies between the reported and expected effect sizes are\nidentified.\n\nNote that the predict\\_lnor\\_sh can be quite slow, so you may want to\nclump your results prior to using it, especially if you have \\>100 SNPs.\nBelow is how you would clump your results using the ieugwasr\npackage.\n\n``` r\nClump<-ieugwasr::ld_clump(clump_r2 = 0.01,clump_p=1e-8,dplyr::tibble(rsid=Dat$rsid, pval=Dat$p, id=Dat$id),pop=\"EUR\")\nDat<-Dat[Dat$rsid %in% Clump$rsid,]\nPred<-predict_lnor_sh(dat=Dat)\nPlot4<-make_plot_pred_effect(dat=Pred)\n```\n\nWe can also plot the relative bias, i.e.\u00a0the percentage deviation of the\nexpected from the reported effect size.\n\n``` r\nPlot5<-make_plot_pred_effect(dat=Pred,bias=TRUE)\nPlot5\n```\n\n![\u201cREADME-example1\\_predplot2.png\u201d](/man/figures/README-example1_predplot2.png)\n\nOverall the relative bias seems small and mostly varies from -10.9% to\n-13.8%, which seems reasonable. Given that genetic effect sizes tend to\nbe small, a relative bias of 10% will be very small on an absolute scale\n(e.g.\u00a0scaling an odds ratio of 1.10 up by 10% is\n1.11).\n"
+      },
+      "source": "https://raw.githubusercontent.com/MRCIEU/CheckSumStats/main/README.Rmd",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "2.4 Check for errors or analytical issues in the summary data",
+        "parent_header": [
+          "<a id=\"ara\"></a>Example 2. Check the results and metadata from a genome-wide association study of arachidonic acid."
+        ],
+        "type": "Text_excerpt",
+        "value": "Next, we check the summary data for potential errors or analytical\nissues. For this step, we extract summary data for \u201ctop hits\u201d in the\ntest\ndataset.\n\n``` r\nFile<-system.file(\"extdata\", \"ara_test_dat.txt\", package = \"CheckSumStats\")\nara<-extract_sig_snps(path_to_target_file=File,p_val_col_number=7)\n```\n\nIf the extract\\_sig\\_snps function doesn\u2019\u2019t work, use the fread function\nfrom the data.table package.\n\n``` r\nara<-data.table::fread(File)\nara<-ara[ara$p<5e-8,]\nDat<-format_data(dat=ara,trait=\"arachidonic\nacid\",population=\"European\",ncontrol=\"n\",rsid=\"snp\",effect_allele=\"effect_allele\",other_allele=\"other_allele\",beta=\"beta\",se=\"se\",eaf=\"effect_allele_freq\",p=\"p\")\ndim(Dat)\n#> [1] 1064 19 \n```\n\n\n1064 SNPs were extracted. It\u2019s useful to clump the results to ensure\nindependence amongst SNPs and to speed up the next steps. We call the\nieugwasr package to perform the clumping.\n\n``` r\n\nClump<-ieugwasr::ld_clump(clump_r2 = 0.01,clump_p=1e-8,dplyr::tibble(rsid=Dat$rsid, pval=Dat$p, id=Dat$id),pop=\"EUR\")\n#> Please look at vignettes for options on running this locally if you need to run many instances of this command.\n#> Clumping , 1064 variants, using EUR population reference\n#> Removing 969 of 1064 variants due to LD with other variants or absence from LD reference panel\nDat<-Dat[Dat$rsid %in% Clump$rsid,]\n```\n\nNow we generate expected effect sizes and plot these against the\nreported effect sizes.\n\n``` r\nDat<-predict_beta_sd(dat=Dat)\nPlot3<-make_plot_pred_effect(dat=Dat,pred_beta = \"beta_sd\",pred_beta_se=\"se_sd\",beta=\"beta\",se=\"se\")\nPlot3\n```\n\n![\u201cexample3\\_predplot1.png\u201d](/man/figures/README-example3_predplot1.png)\n\nWe see a slope of 0.548 and non-linear correlation pattern, indicating\nthat the SNPs have unusual effect sizes and the presence of summary data\nerrors or major analytical issues.\n\nWe can also plot the relative bias - the relative deviation of the\nreported from the expected effect\nsizes.\n\n``` r\nPlot4<-make_plot_pred_effect(dat=Dat,pred_beta = \"beta_sd\",pred_beta_se=\"se_sd\",beta=\"beta\",se=\"se\",bias=TRUE)\nPlot4\n```\n\n![\u201cexample3\\_predplot2.png\u201d](/man/figures/README-example3_predplot2.png)\n\nThe SNPs with the most bias tend to have lower minor allele\nfrequencies.\n"
+      },
+      "source": "https://raw.githubusercontent.com/MRCIEU/CheckSumStats/main/README.Rmd",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "<a id=fasting_glucose></a> An allele frequency metadata error in a genome-wide association study of fasting glucose",
+        "parent_header": [
+          "Other examples"
+        ],
+        "type": "Text_excerpt",
+        "value": "In this example we use the package to check the allele frequency\nmetadata from a genome-wide association study of fasting glucose. In\nthis example, the minor allele frequency column was incorrectly\ninterpreted as effect allele frequency.\n\n``` r\nlibrary(CheckSumStats)\nEFO<-get_efo(trait=\"fasting glucose\")\nsnplist<-make_snplist(efo_id=EFO$efo_id,trait=\"fasting blood glucose\",ref1000G_superpops=TRUE)\nglu <- ieugwasr::associations(id=\"ebi-a-GCST005186\", variants=snplist,proxies=0)  \nDat<-format_data(dat=glu,outcome=\"Fasting glucose\",population=\"European\",pmid=22581228,study=\"\",ncontrol=\"n\",rsid=\"rsid\",effect_allele=\"ea\",other_allele=\"nea\",beta=\"beta\",se=\"se\",eaf=\"eaf\",p=\"p\")\nPlot1<-make_plot_maf(ref_1000G=c(\"AFR\",\"AMR\",\"EAS\",\"EUR\",\"SAS\",\"ALL\"),target_dat=Dat)\nPlot1\n```\n\n![\u201cexample2.png\u201d](/man/figures/README-example2.png)\n\nEach red data point corresponds to an allele frequency conflict and is\nidentified for a substantial proportion of SNPs. This pattern occurs\nwhen minor allele frequency in the test dataset is interpreted as effect\nallele frequency but the effect allele is not always the minor allele.\nIn other words, the reported effect allele frequency corresponds to a\nmixture of effect and non-effect alleles.\n\nComparison to the GWAS catalog confirms the\nerror:\n\n``` r\nPlot2<-make_plot_gwas_catalog(dat=Dat,efo_id=EFO$efo_id,trait=unique(Dat$outcome),beta=\"beta\",se=\"se\",plot_type = \"plot_eaf\")\nPlot2\n```\n\n![\u201cexample2\\_gcplot2.png\u201d](/man/figures/README-example2_gcplot2.png)\n\nThe observed \u201cX\u201d shaped correlation pattern is due to the aforementioned\nmetadata error. The pattern is distinct to the previous plot because\nallele frequency reflects effect allele frequency in the GWAS catalog,\nwhereas in the previous plot it reflected the 1000 genomes minor allele.\n\nNote that the infer\\_ancestry function does not provide sensible results\nin the presence of this type of metadata error:\n\n``` r\ninfer_ancestry(target_dat=Dat) \n# $AFR\n# [1] 0.1026573\n\n# $ALL\n# [1] 0.1662463\n\n# $AMR\n# [1] 0.09433519\n\n# $EAS\n# [1] 0.133659\n\n# $EUR\n# [1] 0.05840051\n\n# $SAS\n# [1] 0.07698771\n```\n\nAlthough we know the test dataset was generated in a European ancestry\npopulation, the correlation with the European ancestry 1000 genomes\nsuper population is only 0.058. This is because reported effect allele\nfrequency actually refers to a mixture of effect and non-effect\nalleles.\n"
+      },
+      "source": "https://raw.githubusercontent.com/MRCIEU/CheckSumStats/main/README.Rmd",
+      "technique": "header_analysis"
+    }
+  ],
+  "forks_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 5
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/MRCIEU/CheckSumStats/forks"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "MRCIEU/CheckSumStats"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_title": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "CheckSumStats"
+      },
+      "source": "https://raw.githubusercontent.com/MRCIEU/CheckSumStats/main/README.Rmd",
+      "technique": "regular_expression"
+    }
+  ],
+  "images": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/MRCIEU/CheckSumStats/main//man/figures/README-example1_mafplot.png"
+      },
+      "source": "https://raw.githubusercontent.com/MRCIEU/CheckSumStats/main/README.Rmd",
+      "technique": "regular_expression"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/MRCIEU/CheckSumStats/main//man/figures/README-example1_gcplot1.png"
+      },
+      "source": "https://raw.githubusercontent.com/MRCIEU/CheckSumStats/main/README.Rmd",
+      "technique": "regular_expression"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/MRCIEU/CheckSumStats/main//man/figures/README-example1_gcplot2.png"
+      },
+      "source": "https://raw.githubusercontent.com/MRCIEU/CheckSumStats/main/README.Rmd",
+      "technique": "regular_expression"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/MRCIEU/CheckSumStats/main//man/figures/README-example1_predplot1.png"
+      },
+      "source": "https://raw.githubusercontent.com/MRCIEU/CheckSumStats/main/README.Rmd",
+      "technique": "regular_expression"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/MRCIEU/CheckSumStats/main//man/figures/README-example1_predplot2.png"
+      },
+      "source": "https://raw.githubusercontent.com/MRCIEU/CheckSumStats/main/README.Rmd",
+      "technique": "regular_expression"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/MRCIEU/CheckSumStats/main//man/figures/README-example1_zzplot.png"
+      },
+      "source": "https://raw.githubusercontent.com/MRCIEU/CheckSumStats/main/README.Rmd",
+      "technique": "regular_expression"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/MRCIEU/CheckSumStats/main//man/figures/README-qc_report.png"
+      },
+      "source": "https://raw.githubusercontent.com/MRCIEU/CheckSumStats/main/README.Rmd",
+      "technique": "regular_expression"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/MRCIEU/CheckSumStats/main//man/figures/README-example3_mafplot.png"
+      },
+      "source": "https://raw.githubusercontent.com/MRCIEU/CheckSumStats/main/README.Rmd",
+      "technique": "regular_expression"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/MRCIEU/CheckSumStats/main//man/figures/README-example3_gcplot1.png"
+      },
+      "source": "https://raw.githubusercontent.com/MRCIEU/CheckSumStats/main/README.Rmd",
+      "technique": "regular_expression"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/MRCIEU/CheckSumStats/main//man/figures/README-example3_predplot1.png"
+      },
+      "source": "https://raw.githubusercontent.com/MRCIEU/CheckSumStats/main/README.Rmd",
+      "technique": "regular_expression"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/MRCIEU/CheckSumStats/main//man/figures/README-example3_predplot2.png"
+      },
+      "source": "https://raw.githubusercontent.com/MRCIEU/CheckSumStats/main/README.Rmd",
+      "technique": "regular_expression"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/MRCIEU/CheckSumStats/main//man/figures/README-example3_gcplot3.png"
+      },
+      "source": "https://raw.githubusercontent.com/MRCIEU/CheckSumStats/main/README.Rmd",
+      "technique": "regular_expression"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/MRCIEU/CheckSumStats/main//man/figures/README-example3_zzplot.png"
+      },
+      "source": "https://raw.githubusercontent.com/MRCIEU/CheckSumStats/main/README.Rmd",
+      "technique": "regular_expression"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/MRCIEU/CheckSumStats/main//man/figures/README-qc_report2.png"
+      },
+      "source": "https://raw.githubusercontent.com/MRCIEU/CheckSumStats/main/README.Rmd",
+      "technique": "regular_expression"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/MRCIEU/CheckSumStats/main//man/figures/README-example2.png"
+      },
+      "source": "https://raw.githubusercontent.com/MRCIEU/CheckSumStats/main/README.Rmd",
+      "technique": "regular_expression"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/MRCIEU/CheckSumStats/main//man/figures/README-example2_gcplot2.png"
+      },
+      "source": "https://raw.githubusercontent.com/MRCIEU/CheckSumStats/main/README.Rmd",
+      "technique": "regular_expression"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/MRCIEU/CheckSumStats/main//man/figures/README-example4_1.png"
+      },
+      "source": "https://raw.githubusercontent.com/MRCIEU/CheckSumStats/main/README.Rmd",
+      "technique": "regular_expression"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/MRCIEU/CheckSumStats/main//man/figures/README-example4_2.png"
+      },
+      "source": "https://raw.githubusercontent.com/MRCIEU/CheckSumStats/main/README.Rmd",
+      "technique": "regular_expression"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/MRCIEU/CheckSumStats/main//man/figures/README-example5.png"
+      },
+      "source": "https://raw.githubusercontent.com/MRCIEU/CheckSumStats/main/README.Rmd",
+      "technique": "regular_expression"
+    }
+  ],
+  "installation": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Installation",
+        "parent_header": [
+          "CheckSumStats"
+        ],
+        "type": "Text_excerpt",
+        "value": "To install the latest version of CheckSumStats, perform as normal:\n\n``` r\ninstall.packages(\"devtools\")\ndevtools::install_github(\"MRCIEU/CheckSumStats\")\nlibrary(CheckSumStats)\n```\n\nIf you are on a MAC and installation fails, owing to a problem with the\nbiomaRt package, before installing the package you may first need to\ninstall developer tools using the following in terminal:\n\n``` r\nxcode-select --install\n```\n"
+      },
+      "source": "https://raw.githubusercontent.com/MRCIEU/CheckSumStats/main/README.Rmd",
+      "technique": "header_analysis"
+    }
+  ],
+  "issue_tracker": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/MRCIEU/CheckSumStats/issues"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "keywords": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": ""
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "license": [
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Other",
+        "spdx_id": "NOASSERTION",
+        "type": "License",
+        "url": null,
+        "value": null
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "File_dump",
+        "value": "YEAR: 2021\nCOPYRIGHT HOLDER: Philip Haycock\n"
+      },
+      "source": "https://raw.githubusercontent.com/MRCIEU/CheckSumStats/main/LICENSE",
+      "technique": "file_exploration"
+    }
+  ],
+  "name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "CheckSumStats"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "owner": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Organization",
+        "value": "MRCIEU"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "programming_languages": [
+    {
+      "confidence": 1,
+      "result": {
+        "name": "R",
+        "size": 114408,
+        "type": "Programming_language",
+        "value": "R"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "readme_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/MRCIEU/CheckSumStats/main/README.Rmd"
+      },
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/MRCIEU/CheckSumStats/main/README.md"
+      },
+      "technique": "file_exploration"
+    }
+  ],
+  "somef_missing_categories": [
+    "citation",
+    "acknowledgement",
+    "run",
+    "download",
+    "requirements",
+    "contact",
+    "contributors",
+    "documentation",
+    "identifier",
+    "has_build_file",
+    "executable_example"
+  ],
+  "somef_provenance": {
+    "date": "2024-10-06 04:05:35",
+    "somef_schema_version": "1.0.0",
+    "somef_version": "0.9.5"
+  },
+  "stargazers_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 8
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "support": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Example 1. Genome-wide association study of glioma",
+        "type": "Text_excerpt",
+        "value": "In this example we show how the package can be used to check the results\nand metadata from a case-control genome-wide association study of\nglioma. In this particular example, the non-effect allele column was\nmis-labelled as the effect\nallele.\n"
+      },
+      "source": "https://raw.githubusercontent.com/MRCIEU/CheckSumStats/main/README.Rmd",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "<a id=\"step1\"></a> 1.1 Check allele frequency metadata in the glioma GWAS",
+        "parent_header": [
+          "Example 1. Genome-wide association study of glioma"
+        ],
+        "type": "Text_excerpt",
+        "value": "First we investigate potential problems with the effect allele frequency\ncolumn. We do this by comparing allele frequency in the glioma dataset\nto the 1000 genomes super populations. The function harmonises the test\nand reference dataset to reflect the minor allele in the 1000 genomes\nsuperpopulations. Therefore, the presence of SNPs with allele frequency\n\\> 0.5 in the test dataset implies an allele frequency conflict.\n\nFirst we create a list of SNPs from the 1000 genomes reference set\n\n``` r\nutils::data(\"refdat_1000G_superpops\")\nsnplist<-unique(refdat_1000G_superpops$SNP)\n```\n\nNext, we extract the summary associations statistics for these SNPs from\nthe glioma\ndataset.\n\n``` r\nFile<-system.file(\"extdata\", \"glioma_test_dat.txt\", package = \"CheckSumStats\")\ngli<-extract_snps(snplist=snplist,path_to_target_file=File,path_to_target_file_sep=\"\\t\")\n```\n\nIf the extract\\_snps function does not work, we recommend you use the\nfread function from the data.table package.\n\n``` r\ngli<-data.table::fread(File)\n#then restrict the dataset to the snplist. In this dataset the rsid column happens to be called Locus but it will likely be called something else in your dataset. \ngli<-gli[gli$Locus %in% snplist,] \n```\n\nAlternatively, your summary dataset of interest migh be located in an\nonline repository, such as the [Open GWAS\nproject](https://gwas.mrcieu.ac.uk/). The equivalent scripts to extract\nsummary data for thyroid cancer from Open GWAS are:\n\n``` r\nEFO<-get_efo(trait=\"thyroid cancer\")\nao<-ieugwasr::gwasinfo()\nPos<-grep(\"thyroid cancer\",ao$trait,ignore.case=TRUE)\nao$id[Pos]\n#> [1] \"ieu-a-1082\"\nthy <- ieugwasr::associations(id=\"ieu-a-1082\", variants=snplist,proxies=0)  \n```\n\nReturning to the glioma example, from the test dataset we have now\nextracted results corresponding to SNPs in the 1000 genomes reference\nset. Now we need to format the data, to get it into the expected\nformat.\n\n``` r\nDat<-format_data(dat=gli,trait=\"Glioma\",population=\"European\",ncase=\"cases\",ncontrol=\"controls\",rsid=\"Locus\",effect_allele=\"Allele1\",other_allele=\"Allele2\",or=\"OR\",or_lci=\"OR_95._CI_l\",or_uci=\"OR_95._CI_u\",eaf=\"eaf.controls\",p=\"p\")\n```\n\nIn this example, the glioma results file contained columns for the odds\nratio and 95% confidence intervals. In practice, the format of the\neffect size columns is highly variable across studies. For example, some\nstudies may report the log odds ratio and its standard error or the odds\nratio and P value without confidence intervals or a standard error. The\nformat\\_data() function accepts these and other effect size reporting\nformats. See ?format\\_data() for more info.\n\nNow we check the summary data for potential allele frequency conflicts.\nare ready to perform some checks on the data.\n\n``` r\naf_conflicts<-flag_af_conflicts(target_dat=Dat)\naf_conflicts\n# $number_of_conflicts\n# [1] 88\n\n# $proportion_conflicts\n# [1] 1\n\n# $number_of_snps\n# [1] 88\n```\n\nThe flag\\_af\\_conflicts function returns the number of SNPs with an\nallele frequency conflict and also the number of SNPs used for the\ncomparison with the 1000 genomes super populations. In this example, all\nSNPs are flagged with a conflict, indicating that the reported effect\nallele frequency actually reflects the non-effect allele.\n\nWe can also create some plots to visualise the allele frequncy\nconflicts\n\n``` r\nPlot1<-make_plot_maf(ref_1000G=c(\"AFR\",\"AMR\",\"EAS\",\"EUR\",\"SAS\",\"ALL\"),target_dat=Dat)\nPlot1\n```\n\n![\u201cREADME-example1\\_mafplot.png\u201d](/man/figures/README-example1_mafplot.png)\n\nData points with a red colour are SNPs with allele frequency conflicts.\nAllele frequencies in the glioma dataset are all greater than 0.5,\nindicating that the reported effect allele frequency column actually\ncorresponds to the non-effect allele. Notice how conflicts are flagged\nacross all SNPs across all superpopulations. This illustrates that\nallele frequency metadata errors can be identified without matching of\ntest and reference datasets on ancestry. See the \u201cfasting glucose\u201d GWAS\n([Other examples](#fasting_glucose)) for an example where the reported\neffect allele frequency corresponds to a mixture of effect and\nnon-effect alleles.\n\nNotice also how the comparison provides information on the ancestral\nbackground of the test dataset: the test dataset is strongly correlated\nwith the European-ancestry 1000 genomes super population, which matches\nthe reported ancestry for the test dataset. We can also do a more formal\nassessment using the infer\\_ancestry function:\n\n``` r\ninfer_ancestry(target_dat=Dat) \n# $AFR\n# [1] 0.144927\n\n# $ALL\n# [1] -0.480663\n\n# $AMR\n# [1] -0.4507726\n\n# $EAS\n# [1] 0.08052629\n\n# $EUR\n# [1] -0.8856621\n\n# $SAS\n# [1] -0.4151809\n```\n\nThe strongest correlation is observed with the European ancestry 1000\ngenomes super population (r=-0.89). This confirms the reported ancestry\nof the test dataset. Note that this function assumes that reported\neffect allele frequency corresponds to either the effect allele (returns\npositive correlation coefficient) or non-effect allele (returns a\nnegative correlation coefficient). If reported allele frequency does not\ncorrespond consistently with either the effect or non-effect allele, the\nfunction will not return sensible results, e.g.\u00a0see [fasting glucose\nexample](#fasting_glucose).\n\nWe can also ask the function to return the dataset used to generate the\nprevious plot, by setting the return\\_dat argument to TRUE.\n\n``` r\nplot_dat<-make_plot_maf(target_dat=Dat,return_dat=TRUE)\n```\n"
+      },
+      "source": "https://raw.githubusercontent.com/MRCIEU/CheckSumStats/main/README.Rmd",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "1.2 Check the effect allele metadata",
+        "parent_header": [
+          "Example 1. Genome-wide association study of glioma"
+        ],
+        "type": "Text_excerpt",
+        "value": "We next check that the reported effect allele metadata is correct, by\ncomparing the reported effect alleles for glioma to the GWAS catalog.\n\nThe first step is to download the GWAS catalog data corresponding to our\ntrait of interest. We then extract the SNPs associated with glioma from\nthe downloaded dataset. The GWAS catalog can be searched on either the\nplain text description of the trait (e.g. \u201cglioma\u201d) or the trait EFO. In\nthis example, we search the GWAS catalog on EFO, retrieved using the\nget\\_efo function.\n\n``` r\nEFO<-get_efo(trait=\"glioma\")\nEFO$efo_id\n# \"EFO_0000326\" \"EFO_0005543\"\n\ngwas_catalog<-gwas_catalog_hits(efo=NULL,efo_id=EFO$efo_id,trait=NULL,map_association_to_study=TRUE)\nsnplist<-gwas_catalog$rsid\n```\n\nNext, we extract the summary associations statistics for these SNPs from\nthe glioma\ndataset.\n\n``` r\nFile<-system.file(\"extdata\", \"glioma_test_dat.txt\", package = \"CheckSumStats\")\ngli<-extract_snps(snplist=snplist,path_to_target_file=File,path_to_target_file_sep=\"\\t\")\n```\n\nIf the extract\\_snps function does not work, we recommend you use the\nfread function from the data.table package to read in the summary data\nfile and thereafter extract the relevant rows.\n\n``` r\ngli<-data.table::fread(File)\ngli<-gli[gli$Locus %in% snplist,]\n```\n\nWe then format the data to get into the expected\nformat.\n\n``` r\nDat<-format_data(dat=gli,trait=\"Glioma\",population=\"European\",ncase=\"cases\",ncontrol=\"controls\",rsid=\"Locus\",effect_allele=\"Allele1\",other_allele=\"Allele2\",or=\"OR\",or_lci=\"OR_95._CI_l\",or_uci=\"OR_95._CI_u\",eaf=\"eaf.controls\",p=\"p\")\n\ngc_dat<-compare_effect_to_gwascatalog2(dat=Dat,efo_id=EFO$efo_id,trait=\"Glioma\",map_association_to_study=FALSE,gwas_catalog=gwas_catalog,beta=\"lnor\",se=\"lnor_se\")\n\ngc_conflicts<-flag_gc_conflicts2(gc_dat=gc_dat) \ngc_conflicts\n# $effect_size_conflicts$`high conflict`\n# [1] 29\n\n# $effect_size_conflicts$`moderate conflict`\n# [1] 41\n\n# $effect_size_conflicts$`no conflict`\n# [1] 8\n\n# $effect_size_conflicts$n_snps\n# [1] 78\n\n# $eaf_conflicts\n# $eaf_conflicts$`high conflict`\n# [1] 36\n\n# $eaf_conflicts$`moderate conflict`\n# [1] 10\n\n# $eaf_conflicts$`no conflict`\n# [1] 3\n\n# $eaf_conflicts$n_snps\n# [1] 49\n```\n\nModerate or high effect size conflicts are identified for 70 out of 78\nSNPs, while moderatate or high EAF conflicts are identified for 46 out\nof 49 SNPs (the number of SNPs differ because effect allele frequency\nwas missing for 29 SNPs). This strongly indicates that the reported\neffect allele is actually the non-effect allele.\n\nThis step can be quite slow if there are large numbers of genetic\nassociations in the GWAS catalog. It can be sped up by restricting the\nsearch to one of efo, efo\\_id or trait (rather than simultaneous\ncombinations of the three) or by setting the map\\_association\\_to\\_study\nargument to FALSE (but if set to FALSE information on association ID and\nstudy ancestry will not be retrieved).\n\nWe can also create some plots to visualise the effect size conflicts\n\n``` r\n\nPlot2<-make_plot_gwas_catalog(dat=Dat,gwas_catalog=gwas_catalog,beta=\"lnor\",se=\"lnor_se\",map_association_to_study=TRUE)\nPlot2\n```\n\n![\u201cREADME-example1\\_gcplot1.png\u201d](/man/figures/README-example1_gcplot1.png)\n\nEach data point represents the Z score for glioma risk for a single SNP\n(scaled to reflect the reported effect allele in the GWAS catalog). The\nY and X axes represent the Z scores in the test and GWAS catalog\ndatasets, respectively. For most SNPs, the allele associated with higher\nrisk in the GWAS catalog is associated with lower risk in the test\ndataset. We call these discrepancies \u201ceffect size conflicts\u201d and their\npresence can be interpreted as evidence for an effect allele metadata\nerror. However, when comparing datasets, it\u2019s important to make\nallowance for chance deviations in effect direction, especially for test\ndatasets generated in small sample sizes. For this reason, effect size\nconflicts are labelled as high if the two-sided P value for the Z score\nis \u22640.0001 and as moderate if \\>0.0001 (this is a pragmatic cutoff).\nWhen comparing datasets, one should also consider the number of SNPs as\nwell as whether datasets are matched on ancestry. Effect size conflicts\nare more likely to reflect a metadata error when they are systematic\nacross a large number of SNPs and when the datasets being compared are\nclosely matched on ancestry. In this glioma example, effect size\nconflicts are flagged across the vast majority of a reasonably large\nnumber of SNPs. In addition, most of the associations being compared\nhave been generated in samples of European ancestry. We can therefore\ninterpret this plot as providing very strong evidence for an effect\nallele metadata error. This is consistent with the allele frequency\nconflicts flagged in the previous plot. The reason for these conflicts\nis that the non-effect allele column was mis-labelled as the effect\nallele.\n\nWe can also return the dataset used to generate the above plot by\nsetting the return\\_dat argument to\nTRUE.\n\n``` r\nplot_dat<-make_plot_gwas_catalog(dat=Dat,gwas_catalog=gwas_catalog,beta=\"lnor\",se=\"lnor_se\",map_association_to_study=TRUE,\n    return_dat=TRUE)\n```\n\nWe can also make a plot comparing effect allele frequency between the\ntest dataset and the GWAS\ncatalog:\n\n``` r\nPlot3<-make_plot_gwas_catalog(dat=Dat,plot_type=\"plot_eaf\",map_association_to_study=TRUE,gwas_catalog=gwas_catalog,beta=\"lnor\",se=\"lnor_se\")\nPlot3\n```\n\n![\u201cREADME-example1\\_gcplot2.png\u201d](/man/figures/README-example1_gcplot2.png)\n\nWe see an inverse correlation in effect allele frequency (EAF) between\nthe test dataset and the GWAS catalog in European ancestry studies,\nwhich confirms the metadata error identified in the previous plots (in\nthe absence of metadata errors the correlation should be positive).\nEffect allele frequency in the test dataset is opposite to that observed\nin the GWAS catalog - e.g.\u00a0effect alleles with frequencies \\>0.5 in the\ntest dataset have frequencies \\<0.5 in the GWAS catalog. We flag these\ndiscrepancies as EAF conflicts. EAF conflicts are labelled as moderate\nif EAF is close to 0.5 (i.e.\u00a00.4 to 0.6) and as high if \\<0.4 or \\>0.6.\nThis makes allowance for chance deviations in allele frequency around\n0.5. When making comparisons with the GWAS catalog it\u2019\u2019s important to\nconsider whether the datasets are matched on ancestry. This\nconsideration does not, however, apply for comparisons with the\ncustomised 1000 genomes reference dataset (see [step 1.2](#step2)\nabove).\n"
+      },
+      "source": "https://raw.githubusercontent.com/MRCIEU/CheckSumStats/main/README.Rmd",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "1.4 Check that the top hits in the glioma test dataset are reported in the GWAS catalog",
+        "parent_header": [
+          "Example 1. Genome-wide association study of glioma"
+        ],
+        "type": "Text_excerpt",
+        "value": "Next we check that the \u201ctop hits\u201d for glioma in the test dataset are\nreported in the GWAS catalog. We define top hits as SNP-trait\nassociations with P values \\< 5e-8, a conventional threshold for\nstatistical significance in GWAS. First we extract the top hits, using\nthe extract\\_sig\\_snps() function. We then search the GWAS catalog for\nall genetic associations for glioma that are within 50,000 base pairs of\nthe top hits in the test dataset.\n\nA lack of overlap with the GWAS catalog could be a sign of false\npositives in the test dataset, which in turn could be a sign of\nanalytical issues (such as failure to exclude low quality variants).\nAlternatively, lack of overlap may reflect an insufficiently stringent\n\u201cGWAS significance threshold\u201d to define top hits in the test dataset,\nor may a reflect a test dataset that is unpublished and has much greater\npower than any previously published study. The function is also\nsensitive to the distance\\_threshold used to define overlap amongst top\nhits.\n\n``` r\nFile<-system.file(\"extdata\", \"glioma_test_dat.txt\", package = \"CheckSumStats\")\ngli<-extract_sig_snps(path_to_target_file=File,p_val_col_number=7)\n```\n\nIf extract\\_sig\\_snps does not work, we recommend using the fread\nfunction from the data.table package to read in your entire dataset and\nthen extract the top hits.\n\n``` r\ngli<-data.table::fread(File)\nPos<-which(gli$p<5e-8)\ngli<-gli[Pos,]\nDat<-format_data(dat=gli,trait=\"Glioma\",population=\"European\",ncase=\"cases\",ncontrol=\"controls\",rsid=\"Locus\",effect_allele=\"Allele1\",other_allele=\"Allele2\",or=\"OR\",or_lci=\"OR_95._CI_l\",or_uci=\"OR_95._CI_u\",eaf=\"eaf.controls\",p=\"p\")\ngc_list<-find_hits_in_gwas_catalog(gwas_hits=Dat$rsid,efo_id=EFO$efo_id,distance_threshold=50000)\ngc_list \n#> $not_in_gc \n#> character(0) \n#> \n#> $in_gc \n#>[1] \u201crs2736100\u201d \u201crs2853676\u201d \u201crs10120688\u201d \u201crs1063192\u201d \u201crs1412829\u201d \n#>[6] \u201crs2151280\u201d \u201crs2157719\u201d \u201crs7049105\u201d \u201crs4977756\u201d \u201crs6010620\u201d \n#>[11] \u201crs6089953\u201d \n```\n\nAll the top hits for glioma in the test dataset are either associated\nwith glioma in the GWAS cataog or are in close physical proximity to a\nreported association for glioma (see $in\\_gc), indicating the absence of\nmajor analytical issues. The [arachidonic acid\nexample](#example3_notingc) illustrates a test dataset where most of the\ntop hits are not reported in the GWAS\ncatalog.\n"
+      },
+      "source": "https://raw.githubusercontent.com/MRCIEU/CheckSumStats/main/README.Rmd",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "1.5 Check whether the reported P values correspond to the reported effect sizes in the glioma dataset",
+        "parent_header": [
+          "Example 1. Genome-wide association study of glioma"
+        ],
+        "type": "Text_excerpt",
+        "value": "Next we generate some ZZ plots, in order to flag SNPs with P values that\ndon\u2019\u2019t coincide with their reported effect sizes. The zz\\_plot()\nfunction compares Zp scores (inferred from the reported P values) to Zb\nscores (inferred from the reported effect size and standard error). We\nsee a very strong agreement between the Zb and Zp scores.\n\n``` r\nPlot6<-zz_plot(dat=Dat)\nPlot6\n```\n\n![\u201cexample1\\_zzplot.png\u201d](/man/figures/README-example1_zzplot.png)\n"
+      },
+      "source": "https://raw.githubusercontent.com/MRCIEU/CheckSumStats/main/README.Rmd",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "1.6 Combine all plots into a single report for the glioma GWAS",
+        "parent_header": [
+          "Example 1. Genome-wide association study of glioma"
+        ],
+        "type": "Text_excerpt",
+        "value": "Next we combine all the plots into a single report.\n\n``` r\nPlot_list2<-ls()[grep(\"Plot[0-9]\",ls())] \nPlot_list<-lapply(1:length(Plot_list2),FUN=function(x) eval(parse(text=Plot_list2[x])))\ncombine_plots(Plot_list=Plot_list,out_file=\"qc_report.png\")\n```\n\n![\u201cqc\\_report.png\u201d](/man/figures/README-qc_report.png)\n"
+      },
+      "source": "https://raw.githubusercontent.com/MRCIEU/CheckSumStats/main/README.Rmd",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "<a id=\"ara\"></a>Example 2. Check the results and metadata from a genome-wide association study of arachidonic acid.",
+        "type": "Text_excerpt",
+        "value": "In this example we use the package to check the results and metadata\nfrom a genome-wide association study (GWAS) of arachidonic acid that has\nnot gone through standad post-GWAS quality control (e.g.\u00a0with low\nquality or unreliable genetic variants excluded).\n"
+      },
+      "source": "https://raw.githubusercontent.com/MRCIEU/CheckSumStats/main/README.Rmd",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "2.2 Check allele frequency metadata for arachidonic acid GWAS",
+        "parent_header": [
+          "<a id=\"ara\"></a>Example 2. Check the results and metadata from a genome-wide association study of arachidonic acid."
+        ],
+        "type": "Text_excerpt",
+        "value": "``` r\nPlot1<-make_plot_maf(ref_1000G=c(\"AFR\",\"AMR\",\"EAS\",\"EUR\",\"SAS\",\"ALL\"),target_dat=Dat)\nPlot1\n```\n\n![\u201cexample3\\_mafplot.png\u201d](/man/figures/README-example3_mafplot.png)\n\nFor the vast majority of SNPs, allele frequencies are compatible between\nthe test dataset and 1000 genomes superpopulations. This indicates that\nthe reported effect allele frequency column corresponds to the reported\neffect\nallele.\n"
+      },
+      "source": "https://raw.githubusercontent.com/MRCIEU/CheckSumStats/main/README.Rmd",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "2.3 Check effect allele metadata for arachidonic acid",
+        "parent_header": [
+          "<a id=\"ara\"></a>Example 2. Check the results and metadata from a genome-wide association study of arachidonic acid."
+        ],
+        "type": "Text_excerpt",
+        "value": "``` r\nPlot2<-make_plot_gwas_catalog(dat=Dat,beta=\"beta\",se=\"se\",Title = \"Comparison of associations in the GWAS catalog to the test dataset\",gwas_catalog=gwas_catalog)\nPlot2\n```\n\n![\u201cexample3\\_gcplot1.png\u201d](/man/figures/README-example3_gcplot1.png)\n\nMost SNPs appear to have concordant effect sizes between the test\ndataset and the GWAS catalog. Although there are a few SNPs with effect\nsizes in opposite directions, the Z scores for these SNPs are small and\ntherefore compatible with chance deviations. This suggests that the\nreported effect allele column is correct.\n"
+      },
+      "source": "https://raw.githubusercontent.com/MRCIEU/CheckSumStats/main/README.Rmd",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "<a id=\"example3_notingc\"></a> 2.5 Check that the top hits in the arachidonic acid test dataset are reported in the GWAS catalog",
+        "parent_header": [
+          "<a id=\"ara\"></a>Example 2. Check the results and metadata from a genome-wide association study of arachidonic acid."
+        ],
+        "type": "Text_excerpt",
+        "value": "``` r\ngc_list<-find_hits_in_gwas_catalog(gwas_hits=Dat$rsid,trait=\"Plasma omega-6 polyunsaturated fatty acid levels (arachidonic acid)\",distance_threshold=50000) \ngc_list\n#> $not_in_gc\n#>  [1] \"rs10026364\" \"rs10488885\" \"rs10819512\" \"rs10938476\" \"rs10986188\"\n#>  [6] \"rs11726352\" \"rs12238732\" \"rs12416578\" \"rs12456907\" \"rs12639648\"\n#> [11] \"rs12888839\" \"rs12894905\" \"rs12955978\" \"rs13128117\" \"rs13268288\"\n#> [16] \"rs13381393\" \"rs16940996\" \"rs16943026\" \"rs16951711\" \"rs16974991\"\n#> [21] \"rs17060495\" \"rs17568699\" \"rs1887892\"  \"rs2192242\"  \"rs2826490\" \n#> [26] \"rs3088245\"  \"rs340480\"   \"rs4359352\"  \"rs4818759\"  \"rs7080747\" \n#> [31] \"rs7093714\"  \"rs7226534\"  \"rs7231821\"  \"rs727887\"   \"rs7292052\" \n#> [36] \"rs7456249\"  \"rs7690731\"  \"rs7778698\"  \"rs7904736\"  \"rs12747494\"\n#> [41] \"rs10788947\" \"rs10798816\" \"rs957129\"   \"rs11578575\" \"rs7546429\" \n#> [46] \"rs12037648\" \"rs6658106\"  \"rs12623171\" \"rs6750701\"  \"rs13386900\"\n#> [51] \"rs13314643\" \"rs13325952\" \"rs16851412\" \"rs11917725\" \"rs17077488\"\n#> [56] \"rs11958171\" \"rs279412\"   \"rs5745104\"  \"rs13178241\" \"rs10040997\"\n#> [61] \"rs1432985\"  \"rs781980\"   \"rs9275354\"  \"rs13191761\" \"rs9356335\" \n#> [66] \"rs12523734\" \"rs6456902\"  \"rs11752402\" \"rs2294281\"  \"rs9375065\" \n#> [71] \"rs12285167\" \"rs487023\"   \"rs7933136\"  \"rs2903922\"  \"rs930786\"  \n#> [76] \"rs760306\"   \"rs11824358\" \"rs890455\"   \"rs10830946\" \"rs259874\"  \n#> [81] \"rs11833369\" \"rs7970058\"  \"rs4931549\"  \"rs11147144\" \"rs7137292\" \n#> [86] \"rs12297743\" \"rs11107024\" \"rs2653765\"  \"rs16959795\" \"rs16985879\"\n#> [91] \"rs4614987\"  \"rs6060682\" \n#> \n#> $in_gc\n#> [1] \"rs174528\" \"rs472031\" \"rs1741\"\n\nPlot5<-make_plot_gwas_catalog(dat=Dat,efo_id=NULL,trait=\"Plasma omega-6 polyunsaturated fatty acid levels (arachidonic acid)\",force_all_trait_study_hits=TRUE,beta=\"beta\",se=\"se\",Title = \"Comparison of top hits in test dataset to GWAS catalog\")\nPlot5\n```\n\n![\u201cexample3\\_gcplot3.png\u201d](/man/figures/README-example3_gcplot3.png)\n\n92 of 95 top hits in the test dataset do not overlap with associations\nfor arachidonic acid in the GWAS catalog, indicating the presence of a\nlarge number of false positives. Correspondence with the data provider\nconfirmed that the GWAS summary statistics had not gone through post\nGWAS filtering of low quality variants (e.g.\u00a0exclusion of SNPs with low\nminor allele frequency or low imputation r2 scores). Once we obtained a\ncleaned dataset (with low quality SNPs excluded), the aforementioned\ndiscrepancies were resolved.\n\nDiscrepancies between expected and reported effect sizes can arise for\nother reasons, illustrated in the [basal cell carcinoma](#bcc) and\n[colorectal cancer](#crc)\nexamples.\n"
+      },
+      "source": "https://raw.githubusercontent.com/MRCIEU/CheckSumStats/main/README.Rmd",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "2.7 Combine all plots into a single report",
+        "parent_header": [
+          "<a id=\"ara\"></a>Example 2. Check the results and metadata from a genome-wide association study of arachidonic acid."
+        ],
+        "type": "Text_excerpt",
+        "value": "Let\u2019\u2019s combine all the key figures into a single report\n\n``` r\nPlot_list2<-c(\"Plot1\",\"Plot2\",\"Plot3\",\"Plot4\",\"Plot5\",\"Plot6\")\nPlot_list<-lapply(1:length(Plot_list2),FUN=function(x) eval(parse(text=Plot_list2[x])))\ncombine_plots(Plot_list=Plot_list,out_file=\"~/qc_report2.png\")\n```\n\n![\u201cqc\\_report.png\u201d](/man/figures/README-qc_report2.png)\n"
+      },
+      "source": "https://raw.githubusercontent.com/MRCIEU/CheckSumStats/main/README.Rmd",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "<a id=fasting_glucose></a> An allele frequency metadata error in a genome-wide association study of fasting glucose",
+        "parent_header": [
+          "Other examples"
+        ],
+        "type": "Text_excerpt",
+        "value": "In this example we use the package to check the allele frequency\nmetadata from a genome-wide association study of fasting glucose. In\nthis example, the minor allele frequency column was incorrectly\ninterpreted as effect allele frequency.\n\n``` r\nlibrary(CheckSumStats)\nEFO<-get_efo(trait=\"fasting glucose\")\nsnplist<-make_snplist(efo_id=EFO$efo_id,trait=\"fasting blood glucose\",ref1000G_superpops=TRUE)\nglu <- ieugwasr::associations(id=\"ebi-a-GCST005186\", variants=snplist,proxies=0)  \nDat<-format_data(dat=glu,outcome=\"Fasting glucose\",population=\"European\",pmid=22581228,study=\"\",ncontrol=\"n\",rsid=\"rsid\",effect_allele=\"ea\",other_allele=\"nea\",beta=\"beta\",se=\"se\",eaf=\"eaf\",p=\"p\")\nPlot1<-make_plot_maf(ref_1000G=c(\"AFR\",\"AMR\",\"EAS\",\"EUR\",\"SAS\",\"ALL\"),target_dat=Dat)\nPlot1\n```\n\n![\u201cexample2.png\u201d](/man/figures/README-example2.png)\n\nEach red data point corresponds to an allele frequency conflict and is\nidentified for a substantial proportion of SNPs. This pattern occurs\nwhen minor allele frequency in the test dataset is interpreted as effect\nallele frequency but the effect allele is not always the minor allele.\nIn other words, the reported effect allele frequency corresponds to a\nmixture of effect and non-effect alleles.\n\nComparison to the GWAS catalog confirms the\nerror:\n\n``` r\nPlot2<-make_plot_gwas_catalog(dat=Dat,efo_id=EFO$efo_id,trait=unique(Dat$outcome),beta=\"beta\",se=\"se\",plot_type = \"plot_eaf\")\nPlot2\n```\n\n![\u201cexample2\\_gcplot2.png\u201d](/man/figures/README-example2_gcplot2.png)\n\nThe observed \u201cX\u201d shaped correlation pattern is due to the aforementioned\nmetadata error. The pattern is distinct to the previous plot because\nallele frequency reflects effect allele frequency in the GWAS catalog,\nwhereas in the previous plot it reflected the 1000 genomes minor allele.\n\nNote that the infer\\_ancestry function does not provide sensible results\nin the presence of this type of metadata error:\n\n``` r\ninfer_ancestry(target_dat=Dat) \n# $AFR\n# [1] 0.1026573\n\n# $ALL\n# [1] 0.1662463\n\n# $AMR\n# [1] 0.09433519\n\n# $EAS\n# [1] 0.133659\n\n# $EUR\n# [1] 0.05840051\n\n# $SAS\n# [1] 0.07698771\n```\n\nAlthough we know the test dataset was generated in a European ancestry\npopulation, the correlation with the European ancestry 1000 genomes\nsuper population is only 0.058. This is because reported effect allele\nfrequency actually refers to a mixture of effect and non-effect\nalleles.\n"
+      },
+      "source": "https://raw.githubusercontent.com/MRCIEU/CheckSumStats/main/README.Rmd",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "<a id=\"bcc\"></a> Effect size scale issues in a genome-wide association study of basal cell carcinoma",
+        "parent_header": [
+          "Other examples"
+        ],
+        "type": "Text_excerpt",
+        "value": "One of the limitations of using GWAS results from online platforms is\nthat the scale of the effect sizes may not always be clear. This can\nhamper comparison of results from different studies. For example, for\nsome studies conducted in large population biobanks, disease\ncase-control status has been assessed using linear mixed models, when\nmost previously conducted case-control GWAS have employed logistic\nregression models. One way to test that the effect sizes correspond to\nlog odds ratios is to use the predict\\_lnor\\_sh function, which\ngenerates expected log odds ratios based on Z scores, allele frequency\nand sample size. These can then be compared to the reported effect\nsizes. Disagreements between the two could suggest differences in the\nunderlying statistical models used to generate the results. In the next\nexample, we compare the reported and expected effect sizes from a GWAS\nof basal cell carcinoma conducted in UK Biobank. The effect sizes were\ngenerated in a linear mixed model, with case-control status (controls\ncoded 1 and cases coded 2) regressed on genotype.\n\n``` r\nlibrary(CheckSumStats)\nEFO<-get_efo(trait=\"basal cell carcinoma\")\nsnplist<-make_snplist(efo_id = EFO$efo_id)\nbcc <- ieugwasr::associations(id=\"ukb-b-8837\", variants=snplist,proxies=0)  \ndat<-format_data(dat=bcc,outcome=\"Basal cell carcinoma\",population=\"European\",ncase=4290,ncontrol=458643,study=\"UKB\",rsid=\"rsid\",effect_allele=\"ea\",other_allele=\"nea\",lnor=\"beta\",lnor_se=\"se\",eaf=\"eaf\",p=\"p\",efo_id = EFO$efo_id)\nClump<-ieugwasr::ld_clump(clump_r2 = 0.01,clump_p=1e-8,dplyr::tibble(rsid=dat$rsid, pval=dat$p, id=dat$id),pop=\"EUR\")\ndat2<-dat[dat$rsid %in% Clump$rsid,]\nPred<-predict_lnor_sh(dat=dat2)\nlm(Pred$lnor_pred ~ Pred$lnor)$coefficients\n#> (Intercept)    Pred$lnor \n#> 0.01590922 110.47612861 \n\nPlot4<-make_plot_pred_effect(dat=data.frame(Pred))\nPlot4\n```\n\n![\u201cexample4\\_1.png\u201d](/man/figures/README-example4_1.png)\n\nThe slope of the relationship between the expected and reported effect\nsizes is 110, when we expect it to be 1. This discrepancy has arisen\nbecause the reported effect sizes correspond to absolute changes in\nrisk, whereas the expected effect sizes correspond to log odds ratios.\nTo transform the reported effect sizes to log odds ratios, we can use\nthe transform\\_betas function. After applying this transformation, we\nsee that the regression slope is very close to 1.\n\n``` r\ndat2<-transform_betas(dat=dat2,effect=\"lnor\",effect.se=\"lnor_se\")\nPred<-predict_lnor_sh(dat=dat2)\nlm(Pred$lnor_pred ~ Pred$lnor)$coefficients\n#> (Intercept)   Pred$lnor \n#> 0.01590922  1.01429487 \nPlot4<-make_plot_pred_effect(dat=data.frame(Pred))\nPlot4\n```\n\n![\u201cexample4\\_2.png\u201d](/man/figures/README-example4_2.png)\n"
+      },
+      "source": "https://raw.githubusercontent.com/MRCIEU/CheckSumStats/main/README.Rmd",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "<a id=\"crc\"></a> Sample size issues in a genome-wide association study of colorectal cancer",
+        "type": "Text_excerpt",
+        "value": "Discrepancies between expected and reported effect sizes can also arise\nfrom errors in reported allele frequency or SNP-level sample sizes. In\nthe next example, we assess results from a GWAS meta-analysis of\ncolorectal cancer, where the number of samples contributing to the\nanalysis varied across\nSNPs.\n\n``` r\nFile<-system.file(\"extdata\", \"crc_test_dat.txt\", package = \"CheckSumStats\")\ncrc<-read.table(File,sep=\"\\t\",head=TRUE,stringsAsFactors=FALSE)\ndat<-format_data(dat=crc,outcome=\"Colorectal cancer\",population=\"East Asian\",ncase=23572,ncontrol=48700,study=\"ACCC\",rsid=\"rsid\",effect_allele=\"Allele1\",other_allele=\"Allele2\",lnor=\"Effect\",lnor_se=\"StdErr\",eaf=\"Freq1\",p=\"P.value\")\nPred<-predict_lnor_sh(dat=dat)\nlm(Pred$lnor_pred ~ Pred$lnor)$coefficients\n#> (Intercept)   Pred$lnor \n#> 0.002193062 0.231316576 \n```\n\n![\u201cexample5.png\u201d](/man/figures/README-example5.png)\n\nThe slope of the relationship between the expected and reported effect\nsizes is 0.23 (the expected slope is 1). The shape of the relationship\nbetween the two sets of effect sizes is also non-linear. The discrepancy\nhas arisen due to incorrect assumptions about sample size across SNPs.\nThe expected effect sizes were generated assuming 23572 cases and 48700\ncontrols across all SNPs. However, in this example the number of\ncontributing studies varies quite substantially across SNPs:\n\n``` r\nsummary(dat$Nstudies)\n#> Min. 1st Qu.  Median    Mean 3rd Qu.    Max. \n#> 1.00   11.75   14.00   11.69   14.00   15.00 \n```\n\nWe can see that the number of studies contributing to each SNP analysis\nvaries from a minimum of 1 to 15. For 25% of the SNPs, analyses were\nbased on \\<12 studies. This implies that the number of cases and\ncontrols that contributed to the analyses varied across SNPs (in this\nexample we lacked direct information on SNP-level sample sizes and only\nhad information on the maximum reported sample size).\n\n``` r\nPos<-Pred$Nstudies>=14\nlm(Pred$lnor_pred[Pos] ~ Pred$lnor[Pos])$coefficients\n#> (Intercept) Pred$lnor[Pos] \n#> 6.634408e-05   8.379027e-01 \nPos<-Pred$Nstudies<14\nlm(Pred$lnor_pred[Pos] ~ Pred$lnor[Pos])$coefficients\n#> (Intercept) Pred$lnor[Pos] \n#> 4.587284e-05   2.140147e-01 \n```\n\nFor the subset of SNP results generated in analyses of \u226514 studies (and\nthus with a sample size closer to the assumed sample size) the slope was\nmuch closer to expectation (slope=0.84). In contrast, for results\ngenerated in \\<14 studies, the slope was 0.21.\n\n\\#Acknowledgements We gratefully acknowledge the help of Ramiro Magno\nfor their help and advice with the gwasrapidd package.\n\nCheckSumStats greatfully acknowledges the following packages:\n\n    gwasrapidd\n    ggplot2\n    grid\n    gridExtra\n    cowplot\n    grDevices\n    ieugwasr\n    knitr\n    biomaRt\n    purrr\n    dplyr\n    tibble\n    magrittr\n    curl\n    plyr\n    utils\n    stats\n\nCheckSumStats greatfully acknowledges use of the following resources:\n\n[ZOOMA](https://www.ebi.ac.uk/spot/zooma/)\n\n[NHGRI-EBI GWAS catalog](https://www.ebi.ac.uk/gwas/)\n"
+      },
+      "source": "https://raw.githubusercontent.com/MRCIEU/CheckSumStats/main/README.Rmd",
+      "technique": "header_analysis"
+    }
+  ],
+  "usage": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Example 1. Genome-wide association study of glioma",
+        "type": "Text_excerpt",
+        "value": "In this example we show how the package can be used to check the results\nand metadata from a case-control genome-wide association study of\nglioma. In this particular example, the non-effect allele column was\nmis-labelled as the effect\nallele.\n"
+      },
+      "source": "https://raw.githubusercontent.com/MRCIEU/CheckSumStats/main/README.Rmd",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "<a id=\"step1\"></a> 1.1 Check allele frequency metadata in the glioma GWAS",
+        "parent_header": [
+          "Example 1. Genome-wide association study of glioma"
+        ],
+        "type": "Text_excerpt",
+        "value": "First we investigate potential problems with the effect allele frequency\ncolumn. We do this by comparing allele frequency in the glioma dataset\nto the 1000 genomes super populations. The function harmonises the test\nand reference dataset to reflect the minor allele in the 1000 genomes\nsuperpopulations. Therefore, the presence of SNPs with allele frequency\n\\> 0.5 in the test dataset implies an allele frequency conflict.\n\nFirst we create a list of SNPs from the 1000 genomes reference set\n\n``` r\nutils::data(\"refdat_1000G_superpops\")\nsnplist<-unique(refdat_1000G_superpops$SNP)\n```\n\nNext, we extract the summary associations statistics for these SNPs from\nthe glioma\ndataset.\n\n``` r\nFile<-system.file(\"extdata\", \"glioma_test_dat.txt\", package = \"CheckSumStats\")\ngli<-extract_snps(snplist=snplist,path_to_target_file=File,path_to_target_file_sep=\"\\t\")\n```\n\nIf the extract\\_snps function does not work, we recommend you use the\nfread function from the data.table package.\n\n``` r\ngli<-data.table::fread(File)\n#then restrict the dataset to the snplist. In this dataset the rsid column happens to be called Locus but it will likely be called something else in your dataset. \ngli<-gli[gli$Locus %in% snplist,] \n```\n\nAlternatively, your summary dataset of interest migh be located in an\nonline repository, such as the [Open GWAS\nproject](https://gwas.mrcieu.ac.uk/). The equivalent scripts to extract\nsummary data for thyroid cancer from Open GWAS are:\n\n``` r\nEFO<-get_efo(trait=\"thyroid cancer\")\nao<-ieugwasr::gwasinfo()\nPos<-grep(\"thyroid cancer\",ao$trait,ignore.case=TRUE)\nao$id[Pos]\n#> [1] \"ieu-a-1082\"\nthy <- ieugwasr::associations(id=\"ieu-a-1082\", variants=snplist,proxies=0)  \n```\n\nReturning to the glioma example, from the test dataset we have now\nextracted results corresponding to SNPs in the 1000 genomes reference\nset. Now we need to format the data, to get it into the expected\nformat.\n\n``` r\nDat<-format_data(dat=gli,trait=\"Glioma\",population=\"European\",ncase=\"cases\",ncontrol=\"controls\",rsid=\"Locus\",effect_allele=\"Allele1\",other_allele=\"Allele2\",or=\"OR\",or_lci=\"OR_95._CI_l\",or_uci=\"OR_95._CI_u\",eaf=\"eaf.controls\",p=\"p\")\n```\n\nIn this example, the glioma results file contained columns for the odds\nratio and 95% confidence intervals. In practice, the format of the\neffect size columns is highly variable across studies. For example, some\nstudies may report the log odds ratio and its standard error or the odds\nratio and P value without confidence intervals or a standard error. The\nformat\\_data() function accepts these and other effect size reporting\nformats. See ?format\\_data() for more info.\n\nNow we check the summary data for potential allele frequency conflicts.\nare ready to perform some checks on the data.\n\n``` r\naf_conflicts<-flag_af_conflicts(target_dat=Dat)\naf_conflicts\n# $number_of_conflicts\n# [1] 88\n\n# $proportion_conflicts\n# [1] 1\n\n# $number_of_snps\n# [1] 88\n```\n\nThe flag\\_af\\_conflicts function returns the number of SNPs with an\nallele frequency conflict and also the number of SNPs used for the\ncomparison with the 1000 genomes super populations. In this example, all\nSNPs are flagged with a conflict, indicating that the reported effect\nallele frequency actually reflects the non-effect allele.\n\nWe can also create some plots to visualise the allele frequncy\nconflicts\n\n``` r\nPlot1<-make_plot_maf(ref_1000G=c(\"AFR\",\"AMR\",\"EAS\",\"EUR\",\"SAS\",\"ALL\"),target_dat=Dat)\nPlot1\n```\n\n![\u201cREADME-example1\\_mafplot.png\u201d](/man/figures/README-example1_mafplot.png)\n\nData points with a red colour are SNPs with allele frequency conflicts.\nAllele frequencies in the glioma dataset are all greater than 0.5,\nindicating that the reported effect allele frequency column actually\ncorresponds to the non-effect allele. Notice how conflicts are flagged\nacross all SNPs across all superpopulations. This illustrates that\nallele frequency metadata errors can be identified without matching of\ntest and reference datasets on ancestry. See the \u201cfasting glucose\u201d GWAS\n([Other examples](#fasting_glucose)) for an example where the reported\neffect allele frequency corresponds to a mixture of effect and\nnon-effect alleles.\n\nNotice also how the comparison provides information on the ancestral\nbackground of the test dataset: the test dataset is strongly correlated\nwith the European-ancestry 1000 genomes super population, which matches\nthe reported ancestry for the test dataset. We can also do a more formal\nassessment using the infer\\_ancestry function:\n\n``` r\ninfer_ancestry(target_dat=Dat) \n# $AFR\n# [1] 0.144927\n\n# $ALL\n# [1] -0.480663\n\n# $AMR\n# [1] -0.4507726\n\n# $EAS\n# [1] 0.08052629\n\n# $EUR\n# [1] -0.8856621\n\n# $SAS\n# [1] -0.4151809\n```\n\nThe strongest correlation is observed with the European ancestry 1000\ngenomes super population (r=-0.89). This confirms the reported ancestry\nof the test dataset. Note that this function assumes that reported\neffect allele frequency corresponds to either the effect allele (returns\npositive correlation coefficient) or non-effect allele (returns a\nnegative correlation coefficient). If reported allele frequency does not\ncorrespond consistently with either the effect or non-effect allele, the\nfunction will not return sensible results, e.g.\u00a0see [fasting glucose\nexample](#fasting_glucose).\n\nWe can also ask the function to return the dataset used to generate the\nprevious plot, by setting the return\\_dat argument to TRUE.\n\n``` r\nplot_dat<-make_plot_maf(target_dat=Dat,return_dat=TRUE)\n```\n"
+      },
+      "source": "https://raw.githubusercontent.com/MRCIEU/CheckSumStats/main/README.Rmd",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "1.2 Check the effect allele metadata",
+        "parent_header": [
+          "Example 1. Genome-wide association study of glioma"
+        ],
+        "type": "Text_excerpt",
+        "value": "We next check that the reported effect allele metadata is correct, by\ncomparing the reported effect alleles for glioma to the GWAS catalog.\n\nThe first step is to download the GWAS catalog data corresponding to our\ntrait of interest. We then extract the SNPs associated with glioma from\nthe downloaded dataset. The GWAS catalog can be searched on either the\nplain text description of the trait (e.g. \u201cglioma\u201d) or the trait EFO. In\nthis example, we search the GWAS catalog on EFO, retrieved using the\nget\\_efo function.\n\n``` r\nEFO<-get_efo(trait=\"glioma\")\nEFO$efo_id\n# \"EFO_0000326\" \"EFO_0005543\"\n\ngwas_catalog<-gwas_catalog_hits(efo=NULL,efo_id=EFO$efo_id,trait=NULL,map_association_to_study=TRUE)\nsnplist<-gwas_catalog$rsid\n```\n\nNext, we extract the summary associations statistics for these SNPs from\nthe glioma\ndataset.\n\n``` r\nFile<-system.file(\"extdata\", \"glioma_test_dat.txt\", package = \"CheckSumStats\")\ngli<-extract_snps(snplist=snplist,path_to_target_file=File,path_to_target_file_sep=\"\\t\")\n```\n\nIf the extract\\_snps function does not work, we recommend you use the\nfread function from the data.table package to read in the summary data\nfile and thereafter extract the relevant rows.\n\n``` r\ngli<-data.table::fread(File)\ngli<-gli[gli$Locus %in% snplist,]\n```\n\nWe then format the data to get into the expected\nformat.\n\n``` r\nDat<-format_data(dat=gli,trait=\"Glioma\",population=\"European\",ncase=\"cases\",ncontrol=\"controls\",rsid=\"Locus\",effect_allele=\"Allele1\",other_allele=\"Allele2\",or=\"OR\",or_lci=\"OR_95._CI_l\",or_uci=\"OR_95._CI_u\",eaf=\"eaf.controls\",p=\"p\")\n\ngc_dat<-compare_effect_to_gwascatalog2(dat=Dat,efo_id=EFO$efo_id,trait=\"Glioma\",map_association_to_study=FALSE,gwas_catalog=gwas_catalog,beta=\"lnor\",se=\"lnor_se\")\n\ngc_conflicts<-flag_gc_conflicts2(gc_dat=gc_dat) \ngc_conflicts\n# $effect_size_conflicts$`high conflict`\n# [1] 29\n\n# $effect_size_conflicts$`moderate conflict`\n# [1] 41\n\n# $effect_size_conflicts$`no conflict`\n# [1] 8\n\n# $effect_size_conflicts$n_snps\n# [1] 78\n\n# $eaf_conflicts\n# $eaf_conflicts$`high conflict`\n# [1] 36\n\n# $eaf_conflicts$`moderate conflict`\n# [1] 10\n\n# $eaf_conflicts$`no conflict`\n# [1] 3\n\n# $eaf_conflicts$n_snps\n# [1] 49\n```\n\nModerate or high effect size conflicts are identified for 70 out of 78\nSNPs, while moderatate or high EAF conflicts are identified for 46 out\nof 49 SNPs (the number of SNPs differ because effect allele frequency\nwas missing for 29 SNPs). This strongly indicates that the reported\neffect allele is actually the non-effect allele.\n\nThis step can be quite slow if there are large numbers of genetic\nassociations in the GWAS catalog. It can be sped up by restricting the\nsearch to one of efo, efo\\_id or trait (rather than simultaneous\ncombinations of the three) or by setting the map\\_association\\_to\\_study\nargument to FALSE (but if set to FALSE information on association ID and\nstudy ancestry will not be retrieved).\n\nWe can also create some plots to visualise the effect size conflicts\n\n``` r\n\nPlot2<-make_plot_gwas_catalog(dat=Dat,gwas_catalog=gwas_catalog,beta=\"lnor\",se=\"lnor_se\",map_association_to_study=TRUE)\nPlot2\n```\n\n![\u201cREADME-example1\\_gcplot1.png\u201d](/man/figures/README-example1_gcplot1.png)\n\nEach data point represents the Z score for glioma risk for a single SNP\n(scaled to reflect the reported effect allele in the GWAS catalog). The\nY and X axes represent the Z scores in the test and GWAS catalog\ndatasets, respectively. For most SNPs, the allele associated with higher\nrisk in the GWAS catalog is associated with lower risk in the test\ndataset. We call these discrepancies \u201ceffect size conflicts\u201d and their\npresence can be interpreted as evidence for an effect allele metadata\nerror. However, when comparing datasets, it\u2019s important to make\nallowance for chance deviations in effect direction, especially for test\ndatasets generated in small sample sizes. For this reason, effect size\nconflicts are labelled as high if the two-sided P value for the Z score\nis \u22640.0001 and as moderate if \\>0.0001 (this is a pragmatic cutoff).\nWhen comparing datasets, one should also consider the number of SNPs as\nwell as whether datasets are matched on ancestry. Effect size conflicts\nare more likely to reflect a metadata error when they are systematic\nacross a large number of SNPs and when the datasets being compared are\nclosely matched on ancestry. In this glioma example, effect size\nconflicts are flagged across the vast majority of a reasonably large\nnumber of SNPs. In addition, most of the associations being compared\nhave been generated in samples of European ancestry. We can therefore\ninterpret this plot as providing very strong evidence for an effect\nallele metadata error. This is consistent with the allele frequency\nconflicts flagged in the previous plot. The reason for these conflicts\nis that the non-effect allele column was mis-labelled as the effect\nallele.\n\nWe can also return the dataset used to generate the above plot by\nsetting the return\\_dat argument to\nTRUE.\n\n``` r\nplot_dat<-make_plot_gwas_catalog(dat=Dat,gwas_catalog=gwas_catalog,beta=\"lnor\",se=\"lnor_se\",map_association_to_study=TRUE,\n    return_dat=TRUE)\n```\n\nWe can also make a plot comparing effect allele frequency between the\ntest dataset and the GWAS\ncatalog:\n\n``` r\nPlot3<-make_plot_gwas_catalog(dat=Dat,plot_type=\"plot_eaf\",map_association_to_study=TRUE,gwas_catalog=gwas_catalog,beta=\"lnor\",se=\"lnor_se\")\nPlot3\n```\n\n![\u201cREADME-example1\\_gcplot2.png\u201d](/man/figures/README-example1_gcplot2.png)\n\nWe see an inverse correlation in effect allele frequency (EAF) between\nthe test dataset and the GWAS catalog in European ancestry studies,\nwhich confirms the metadata error identified in the previous plots (in\nthe absence of metadata errors the correlation should be positive).\nEffect allele frequency in the test dataset is opposite to that observed\nin the GWAS catalog - e.g.\u00a0effect alleles with frequencies \\>0.5 in the\ntest dataset have frequencies \\<0.5 in the GWAS catalog. We flag these\ndiscrepancies as EAF conflicts. EAF conflicts are labelled as moderate\nif EAF is close to 0.5 (i.e.\u00a00.4 to 0.6) and as high if \\<0.4 or \\>0.6.\nThis makes allowance for chance deviations in allele frequency around\n0.5. When making comparisons with the GWAS catalog it\u2019\u2019s important to\nconsider whether the datasets are matched on ancestry. This\nconsideration does not, however, apply for comparisons with the\ncustomised 1000 genomes reference dataset (see [step 1.2](#step2)\nabove).\n"
+      },
+      "source": "https://raw.githubusercontent.com/MRCIEU/CheckSumStats/main/README.Rmd",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "1.4 Check that the top hits in the glioma test dataset are reported in the GWAS catalog",
+        "parent_header": [
+          "Example 1. Genome-wide association study of glioma"
+        ],
+        "type": "Text_excerpt",
+        "value": "Next we check that the \u201ctop hits\u201d for glioma in the test dataset are\nreported in the GWAS catalog. We define top hits as SNP-trait\nassociations with P values \\< 5e-8, a conventional threshold for\nstatistical significance in GWAS. First we extract the top hits, using\nthe extract\\_sig\\_snps() function. We then search the GWAS catalog for\nall genetic associations for glioma that are within 50,000 base pairs of\nthe top hits in the test dataset.\n\nA lack of overlap with the GWAS catalog could be a sign of false\npositives in the test dataset, which in turn could be a sign of\nanalytical issues (such as failure to exclude low quality variants).\nAlternatively, lack of overlap may reflect an insufficiently stringent\n\u201cGWAS significance threshold\u201d to define top hits in the test dataset,\nor may a reflect a test dataset that is unpublished and has much greater\npower than any previously published study. The function is also\nsensitive to the distance\\_threshold used to define overlap amongst top\nhits.\n\n``` r\nFile<-system.file(\"extdata\", \"glioma_test_dat.txt\", package = \"CheckSumStats\")\ngli<-extract_sig_snps(path_to_target_file=File,p_val_col_number=7)\n```\n\nIf extract\\_sig\\_snps does not work, we recommend using the fread\nfunction from the data.table package to read in your entire dataset and\nthen extract the top hits.\n\n``` r\ngli<-data.table::fread(File)\nPos<-which(gli$p<5e-8)\ngli<-gli[Pos,]\nDat<-format_data(dat=gli,trait=\"Glioma\",population=\"European\",ncase=\"cases\",ncontrol=\"controls\",rsid=\"Locus\",effect_allele=\"Allele1\",other_allele=\"Allele2\",or=\"OR\",or_lci=\"OR_95._CI_l\",or_uci=\"OR_95._CI_u\",eaf=\"eaf.controls\",p=\"p\")\ngc_list<-find_hits_in_gwas_catalog(gwas_hits=Dat$rsid,efo_id=EFO$efo_id,distance_threshold=50000)\ngc_list \n#> $not_in_gc \n#> character(0) \n#> \n#> $in_gc \n#>[1] \u201crs2736100\u201d \u201crs2853676\u201d \u201crs10120688\u201d \u201crs1063192\u201d \u201crs1412829\u201d \n#>[6] \u201crs2151280\u201d \u201crs2157719\u201d \u201crs7049105\u201d \u201crs4977756\u201d \u201crs6010620\u201d \n#>[11] \u201crs6089953\u201d \n```\n\nAll the top hits for glioma in the test dataset are either associated\nwith glioma in the GWAS cataog or are in close physical proximity to a\nreported association for glioma (see $in\\_gc), indicating the absence of\nmajor analytical issues. The [arachidonic acid\nexample](#example3_notingc) illustrates a test dataset where most of the\ntop hits are not reported in the GWAS\ncatalog.\n"
+      },
+      "source": "https://raw.githubusercontent.com/MRCIEU/CheckSumStats/main/README.Rmd",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "1.5 Check whether the reported P values correspond to the reported effect sizes in the glioma dataset",
+        "parent_header": [
+          "Example 1. Genome-wide association study of glioma"
+        ],
+        "type": "Text_excerpt",
+        "value": "Next we generate some ZZ plots, in order to flag SNPs with P values that\ndon\u2019\u2019t coincide with their reported effect sizes. The zz\\_plot()\nfunction compares Zp scores (inferred from the reported P values) to Zb\nscores (inferred from the reported effect size and standard error). We\nsee a very strong agreement between the Zb and Zp scores.\n\n``` r\nPlot6<-zz_plot(dat=Dat)\nPlot6\n```\n\n![\u201cexample1\\_zzplot.png\u201d](/man/figures/README-example1_zzplot.png)\n"
+      },
+      "source": "https://raw.githubusercontent.com/MRCIEU/CheckSumStats/main/README.Rmd",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "2.6 Check whether the reported P values correspond to the reported effect sizes (arachidonic acid example)",
+        "parent_header": [
+          "<a id=\"ara\"></a>Example 2. Check the results and metadata from a genome-wide association study of arachidonic acid."
+        ],
+        "type": "Text_excerpt",
+        "value": "Finally, we check whether the reported P values correspond to the\nreported effect sizes.\n\n``` r\nPlot6<-zz_plot(dat=Dat,beta=\"beta\",se=\"se\")\nPlot6\n```\n\n![\u201cexample3\\_zzplot.png\u201d](/man/figures/README-example3_zzplot.png)\n\nWe see a very close concordance between the reported P-values and\nreported effect sizes.\n"
+      },
+      "source": "https://raw.githubusercontent.com/MRCIEU/CheckSumStats/main/README.Rmd",
+      "technique": "header_analysis"
+    }
+  ]
+}

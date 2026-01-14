@@ -1,0 +1,431 @@
+{
+  "code_repository": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/pyrevo/ClusterScan"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_created": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2017-11-29T12:29:58Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_updated": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2024-09-25T03:05:50Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "description": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "ClusterScan, search for clusters of features in a given annotation."
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 0.9953342178165103,
+      "result": {
+        "original_header": "ClusterScan",
+        "type": "Text_excerpt",
+        "value": "ClusterScan is a tool to search for genomic clusters starting from genomic feature locations and their annotations. It allow the user to scan an annotation file (BED format with locations of specific features such as gene, transcripts, regulatory regions or anything that can be mapped on a genome) and get clusters coordinates in output. In order to build annotated clusters, ClusterScan need an additional two-columns file, storing the feature ids and the corresponding categorical information (such as Gene Ontology classes, KEGG, Pfam accessions, etc). The user can also define a custom set of categories, which makes ClusterScan very flexible. \n"
+      },
+      "source": "https://raw.githubusercontent.com/pyrevo/ClusterScan/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9439024464216371,
+      "result": {
+        "original_header": "How it works:",
+        "type": "Text_excerpt",
+        "value": "ClusterScan can use two different algorithms that perform the search and it also offer filters to select the minimum number of features to call a cluster (that can\u2019t be a number lower than 2). The two algorithms are: \n- **clusterdist**: scans the features using bedtools merge in order to find those features, for each category, which are separated by a maximum distance in base pairs that can be selected by the user (p: --distance). Some studies based on gene families, for example in human and mouse, have estimated genes within 500 Kb to be in cluster ([Niimura et al. 2003](https://www.ncbi.nlm.nih.gov/pubmed/14507991); [Tadepally et al. 2008](https://www.ncbi.nlm.nih.gov/pubmed/18559114)). \n- **clustermean**: divides the genome in sliding windows and calculates, for each category, the mean number of features and the standard deviation for each accession. After that, clustermean searches for those windows showing a Z-score bigger than a given value, i.e. containing a number of features higher or equal to the relation _mean+n*stdv_ in which *n* can be set by the user (p: --seed). Thus, the seed parameter set the number of standard deviations to identify a window which serves as the beginning of the cluster. After this step, the algorithm similarly tries to extend the cluster in both the directions starting from the seed using the same relation _mean+n*stdv_ in which *n* can be set again by the user (p: --extension). Thus, the extension parameter set the number of standard deviations to identify the window(s) which serve to extend the cluster. Lastly, clustermean trims the clusters in order to replace the cluster start/end represented by the most 5' feature start and the most 3' feature end respectively.\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/pyrevo/ClusterScan/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9647556072748377,
+      "result": {
+        "original_header": "Options:",
+        "type": "Text_excerpt",
+        "value": "ClusterScan provides different options in order to finely tune the cluster search. Some of them are algorithm-specific whereas other are in common between clusterdist and clustermean:\n```\nUsage:\n  clusterscan.py clusterdist FEATURES ANNOTATION [-o PATH] [-a NAME] [-c LIST] [--info FILE] [--singletons] [-n=<n>] [-d=<bp>]\n  clusterscan.py clustermean FEATURES ANNOTATION [-o PATH] [-a NAME] [-c LIST] [--info FILE] [--singletons] [-n=<n>] [-w=<bp>] [-s=<bp>] [-k=<n>] [-e=<n>]\n  clusterscan.py (-h | --help)\n  clusterscan.py --version\n\nclusterdist:\n  -d, --dist=<bp>\tMaximum distance between features in bp [default: 500000].\n\nclustermean:\n  -w, --window=<bp>\tWindow size [default: 500000].\n  -s, --slide=<bp>\tSliding size [default: 250000].\n  -k, --seed=<n>\tNumber of standard deviations to identify a window which serves as the beginning of the cluster [default: 3].\n  -e, --extension=<n>\tNumber of standard deviations to identify the window(s) which serve to extend the cluster [default: 2].\n\nshared options:\n  -o, --output PATH\tSpecify output path [default: current directory].\n  -a, --analysis NAME\tSpecify optional analysis name for output files.\n  -n, --nf=<n>\t\tMinimum number of features per cluster [default: 2].\n  -c, --category LIST   Comma separated list of one or more specific categories to be analyzed [e.g. PF00001,PF00002].\n                        Useful when you need to perform the analysis only for specific categories in the ANNOTATION file.\n  --info FILE           Specify optional file to describe categories.\n  --singletons          Identify singletons after clusters and bystanders annotation.\n```\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/pyrevo/ClusterScan/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.933664513127311,
+      "result": {
+        "original_header": "Input/Output:",
+        "type": "Text_excerpt",
+        "value": "ClusterScan is composed by three files: _clusterscan.py_, _algos.py_ and _docopt.py_. The first represent the tool itself, the second stores the functions belonging to the two algorithms described above, and the latter is a dependence that provides an interface for the command-line menu. The three files need to be in the same folder. \nClusterScan requires two mandatory files and a third optional file in input. The first mandatory file is represented by a six-field bed file (FEATURES) containing the location of the features for which to build cluster. It must follow the organization of the [BED file format](https://genome.ucsc.edu/FAQ/FAQformat.html#format1). The second file is a two-column table (ANNOTATION) containing the name of the features as first column (must correspond to the name of the feature in the FEATURES file) and a string representing the categorical information used in the cluster search as second column. This \"category\" can be represented for esample by Gene Ontology classes, KEGG, Pfam accessions etc. The user can also search for clusters based on a custom made series of categories describing them using an optional additional two-column tab-delimited .txt file (category, description) that can be read by the program (p: --info). Moreover, the user can pass to the program a comma separated list of categories on which perform the analysis (p: --category) in the case in which he/she does not want to analyze all the categories in the ANNOTATION file. It is not uncommon that a feature is associated with different accessions at the same time and, in this case, the feature can be part of multiple different clusters. The user can also choose to identify features which exist as _singletons_ (p: --singletons). Those represent features belonging to a certain category, for which at least one cluster was annotated, that are outside of any of the corresponding clusters. \n|File|Description|\n|---|---|\n|\tclusters.tsv | stores the coordinates of all the clusters found. It contains an unique ID for each cluster; the category to which the cluster belongs; the chromosome/scaffold (chr) on which it resides; its start and end coordinates; the number of features within the cluster (n_features) and the number of features which overlap the cluster but belong to a different category (n_bystanders). |\n|\t\tclusters.bed | a bed version of the previous file for compatibility with other tools for downstream analysis. Fields respect the bed format and are (from first to last column): chromosome/scaffold on which the cluster resides; its start/end coordinates using a 0-based start and 1-based end system of coordinates; the cluster ID; the number of features within the cluster; the strand; the category describing the cluster. |\n|\t\tsummary.tsv | contains a category based summary of the cluster analysis with the category; the number of clusters found for each category (n_clusters); the total number of features found for clusters belonging to each category (n_ft); the number of bystanders (n_bs); the number of features and bystanders found in the clusters which contains the minimal and the maximal number of these features (max_ft and min_ft / max_bs and min_bs) for each category. |\n|\t\tfeatures.tsv | a list of features found to be in overlap with clusters. It contains the chromosome/scaffold (chr) on which the feature resides; its start and end coordinates; the feature name; the strand; the ID of the cluster to which it overlaps; the category to which the cluster (and the feature) belongs. |\n|\t\tbystanders.tsv | a list of bystanders found to be in overlap with clusters. It contains the chromosome/scaffold (chr) on which the feature resides; its start and end coordinates; the feature name; the strand; the ID of the cluster to which it overlaps; the category to which the cluster (but no the feature) belongs. |\n|\t\tdistribution.pdf | an histogram which shows the distribution of features in the top-10 categories by number of features. |\n|\t\tsingletons.tsv | a list of singletons found to be out from the annotated clusters for each category. It contains the chromosome/scaffold (chr) on which it resides; its start and end coordinates; the feature name; the strand; the category to which the feature belongs. | \n"
+      },
+      "source": "https://raw.githubusercontent.com/pyrevo/ClusterScan/master/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "documentation": [
+    {
+      "confidence": 1,
+      "result": {
+        "format": "readthedocs",
+        "type": "Url",
+        "value": "http://bedtools.readthedocs.io/"
+      },
+      "source": "https://raw.githubusercontent.com/pyrevo/ClusterScan/master/README.md",
+      "technique": "regular_expression"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "format": "wiki",
+        "type": "Url",
+        "value": "https://github.com/pyrevo/ClusterScan/wiki"
+      },
+      "source": "https://raw.githubusercontent.com/pyrevo/ClusterScan/master/README.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "download_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/pyrevo/ClusterScan/releases"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 5
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/pyrevo/ClusterScan/forks"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "pyrevo/ClusterScan"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_title": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "ClusterScan"
+      },
+      "source": "https://raw.githubusercontent.com/pyrevo/ClusterScan/master/README.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "installation": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Local installation:",
+        "parent_header": [
+          "ClusterScan"
+        ],
+        "type": "Text_excerpt",
+        "value": "ClusterScan can be installed locally or used in a docker container. Continue reading below to locally install the tool on your own machine or you can find docker instructions [here](https://github.com/pyrevo/ClusterScan/wiki/Docker-Installation). ClusterScan requires [Python](https://www.python.org/downloads/release/python-2714/) (v2.7.x). [Bedtools](https://github.com/arq5x/bedtools2) (v2.25.0+) and [R](https://www.r-project.org/) (v3.0.0+) are needed to be in the user path. In order to draw high quality clusters distributions for features in the top 10 clusters (by number of features) found, it is also required to install the R library [ggplot2](http://ggplot2.org/) (v2.0.0+).\n"
+      },
+      "source": "https://raw.githubusercontent.com/pyrevo/ClusterScan/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Installing Bedtools",
+        "parent_header": [
+          "ClusterScan",
+          "Local installation:"
+        ],
+        "type": "Text_excerpt",
+        "value": "To install bedtools you need to download the package via GitHub and compile from source:\n```\nwget https://github.com/arq5x/bedtools2/releases/download/v2.26.0/bedtools-2.26.0.tar.gz\ntar -zxvf bedtools-2.26.0.tar.gz\ncd bedtools2\nmake\n```\nOnce you have finished you can add bedtools to your path opening a new terminal and typing:\n```\nsudo nano ~/.bashrc\n```\nscroll until you reach the bottom of the page and add the following string:\n```\nexport PATH=$PATH:/<path-to-bedtools>/bedtools2/bin\n```\nSave and exit. To test your bedtools installation you must open a new terminal and type:\n```\nbedtools -h\n```\nMore informations about the bedtools installation can be found [here](http://bedtools.readthedocs.io/en/latest/content/installation.html).\n"
+      },
+      "source": "https://raw.githubusercontent.com/pyrevo/ClusterScan/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Installing R and the ggplot2 library",
+        "parent_header": [
+          "ClusterScan",
+          "Local installation:"
+        ],
+        "type": "Text_excerpt",
+        "value": "To install R simply type:\n```\nsudo apt install r-base r-base-dev\n```\nand enter the program with the command:\n```\nR\n```\nnow you can install ggplotw with:\n```\ninstall.packages(\"ggplot2\")\n```\nFinally you can test the ggplot installation with:\n```\nlibrary(ggplot2)\n```\n"
+      },
+      "source": "https://raw.githubusercontent.com/pyrevo/ClusterScan/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Installing the required Python libraries",
+        "parent_header": [
+          "ClusterScan",
+          "Local installation:"
+        ],
+        "type": "Text_excerpt",
+        "value": "ClusterScan needs few other Python libraries which can be easily installed via [pip](https://pip.pypa.io/en/stable/installing/) from [PyPI](https://pypi.python.org/pypi). As first step install python setuptools and pip on your distribution:\n```\nsudo apt install python-pip\nsudo apt install python-setuptools\n```\nThen install the required dependencies via pip typing:\n```\npip install pandas==0.19.1\npip install rpy2==2.8.3\npip install pybedtools==0.7.8\n```\nYou can find more informations at: \n- [pandas](https://pandas.pydata.org/)\n- [pybedtools](https://daler.github.io/pybedtools/)\n- [rpy2](https://rpy2.readthedocs.io/en/version_2.8.x/)\n"
+      },
+      "source": "https://raw.githubusercontent.com/pyrevo/ClusterScan/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Installing ClusterScan",
+        "parent_header": [
+          "ClusterScan",
+          "Local installation:"
+        ],
+        "type": "Text_excerpt",
+        "value": "Now, you can download and extract ClusterScan in your preferred directory:\n```\nwget https://github.com/pyrevo/ClusterScan/archive/master.zip\nunzip master.zip\n```\nFinally, you can add ClusterScan in your path by editing your bashrc file:\n```\nsudo nano ~/.bashrc\nexport PATH=$PATH:/<path-to-clusterscan>/ClusterScan-master\n```\nSave and exit. To test the clusterscan installation you must open a new terminal and type:\n```\nclusterscan.py -h\n```\nIf you visualize the ClusterScan help page, you can proceed to run your first analysis by following the [ClusterScan Tutorial](https://github.com/pyrevo/ClusterScan/wiki/ClusterScan-Tutorial).\n\nWe have tested ClusterScan on [Ubuntu](https://www.ubuntu.com/) (v14.04LTS+). ClusterScan is distributed under the [GNU General Public License (GPL) Version 3](https://www.gnu.org/licenses/gpl-3.0.en.html).\n"
+      },
+      "source": "https://raw.githubusercontent.com/pyrevo/ClusterScan/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Docker installation:",
+        "parent_header": [
+          "ClusterScan"
+        ],
+        "type": "Text_excerpt",
+        "value": "ClusterScan can also be used in a docker container. Docker is an open source project intended to provide tools to performs operating-system-level virtualization also known as containerization. More information can be found [here](https://www.docker.com/what-docker). In order to use ClusterScan in a docker container, you must install the docker engine and the docker ClusterScan image. You can find a complete Linux installation guide of the docker engine following this [link](https://docs.docker.com/install/linux/docker-ce/ubuntu/).\n"
+      },
+      "source": "https://raw.githubusercontent.com/pyrevo/ClusterScan/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Installing docker engine",
+        "parent_header": [
+          "ClusterScan",
+          "Docker installation:"
+        ],
+        "type": "Text_excerpt",
+        "value": "If you already have the docker engine installed on your machine, you can skip this step. To install the docker engine you simply have to type:\n```\ncurl -fsSL https://get.docker.com/ | sh\n```\nIf you haven't curl installed, you can obtain it by typing:\n```\nsudo apt update\nsudo apt install curl\n```\nOnce you have the docker engine installed, you may want guarantee administrator permissions to your user:\n```\nsudo usermod -aG docker <your-user>\n```\nAfter this step you must exit and open a new terminal. You can test your docker engine installation with the command:\n```\ndocker run hello-world\n```\n"
+      },
+      "source": "https://raw.githubusercontent.com/pyrevo/ClusterScan/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Installing ClusterScan image",
+        "parent_header": [
+          "ClusterScan",
+          "Docker installation:"
+        ],
+        "type": "Text_excerpt",
+        "value": "To obtain the latest ClusterScan docker image type:\n```\ndocker pull sangeslab/clusterscan:latest\n```\nYou can test your docker ClusterScan installation by typing:\n```\ndocker images\n```\nobtaining something like that:\n\n|REPOSITORY|TAG|IMAGE ID|CREATED|SIZE|\n|---|---|---|---|---|\n|sangeslab/clusterscan|latest|1bc62465dc7c|3 days ago|1.44GB|\n|hello-world|latest|f2a91732366c|4 months ago|1.85kB|\n\nTo get rid of the ClusterScan image:\n```\ndocker rmi -f sangeslab/clusterscan\n```\nyou can also remove the created containers by tracking their IDs:\n```\ndocker ps -a\ndocker rm <your container ID>\n```\n"
+      },
+      "source": "https://raw.githubusercontent.com/pyrevo/ClusterScan/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 0.8809549330624761,
+      "result": {
+        "original_header": "Options:",
+        "type": "Text_excerpt",
+        "value": "An example of execution with clustermean:\n```\nclusterscan.py clustermean my_genes.bed my_categories.txt --info my_descriptions.txt -w 10000 -s 5000\n```\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/pyrevo/ClusterScan/master/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "invocation": [
+    {
+      "confidence": 0.8592723015818727,
+      "result": {
+        "original_header": "Options:",
+        "type": "Text_excerpt",
+        "value": "An example of execution with clusterdist:\n```\nclusterscan.py clusterdist my_genes.bed my_categories.txt -d 250000 -a analysis_01\n``` \nAn example of execution with clustermean:\n```\nclusterscan.py clustermean my_genes.bed my_categories.txt --info my_descriptions.txt -w 10000 -s 5000\n```\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/pyrevo/ClusterScan/master/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "issue_tracker": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/pyrevo/ClusterScan/issues"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "keywords": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": ""
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "license": [
+    {
+      "confidence": 1,
+      "result": {
+        "name": "GNU General Public License v3.0",
+        "spdx_id": "GPL-3.0",
+        "type": "License",
+        "url": "https://api.github.com/licenses/gpl-3.0",
+        "value": "https://api.github.com/licenses/gpl-3.0"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "ClusterScan"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "owner": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "User",
+        "value": "pyrevo"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "programming_languages": [
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Python",
+        "size": 41700,
+        "type": "Programming_language",
+        "value": "Python"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "readme_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/pyrevo/ClusterScan/master/README.md"
+      },
+      "technique": "file_exploration"
+    }
+  ],
+  "related_documentation": [
+    {
+      "confidence": 1,
+      "result": {
+        "format": "readthedocs",
+        "type": "Url",
+        "value": "https://rpy2.readthedocs.io/"
+      },
+      "source": "https://raw.githubusercontent.com/pyrevo/ClusterScan/master/README.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "run": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Running ClusterScan through docker",
+        "parent_header": [
+          "ClusterScan",
+          "Docker installation:"
+        ],
+        "type": "Text_excerpt",
+        "value": "To run ClusterScan type:\n```\ndocker run --user $(id -u) -it -v /full/path/to/data/folder:/data sangeslab/clusterscan bash\n```\nand substitute _/full/path/to/data/folder_ with the complete path to the directory containing your input data.\n\nYou can test whether CLusterScan is ready with:\n```\nclusterscan.py -h\n```\n"
+      },
+      "source": "https://raw.githubusercontent.com/pyrevo/ClusterScan/master/README.md",
+      "technique": "header_analysis"
+    }
+  ],
+  "somef_missing_categories": [
+    "citation",
+    "acknowledgement",
+    "download",
+    "requirements",
+    "contact",
+    "contributors",
+    "usage",
+    "faq",
+    "support",
+    "identifier",
+    "has_build_file",
+    "executable_example"
+  ],
+  "somef_provenance": {
+    "date": "2024-11-04 05:25:22",
+    "somef_schema_version": "1.0.0",
+    "somef_version": "0.9.5"
+  },
+  "stargazers_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 11
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "type": [
+    {
+      "confidence": 0.82,
+      "result": {
+        "type": "String",
+        "value": "commandline-application"
+      },
+      "technique": "software_type_heuristics"
+    }
+  ]
+}

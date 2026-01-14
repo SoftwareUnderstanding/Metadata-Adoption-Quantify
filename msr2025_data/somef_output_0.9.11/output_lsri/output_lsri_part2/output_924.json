@@ -1,0 +1,582 @@
+{
+  "code_repository": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/PacificBiosciences/pbipa"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_created": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2020-05-18T19:21:44Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_updated": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2024-10-01T13:30:18Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "description": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "Improved Phased Assembler"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 0.9127735559731793,
+      "result": {
+        "original_header": "Description",
+        "type": "Text_excerpt",
+        "value": "This repo contains the implementation of the IPA HiFi Genome Assembler.\nIt's currently implemented as a Snakemake workflow (`workflow/ipa.snakefile`) and runs the following stages:\n1. Building the SeqDB and SeedDB from the input reads.\n2. Overlapping using the Pancake overlapper.\n3. Phasing the overlaps using the Nighthawk phasing tool.\n4. Filtering the overlaps using Falconc m4Filt.\n5. Contig construction using Falcon's `ovlp_to_graph` and `graph_to_contig` tools.\n6. Read tracking for read-to-contig assignment.\n7. Polishing using Racon. \n"
+      },
+      "source": "https://raw.githubusercontent.com/PacificBiosciences/pbipa/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.918824827755252,
+      "result": {
+        "type": "Text_excerpt",
+        "value": "### 1. Snakemake error: \"ImportError: cannot import name 'parse_uri' from 'smart_open'\"\nSnakemake depends on the `smart_open` package, and there is a discrepancy between the versions of the two packages in your installation.  \nSolution is to either upgrade `snakemake` or downgrade `smart_open` in your `conda` environtment.  \nPlease take a look at the following issue for more details:  \nhttps://github.com/PacificBiosciences/pbbioconda/issues/476 \n### 2. Samtools error: \"samtools: error while loading shared libraries: libcrypto.so.1.0.0: cannot open shared object file\"\nThis error has nothing to do with IPA itself.  \nIt is a known long-standing Samtools error which happens with older versions of Samtools (v1.9).  \nMost likely, Samtools or OpenSSL get pulled from the wrong Conda channel.  \nThe same issue was also reported in other projects with suggested solutions:  \nhttps://github.com/bioconda/bioconda-recipes/issues/12100 \n"
+      },
+      "source": "https://raw.githubusercontent.com/PacificBiosciences/pbipa/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9520380786639708,
+      "result": {
+        "original_header": "2. Samtools error: \"samtools: error while loading shared libraries: libcrypto.so.1.0.0: cannot open shared object file\"",
+        "type": "Text_excerpt",
+        "value": "\nAll the reports of this issue we have seen were with respect to Samtools v1.9.  \n**The best solution is to upgrade Samtools to >=1.10.**   \n\nOtherwise, the solution which worked for most users is to manually create a file `~/.condarc` with the following content:  \n```\nchannels:\n  - conda-forge\n  - bioconda\n  - defaults\n```\nIf the order of channels is wrong, Conda may pull wrong versions of Samtools and libcrypto.   \n"
+      },
+      "source": "https://raw.githubusercontent.com/PacificBiosciences/pbipa/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9884423549836521,
+      "result": {
+        "original_header": "Usage examples",
+        "type": "Text_excerpt",
+        "value": "Specifying custom number of threads and number of parallel jobs can provide more optimal performance on your machine:\n```\nipa local --nthreads 20 --njobs 4 -i <myreads.fasta>\n```\nNote: this will use 80 CPUs for parallel jobs like overlapping, phasing and polishing (given that the input dataset is large enough). \n"
+      },
+      "source": "https://raw.githubusercontent.com/PacificBiosciences/pbipa/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.969240730561611,
+      "result": {
+        "original_header": "Config file",
+        "type": "Text_excerpt",
+        "value": "The structure of `config.json` is given here:\n```\n{\n    \"reads_fn\": \"input.fofn\",\n    \"genome_size\": 0,\n    \"coverage\": 0,\n    \"advanced_options\": \"\",\n    \"polish_run\": 1,\n    \"phase_run\": 1,\n    \"nproc\": 8,\n    \"max_nchunks\": 40,\n    \"tmp_dir\": \"/tmp\"\n}\n``` \nExplanation of each parameter:\n- `reads_fn`: Can be a FOFN, FASTA, FASTQ, BAM or XML. Also, gzipped versions of FASTA and FASTQ are available.\n- `genome_size`: Used for downsampling in combination with `coverage`. If `genome_size * coverage <=0` downsampling is turned off.\n- `coverage`: Used for downsampling in combination with `genome_size`. If `genome_size * coverage <=0` downsampling is turned off.\n- `advanced_options`: A single line listing advanced options in the form of `key = value` pairs, separated with `;`.\n- `polish_run`: Polishing will be applied if the value of this parameter is equal to `1`.\n- `phase_run`: Phasing will be applied if the value of this parameter is equal to `1`.\n- `nproc`: Number of threads to use on each compute node.\n- `max_nchunks`: Parallel tasks will be groupped into at most this many chunks. If there is more than one task per chunk, they are executed linearly. Each chunk is executed in parallel. Useful for throttling job submissions.\n- `tmp_dir`: Temporary directory which will be used for some disk-based operations, like sorting. \n"
+      },
+      "source": "https://raw.githubusercontent.com/PacificBiosciences/pbipa/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.8508715262682951,
+      "result": {
+        "type": "Text_excerpt",
+        "value": "## Contig headers\nIPA (without `purge_dups`) generates contigs with headers of the form:\n- Primary contigs: `ctg.[0-9]{6}[FR]`. The number represents the contig identifier. Example: `ctg.000003F`.\n- Haplotigs: `ctg.[0-9]{6}[FR]-[0-9]{3}-[0-9]{2}` - meaning: `<contig_id>-<bubble_id>-<branch_id>`, where `bubble_id` represents the ID of a bubble in the assembly graph, and `branch_id` refers to individual branches in the bubble. Example: `ctg.000003F-003-01`.\n- Haplotigs with any other type of headers are produced by `purge_dups`. The `purge_dups` modifies headers when it moves a contig from the primary pile to the haplotig pile (e.g. `hap_` prefix in the contigs). Example: `hap_ctg.000004F`. \n"
+      },
+      "source": "https://raw.githubusercontent.com/PacificBiosciences/pbipa/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9438253658163706,
+      "result": {
+        "original_header": "Contig headers",
+        "type": "Text_excerpt",
+        "value": "Additionally, different stages of assembly may add other tags (whitespace separated) to the sequence headers. Concretely:\n* Stage `10-assemble`, primary contigs:\n    * `>ctg.000003F label ctg_linear 15597457 108971087` - Columns are: (1) contig identifier, (2) tag placeholder for legacy compatibility currently always marked as `label`, (3) tag which marks the contig as either linear or circular (`ctg_linear` or `ctg_circular`), (4) contig length and (5) contig score. \n* Stage `14-separate`, both primary contigs and haplotigs:\n    * `>ctg.000003F LN:i:15600633 RC:i:17803 XC:f:0.998846` - Columns are: (1) contig identifier, (2) length of the contig (Racon tag), (3) number of reads aligned to that contig which were available for polishing (Racon tag), (4) fraction of the contig that was polished (depending on input alignments, Racon tag). \n* Stage `19-final`, haplotigs:\n    * `>hap_ctg.000004F HAPLOTIG` - Columns are: (1) contig identifier, modified by `purge_dups`, (2) `purge_dups` tag which can be \"HAPLOTIG\", \"OVLP\", \"REPEAT\", \"JUNK\", etc. Please consult `purge_dups` documentation for explanation of these tags.\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/PacificBiosciences/pbipa/master/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "download_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/PacificBiosciences/pbipa/releases"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 7
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/PacificBiosciences/pbipa/forks"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "PacificBiosciences/pbipa"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_title": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "IPA HiFi Genome Assembler"
+      },
+      "source": "https://raw.githubusercontent.com/PacificBiosciences/pbipa/master/README.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "installation": [
+    {
+      "confidence": 0.9978747097183671,
+      "result": {
+        "original_header": "Description",
+        "type": "Text_excerpt",
+        "value": "For more info: https://github.com/PacificBiosciences/pbbioconda/wiki/Improved-Phased-Assembler \n"
+      },
+      "source": "https://raw.githubusercontent.com/PacificBiosciences/pbipa/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9885528957529093,
+      "result": {
+        "type": "Text_excerpt",
+        "value": "\n## Installation from Bioconda \n"
+      },
+      "source": "https://raw.githubusercontent.com/PacificBiosciences/pbipa/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9999999999987494,
+      "result": {
+        "original_header": "Installation from Bioconda",
+        "type": "Text_excerpt",
+        "value": "First, be sure to select the right channels. Look in your `~/.condarc` and\nif necessary run this:\n```\nconda config --prepend channels defaults\nconda config --prepend channels conda-forge\nconda config --prepend channels bioconda\n``` \n"
+      },
+      "source": "https://raw.githubusercontent.com/PacificBiosciences/pbipa/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9999922071859859,
+      "result": {
+        "type": "Text_excerpt",
+        "value": "IPA is available via Bioconda:\n```\nconda create -n ipa\nconda activate ipa\nconda install pbipa\n```\nIPA requires python 3.7+. Please use miniconda3, not miniconda2. We currently only support Linux 64-bit, not MacOS or Linux 32-bit. \n## Troubleshooting the Bioconda installation\nIn some cases, `bioconda install` may pull wrong versions of packages into your environment.\nHere are some common issues. \n### 1. Snakemake error: \"ImportError: cannot import name 'parse_uri' from 'smart_open'\"\nSnakemake depends on the `smart_open` package, and there is a discrepancy between the versions of the two packages in your installation.  \nSolution is to either upgrade `snakemake` or downgrade `smart_open` in your `conda` environtment.  \nPlease take a look at the following issue for more details:  \nhttps://github.com/PacificBiosciences/pbbioconda/issues/476 \n### 2. Samtools error: \"samtools: error while loading shared libraries: libcrypto.so.1.0.0: cannot open shared object file\"\nThis error has nothing to do with IPA itself.  \nIt is a known long-standing Samtools error which happens with older versions of Samtools (v1.9).  \nMost likely, Samtools or OpenSSL get pulled from the wrong Conda channel.  \nThe same issue was also reported in other projects with suggested solutions:  \nhttps://github.com/bioconda/bioconda-recipes/issues/12100 \n"
+      },
+      "source": "https://raw.githubusercontent.com/PacificBiosciences/pbipa/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9998196950818832,
+      "result": {
+        "original_header": "2. Samtools error: \"samtools: error while loading shared libraries: libcrypto.so.1.0.0: cannot open shared object file\"",
+        "type": "Text_excerpt",
+        "value": "\nOtherwise, the solution which worked for most users is to manually create a file `~/.condarc` with the following content:  \n```\nchannels:\n  - conda-forge\n  - bioconda\n  - defaults\n```\nIf the order of channels is wrong, Conda may pull wrong versions of Samtools and libcrypto.   \nAnother solution is to explicitly downgrade `openssl`:  \n```\nconda install -c bioconda samtools openssl=1.0\n``` \nMake sure you install `pbipa` fresh after these changes (e.g. in a new environment).   \n"
+      },
+      "source": "https://raw.githubusercontent.com/PacificBiosciences/pbipa/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9981975441138642,
+      "result": {
+        "original_header": "Usage examples",
+        "type": "Text_excerpt",
+        "value": "Example of a distributed run on a cluster using SGE:\n```\nmkdir -p <out_dir>/qsub_log\nipa dist -i <myreads.fastq> --run-dir <out_dir> --cluster-args \"qsub -S /bin/bash -N ipa -cwd -q default -pe smp {params.num_threads} -e qsub_log/ -o qsub_log/ -V\"\n```\nNote: `--cluster-args` are passed directly to Snakemake. For a custom queue, please edit that string. Also, for other types of cluster environment, please consult the Snakemake documentation. \n"
+      },
+      "source": "https://raw.githubusercontent.com/PacificBiosciences/pbipa/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9976807184743514,
+      "result": {
+        "type": "Text_excerpt",
+        "value": "More details can be found here: https://github.com/PacificBiosciences/pbbioconda/wiki/Improved-Phased-Assembler \n"
+      },
+      "source": "https://raw.githubusercontent.com/PacificBiosciences/pbipa/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9935006285658847,
+      "result": {
+        "original_header": "Advanced Usage",
+        "type": "Text_excerpt",
+        "value": "Only one file (config) is required to run IPA:\n- (mandatory) Config file: `config.json`.\n- (optional) Input FOFN in case the config points to it: `input.fofn`. \nOnce the config file is specified, the workflow can be run via Snakemake directly, similar to this:\n```\nsnakemake -p -j 1 -d RUN -s <ipa.snakefile> --configfile config.json --config MAKEDIR=.. -- finish\n``` \nAdditionally, the `ipa` runner tool provides an option `--only-print` which will not run the workflow, but instead only prints the Snakemake run command to the user. It also generates the config file from the command line options.\nFor example:\n```\n$ ipa local -i input.fofn --only-print\n...\npython3 -m snakemake -j 4 -d RUN -p -s /mnt/software/i/ipa/develop/etc/ipa.snakefile --configfile RUN/config.yaml --reason\n``` \nThe user can then copy this line and run Snakemake manually. \n"
+      },
+      "source": "https://raw.githubusercontent.com/PacificBiosciences/pbipa/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9129886898895958,
+      "result": {
+        "type": "Text_excerpt",
+        "value": "The same option is available in the cluster runner subtool `ipa dist`:\n```\n$ ipa dist -i input.fofn --run-dir RUN --cluster-args 'qsub -S /bin/bash -N ipa -cwd -q sequel-farm -pe smp {params.num_threads} -e qsub_log/ -o qsub_log/ -V' --nthreads 24 --njobs 40 --nshards 40 --only-print\n...\npython3 -m snakemake -j 40 -d RUN -p -s /mnt/software/i/ipa/develop/etc/ipa.snakefile --configfile RUN/config.yaml --reason --cluster 'qsub -S /bin/bash -N ipa -cwd -q sequel-farm -pe smp {params.num_threads} -e qsub_log/ -o qsub_log/ -V' --latency-wait 60 --rerun-incomplete\n``` \n### Config file\nConfig can be specified either in JSON or YAML formats (as supported by Snakemake). \n"
+      },
+      "source": "https://raw.githubusercontent.com/PacificBiosciences/pbipa/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.8051522755338688,
+      "result": {
+        "original_header": "Contig headers",
+        "type": "Text_excerpt",
+        "value": "* Stage `19-final`, haplotigs:\n    * `>hap_ctg.000004F HAPLOTIG` - Columns are: (1) contig identifier, modified by `purge_dups`, (2) `purge_dups` tag which can be \"HAPLOTIG\", \"OVLP\", \"REPEAT\", \"JUNK\", etc. Please consult `purge_dups` documentation for explanation of these tags.\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/PacificBiosciences/pbipa/master/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "invocation": [
+    {
+      "confidence": 0.8013371570019835,
+      "result": {
+        "type": "Text_excerpt",
+        "value": "<h1 align=\"center\"><img width=\"512px\" src=\"doc/IPA-logo-3.png\"/></h1> \n"
+      },
+      "source": "https://raw.githubusercontent.com/PacificBiosciences/pbipa/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.8158276419118842,
+      "result": {
+        "original_header": "Advanced Usage",
+        "type": "Text_excerpt",
+        "value": "Once the config file is specified, the workflow can be run via Snakemake directly, similar to this:\n```\nsnakemake -p -j 1 -d RUN -s <ipa.snakefile> --configfile config.json --config MAKEDIR=.. -- finish\n``` \nAdditionally, the `ipa` runner tool provides an option `--only-print` which will not run the workflow, but instead only prints the Snakemake run command to the user. It also generates the config file from the command line options.\nFor example:\n```\n$ ipa local -i input.fofn --only-print\n...\npython3 -m snakemake -j 4 -d RUN -p -s /mnt/software/i/ipa/develop/etc/ipa.snakefile --configfile RUN/config.yaml --reason\n``` \n"
+      },
+      "source": "https://raw.githubusercontent.com/PacificBiosciences/pbipa/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.8961036094174897,
+      "result": {
+        "type": "Text_excerpt",
+        "value": "The same option is available in the cluster runner subtool `ipa dist`:\n```\n$ ipa dist -i input.fofn --run-dir RUN --cluster-args 'qsub -S /bin/bash -N ipa -cwd -q sequel-farm -pe smp {params.num_threads} -e qsub_log/ -o qsub_log/ -V' --nthreads 24 --njobs 40 --nshards 40 --only-print\n...\npython3 -m snakemake -j 40 -d RUN -p -s /mnt/software/i/ipa/develop/etc/ipa.snakefile --configfile RUN/config.yaml --reason --cluster 'qsub -S /bin/bash -N ipa -cwd -q sequel-farm -pe smp {params.num_threads} -e qsub_log/ -o qsub_log/ -V' --latency-wait 60 --rerun-incomplete\n``` \n"
+      },
+      "source": "https://raw.githubusercontent.com/PacificBiosciences/pbipa/master/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "issue_tracker": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/PacificBiosciences/pbipa/issues"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "keywords": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": ""
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "license": [
+    {
+      "confidence": 1,
+      "result": {
+        "name": "BSD 3-Clause Clear License",
+        "spdx_id": "BSD-3-Clause-Clear",
+        "type": "License",
+        "url": "https://api.github.com/licenses/bsd-3-clause-clear",
+        "value": "https://api.github.com/licenses/bsd-3-clause-clear"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "logo": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/PacificBiosciences/pbipa/master/doc/IPA-logo-3.png"
+      },
+      "source": "https://raw.githubusercontent.com/PacificBiosciences/pbipa/master/README.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "pbipa"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "owner": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Organization",
+        "value": "PacificBiosciences"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "readme_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/PacificBiosciences/pbipa/master/README.md"
+      },
+      "technique": "file_exploration"
+    }
+  ],
+  "releases": [
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "isovic",
+          "type": "User"
+        },
+        "date_created": "2022-03-08T09:07:28Z",
+        "date_published": "2022-03-11T12:14:25Z",
+        "description": "- Completely redesigned the layout stage from scratch.\r\n- Improved contiguity.\r\n- Output of the new version is **no longer compatible with FALCON-Phase**.",
+        "html_url": "https://github.com/PacificBiosciences/pbipa/releases/tag/v1.8.0",
+        "name": "IPA v1.8.0",
+        "release_id": 61593846,
+        "tag": "v1.8.0",
+        "tarball_url": "https://api.github.com/repos/PacificBiosciences/pbipa/tarball/v1.8.0",
+        "type": "Release",
+        "url": "https://api.github.com/repos/PacificBiosciences/pbipa/releases/61593846",
+        "value": "https://api.github.com/repos/PacificBiosciences/pbipa/releases/61593846",
+        "zipball_url": "https://api.github.com/repos/PacificBiosciences/pbipa/zipball/v1.8.0"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "isovic",
+          "type": "User"
+        },
+        "date_created": "2020-09-10T01:44:16Z",
+        "date_published": "2021-07-30T07:38:06Z",
+        "description": "- Removed Pbmm2 for polishing. This should allow a much faster overall runtime, especially on genomes with low-complexity sequences.\r\n- Pancake has a new maximum seed length of 28 (instead of 32 like before). This is due to a new seed data structure which encodes seed span.\r\n- GNU time in the IPA workflow is now used only when available.\r\n- GFA string graph is now being written at the end of the 10-assemble stage.\r\n- Overall improvements to stability and efficiency.",
+        "html_url": "https://github.com/PacificBiosciences/pbipa/releases/tag/v1.5.0",
+        "name": "IPA v1.5.0",
+        "release_id": 47027104,
+        "tag": "v1.5.0",
+        "tarball_url": "https://api.github.com/repos/PacificBiosciences/pbipa/tarball/v1.5.0",
+        "type": "Release",
+        "url": "https://api.github.com/repos/PacificBiosciences/pbipa/releases/47027104",
+        "value": "https://api.github.com/repos/PacificBiosciences/pbipa/releases/47027104",
+        "zipball_url": "https://api.github.com/repos/PacificBiosciences/pbipa/zipball/v1.5.0"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "pb-cdunn",
+          "type": "User"
+        },
+        "date_created": "2020-09-10T01:44:16Z",
+        "date_published": "2020-10-10T23:14:19Z",
+        "description": "The `-e` can still be added by configuration, via `config_purge_dups_get_seqs`.",
+        "html_url": "https://github.com/PacificBiosciences/pbipa/releases/tag/v1.3.2",
+        "name": "Drop \"-e\" from purge_dups",
+        "release_id": 32411770,
+        "tag": "v1.3.2",
+        "tarball_url": "https://api.github.com/repos/PacificBiosciences/pbipa/tarball/v1.3.2",
+        "type": "Release",
+        "url": "https://api.github.com/repos/PacificBiosciences/pbipa/releases/32411770",
+        "value": "https://api.github.com/repos/PacificBiosciences/pbipa/releases/32411770",
+        "zipball_url": "https://api.github.com/repos/PacificBiosciences/pbipa/zipball/v1.3.2"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "pb-cdunn",
+          "type": "User"
+        },
+        "date_created": "2020-09-10T01:44:16Z",
+        "date_published": "2020-09-25T20:36:01Z",
+        "description": "https://github.com/PacificBiosciences/pbbioconda/issues/326",
+        "html_url": "https://github.com/PacificBiosciences/pbipa/releases/tag/v1.3.1",
+        "name": "Support .fq and other extensions",
+        "release_id": 31830904,
+        "tag": "v1.3.1",
+        "tarball_url": "https://api.github.com/repos/PacificBiosciences/pbipa/tarball/v1.3.1",
+        "type": "Release",
+        "url": "https://api.github.com/repos/PacificBiosciences/pbipa/releases/31830904",
+        "value": "https://api.github.com/repos/PacificBiosciences/pbipa/releases/31830904",
+        "zipball_url": "https://api.github.com/repos/PacificBiosciences/pbipa/zipball/v1.3.1"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "pb-cdunn",
+          "type": "User"
+        },
+        "date_created": "2020-09-10T01:44:16Z",
+        "date_published": "2020-09-10T01:45:25Z",
+        "description": "See README.",
+        "html_url": "https://github.com/PacificBiosciences/pbipa/releases/tag/v1.3.0",
+        "name": "Support purge_dups after parallel pancake",
+        "release_id": 31018341,
+        "tag": "v1.3.0",
+        "tarball_url": "https://api.github.com/repos/PacificBiosciences/pbipa/tarball/v1.3.0",
+        "type": "Release",
+        "url": "https://api.github.com/repos/PacificBiosciences/pbipa/releases/31018341",
+        "value": "https://api.github.com/repos/PacificBiosciences/pbipa/releases/31018341",
+        "zipball_url": "https://api.github.com/repos/PacificBiosciences/pbipa/zipball/v1.3.0"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "pb-cdunn",
+          "type": "User"
+        },
+        "date_created": "2020-08-14T02:05:49Z",
+        "date_published": "2020-08-14T02:54:01Z",
+        "description": "See CHANGELOG.md",
+        "html_url": "https://github.com/PacificBiosciences/pbipa/releases/tag/v1.2.0",
+        "name": "htslib-1.10 unpinned in Bioconda",
+        "release_id": 29682556,
+        "tag": "v1.2.0",
+        "tarball_url": "https://api.github.com/repos/PacificBiosciences/pbipa/tarball/v1.2.0",
+        "type": "Release",
+        "url": "https://api.github.com/repos/PacificBiosciences/pbipa/releases/29682556",
+        "value": "https://api.github.com/repos/PacificBiosciences/pbipa/releases/29682556",
+        "zipball_url": "https://api.github.com/repos/PacificBiosciences/pbipa/zipball/v1.2.0"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "pb-cdunn",
+          "type": "User"
+        },
+        "date_created": "2020-07-26T22:09:20Z",
+        "date_published": "2020-07-26T22:11:13Z",
+        "description": "See CHANGELOG.md",
+        "html_url": "https://github.com/PacificBiosciences/pbipa/releases/tag/v1.1.2",
+        "name": "Bug-fixes; retain high copy number elements",
+        "release_id": 28967302,
+        "tag": "v1.1.2",
+        "tarball_url": "https://api.github.com/repos/PacificBiosciences/pbipa/tarball/v1.1.2",
+        "type": "Release",
+        "url": "https://api.github.com/repos/PacificBiosciences/pbipa/releases/28967302",
+        "value": "https://api.github.com/repos/PacificBiosciences/pbipa/releases/28967302",
+        "zipball_url": "https://api.github.com/repos/PacificBiosciences/pbipa/zipball/v1.1.2"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "pb-cdunn",
+          "type": "User"
+        },
+        "date_created": "2020-06-15T23:48:37Z",
+        "date_published": "2020-06-15T23:51:39Z",
+        "description": "See CHANGELOG.md",
+        "html_url": "https://github.com/PacificBiosciences/pbipa/releases/tag/v1.0.5",
+        "name": "Improved sharding for parallel tasks",
+        "release_id": 27576204,
+        "tag": "v1.0.5",
+        "tarball_url": "https://api.github.com/repos/PacificBiosciences/pbipa/tarball/v1.0.5",
+        "type": "Release",
+        "url": "https://api.github.com/repos/PacificBiosciences/pbipa/releases/27576204",
+        "value": "https://api.github.com/repos/PacificBiosciences/pbipa/releases/27576204",
+        "zipball_url": "https://api.github.com/repos/PacificBiosciences/pbipa/zipball/v1.0.5"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "somef_missing_categories": [
+    "citation",
+    "acknowledgement",
+    "run",
+    "download",
+    "requirements",
+    "contact",
+    "contributors",
+    "documentation",
+    "usage",
+    "faq",
+    "support",
+    "identifier",
+    "has_build_file",
+    "executable_example"
+  ],
+  "somef_provenance": {
+    "date": "2024-10-04 12:32:42",
+    "somef_schema_version": "1.0.0",
+    "somef_version": "0.9.5"
+  },
+  "stargazers_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 28
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "type": [
+    {
+      "confidence": 0.82,
+      "result": {
+        "type": "String",
+        "value": "commandline-application"
+      },
+      "technique": "software_type_heuristics"
+    }
+  ]
+}

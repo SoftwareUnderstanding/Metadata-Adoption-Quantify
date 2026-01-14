@@ -1,0 +1,301 @@
+{
+  "application_domain": [
+    {
+      "confidence": 14.65,
+      "result": {
+        "type": "String",
+        "value": "Computer Vision"
+      },
+      "technique": "supervised_classification"
+    }
+  ],
+  "code_repository": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/COMBINE-lab/grouper"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_created": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2017-09-19T20:59:03Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_updated": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2024-06-07T12:57:12Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "description": [
+    {
+      "confidence": 0.9958690844330085,
+      "result": {
+        "original_header": "Grouper",
+        "type": "Text_excerpt",
+        "value": "Grouper is a tool for clustering and annotating contigs from *de novo* transcriptome assemblies.  There are two main modules in Grouper: the clustering module and the labeling module.  The former is based on the tool, [RapClust](https://github.com/COMBINE-lab/RapClust), and is designed to be run downstream of the [Sailfish](https://github.com/kingsfordgroup/sailfish) or [Salmon](https://github.com/COMBINE-lab/salmon) tools for rapid transcript-level quantification.  It relies on the *fragment equivalence classes*, orphaned read mappings and quantification information computed by these tools in order to determine how contigs in the assembly are potentially related and cluster them accordingly.  The labeling module in Grouper is able to incorporate information from annotated genomes of closely related species to annotate contigs in the *de novo* assembly.  Hence, the different modules of Grouper are able to efficiently utilize information from multiple sources to accurately cluster and annotate contigs from transcriptome assemblies. \n \n"
+      },
+      "source": "https://raw.githubusercontent.com/COMBINE-lab/grouper/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.8276349574407698,
+      "result": {
+        "original_header": "Docker Image",
+        "type": "Text_excerpt",
+        "value": "A Docker image for [Grouper](https://hub.docker.com/r/combinelab/grouper/) can be downloaded from DockerHub using:\n```\ndocker pull combinelab/grouper\n```\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/COMBINE-lab/grouper/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9546448721635062,
+      "result": {
+        "original_header": "Using Grouper",
+        "type": "Text_excerpt",
+        "value": "Grouper is written in Python and is easy to use.  Below, we explain how to use it with Salmon.  There are two main steps involved in running Grouper: \n  1. Run Salmon on each sample in your experiment, passing it the `--dumpEq` option.  This will tell Salmon to dump a representation of the fragment equivalence classes that it computed during quasi-mapping of each sample.  If you wish to use orphan read information for joining contigs in Grouper, use the `--writeOrphanLinks` option as well, which will dump orphan read pair information to a file.  Apart from these additional option, Salmon should be run normally (i.e. passing in whatever other options are appropriate for your samples).  \n  2. Run Grouper, providing it with a configuration file that describes the experimental setup of your samples, and where the Salmon quantification results have been written. You can also choose whether or not to use the additional filters and the labeling module in Grouper.\n    \nLet's illustrate this pipeline with a particular example, the following experimental data from the [Trapnell et al. paper](http://www.nature.com/nbt/journal/v31/n1/full/nbt.2450.html): \nWe'll assume that the raw read files reside in the directory `reads`.  Assuming that you've already built the index on the transcriptome you wish to quantify, a typical run of Salmon on this data would look something like.\n```\n> parallel -j 6 \"samp={}; salmon quant -i index -l a -1 <(gunzip -c reads/{$samp}_1.fq.gz) -2 <(gunzip -c reads/{$samp}_2.fq.gz) -o {$samp}_quant --dumpEq --writeOrphanLinks -p 4\" ::: SRR493366 SRR493367 SRR493368 SRR493369 SRR493370 SRR493371\n```\nThis will quantify each sample, and write the result to the directory `samplename_quant`.  Given this setup, we're now ready to run the clustering module in Grouper.  First, we have to make an appropriate config file.  We demonstrate one using both the optinal filters in Grouper:\n```\nconditions:\n    - Control\n    - HOXA1 Knockdown\nsamples:\n    Control:\n        - SRR493366_quant\n        - SRR493367_quant\n        - SRR493368_quant\n    HOXA1 Knockdown:\n        - SRR493369_quant\n        - SRR493370_quant\n        - SRR493371_quant\noutdir: human_grouper\norphan: True\nmincut: True\n```\nyou can place this in a file called `config.yaml`.  Grouper uses [YAML](http://yaml.org/) to specify its configuration files.  The configuration file must contain the following three entries; `conditions`, `samples`, and `outdir`.  The `conditions` entry lists the conditions present in the sample. The `samples` entry is a nested dictionary of lists; there is a key corrseponding to each condition listed in the `conditions` entry, and the value associated with this key is a list of quantification directories of the samples for this condition.  Finally, the `outdir` entry specifies where the Grouper output and intermediate files should be stored.  Optionally, the `orphan` and `mincut` entries tell Grouper which extra filters to use. If these lines are not added to the config file, by default, the filters are not applied. Given the above, we can run Grouper as:\n```\n> Grouper --config config.yaml\n```\n \nThis will process the samples, generate the mapping ambiguity graph, filter it according to the conditions and the optional filter, and cluster the resuling graph (Grouper uses [MCL](http://micans.org/mcl/) internally for clustering).  Once Grouper is finished, the `human_grouper` directory should exist.  It will contain the following files: \nThe most important file for downstream processing is `mag.flat.clust`.  It contains the computed cluster information in a \"transcript-to-gene\" mapping formation that is compatible with downstream tools like [tximport](https://github.com/mikelove/tximport).  The other files may be useful for exploration, but they are more intended for Grouper's internal use (e.g. `mag.filt.net` contains the filtered mapping ambiguity graph that is used for clustering).\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/COMBINE-lab/grouper/master/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "download_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/COMBINE-lab/grouper/releases"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 1
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/COMBINE-lab/grouper/forks"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "COMBINE-lab/grouper"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_title": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "Grouper"
+      },
+      "source": "https://raw.githubusercontent.com/COMBINE-lab/grouper/master/README.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "has_build_file": [
+    {
+      "confidence": 1,
+      "result": {
+        "format": "dockerfile",
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/COMBINE-lab/grouper/master/scripts/Dockerfile"
+      },
+      "source": "https://raw.githubusercontent.com/COMBINE-lab/grouper/master/scripts/Dockerfile",
+      "technique": "file_exploration"
+    }
+  ],
+  "installation": [
+    {
+      "confidence": 0.8627536847205921,
+      "result": {
+        "original_header": "Docker Image",
+        "type": "Text_excerpt",
+        "value": "A Docker image for [Grouper](https://hub.docker.com/r/combinelab/grouper/) can be downloaded from DockerHub using:\n```\ndocker pull combinelab/grouper\n```\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/COMBINE-lab/grouper/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.974140539401785,
+      "result": {
+        "original_header": "Using Grouper",
+        "type": "Text_excerpt",
+        "value": "`mag.clust, mag.filt.net,  mag.flat.clust,  mag.net,  stats.json, log.txt, mag.orphan.net` \n"
+      },
+      "source": "https://raw.githubusercontent.com/COMBINE-lab/grouper/master/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "issue_tracker": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/COMBINE-lab/grouper/issues"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "keywords": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": ""
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "license": [
+    {
+      "confidence": 1,
+      "result": {
+        "name": "BSD 2-Clause \"Simplified\" License",
+        "spdx_id": "BSD-2-Clause",
+        "type": "License",
+        "url": "https://api.github.com/licenses/bsd-2-clause",
+        "value": "https://api.github.com/licenses/bsd-2-clause"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "File_dump",
+        "value": "BSD 2-Clause License\n\nCopyright (c) 2017, \nAll rights reserved.\n\nRedistribution and use in source and binary forms, with or without\nmodification, are permitted provided that the following conditions are met:\n\n* Redistributions of source code must retain the above copyright notice, this\n  list of conditions and the following disclaimer.\n\n* Redistributions in binary form must reproduce the above copyright notice,\n  this list of conditions and the following disclaimer in the documentation\n  and/or other materials provided with the distribution.\n\nTHIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS \"AS IS\"\nAND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE\nIMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE\nDISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE\nFOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL\nDAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR\nSERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER\nCAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,\nOR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE\nOF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.\n"
+      },
+      "source": "https://raw.githubusercontent.com/COMBINE-lab/grouper/master/LICENSE",
+      "technique": "file_exploration"
+    }
+  ],
+  "name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "grouper"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "owner": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Organization",
+        "value": "COMBINE-lab"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "programming_languages": [
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Python",
+        "size": 39398,
+        "type": "Programming_language",
+        "value": "Python"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "readme_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/COMBINE-lab/grouper/master/README.md"
+      },
+      "technique": "file_exploration"
+    }
+  ],
+  "requirements": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Dependencies",
+        "parent_header": [
+          "Grouper"
+        ],
+        "type": "Text_excerpt",
+        "value": "To run Grouper using the source code, several dependencies need to be installed. The clustering module of Grouper depends on the [MCL](http://micans.org/mcl/) clustering tool (to be available in the environment where it runs).\n\nSimilarly, the labeling module depends on the [Junto](https://github.com/parthatalukdar/junto) library for label propagation (to be available in the environment where it runs). This will require the relevant Java version. You can add this by cloning the repository and running the following commands:\n\n```\nexport JUNTO_DIR=<path to junto folder>\nexport PATH=\"$PATH:$JUNTO_DIR/bin\"\n```\n\nFurther, Grouper depends on the following Python packages:\n  \n  1. [Click](http://click.pocoo.org/5/)\n  2. [PyYAML](https://pypi.python.org/pypi/PyYAML)\n  3. [Pandas](http://pandas.pydata.org/)\n  4. [NumPy](http://www.numpy.org/)\n  5. [Networkx v1.11](https://networkx.github.io/)\n\nHowever, you should be able to install Grouper via `pip` and have these python dependencies installed automatically.  To install Grouper via pip, you can use:\n\n```\n> pip install biogrouper\n```\n\nYou should now have a `Grouper` executable in your path.  You can test this with the following command:\n\n```\n> Grouper --help\n```\n\nYou should see the following output:\n\n```\nUsage: Grouper [OPTIONS]\n\nOptions:\n  --config TEXT  Config file describing the experimental setup\n  --help         Show this message and exit.\n```\n"
+      },
+      "source": "https://raw.githubusercontent.com/COMBINE-lab/grouper/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Notes on Grouper options",
+        "parent_header": [
+          "Grouper",
+          "Dependencies"
+        ],
+        "type": "Text_excerpt",
+        "value": "Grouper provides flags to enable certain features that may improve the accuracy of clustering.  Specifically, one can use information from orphaned reads to link contigs prior to clustering (setting `orphan` to true in the YAML file), and can apply a min cut filter to force the clustering module to separate certain contigs based on their expression statistics across conditions.  It is not the case, however, that applying these features always improves the accuracy of Grouper.  While there is no single simple rule that one can follow to decide if one or both of these options should be applied, we observed the following when testing Grouper on a wide range of data.  The more complete and accurate the assembly, the less useful these features tend to be.  Hence, if your assembly is of high quality (as evalutated by e.g. [Transrate](http://hibberdlab.com/transrate/) or [Detonate](http://deweylab.biostat.wisc.edu/detonate/)), then you may wish to run Grouper without these flags enabled, as it may yield superior performance.  However, if your assembly is of lower quality, and contains many orphaned reads, then you may wish to enable these flags.  We are exploring a more thorough methodology for determining which set of options is optimal for a given data set, and will update this documentation as we determine more concrete recommendations. \n"
+      },
+      "source": "https://raw.githubusercontent.com/COMBINE-lab/grouper/master/README.md",
+      "technique": "header_analysis"
+    }
+  ],
+  "somef_missing_categories": [
+    "citation",
+    "acknowledgement",
+    "run",
+    "download",
+    "contact",
+    "contributors",
+    "documentation",
+    "usage",
+    "faq",
+    "support",
+    "identifier",
+    "executable_example"
+  ],
+  "somef_provenance": {
+    "date": "2024-11-04 08:05:31",
+    "somef_schema_version": "1.0.0",
+    "somef_version": "0.9.5"
+  },
+  "stargazers_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 15
+      },
+      "technique": "GitHub_API"
+    }
+  ]
+}

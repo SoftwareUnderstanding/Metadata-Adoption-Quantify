@@ -1,0 +1,253 @@
+{
+  "code_repository": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/bhattacharya-a-bt/DeCompress"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_created": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2020-04-07T22:04:53Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_updated": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2021-03-22T22:57:25Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "description": [
+    {
+      "confidence": 0.9956361096050321,
+      "result": {
+        "original_header": "DeCompress",
+        "type": "Text_excerpt",
+        "value": "Welcome to `DeCompress` - a semi-reference-free method to\ndeconvolve targeted panels of mRNA expression\ninto tissue compartment. A tissue compartment is a group\nof cells of similar type or biological function (i.e. immune\nor stroma or tumor compartments).\nPlease cite \n[Bhattacharya et al 2020](https://www.biorxiv.org/content/10.1101/2020.08.14.250902v2) \nif you use our package. Visit [our documentation page](https://bhattacharya-a-bt.github.io/DeCompress/).\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/bhattacharya-a-bt/DeCompress/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9767846316223956,
+      "result": {
+        "original_header": "Using DeCompress",
+        "type": "Text_excerpt",
+        "value": "`DeCompress` requires two input data matrices:\n- the *target* matrix (k X n) with k genes and n samples, and\n- the *reference* matrix (K X n) with K genes and N samples with\nK > k. \n`DeCompress` also requires *a priori* knowledge of the number of tissue\ncompartments. If you don't know the number of compartments you wish\nto deconvolve to, you can use the `findNumberCells()` function to get\nan estimate from an singular value decomposition of the target matrix. \nTo illustrate `DeCompress`, let's generate some fake data.\nHere, `pure` is a matrix of compartment-specific expression profiles,\n`reference_props` and `target_props` are different $200 \\times 4$ matrices\nof proportions, and `reference` and `target` gives us the input expression\nmatrices.\n```r\npure = matrix(abs(rnorm(1e4*4)),ncol=4)\nrownames(pure) = paste0('Gene',1:1e4)\nreference_props = apply(matrix(abs(rnorm(200*4)),ncol=4),\n        1,function(x) x/sum(x))\ntarget_props = apply(matrix(abs(rnorm(200*4)),ncol=4),\n        1,function(x) x/sum(x))\n\nreference = pure %*% reference_props\ntarget = pure[sample(1:1e4,400),] %*% target_props\n```\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/bhattacharya-a-bt/DeCompress/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9832939476898941,
+      "result": {
+        "original_header": "Step 1: Feature selection",
+        "type": "Text_excerpt",
+        "value": "Step 1 of DeCompress is to feature select a set of $K'$ genes from\nthe reference that are compartment-specific. \nWe have a wrapper function for this:\n```r\ncompSpec = findInformSet(yref = reference,\n                         method = 'variance',\n                         n_genes = 1000,\n                         n.types = 4)\n```\n \nThe `method = variance` option calls `TOAST` for this feature selection,\na method we have seen to be best suited for this task. The\n`method = linearity` uses the `linseed` method's mutual linearity\nassumption to select compartment-specific genes. `findInformSet()`\nreturns the reference matrix, reduced to these $K'$ genes.\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/bhattacharya-a-bt/DeCompress/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9882985088102102,
+      "result": {
+        "original_header": "Step 2: Train the compressed sensing matrix",
+        "type": "Text_excerpt",
+        "value": "Step 2 of DeCompress is to train the compressed sensing\nmodel that projects the feature space of target matrix to\nthe $K'$ compartment-specific genes. This is done \nwith the `trainCS()` function.\n```r\ncsModel = trainCS(yref = reference[rownames(target),],\n                    yref_need = compSpec,\n                    seed = 1111,\n                    method = c('lar',\n                               'lasso',\n                               'enet',\n                               'ridge',\n                               'l1',\n                               'TV',\n                               'l2'),\n                    par = T,\n                    n.cores = 4,\n                    lambda = .1)\n```\n \nHere, `yref` takes in the reference matrix subsetted to\nthe $k$ genes on the target and `yref_need` takes in the reference matrix\nsubsetted to the $K'$ compartment-specific genes. The `method` option\nallows for various predictive models: `lar` is least angle\nregression, `lasso`, `enet`, and `ridge` fits the `glmnet`\nmethods, and `l1`, `TV`, and `l2` are non-linear optimization\nmethods to different penalties (see the `R1Magic` package).\nYou can also parallelize by toggling `par` and setting the number\nof cores to `n.cores`. `lambda` is a penalization parameter\nfor the non-linear methods defaulted to 0.1. The three \n`glmnet` methods are fastest and work as well as (if not better than)\nthe other methods. \nOnce the compressed sensing model is fit, the compression\nmatrix is extracted with `csModel$compression.matrix`\nand the DeCompressed expression is calculated with \n`dcexp = expandTarget(target,csModel$compression.matrix)`.\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/bhattacharya-a-bt/DeCompress/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.981390775656138,
+      "result": {
+        "original_header": "Step 3: Ensemble deconvolution",
+        "type": "Text_excerpt",
+        "value": "Step 3 of DeCompress is to run ensemble deconvolution\non the DeCompressed expression data.\n```r\ncsModel = bestDeconvolution(yref = dcexp,\n                            n.types = 4,\n                            known.props = target_props,\n                            methods = c('TOAST',\n                                        'linseed',\n                                        'celldistinguisher'))\n```\n \nHere, `yref` takes in the DeCompressed matrix with\n`n.types` taking in the number of compartments.\n`known.props` can be passed a proportion matrix\nif that is known; if left set to `NULL`, the\nfunction will output the deconvolution\nwith the smallest reconstruction error. The `method` option\nallows for various deconvolution methods. Feel free to use your\nfavorite reference-free method to deconvolve `dcexp`.\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/bhattacharya-a-bt/DeCompress/master/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "documentation": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/bhattacharya-a-bt/DeCompress/tree/master/docs"
+      },
+      "technique": "file_exploration"
+    }
+  ],
+  "download_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/bhattacharya-a-bt/DeCompress/releases"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 0
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/bhattacharya-a-bt/DeCompress/forks"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "bhattacharya-a-bt/DeCompress"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_title": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "DeCompress"
+      },
+      "source": "https://raw.githubusercontent.com/bhattacharya-a-bt/DeCompress/master/README.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "installation": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Installation",
+        "parent_header": [
+          "DeCompress"
+        ],
+        "type": "Text_excerpt",
+        "value": "You can install `DeCompress` using \n`devtools::install_github('bhattacharya-a-bt/DeCompress')`.\nMake sure to have dependencies installed as well!\n\n"
+      },
+      "source": "https://raw.githubusercontent.com/bhattacharya-a-bt/DeCompress/master/README.md",
+      "technique": "header_analysis"
+    }
+  ],
+  "issue_tracker": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/bhattacharya-a-bt/DeCompress/issues"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "keywords": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": ""
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "DeCompress"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "owner": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "User",
+        "value": "bhattacharya-a-bt"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "programming_languages": [
+    {
+      "confidence": 1,
+      "result": {
+        "name": "R",
+        "size": 37433,
+        "type": "Programming_language",
+        "value": "R"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "readme_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/bhattacharya-a-bt/DeCompress/master/README.md"
+      },
+      "technique": "file_exploration"
+    }
+  ],
+  "somef_missing_categories": [
+    "citation",
+    "acknowledgement",
+    "run",
+    "download",
+    "requirements",
+    "contact",
+    "contributors",
+    "license",
+    "usage",
+    "faq",
+    "support",
+    "identifier",
+    "has_build_file",
+    "executable_example"
+  ],
+  "somef_provenance": {
+    "date": "2024-10-06 09:55:09",
+    "somef_schema_version": "1.0.0",
+    "somef_version": "0.9.5"
+  },
+  "stargazers_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 1
+      },
+      "technique": "GitHub_API"
+    }
+  ]
+}

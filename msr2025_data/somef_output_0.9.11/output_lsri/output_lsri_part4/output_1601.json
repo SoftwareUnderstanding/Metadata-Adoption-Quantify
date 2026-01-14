@@ -1,0 +1,250 @@
+{
+  "code_repository": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/zhangwei2015/IMPre"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_created": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2016-01-18T11:14:10Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_updated": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2023-07-31T11:18:50Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "description": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "Predict BCR/TCR Germline Genes and Alleles"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 0.9130600036665178,
+      "result": {
+        "type": "Text_excerpt",
+        "value": "Introduction \nIMPre - predict BCR and TCR germline V/J genes and alleles using deep-sequencing data for rearrangement repertoire. It utilizes Clust_Seed algorithm to classify sequences and de-novel assembly for extension. V and J gene/allele are inferred seperately. FASTA format is required. \nIt runs on 64-bit Linux systems.  If takes 1E6 sequences as input for example, about maximum 2.5Gb memory would be required.\nPerl and C need to be installed for you system. \n   1. Create shell\n   perl IMPre.pl \n\tCompulsory: for sequence include C region, -i -o -n -p; for others (sequence with plus strand), -i -o -n\n\tOptionally: others\n\tall the parameters have the detail introduction if you run \"perl IMPre.pl\"\n   this step will create multiple directory and shells \n                    ****    clustering      **********\n            -v_seed <I> the length of seed for V clustering [200]\n            -j_seed <I> the length of seed for J clustering [40]\n            -v_seed_m <I> the last bases masked for V seed [20](recommendation:TRB/IGH=20,TRA/IGk/L=10)\n            -j_seed_m <I> the first bases masked for J seed [5]\n            -vn     <I> the number of cluster for V gene [200](recommendation:TRB=200,IGH=300)\n            -jn     <I> the number of cluster for J gene [30]\n        \n                    ****    assembly:seed extension    *************\n            -v_mr       Rate of the read number needed for V seed extension[0.15]\n            -v_nr       Rate of the unique read number needed for V seed extension[0.12]\n            -j_mr       Rate of the read number needed for J seed extension [0.12]\n            -j_nr       Rate of the unique read number needed for J seed extension [0.1]\n        \n                    ****    optimization:combine && filter     *************\n            -vf_ratio    <I> for V gene, ratio(#(5bp trimmed)supporing seq/#supproing seq) for filtering [1.5]\n            -vf_ave2     <I> for V gene, rate2(#more 5bp/average*100) for filtering [5]\n            -jf_ratio    <I> for J gene, ratio(#(5bp trimmed)supporing seq/#supproing seq) for filtering [1.5]\n            -jf_ave2     <I> for J gene, rate2(#more 5bp/average*100) for filtering [5]\n        \n            -vf_ave      <I> for V gene, depth rate1(#(5bp trimmed)supporting/average*100) for filtering [2]\n            -jf_ave      <I> for J gene, depth rate1(#(5bp trimmed)supporting/average*100) for filtering [0.5](recommendation:TRB=0.5,IGH=2)\n            -v_min_e     <I> for V gene, the mismatch number for last clustering to determine marjor/minor alleles [3]\n            -j_min_e     <I> for J gene, the mismatch number for last clustering to determine marjor/minor alleles [3] \n\t\t   ****    Annotation     *************\n\t    -known  <S> Known germline sequences file. uesd for annotation. FASTA format(the id should be like this: germline_name_flag_specie, such as TRBV1-1*01_F_Human)\n\t    -re_v   <I> To recommend a gene name, V gene mismatch number allowed for clustering [7]\n\t    -re_j   <I> To recommend a gene name, J gene mismatch number allowed for clustering [5] \nNote\n            1. If the sequence including C region, the compulsory parameters: -i -o -n -p\n            2. If the sequence without C region, the sequence must be forward strand and the compulsory parameters: -i -o -n\n\t    3. -known: inferred germline would be aligned to the provided known germline sequences. Actually, IMPre will align all inferred germline to Human and Mouse known germline sequences with default.So \"-known+Human+Mouse\" will be used for annotation\n            4. There are lots of parameters, however, almost of them are not need to reset, just using the values by recommendation. \n\t1. *_V_Germline.final.fa              : inferred germline V sequence\n\t2. *_V_Germline.annotation.summary    : annotation for inferred V sequence\n\t3. *_V_Germline.annotation.details    : details for annotation\n\t4. *_J_Germline.final.fa              : inferred germline J sequence\n\t5. *_J_Germline.annotation.summary    : annotation for inferred J sequence\n\t6. *_J_Germline.annotation.details    : details for annotation \n  2. format for file: annotation.summary\n  ID     Score   Total_reads_support     Unique_reads_support    Combined_seq Recommend_Gene/allele   Flag    Mapped_to_known_germline Mapped_identity\tMapped_mismatch Mapped_Deviated_bases\n  ID: \t\tinferred sequence id(see *_Germline.final.fa)\n  Score:\tCertainty score given by IMPre, range from 0 to 100\n  Total_reads_support:\tthe number of reads contain this inferred germline\n  Unique_reads_support: the unique number of reads contain this inferred germline\n  Combined_seq:\tthe number of extended sequences merged in the optimization step\n  Recommend_Gene/allele: recommend name for the inferred germline\n  Flag:\t\t\"known\"(same with the known germline), \"novel_allele\"(<=7 mismatches for V; J:5),\"novel_gene\"(>7 mismathces for V; J:5)\n  Mapped_to_known_germline:\tnearest known germline allele\n  Mapped_identity:\tidentity from alignment(inferred sequence && known germline sequences)\n  Mapped_mismatch:\tmismatch number from alignment\n  Mapped_Deviated_bases: the missed bases or extra bases number at the 5' end for V( 3'end for J), comparing with nearest known germline sequence \nWei Zhang et al. IMPre: An Accurate and Efficient Software for Prediction of T- and B-Cell Receptor Germline Genes and Alleles from Rearranged Repertoire Data. 2016.Frontiers in Immunology  \n"
+      },
+      "source": "https://raw.githubusercontent.com/zhangwei2015/IMPre/master/README.txt",
+      "technique": "supervised_classification"
+    }
+  ],
+  "download_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/zhangwei2015/IMPre/releases"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 3
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/zhangwei2015/IMPre/forks"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "zhangwei2015/IMPre"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_title": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": ""
+      },
+      "source": "https://raw.githubusercontent.com/zhangwei2015/IMPre/master/README.txt",
+      "technique": "regular_expression"
+    }
+  ],
+  "installation": [
+    {
+      "confidence": 0.9404349880549798,
+      "result": {
+        "type": "Text_excerpt",
+        "value": "######################\nSystem Requirement \n######################\nInstallation \n   1. Before use it, perl(https://www.perl.org/get.html) need to be installed. \n   2. The 'Graph' module is required for the perl version.\n   3. The system for C program is required.\n   4. Download the IMPre to your directory, uncompress it.\n   5. Make sure all programs are executable: (go to the direcotry IMPre)\n   \tchmod 555 *\n\tchmod 555 Annotation/*\n\tchmod 755 Test\n   \t \n\n   2. Run shell\n   2.1 it can easy to run the general sh 'Execute_all.sh': sh Execute_all.sh\n   2.2 run multiple shells in seperately,so V/J could be run in parallel.\n   \tsh *_data_processing.sh\n\tsh *_J_clustering.sh\n\tsh *_V_clustering.sh\n\tsh *_J_assembly.sh\n\tsh *_J_optimization.sh\n\tsh *_V_assembly.sh\n\tsh *_V_optimization.sh\n\tsh *_annotation.sh \n\tdirectory Test/ has a data for testing\n\trun.sh:\n\tperl ../IMPre.pl -i Test.TRB.fa.gz -p TRB_C_region.txt -n T -o . -v_min_e 1 -j_min_e 1 -v_seed 40\t \nPlease email wzhang287-c@my.cityu.edu.hk to report bugs/for help in installtion or usage.\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/zhangwei2015/IMPre/master/README.txt",
+      "technique": "supervised_classification"
+    }
+  ],
+  "invocation": [
+    {
+      "confidence": 0.9367359338174353,
+      "result": {
+        "type": "Text_excerpt",
+        "value": "\tdirectory Test/ has a data for testing\n\trun.sh:\n\tperl ../IMPre.pl -i Test.TRB.fa.gz -p TRB_C_region.txt -n T -o . -v_min_e 1 -j_min_e 1 -v_seed 40\t \n"
+      },
+      "source": "https://raw.githubusercontent.com/zhangwei2015/IMPre/master/README.txt",
+      "technique": "supervised_classification"
+    }
+  ],
+  "issue_tracker": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/zhangwei2015/IMPre/issues"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "keywords": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": ""
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "license": [
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Other",
+        "spdx_id": "NOASSERTION",
+        "type": "License",
+        "url": null,
+        "value": null
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "IMPre"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "owner": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "User",
+        "value": "zhangwei2015"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "programming_languages": [
+    {
+      "confidence": 1,
+      "result": {
+        "name": "C",
+        "size": 85980,
+        "type": "Programming_language",
+        "value": "C"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Perl",
+        "size": 69545,
+        "type": "Programming_language",
+        "value": "Perl"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Shell",
+        "size": 98,
+        "type": "Programming_language",
+        "value": "Shell"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "readme_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/zhangwei2015/IMPre/master/README.txt"
+      },
+      "technique": "file_exploration"
+    }
+  ],
+  "somef_missing_categories": [
+    "citation",
+    "acknowledgement",
+    "run",
+    "download",
+    "requirements",
+    "contact",
+    "contributors",
+    "documentation",
+    "usage",
+    "faq",
+    "support",
+    "identifier",
+    "has_build_file",
+    "executable_example"
+  ],
+  "somef_provenance": {
+    "date": "2024-11-04 07:40:42",
+    "somef_schema_version": "1.0.0",
+    "somef_version": "0.9.5"
+  },
+  "stargazers_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 6
+      },
+      "technique": "GitHub_API"
+    }
+  ]
+}

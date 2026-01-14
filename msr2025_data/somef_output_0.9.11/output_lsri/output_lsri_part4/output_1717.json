@@ -1,0 +1,319 @@
+{
+  "citation": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "References",
+        "type": "Text_excerpt",
+        "value": "1.\tHaghverdi, L., et al., Diffusion pseudotime robustly reconstructs lineage branching. Nat Methods, 2016. 13(10): p. 845-8.\n2.\tCannoodt, R., W. Saelens, and Y. Saeys, Computational methods for trajectory inference from single-cell transcriptomics. Eur J Immunol, 2016. 46(11): p. 2496-2506.\n3.\tAach, J. and G.M. Church, Aligning gene expression time series with time warping algorithms. Bioinformatics, 2001. 17(6): p. 495-508.\n4.\tSankoff, D. and J.B. Kruskal, Time warps, string edits, and macromolecules : the theory and practice of sequence comparison. 1983, Reading, Mass.: Addison-Wesley Pub. Co., Advanced Book Program. xii, 382 p.\n5. Jiaping Zhao, Laurent Itti, shapeDTW: shape Dynamic Time Warping. 2016, arXiv:1606.01601 [cs.CV]\n\n\n"
+      },
+      "source": "https://raw.githubusercontent.com/shenorrLab/cellAlign/master/README.md",
+      "technique": "header_analysis"
+    }
+  ],
+  "code_repository": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/shenorrLabTRDF/cellAlign"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_created": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2018-02-08T11:23:08Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_updated": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2024-09-19T19:27:58Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "description": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Introduction",
+        "type": "Text_excerpt",
+        "value": "Cell Align is a package that takes as input a scaled trajectory vector that orders a gene expression matrix along an arbitrary pseudotime scaled to [0,1], and the gene expression matrix. cellAlign has 3 essential steps:\n\n1. Interpolate the data to have N evenly spaced points along the scaled pseudotime vector using a sliding window of Gaussian weights\n\n2. Determine the genes of interest for alignment\n\n3. Align your trajectory among the selected genes either along the whole trajectory or along a partial segment.\n\nAt this point you may either apply the alignment to compare your trajectories or you can use the relative shift in pseudotime to compare differences between your trajectories.\n\nIncluded in our package is an example: single-cell RNA-seq data set downloaded from GEO(GSE48968) and as shown in figure 2 of the CellAlign publication. They are mouse dendritic cells with two stimulations - LPS and PAM - preprocessed to eliminate bad gene reads and cells with fewer than 2500 genes measured. Here we include a 99 gene module that are induced two-fold by the LPS stimulation for the global alignment and an 89 gene module for the local alignment. We used a technique called diffusion pseudotime [1] to find the trajectories for these data. This pre-processing is typical for single-cell RNA-seq trajectory building, but is by no means the only method of generating such a trajectory. The user should pre-process his or her own data in a technically and biologically relevant way to generate a trajectory for each sample for comparison. The user should keep in mind that the pseudotime metric will be different for each trajectory-finding algorithm because the dimensionality reduction and distance metrics are different for each algorithm [2].  \n\n```{r include = FALSE}\ndata(expGlobalLPS)\ndata(expGlobalPAM)\ndata(expLocalLPS)\ndata(expLocalPAM)\ndata(trajLPS)\ndata(trajPAM)\ntrajLPS = as.numeric(t(trajLPS))\nnames(trajLPS) = colnames(expGlobalLPS)\ntrajPAM = as.numeric(t(trajPAM))\nnames(trajPAM) = colnames(expGlobalPAM)\n\n\n```\n"
+      },
+      "source": "https://raw.githubusercontent.com/shenorrLab/cellAlign/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Interpolation and scaling",
+        "parent_header": [
+          "Introduction"
+        ],
+        "type": "Text_excerpt",
+        "value": "-----\nThe first step is to interpolate the data along the trajectory to represent the data by N (default 200) equally spaced points along the pseudotime trajectory. We included this step because single-cell measurements are often sparse or heterogeneous along the trajectory, leaving gaps that cannot be aligned. Cell-Align interpolates the gene-expression values of equally spaced artificial points using the real single-cell expression data. The expression values of the interpolated points are calculated using all cells, with each single cell assigned a weight given by a Gaussian distribution centered at the interpolated point and a width assigned by a parameter called **winSz**. The default **winSz** is 0.1, as this is the range that preserves the dynamics of the trajectory without including excessive noise for standard single cell data sets. \n\n```{r fig.height=5}\nnumPts = 200\ninterGlobalLPS = cellAlign::interWeights(expDataBatch = expGlobalLPS, trajCond = trajLPS,\n                                         winSz = 0.1, numPts = numPts)\ninterGlobalPAM = cellAlign::interWeights(expDataBatch = expGlobalPAM, trajCond = trajPAM,\n                                         winSz = 0.1, numPts = numPts)\n\n```\n\n```{r echo=FALSE}\nrequire(ggplot2)\nrequire(reshape2)\nrequire(pheatmap)\nsharedMarkers = intersect(rownames(expGlobalLPS), rownames(expGlobalPAM))\nwhichgene=sharedMarkers[1]\nselectedLPS<-interGlobalLPS$interpolatedVals[whichgene,]\nselectedPAM<-interGlobalPAM$interpolatedVals[whichgene,]\n\ndfLPSi = data.frame(traj = interGlobalLPS$traj, value=(selectedLPS), error=interGlobalLPS$error[whichgene,])\ndfLPS = data.frame(traj = trajLPS, t(expGlobalLPS[whichgene,]))\ndfPAMi = data.frame(traj = interGlobalPAM$traj, value=(selectedPAM), error=interGlobalPAM$error[whichgene,])\ndfPAM = data.frame(traj = trajPAM, t(expGlobalPAM[whichgene,]))\ndfLPSM = melt(dfLPS, id.vars = 'traj')\ndfPAMM = melt(dfPAM, id.vars = 'traj')\n#plot of an example gene and its interpolation with error bars\nggplot(dfLPSi, aes(x=traj,y=value)) +  geom_errorbar(aes(ymin=value-error/2, ymax=value+error/2)) + geom_line(size = 2) + geom_point(data=dfLPSM, aes(x=traj,y=value)) + ggtitle(whichgene) \n\n```\n\nNext, you can scale the expression matrix. This is usual for gene expression analysis, but optional. CellAlign alignment will still run without scaling the expression matrix.\n\n```{r}\n#scale the interpolated data (Recommended):\ninterScaledGlobalLPS = cellAlign::scaleInterpolate(interGlobalLPS)\ninterScaledGlobalPAM = cellAlign::scaleInterpolate(interGlobalPAM)\n```\n"
+      },
+      "source": "https://raw.githubusercontent.com/shenorrLab/cellAlign/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 0.936633710961968,
+      "result": {
+        "original_header": "cellAlign",
+        "type": "Text_excerpt",
+        "value": "global and local alignment of single cell trajectories \n---\nTo use this package, you \nwill need the R statistical computing environment (version 3.0 or later)\nand several packages available through Bioconductor and CRAN. \nThe following license governs the use of cellAlign in academic and educational environments. Commercial use requires a commercial license from the Owner of the copyright, The Technion Research &amp; Development Foundation Ltd.,http://t3.trdf.co.il. Please check the license.pdf file for more details. \n"
+      },
+      "source": "https://raw.githubusercontent.com/shenorrLab/cellAlign/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9979589455360995,
+      "result": {
+        "original_header": "Abstract",
+        "type": "Text_excerpt",
+        "value": "High-dimensional measurements of single cells such as RNA sequencing or mass cytometry are often used to generate detailed trajectories of complex biological processes from heterogeneous cell populations. The high-dimensional information enables ordering of single cells based on continuous changes in measured mRNA or protein expression.  CellAlign is a tool for quantitative comparison of expression dynamics within or between single-cell trajectories. The **input** to the CellAlign workflow is any **trajectory vector** that orders single cell expression with a pseudo-time spacing and the **expression matrix** for the cells used to define the trajectory. This vignette provides an overview of a single cell RNA-Seq analysis workflow with CellAlign describing both whole trajectory and partial trajectory alignments. \n \n"
+      },
+      "source": "https://raw.githubusercontent.com/shenorrLab/cellAlign/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9445730963436795,
+      "result": {
+        "original_header": "Choose the genes -",
+        "type": "Text_excerpt",
+        "value": "====\nNow, the user has to choose which genes to include in the alignment. The choice of genes depends on the goals of the experiment.  \nFor multiple genes, the most straightforward choice is to use **the genes that were included in the trajectory-finding** preprocessing step, since these genes were likely chosen for their relevance to the biological question of interest.  \nIn the case of experiment replicates or comparison between different stimulations of the same sample, it might be worthwhile to include all genes. \n \n"
+      },
+      "source": "https://raw.githubusercontent.com/shenorrLab/cellAlign/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.938745438187218,
+      "result": {
+        "original_header": "Alignment -",
+        "type": "Text_excerpt",
+        "value": "Finally, there is the alignment step. CellAlign operates much like sequence alignment algorithms, quantifying overall similarity in expression throughout the trajectory (global alignment), or finding areas of highly conserved expression (local alignment). The method used is based on dynamic time-warping (DTW) [3, 4] in which a dissimilarity matrix is computed from the distance between each pair of points in the gene-expression space. The user can specify the distance measure to be used - \"euclidean\", \"maximum\", \"manhattan\", \"canberra\", \"binary\" or \"minkowski\". Here we use the  Euclidean distance. \n```{r echo=FALSE, message=FALSE, fig.height=5, fig.width=5.5}\nA=calcDistMat(interScaledGlobalPAM$scaledData[,1:10],interScaledGlobalLPS$scaledData[,1:10], dist.method = 'Euclidean')\npheatmap(A, cluster_cols = F, cluster_rows=F, main = \"LPS vs PAM distances, 1st 10 points\",\n          show_rownames = F, show_colnames = F,display_numbers = TRUE)\n\n```\n \nCell-Align then finds a path through the matrix that minimizes the overall distance while adhering to the following constraints: \n *\tfor global alignment the alignment must cover the entire extent of both trajectories, always starting in the upper left of the dissimilarity matrix and ending in the lower right.\n \n *\tfor local alignment the alignment is restricted only to highly similar cells, yielding as output regions with conserved expression dynamics  \nThe cellAlign package performs DTW to align pseudo-temporal sequences by \"warping\" the temporal axis. DTW is essentially a point-to-point matching algorithm, simliar to DNA sequence alignment algorithms, constrained to maintain the uni-directionality of time and in general without allowing skipped points. At the heart of DTW is a step pattern that assigns penalties to skipping points along the trajectory or excessive repeating of individual points, effectively putting limits on the local slope of the warping curve. CellAlign allows the user to set the step pattern as input (step.pattern = (\"symmetric1\", \"symmetric2\", \"asymmetric\", \"rabinerJuang\", \"symmetric5\")). The default pattern, _\"symmetric2\"_\" is adequate for most cellAlign applications because the interpolated data are sufficiently smooth that there is nothing gained from allowing skipped points, and the additional cost for staying on the diagonal balances the fact that the diagonal is the shortest path [5]. \nThe input of the globalAlign function can be either a dissimilarity matrix (as calculated above), or a query and reference matrix as shown below.The pseudotime trajectory vectors must also be included. \n"
+      },
+      "source": "https://raw.githubusercontent.com/shenorrLab/cellAlign/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9609625573826125,
+      "result": {
+        "original_header": "Alignment of branched trajectories",
+        "type": "Text_excerpt",
+        "value": "Sometimes your data will create a branched trajectory when using trajectory-building algorithms that support this kind of output (such as Monocle2 or diffusion pseudotime). \n \n"
+      },
+      "source": "https://raw.githubusercontent.com/shenorrLab/cellAlign/master/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "download_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/shenorrLab/cellAlign/releases"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 8
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/shenorrLabTRDF/cellAlign/forks"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "shenorrLabTRDF/cellAlign"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_title": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "cellAlign"
+      },
+      "source": "https://raw.githubusercontent.com/shenorrLab/cellAlign/master/README.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "installation": [
+    {
+      "confidence": 0.9998033334109726,
+      "result": {
+        "original_header": "cellAlign",
+        "type": "Text_excerpt",
+        "value": "---\nTo use this package, you \nwill need the R statistical computing environment (version 3.0 or later)\nand several packages available through Bioconductor and CRAN. \nThis release supports Windows 10. cellAlign has not been tested with Mac and Linux operating systems. \n"
+      },
+      "source": "https://raw.githubusercontent.com/shenorrLab/cellAlign/master/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "issue_tracker": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/shenorrLabTRDF/cellAlign/issues"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "keywords": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": ""
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "license": [
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Other",
+        "spdx_id": "NOASSERTION",
+        "type": "License",
+        "url": null,
+        "value": null
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "cellAlign"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "owner": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Organization",
+        "value": "shenorrLabTRDF"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "programming_languages": [
+    {
+      "confidence": 1,
+      "result": {
+        "name": "R",
+        "size": 60164,
+        "type": "Programming_language",
+        "value": "R"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "C",
+        "size": 8422,
+        "type": "Programming_language",
+        "value": "C"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "readme_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/shenorrLab/cellAlign/master/README.md"
+      },
+      "technique": "file_exploration"
+    }
+  ],
+  "related_papers": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://arxiv.org/abs/1606.01601 [cs.CV]\n\n"
+      },
+      "source": "https://raw.githubusercontent.com/shenorrLab/cellAlign/master/README.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "somef_missing_categories": [
+    "acknowledgement",
+    "run",
+    "download",
+    "requirements",
+    "contact",
+    "contributors",
+    "documentation",
+    "faq",
+    "support",
+    "identifier",
+    "has_build_file",
+    "executable_example"
+  ],
+  "somef_provenance": {
+    "date": "2024-11-04 08:04:24",
+    "somef_schema_version": "1.0.0",
+    "somef_version": "0.9.5"
+  },
+  "stargazers_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 37
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "usage": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "To begin",
+        "type": "Text_excerpt",
+        "value": "cellAlign \nFirst you will need to download the package from github \n\nStart by installing the devtools package from CRAN and load it\n\nInstallation should take less than one minute.\n\n```{r eval=FALSE}\ninstall.packages(\"devtools\")\nlibrary(devtools)\n```\n\ninstall cellAlign and load it\n\n```{r eval=FALSE}\ninstall_github(\"shenorrLab/cellAlign\")\n```\n```{r}\nlibrary(cellAlign)\n\n```\nThe following demo is provided to walk you through the basic functionality of cellAlign. It should take less than 10 minutes to complete on a standard desktop computer.\n"
+      },
+      "source": "https://raw.githubusercontent.com/shenorrLab/cellAlign/master/README.md",
+      "technique": "header_analysis"
+    }
+  ]
+}

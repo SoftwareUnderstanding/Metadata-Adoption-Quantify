@@ -1,0 +1,745 @@
+{
+  "code_repository": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/JSuryatenggara/ChIP-AP"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_created": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2021-04-30T02:24:57Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_updated": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2024-10-02T12:42:57Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "description": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "An Integrated Analysis Pipeline for Unbiased ChIP seq Analysis"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Introduction",
+        "type": "Text_excerpt",
+        "value": "ChIP-Seq is a technique used to analyse protein-DNA interactions and identify the binding sites of said protein. A key step in the bioinformatics analysis is the calling of \u201cpeaks,\u201d or regions of enrichment, corresponding to binding sites of the protein to the DNA. \n\n\nIt has been widely reported that of all the bioinformatics analysis steps, the step most likely to affect study outcome is peak calling (Chen et al., 2012; Johnson et al., 2007). Numerous reviews (Koohy et al., 2014; Laajala et al., 2009; Wilbanks and Facciotti, 2010) have been published benchmarking peak callers to ascertain superiority of one caller over others. Consistently however, these benchmarks report mixed, potentially conflicting, findings with no single peak caller out-performing others. Rather, each peak-caller excels in specific types of datasets and one cannot know the overall best performance of a single peak-caller in advance. Using a sub-optimal peak caller will result in few peaks called that do not accurately describe the binding landscape of the investigated protein, or worse, report a large number of false-positive peaks which, short of validating every peak manually, will be indiscernable from true-positive peaks. Compounding issues further, benchmarking reviews have consistently shown little overlap between called peak sets of different peak callers. Therefore, we can conclude that each peak caller has distinct selectivity and specificity characteristics which are often not additive and seldom completely overlap in many scenarios. As such, results obtained from individual peak callers, even sub-optimal callers, will contain sub-sets of true and false-positive peaks that are exclusive to that caller. \n\n\nThis leads the user to the peak-caller dilemma, if there is no universal peak caller to use, which peak caller _does_ one use for their dataset? We therefore rationalized that without a perfect peak caller (which is near impossible owing to the significant variability introduced from \nwet-lab experiments), the only option is to leverage the best performing, currently available peak callers and identify unique and/or overlapping peaks to better discern the confidence of peaks without manual validation, and identify overlapping, high-confidence peak sub-sets.\n\n\nTo that end, our <b>ChIP-Seq Analysis Pipeline (ChIP-AP)</b> utilizes multiple peak callers, which enables peak calling and merging of results from multiple peak callers (MACS2, GEM/SICER2, HOMER, and Genrich) to: \n\n1. Selectively obtain high confidence peaks based on overlaps by different peak callers\n\n2. Avoid the caveats of depending on a single peak caller in datasets with different peak characteristics and signal-to-noise ratios\n\n3. Freely choose the \u201csweet spot\u201d between the consensus peaks set (intersection of detected peaks from all peak callers) and the total peaks set (the union of all detected peaks), that answers one\u2019s biological questions which may be supported by additional evidence from other experiments. This can be done from the output without re-processing data.\n\nChIP-AP is a fully automated ChIP-seq data processing and analysis pipeline:\n\n1. For input, it takes unaligned sequencing reads in fastq format (extension: .fastq / .fq / .fastq.gz / .fq.gz) or previously aligned reads in bam format (extension: .bam) from any aligner\n\n2. ChIP-AP is capable of processing and analyze multiple sample replicates\n\n3. ChIP-AP is a complete, integrated workflow which performs all analysis steps (QC, cleanup, alignment, peak-calling, pathway analysis) and outputs a final integrated peak set\n\n4. The output of ChIP-AP is a detected peaks list, annotated with information on associated gene names, IDs, functions, gene ontology, and related pathways\n\n<br>\n"
+      },
+      "source": "https://raw.githubusercontent.com/JSuryatenggara/ChIP-AP/main/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 0.9518106495124584,
+      "result": {
+        "original_header": "Final Analysis Table (including supplementary annotations)",
+        "type": "Text_excerpt",
+        "value": "The table below shows the contents of [setname]_all_peaks_go_pathway_annotated.tsv. Smaller sized and less verbose variants of this table are saved in the output folder with suffixes: concatenated, annotated, and calculated (see Source in the table below) \n"
+      },
+      "source": "https://raw.githubusercontent.com/JSuryatenggara/ChIP-AP/main/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9902113074905567,
+      "result": {
+        "original_header": "Sample Table",
+        "type": "Text_excerpt",
+        "value": "Contains the full path of each input ChIP and control sample in the pipeline run in a tab-separated value file: [setname]_sample_table.tsv in the output save folder in ChIP-AP sample table format. This is useful for documentation of the run, and for re-running of the pipeline after a run failure or some tweaking if need be. Below is an example of sample table file content (header included), given paired-end samples with two ChIP replicates and two control replicates: \n"
+      },
+      "source": "https://raw.githubusercontent.com/JSuryatenggara/ChIP-AP/main/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9612852000819887,
+      "result": {
+        "original_header": "ChIP vs Control fold change calculation",
+        "type": "Text_excerpt",
+        "value": "For transcription factor samples (narrow peaks), ChIP weighted peak center coordinate is determined by the median coordinate of all reads in the peak region. Fold change was then calculated as read depth in ChIP sample divided by non-zero read depth of control sample at the weighted peak center coordinate. \nFor histone modifier samples (broad peak type), fold change was simply calculated based on average read depth in ChIP sample, divided by non-zero average read depth of control sample, along the same peak region. \nTo correct for read depth discrepancies due to imbalanced number of reads between ChIP and control samples, ChIP-AP uses one of three available normalization factors depending on the commandline flag specified:\n- (Default) Based on only uniquely mapped reads in ChIP vs control bam files (filtered using samtools view -F256 and counted using samtools view -c)\n- Based on only successfully mapped reads in ChIP vs control bam files (filtered using samtools view -F4 and counted using samtools view -c) \n- Based on user-determined value. \nAdvanced users may choose to change this by changing the argument field for fold_change_calculator in the settings table as follows:\n- --normfactor uniquely_mapped \n    - _Default_ - based on uniquely mapped reads; default setting\n- --normfactor mapped \n    - change to all mapped reads\n- --normfactor user_value --chip_norm [x] --ctrl_norm [y] \n    - change to user-determined normalization factor, where x / y is the user-determined ratio of the number of ChIP reads to the number of control reads \n"
+      },
+      "source": "https://raw.githubusercontent.com/JSuryatenggara/ChIP-AP/main/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9992772282697265,
+      "result": {
+        "original_header": "Genrich p-value threshold adjustment formula",
+        "type": "Text_excerpt",
+        "value": "Based on our testing, Genrich tends to misbehave when processing datasets with low read depth. It starts to call low enrichment regions as peaks, leaving users with an impossibly large number of called peaks. We contacted the developer of Genrich and confirmed such behaviour with them. Through our testing, we derived equations that allow us to curtail Genrich\u2019s aberrant behaviour in such scenarios. This adjustment is performed and derived by us and is not attributed to Genrich and/or its developer(s). \n"
+      },
+      "source": "https://raw.githubusercontent.com/JSuryatenggara/ChIP-AP/main/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9863362827362572,
+      "result": {
+        "original_header": "Interpreting ChIP-AP Output",
+        "type": "Text_excerpt",
+        "value": "Ok so ChIP-AP does report a fair amount of stuff. If you ran it locally you have a swath of folders and you have nooooo clue what to look for and its all confusing. We get that. The reality though its very simple to know what to look for to know your experimental run worked and in this section were going to walk you through that!\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/JSuryatenggara/ChIP-AP/main/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9381399091208591,
+      "result": {
+        "original_header": "Did my analysis work?",
+        "type": "Text_excerpt",
+        "value": "There are a couple of things to look for to answer this question. 1, the fingerprint plot and 2, the venn diagram of the merged peaks. Let's begin\u2026 \n    The fingerprint plot tells us how well the enrichment of your samples worked. It is generated by the function from the deeptools package and is generated after the alignment files. As such, the plots are found in the \u201c08_results\u201d folder and are labelled \u201cfingerprint_xxxxx.png/svg.\u201d The PNG files allow you to view them in any image viewer, the SVG files are for opening in Adobe Illustrator or Inkscape to make HQ publication figures later if you need. \n    To interpret the fingerprint plot, (more information can be found on the deeptools documentation site), but  put simply, the input control should be a diagonal line as close as possible toward the 1:1 diagonal. Your ChIP sample should have a bend/kink towards the bottom right corner. The greater the separation between the input and the chip sample, the greater the enrichment you will see in the final result (i.e., lots of peaks). If the lines are overlapping, then you will see little enrichment and your experiment didn\u2019t work that well. If you\u2019re sample lines are switched \u2013 then you probably switched the sample names and we recommend doing the right thing and repeating the experiment and not simply switch sample names for the sake of a publication. \n   In this example, there is reasonable enrichment in our chip samples. And so we are confident we can see enrichment. \n    In the folder \u201c21_peaks_merging\u201d folder, you will find the \u201cvenn.txt\u201d file. This will show you a textual venn diagram of the overlap between the called peaks across all peak callers. To know your experiment worked well, then you should see a full list with combinations of all peak callers and relatively large numbers for the consensus peak sets (ie peaks called by multiple peak callers) \u2013 this is the ideal case. However, from our experiences, there will almost always be 1 maybe 2 peak callers that don\u2019t like a dataset for some reason and so you may find a peak caller performed poorly but the others performed admirably. This is still a good and valid result.  \n    If you look at this file and only see a small number of peaks and little overlap, and only 1 peak caller seems to have dominated peak calling, then likely your experiment didn\u2019t work that great. Just because only 1 peak caller performed well though, doesn\u2019t mean the experiment is a write-off and a failure. It can still be valid and so doings some manual validations on the top FC differential peaks by chip-PCR might give you an indication whether there is salvageable data or not. Also if you have other confirmatory experimental evidence then even 1 peak calling getting results is fine. This is why we implemented multiple peak callers, because there are many instances where the signal:noise just creates a mess for most peak callers but generally 1 will be the super-hero of the day in such a situation. \n    Valid question. In the folder \u201c22_peak_processing,\u201d open the \u201cxxxx_all_peaks_calculated.tsv\u201d file in excel and you\u2019re good to go. Now to open it there is a little step to do\u2026 \n    Open a new blank workbook in excel \n    In the ribbon at the top, go to \u201cData\u201d, then select \u201cFrom Text/CSV\u201d \n    In the dialog box that opens up, find and open the peaks files \u201cxxxx_all_peaks_calculated.tsv.\u201d Follow all the prompts and keep pressing \u201cNext\u201d / \u201cProceed\u201d till the end and the file opens. Opening the peak file this way circumvents an issue that Excel constantly makes which is it will interpret some gene names such as OCT1 as a date, when its not. So by following the aforementioned steps, excel will not do this stupid conversion and instead, when you save the file as an xlsx, it will ensure that this issue doesn\u2019t happen (seen it in sooooo many publications its not funny \u2013 just import data this way please people?) \n   From this file, you can view all the results and data for you analysis. Refer to Interpreting ChIP-AP Output for the definition of what each column means. \n4. <b>How Do I View My Alignments And Data?</b>\n    \n    People typically want to view their results on UCSC or other genome browsers. As we don\u2019t have a web-server to host such coverage files (and making an accessible ucsc hub is a real pain and we don\u2019t want to implement that), the onus is on you to view them locally on your machine. All laptops, whether then can run ChIP-AP or not can run [IGV](https://software.broadinstitute.org/software/igv/download) and view the coverage and bam files. The coverage and bam failes can be located in the \u201c08_results\u201d folder.  \n5. <b>In Short, What's Relevant?</b>  \n    Easy answers\n    1. Check fingerprint plot and make sure it looks good\n    2. Check venn.txt file and make sure you get good spread of peaks\n    Together points 1 and 2 tell you your experiment worked!\n    3. Your final peak file is in \u201c22_peak_processing\u201d open the \u201cxxxx_all_peaks_calculated.tsv\u201d \u2013 This is the file you need to upload to GEO as your processed data file for your analysis and the only file you need to work with when looking through your data.\n    4. Also as part of your submission to GEO or as a supplemental table in your manuscript, you MUST include the settings table named \u201cdefault_settings_table.txt\u201d located in the root analysis directory. This provided with the raw fq files, which must be uploaded to GEO, will ensure complete reproducibility of the analysis performed.\n    5. Manuscript details for M&M. A statement such as the following should suffice:\n    \n        For processing our ChIP-Seq analysis, we utilized ChIP-AP (https://academic.oup.com/bib/advance-article/doi/10.1093/bib/bbab537/6489109). Raw fq files are uploaded to GEO with accession number GSE172355, and the custom settings table utilized for analysis can be found on GEO as a processed settings file and also in Table 1 in our manuscript. Full details of ChIP-AP and its function can be found in its corresponding manuscript (https://academic.oup.com/bib/advance-article/doi/10.1093/bib/bbab537/6489109). \n<br>\n\t\t    \n<b>We have a Q&A section located as a wiki page with frequently asked questions and answers. This list will be updated as we receive more questions to advise the wider community.</b>\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/JSuryatenggara/ChIP-AP/main/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "documentation": [
+    {
+      "confidence": 1,
+      "result": {
+        "format": "wiki",
+        "type": "Url",
+        "value": "https://github.com/JSuryatenggara/ChIP-AP/wiki"
+      },
+      "source": "https://raw.githubusercontent.com/JSuryatenggara/ChIP-AP/main/README.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "download_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/JSuryatenggara/ChIP-AP/releases"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 11
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/JSuryatenggara/ChIP-AP/forks"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "JSuryatenggara/ChIP-AP"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_title": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": ""
+      },
+      "source": "https://raw.githubusercontent.com/JSuryatenggara/ChIP-AP/main/README.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "has_script_file": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/JSuryatenggara/ChIP-AP/main/chipap_installation/homer_genome_update.sh"
+      },
+      "technique": "file_exploration"
+    }
+  ],
+  "images": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/JSuryatenggara/ChIP-AP/storage/images/genrich_equation_guide.PNG"
+      },
+      "source": "https://raw.githubusercontent.com/JSuryatenggara/ChIP-AP/main/README.md",
+      "technique": "regular_expression"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/JSuryatenggara/ChIP-AP/storage/images/genrich_equation_guide.PNG"
+      },
+      "source": "https://raw.githubusercontent.com/JSuryatenggara/ChIP-AP/main/README.md",
+      "technique": "regular_expression"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/JSuryatenggara/ChIP-AP/storage/images/genrich_equation_guide.PNG"
+      },
+      "source": "https://raw.githubusercontent.com/JSuryatenggara/ChIP-AP/main/README.md",
+      "technique": "regular_expression"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/JSuryatenggara/ChIP-AP/storage/images/genrich_equation_guide.PNG"
+      },
+      "source": "https://raw.githubusercontent.com/JSuryatenggara/ChIP-AP/main/README.md",
+      "technique": "regular_expression"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/JSuryatenggara/ChIP-AP/storage/images/genrich_equation_guide.PNG"
+      },
+      "source": "https://raw.githubusercontent.com/JSuryatenggara/ChIP-AP/main/README.md",
+      "technique": "regular_expression"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/JSuryatenggara/ChIP-AP/storage/images/genrich_equation_guide.PNG"
+      },
+      "source": "https://raw.githubusercontent.com/JSuryatenggara/ChIP-AP/main/README.md",
+      "technique": "regular_expression"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/JSuryatenggara/ChIP-AP/storage/images/fingerprint_plot_guide.png"
+      },
+      "source": "https://raw.githubusercontent.com/JSuryatenggara/ChIP-AP/main/README.md",
+      "technique": "regular_expression"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/JSuryatenggara/ChIP-AP/storage/images/venn_diagram_guide.png"
+      },
+      "source": "https://raw.githubusercontent.com/JSuryatenggara/ChIP-AP/main/README.md",
+      "technique": "regular_expression"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/JSuryatenggara/ChIP-AP/storage/images/excel_screenshot_1_guide.png"
+      },
+      "source": "https://raw.githubusercontent.com/JSuryatenggara/ChIP-AP/main/README.md",
+      "technique": "regular_expression"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/JSuryatenggara/ChIP-AP/storage/images/excel_screenshot_2_guide.png"
+      },
+      "source": "https://raw.githubusercontent.com/JSuryatenggara/ChIP-AP/main/README.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "installation": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Software Installation",
+        "type": "Text_excerpt",
+        "value": "ChIP-AP has been designed to be as simple as possible to run for end-users, be they bioinformaticians or wet-lab biologists with no coding experience. For non-experienced users a little command-line dabbling is required in order to get everything set up just right however. We have prepared full installation guides and wiki\u2019s located here on our github for your operating system (OS) of choice (look at the top you will see a \u201cWiki\u201d tab). These are complete step-by-step guides with accompanying screenshots to walk users through every step of the installation processes. For fresh installations, we have not encountered issues when following our installation instructions accurately. If you have previous instalaltions of configurations, some tweaking may be necessary to get everything to work right \u2013 just be aware.\n\nFor advanced users, the installation instructions are as follows:\n\n1 - Download the _chipap_installation_ zip in our github repo and unzip in the folder of your choosing.\n\t\n\twget https://github.com/JSuryatenggara/ChIP-AP/raw/main/chipap_installation.zip\n\n2 - Download the pre-generated, required genome files from our [dropbox](https://www.dropbox.com/s/ioqd3hwdahh9xon/genomes.zip) and unzip in the same folder as the ChIP-AP scripts \u2013 ie \n\n\t<path>\u2026/chipap_installation/chipap_scripts/\n\t\n3 - Anaconda3 is required for ChIP-AP to install and run. If you have already installed Anaconda3 on your machine, proceed to the next step. If you need to setup Anaconda3, download the required command-line installer from [Anaconda](https://www.anaconda.com/products/individual) using wget. We recommend isntalling anaconda with default settings and when prompted at the end of the installation, initialize the base conda environment.  \n\nBefore continuing, you must close and re-open the terminal to initialize conda.\n\n4 - In a new terminal window, you should now see (base) written to the left of the command prompt, this tells you conda has been properly initialized.  If it hasn\u2019t been initialized, refer to the [conda documentation](https://docs.anaconda.com/anaconda/user-guide/faq/#:~:text=In%20order%20to%20initialize%20after,and%20then%20run%20conda%20init%20.&text=Replace%20%3Cpath%2Dto%2Danaconda,of%20your%20installed%20Anaconda%20file.), section _\"Should I add Anaconda to the macOS or Linux PATH?\"_\n\n5 - Next navigate to the chipap_installation folder. Check that the chipap_installer.py script is executable. If not, type the command:\n\n\tchmod +x ./chipap_installer.py\n\nand then execute it. The installer will then ask you a couple of questions regarding installing in its own environment (highly recommended) and then proceed to install everything and all dependencies. Depending on your CPU and internet speeds this will take a while as it needs to download ~10-15Gb of genome data for HOMER.\n\n6 - Once done, to use ChIP-AP, if you installed in its own conda environment you must activate the conda environment before each run. Otherwise, you can simply run \n\n\tchipap_vxx.py\n\tchipap_wizard.py \n\tchipap_dashboard.py\n\ndepending on your preference of running.\n\n<br>\n"
+      },
+      "source": "https://raw.githubusercontent.com/JSuryatenggara/ChIP-AP/main/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Setting Table &amp; Default Parameters",
+        "parent_header": [
+          "Main Pipeline Output"
+        ],
+        "type": "Text_excerpt",
+        "value": "A cornerstone of ChIP-AP\u2019s functionality is the settings table. ChIP-AP, with the raw fq files and the settings table, is able to reproduce (near) identically any analysis that was performed (provided the same program version numbers are used). The \u2018near identically\u2019 statements is owing to the fact that reported alignments of multi-mappers may, in some cases, give every so slightly different results. This ambiguity can be alleviated however by filtering out alignments with low MAPQ scores in the corresponding alignment filter step, post-alignment to ensure consistent results from every analysis run. The provision of the settings table therefore ensures reproducibility of any analysis with minimal effort and bypasses the usually sparse and significantly under-detailed methods sections of publications. Science is supposed to be reproducible, yet bioinformatics analysis are typically black-boxes which are irreproducible. This 1 file, changes that!  \n\nThe structure of the settings table is simple. It is a 2 column tab-separated value file with the names of the programs on the 1st column, and the necessary flags required or changed in the 2nd column. If making your own custom table, then the 1st column below must be copied as-is and not changed. These 2 columns together, list the flags and argument values for each program used in the pipeline.  \n\nWhen ChIP-AP is run, a copy of the used settings table is saved as a tab-separated value file: [setname]_ setting_table.tsv in the output save folder. \n\nIf you have a custom settings table made and provided it as input, then ChIP-AP will make a 2nd copy of this table in the same output save folder. This decision is made as it is useful documentation of the run performed. This file is also useful for re-running of the pipeline after run failure or some tweaking if necessary. If submitting an issue request on Github, you must provide us your settings table used as well as all other requested information. See Github for details regarding this.\n\n**We consider the dissemination of the information of this file as vital and essential along with results obtained. The table can be included as a supplemental table in a manuscript or can be included as a processed data file when submitting data to GEO \u2013 either way, the information of this file must be presented when publishing data.**\n\t\t    \nBelow is an example of setting table file in its default-setting state:\n\n**Note:** When running GEM, to ensure absolute reproducibility of all results every single run, you **MUST** add the flag \"--t 1\" to the DST below. When GEM is run in multi-threaded mode, its results are not reproducible over multiple runs even with the same parameters (although they are very close to each other). This is an issue we raised with the developers and is out of our hands. We highly doubt they will fix this aspect of GEM's behaviour. Therefore if 100% reproducibility of results is key for you, run in single-threaded mode only - even if it will take longer to run.\n\t\t    \n\n| program | argument |\n|-|-|\n| <b>fastqc1 | -q |\n| <b>clumpify | dedupe spany addcount qout=33 fixjunk |\n| <b>bbduk | ktrim=l hdist=2 |\n| <b>trimmomatic | LEADING:20 SLIDINGWINDOW:4:20 TRAILING:20 MINLEN:20 |\n| <b>fastqc2 | -q |\n| <b>bwa_mem |  |\n| <b>samtools_view | -q 20 |\n| <b>plotfingerprint |  |\n| <b>fastqc3 | -q  |\n| <b>macs2_callpeak |  |\n| <b>gem | -Xmx10G --k_min 8 --k_max 12 |\n| <b>sicer2 |  |\n| <b>homer_findPeaks |  |\n| <b>genrich | --adjustp -v |\n| <b>homer_mergePeaks |  |\n| <b>homer_annotatePeaks |  |\n| <b>fold_change_calculator | --normfactor uniquely_mapped |\n| <b>homer_findMotifsGenome | -size given -mask | \n| <b>meme_chip | -meme-nmotifs 25 |\n\nAs can be seen, certain flags and values for some programs have been preset as per our testing and opinions. A point to note however, some flags for programs, such as -BAMPE in MACS2, are not listed since they are \u201chard-coded\u201d into the pipeline and cannot be modified. For this example of -BAMPE in MACS2, this is \u201chard-coded\u201d because this flag is essential for running peak calling in paired-end datsets. Parameters and flags like this that must be set are \u201chard-coded\u201d and hidden and cannot be changed unless by choosing the appropriate narrow/broad run modes. A listing of all these \u201chard-coded\u201d parameters can be found in our [documentation](https://github.com/JSuryatenggara/ChIP-AP/wiki/ChIP-AP-Guide).\n\n<br>\n"
+      },
+      "source": "https://raw.githubusercontent.com/JSuryatenggara/ChIP-AP/main/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 0.9999958028481304,
+      "result": {
+        "original_header": "ChIP-AP Graphical Overview",
+        "type": "Text_excerpt",
+        "value": "<p align=\"center\">\n<img src=https://raw.githubusercontent.com/JSuryatenggara/ChIP-AP/storage/images/chipap_workflow_guide.png>\n</p>\n<b>For detailed explanations of all the steps and methodologies used throughout ChIP-AP refer to our documentation (https://github.com/JSuryatenggara/ChIP-AP/wiki/ChIP-AP-Guide)</b> \n"
+      },
+      "source": "https://raw.githubusercontent.com/JSuryatenggara/ChIP-AP/main/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9722517731676767,
+      "result": {
+        "original_header": "Did my analysis work?",
+        "type": "Text_excerpt",
+        "value": "    <img src=\"https://raw.githubusercontent.com/JSuryatenggara/ChIP-AP/storage/images/fingerprint_plot_guide.png\" width=\"500\">  \n    <img src=\"https://raw.githubusercontent.com/JSuryatenggara/ChIP-AP/storage/images/venn_diagram_guide.png\" width=\"500\"> \n    <img src=\"https://raw.githubusercontent.com/JSuryatenggara/ChIP-AP/storage/images/excel_screenshot_1_guide.png\" width=\"500\"> \n    <img src=\"https://raw.githubusercontent.com/JSuryatenggara/ChIP-AP/storage/images/excel_screenshot_2_guide.png\" width=\"500\"> \n    Download [IGV](https://software.broadinstitute.org/software/igv/download), install it (super easy) and then load the coverage and bam files needed. Make sure you load the right genome build however! That\u2019s critical. From the ChIP-AP main output file (see the _Main Pipeline Output_ section), you can copy columns B,C,D straight into IGV and it will take you to the peak region.  \n"
+      },
+      "source": "https://raw.githubusercontent.com/JSuryatenggara/ChIP-AP/main/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "issue_tracker": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/JSuryatenggara/ChIP-AP/issues"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "keywords": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": ""
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "ChIP-AP"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "owner": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "User",
+        "value": "JSuryatenggara"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "programming_languages": [
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Python",
+        "size": 892462,
+        "type": "Programming_language",
+        "value": "Python"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Shell",
+        "size": 538,
+        "type": "Programming_language",
+        "value": "Shell"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "readme_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/JSuryatenggara/ChIP-AP/main/README.md"
+      },
+      "technique": "file_exploration"
+    }
+  ],
+  "releases": [
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "JSuryatenggara",
+          "type": "User"
+        },
+        "date_created": "2022-09-12T12:00:38Z",
+        "date_published": "2022-09-12T23:38:44Z",
+        "description": "Version 5.4\r\n- Sixth version to be released on GitHub\r\n    - --fcmerge flag will now automatically be activated when the number of ChIP samples\r\nare unequal to control samples without requiring any user prompt.\r\n- chipap_installer.py now works for anaconda installed under a different parent directory\r\nname other than \u201canaconda3\u201d\r\n    - Upon not finding \u201canaconda3\u201d parent directory name, the installer will attempt to\r\nrecognize the actual parent directory name, in which file bin/conda is located.\r\n    - As a failsafe measure, upon still being unable to find anaconda parent directory, the\r\ninstaller will prompt the user to manually key in the full path to anaconda parent\r\ndirectory, before proceeding with the installation.\r\n- The .yaml files for ChIP-AP installation have been updated\r\n    - The R version the line \u201cr-base=3.2.2=0\u201d trying to install cannot be found anymore in\r\nanaconda. To fix this issue, and possibly similar issues in the future, the line has now\r\nbeen simplified to be able to flexibly find and install any compatible R version:\r\n        - \u201cr-base=3.2.2=0\u201d changed to \u201cr\u201d\r\n- default_settings_table.tsv has been updated\r\n    - Due to the prevalence of Illumina NGS in the field, the default arguments for adapter\r\ntrimming by BBDuk has been changed to better trim read-through adapter sequences\r\nat the 3\u2019 end of reads:\r\n        - \u201cktrim=l hdist=2\u201d changed to \u201cktrim=r k=21 mink=8 hdist=2 hdist2=1\u201d",
+        "html_url": "https://github.com/JSuryatenggara/ChIP-AP/releases/tag/5.4",
+        "name": "ChIP-AP_v5.4",
+        "release_id": 76887485,
+        "tag": "5.4",
+        "tarball_url": "https://api.github.com/repos/JSuryatenggara/ChIP-AP/tarball/5.4",
+        "type": "Release",
+        "url": "https://api.github.com/repos/JSuryatenggara/ChIP-AP/releases/76887485",
+        "value": "https://api.github.com/repos/JSuryatenggara/ChIP-AP/releases/76887485",
+        "zipball_url": "https://api.github.com/repos/JSuryatenggara/ChIP-AP/zipball/5.4"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "JSuryatenggara",
+          "type": "User"
+        },
+        "date_created": "2022-03-10T02:25:55Z",
+        "date_published": "2022-03-10T02:37:34Z",
+        "description": "Fixed issue where GEM was given a non-integer value for its -t flag argument",
+        "html_url": "https://github.com/JSuryatenggara/ChIP-AP/releases/tag/5.3",
+        "name": "ChIP-AP_v5.3",
+        "release_id": 61452044,
+        "tag": "5.3",
+        "tarball_url": "https://api.github.com/repos/JSuryatenggara/ChIP-AP/tarball/5.3",
+        "type": "Release",
+        "url": "https://api.github.com/repos/JSuryatenggara/ChIP-AP/releases/61452044",
+        "value": "https://api.github.com/repos/JSuryatenggara/ChIP-AP/releases/61452044",
+        "zipball_url": "https://api.github.com/repos/JSuryatenggara/ChIP-AP/zipball/5.3"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "JSuryatenggara",
+          "type": "User"
+        },
+        "date_created": "2022-01-21T10:19:20Z",
+        "date_published": "2022-01-21T10:25:06Z",
+        "description": "Fourth release. Minor bug fixes and stuffs. See docs for details.",
+        "html_url": "https://github.com/JSuryatenggara/ChIP-AP/releases/tag/5.2",
+        "name": "ChIP-AP_v5.2",
+        "release_id": 57673776,
+        "tag": "5.2",
+        "tarball_url": "https://api.github.com/repos/JSuryatenggara/ChIP-AP/tarball/5.2",
+        "type": "Release",
+        "url": "https://api.github.com/repos/JSuryatenggara/ChIP-AP/releases/57673776",
+        "value": "https://api.github.com/repos/JSuryatenggara/ChIP-AP/releases/57673776",
+        "zipball_url": "https://api.github.com/repos/JSuryatenggara/ChIP-AP/zipball/5.2"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "JSuryatenggara",
+          "type": "User"
+        },
+        "date_created": "2021-08-08T13:26:29Z",
+        "date_published": "2021-08-08T13:41:26Z",
+        "description": "Third release. Peak IDR calculation added into the pipeline.",
+        "html_url": "https://github.com/JSuryatenggara/ChIP-AP/releases/tag/5.1",
+        "name": "ChIP-AP_v5.1",
+        "release_id": 47495571,
+        "tag": "5.1",
+        "tarball_url": "https://api.github.com/repos/JSuryatenggara/ChIP-AP/tarball/5.1",
+        "type": "Release",
+        "url": "https://api.github.com/repos/JSuryatenggara/ChIP-AP/releases/47495571",
+        "value": "https://api.github.com/repos/JSuryatenggara/ChIP-AP/releases/47495571",
+        "zipball_url": "https://api.github.com/repos/JSuryatenggara/ChIP-AP/zipball/5.1"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "JSuryatenggara",
+          "type": "User"
+        },
+        "date_created": "2021-07-23T01:14:11Z",
+        "date_published": "2021-07-23T01:25:43Z",
+        "description": "Second release. Motif enrichment analysis added to the pipeline. See documentations for more details.",
+        "html_url": "https://github.com/JSuryatenggara/ChIP-AP/releases/tag/5.0",
+        "name": "ChIP-AP_v5.0",
+        "release_id": 46645812,
+        "tag": "5.0",
+        "tarball_url": "https://api.github.com/repos/JSuryatenggara/ChIP-AP/tarball/5.0",
+        "type": "Release",
+        "url": "https://api.github.com/repos/JSuryatenggara/ChIP-AP/releases/46645812",
+        "value": "https://api.github.com/repos/JSuryatenggara/ChIP-AP/releases/46645812",
+        "zipball_url": "https://api.github.com/repos/JSuryatenggara/ChIP-AP/zipball/5.0"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "JSuryatenggara",
+          "type": "User"
+        },
+        "date_created": "2021-06-10T11:30:53Z",
+        "date_published": "2021-06-10T11:36:40Z",
+        "description": "Initial release. Publication version.",
+        "html_url": "https://github.com/JSuryatenggara/ChIP-AP/releases/tag/4.1",
+        "name": "ChIP-AP_v4.1",
+        "release_id": 44407368,
+        "tag": "4.1",
+        "tarball_url": "https://api.github.com/repos/JSuryatenggara/ChIP-AP/tarball/4.1",
+        "type": "Release",
+        "url": "https://api.github.com/repos/JSuryatenggara/ChIP-AP/releases/44407368",
+        "value": "https://api.github.com/repos/JSuryatenggara/ChIP-AP/releases/44407368",
+        "zipball_url": "https://api.github.com/repos/JSuryatenggara/ChIP-AP/zipball/4.1"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "requirements": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Computational requirements",
+        "type": "Text_excerpt",
+        "value": "<b>OS</b> \u2013 Linux (Ubuntu-variants 16.04+ tested), MacOS (10.13+), Windows 10 (v1903+), Windows 11\n\n<b>CPU</b> \u2013 (minimum) Quad-Core Intel/AMD CPU, (recommended) Octa-Core Intel/AMD CPU. Apple Silicon Macs are compatible though Rosetta 2.\n\n<b>RAM</b> \u2013 (minimum) 8Gb, (recommended) 16Gb+\n\n<b>Storage (SSD/HDD)</b> \u2013 This varies widely depending on the samples being processed and the sequencing depth. Rough estimate, (minimum) 30Gb, (recommended) 100Gb+\n\n<b>Screen Resolution</b> \u2013 A minimum resolution of 1920*1080 is required for the dashboard interface. If your screen resolution is less than this, you will be limited to only using the wizard\n<br>\n"
+      },
+      "source": "https://raw.githubusercontent.com/JSuryatenggara/ChIP-AP/main/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Pre-Configured Image",
+        "parent_header": [
+          "Computational requirements"
+        ],
+        "type": "Text_excerpt",
+        "value": "For users who do not wish to try to configure things on their own, we provide a preconfigured virtual machine image for use. Users can download a pre-configured virtual-machine image to run in VirtualBox (Oracle VM VirtualBox). A detailed tutorial can be found on our wiki [here](https://github.com/JSuryatenggara/ChIP-AP/wiki/Virtual-Machine-Installation-Guide). \n\nWe do recommend installing ChIP-AP locally though.\n\n<br>\n"
+      },
+      "source": "https://raw.githubusercontent.com/JSuryatenggara/ChIP-AP/main/README.md",
+      "technique": "header_analysis"
+    }
+  ],
+  "run": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Pipeline Run Command",
+        "parent_header": [
+          "Quick start \u2013 For Command line User Only"
+        ],
+        "type": "Text_excerpt",
+        "value": "The command line that was used to call the pipeline will be located in a text file: _[setname]_command_line.txt_ in the output save folder. This is useful for documentation of the run, and for re-running of the pipeline after a run failure or some tweaking if need be.  For example:\n\n    chipap_xx.py --mode paired --ref hg38 --genome [path_to_genome_folder] --output [full_path_to_output_save_folder] --setname [dataset name] --sample_table [path_to_sample_table_file] --custom_setting_table [path_to_setting_table_file].tsv --motif [path_to_known_motif_file] --fcmerge --goann --pathann --deltemp --thread [#_of_threads_to_use] --run\n\n<br>\n"
+      },
+      "source": "https://raw.githubusercontent.com/JSuryatenggara/ChIP-AP/main/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Running ChIP-AP with Graphical Interfaces",
+        "type": "Text_excerpt",
+        "value": "ChIP-AP offers 2 graphical interfaces for running \u2013 depending on a users proficiency with ChIP-AP. They are the _chipap_dashboard_ and the _chipap_wizard_.\n\nWe recommend new users to ChIP-AP first use the wizard. Proficient users of ChIP-AP should use the dashboard as it enables inputting the data more quickly.\n\n<br>\n"
+      },
+      "source": "https://raw.githubusercontent.com/JSuryatenggara/ChIP-AP/main/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Running the Wizard",
+        "parent_header": [
+          "Running ChIP-AP with Graphical Interfaces"
+        ],
+        "type": "Text_excerpt",
+        "value": "Once ChIP-AP is setup, at the command line type: \n\n\tchipap_wizard.py\n\nto use the wizard graphical user interface (GUI). The multiple windows that appear ask users questions sequentially regarding information required for a run. This ensure data is provided in the correct order without overwhelming the user with all questions and options simultaneously. This option is therefore recommended for inexperienced ChIP-AP users. Tooltip boxes appear over entry fields providing brief explanations of input requirements.\n<p align=\"center\">\n<img src=https://raw.githubusercontent.com/JSuryatenggara/ChIP-AP/storage/images/chipap_wizard_guide.png>\n</p>\n\n<br>\n"
+      },
+      "source": "https://raw.githubusercontent.com/JSuryatenggara/ChIP-AP/main/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Running the Dashboard",
+        "parent_header": [
+          "Running ChIP-AP with Graphical Interfaces"
+        ],
+        "type": "Text_excerpt",
+        "value": "Once ChIP-AP is setup, at the command line type: \n\n\tchipap_dashboard.py\n\nThe GUI below will appear enabling users to input everything required for a run. Tooltip boxes will appear over each field providing brief explanations of whats required in said field.\n<p align=\"center\">\n<img src=https://raw.githubusercontent.com/JSuryatenggara/ChIP-AP/storage/images/chipap_dashboard_guide.png>\n</p>\n\n<br>\n"
+      },
+      "source": "https://raw.githubusercontent.com/JSuryatenggara/ChIP-AP/main/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "For advanced users",
+        "parent_header": [
+          "Running ChIP-AP with Graphical Interfaces"
+        ],
+        "type": "Text_excerpt",
+        "value": "A customized pipeline run is possible by providing the required flag arguments for each individual program in the pipeline at the * stage above. By selecting the right option, a secondary window will appear containing multiple entry fields for such flag arguments. This option is for advanced users only. For valid flags, please refer to the documentation of each program specifically as each program has different flags and syntax for its parameters.\n<p align=\"center\">\n<img src=https://raw.githubusercontent.com/JSuryatenggara/ChIP-AP/storage/images/setting_table_guide.png width=\"500\">\n</p>\nIn each of these entry fields, user may key in the flag arguments as they are written for each corresponding program (e.g., \u201c-q 20\u201d for samtools view which will filter reads with a MAPQ > 20). This requires user to read dedicated official manuals to understand what and how these arguments can be given to the corresponding program in the pipeline. This, accompanied with the fact that bad/wrong flag arguments may break the pipeline run, shows that this manual customization of pipeline programs settings is recommended for experienced users only, and that inexperienced users should stick with the default settings or get a bioinformaticians input.\n\n<br>\n<br>\n"
+      },
+      "source": "https://raw.githubusercontent.com/JSuryatenggara/ChIP-AP/main/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Pipeline Run Info",
+        "parent_header": [
+          "Main Pipeline Output"
+        ],
+        "type": "Text_excerpt",
+        "value": "This file summarizes the assignment of the files (IP sample or control, read 1 or 2; replicate number) and the file name conversion for every unaligned or aligned sequencing reads to be processed. Each line tells the user what the original files have been renamed into. Check this file if you suspect the order of samples were incorrectly entered (i.e., swapped chip with control)\n\n    Chromatin IP dataset replicate 1, 1st read : Original filename = a.fastq --> New filename = setname_chip_rep1_R1.fq.gz\n\n    Chromatin IP dataset replicate 2, 1st read : Original filename = b.fastq --> New filename = setname _chip_rep2_R1.fq.gz  \n\n    Chromatin IP dataset replicate 1, 2nd read : Original filename = c.fastq --> New filename = setname _chip_rep1_R2.fq.gz  \n\n    Chromatin IP dataset replicate 2, 2nd read : Original filename = d.fastq --> New filename = setname _chip_rep2_R2.fq.gz  \n\n    Control dataset replicate 1, 1st read : Original filename = e.fastq --> New filename = setname _ctrl_rep1_R1.fq.gz  \n\n    Control dataset replicate 2, 1st read : Original filename = f.fastq --> New filename = setname _ctrl_rep2_R1.fq.gz  \n\n    Control dataset replicate 1, 2nd read : Original filename = g.fastq --> New filename = setname _ctrl_rep1_R2.fq.gz  \n\n    Control dataset replicate 2, 2nd read : Original filename = h.fastq --> New filename = setname _ctrl_rep2_R2.fq.gz\n\n<br>\n"
+      },
+      "source": "https://raw.githubusercontent.com/JSuryatenggara/ChIP-AP/main/README.md",
+      "technique": "header_analysis"
+    }
+  ],
+  "somef_missing_categories": [
+    "citation",
+    "acknowledgement",
+    "download",
+    "contact",
+    "contributors",
+    "license",
+    "faq",
+    "support",
+    "identifier",
+    "has_build_file",
+    "executable_example"
+  ],
+  "somef_provenance": {
+    "date": "2024-10-06 07:34:03",
+    "somef_schema_version": "1.0.0",
+    "somef_version": "0.9.5"
+  },
+  "stargazers_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 21
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "type": [
+    {
+      "confidence": 0.82,
+      "result": {
+        "type": "String",
+        "value": "commandline-application"
+      },
+      "technique": "software_type_heuristics"
+    }
+  ],
+  "usage": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Quick start \u2013 For Command line User Only",
+        "type": "Text_excerpt",
+        "value": "ChIP-AP is capable of handling multiple sample replicates in a single run. It is also capable of hanlding an un-balanced number of sample replicates (ie 3 ChIP, 2 Controls). It does so by merging each corresponding sample type (so merge all ChIP samples together and merge all control samples together) following read alignment and these merged files are used for all down-stream processing.\n\nFor controls, input (not IgG) is recommended and is consensually considered best practice.\n\nFor peak calling, peaks are called as ChIP over control.\n"
+      },
+      "source": "https://raw.githubusercontent.com/JSuryatenggara/ChIP-AP/main/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Example : To process single-end unaligned reads with default settings:",
+        "parent_header": [
+          "Quick start \u2013 For Command line User Only"
+        ],
+        "type": "Text_excerpt",
+        "value": "    chipap  --mode single \n            --chipR1 [chip fastq replicate1] [chip fastq replicate2] \u2026 \n            --ctrlR1 [control fastq replicate1] [control fastq replicate2] \u2026\n            --genome [path to genome folder]\n            --output [path to output save folder]\n            --setname [dataset name]\n"
+      },
+      "source": "https://raw.githubusercontent.com/JSuryatenggara/ChIP-AP/main/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Example : To process paired-end unaligned reads with default settings:",
+        "parent_header": [
+          "Quick start \u2013 For Command line User Only"
+        ],
+        "type": "Text_excerpt",
+        "value": "    chipap  --mode paired \n            --chipR1 [chip fastq replicate1, first read] [chip fastq replicate2, first read] \u2026 \n            --chipR2 [chip fastq replicate1, second read] [chip fastq replicate2, second read] \u2026 \n            --ctrlR1 [control fastq replicate1, first read] [control fastq replicate2, first read] \u2026 \n            --ctrlR2 [control fastq replicate1, second read] [control fastq replicate2, second read] \u2026 \n            --genome [path to output save folder] \n            --output [path to output save folder] \n            --setname [dataset name]\n"
+      },
+      "source": "https://raw.githubusercontent.com/JSuryatenggara/ChIP-AP/main/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Example : To process single/paired-end aligned reads with default settings:",
+        "parent_header": [
+          "Quick start \u2013 For Command line User Only"
+        ],
+        "type": "Text_excerpt",
+        "value": "    chipap\t--mode single / paired \n            --chipR1 [chip bam replicate1] [chip bam replicate2] \u2026 \n            --ctrlR1 [control bam replicate1] [control bam replicate2] \u2026 \n            --genome [path to genome folder] \n            --output [path to output save folder]\n            --setname [dataset name]\n\n<br>\n"
+      },
+      "source": "https://raw.githubusercontent.com/JSuryatenggara/ChIP-AP/main/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Required Arguments",
+        "parent_header": [
+          "Usage notes and Command Line Flags / Parameters"
+        ],
+        "type": "Text_excerpt",
+        "value": "| <nobr><b>Argument/Flag</b></nobr> | <nobr><b>Possible Values</b></nobr> | <nobr><b>Detailed Explanation</b></nobr> |\n|-|-|-|\n| <nobr>--mode</nobr> | <nobr>single / paired</nobr> | Single-end or paired-end sequencing analysis. If a paired-end run, files will typically be labelled ending in *_R1 and *_R2 before the file extension. If these labels aren\u2019t present then likely, you have single-ended sequencing data and select the \u201csingle\u201d option. |\n| <nobr>--genome</nobr> | <nobr>[directory]</nobr> | Your genome folder directory. Requires full path, not relative path. This is the folder where the pre-computed genome alignment and processing files are saved. These genomes can be downloaded from [dropbox](https://www.dropbox.com/s/ioqd3hwdahh9xon/genomes.zip) or instead you can compute your own (a guide for this is coming soon actually\u2026 Keep an eye on the wiki\u2026) |\n| <nobr>--output</nobr> | <nobr>[directory]</nobr> | Your desired output folder. Requires full path, not relative path. |\n| <nobr>--setname</nobr> | <nobr>[text]</nobr> | The prefix to label output and intermediate files (no space allowed). ChIP-AP will rename all processed data files to have this \u201csetname\u201d prefix. |\n"
+      },
+      "source": "https://raw.githubusercontent.com/JSuryatenggara/ChIP-AP/main/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Optional Arguments",
+        "parent_header": [
+          "Usage notes and Command Line Flags / Parameters"
+        ],
+        "type": "Text_excerpt",
+        "value": "| <nobr><b>Argument/Flag</b></nobr> | <nobr><b>Possible Values</b></nobr> | <nobr><b>Detailed Explanation</b></nobr> |\n|-|-|-|\n| <nobr>--peak</nobr> | <nobr>narrow / broad</nobr> | Narrow peaks for transcription factors (default). Broad peaks for histone modifiers. <br>If unsure what will work best for your dataset, you may need to run ChIP-AP once in each mode and inspect the output to ensure you get what you want from the results. Pay close attention to the width of the peaks called and regions of enrichment. |\n| <nobr>--chipR1</nobr> | <nobr>[repl1 repl2 \u2026]</nobr> | Your ChIP datasets: ordered by replicate, separated by space. Best to include full path rather than relative paths. |\n| <nobr>--chipR2</nobr> | [repl1 repl2 \u2026] | [ Paired-end Only ] Your ChIP datasets second read: ordered by replicate, separated by space. Best to include full path rather than relative paths. |\n| <nobr>--ctrlR1</nobr> | <nobr>[repl1 repl2 \u2026]</nobr> | Your control datasets: ordered by replicate, separated by space. Best to include full path rather than relative paths. |\n| <nobr>--ctrlR2</nobr> | <nobr>[repl1 repl2 \u2026]</nobr> | [ Paired-end Only ] Your control datasets second read: ordered by replicate, separated by space. Best to include full path rather than relative paths. |\n| <nobr>--sample</nobr> | <nobr>[file]</nobr> | Rather than including the input sample file names and paths on the commandline, one can make a sample table containing the same information and input this instead. The sample-table is a 4*n-sized table (with n = number of replicates) containing the absolute paths to each of your ChIP and control replicates (See below for more information regarding this file and its layout). <br>When this option is used, this table will disregard any assigned values to --chipR1, --chipR2, --ctrlR1, and --ctrlR2. |\n| <nobr>--setting</nobr> | <nobr>[file]</nobr> | [ For Advanced Users ONLY ] The settings-table allows you to fine-tune the behaviour of every program as part of ChIP-AP. Hence very disasterous if you get wrong! If you are unsure even a little about what you\u2019re doing, then stick to default settings please \u2013 this goes even for bioinformaticians. <br>This txt file is a 2*n-sized table (with n = number of replicates) containing custom arguments for every program as part of ChIP-AP. The default settings table is provided in the genome folder. You can COPY this file and make changes as necessary. To use your customs settings table, provide full path to updated txt file. |\n| <nobr>--ref</nobr> | hg19 / hg38 /<br> mm9 / mm10 /<br> dm6 / sacCer3 | Your sample genome reference build. Default is hg38 (human). The genomes listed to the left are provided, pre-calculated by us and are the only genomes used and tested for now. We will provide added functionality soon to add your own custom genome to ChIP-AP. <br>Watch this space (actually the github\u2026)! |\n| <nobr>--motif</nobr> | <nobr>[file]</nobr> | Your predicted/known motif file, in HOMER matrix format (.motif). If provided, once peaks are called, HOMER motif discovery will be run on the total called peak set for this motif. Many users prefer MEME-ChIP instead\u2026 we know\u2026 WIP :) |\n| <nobr>--fcmerge</nobr> | | This flag will force fold change analysis to be computed based on merged replicates instead of on each replicate seperately.\n| <nobr>--goann</nobr> | | This flag will instruct to annotate peaks with all relevant GO terms as provided by HOMER. |\n| <nobr>--pathann</nobr> | | This flag will instruct to annotate peaks with all relevant pathway and interaction enrichment terms as provided by HOMER. |\n| <nobr>--deltemp</nobr> | | This flag will instruct to delete large intermediary files right after they are not going to be used for further processes (eg intermediary fq files. This option will save a significant amount of space by the end of your analysis, so recommended. |\n| <nobr>--thread</nobr> | <nobr>[integer]</nobr> | Maximum number of processes to use. Default is half the maximum available on your system so as to not choke it during the run. If running on a laptop or low-thread count cpu, best to push this up to maximum number threads available -1 \u2013 but this will significantly slow your laptop if attempting other tasks while ChIP-AP is running. |\n| <nobr>--run</nobr> | | Use to immediately run the suite by running the master script. This is the big red button ok... Use at your own risk! <br> When not used, the generated master script (MASTER_script.sh) in the output folder can be run manually by user. We have made sure that when you tell ChIP-AP \u201cdo not press the big red button\u201d that it will behave and do as you say. |\n| <nobr>--homer_motif</nobr> | consensus /<br> union / both | This flag will instruct HOMER (findMotifsGenome.pl) to perform motif enrichment analysis at the end of the pipeline run. |\n| <nobr>--meme_motif</nobr> | consensus /<br> union / both | This flag will instruct MEME (meme-chip) to perform motif enrichment analysis at the end of the pipeline run. |\n\n<br>\n"
+      },
+      "source": "https://raw.githubusercontent.com/JSuryatenggara/ChIP-AP/main/README.md",
+      "technique": "header_analysis"
+    }
+  ]
+}

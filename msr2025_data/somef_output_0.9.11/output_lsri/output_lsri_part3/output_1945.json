@@ -1,0 +1,579 @@
+{
+  "application_domain": [
+    {
+      "confidence": 16.73,
+      "result": {
+        "type": "String",
+        "value": "Computer Vision"
+      },
+      "technique": "supervised_classification"
+    }
+  ],
+  "code_repository": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/dyxstat/HiCzin"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "contact": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "HiCzin: Normalizing metagenomic Hi-C data and detecting spurious contacts",
+        "parent_header": [
+          "HiCzin: Normalizing metagenomic Hi-C data and detecting spurious contacts using zero-inflated negative binomial regression"
+        ],
+        "type": "Text_excerpt",
+        "value": "\nPlease refer to the folder 'RECOMB paper related materials' for supplementary materials, datasets and codes in our HiCzin RECOMB paper (Yuxuan Du, Sarah M. Laperriere, Jed Fuhrman, and Fengzhu Sun. Journal of Computational Biology. 2022 http://doi.org/10.1089/cmb.2021.0439).\n\nUnlabeled HiCzin in our original paper is available [here](https://github.com/dyxstat/Unlabeled_HiCzin).\n\n## HiCzin: Normalizing metagenomic Hi-C data and detecting spurious contacts\nHiCzin is a normalization method designed for metagenomic Hi-C data. HiCzin is based on the zero-inflated negative binomial regression frameworks. We model the population of the intra-species contacts using the negative binomial distribution. HiCzin combines the counting distribution of the intra-species contacts with a mass distribution of unobserved contacts. The residues of the counting part serve as normalized contacts. HiCzin can also be used to detect and remove spurious contacts.\n"
+      },
+      "source": "https://raw.githubusercontent.com/dyxstat/HiCzin/main/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "conda",
+        "parent_header": [
+          "HiCzin: Normalizing metagenomic Hi-C data and detecting spurious contacts using zero-inflated negative binomial regression",
+          "Install and Setup"
+        ],
+        "type": "Text_excerpt",
+        "value": "We recommend using conda to run HiCzin.\n\nAfter installing Anaconda (or miniconda), Users can clone the repository with git:\n```\ngit clone https://github.com/dyxstat/HiCzin.git\n```\n\nOnce complete, you can enter the repository folder and then create a HiCzin environment using conda:\n```\n# enter the HiCzin folder\ncd HiCzin\n# Construct environment\nconda env create -f HiCzin_linux_env.yaml \nor\nconda env create -f HiCzin_osx_env.yaml\n# Enter the environment\nconda activate HiCzin_env\n```\n\nNormalization method in HiCzin depends on R package 'glmmTMB'. Though the R package can be installed by 'conda install -c conda-forge r-glmmtmb', you will meet one potential warning derived from the dependency version (https://github.com/glmmTMB/glmmTMB/issues/615): 'Error in .Call(\"FreeADFunObject\", ptr, PACKAGE = DLL) : \"FreeADFunObject\" not available for .Call() for package \"glmmTMB\"' and we are not sure whether this warning would influence the noramlization results. To get rid of this warning, we strongly recommend you to install the source version of package 'glmmTMB' directly in R:\n\n```\n# Enter the R\nR\n# Download the R package and you may need to select a CRAN mirror for the installation\ninstall.packages(\"glmmTMB\", type=\"source\")\n```\n\nFinally, you can test the pipeline, and testing result are in test/out/hiczin.log:\n```\npython ./hiczin.py test test/out\n```\n"
+      },
+      "source": "https://raw.githubusercontent.com/dyxstat/HiCzin/main/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "1.Shotgun assembly",
+        "parent_header": [
+          "HiCzin: Normalizing metagenomic Hi-C data and detecting spurious contacts using zero-inflated negative binomial regression",
+          "Preparation"
+        ],
+        "type": "Text_excerpt",
+        "value": "For the shotgun library, de novo metagenome assembly is produced by an assembly software, such as MEGAHIT.\n```\nmegahit -1 SG1.fastq.gz -2 SG2.fastq.gz -o ASSEMBLY --min-contig-len 1000 --k-min 21 --k-max 141 --k-step 12 --merge-level 20,0.95\n```"
+      },
+      "source": "https://raw.githubusercontent.com/dyxstat/HiCzin/main/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "2.Align Hi-C paired-end reads to assembled contigs",
+        "parent_header": [
+          "HiCzin: Normalizing metagenomic Hi-C data and detecting spurious contacts using zero-inflated negative binomial regression",
+          "Preparation"
+        ],
+        "type": "Text_excerpt",
+        "value": "Hi-C paired-end reads are mapped to assembled contigs using BWA-MEM with parameters \u2018-5SP\u2019. Then, samtools with parameters \u2018view -F 0x904\u2019 is applied to remove unmapped reads (0x4) and supplementary (0x800) and secondary (0x100) alignments and sort BAM files by name. \n```\nbwa index final.contigs.fa\nbwa mem -5SP final.contigs.fa hic_read1.fastq.gz hic_read2.fastq.gz > MAP.sam\nsamtools view -F 0x904 -bS MAP.sam > MAP_UNSORTED.bam\nsamtools sort -n MAP_UNSORTED.bam -o MAP_SORTED.bam\n```"
+      },
+      "source": "https://raw.githubusercontent.com/dyxstat/HiCzin/main/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "3.Assign taxonomy to contigs by TAXAassign",
+        "parent_header": [
+          "HiCzin: Normalizing metagenomic Hi-C data and detecting spurious contacts using zero-inflated negative binomial regression",
+          "Preparation"
+        ],
+        "type": "Text_excerpt",
+        "value": "The taxonomic assignment of contigs was resolved using NCBI\u2019s Taxonomy and its nt database by [TAXAassign(v0.4)](https://github.com/umerijaz/TAXAassign) with parameters \u2018-p -c 20 -r 10 -m 98 -q 98 -t 95 -a \u201c60,70,80,95,95,98\u201d -f\u2019. \n"
+      },
+      "source": "https://raw.githubusercontent.com/dyxstat/HiCzin/main/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "4.Calculate the coverage of assembled contigs",
+        "parent_header": [
+          "HiCzin: Normalizing metagenomic Hi-C data and detecting spurious contacts using zero-inflated negative binomial regression",
+          "Preparation"
+        ],
+        "type": "Text_excerpt",
+        "value": "Firstly, BBmap from the BBTools suite is applied to map the shotgun reads to the assembled contigs with parameters \u2018bamscript=bs.sh; sh bs.sh\u2019. The coverage of contigs is computed using script: \u2018jgi summarize bam contig depths\u2019 from MetaBAT2 v2.12.1.\n```\nbbmap.sh in1=SG1.fastq.gz in2=SG2.fastq.gz ref=final.contigs.fa out=SG_map.sam bamscript=bs.sh; sh bs.sh\njgi_summarize_bam_contig_depths --outputDepth coverage.txt --pairedContigs pair.txt SG_map_sorted.bam\n```\n"
+      },
+      "source": "https://raw.githubusercontent.com/dyxstat/HiCzin/main/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Implement the HiCzin normalization",
+        "parent_header": [
+          "HiCzin: Normalizing metagenomic Hi-C data and detecting spurious contacts using zero-inflated negative binomial regression",
+          "Usage"
+        ],
+        "type": "Text_excerpt",
+        "value": "```\npython ./hiczin.py norm [Parameters] FASTA_file BAM_file TAX_file COV_file OUTPUT_directory\n```"
+      },
+      "source": "https://raw.githubusercontent.com/dyxstat/HiCzin/main/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Parameters",
+        "parent_header": [
+          "HiCzin: Normalizing metagenomic Hi-C data and detecting spurious contacts using zero-inflated negative binomial regression",
+          "Usage",
+          "Implement the HiCzin normalization"
+        ],
+        "type": "Text_excerpt",
+        "value": "```\n-e: Case-sensitive enzyme name. Use multiple times for multiple enzymes \n    (Optional; If no enzyme is input, HiCzin_LC mode will be automatically employed to do normalization)\n--min-len: Minimum acceptable contig length (default 1000)\n--min-mapq: Minimum acceptable alignment quality (default 30)\n--min-match: Accepted alignments must be at least N matches (default 30)\n--min-signal: Minimum acceptable signal (default 2)\n--thres: Maximum acceptable fraction of incorrectly identified valid contacts in spurious contact detection (default 0.05)\n-v: Verbose output\n```"
+      },
+      "source": "https://raw.githubusercontent.com/dyxstat/HiCzin/main/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Input File",
+        "parent_header": [
+          "HiCzin: Normalizing metagenomic Hi-C data and detecting spurious contacts using zero-inflated negative binomial regression",
+          "Usage",
+          "Implement the HiCzin normalization"
+        ],
+        "type": "Text_excerpt",
+        "value": "* **FASTA_file**: a fasta file of the assembled contig (e.g. final.contigs.fa)\n* **BAM_file**: a bam file of the Hi-C alignment (e.g. MAP_SORTED.bam)\n* **TAX_file**: a csv file of contigs' taxonomy assignment by TAXAassign (e.g. contig_tax.csv)\n* **COV_file**: a txt file of contigs' coverage information computed by script: \u2018jgi summarize bam contig depths\u2019 from MetaBAT2 (e.g. depth.txt)\n\n"
+      },
+      "source": "https://raw.githubusercontent.com/dyxstat/HiCzin/main/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Output file",
+        "parent_header": [
+          "HiCzin: Normalizing metagenomic Hi-C data and detecting spurious contacts using zero-inflated negative binomial regression",
+          "Usage"
+        ],
+        "type": "Text_excerpt",
+        "value": "All outputs of HiCzin normalization pipeline are located in the OUT_directory you specified when running the software. \n\n* **hiczin.log**: the specific implementation information of HiCzin pipeline\n* **contig_info.csv**: information of contigs, containing four columns (contigs' name, the number of restriction sites on contigs, contigs' length \nand coverage) or three columns (contigs' name, length and coverage)\n* **Normalized_contact_matrix.npz**: a sparse matrix of normlized Hi-C contact maps in csr format and can be reloaded using **scipy.sparse.load_npz('Normalized_contact_matrix.npz')**\n* **valid_contact.csv**: information of valid intra-species contacts, containing three columns (index of the first contig, index of the second contig, and value of raw valid  intra-species contacts)\n* **HiCzin_normalized_contact.gz**: Compressed format of the normalized contacts and contig information by pickle. This file can further serve as the input of [**HiCBin**](https://github.com/dyxstat/HiCBin) and [**HiFine**](https://github.com/dyxstat/HiFine).\n\n"
+      },
+      "source": "https://raw.githubusercontent.com/dyxstat/HiCzin/main/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Contacts and bug reports",
+        "parent_header": [
+          "HiCzin: Normalizing metagenomic Hi-C data and detecting spurious contacts using zero-inflated negative binomial regression"
+        ],
+        "type": "Text_excerpt",
+        "value": "If you have any questions or suggestions, welcome to contact Yuxuan Du (yuxuandu@usc.edu).\n\n"
+      },
+      "source": "https://raw.githubusercontent.com/dyxstat/HiCzin/main/README.md",
+      "technique": "header_analysis"
+    }
+  ],
+  "date_created": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2020-10-26T05:49:10Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_updated": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2024-04-17T23:50:54Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "description": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "HiCzin: Normalizing metagenomic Hi-C data and detecting spurious contacts using zero-inflated negative binomial regression"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "download_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/dyxstat/HiCzin/releases"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 1
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/dyxstat/HiCzin/forks"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "dyxstat/HiCzin"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_title": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "HiCzin: Normalizing metagenomic Hi-C data and detecting spurious contacts using zero-inflated negative binomial regression"
+      },
+      "source": "https://raw.githubusercontent.com/dyxstat/HiCzin/main/README.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "installation": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "conda",
+        "parent_header": [
+          "HiCzin: Normalizing metagenomic Hi-C data and detecting spurious contacts using zero-inflated negative binomial regression",
+          "Install and Setup"
+        ],
+        "type": "Text_excerpt",
+        "value": "We recommend using conda to run HiCzin.\n\nAfter installing Anaconda (or miniconda), Users can clone the repository with git:\n```\ngit clone https://github.com/dyxstat/HiCzin.git\n```\n\nOnce complete, you can enter the repository folder and then create a HiCzin environment using conda:\n```\n# enter the HiCzin folder\ncd HiCzin\n# Construct environment\nconda env create -f HiCzin_linux_env.yaml \nor\nconda env create -f HiCzin_osx_env.yaml\n# Enter the environment\nconda activate HiCzin_env\n```\n\nNormalization method in HiCzin depends on R package 'glmmTMB'. Though the R package can be installed by 'conda install -c conda-forge r-glmmtmb', you will meet one potential warning derived from the dependency version (https://github.com/glmmTMB/glmmTMB/issues/615): 'Error in .Call(\"FreeADFunObject\", ptr, PACKAGE = DLL) : \"FreeADFunObject\" not available for .Call() for package \"glmmTMB\"' and we are not sure whether this warning would influence the noramlization results. To get rid of this warning, we strongly recommend you to install the source version of package 'glmmTMB' directly in R:\n\n```\n# Enter the R\nR\n# Download the R package and you may need to select a CRAN mirror for the installation\ninstall.packages(\"glmmTMB\", type=\"source\")\n```\n\nFinally, you can test the pipeline, and testing result are in test/out/hiczin.log:\n```\npython ./hiczin.py test test/out\n```\n"
+      },
+      "source": "https://raw.githubusercontent.com/dyxstat/HiCzin/main/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "1.Shotgun assembly",
+        "parent_header": [
+          "HiCzin: Normalizing metagenomic Hi-C data and detecting spurious contacts using zero-inflated negative binomial regression",
+          "Preparation"
+        ],
+        "type": "Text_excerpt",
+        "value": "For the shotgun library, de novo metagenome assembly is produced by an assembly software, such as MEGAHIT.\n```\nmegahit -1 SG1.fastq.gz -2 SG2.fastq.gz -o ASSEMBLY --min-contig-len 1000 --k-min 21 --k-max 141 --k-step 12 --merge-level 20,0.95\n```"
+      },
+      "source": "https://raw.githubusercontent.com/dyxstat/HiCzin/main/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "2.Align Hi-C paired-end reads to assembled contigs",
+        "parent_header": [
+          "HiCzin: Normalizing metagenomic Hi-C data and detecting spurious contacts using zero-inflated negative binomial regression",
+          "Preparation"
+        ],
+        "type": "Text_excerpt",
+        "value": "Hi-C paired-end reads are mapped to assembled contigs using BWA-MEM with parameters \u2018-5SP\u2019. Then, samtools with parameters \u2018view -F 0x904\u2019 is applied to remove unmapped reads (0x4) and supplementary (0x800) and secondary (0x100) alignments and sort BAM files by name. \n```\nbwa index final.contigs.fa\nbwa mem -5SP final.contigs.fa hic_read1.fastq.gz hic_read2.fastq.gz > MAP.sam\nsamtools view -F 0x904 -bS MAP.sam > MAP_UNSORTED.bam\nsamtools sort -n MAP_UNSORTED.bam -o MAP_SORTED.bam\n```"
+      },
+      "source": "https://raw.githubusercontent.com/dyxstat/HiCzin/main/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "3.Assign taxonomy to contigs by TAXAassign",
+        "parent_header": [
+          "HiCzin: Normalizing metagenomic Hi-C data and detecting spurious contacts using zero-inflated negative binomial regression",
+          "Preparation"
+        ],
+        "type": "Text_excerpt",
+        "value": "The taxonomic assignment of contigs was resolved using NCBI\u2019s Taxonomy and its nt database by [TAXAassign(v0.4)](https://github.com/umerijaz/TAXAassign) with parameters \u2018-p -c 20 -r 10 -m 98 -q 98 -t 95 -a \u201c60,70,80,95,95,98\u201d -f\u2019. \n"
+      },
+      "source": "https://raw.githubusercontent.com/dyxstat/HiCzin/main/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "4.Calculate the coverage of assembled contigs",
+        "parent_header": [
+          "HiCzin: Normalizing metagenomic Hi-C data and detecting spurious contacts using zero-inflated negative binomial regression",
+          "Preparation"
+        ],
+        "type": "Text_excerpt",
+        "value": "Firstly, BBmap from the BBTools suite is applied to map the shotgun reads to the assembled contigs with parameters \u2018bamscript=bs.sh; sh bs.sh\u2019. The coverage of contigs is computed using script: \u2018jgi summarize bam contig depths\u2019 from MetaBAT2 v2.12.1.\n```\nbbmap.sh in1=SG1.fastq.gz in2=SG2.fastq.gz ref=final.contigs.fa out=SG_map.sam bamscript=bs.sh; sh bs.sh\njgi_summarize_bam_contig_depths --outputDepth coverage.txt --pairedContigs pair.txt SG_map_sorted.bam\n```\n"
+      },
+      "source": "https://raw.githubusercontent.com/dyxstat/HiCzin/main/README.md",
+      "technique": "header_analysis"
+    }
+  ],
+  "issue_tracker": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/dyxstat/HiCzin/issues"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "keywords": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": ""
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "license": [
+    {
+      "confidence": 1,
+      "result": {
+        "name": "MIT License",
+        "spdx_id": "MIT",
+        "type": "License",
+        "url": "https://api.github.com/licenses/mit",
+        "value": "https://api.github.com/licenses/mit"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "File_dump",
+        "value": "MIT License\n\nCopyright (c) 2020 dyxstat\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.\n"
+      },
+      "source": "https://raw.githubusercontent.com/dyxstat/HiCzin/main/LICENSE",
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Copyright and License Information",
+        "parent_header": [
+          "HiCzin: Normalizing metagenomic Hi-C data and detecting spurious contacts using zero-inflated negative binomial regression"
+        ],
+        "type": "Text_excerpt",
+        "value": "This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.\n\nThis program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.\n\nYou should have received a copy of the GNU General Public License along with this program. If not, see http://www.gnu.org/licenses/.\n\n\n\n\n\n\n\n"
+      },
+      "source": "https://raw.githubusercontent.com/dyxstat/HiCzin/main/README.md",
+      "technique": "header_analysis"
+    }
+  ],
+  "name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "HiCzin"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "owner": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "User",
+        "value": "dyxstat"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "programming_languages": [
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Python",
+        "size": 58487,
+        "type": "Programming_language",
+        "value": "Python"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "R",
+        "size": 15723,
+        "type": "Programming_language",
+        "value": "R"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "readme_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/dyxstat/HiCzin/main/README.md"
+      },
+      "technique": "file_exploration"
+    }
+  ],
+  "releases": [
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "dyxstat",
+          "type": "User"
+        },
+        "date_created": "2020-11-02T01:35:17Z",
+        "date_published": "2020-11-02T01:39:24Z",
+        "html_url": "https://github.com/dyxstat/HiCzin/releases/tag/v0.1.0",
+        "name": "HiCzin v0.1.0",
+        "release_id": 33332517,
+        "tag": "v0.1.0",
+        "tarball_url": "https://api.github.com/repos/dyxstat/HiCzin/tarball/v0.1.0",
+        "type": "Release",
+        "url": "https://api.github.com/repos/dyxstat/HiCzin/releases/33332517",
+        "value": "https://api.github.com/repos/dyxstat/HiCzin/releases/33332517",
+        "zipball_url": "https://api.github.com/repos/dyxstat/HiCzin/zipball/v0.1.0"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "somef_missing_categories": [
+    "citation",
+    "acknowledgement",
+    "run",
+    "download",
+    "requirements",
+    "contributors",
+    "documentation",
+    "faq",
+    "identifier",
+    "has_build_file",
+    "executable_example"
+  ],
+  "somef_provenance": {
+    "date": "2024-10-06 06:56:38",
+    "somef_schema_version": "1.0.0",
+    "somef_version": "0.9.5"
+  },
+  "stargazers_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 6
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "support": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Contacts and bug reports",
+        "parent_header": [
+          "HiCzin: Normalizing metagenomic Hi-C data and detecting spurious contacts using zero-inflated negative binomial regression"
+        ],
+        "type": "Text_excerpt",
+        "value": "If you have any questions or suggestions, welcome to contact Yuxuan Du (yuxuandu@usc.edu).\n\n"
+      },
+      "source": "https://raw.githubusercontent.com/dyxstat/HiCzin/main/README.md",
+      "technique": "header_analysis"
+    }
+  ],
+  "usage": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Implement the HiCzin normalization",
+        "parent_header": [
+          "HiCzin: Normalizing metagenomic Hi-C data and detecting spurious contacts using zero-inflated negative binomial regression",
+          "Usage"
+        ],
+        "type": "Text_excerpt",
+        "value": "```\npython ./hiczin.py norm [Parameters] FASTA_file BAM_file TAX_file COV_file OUTPUT_directory\n```"
+      },
+      "source": "https://raw.githubusercontent.com/dyxstat/HiCzin/main/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Parameters",
+        "parent_header": [
+          "HiCzin: Normalizing metagenomic Hi-C data and detecting spurious contacts using zero-inflated negative binomial regression",
+          "Usage",
+          "Implement the HiCzin normalization"
+        ],
+        "type": "Text_excerpt",
+        "value": "```\n-e: Case-sensitive enzyme name. Use multiple times for multiple enzymes \n    (Optional; If no enzyme is input, HiCzin_LC mode will be automatically employed to do normalization)\n--min-len: Minimum acceptable contig length (default 1000)\n--min-mapq: Minimum acceptable alignment quality (default 30)\n--min-match: Accepted alignments must be at least N matches (default 30)\n--min-signal: Minimum acceptable signal (default 2)\n--thres: Maximum acceptable fraction of incorrectly identified valid contacts in spurious contact detection (default 0.05)\n-v: Verbose output\n```"
+      },
+      "source": "https://raw.githubusercontent.com/dyxstat/HiCzin/main/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Input File",
+        "parent_header": [
+          "HiCzin: Normalizing metagenomic Hi-C data and detecting spurious contacts using zero-inflated negative binomial regression",
+          "Usage",
+          "Implement the HiCzin normalization"
+        ],
+        "type": "Text_excerpt",
+        "value": "* **FASTA_file**: a fasta file of the assembled contig (e.g. final.contigs.fa)\n* **BAM_file**: a bam file of the Hi-C alignment (e.g. MAP_SORTED.bam)\n* **TAX_file**: a csv file of contigs' taxonomy assignment by TAXAassign (e.g. contig_tax.csv)\n* **COV_file**: a txt file of contigs' coverage information computed by script: \u2018jgi summarize bam contig depths\u2019 from MetaBAT2 (e.g. depth.txt)\n\n"
+      },
+      "source": "https://raw.githubusercontent.com/dyxstat/HiCzin/main/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Example",
+        "parent_header": [
+          "HiCzin: Normalizing metagenomic Hi-C data and detecting spurious contacts using zero-inflated negative binomial regression",
+          "Usage",
+          "Implement the HiCzin normalization"
+        ],
+        "type": "Text_excerpt",
+        "value": "```\npython ./hiczin.py pipeline -e HindIII -e NcoI -v final.contigs.fa MAP_SORTED.bam contig_tax.csv depth.txt out\n```\nIf the restriction enzymes employed in the experiment are unspecified, use\n```\npython ./hiczin.py pipeline -v final.contigs.fa MAP_SORTED.bam contig_tax.csv depth.txt out\n```\n\n"
+      },
+      "source": "https://raw.githubusercontent.com/dyxstat/HiCzin/main/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Output file",
+        "parent_header": [
+          "HiCzin: Normalizing metagenomic Hi-C data and detecting spurious contacts using zero-inflated negative binomial regression",
+          "Usage"
+        ],
+        "type": "Text_excerpt",
+        "value": "All outputs of HiCzin normalization pipeline are located in the OUT_directory you specified when running the software. \n\n* **hiczin.log**: the specific implementation information of HiCzin pipeline\n* **contig_info.csv**: information of contigs, containing four columns (contigs' name, the number of restriction sites on contigs, contigs' length \nand coverage) or three columns (contigs' name, length and coverage)\n* **Normalized_contact_matrix.npz**: a sparse matrix of normlized Hi-C contact maps in csr format and can be reloaded using **scipy.sparse.load_npz('Normalized_contact_matrix.npz')**\n* **valid_contact.csv**: information of valid intra-species contacts, containing three columns (index of the first contig, index of the second contig, and value of raw valid  intra-species contacts)\n* **HiCzin_normalized_contact.gz**: Compressed format of the normalized contacts and contig information by pickle. This file can further serve as the input of [**HiCBin**](https://github.com/dyxstat/HiCBin) and [**HiFine**](https://github.com/dyxstat/HiFine).\n\n"
+      },
+      "source": "https://raw.githubusercontent.com/dyxstat/HiCzin/main/README.md",
+      "technique": "header_analysis"
+    }
+  ]
+}

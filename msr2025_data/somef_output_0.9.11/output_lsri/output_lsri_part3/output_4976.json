@@ -1,0 +1,552 @@
+{
+  "code_repository": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/lifs-tools/jmzTab-m"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_created": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2017-10-23T08:39:17Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_updated": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2024-07-26T10:04:39Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "description": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "Reference implementation for mzTab-M 2.0 for metabolomics"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 0.9185244507069678,
+      "result": {
+        "type": "Text_excerpt",
+        "value": "= mzTab 2.0 for Metabolomics Reader, Writer and Validator\nNils Hoffmann <n.hoffmann@fz-juelich.de>\n:toc: macro \n\nThis project is the reference reader, writer and validator implementation for mzTab for metabolomics 2.0+, based on the https://github.com/PRIDE-Utilities/jmztab[jmztab project]. \nmzTab-M is intended as a reporting standard for quantitative results from metabolomics/lipodomics approaches. This format is further intended to provide local LIMS systems as well as MS metabolomics repositories a simple way to share and combine basic information. \n. Facilitate the sharing of final experimental results, especially with researchers outside the field of metabolomics.\n. Export of results to external software, including programs such as Microsoft Excel\u00ae and Open Office Spreadsheet and statistical software / coding languages such as R.\n. Act as an output format of (web-) services that report MS-based results and thus can produce standardized result pages.\n. Be able to link to the external experimental evidence e.g. by referencing back to mzML files. \n* The Maven site with JavaDoc is available https://lifs-tools.github.io/jmzTab-m[here].\n* The latest aggregated, browseable JavaDoc is available https://lifs-tools.github.io/jmzTab-m/1.0.5/apidocs/index.html[here].\n* The latest version of the mzTab spec is available https://github.com/HUPO-PSI/mzTab[here].\n* The web-based validator application is available https://github.com/lifs-tools/jmzTab-m-webapp[here].\n* The Swagger / OpenAPI object and operations model definition file is https://github.com/lifs-tools/jmzTab-m/blob/master/api/src/main/resources/mzTab_m_swagger.yml[here].\n* The controlled vocabulary (CV) mapping file bundled with jmzTab-M is https://github.com/lifs-tools/jmzTab-m/blob/master/validation/src/main/resources/mappings/mzTab-M-mapping.xml[here].\n* Information on validation messages is available in <<validation-message-templates-and-ids>>. \nThis generates the necessary domain specific code for a number of different languages, e.g. for Python, JAVA and R.\nIn general, any language and framework for which swagger-codegen has templates available may be used. For details, please\nlook at the `api/pom.xml` file and at the https://github.com/swagger-api/swagger-codegen[swagger-codegen repository and documentation]. \nThe generated code is available in the zip archives below the `api/target` directory: \nThe generated JAVA code is available in a jar archive below the `api/target` directory: \nThe generated client libraries only contain the basic domain object code. Parsing from mzTab and writing to mzTab still need to be\nimplemented separately. The library provides this functionality for JAVA in the `io` sub-project. \nNOTE: Currently, we do not plan to provide a CLI-based validator for mzTab 1.0, since that is still being provided by the original https://github.com/PRIDE-Utilities/jmzTab[jmzTab project]. \nIf you want to exchange your mzTab-M model in JSON format, you can transcode your mzTab-M TSV file into JSON as follows: \nThis will create a new file on successful validation, named <inFile>.json (inFile without any paths) that contains your mzTab-M data serialized as JSON. \nThis will create a new file on successful validation, named <inFile>.mztab (inFile without any paths) that contains your mzTab-M data serialized in TSV format. \njmztab-m is available from https://anaconda.org/bioconda/jmztab-m \nThis also includes an automatically built Biocontainers Docker image that is available from\nhttps://biocontainers.pro/#/tools/jmztab-m \nAlternatively, you can build and run a custom Docker image with the instructions \nin the following sections. \nThe Bioconda Docker container works slightly different from the one we provide instructions for further down.\nFirst, go to the quai.io page (user account required) to check for available tags: https://quay.io/repository/biocontainers/jmztab-m?tab=tags\nThen, run jmztab-m (the cli) as follows, mounting the local directory to '/home/data' within the container, with read and write permissions.\nThe rest of the arguments follow those of the regular jmztab-m CLI (this example converts an input mzTab-M file into json, stores validation output in the file  'validation.txt', and applies semantic validation following the rules described in a custom mapping file): \n    docker run -v \"${PWD}\":/home/data:rw quay.io/biocontainers/jmztab-m:1.0.6--0 jmztab-m -c \"/home/data/$i\" -s --toJson -o \"/home/data/validation.txt\" -s mzTab_2_0-M_summary-mapping.xml \nfrom your commandline (mvnw.bat on Windows).\nThis will build and tag a Docker image lifs/jmztabm-cli with a corresponding version and make it available to your local Docker installation.\nTo show the coordinates of the image, call \nThis will only invoke the default entrypoint of the container, which is a shell script wrapper calling the jmztab-m-cli Jar. It passes all arguments to the validator, so that all\narguments that you would pass normally will work in the same way (please replace `<YOUR_MZTABM_FILE>` with the actual file's name in `<YOUR_DATA_DIR>`: \nNOTE: As of version 1.0.7, the `groupId` has changed from `de.isas.mztab` to `org.lifs-tools` to reflect the project's GitHub organization. \nTo use the IO libraries (reading, writing and structural and logical validation) in your own Maven projects, use the following dependency: \nwhere `jmztab.version` is the version of jmztabm you wish to use, e.g. for a release version: \nas defined in the properties section of your pom file. \nThe library development artifacts are available as SNAPSHOT (development versions) from Sonatype's OSSRH repository.\nIf you want to use them, add the following lines to your own Maven pom file: \nThe project coordinates for the api module are \nand \nfor the io module, where `jmztab.version` is the version of jmztabm you wish to use, e.g. for a `SNAPSHOT` version: \n=== Reading mzTab 2.0 with structural and logical validation \nNOTE: As of version 1.0.7, the package structure has been adapted to the new `groupId`. In your imports, please replace `de.isas` with `org.lifstools` \nThe mzTab domain model uses a _builder_ pattern, but also conforms to the usual JAVA _bean style_ pattern. The _builder_ pattern allows for a more fluent definition of your object structure. However, especially for cross references with the file, you will need to define e.g. MsRun objects separately since inline referencing within the builder code will not work. \nYou can also pass an `OutputStreamWriter` to the `write` method. \n[validation-message-templates-and-ids]\n== Validation message templates and IDs \nThe reference implementation uses message templates and IDs to uniquely identify each validation message. The catalogs of validation messages have been adapted and substantially extended from the previous reference implementation. The message catalogs can be found at the following locations: \n== Editing the Swagger Spec\nThis project defines the structure of an mzTab document based on JSON-Schema\nand Swagger https://swagger.io/. \nSwagger provides many templates to generate client / server implementations\nbased on a Swagger yaml or json definition. \nThis mechanism can be used to generate the domain-specific model classes in\nany of the supported languages, omitting the web-specific parts. \nThe https://editor.swagger.io/[Swagger editor] can be used to import the file,\nedit it with assistance and preview, and export it after editing. It additionally\nsupports the generation of server and client code to represent the mzTab object structure. \nYou can create server and client code in a multitude of languages from the Generate Server and Generate Client menu items. \nThis project is the reference implementation for the mzTab-M 2.0 standard: \nThis project is based on and uses code that was developed for the https://github.com/PRIDE-Utilities/jmzTab[original jmzTab project]: \n"
+      },
+      "source": "https://raw.githubusercontent.com/lifs-tools/jmzTab-m/master/README.adoc",
+      "technique": "supervised_classification"
+    }
+  ],
+  "download_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/lifs-tools/jmzTab-m/releases"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 6
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/lifs-tools/jmzTab-m/forks"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "lifs-tools/jmzTab-m"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_title": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": ""
+      },
+      "source": "https://raw.githubusercontent.com/lifs-tools/jmzTab-m/master/README.adoc",
+      "technique": "regular_expression"
+    }
+  ],
+  "has_build_file": [
+    {
+      "confidence": 1,
+      "result": {
+        "format": "dockerfile",
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/lifs-tools/jmzTab-m/master/cli/Dockerfile"
+      },
+      "source": "https://raw.githubusercontent.com/lifs-tools/jmzTab-m/master/cli/Dockerfile",
+      "technique": "file_exploration"
+    }
+  ],
+  "has_script_file": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/lifs-tools/jmzTab-m/master/run-swagger-editor.sh"
+      },
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/lifs-tools/jmzTab-m/master/cli/validate.sh"
+      },
+      "technique": "file_exploration"
+    }
+  ],
+  "installation": [
+    {
+      "confidence": 0.9547225392128649,
+      "result": {
+        "type": "Text_excerpt",
+        "value": "image:https://github.com/lifs-tools/jmzTab-m/actions/workflows/maven.yml/badge.svg[\"Java CI with Maven\", link=\"https://github.com/lifs-tools/jmzTab-m/actions/workflows/maven.yml\"] image:https://img.shields.io/maven-central/v/org.lifs-tools.mztab/jmztabm-cli.svg[\"Maven Central\", link=\"https://search.maven.org/search?q=a:jmztabm-cli\"] image:https://img.shields.io/github/release/lifs-tools/jmzTab-m.svg[\"Latest Release\", link=\"https://github.com/lifs-tools/jmzTab-m/releases/latest\"] image:https://zenodo.org/badge/DOI/10.5281/zenodo.3361472.svg[\"DOI\", link=\"https://doi.org/10.5281/zenodo.3361472\"] image:https://img.shields.io/badge/install%20with-docker-important.svg?style=flat-square&logo=docker[\"BioContainers\", link=\"https://biocontainers.pro/#/tools/jmztab-m\"] image:https://anaconda.org/bioconda/jmztab-m/badges/installer/conda.svg[\"Install with Conda\", link=\"https://anaconda.org/bioconda/jmztab-m\"] \nNOTE: If you use the jmzTab-M library or the web application, please cite the following paper: +\nhttps://pubs.acs.org/doi/10.1021/acs.analchem.9b01987[N. Hoffmann et al., Analytical Chemistry 2019; Oct 15;91(20):12615-12618..] https://www.ncbi.nlm.nih.gov/pubmed/31525911[PubMed record]. \n* The Maven site with JavaDoc is available https://lifs-tools.github.io/jmzTab-m[here].\n* The latest aggregated, browseable JavaDoc is available https://lifs-tools.github.io/jmzTab-m/1.0.5/apidocs/index.html[here].\n* The latest version of the mzTab spec is available https://github.com/HUPO-PSI/mzTab[here].\n* The web-based validator application is available https://github.com/lifs-tools/jmzTab-m-webapp[here].\n* The Swagger / OpenAPI object and operations model definition file is https://github.com/lifs-tools/jmzTab-m/blob/master/api/src/main/resources/mzTab_m_swagger.yml[here].\n* The controlled vocabulary (CV) mapping file bundled with jmzTab-M is https://github.com/lifs-tools/jmzTab-m/blob/master/validation/src/main/resources/mappings/mzTab-M-mapping.xml[here].\n* Information on validation messages is available in <<validation-message-templates-and-ids>>. \n== Building the project and generating client code from the command-line \nIn order to build the client code and run the unit tests, execute the following command from a terminal: \n\t./mvnw install \nThe generated code is available in the zip archives below the `api/target` directory: \n. mztab-api-python https://github.com/lifs-tools/pymzTab-m[GitHub project]\n. mztab-api-r https://github.com/lifs-tools/rmzTab-m[GitHub project] \nThe generated JAVA code is available in a jar archive below the `api/target` directory: \n. jmztabm-api-<VERSION>.jar \nNOTE: Currently, we do not plan to provide a CLI-based validator for mzTab 1.0, since that is still being provided by the original https://github.com/PRIDE-Utilities/jmzTab[jmzTab project]. \nAfter building the project as mentioned above with `./mvnw install`, the `cli/target` folder will contain the `cli-<version>-jmztabm-deployment.zip` file. Alternatively, you can download the latest\ncli zip file from Maven central: https://search.maven.org/#search%7Cga%7C1%7Cg%3A%22org.lifs-tools.mztab%22%20AND%20a%3A%22jmztabm-cli%22%20[Search for latest cli artefact] and click on \"bin.zip\" to download. \n  java -jar jmztabm-cli-<VERSION>.jar \nto see the available options. \n  java -jar jmztabm-cli-<VERSION>.jar -c examples/MTBLS263.mztab -level Info \nIf you want to exchange your mzTab-M model in JSON format, you can transcode your mzTab-M TSV file into JSON as follows: \nIf you only have a JSON model of your mzTab-M file available, you can convert it using the command line as follows: \n  java -jar jmztabm-cli-<VERSION>.jar -c examples/gcxgc-ms-example.mztab.json -fromJson -s cv-mapping/mzTab-M-mapping.xml \nThe validator web application code has been moved into a separate project: https://github.com/lifs-tools/jmzTab-m-webapp\nThe application is available at: https://apps.lifs-tools.org/mztabvalidator \n== Using the Bioconda Package \njmztab-m is available from https://anaconda.org/bioconda/jmztab-m \nThis also includes an automatically built Biocontainers Docker image that is available from\nhttps://biocontainers.pro/#/tools/jmztab-m \nAlternatively, you can build and run a custom Docker image with the instructions \nin the following sections. \n    docker run -v \"${PWD}\":/home/data:rw quay.io/biocontainers/jmztab-m:1.0.6--0 jmztab-m -c \"/home/data/$i\" -s --toJson -o \"/home/data/validation.txt\" -s mzTab_2_0-M_summary-mapping.xml \n  ./mvnw -Pdocker install \nfrom your commandline (mvnw.bat on Windows).\nThis will build and tag a Docker image lifs/jmztabm-cli with a corresponding version and make it available to your local Docker installation.\nTo show the coordinates of the image, call \nIf you have not done so, please build the Docker image of the validator cli or pull it from the docker hub (see previous sections).\nThen, run the following command, replacing `<VERSION>` with the current version, e.g. `1.0.6`) and `<DATA_DIR>` with the **local** directory containing your mzTab-M files: \n  docker run -v <YOUR_DATA_DIR>:/home/data:rw lifs/jmztabm-cli:<VERSION> \n  docker run -v <YOUR_DATA_DIR>:/home/data:rw lifs/jmztabm-cli:<VERSION> -c <YOUR_MZTABM_FILE> \n== Using the project code releases via Maven Central \nNOTE: As of version 1.0.7, the `groupId` has changed from `de.isas.mztab` to `org.lifs-tools` to reflect the project's GitHub organization. \nThe library release artifacts are available from Maven Central.\nIf you want to use them, add the following lines to your own Maven pom file: \nTo use the IO libraries (reading, writing and structural and logical validation) in your own Maven projects, use the following dependency: \n  <dependency>\n    <groupId>org.lifs-tools</groupId>\n    <artifactId>jmztabm-io</artifactId>\n    <version>${jmztabm.version}</version>\n  </dependency> \n\nTo use the semantic validation with the mapping file in your own Maven project, use the following dependency: \n  <dependency>\n    <groupId>org.lifs-tools</groupId>\n    <artifactId>jmztabm-validation</artifactId>\n    <version>${jmztabm.version}</version>\n  </dependency> \nwhere `jmztab.version` is the version of jmztabm you wish to use, e.g. for a release version: \n  <properties>\n    <jmztabm.version>1.0.7</jmztabm.version>\n  </properties> \nThe library development artifacts are available as SNAPSHOT (development versions) from Sonatype's OSSRH repository.\nIf you want to use them, add the following lines to your own Maven pom file: \n  <repositories>\n    <repository>\n      <name>Sonatype Snapshot Repository</name>\n      <id>oss-sonatype-snapshots</id>\n      <url>https://oss.sonatype.org/content/repositories/snapshots/</url>\n      <snapshots>\n        <enabled>true</enabled>\n      </snapshots>\n    </repository>\n   ...\n  </repositories> \n    <dependency>\n      <groupId>org.lifs-tools</groupId>\n      <artifactId>jmztabm-api</artifactId>\n      <version>${jmztabm.version}</version>\n      <type>jar</type>\n    </dependency> \n    <dependency>\n      <groupId>org.lifs-tools</groupId>\n      <artifactId>jmztabm-io</artifactId>\n      <version>${jmztabm.version}</version>\n      <type>jar</type>\n    </dependency> \nfor the io module, where `jmztab.version` is the version of jmztabm you wish to use, e.g. for a `SNAPSHOT` version: \n  <properties>\n    <jmztabm.version>1.0.7-SNAPSHOT</jmztabm.version>\n  </properties> \nThe SNAPSHOTS are also available from https://oss.sonatype.org/content/repositories/snapshots/org/lifstools/mztab/. \nNOTE: As of version 1.0.7, the package structure has been adapted to the new `groupId`. In your imports, please replace `de.isas` with `org.lifstools` \n==== Adding optional columns \n* https://github.com/lifs-tools/jmzTab-m/blob/master/io/src/test/java/uk/ac/ebi/pride/jmztab2/model/OptColumnMappingBuilderTest.java[OptColumnMappingBuilderTest] - shows how to use the custom OptColumnMappingBuilder to create custom optional column definitions.\n* https://github.com/lifs-tools/jmzTab-m/blob/master/io/src/test/java/org/lifstools/mztab2/io/serialization/SmallMoleculeSummarySerializerTest.java[SmallMoleculeSummarySerializerTest] - shows how to add optional columns to the SmallMoleculeSummarySection _with_ the OptColumnMappingBuilder.\n* https://github.com/lifs-tools/jmzTab-m/blob/master/io/src/test/java/org/lifstools/mztab2/io/serialization/SmallMoleculeEvidenceSerializerTest.java[SmallMoleculeEvidenceSerializerTest] - shows how to add optional columns to the SmallMoleculeEvidenceSection _with_ the OptColumnMappingBuilder.\n* https://github.com/lifs-tools/jmzTab-m/blob/master/io/src/test/java/org/lifstools/mztab2/io/serialization/SmallMoleculeFeatureSerializerTest.java[SmallMoleculeFeatureSerializerTest] - shows how to add optional columns _without_ the OptColumnMappingBuilder. \nAlternatively, you can also provide a File path to the `write` method. \n* https://github.com/lifs-tools/jmzTab-m/blob/master/api/src/test/java/org/lifstools/mztab2/model/MzTabTest.java[MzTabTest] - creation and serialization of MzTab object trees using the Jackson JSON serializer.\n* https://github.com/lifs-tools/jmzTab-m/blob/master/io/src/test/java/org/lifstools/mztab2/io/MZTabFileParserTest.java[MZTabFileParserTest] - test for reading of mzTab-m files.\n* https://github.com/lifs-tools/jmzTab-m/blob/master/io/src/test/java/org/lifstools/mztab2/io/MzTabValidatingWriterTest.java[MzTabValidatingWriterTest] - writing with structural and syntactic validation.\n* https://github.com/lifs-tools/jmzTab-m/blob/master/io/src/test/java/org/lifstools/mztab2/io/MzTabWriterTest.java[MzTabWriterTest] - plain writing of MzTab and roundtrip read/write/read testing.\n* https://github.com/lifs-tools/jmzTab-m/blob/master/validation/src/test/java/org/lifstools/mztab2/validation/ExampleFilesValidationTestIT.java[ExampleFilesValidationTestIT] - semantic validation using a mapping file and parameter validation rules.\n* https://github.com/lifs-tools/jmzTab-m/blob/master/validation/src/test/java/org/lifstools/mztab2/validation/JxPathTest.java[JxPathTest] - Object selection in MzTab models via the JxPath library. \n* https://github.com/lifs-tools/jmzTab-m/blob/master/api/src/main/resources/conf1_1/mztab_format_error.properties[Format Error Codes and Messages] - Basic mzTab-M structural and format errors, e.g. malformed tab format, invalid version definition, etc.\n* https://github.com/lifs-tools/jmzTab-m/blob/master/api/src/main/resources/conf1_1/mztab_logical_error.properties[Logical Error Codes and Messages] - Logical mzTab-M errors, e.g. missing sections, item number mismatches, etc.\n* https://github.com/lifs-tools/jmzTab-m/blob/master/api/src/main/resources/conf1_1/mztab_crosscheck_error.properties[Semantic Error Codes Messages] - Semantic mzTab-M errors, e.g. required CV params that are missing. \nTo launch the editor via https://www.docker.com/[Docker] on Unix, use the script\n`run-swagger-editor.sh` in this directory. \n  * **https://pubs.acs.org/doi/10.1021/acs.analchem.8b04310[N. Hoffmann et al., Analytical Chemistry 2019; Jan;91(5):3302-3310.] https://pubs.acs.org/doi/pdf/10.1021/acs.analchem.8b04310[PDF File.] https://www.ncbi.nlm.nih.gov/pubmed/30688441[PubMed record].** \n* **http://onlinelibrary.wiley.com/doi/10.1002/pmic.201300560/abstract[Qing-Wei Xu et al., Proteomics 2014; Jun;14(11):1328-32.] http://onlinelibrary.wiley.com/doi/10.1002/pmic.201300560/pdf[PDF File.] https://www.ncbi.nlm.nih.gov/pubmed/24659499[PubMed record.]**\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/lifs-tools/jmzTab-m/master/README.adoc",
+      "technique": "supervised_classification"
+    }
+  ],
+  "invocation": [
+    {
+      "confidence": 0.8365541799873828,
+      "result": {
+        "type": "Text_excerpt",
+        "value": "  java -jar jmztabm-cli-<VERSION>.jar -c examples/MTBLS263.mztab -level Info \n  java -jar jmztabm-cli-<VERSION>.jar -c examples/MTBLS263.mztab -level Info -s cv-mapping/mzTab-M-mapping.xml \n  java -jar jmztabm-cli-<VERSION>.jar -c examples/gcxgc-ms-example.mztab -toJson -s cv-mapping/mzTab-M-mapping.xml \nIf you only have a JSON model of your mzTab-M file available, you can convert it using the command line as follows: \n  java -jar jmztabm-cli-<VERSION>.jar -c examples/gcxgc-ms-example.mztab.json -fromJson -s cv-mapping/mzTab-M-mapping.xml \n    docker run -v \"${PWD}\":/home/data:rw quay.io/biocontainers/jmztab-m:1.0.6--0 jmztab-m -c \"/home/data/$i\" -s --toJson -o \"/home/data/validation.txt\" -s mzTab_2_0-M_summary-mapping.xml \n  import uk.ac.ebi.pride.jmztab2.*;\n  import uk.ac.ebi.pride.jmztab2.utils.*;\n  import uk.ac.ebi.pride.jmztab2.utils.errors.*;\n  import org.lifstools.mztab2.io.*;\n  import org.lifstools.mztab2.model.*;\n  ...\n  File mzTabFile = new File(\"/path/to/my/file.mztab\");\n  MzTabFileParser parser = new MzTabFileParser(mzTabFile);\n  //will report a maxmimum of 500 errors on Error, Warn and Info levels\n  //will output errors to System.err (onto your terminal)\n  parser.parse(System.err, MZTabErrorType.Level.Info, 500);\n  //inspect the output of the parse and errors\n  MZTabErrorList errors = parser.getErrorList();\n  //converting the MZTabErrorList into a list of ValidationMessage\n  List<ValidationMessage> messages = errors.convertToValidationMessages();\n  //access the file after parsing\n  MzTab mzTab = parser.getMZTabFile(); \n  MzTabValidatingWriter writer = new MzTabValidatingWriter();\n  File f = File.createTempFile(UUID.randomUUID().toString(), \".mztab\");\n  Optional<List<ValidationMessage>> messages = writer.write(f.toPath(), mzTab); \n"
+      },
+      "source": "https://raw.githubusercontent.com/lifs-tools/jmzTab-m/master/README.adoc",
+      "technique": "supervised_classification"
+    }
+  ],
+  "issue_tracker": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/lifs-tools/jmzTab-m/issues"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "keywords": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": ""
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "license": [
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Apache License 2.0",
+        "spdx_id": "Apache-2.0",
+        "type": "License",
+        "url": "https://api.github.com/licenses/apache-2.0",
+        "value": "https://api.github.com/licenses/apache-2.0"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "File_dump",
+        "value": "                                 Apache License\n                           Version 2.0, January 2004\n                        http://www.apache.org/licenses/\n\n   TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION\n\n   1. Definitions.\n\n      \"License\" shall mean the terms and conditions for use, reproduction,\n      and distribution as defined by Sections 1 through 9 of this document.\n\n      \"Licensor\" shall mean the copyright owner or entity authorized by\n      the copyright owner that is granting the License.\n\n      \"Legal Entity\" shall mean the union of the acting entity and all\n      other entities that control, are controlled by, or are under common\n      control with that entity. For the purposes of this definition,\n      \"control\" means (i) the power, direct or indirect, to cause the\n      direction or management of such entity, whether by contract or\n      otherwise, or (ii) ownership of fifty percent (50%) or more of the\n      outstanding shares, or (iii) beneficial ownership of such entity.\n\n      \"You\" (or \"Your\") shall mean an individual or Legal Entity\n      exercising permissions granted by this License.\n\n      \"Source\" form shall mean the preferred form for making modifications,\n      including but not limited to software source code, documentation\n      source, and configuration files.\n\n      \"Object\" form shall mean any form resulting from mechanical\n      transformation or translation of a Source form, including but\n      not limited to compiled object code, generated documentation,\n      and conversions to other media types.\n\n      \"Work\" shall mean the work of authorship, whether in Source or\n      Object form, made available under the License, as indicated by a\n      copyright notice that is included in or attached to the work\n      (an example is provided in the Appendix below).\n\n      \"Derivative Works\" shall mean any work, whether in Source or Object\n      form, that is based on (or derived from) the Work and for which the\n      editorial revisions, annotations, elaborations, or other modifications\n      represent, as a whole, an original work of authorship. For the purposes\n      of this License, Derivative Works shall not include works that remain\n      separable from, or merely link (or bind by name) to the interfaces of,\n      the Work and Derivative Works thereof.\n\n      \"Contribution\" shall mean any work of authorship, including\n      the original version of the Work and any modifications or additions\n      to that Work or Derivative Works thereof, that is intentionally\n      submitted to Licensor for inclusion in the Work by the copyright owner\n      or by an individual or Legal Entity authorized to submit on behalf of\n      the copyright owner. For the purposes of this definition, \"submitted\"\n      means any form of electronic, verbal, or written communication sent\n      to the Licensor or its representatives, including but not limited to\n      communication on electronic mailing lists, source code control systems,\n      and issue tracking systems that are managed by, or on behalf of, the\n      Licensor for the purpose of discussing and improving the Work, but\n      excluding communication that is conspicuously marked or otherwise\n      designated in writing by the copyright owner as \"Not a Contribution.\"\n\n      \"Contributor\" shall mean Licensor and any individual or Legal Entity\n      on behalf of whom a Contribution has been received by Licensor and\n      subsequently incorporated within the Work.\n\n   2. Grant of Copyright License. Subject to the terms and conditions of\n      this License, each Contributor hereby grants to You a perpetual,\n      worldwide, non-exclusive, no-charge, royalty-free, irrevocable\n      copyright license to reproduce, prepare Derivative Works of,\n      publicly display, publicly perform, sublicense, and distribute the\n      Work and such Derivative Works in Source or Object form.\n\n   3. Grant of Patent License. Subject to the terms and conditions of\n      this License, each Contributor hereby grants to You a perpetual,\n      worldwide, non-exclusive, no-charge, royalty-free, irrevocable\n      (except as stated in this section) patent license to make, have made,\n      use, offer to sell, sell, import, and otherwise transfer the Work,\n      where such license applies only to those patent claims licensable\n      by such Contributor that are necessarily infringed by their\n      Contribution(s) alone or by combination of their Contribution(s)\n      with the Work to which such Contribution(s) was submitted. If You\n      institute patent litigation against any entity (including a\n      cross-claim or counterclaim in a lawsuit) alleging that the Work\n      or a Contribution incorporated within the Work constitutes direct\n      or contributory patent infringement, then any patent licenses\n      granted to You under this License for that Work shall terminate\n      as of the date such litigation is filed.\n\n   4. Redistribution. You may reproduce and distribute copies of the\n      Work or Derivative Works thereof in any medium, with or without\n      modifications, and in Source or Object form, provided that You\n      meet the following conditions:\n\n      (a) You must give any other recipients of the Work or\n          Derivative Works a copy of this License; and\n\n      (b) You must cause any modified files to carry prominent notices\n          stating that You changed the files; and\n\n      (c) You must retain, in the Source form of any Derivative Works\n          that You distribute, all copyright, patent, trademark, and\n          attribution notices from the Source form of the Work,\n          excluding those notices that do not pertain to any part of\n          the Derivative Works; and\n\n      (d) If the Work includes a \"NOTICE\" text file as part of its\n          distribution, then any Derivative Works that You distribute must\n          include a readable copy of the attribution notices contained\n          within such NOTICE file, excluding those notices that do not\n          pertain to any part of the Derivative Works, in at least one\n          of the following places: within a NOTICE text file distributed\n          as part of the Derivative Works; within the Source form or\n          documentation, if provided along with the Derivative Works; or,\n          within a display generated by the Derivative Works, if and\n          wherever such third-party notices normally appear. The contents\n          of the NOTICE file are for informational purposes only and\n          do not modify the License. You may add Your own attribution\n          notices within Derivative Works that You distribute, alongside\n          or as an addendum to the NOTICE text from the Work, provided\n          that such additional attribution notices cannot be construed\n          as modifying the License.\n\n      You may add Your own copyright statement to Your modifications and\n      may provide additional or different license terms and conditions\n      for use, reproduction, or distribution of Your modifications, or\n      for any such Derivative Works as a whole, provided Your use,\n      reproduction, and distribution of the Work otherwise complies with\n      the conditions stated in this License.\n\n   5. Submission of Contributions. Unless You explicitly state otherwise,\n      any Contribution intentionally submitted for inclusion in the Work\n      by You to the Licensor shall be under the terms and conditions of\n      this License, without any additional terms or conditions.\n      Notwithstanding the above, nothing herein shall supersede or modify\n      the terms of any separate license agreement you may have executed\n      with Licensor regarding such Contributions.\n\n   6. Trademarks. This License does not grant permission to use the trade\n      names, trademarks, service marks, or product names of the Licensor,\n      except as required for reasonable and customary use in describing the\n      origin of the Work and reproducing the content of the NOTICE file.\n\n   7. Disclaimer of Warranty. Unless required by applicable law or\n      agreed to in writing, Licensor provides the Work (and each\n      Contributor provides its Contributions) on an \"AS IS\" BASIS,\n      WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or\n      implied, including, without limitation, any warranties or conditions\n      of TITLE, NON-INFRINGEMENT, MERCHANTABILITY, or FITNESS FOR A\n      PARTICULAR PURPOSE. You are solely responsible for determining the\n      appropriateness of using or redistributing the Work and assume any\n      risks associated with Your exercise of permissions under this License.\n\n   8. Limitation of Liability. In no event and under no legal theory,\n      whether in tort (including negligence), contract, or otherwise,\n      unless required by applicable law (such as deliberate and grossly\n      negligent acts) or agreed to in writing, shall any Contributor be\n      liable to You for damages, including any direct, indirect, special,\n      incidental, or consequential damages of any character arising as a\n      result of this License or out of the use or inability to use the\n      Work (including but not limited to damages for loss of goodwill,\n      work stoppage, computer failure or malfunction, or any and all\n      other commercial damages or losses), even if such Contributor\n      has been advised of the possibility of such damages.\n\n   9. Accepting Warranty or Additional Liability. While redistributing\n      the Work or Derivative Works thereof, You may choose to offer,\n      and charge a fee for, acceptance of support, warranty, indemnity,\n      or other liability obligations and/or rights consistent with this\n      License. However, in accepting such obligations, You may act only\n      on Your own behalf and on Your sole responsibility, not on behalf\n      of any other Contributor, and only if You agree to indemnify,\n      defend, and hold each Contributor harmless for any liability\n      incurred by, or claims asserted against, such Contributor by reason\n      of your accepting any such warranty or additional liability.\n\n   END OF TERMS AND CONDITIONS\n\n   APPENDIX: How to apply the Apache License to your work.\n\n      To apply the Apache License to your work, attach the following\n      boilerplate notice, with the fields enclosed by brackets \"{}\"\n      replaced with your own identifying information. (Don't include\n      the brackets!)  The text should be enclosed in the appropriate\n      comment syntax for the file format. We also recommend that a\n      file or class name and description of purpose be included on the\n      same \"printed page\" as the copyright notice for easier\n      identification within third-party archives.\n\n   Copyright 2017 Nils Hoffmann\n\n   Licensed under the Apache License, Version 2.0 (the \"License\");\n   you may not use this file except in compliance with the License.\n   You may obtain a copy of the License at\n\n       http://www.apache.org/licenses/LICENSE-2.0\n\n   Unless required by applicable law or agreed to in writing, software\n   distributed under the License is distributed on an \"AS IS\" BASIS,\n   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n   See the License for the specific language governing permissions and\n   limitations under the License.\n"
+      },
+      "source": "https://raw.githubusercontent.com/lifs-tools/jmzTab-m/master/LICENSE",
+      "technique": "file_exploration"
+    }
+  ],
+  "name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "jmzTab-m"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "owner": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Organization",
+        "value": "lifs-tools"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "programming_languages": [
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Java",
+        "size": 1232101,
+        "type": "Programming_language",
+        "value": "Java"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Mustache",
+        "size": 640122,
+        "type": "Programming_language",
+        "value": "Mustache"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Shell",
+        "size": 8738,
+        "type": "Programming_language",
+        "value": "Shell"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Dockerfile",
+        "size": 1043,
+        "type": "Programming_language",
+        "value": "Dockerfile"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "readme_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/lifs-tools/jmzTab-m/master/README.adoc"
+      },
+      "technique": "file_exploration"
+    }
+  ],
+  "releases": [
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "nilshoffmann",
+          "type": "User"
+        },
+        "date_created": "2021-01-02T17:14:48Z",
+        "date_published": "2021-01-02T17:39:11Z",
+        "description": "This is release 1.0.6 of the jmztab-m libraries that was published to Maven Central.\r\n\r\nIt implements the mzTab-m 2.0 specification for metabolomics at https://github.com/HUPO-PSI/mzTab. \r\n\r\nMajor Changes:\r\n- This release requires at least Java 11 to run.\r\n\r\nMinor Changes:\r\n- The internal data model was changed to simplify generation of OpenAPI clients in R and Python concerning the `IndexedElement` class. This change should not affect users of the JAVA version, unless you are using mzTab-M JSON data generated before version 1.0.6. You can convert the data by serializing it to mzTab-M format first and then saving it to JSON with the 1.0.6 version library (e.g. using the command line interface). \r\n\r\nFeatures:\r\n- Added [MzTabAccess](https://github.com/lifs-tools/jmzTab-m/blob/1.0.6/api/src/main/java/de/isas/mztab2/model/MzTabAccess.java) to simplify accessing objects by id.\r\n\r\nBug Fixes:\r\n- Fixed issues #31, #32 ,  #34. \r\n\r\nRelease 1.0.6 should be backwards compatible to 1.0.5, 1.0.4, 1.0.3 and 1.0.2. \r\n\r\nHowever, due to a stricter validation of the ms scan id referencing, files that have validated before may now fail to validate. Please contact us if you need help fixing your files.\r\n\r\nThis release also includes any amendments that were made as a result of the publication reviewers' feedback and the feedback from the PSI document review process. We have substantially updated the API documentation and have added examples from the specification document and have increased the unit test coverage.\r\n\r\nTo access the release artefacts, please go to Maven Central:\r\n\r\nhttps://search.maven.org/#search%7Cga%7C1%7Cde.isas.mztab\r\n\r\nTo access the latest JavaDoc, please to the project's Maven page:\r\n\r\nhttps://lifs-tools.github.io/jmzTab-m/\r\n\r\nFor everyone who is working off any generated code, please update to the latest version:\r\n\r\nR: https://search.maven.org/remotecontent?filepath=de/isas/mztab/jmztabm-api/1.0.6/jmztabm-api-1.0.6-r.zip,\r\nThe reference implementation for R is now being developed here: https://github.com/lifs-tools/rmzTab-m\r\n\r\nPython: https://search.maven.org/remotecontent?filepath=de/isas/mztab/jmztabm-api/1.0.6/jmztabm-api-1.0.6-python.zip\r\nThe reference implementation for Python 3 is now being developed here: https://github.com/lifs-tools/pymzTab-m\r\n\r\nThe CLI package bundles parser and semantic validator and contains sample files and the latest mapping file:\r\n\r\nhttps://search.maven.org/remotecontent?filepath=de/isas/mztab/jmztabm-cli/1.0.6/jmztabm-cli-1.0.6-bin.zip\r\n\r\nRunning\r\n\r\n```\r\njava -jar jmztabm-cli-1.0.6.jar\r\n```\r\n\r\non your command line will show you the possible arguments (staying close to the old jmztab).\r\n\r\nRun a basic parse and validation on Error level:\r\n\r\n```\r\njava -jar jmztabm-cli-1.0.6.jar -c examples/MTBLS263.mztab\r\n```\r\n\r\nRun a basic parse and validation followed by applying the default mapping file on Error level for semantic validation:\r\n\r\n```\r\njava -jar jmztabm-cli-1.0.6.jar -c examples/MTBLS263.mztab -s\r\n```\r\n\r\nRun a basic parse and validation followed by applying a provided mapping file on Error level for semantic validation:\r\n\r\n```\r\njava -jar jmztabm-cli-1.0.6.jar -c examples/MTBLS263.mztab -s cv-mapping/mzTab-M-mapping.xml\r\n```\r\n\r\nRunning the same on Info level yields additional messages (for optional parameters):\r\n\r\n```\r\njava -jar jmztabm-cli-1.0.6.jar -c examples/MTBLS263.mztab -s cv-mapping/mzTab-M-mapping.xml -level Info\r\n```\r\n\r\nTo use the IO libraries (reading, writing and structural and logical validation) in your own Maven projects, use the following dependency:\r\n\r\n```\r\n<dependency>\r\n    <groupId>de.isas.mztab</groupId>\r\n    <artifactId>jmztabm-io</artifactId>\r\n    <version>1.0.6</version>\r\n</dependency>\r\n```\r\n\r\nTo use the semantic validation with the mapping file in your own Maven project, use the following dependency:\r\n\r\n```\r\n<dependency>\r\n    <groupId>de.isas.mztab</groupId>\r\n    <artifactId>jmztabm-validation</artifactId>\r\n    <version>1.0.6</version>\r\n</dependency>\r\n```\r\n\r\nThe semantic validation requires access to EBI's Ontology Lookup Service to resolve child terms in the mzTab file against their potential parents in the mapping file.",
+        "html_url": "https://github.com/lifs-tools/jmzTab-m/releases/tag/release-1.0.6",
+        "name": "Release 1.0.6 of jmztab-m",
+        "release_id": 35912032,
+        "tag": "release-1.0.6",
+        "tarball_url": "https://api.github.com/repos/lifs-tools/jmzTab-m/tarball/release-1.0.6",
+        "type": "Release",
+        "url": "https://api.github.com/repos/lifs-tools/jmzTab-m/releases/35912032",
+        "value": "https://api.github.com/repos/lifs-tools/jmzTab-m/releases/35912032",
+        "zipball_url": "https://api.github.com/repos/lifs-tools/jmzTab-m/zipball/release-1.0.6"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "nilshoffmann",
+          "type": "User"
+        },
+        "date_created": "2020-02-11T12:57:08Z",
+        "date_published": "2020-02-11T13:08:41Z",
+        "description": "This is release 1.0.5 of the jmztab-m libraries that was published to Maven Central.\r\n\r\nIt implements the mzTab-m 2.0 specification for metabolomics at https://github.com/HUPO-PSI/mzTab. \r\n\r\nThis release comes with an updated Maven site and JavaDoc and fixes issue #26. \r\n\r\nRelease 1.0.5 should be backwards compatible to 1.0.4, 1.0.3 and 1.0.2. \r\n\r\nHowever, due to a stricter validation of the ms scan id referencing, files that have validated before may now fail to validate. Please contact us if you need help fixing your files.\r\n\r\nThis release also includes any amendments that were made as a result of the publication reviewers' feedback and the feedback from the PSI document review process. We have substantially updated the API documentation and have added examples from the specification document and have increased the unit test coverage.\r\n\r\nTo access the release artefacts, please go to Maven Central:\r\n\r\nhttps://search.maven.org/#search%7Cga%7C1%7Cde.isas.mztab\r\n\r\nTo access the latest JavaDoc, please to the project's Maven page:\r\n\r\nhttps://lifs-tools.github.io/jmzTab-m/\r\n\r\nFor everyone who is working off any generated code, please update to the latest version:\r\n\r\nR: https://search.maven.org/remotecontent?filepath=de/isas/mztab/jmztabm-api/1.0.5/jmztabm-api-1.0.5-r.zip,\r\nThe reference implementation for R is now being developed here: https://github.com/lifs-tools/rmzTab-m\r\n\r\nPython: https://search.maven.org/remotecontent?filepath=de/isas/mztab/jmztabm-api/1.0.5/jmztabm-api-1.0.5-python.zip\r\nThe reference implementation for Python 3 is now being developed here: https://github.com/lifs-tools/pymzTab-m\r\n\r\nThe CLI package bundles parser and semantic validator and contains sample files and the latest mapping file:\r\n\r\nhttps://search.maven.org/remotecontent?filepath=de/isas/mztab/jmztabm-cli/1.0.5/jmztabm-cli-1.0.5-bin.zip\r\n\r\nRunning\r\n\r\n```\r\njava -jar jmztabm-cli-1.0.5.jar\r\n```\r\n\r\non your command line will show you the possible arguments (staying close to the old jmztab).\r\n\r\nRun a basic parse and validation on Error level:\r\n\r\n```\r\njava -jar jmztabm-cli-1.0.5.jar -c examples/MTBLS263.mztab\r\n```\r\n\r\nRun a basic parse and validation followed by applying the default mapping file on Error level for semantic validation:\r\n\r\n```\r\njava -jar jmztabm-cli-1.0.5.jar -c examples/MTBLS263.mztab -s\r\n```\r\n\r\nRun a basic parse and validation followed by applying a provided mapping file on Error level for semantic validation:\r\n\r\n```\r\njava -jar jmztabm-cli-1.0.5.jar -c examples/MTBLS263.mztab -s cv-mapping/mzTab-M-mapping.xml\r\n```\r\n\r\nRunning the same on Info level yields additional messages (for optional parameters):\r\n\r\n```\r\njava -jar jmztabm-cli-1.0.5.jar -c examples/MTBLS263.mztab -s cv-mapping/mzTab-M-mapping.xml -level Info\r\n```\r\n\r\nTo use the IO libraries (reading, writing and structural and logical validation) in your own Maven projects, use the following dependency:\r\n\r\n```\r\n<dependency>\r\n    <groupId>de.isas.mztab</groupId>\r\n    <artifactId>jmztabm-io</artifactId>\r\n    <version>1.0.5</version>\r\n</dependency>\r\n```\r\n\r\nTo use the semantic validation with the mapping file in your own Maven project, use the following dependency:\r\n\r\n```\r\n<dependency>\r\n    <groupId>de.isas.mztab</groupId>\r\n    <artifactId>jmztabm-validation</artifactId>\r\n    <version>1.0.5</version>\r\n</dependency>\r\n```\r\n\r\nThe semantic validation requires access to EBI's Ontology Lookup Service to resolve child terms in the mzTab file against their potential parents in the mapping file.",
+        "html_url": "https://github.com/lifs-tools/jmzTab-m/releases/tag/release-1.0.5",
+        "name": "Release 1.0.5 of jmztab-m",
+        "release_id": 23566944,
+        "tag": "release-1.0.5",
+        "tarball_url": "https://api.github.com/repos/lifs-tools/jmzTab-m/tarball/release-1.0.5",
+        "type": "Release",
+        "url": "https://api.github.com/repos/lifs-tools/jmzTab-m/releases/23566944",
+        "value": "https://api.github.com/repos/lifs-tools/jmzTab-m/releases/23566944",
+        "zipball_url": "https://api.github.com/repos/lifs-tools/jmzTab-m/zipball/release-1.0.5"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "nilshoffmann",
+          "type": "User"
+        },
+        "date_created": "2019-08-07T09:08:07Z",
+        "date_published": "2019-08-07T09:32:00Z",
+        "description": "This is release 1.0.4 of the jmztab-m libraries that was published to Maven Central.\r\n\r\nIt implements the mzTab-m 2.0 specification for metabolomics at https://github.com/HUPO-PSI/mzTab. \r\n\r\nThis release comes with an updated README and a POSIX compatible command line interface. Please note: the old command line examples will no longer work. Please check the updated examples below or on the main project page for the new syntax.\r\n\r\nRelease 1.0.4 should be backwards compatible to 1.0.3 and 1.0.2. However, for implementors, the refine validation within the io package's MTDLineParser has been refactored into separate validator implementations into the `de.isas.mztab2.io.validators` package.\r\n\r\nThis release also includes any amendments that were made as a result of the publication reviewers' feedback and the feedback from the PSI document review process. We have substantially updated the API documentation and have added examples from the specification document and have increased the unit test coverage.\r\n\r\nTo access the release artefacts, please go to Maven Central:\r\n\r\nhttps://search.maven.org/#search%7Cga%7C1%7Cde.isas.mztab\r\n\r\nTo access the latest JavaDoc, please to the project's Maven page:\r\n\r\nhttps://lifs-tools.github.io/jmzTab-m/\r\n\r\nFor everyone who is working off any generated code, please update to the latest version:\r\n\r\nR: https://search.maven.org/remotecontent?filepath=de/isas/mztab/jmztabm-api/1.0.4/jmztabm-api-1.0.4-r.zip,\r\n\r\nPython: https://search.maven.org/remotecontent?filepath=de/isas/mztab/jmztabm-api/1.0.4/jmztabm-api-1.0.4-python.zip\r\n\r\nPlease note that these packages do not include parser or writer code yet. However, the JSON created can be converted to proper mzTab using the Java CLI.\r\n\r\nThe CLI package bundles parser and semantic validator and contains sample files and the latest mapping file:\r\n\r\nhttps://search.maven.org/remotecontent?filepath=de/isas/mztab/jmztabm-cli/1.0.4/jmztabm-cli-1.0.4-bin.zip\r\n\r\nRunning\r\n\r\n```\r\njava -jar jmztabm-cli-1.0.4.jar\r\n```\r\n\r\non your command line will show you the possible arguments (staying close to the old jmztab).\r\n\r\nRun a basic parse and validation on Error level:\r\n\r\n```\r\njava -jar jmztabm-cli-1.0.4.jar -c examples/MTBLS263.mztab\r\n```\r\n\r\nRun a basic parse and validation followed by applying the default mapping file on Error level for semantic validation:\r\n\r\n```\r\njava -jar jmztabm-cli-1.0.4.jar -c examples/MTBLS263.mztab -s\r\n```\r\n\r\nRun a basic parse and validation followed by applying a provided mapping file on Error level for semantic validation:\r\n\r\n```\r\njava -jar jmztabm-cli-1.0.4.jar -c examples/MTBLS263.mztab -s cv-mapping/mzTab-M-mapping.xml\r\n```\r\n\r\nRunning the same on Info level yields additional messages (for optional parameters):\r\n\r\n```\r\njava -jar jmztabm-cli-1.0.4.jar -c examples/MTBLS263.mztab -s cv-mapping/mzTab-M-mapping.xml -level Info\r\n```\r\n\r\nTo use the IO libraries (reading, writing and structural and logical validation) in your own Maven projects, use the following dependency:\r\n\r\n```\r\n<dependency>\r\n    <groupId>de.isas.mztab</groupId>\r\n    <artifactId>jmztabm-io</artifactId>\r\n    <version>1.0.4</version>\r\n</dependency>\r\n```\r\n\r\nTo use the semantic validation with the mapping file in your own Maven project, use the following dependency:\r\n\r\n```\r\n<dependency>\r\n    <groupId>de.isas.mztab</groupId>\r\n    <artifactId>jmztabm-validation</artifactId>\r\n    <version>1.0.4</version>\r\n</dependency>\r\n```\r\n\r\nThe semantic validation requires access to EBI's Ontology Lookup Service to resolve child terms in the mzTab file against their potential parents in the mapping file.",
+        "html_url": "https://github.com/lifs-tools/jmzTab-m/releases/tag/release-1.0.4",
+        "name": "Release 1.0.4 of jmztab-m",
+        "release_id": 19130155,
+        "tag": "release-1.0.4",
+        "tarball_url": "https://api.github.com/repos/lifs-tools/jmzTab-m/tarball/release-1.0.4",
+        "type": "Release",
+        "url": "https://api.github.com/repos/lifs-tools/jmzTab-m/releases/19130155",
+        "value": "https://api.github.com/repos/lifs-tools/jmzTab-m/releases/19130155",
+        "zipball_url": "https://api.github.com/repos/lifs-tools/jmzTab-m/zipball/release-1.0.4"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "nilshoffmann",
+          "type": "User"
+        },
+        "date_created": "2019-08-06T11:05:02Z",
+        "date_published": "2019-08-06T11:08:23Z",
+        "description": "This is release 1.0.3 of the jmztab-m libraries that was published to Maven Central.\r\n\r\nIt implements the draft of mzTab-m 2.0 at https://github.com/HUPO-PSI/mzTab. \r\n\r\nThis release comes with an updated, POSIX compatible command line interface. Please note: the old command line examples will no longer work. Please check the updated examples below or on the main project page for the new syntax.\r\n\r\nRelease 1.0.3 should be backwards compatible to 1.0.2. However, for implementors, the refine validation within the io package's MTDLineParser has been refactored into separate validator implementations into the `de.isas.mztab2.io.validators` package.\r\n\r\nThis release also includes any amendments that were made as a result of the publication reviewers' feedback and the feedback from the PSI document review process. We have substantially updated the API documentation and have added examples from the specification document and have increased the unit test coverage.\r\n\r\nTo access the release artefacts, please go to Maven Central:\r\n\r\nhttps://search.maven.org/#search%7Cga%7C1%7Cde.isas.mztab\r\n\r\nTo access the latest JavaDoc, please to the project's Maven page:\r\n\r\nhttps://lifs-tools.github.io/jmzTab-m/\r\n\r\nFor everyone who is working off any generated code, please update to the latest version:\r\n\r\nR: https://search.maven.org/remotecontent?filepath=de/isas/mztab/jmztabm-api/1.0.3/jmztabm-api-1.0.3-r.zip,\r\n\r\nPython: https://search.maven.org/remotecontent?filepath=de/isas/mztab/jmztabm-api/1.0.3/jmztabm-api-1.0.3-python.zip\r\n\r\nPlease note that these packages do not include parser or writer code yet. However, the JSON created can be converted to proper mzTab using the Java CLI.\r\n\r\nThe CLI package bundles parser and semantic validator and contains sample files and the latest mapping file:\r\n\r\nhttps://search.maven.org/remotecontent?filepath=de/isas/mztab/jmztabm-cli/1.0.3/jmztabm-cli-1.0.3-bin.zip\r\n\r\nRunning\r\n\r\n```\r\njava -jar jmztabm-cli-1.0.3.jar\r\n```\r\n\r\non your command line will show you the possible arguments (staying close to the old jmztab).\r\n\r\nRun a basic parse and validation on Error level:\r\n\r\n```\r\njava -jar jmztabm-cli-1.0.3.jar -c examples/MTBLS263.mztab\r\n```\r\n\r\nRun a basic parse and validation followed by applying the default mapping file on Error level for semantic validation:\r\n\r\n```\r\njava -jar jmztabm-cli-1.0.3.jar -c examples/MTBLS263.mztab -s\r\n```\r\n\r\nRun a basic parse and validation followed by applying a provided mapping file on Error level for semantic validation:\r\n\r\n```\r\njava -jar jmztabm-cli-1.0.3.jar -c examples/MTBLS263.mztab -s cv-mapping/mzTab-M-mapping.xml\r\n```\r\n\r\nRunning the same on Info level yields additional messages (for optional parameters):\r\n\r\n```\r\njava -jar jmztabm-cli-1.0.3.jar -c examples/MTBLS263.mztab -s cv-mapping/mzTab-M-mapping.xml -level Info\r\n```\r\n\r\nTo use the IO libraries (reading, writing and structural and logical validation) in your own Maven projects, use the following dependency:\r\n\r\n```\r\n<dependency>\r\n    <groupId>de.isas.mztab</groupId>\r\n    <artifactId>jmztabm-io</artifactId>\r\n    <version>1.0.3</version>\r\n</dependency>\r\n```\r\n\r\nTo use the semantic validation with the mapping file in your own Maven project, use the following dependency:\r\n\r\n```\r\n<dependency>\r\n    <groupId>de.isas.mztab</groupId>\r\n    <artifactId>jmztabm-validation</artifactId>\r\n    <version>1.0.3</version>\r\n</dependency>\r\n```\r\n\r\nThe semantic validation requires access to EBI's Ontology Lookup Service to resolve child terms in the mzTab file against their potential parents in the mapping file.",
+        "html_url": "https://github.com/lifs-tools/jmzTab-m/releases/tag/release-1.0.3",
+        "name": "Release 1.0.3 of jmztab-m",
+        "release_id": 19087236,
+        "tag": "release-1.0.3",
+        "tarball_url": "https://api.github.com/repos/lifs-tools/jmzTab-m/tarball/release-1.0.3",
+        "type": "Release",
+        "url": "https://api.github.com/repos/lifs-tools/jmzTab-m/releases/19087236",
+        "value": "https://api.github.com/repos/lifs-tools/jmzTab-m/releases/19087236",
+        "zipball_url": "https://api.github.com/repos/lifs-tools/jmzTab-m/zipball/release-1.0.3"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "nilshoffmann",
+          "type": "User"
+        },
+        "date_created": "2019-02-20T12:27:32Z",
+        "date_published": "2019-02-20T12:24:02Z",
+        "description": "This is release 1.0.2 of the jmztab-m libraries that was published to Maven Central.\r\n\r\nIt implements the draft of mzTab-m 2.0 at https://github.com/HUPO-PSI/mzTab. \r\n\r\nThis release also includes any amendments that were made as a result of the publication reviewers' feedback and the feedback from the PSI document review process. We have substantially updated the API documentation and have added examples from the specification document.\r\n\r\nRelease 1.0.2 should be backwards compatible to 1.0.1. However, due to fixes in the handling of optional columns using CV parameters, files written with the old version may need to be updated to follow the optional column specification for CV parameters, namely only the value for the affected row MUST be reported in the table. The column header name must follow the opt_global_cv_MS_MS:12189_parameter_name pattern or the opt_assay[1]_cv_MS_MS:12189_parameter_name pattern (please change the values accordingly). \r\n\r\nAlso, the `MZTabFileParser` class has been renamed to `MzTabFileParser` and was moved from the `uk.ac.ebi.pride.jmztab2.utils` package to the `de.isas.mztab2.io package`.\r\n\r\nThe mapping file has been updated to use the https://www.ebi.ac.uk/ols/ontologies/msio[Metabolomics Standards Society MSIO ontology] for sample processing related terms and the https://www.ebi.ac.uk/ols/ontologies/chebi[CHEBI ontology] for derivatization groups to replace the SEP and XLMOD ontologies. Semantic validation should in this case report a warning to alert you to these changes. Please update your files and implementations accordingly.\r\n\r\nTo access the release artefacts, please go to Maven Central:\r\n\r\nhttps://search.maven.org/#search%7Cga%7C1%7Cde.isas.mztab\r\n\r\nFor everyone who is working off any generated code, please update to the latest version:\r\n\r\nR: https://search.maven.org/remotecontent?filepath=de/isas/mztab/jmztabm-api/1.0.2/jmztabm-api-1.0.2-r.zip,\r\n\r\nPython: https://search.maven.org/remotecontent?filepath=de/isas/mztab/jmztabm-api/1.0.2/jmztabm-api-1.0.2-python.zip\r\n\r\nPlease note that these packages do not include parser or writer code yet. However, the JSON created can be converted to proper mzTab using the Java CLI.\r\n\r\nThe CLI package bundles parser and semantic validator and contains sample files and the latest mapping file:\r\n\r\nhttps://search.maven.org/remotecontent?filepath=de/isas/mztab/jmztabm-cli/1.0.2/jmztabm-cli-1.0.2-bin.zip\r\n\r\nRunning\r\n\r\n```\r\njava -jar jmztabm-cli-1.0.2.jar\r\n```\r\n\r\non your command line will show you the possible arguments (staying close to the old jmztab).\r\n\r\nRun a basic parse and validation on Error level:\r\n\r\n```\r\njava -jar jmztabm-cli-1.0.2.jar -check inFile=examples/MTBLS263.mztab\r\n```\r\n\r\nRun a basic parse and validation followed by applying a provided mapping file on Error level:\r\n\r\n```\r\njava -jar jmztabm-cli-1.0.2.jar -check inFile=examples/MTBLS263.mztab -checkSemantic mappingFile=cv-mapping/mzTab-M-mapping.xml\r\n```\r\n\r\nRunning the same on Info level yields additional messages (for optional parameters):\r\n\r\n```\r\njava -jar jmztabm-cli-1.0.2.jar -check inFile=examples/MTBLS263.mztab -checkSemantic mappingFile=cv-mapping/mzTab-M-mapping.xml -level Info\r\n```\r\n\r\nTo use the IO libraries (reading, writing and structural and logical validation) in your own Maven projects, use the following dependency:\r\n\r\n```\r\n<dependency>\r\n    <groupId>de.isas.mztab</groupId>\r\n    <artifactId>jmztabm-io</artifactId>\r\n    <version>1.0.2</version>\r\n</dependency>\r\n```\r\n\r\nTo use the semantic validation with the mapping file in your own Maven project, use the following dependency:\r\n\r\n```\r\n<dependency>\r\n    <groupId>de.isas.mztab</groupId>\r\n    <artifactId>jmztabm-validation</artifactId>\r\n    <version>1.0.2</version>\r\n</dependency>\r\n```\r\n\r\nThe semantic validation requires access to EBI's Ontology Lookup Service to resolve child terms in the mzTab file against their potential parents in the mapping file.",
+        "html_url": "https://github.com/lifs-tools/jmzTab-m/releases/tag/release-1.0.2",
+        "name": "Release 1.0.2 of jmztab-m",
+        "release_id": 15665982,
+        "tag": "release-1.0.2",
+        "tarball_url": "https://api.github.com/repos/lifs-tools/jmzTab-m/tarball/release-1.0.2",
+        "type": "Release",
+        "url": "https://api.github.com/repos/lifs-tools/jmzTab-m/releases/15665982",
+        "value": "https://api.github.com/repos/lifs-tools/jmzTab-m/releases/15665982",
+        "zipball_url": "https://api.github.com/repos/lifs-tools/jmzTab-m/zipball/release-1.0.2"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "nilshoffmann",
+          "type": "User"
+        },
+        "date_created": "2018-08-30T15:11:27Z",
+        "date_published": "2018-08-30T15:58:39Z",
+        "description": "This is release 1.0.1 of the jmztab-m libraries that was published to Maven Central.\r\nIt implements the draft of mzTab-m 2.0 at https://github.com/HUPO-PSI/mzTab.\r\n\r\nPlease note that release 1.0.0 was incompletely deployed to Maven Central. \r\nRelease 1.0.1 is virtually identical to 1.0.0 and replaces it.\r\n\r\nThis release fixes issues with the validation of cv and user parameters.\r\n\r\nTo access the release artefacts, please go to Maven Central:\r\n\r\nhttps://search.maven.org/#search%7Cga%7C1%7Cde.isas.mztab\r\n\r\nFor everyone who is working off any generated code, please update to the latest version:\r\n\r\nR: https://search.maven.org/remotecontent?filepath=de/isas/mztab/jmztabm-api/1.0.1/jmztabm-api-1.0.1-r.zip,\r\n\r\nPython: https://search.maven.org/remotecontent?filepath=de/isas/mztab/jmztabm-api/1.0.1/jmztabm-api-1.0.1-python.zip\r\n\r\nThe CLI package bundles parser and semantic validator and contains sample files and the latest mapping file:\r\n\r\nhttps://search.maven.org/remotecontent?filepath=de/isas/mztab/jmztabm-cli/1.0.1/jmztabm-cli-1.0.1-bin.zip\r\n\r\nRunning\r\n\r\n```\r\njava -jar jmztabm-cli-1.0.1.jar\r\n```\r\n\r\non your command line will show you the possible arguments (staying close to the old jmztab).\r\n\r\nRun a basic parse and validation on Error level:\r\n\r\n```\r\njava -jar jmztabm-cli-1.0.1.jar -check inFile=examples/MTBLS263.mztab\r\n```\r\n\r\nRun a basic parse and validation followed by applying a provided mapping file on Error level:\r\n\r\n```\r\njava -jar jmztabm-cli-1.0.1.jar -check inFile=examples/MTBLS263.mztab -checkSemantic mappingFile=cv-mapping/mzTab-M-mapping.xml\r\n```\r\n\r\nRunning the same on Info level yields additional messages (for optional parameters):\r\n\r\n```\r\njava -jar jmztabm-cli-1.0.1.jar -check inFile=examples/MTBLS263.mztab -checkSemantic mappingFile=cv-mapping/mzTab-M-mapping.xml -level Info\r\n```\r\n\r\nTo use the IO libraries (reading, writing and structural and logical validation) in your own Maven projects, use the following dependency:\r\n\r\n```\r\n<dependency>\r\n    <groupId>de.isas.mztab</groupId>\r\n    <artifactId>jmztabm-io</artifactId>\r\n    <version>1.0.1</version>\r\n</dependency>\r\n```\r\n\r\nTo use the semantic validation with the mapping file in your own Maven project, use the following dependency:\r\n\r\n```\r\n<dependency>\r\n    <groupId>de.isas.mztab</groupId>\r\n    <artifactId>jmztabm-validation</artifactId>\r\n    <version>1.0.1</version>\r\n</dependency>\r\n```\r\n\r\nThe semantic validation requires access to EBI's Ontology Lookup Service to resolve child terms in the mzTab file against their potential parents in the mapping file.",
+        "html_url": "https://github.com/lifs-tools/jmzTab-m/releases/tag/release-1.0.1",
+        "name": "Release 1.0.1 of jmztab-m",
+        "release_id": 12657535,
+        "tag": "release-1.0.1",
+        "tarball_url": "https://api.github.com/repos/lifs-tools/jmzTab-m/tarball/release-1.0.1",
+        "type": "Release",
+        "url": "https://api.github.com/repos/lifs-tools/jmzTab-m/releases/12657535",
+        "value": "https://api.github.com/repos/lifs-tools/jmzTab-m/releases/12657535",
+        "zipball_url": "https://api.github.com/repos/lifs-tools/jmzTab-m/zipball/release-1.0.1"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "nilshoffmann",
+          "type": "User"
+        },
+        "date_created": "2018-07-18T14:28:27Z",
+        "date_published": "2018-07-18T17:11:44Z",
+        "description": "This is release 0.9.9 of the jmztab-m libraries that was published to Maven Central.\r\nIt implements the draft of mzTab-m 2.0 at https://github.com/HUPO-PSI/mzTab.\r\n\r\nThis release fixes issues with the default mapping file in the previous release.\r\n\r\nTo access the release artefacts, please go to Maven Central:\r\n\r\nhttps://search.maven.org/#search%7Cga%7C1%7Cde.isas.mztab\r\n\r\nFor everyone who is working off any generated code, please update to the latest version:\r\n\r\nR: https://search.maven.org/remotecontent?filepath=de/isas/mztab/jmztabm-api/0.9.9/jmztabm-api-0.9.9-r.zip,\r\n\r\nPython: https://search.maven.org/remotecontent?filepath=de/isas/mztab/jmztabm-api/0.9.9/jmztabm-api-0.9.9-python.zip\r\n\r\nThe CLI package bundles parser and semantic validator and contains sample files and the latest mapping file:\r\n\r\nhttps://search.maven.org/remotecontent?filepath=de/isas/mztab/jmztabm-cli/0.9.9/jmztabm-cli-0.9.9-bin.zip\r\n\r\nRunning\r\n\r\n```\r\njava -jar jmztabm-cli-0.9.9.jar\r\n```\r\n\r\non your command line will show you the possible arguments (staying close to the old jmztab).\r\n\r\nRun a basic parse and validation on Error level:\r\n\r\n```\r\njava -jar jmztabm-cli-0.9.9.jar -check inFile=examples/MTBLS263.mztab\r\n```\r\n\r\nRun a basic parse and validation followed by applying a provided mapping file on Error level:\r\n\r\n```\r\njava -jar jmztabm-cli-0.9.9.jar -check inFile=examples/MTBLS263.mztab -checkSemantic mappingFile=cv-mapping/mzTab-M-mapping.xml\r\n```\r\n\r\nRunning the same on Info level yields additional messages (for optional parameters):\r\n\r\n```\r\njava -jar jmztabm-cli-0.9.9.jar -check inFile=examples/MTBLS263.mztab -checkSemantic mappingFile=cv-mapping/mzTab-M-mapping.xml -level Info\r\n```\r\n\r\nTo use the IO libraries (reading, writing and structural and logical validation) in your own Maven projects, use the following dependency:\r\n\r\n```\r\n<dependency>\r\n    <groupId>de.isas.mztab</groupId>\r\n    <artifactId>jmztabm-io</artifactId>\r\n    <version>0.9.9</version>\r\n</dependency>\r\n```\r\n\r\nTo use the semantic validation with the mapping file in your own Maven project, use the following dependency:\r\n\r\n```\r\n<dependency>\r\n    <groupId>de.isas.mztab</groupId>\r\n    <artifactId>jmztabm-validation</artifactId>\r\n    <version>0.9.9</version>\r\n</dependency>\r\n```\r\n\r\nThe semantic validation requires access to EBI's Ontology Lookup Service to resolve child terms in the mzTab file against their potential parents in the mapping file.",
+        "html_url": "https://github.com/lifs-tools/jmzTab-m/releases/tag/release-0.9.9",
+        "name": "Release 0.9.9 of jmztab-m",
+        "release_id": 11991467,
+        "tag": "release-0.9.9",
+        "tarball_url": "https://api.github.com/repos/lifs-tools/jmzTab-m/tarball/release-0.9.9",
+        "type": "Release",
+        "url": "https://api.github.com/repos/lifs-tools/jmzTab-m/releases/11991467",
+        "value": "https://api.github.com/repos/lifs-tools/jmzTab-m/releases/11991467",
+        "zipball_url": "https://api.github.com/repos/lifs-tools/jmzTab-m/zipball/release-0.9.9"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "nilshoffmann",
+          "type": "User"
+        },
+        "date_created": "2018-07-10T14:00:48Z",
+        "date_published": "2018-07-10T14:35:00Z",
+        "description": "This is release 0.9.8 of the jmztab-m libraries that was published to Maven Central.\r\nIt implements the draft of mzTab-m 2.0 at https://github.com/HUPO-PSI/mzTab.\r\n\r\nThis release fixes issues with the default mapping file in the previous release.\r\n\r\nTo access the release arefacts, please go to Maven Central:\r\n\r\nhttps://search.maven.org/#search%7Cga%7C1%7Cde.isas.mztab\r\n\r\nFor everyone who is working off any generated code, please update to the latest version:\r\n\r\nR: https://search.maven.org/remotecontent?filepath=de/isas/mztab/jmztabm-api/0.9.8/jmztabm-api-0.9.8-r.zip,\r\n\r\nPython: https://search.maven.org/remotecontent?filepath=de/isas/mztab/jmztabm-api/0.9.8/jmztabm-api-0.9.8-python.zip\r\n\r\nThe CLI package bundles parser and semantic validator and contains sample files and the latest mapping file:\r\n\r\nhttps://search.maven.org/remotecontent?filepath=de/isas/mztab/jmztabm-cli/0.9.8/jmztabm-cli-0.9.8-bin.zip\r\n\r\nRunning\r\n\r\n```\r\njava -jar jmztabm-cli-0.9.8.jar\r\n```\r\n\r\non your command line will show you the possible arguments (staying close to the old jmztab).\r\n\r\nRun a basic parse and validation on Error level:\r\n\r\n```\r\njava -jar jmztabm-cli-0.9.8.jar -check inFile=examples/MTBLS263.mztab\r\n```\r\n\r\nRun a basic parse and validation followed by applying a provided mapping file on Error level:\r\n\r\n```\r\njava -jar jmztabm-cli-0.9.8.jar -check inFile=examples/MTBLS263.mztab -checkSemantic mappingFile=cv-mapping/mzTab-M-mapping.xml\r\n```\r\n\r\nRunning the same on Info level yields additional messages (for optional parameters):\r\n\r\n```\r\njava -jar jmztabm-cli-0.9.8.jar -check inFile=examples/MTBLS263.mztab -checkSemantic mappingFile=cv-mapping/mzTab-M-mapping.xml -level Info\r\n```\r\n\r\nTo use the IO libraries (reading, writing and structural and logical validation) in your own Maven projects, use the following dependency:\r\n\r\n```\r\n<dependency>\r\n    <groupId>de.isas.mztab</groupId>\r\n    <artifactId>jmztabm-io</artifactId>\r\n    <version>0.9.8</version>\r\n</dependency>\r\n```\r\n\r\nTo use the semantic validation with the mapping file in your own Maven project, use the following dependency:\r\n\r\n```\r\n<dependency>\r\n    <groupId>de.isas.mztab</groupId>\r\n    <artifactId>jmztabm-validation</artifactId>\r\n    <version>0.9.8</version>\r\n</dependency>\r\n```\r\n\r\nThe semantic validation requires access to EBI's Ontology Lookup Service to resolve child terms in the mzTab file against their potential parents in the mapping file.",
+        "html_url": "https://github.com/lifs-tools/jmzTab-m/releases/tag/release-0.9.8",
+        "name": "Release 0.9.8 of jmztab-m",
+        "release_id": 11858206,
+        "tag": "release-0.9.8",
+        "tarball_url": "https://api.github.com/repos/lifs-tools/jmzTab-m/tarball/release-0.9.8",
+        "type": "Release",
+        "url": "https://api.github.com/repos/lifs-tools/jmzTab-m/releases/11858206",
+        "value": "https://api.github.com/repos/lifs-tools/jmzTab-m/releases/11858206",
+        "zipball_url": "https://api.github.com/repos/lifs-tools/jmzTab-m/zipball/release-0.9.8"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "nilshoffmann",
+          "type": "User"
+        },
+        "date_created": "2018-06-22T13:41:30Z",
+        "date_published": "2018-06-22T13:49:58Z",
+        "description": "This is release 0.9.7 of the jmztab-m libraries that was published to Maven Central.\r\nIt implements the draft of mzTab-m 2.0 at https://github.com/HUPO-PSI/mzTab.\r\n\r\nThis release fixes issues with the default mapping file in the previous release.\r\n\r\nTo access the release arefacts, please go to Maven Central:\r\n\r\nhttps://search.maven.org/#search%7Cga%7C1%7Cde.isas.mztab\r\n\r\nFor everyone who is working off any generated code, please update to the latest version:\r\n\r\nR: https://search.maven.org/remotecontent?filepath=de/isas/mztab/jmztabm-api/0.9.7/jmztabm-api-0.9.7-r.zip,\r\n\r\nPython: https://search.maven.org/remotecontent?filepath=de/isas/mztab/jmztabm-api/0.9.7/jmztabm-api-0.9.7-python.zip\r\n\r\nThe CLI package bundles parser and semantic validator and contains sample files and the latest mapping file:\r\n\r\nhttps://search.maven.org/remotecontent?filepath=de/isas/mztab/jmztabm-cli/0.9.7/jmztabm-cli-0.9.7-bin.zip\r\n\r\nRunning\r\n\r\n```\r\njava -jar jmztabm-cli-0.9.7.jar\r\n```\r\n\r\non your command line will show you the possible arguments (staying close to the old jmztab).\r\n\r\nRun a basic parse and validation on Error level:\r\n\r\n```\r\njava -jar jmztabm-cli-0.9.7.jar -check inFile=examples/MTBLS263.mztab\r\n```\r\n\r\nRun a basic parse and validation followed by applying a provided mapping file on Error level:\r\n\r\n```\r\njava -jar jmztabm-cli-0.9.7.jar -check inFile=examples/MTBLS263.mztab -checkSemantic mappingFile=cv-mapping/mzTab-M-mapping.xml\r\n```\r\n\r\nRunning the same on Info level yields additional messages (for optional parameters):\r\n\r\n```\r\njava -jar jmztabm-cli-0.9.7.jar -check inFile=examples/MTBLS263.mztab -checkSemantic mappingFile=cv-mapping/mzTab-M-mapping.xml -level Info\r\n```\r\n\r\nTo use the IO libraries (reading, writing and structural and logical validation) in your own Maven projects, use the following dependency:\r\n\r\n```\r\n<dependency>\r\n    <groupId>de.isas.mztab</groupId>\r\n    <artifactId>jmztabm-io</artifactId>\r\n    <version>0.9.7</version>\r\n</dependency>\r\n```\r\n\r\nTo use the semantic validation with the mapping file in your own Maven project, use the following dependency:\r\n\r\n```\r\n<dependency>\r\n    <groupId>de.isas.mztab</groupId>\r\n    <artifactId>jmztabm-validation</artifactId>\r\n    <version>0.9.7</version>\r\n</dependency>\r\n```\r\n\r\nThe semantic validation requires access to EBI's Ontology Lookup Service to resolve child terms in the mzTab file against their potential parents in the mapping file.",
+        "html_url": "https://github.com/lifs-tools/jmzTab-m/releases/tag/release-0.9.7",
+        "name": "Release 0.9.7 of jmztab-m",
+        "release_id": 11606801,
+        "tag": "release-0.9.7",
+        "tarball_url": "https://api.github.com/repos/lifs-tools/jmzTab-m/tarball/release-0.9.7",
+        "type": "Release",
+        "url": "https://api.github.com/repos/lifs-tools/jmzTab-m/releases/11606801",
+        "value": "https://api.github.com/repos/lifs-tools/jmzTab-m/releases/11606801",
+        "zipball_url": "https://api.github.com/repos/lifs-tools/jmzTab-m/zipball/release-0.9.7"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "nilshoffmann",
+          "type": "User"
+        },
+        "date_created": "2018-06-21T07:28:31Z",
+        "date_published": "2018-06-21T08:06:30Z",
+        "description": "This is release 0.9.6 of the jmztab-m libraries that was published to Maven Central.\r\nIt implements the draft of mzTab-m 2.0 at https://github.com/HUPO-PSI/mzTab.\r\n\r\nTo access the release arefacts, please go to Maven Central:\r\n\r\nhttps://search.maven.org/#search%7Cga%7C1%7Cde.isas.mztab\r\n\r\nFor everyone who is working off any generated code, please update to the latest version:\r\n\r\nR: https://search.maven.org/remotecontent?filepath=de/isas/mztab/jmztabm-api/0.9.6/jmztabm-api-0.9.6-r.zip,\r\n\r\nPython: https://search.maven.org/remotecontent?filepath=de/isas/mztab/jmztabm-api/0.9.6/jmztabm-api-0.9.6-python.zip\r\n\r\nThe CLI package bundles parser and semantic validator and contains sample files and the latest mapping file:\r\n\r\nhttps://search.maven.org/remotecontent?filepath=de/isas/mztab/jmztabm-cli/0.9.6/jmztabm-cli-0.9.6-bin.zip\r\n\r\nRunning\r\n\r\n```\r\njava -jar jmztabm-cli-0.9.6.jar\r\n```\r\n\r\non your command line will show you the possible arguments (staying close to the old jmztab).\r\n\r\nRun a basic parse and validation on Error level:\r\n\r\n```\r\njava -jar jmztabm-cli-0.9.6.jar -check inFile=examples/MTBLS263.mztab\r\n```\r\n\r\nRun a basic parse and validation followed by applying a provided mapping file on Error level:\r\n\r\n```\r\njava -jar jmztabm-cli-0.9.6.jar -check inFile=examples/MTBLS263.mztab -checkSemantic mappingFile=cv-mapping/mzTab-M-mapping.xml\r\n```\r\n\r\nRunning the same on Info level yields additional messages (for optional parameters):\r\n\r\n```\r\njava -jar jmztabm-cli-0.9.6.jar -check inFile=examples/MTBLS263.mztab -checkSemantic mappingFile=cv-mapping/mzTab-M-mapping.xml -level Info\r\n```\r\n\r\nTo use the IO libraries (reading, writing and structural and logical validation) in your own Maven projects, use the following dependency:\r\n\r\n```\r\n<dependency>\r\n    <groupId>de.isas.mztab</groupId>\r\n    <artifactId>jmztabm-io</artifactId>\r\n    <version>0.9.6</version>\r\n</dependency>\r\n```\r\n\r\nTo use the semantic validation with the mapping file in your own Maven project, use the following dependency:\r\n\r\n```\r\n<dependency>\r\n    <groupId>de.isas.mztab</groupId>\r\n    <artifactId>jmztabm-validation</artifactId>\r\n    <version>0.9.6</version>\r\n</dependency>\r\n```\r\n\r\nThe semantic validation requires access to EBI's Ontology Lookup Service to resolve child terms in the mzTab file against their potential parents in the mapping file.",
+        "html_url": "https://github.com/lifs-tools/jmzTab-m/releases/tag/release-0.9.6",
+        "name": "Release 0.9.6 of jmztab-m",
+        "release_id": 11582747,
+        "tag": "release-0.9.6",
+        "tarball_url": "https://api.github.com/repos/lifs-tools/jmzTab-m/tarball/release-0.9.6",
+        "type": "Release",
+        "url": "https://api.github.com/repos/lifs-tools/jmzTab-m/releases/11582747",
+        "value": "https://api.github.com/repos/lifs-tools/jmzTab-m/releases/11582747",
+        "zipball_url": "https://api.github.com/repos/lifs-tools/jmzTab-m/zipball/release-0.9.6"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "nilshoffmann",
+          "type": "User"
+        },
+        "date_created": "2018-06-14T19:27:13Z",
+        "date_published": "2018-06-15T07:51:39Z",
+        "description": "This is the first stable release of the jmztab-m libraries that was published to Maven Central.\r\nIt implements the draft of mzTab-m 2.0 at https://github.com/HUPO-PSI/mzTab.\r\n\r\nTo access the release arefacts, please go to Maven Central:\r\n\r\nhttps://search.maven.org/#search%7Cga%7C1%7Cde.isas.mztab\r\n\r\nFor everyone who is working off any generated code, please update to the latest version:\r\n\r\nR: https://search.maven.org/remotecontent?filepath=de/isas/mztab/jmztabm-api/0.9.5/jmztabm-api-0.9.5-r.zip,\r\n\r\nPython: https://search.maven.org/remotecontent?filepath=de/isas/mztab/jmztabm-api/0.9.5/jmztabm-api-0.9.5-python.zip\r\n\r\nThe CLI package bundles parser and semantic validator and contains sample files and the latest mapping file:\r\n\r\nhttps://search.maven.org/remotecontent?filepath=de/isas/mztab/jmztabm-cli/0.9.5/jmztabm-cli-0.9.5-bin.zip\r\n\r\nRunning\r\n\r\n```\r\njava -jar jmztabm-cli-0.9.5.jar\r\n```\r\n\r\non your command line will show you the possible arguments (staying close to the old jmztab).\r\n\r\nRun a basic parse and validation on Error level:\r\n\r\n```\r\njava -jar jmztabm-cli-0.9.5.jar -check inFile=examples/MTBLS263.mztab\r\n```\r\n\r\nRun a basic parse and validation followed by applying a provided mapping file on Error level:\r\n\r\n```\r\njava -jar jmztabm-cli-0.9.5.jar -check inFile=examples/MTBLS263.mztab -checkSemantic mappingFile=cv-mapping/mzTab-M-mapping.xml\r\n```\r\n\r\nRunning the same on Info level yields additional messages (for optional parameters):\r\n\r\n```\r\njava -jar jmztabm-cli-0.9.5.jar -check inFile=examples/MTBLS263.mztab -checkSemantic mappingFile=cv-mapping/mzTab-M-mapping.xml -level Info\r\n```\r\n\r\nTo use the IO libraries (reading, writing and structural and logical validation) in your own Maven projects, use the following dependency:\r\n\r\n```\r\n<dependency>\r\n    <groupId>de.isas.mztab</groupId>\r\n    <artifactId>jmztabm-io</artifactId>\r\n    <version>0.9.5</version>\r\n</dependency>\r\n```\r\n\r\nTo use the semantic validation with the mapping file in your own Maven project, use the following dependency:\r\n\r\n```\r\n<dependency>\r\n    <groupId>de.isas.mztab</groupId>\r\n    <artifactId>jmztabm-validation</artifactId>\r\n    <version>0.9.5</version>\r\n</dependency>\r\n```\r\n\r\nThe semantic validation requires access to EBI's Ontology Lookup Service to resolve child terms in the mzTab file against their potential parents in the mapping file.",
+        "html_url": "https://github.com/lifs-tools/jmzTab-m/releases/tag/release-0.9.5",
+        "name": "Release 0.9.5 of jmztab-m",
+        "release_id": 11495863,
+        "tag": "release-0.9.5",
+        "tarball_url": "https://api.github.com/repos/lifs-tools/jmzTab-m/tarball/release-0.9.5",
+        "type": "Release",
+        "url": "https://api.github.com/repos/lifs-tools/jmzTab-m/releases/11495863",
+        "value": "https://api.github.com/repos/lifs-tools/jmzTab-m/releases/11495863",
+        "zipball_url": "https://api.github.com/repos/lifs-tools/jmzTab-m/zipball/release-0.9.5"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "somef_missing_categories": [
+    "citation",
+    "acknowledgement",
+    "run",
+    "download",
+    "requirements",
+    "contact",
+    "contributors",
+    "documentation",
+    "usage",
+    "faq",
+    "support",
+    "identifier",
+    "executable_example"
+  ],
+  "somef_provenance": {
+    "date": "2024-10-06 18:17:02",
+    "somef_schema_version": "1.0.0",
+    "somef_version": "0.9.5"
+  },
+  "stargazers_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 5
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "type": [
+    {
+      "confidence": 0.82,
+      "result": {
+        "type": "String",
+        "value": "commandline-application"
+      },
+      "technique": "software_type_heuristics"
+    }
+  ]
+}

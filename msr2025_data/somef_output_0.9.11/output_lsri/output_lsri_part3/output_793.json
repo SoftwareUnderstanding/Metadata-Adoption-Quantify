@@ -1,0 +1,605 @@
+{
+  "code_repository": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/kpto/ClusterSheep"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_created": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2017-12-03T09:02:54Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_updated": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2022-02-03T17:35:29Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "description": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "A CUDA accelerated MS2 spectral clustering and cluster visualization software."
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 0.9993468632011225,
+      "result": {
+        "original_header": "Features",
+        "type": "Text_excerpt",
+        "value": "* Fast: CUDA accelerated, GPU (GTX 1070) performs pairwise similarity computation ~45 times faster than CPU (i7 6700K).\n* Visualization: Powered by [graph-tool](https://graph-tool.skewed.de) and [matplotlib](https://matplotlib.org/), clusters are intuitively visualized using force directed drawing. Nodes can be picked to be plotted and peaks of peptide fragment ions are colored if the spectrum is identified. Detail on section [Cluster viewer](#usage-cluster-viewer).\n* Multi-GPUs: Clustering with multiple GPUs is supported with almost no performance loss (>90% efficiency).\n* Big data ready: ClusterSheep is written with big data in mind from the beginning, memory-map is heavily used to reduce memory usage and allow handling of large data set.\n* Easy post-processing: Clusters and peptide identifications are stored in [SQLite](https://www.sqlite.org/index.html) database file for easy access. Output data can be manipulated easily with the built-in Python interactive console. Detail on section [Python interactive console](#usage-advanced-python-interactive-console).\n* Traceability: Logging is important for research, ClusterSheep aggressively logs everything of a clustering session from its beginning to its last use, including configuration and all commands executed in cluster viewer and Python console. \n"
+      },
+      "source": "https://raw.githubusercontent.com/kpto/ClusterSheep/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9584895352075365,
+      "result": {
+        "original_header": "Overview",
+        "type": "Text_excerpt",
+        "value": "ClusterSheep is a CUDA accelerated clustering software of MS2 spectra data generated from proteomics. ClusterSheep is inspired by [SpectraST](http://tools.proteomecenter.org/wiki/index.php?title=Software:SpectraST), a software that builds spectral library by merging similar spectra together to form reference spectra. ClusterSheep works similarly to SpectraST, ClusterSheep groups spectra by computing similarities but with the following key differences. \n1. ClusterSheep doesn't combine spectra, it outputs the resulted groups which are called clusters and also the pairwise similarity scores of similar spectra, represented as edges. \n2. Unlike SpectraST and many existing clustering software which avoid pairwise similarity computation by producing a middle spectrum and compare candidate spectra with it only, ClusterSheep genuinely compute similarities of all pairs of spectra where the precursor mass difference of the pair is within the tolerance (1.1 by default). \n3. ClusterSheep is designed to run on GPU instead of CPU. The computing power provided by GPUs makes pairwise computation possible within an acceptable time. \nClusterSheep is designed to improve the [spectral library building](https://en.wikipedia.org/wiki/Peptide_spectral_library) process. By genuinely computing pairwise similarities, the resulted cluster structure may reveal bridging (such as chimeric spectrum) of sub-clusters that have long been incorrectly merged during library building. Also, spectral clustering provides a middle step of updatable library building. New experiment data can be incorporated into existing clusters easily without re-computing old data. Though this has not yet been implemented in ClusterSheep. \nClusterSheep is written by Paul TO and supervised by [Prof. Henry LAM](https://facultyprofiles.ust.hk/profiles.php?profile=henry-hei-ning-lam-kehlam), the author of SpectraST. \n"
+      },
+      "source": "https://raw.githubusercontent.com/kpto/ClusterSheep/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9905533427397919,
+      "result": {
+        "original_header": "Flow",
+        "type": "Text_excerpt",
+        "value": "The above is the flow of ClusterSheep. To begin with a new session, you need to name the session and supply MS experiment files and identification files (left side of the flow). ClusterSheep supports `mzXML`, `mzML` and `pep.xml` from either [PeptideProphet\u2122](http://peptideprophet.sourceforge.net/) or InterProphet. \n1. Create a new clustering session, store the session in a `cssess` file and create a logging file `cslogg`. All logging in the future will be written into it.\n2. Build an index of all spectra which is stored in a `csindx` file.\n3. Clarify (binning, precursor peaks removal and mz range clipping) and [rank-transform](https://pubmed.ncbi.nlm.nih.gov/24115759/) all spectra and store the transformed spectra in a `csrksp` file.\n4. If any identification file is supplied, import identifications with probability equal or higher than the threshold and store them in a `csiden` file for future searching.\n5. Pairwise similarity computation of all rank-transformed spectra where the precursor mass difference of the spectrum pair is within the tolerance. If the similarity score is higher than the threshold, an edge with the score are recorded. This step is accelerated by GPU.\n6. Searching connected components from edges generated above. Each cluster is presented as a graph object of graph-tool. Graphs are stored in a `csclut` file.\n7. Cluster refinement, optional, detail on section [Cluster refinement](#usage-cluster-refinement). \n"
+      },
+      "source": "https://raw.githubusercontent.com/kpto/ClusterSheep/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9825398665604441,
+      "result": {
+        "original_header": "Cluster refinement",
+        "type": "Text_excerpt",
+        "value": "Cluster refinement is a demonstrative feature to show the value of cluster structure. By computing [betweenness centrality](https://en.wikipedia.org/wiki/Betweenness_centrality) of each node, it identifies bridges within a cluster and remove them to produce clearer clusters. Using the same example cluster [shown above](#usage-cluster-viewer-cluster-visualization), two sub-clusters having different peptide identifications are bridged by the middle node. You can expect the betweenness centrality of that node will be a lot higher than other nodes and thus the node is detected and removed, releasing the two sub-clusters. \nSince this feature is not officially a part of ClusterSheep, by default it is turned off. You can turn it on in a configuration file with parameter `cr_outlier_threshold`, see section [Configuration](#usage-advanced-configuration) for detail about configuration file. \n"
+      },
+      "source": "https://raw.githubusercontent.com/kpto/ClusterSheep/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.993304566935652,
+      "result": {
+        "original_header": "Limitation",
+        "type": "Text_excerpt",
+        "value": "Although ClusterSheep is built with big data in mind, the graph building process after pairwise similarity computation may still take unhandleable amount of ram if a cluster contains too many spectra. This is because ClusterSheep depends on graph-tool for all graph related processing and graph-tool does not support memory-mapping. Depending on a third party package reduces the development time of ClusterSheep significantly, but ClusterSheep will need a customized graph processing component that guarantees low memory use in the future. Before this happens, ClusterSheep is not truly a software that can handle big data. \nIf the value of dot product threshold is too low, all spectra will be clustered together and form a gigantic cluster. As long as the value is reasonable, clustering millions of spectra should not be a problem. \n"
+      },
+      "source": "https://raw.githubusercontent.com/kpto/ClusterSheep/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9189431818582335,
+      "result": {
+        "original_header": "Future",
+        "type": "Text_excerpt",
+        "value": "* Remove dependency of graph-tool.\n* Overlap the clustering process and preparation process to hide the overhead of material preparation.\n* GPU accelerated rank-transformation.\n* Write a GUI.\n* Test big data support.\n* Decouple components.\n* Write unit test.\n* Supports OpenCL and AMD GPUs.\n* Progressive clustering, add spectra after a clustering session.\n* Auto generation of API documentation. \n"
+      },
+      "source": "https://raw.githubusercontent.com/kpto/ClusterSheep/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9178310109791096,
+      "result": {
+        "original_header": "Bugs or requests",
+        "type": "Text_excerpt",
+        "value": "For any bug reporting and feature request, send an email to [kpto@connect.ust.hk](mailto:kpto@connect.ust.hk). \n"
+      },
+      "source": "https://raw.githubusercontent.com/kpto/ClusterSheep/master/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "documentation": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/kpto/ClusterSheep/tree/master/docs"
+      },
+      "technique": "file_exploration"
+    }
+  ],
+  "download_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/kpto/ClusterSheep/releases"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 1
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/kpto/ClusterSheep/forks"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "kpto/ClusterSheep"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_title": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": ""
+      },
+      "source": "https://raw.githubusercontent.com/kpto/ClusterSheep/master/README.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "has_build_file": [
+    {
+      "confidence": 1,
+      "result": {
+        "format": "dockerfile",
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/kpto/ClusterSheep/master/docker/Dockerfile"
+      },
+      "source": "https://raw.githubusercontent.com/kpto/ClusterSheep/master/docker/Dockerfile",
+      "technique": "file_exploration"
+    }
+  ],
+  "has_script_file": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/kpto/ClusterSheep/master/azure-pipelines/build-test.sh"
+      },
+      "technique": "file_exploration"
+    }
+  ],
+  "images": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/kpto/ClusterSheep/raw/release/docs/mascot-with-name.svg"
+      },
+      "source": "https://raw.githubusercontent.com/kpto/ClusterSheep/master/README.md",
+      "technique": "regular_expression"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/kpto/ClusterSheep/raw/release/docs/flow.svg"
+      },
+      "source": "https://raw.githubusercontent.com/kpto/ClusterSheep/master/README.md",
+      "technique": "regular_expression"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/kpto/ClusterSheep/raw/release/docs/mixed-cluster.png"
+      },
+      "source": "https://raw.githubusercontent.com/kpto/ClusterSheep/master/README.md",
+      "technique": "regular_expression"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/kpto/ClusterSheep/raw/release/docs/spectrum-plot.png"
+      },
+      "source": "https://raw.githubusercontent.com/kpto/ClusterSheep/master/README.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "installation": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Installation",
+        "type": "Text_excerpt",
+        "value": "<a name=\"installation-docker\"></a>"
+      },
+      "source": "https://raw.githubusercontent.com/kpto/ClusterSheep/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Docker",
+        "parent_header": [
+          "Installation"
+        ],
+        "type": "Text_excerpt",
+        "value": "This is the easiest way to install ClusterSheep, the docker image has already included everything ClusterSheep needs to run. You only need to install the NVIDIA Driver, Docker and NVIDIA Container Toolkit. Since the image is based on a [CUDA 9.2 image](https://hub.docker.com/layers/nvidia/cuda/9.2-devel-ubuntu18.04/images/sha256-42a0669c248d17225c3e336df2835cf017b299345c6431b3e364f37dae7645b2?context=explore), make sure that the version of installed NVIDIA Driver is >= 396.26. If you are installing on Ubuntu, the NVIDIA Driver can be installed via the built-in driver manager. With the above installed, the ClusterSheep image can be pulled with the following command:\n\n```\ndocker pull kpto/clustersheep\n```\n\n<br/>\n<br/>\n\nIt is recommended to start a container with following command:\n\n```\ndocker run -ti --rm --gpus all -u user -w /home/user -e DISPLAY=$DISPLAY -v /tmp/.X11-unix:/tmp/.X11-unix kpto/clustersheep\n```\n\n`--gpus all` allows the container to access the GPU, `-u user` prevents running ClusterSheep as root, `-w /home/user` set the initial working directory to be an user space directory and `-e DISPLAY=$DISPLAY -v /tmp/.X11-unix:/tmp/.X11-unix` enables X window rendering on host's X server. To access files of the host, you need one more `-v` option to map the desired directory. For example, `-v ~/Documents:/home/user/Documents` maps your Documents folder to the Documents folder inside the container. See [reference of docker run](https://docs.docker.com/engine/reference/run/#volume-shared-filesystems) for more information.\n\n<a name=\"installation-pypi\"></a>"
+      },
+      "source": "https://raw.githubusercontent.com/kpto/ClusterSheep/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Test PyPI",
+        "parent_header": [
+          "Installation"
+        ],
+        "type": "Text_excerpt",
+        "value": "ClusterSheep is available via ***Test*** PyPI, with all [basic dependencies](#prerequisites-base) installed, ClusterSheep can be installed with the following command:\n\n```\npip install -i https://test.pypi.org/simple/ ClusterSheep\n```\n\nClusterSheep is still under heavy development and will soon be available on PyPI once the versioning scheme has been decided.\n\n<a name=\"flow\"></a>"
+      },
+      "source": "https://raw.githubusercontent.com/kpto/ClusterSheep/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Material preparation",
+        "parent_header": [
+          "Usage",
+          "Advanced"
+        ],
+        "type": "Text_excerpt",
+        "value": "In the case that you need to perform the same experiment multiple times but with different configuration, you may want to avoid the duplicated generations of index file `csindx` and rank-transformed spectra file `csrksp` to save time and disk space usage. To do so, you can run a new clustering session just to prepare the intermediate materials by using the option `--preparation-only`, like below:\n\n```\nclustersheep --name=prepsession --preparation-only --file-list=/path/to/the/list.txt\n```\n\nThe above command will create an unfinished session. If you load this session, ClusterSheep will continue the flow and perform clustering on the prepared materials and finish the session. But the unfinished session is more useful if you fork it instead using option `--fork=`, like below:\n\n```\nclustersheep --load-session=/path/to/prepsession.cssess --fork=forkedsession --config=/path/to/config.txt\n```\n\nThe above command will create a new session named by the value supplied by option `--fork=` (in the above example, `forkedsession`). The created session inherits everything from the loaded session including the prepared materials (index, rank-transformed spectra, logging and etc) by creating symbolic links to those files. By forking the preparation session with different configuration file, one can reuse the prepared material and run clustering on it with different configuration.\n\n<a name=\"usage-advanced-python-interactive-console\"></a>"
+      },
+      "source": "https://raw.githubusercontent.com/kpto/ClusterSheep/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 0.8960749362888475,
+      "result": {
+        "original_header": "Overview",
+        "type": "Text_excerpt",
+        "value": "<a name=\"prerequisites\"></a> \n"
+      },
+      "source": "https://raw.githubusercontent.com/kpto/ClusterSheep/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9804186554041683,
+      "result": {
+        "original_header": "Future",
+        "type": "Text_excerpt",
+        "value": "<a name=\"bugs-or-requests\"></a> \n"
+      },
+      "source": "https://raw.githubusercontent.com/kpto/ClusterSheep/master/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "issue_tracker": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/kpto/ClusterSheep/issues"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "keywords": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": ""
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "license": [
+    {
+      "confidence": 1,
+      "result": {
+        "name": "GNU Lesser General Public License v3.0",
+        "spdx_id": "LGPL-3.0",
+        "type": "License",
+        "url": "https://api.github.com/licenses/lgpl-3.0",
+        "value": "https://api.github.com/licenses/lgpl-3.0"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "File_dump",
+        "value": "                   GNU LESSER GENERAL PUBLIC LICENSE\n                       Version 3, 29 June 2007\n\n Copyright (C) 2007 Free Software Foundation, Inc. <https://fsf.org/>\n Everyone is permitted to copy and distribute verbatim copies\n of this license document, but changing it is not allowed.\n\n\n  This version of the GNU Lesser General Public License incorporates\nthe terms and conditions of version 3 of the GNU General Public\nLicense, supplemented by the additional permissions listed below.\n\n  0. Additional Definitions.\n\n  As used herein, \"this License\" refers to version 3 of the GNU Lesser\nGeneral Public License, and the \"GNU GPL\" refers to version 3 of the GNU\nGeneral Public License.\n\n  \"The Library\" refers to a covered work governed by this License,\nother than an Application or a Combined Work as defined below.\n\n  An \"Application\" is any work that makes use of an interface provided\nby the Library, but which is not otherwise based on the Library.\nDefining a subclass of a class defined by the Library is deemed a mode\nof using an interface provided by the Library.\n\n  A \"Combined Work\" is a work produced by combining or linking an\nApplication with the Library.  The particular version of the Library\nwith which the Combined Work was made is also called the \"Linked\nVersion\".\n\n  The \"Minimal Corresponding Source\" for a Combined Work means the\nCorresponding Source for the Combined Work, excluding any source code\nfor portions of the Combined Work that, considered in isolation, are\nbased on the Application, and not on the Linked Version.\n\n  The \"Corresponding Application Code\" for a Combined Work means the\nobject code and/or source code for the Application, including any data\nand utility programs needed for reproducing the Combined Work from the\nApplication, but excluding the System Libraries of the Combined Work.\n\n  1. Exception to Section 3 of the GNU GPL.\n\n  You may convey a covered work under sections 3 and 4 of this License\nwithout being bound by section 3 of the GNU GPL.\n\n  2. Conveying Modified Versions.\n\n  If you modify a copy of the Library, and, in your modifications, a\nfacility refers to a function or data to be supplied by an Application\nthat uses the facility (other than as an argument passed when the\nfacility is invoked), then you may convey a copy of the modified\nversion:\n\n   a) under this License, provided that you make a good faith effort to\n   ensure that, in the event an Application does not supply the\n   function or data, the facility still operates, and performs\n   whatever part of its purpose remains meaningful, or\n\n   b) under the GNU GPL, with none of the additional permissions of\n   this License applicable to that copy.\n\n  3. Object Code Incorporating Material from Library Header Files.\n\n  The object code form of an Application may incorporate material from\na header file that is part of the Library.  You may convey such object\ncode under terms of your choice, provided that, if the incorporated\nmaterial is not limited to numerical parameters, data structure\nlayouts and accessors, or small macros, inline functions and templates\n(ten or fewer lines in length), you do both of the following:\n\n   a) Give prominent notice with each copy of the object code that the\n   Library is used in it and that the Library and its use are\n   covered by this License.\n\n   b) Accompany the object code with a copy of the GNU GPL and this license\n   document.\n\n  4. Combined Works.\n\n  You may convey a Combined Work under terms of your choice that,\ntaken together, effectively do not restrict modification of the\nportions of the Library contained in the Combined Work and reverse\nengineering for debugging such modifications, if you also do each of\nthe following:\n\n   a) Give prominent notice with each copy of the Combined Work that\n   the Library is used in it and that the Library and its use are\n   covered by this License.\n\n   b) Accompany the Combined Work with a copy of the GNU GPL and this license\n   document.\n\n   c) For a Combined Work that displays copyright notices during\n   execution, include the copyright notice for the Library among\n   these notices, as well as a reference directing the user to the\n   copies of the GNU GPL and this license document.\n\n   d) Do one of the following:\n\n       0) Convey the Minimal Corresponding Source under the terms of this\n       License, and the Corresponding Application Code in a form\n       suitable for, and under terms that permit, the user to\n       recombine or relink the Application with a modified version of\n       the Linked Version to produce a modified Combined Work, in the\n       manner specified by section 6 of the GNU GPL for conveying\n       Corresponding Source.\n\n       1) Use a suitable shared library mechanism for linking with the\n       Library.  A suitable mechanism is one that (a) uses at run time\n       a copy of the Library already present on the user's computer\n       system, and (b) will operate properly with a modified version\n       of the Library that is interface-compatible with the Linked\n       Version.\n\n   e) Provide Installation Information, but only if you would otherwise\n   be required to provide such information under section 6 of the\n   GNU GPL, and only to the extent that such information is\n   necessary to install and execute a modified version of the\n   Combined Work produced by recombining or relinking the\n   Application with a modified version of the Linked Version. (If\n   you use option 4d0, the Installation Information must accompany\n   the Minimal Corresponding Source and Corresponding Application\n   Code. If you use option 4d1, you must provide the Installation\n   Information in the manner specified by section 6 of the GNU GPL\n   for conveying Corresponding Source.)\n\n  5. Combined Libraries.\n\n  You may place library facilities that are a work based on the\nLibrary side by side in a single library together with other library\nfacilities that are not Applications and are not covered by this\nLicense, and convey such a combined library under terms of your\nchoice, if you do both of the following:\n\n   a) Accompany the combined library with a copy of the same work based\n   on the Library, uncombined with any other library facilities,\n   conveyed under the terms of this License.\n\n   b) Give prominent notice with the combined library that part of it\n   is a work based on the Library, and explaining where to find the\n   accompanying uncombined form of the same work.\n\n  6. Revised Versions of the GNU Lesser General Public License.\n\n  The Free Software Foundation may publish revised and/or new versions\nof the GNU Lesser General Public License from time to time. Such new\nversions will be similar in spirit to the present version, but may\ndiffer in detail to address new problems or concerns.\n\n  Each version is given a distinguishing version number. If the\nLibrary as you received it specifies that a certain numbered version\nof the GNU Lesser General Public License \"or any later version\"\napplies to it, you have the option of following the terms and\nconditions either of that published version or of any later version\npublished by the Free Software Foundation. If the Library as you\nreceived it does not specify a version number of the GNU Lesser\nGeneral Public License, you may choose any version of the GNU Lesser\nGeneral Public License ever published by the Free Software Foundation.\n\n  If the Library as you received it specifies that a proxy can decide\nwhether future versions of the GNU Lesser General Public License shall\napply, that proxy's public statement of acceptance of any version is\npermanent authorization for you to choose that version for the\nLibrary."
+      },
+      "source": "https://raw.githubusercontent.com/kpto/ClusterSheep/master/LICENSE",
+      "technique": "file_exploration"
+    }
+  ],
+  "name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "ClusterSheep"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "owner": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "User",
+        "value": "kpto"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "programming_languages": [
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Python",
+        "size": 343841,
+        "type": "Programming_language",
+        "value": "Python"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Cython",
+        "size": 9628,
+        "type": "Programming_language",
+        "value": "Cython"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Dockerfile",
+        "size": 1143,
+        "type": "Programming_language",
+        "value": "Dockerfile"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Shell",
+        "size": 887,
+        "type": "Programming_language",
+        "value": "Shell"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "readme_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/kpto/ClusterSheep/master/README.md"
+      },
+      "technique": "file_exploration"
+    }
+  ],
+  "requirements": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Prerequisites",
+        "type": "Text_excerpt",
+        "value": "<a name=\"prerequisites-base\"></a>"
+      },
+      "source": "https://raw.githubusercontent.com/kpto/ClusterSheep/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Base",
+        "parent_header": [
+          "Prerequisites"
+        ],
+        "type": "Text_excerpt",
+        "value": "* [Ubuntu](https://ubuntu.com) 18.04 or above *\n* [Maxwell or above](https://en.wikipedia.org/wiki/List_of_Nvidia_graphics_processing_units#GeForce_900_series) CUDA capable graphics card  \u2020\n* [NVIDIA Driver](https://www.nvidia.com/Download/index.aspx)\n* [CUDA Toolkit](https://developer.nvidia.com/cuda-toolkit)\n* [graph-tool](https://graph-tool.skewed.de)\n* [matplotlib](https://matplotlib.org)\n* [pycuda](https://pypi.org/project/pycuda)\n* [pyopenms](https://pypi.org/project/pyopenms)\n\n<a name=\"prerequisites-others\"></a>"
+      },
+      "source": "https://raw.githubusercontent.com/kpto/ClusterSheep/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Others",
+        "parent_header": [
+          "Prerequisites"
+        ],
+        "type": "Text_excerpt",
+        "value": "* [Docker](https://docs.docker.com/engine/install/ubuntu) and [NVIDIA Container Toolkit](https://github.com/NVIDIA/nvidia-docker) (for installation via docker image) \u2021\n* [Cython](https://pypi.org/project/Cython) (for manually build from source code)\n\n<br/>\n<br/>\n\n\\* Any Linux distribution that can install [graph-tool](https://graph-tool.skewed.de) can run ClusterSheep, but installation on Ubuntu 18.04 is the easiest.\n\n\u2020 Cards before Maxwell should run as well but they are not tested. Also, ClusterSheep can run without a graphics card, it fallbacks to CPU if no GPU is available.\n\n\u2021 NVIDIA Container Toolkit works with Docker 19.03 or above. If the docker installed is below 19.03, [nvidia-docker2](https://github.com/nvidia/nvidia-docker/wiki/Installation-(version-2.0)) (deprecated) should be installed instead.\n\n<a name=\"installation\"></a>"
+      },
+      "source": "https://raw.githubusercontent.com/kpto/ClusterSheep/master/README.md",
+      "technique": "header_analysis"
+    }
+  ],
+  "somef_missing_categories": [
+    "citation",
+    "acknowledgement",
+    "run",
+    "download",
+    "contact",
+    "contributors",
+    "faq",
+    "support",
+    "identifier",
+    "executable_example"
+  ],
+  "somef_provenance": {
+    "date": "2024-10-06 02:22:45",
+    "somef_schema_version": "1.0.0",
+    "somef_version": "0.9.5"
+  },
+  "stargazers_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 5
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "usage": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Usage",
+        "type": "Text_excerpt",
+        "value": "After installation, an entry point should be created so that ClusterSheep can be executed by simply executing command `clustersheep`. ClusterSheep assumes the current working directory to be the output directory, all files of a new clustering session will be generated on the directory where you start ClusterSheep.\n\nHere are some example commands of auxiliary functions.\n\n<br/>\n\n```\nclustersheep\n```\n\nWith no parameter, ClusterSheep outputs a list of all available parameters. A configuration template file named `config_template` will be generated. This file contains all available parameters of ClusterSheep and the detail explanation of each setting.\n\n<br/>\n\n```\nclustersheep --version\n```\n\nWhich prints the version of the installed ClusterSheep.\n\n<br/>\n\n```\nclustersheep --list-gpus\n```\n\nWhich lists all available GPUs that can be used by ClusterSheep.\n\n<a name=\"usage-quick-start\"></a>"
+      },
+      "source": "https://raw.githubusercontent.com/kpto/ClusterSheep/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Quick start",
+        "parent_header": [
+          "Usage"
+        ],
+        "type": "Text_excerpt",
+        "value": "ClusterSheep accepts parameters with following formatting:\n\n```\nclustersheep --flag-type-option --value-type-option=value path-one path-two path-three ...\n```\n\nAll options start with two hyphens `--`, with the value connected by an equal symbol `=` if the option expects a value. All non-option parameters in the end are seen as paths to MS or identification files or folders containing them. If the path is a folder, ClusterSheep searches supported files within it but it does not search sub-folders.\n\nTo cluster one MS experiment file, run ClusterSheep with `--name=` option as below:\n\n```\nclustersheep --name=mysession /path/to/the/ms-experiment-file.mzML\n```\n\nClusterSheep will create a new clustering session named `mysession`. Files will be generated on the current working directory and are all named by the session name.\n\nIf you also have one identification file you want to import, execute below:\n\n```\nclustersheep --name=mysession /path/to/the/ms-experiment-file.mzML /path/to/the/identification-file.pep.xml\n```\n\nOr if both experiment file and identification file are in the same folder:\n\n```\nclustersheep --name=mysession /path/to/the/folder\n```\n\nIf you have many experiment and identification files, you can compose a list of paths and save it as a text file, then load the file list with `--file-list=` option, like below:\n\n```\nclustersheep --name=mysession --file-list=/path/to/the/list.txt\n```\n\nwhere `list.txt` has following content:\n\n```\n/path/to/file-1.mzML\n/path/to/file-2.pep.xml\n/path/to/file-3.mzML\n/path/to/file-4.pep.xml\n          \u22ee\n```\n\n<a name=\"usage-cluster-viewer\"></a>"
+      },
+      "source": "https://raw.githubusercontent.com/kpto/ClusterSheep/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Cluster viewer",
+        "parent_header": [
+          "Usage"
+        ],
+        "type": "Text_excerpt",
+        "value": "After the finish of a clustering session, you can explore clusters in cluster viewer. To enter cluster viewer, execute ClusterSheep with `--stay-interactive` option, like below:\n\n```\nclustersheep --load-session=/path/to/mysession.cssess --stay-interactive\n```\n\nfor loading an existing session or\n\n```\nclustersheep --name=mysession --stay-interactive path-to-files\n```\n\nfor creating a new session.\n\n<a name=\"usage-cluster-viewer-cluster-visualization\"></a>"
+      },
+      "source": "https://raw.githubusercontent.com/kpto/ClusterSheep/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Visualization",
+        "parent_header": [
+          "Usage",
+          "Cluster viewer"
+        ],
+        "type": "Text_excerpt",
+        "value": "Under cluster viewer, you can visualize a cluster by inputting its id. The cluster is drawn using [force-directed graph drawing](https://en.wikipedia.org/wiki/Force-directed_graph_drawing) algorithm. Under this algorithm, spectra that form more edges to its neighbours stay closed to each other while spectra that form less edges repel each other. The algorithm makes sub-clusters can be visually identified, for example, the cluster below.\n\n![mixed-cluster](https://github.com/kpto/ClusterSheep/raw/release/docs/mixed-cluster.png)\n\nIn the above drawing, dots are nodes/spectra. An edge between two nodes means they have a similarity score higher than the threshold. If identifications are imported, identified spectra are colored. Spectra with the same identification are colored with the same colour. Black means no identification.\n\n<a name=\"usage-cluster-viewer-spectrum-plotting\"></a>"
+      },
+      "source": "https://raw.githubusercontent.com/kpto/ClusterSheep/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Spectrum plotting",
+        "parent_header": [
+          "Usage",
+          "Cluster viewer"
+        ],
+        "type": "Text_excerpt",
+        "value": "When a cluster is drawn, you can interact with spectra by hovering your mouse pointer over a node, then press the following keys on your keyboard for different command:\n\n* `T` to tag a spectrum.\n* `D` to draw tagged spectrum/spectrum pair.\n* `C` to clear tags.\n* `V` to turn on or off verificative plotting.\n* `I` to turn on or off identifications swapping of tagged spectrum pair.\n\nFor example, to plot a spectrum in a cluster, hover your mouse point over a node, press `T` button on your keyboard to tag the spectrum, then press `D` button to draw. The plot of the picked spectrum is shown on a new window. You can tag two spectra to plot them against each other like the image below. By default, spectra are plotted verificatively, meaning that the plotted spectrum is post-processed with mz range clipping, precursor peak removal and rank-transformation with the same configuration value used in clustering. If you want to plot the raw spectrum recorded in MS experiment files, press `V` to turn off verificative plotting or press again to turn it on again.\n\nIf the plotted spectrum is identified, the peptide sequence and the probability will be printed in the graph. Also, peaks of fragment ions are highlighted, as shown below. The theoretical spectrum referenced is generated using pyopenms. If two spectra are tagged and identifications swapping is turned on by pressing `I`, their identifications will be swapped and peaks are highlighted using the swapped identification.\n\n![spectrum-plot](https://github.com/kpto/ClusterSheep/raw/release/docs/spectrum-plot.png)\n\nSpectra cannot be plotted if input MS experiment files are moved because spectra data is read from source files.\n\n<a name=\"usage-cluster-viewer-export\"></a>"
+      },
+      "source": "https://raw.githubusercontent.com/kpto/ClusterSheep/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Export",
+        "parent_header": [
+          "Usage",
+          "Cluster viewer"
+        ],
+        "type": "Text_excerpt",
+        "value": "Clusters can be exported by executing command `export` in cluster viewer. Information of nodes and edges will be written in a `Tab` delimited text file. If only a specific cluster is wanted, input the cluster ID (1000 for example) as argument like below:\n\n```\nexport 1000\n```\n\nOr if you want to export all clusters, input argument `all`:\n\n```\nexport all\n```\n\nFile name can be specified by using `file=` argument:\n\n```\nexport all file=path-to-destination\n```\n\nBefore a cluster is exported, a process called `enrichment` is performed on that cluster first. This process append identification of all spectra in that cluster by searching the identification database to include such information in exported clusters. When exporting all clusters, such process will take a considerable time.\n\nThe exported file is sectioned. Section headers have a prefix of `#` followed by the section name. Each section is explained below.\n\n```\n# Columns // Titles of columns, matching the Tab delimited columns in Clusters section\n    # Cluster\n    # Nodes\n    # Edges\n\n# Clusters // Begin of exported clusters\n    # Cluster\n        Cluster ID and meta data, as shown in columns section\n    # Nodes\n        List of spectra\n    # Edges\n        List of edges, ID is the internal ID which corresponds to the first column\n        of nodes section, NOT scan number\n        \n    # Cluster\n    # Nodes\n    # Edges\n    \n        \u22ee\n```\n\nThe following is an actual example:\n\n```\n# Columns\n# Cluster\nID\tNum of nodes\tNum of edges\tNum of identifications\tMajor identification\tIdentified ratio\tAverage precursor mass\n# Nodes\nID\tFile\tScan num\tIdentification\tProbability\n# Edges\nID of source\tID of target\tDot product\n\n# Clusters\n# Cluster\n5\t4\t6\t1\tn[33]SGK[160]VDVINAAK[160]/3\t1.0\t399.9366149902344\n# Nodes\n2950\t/path/to/ms-experiment-file-1.mzXML\t2378\tn[33]SGK[160]VDVINAAK[160]/3\t0.998657\n2951\t/path/to/ms-experiment-file-1.mzXML\t2446\tn[33]SGK[160]VDVINAAK[160]/3\t0.99567\n2953\t/path/to/ms-experiment-file-2.mzXML\t2758\tn[33]SGK[160]VDVINAAK[160]/3\t0.999604\n2952\t/path/to/ms-experiment-file-2.mzXML\t2825\tn[33]SGK[160]VDVINAAK[160]/3\t0.999494\n# Edges\n2950\t2951\t0.71452552\n2950\t2952\t0.72903901\n2950\t2953\t0.75207931\n2951\t2952\t0.77206755\n2951\t2953\t0.77758884\n2952\t2953\t0.82543987\n\n# Cluster\n7\t3\t2\t0\tNone\t0.0\t402.2897033691406\n# Nodes\n3076\t/path/to/ms-experiment-file-2.mzXML\t7818\tNone\tNone\n3079\t/path/to/ms-experiment-file-3.mzXML\t7886\tNone\tNone\n3077\t/path/to/ms-experiment-file-3.mzXML\t7932\tNone\tNone\n# Edges\n3076\t3077\t0.81118226\n3077\t3079\t0.71993017\n\n    \u22ee\n```\n\nSince export is done in parallel by multi-processing, clusters may not be written in order of cluster ID.\n\n<a name=\"usage-advanced\"></a>"
+      },
+      "source": "https://raw.githubusercontent.com/kpto/ClusterSheep/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Advanced",
+        "parent_header": [
+          "Usage"
+        ],
+        "type": "Text_excerpt",
+        "value": "<a name=\"usage-advanced-configuration\"></a>"
+      },
+      "source": "https://raw.githubusercontent.com/kpto/ClusterSheep/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Configuration",
+        "parent_header": [
+          "Usage",
+          "Advanced"
+        ],
+        "type": "Text_excerpt",
+        "value": "There is a set of default values of clustering related parameters. For example, the precursor mass difference tolerance which is `1.1` and dot product threshold which is `0.7`. A comparison involving two spectra with their precursor mass difference larger than the tolerance is skipped as they are assumed to have different identity. An edge of two spectra is recorded only if the similarity score is higher than the threshold. To override these parameters, you can provide a configuration file like below:\n\n```\nclustersheep --name=mysession --config=/path/to/the/config-file.txt --file-list=/path/to/the/list.txt\n```\n\nwhere `config-file.txt` looks like this:\n\n```\ncg_precursor_tolerance = 2.0\ncg_dot_product_threshold = 0.6\n```\n\nThe above content changes the precursor mass difference to `2.0` and the dot product threshold to `0.6`. For more available parameters, generates a configuration template file by executing ClusterSheep with no parameter, as shown in section [Usage](#usage). The configuration template includes a detail explanation of all parameters.\n\nSince ClusterSheep is built with traceable, the configuration used is recorded in a clustering session. You can use option `--print-session` to print the parameter values of it, like below:\n\n```\nclustersheep --load-session=/path/to/mysession.cssess --print-session\n```\n\n<a name=\"usage-advanced-material-preparation\"></a>"
+      },
+      "source": "https://raw.githubusercontent.com/kpto/ClusterSheep/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Python interactive console",
+        "parent_header": [
+          "Usage",
+          "Advanced"
+        ],
+        "type": "Text_excerpt",
+        "value": "If you want to use Python to post-process a clustering session, you can turn on developer mode and enter Python interactive console from cluster viewer. To do so, load the session with option `--dev-mode` first:\n\n```\nclustersheep --load-session=/path/to/mysession.cssess --stay-interactive --dev-mode\n```\n\nYou will enter cluster viewer as usual, but within developer mode, you can type `python` to enter Python interactive console. The prompt will be changed from `viewer >>>` to `python >>>`. All Python commands executed in the console will be logged into `cslogg` file as well.\n\nAPI documentation and examples of usage can be found [here](docs/api-and-example.md).\n\n<a name=\"usage-cluster-refinement\"></a>"
+      },
+      "source": "https://raw.githubusercontent.com/kpto/ClusterSheep/master/README.md",
+      "technique": "header_analysis"
+    }
+  ]
+}

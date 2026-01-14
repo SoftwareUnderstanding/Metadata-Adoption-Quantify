@@ -1,0 +1,685 @@
+{
+  "application_domain": [
+    {
+      "confidence": 31.02,
+      "result": {
+        "type": "String",
+        "value": "Computer Vision"
+      },
+      "technique": "supervised_classification"
+    }
+  ],
+  "code_repository": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/PreibischLab/RS-FISH"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_created": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2017-10-04T17:01:53Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_updated": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2024-08-27T19:31:27Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "description": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "Tool for precise, interactive, fast and scalable FISH spot detection"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 0.931312278349778,
+      "result": {
+        "original_header": "Content",
+        "type": "Text_excerpt",
+        "value": "Fluorescent in-situ hybridization (FISH)-based methods extract spatially resolved genetic and epigenetic information from biological samples by detecting fluorescent spots in microscopy images, an often challenging task. We present Radial Symmetry-FISH (RS-FISH), an accurate, fast, and user-friendly software for spot detection in two- and three-dimensional images. RS-FISH offers interactive parameter tuning and readily scales to large datasets and image volumes of cleared or expanded samples using distributed processing on workstations, clusters, or the cloud. RS-FISH maintains high detection accuracy and low localization error across a wide range of signal-to-noise ratios, a key feature for single-molecule FISH, spatial transcriptomics, or spatial genomics applications.\n  \n <br />\n<br />\nAvailability and implementation:\n  \nRS-FISH is implemented as open-source in Java/ImgLib2 and provided as a macro-scriptable Fiji plugin and stand-alone command-line application capable of cluster and cloud execution.    \n\nThe simulation data that was generated to benchmark the method can be downloaded [here](https://github.com/PreibischLab/RadialSymmetryLocalization/tree/master/documents/Simulation_of_data ). The smFISH image of the _C. elegans_ embryo can be found [here](https://github.com/PreibischLab/RadialSymmetryLocalization/tree/master/documents/Example_smFISH_images )   \nThis currently installs three tools, `rs-fish, rs-fish-anisotropy, csv-overlay`. Please execute them in order to get detailed execution instructions.\n<br />\n<br /> \nSince the effective size of objects along the z-axis is usually different than in the x- and y-axis of your images, you should correct this to achieve a more accurate smFISH detection. To estimate your anisotropy coefficient, you can acquire a fluorescent bead image on the same microscope, using the same settings and equipment or you can use the smFISH image directly.   \nIn the **Adjust difference-of-gaussian values** window, you can choose **Sigma** and **Threshold** values to detect the majority of subpixel resolution spots.   \nDepending on the number of spots, the calculations might take some time as the Gaussian fit is slower and the RS-RANSAC needs to iterate over a range of potential anisotropy coefficients. The program will calculate the corresponding anisotropy coefficient, which shows how we should squeeze the objects in the z-axis to make them look radially symmetric.   \n_Important: It is OK to skip this step if the objects are more or less round in 3D. The plugin will be able to do a decent job even with the default value of the anisotropy coefficient. However, we advise performing this prior to actual RS detection._   \nThe main RS-FISH plugin can be found under: ```Plugins > RS-FISH > RS-FISH```. There are two different modes of processing images: **interactive** and **advanced**. The Interactive method is used to adjust the parameters for further dataset processing or is the right choice if single images need to be processed. The interactive mode provides the visual feedback necessary to adjust the advanced automated processing parameters on large datasets.     \nOpen a 2D or 3D single-channel image for analysis and navigate to the ```Plugins``` menu under BASH14*.\nA window will pop up.   \nEnsure that the correct image is chosen in the **Image** drop-down menu. \nNext, you choose the **Mode** that you want to run RS-FISH in. For finding the best parameters or analyzing a small set of images, choose the **Interactive Mode**.    \n* **RANSAC** defines if you want to use radial symmetry with robust outlier removal, it will identify all gradients within every local patch that supports the same center point (Fig. 1)  \n* **No RANSAC** for the use of radial symmetry without robust outlier removal, simply all gradients of a local spot will be used to compute the center point (classic RS)  \n* **Multiconsensus RANSAC** will iteratively run robust outlier removal on each local patch until all sets of gradients are identified that support a center point. This allows RS-FISH to potentially find multiple points within each local patch that was identified using DoG detections.  \n  \nThe next option you can choose is to **compute the min and max intensity from image**. If you _deselect_ the option, in the next step you can choose range of intensity of the image, which might be a good option if you are processing a set of images with the same accquisition parameters.  \n \n<img src=\"https://github.com/PreibischLab/RadialSymmetryLocalization/blob/master/documents/Tutorial_screenshots/image_min_max.png\" alt=\"RS_FISH image intensity selection window\" width=\"400\">  \n  \nThere are two options in RS-FISH to calculate the spot intensity value. Each spot\u2019s associated intensity values are by default computed using linear interpolation at the spot\u2019s sub-pixel location. By selecting the option **Refine spot intensity with Gaussian fit on inliers** the spot intensity can be refined by fitting a Gaussian to the subset of pixels that support the spot as identified by RS-RANSAC.\n  \nThe last option in the **Visualization** section is whether you want to add the detected spots directly to the ROI Manager at the end of the detection. \nOnce you are done with the settings, press the **OK** button.  \nIn the second step, and based on your selection, multiple windows will open.   \nIn the **Difference of Gaussian** window, you can adjust the parameters for the initial detection of the spots. The goal of this step is to minimize false detections. Adjust the **Sigma** and **Threshold** slider so that the red circles in the image detect as many single spots as possible. Try to slightly find more spots if you chose RANSAC; the RANSAC window allows additional restrictive settings. If you are working with a 3D stack, it helps to constantly move through z while adjusting the parameters as the red circle appears only in the z-slices where the signal is the strongest. It can help to adjust the yellow preview box during this step. If the image is very large, it can help to choose a smaller box to speed up the visualization (the detection will be performed in the whole image).  \nThe **Adjust RANSAC values** dialog allows you to find the right setting for the robust outlier removal. The **Support Region Radius** defines the radius for each spot in which gradients are extracted for RS. You might want to play with this parameter. Sometimes it is helpful to increase the radius and decrease the Inlier Ratio at the same time. The **Inlier ratio** defines the ratio of the gradients (i.e. pixels) that have to support the RS center point (Simply speaking, the ratio of pixels should 'belong' to the current spot), given the **Max error** that defines maximally allowed error for RS fitting (see Fig. 1).  \nWhile moving the sliders, you will see the updates in both image windows. Firstly the **RANSAC preview** window displays the pixels used by RANSAC and the error values at each of the used pixels. The second window is the initial image window with the preview of the detections. Additionally to the red circles, the blue crosses indicate spots that were detected using RANSAC outlier removal. So the goal of this part is to find all spots with a red circle and a blue cross inside while not detecting noise or background.   \n \n \nThe background removal step allows you to remove a non-planar background prior to computing the RS. It will try to estimate a plane using the intensity values of the edges of each local patch using any of the outlined methods. _Note: constant backgrounds do not need to be removed, only if strong gradients are present._ \nIn the next window, you have the option of thresholding the detected spots based on their intensity. The **Intensity distribution** window displays all detected spots and their corresponding intensity value as a histogram. By clicking at an intensity value in the histogram, the blue thresholding bar can be adjusted. All spots that currently pass the thresholding are displayed in the image window and marked by a red circle. If you are satisfied with the selected spots, press the **OK** button and continue to the final results table.  \nThe **Log** window gives you a summary of all spots found at every step and the final number of detections. The **Results table** contains the spot coordinates, time, channel, and intensity values in the corresponding columns. You can save the results and use them in the **Show Detections** part of the plugin to visualize all found spots\u2019 locations.  \nIn the **Advanced mode**, you can skip the interactive setting of parameters and only use already known parameters for the computation. After choosing **Advanced** in the first window, you will reach the second window to set the parameters for spot detection. If you previously used the interactive mode to find the best parameters, they will be saved and set as default for the advanced mode.  \nAfter you press **OK**, the computation is done in all RS-FISH steps automatically, and the same **Results table** as above is either saved or displayed.  \nWhen using the advanced mode you can simply record the parameters you used for running RS-FISH (```Plugins > Macro > Record```). You are then able to apply it to a set of images using the Fiji/ImageJ macro language. \nFor batch processing instructions and running on computing cluster please see the README in the [example_scripts](https://github.com/PreibischLab/RS-FISH/tree/master/documents/example_scripts) folder. \nThere is a dedicated repository for [Spark](http://spark.apache.org)-based execution of RS-FISH on large (and also smaller) volumes: https://github.com/PreibischLab/RS-FISH-Spark\n  \n  \n  \n  \n### 8.\tFiltering detections using a binary mask<a name=\"mask\">\n</a> \n  \nTo filter RS-FISH detections, a binary mask (with values of 0 and 1) can be used to identify parts that are inside a cell or selection and outside the structure.\n  \n <img src=\"https://github.com/PreibischLab/RS-FISH/blob/master/documents/Tutorial_screenshots/filter_neurons.png\" alt=\"Image of smFISH spot detection in neuron, filtered with a binary mask\" width=\"700\">\n  \n \nAfter creating a binary mask with the same dimensions as the original image using Fiji or a different software, the ```Mask filtering``` tool can be used. The tool is located under BASH20*. In the interface, one can specify the input file or folder with csv files and the mask file or folder as well as the output folder. The output is a new csv file with detections only in the specified areas of the image. \n  \n  \n <img src=\"https://github.com/PreibischLab/RS-FISH/blob/master/documents/Tutorial_screenshots/mask_filter.png\" alt=\"Screenshot of the mask filtering tool\" width=\"800\">\n   \nRS-FISH allows the user to choose between different detection methods to localize spots in the image. The tool offers three localization methods that build on each other: \n  1. radial symmetry (\u2018No RANSAC\u2019)\n  2. radial symmetry + RANSAC (the default option)  \n  3. radial symmetry + multi-consensus RANSAC \n \nThe default option is radial symmetry detection of spots with additional RANSAC outlier removal. In cases where the noise level is good, and an even higher computation speed is preferred, the RANSAC outlier removal step can be skipped by choosing ```\u201cno RANSAC\u201d```. In cases where many spots potentially overlap, we recommend choosing multi-consensus RANSAC spot detection, which will try to separate close points by detecting gradients in several rounds.  \nThe next step is to choose the parameters for detection, which is simplified by the plugin\u2019s visual feedback. Using the default spot detection method, there are two windows with parameters to set and two different visual feedback cues (see the Tutorial RS-FISH section). The red circle marks spots detected using the radial symmetry parameters, and the blue cross confirms those spots that pass the RANSAC outlier removal. The detection of the red circle can be adjusted in size (```sigma```) and the threshold of the BASH23* of the DoG pre-detected spots. \nThe RANSAC parameters determine which and how the gradients are used to localize each spot. The ```support region radius``` determines the number of gradients computed in a local patch around each DoG pre-detected spot. We propose a default radius of 3 pixels which means a 7x7[x7] pixel patch resulting in 216 gradients for the 3D case. Decreasing this number might allow more spots to be found but will decrease localization precision as fewer gradients are used to define the center. The BASH25* describes the number of gradients that support the detection's center point. Increasing the inlier ratio increases the robustness of the detected spot but can decrease the total number of detected spots, especially for lower SNR spots. The BASH26* defines the maximally allowed error for the intersection point defined by the gradients; i.e., how far away from the intersection point can each gradient be (only in a perfect scenario, all gradients intersect perfectly in the same point, see Supp. Fig 1d). Decreasing the number restricts the error, thus decreasing the number of false detections but potentially also the number of real detections, especially if the noise level is higher.  \nFor the multi-consensus selection, a window pops up where parameters for additional rounds of spot detection can be defined. It is important to realize that for multi-consensus to work well, the max error in the RANSAC settings should be set relatively low since otherwise, the gradients of multiple points are allowed to intersect in a single spot. A typical setting could be 0.5 - 0.75 pixels. It is important to first run RS-FISH in RANSAC mode before setting the multi-consensus parameters. The log record will output two critical parameters: the ```average #inliers``` and BASH28*. The ```average #inliers``` defines how many inliers intersect in each spot on average, while the BASH28* describes its variability. The parameters for multi-consensus RANSAC must be defined relative to those two values. The BASH29* asks the user how many inliers are required for it to be considered a new spot next to an already found one. For example, let us assume a 7x7x7 local neighborhood with 216 total candidate gradients. If ```average #inliers``` was 80 and BASH28* was 6, then defining n=8 would require at least 80-48=32 inliers for a new spot to be defined. Keep in mind that only around 136 gradients (=216-80) are left to be evaluated per local patch. Once a new spot was identified, we re-center the local patch around its location and re-compute it. Thus the second parameter, BASH30*, is usually chosen higher, e.g., n=6, thus requiring 80-32=48 inliers for a final confirmation of a new spot.\n  \nAdditionally, the min number of inliers describes the number of inlier gradients minimally required to localize a point. This value is supposed to prevent the fitting of noise spots that are expected to have a low number of gradients that agree on a specific spot. Typically a value of 30 inliers is a good starting point. Note that if you set BASH29* and BASH30* very high, only the BASH31* will be relevant, which somewhat simplifies the process. \n"
+      },
+      "source": "https://raw.githubusercontent.com/PreibischLab/RadialSymmetryLocalization/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.8597456618303984,
+      "result": {
+        "type": "Text_excerpt",
+        "value": "_**RS-FISH: Precise, interactive, fast, and scalable FISH spot detection**_ \n"
+      },
+      "source": "https://raw.githubusercontent.com/PreibischLab/RadialSymmetryLocalization/master/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "download_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/PreibischLab/RadialSymmetryLocalization/releases"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "executable_example": [
+    {
+      "confidence": 1,
+      "result": {
+        "format": "jupyter_notebook",
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/PreibischLab/RadialSymmetryLocalization/master/documents/tool_comparison_for_paper/airlocalize.ipynb"
+      },
+      "source": "https://raw.githubusercontent.com/PreibischLab/RadialSymmetryLocalization/master/documents/tool_comparison_for_paper/airlocalize.ipynb",
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "format": "jupyter_notebook",
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/PreibischLab/RadialSymmetryLocalization/master/documents/tool_comparison_for_paper/starfish.ipynb"
+      },
+      "source": "https://raw.githubusercontent.com/PreibischLab/RadialSymmetryLocalization/master/documents/tool_comparison_for_paper/starfish.ipynb",
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "format": "jupyter_notebook",
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/PreibischLab/RadialSymmetryLocalization/master/documents/tool_comparison_for_paper/deepblink.ipynb"
+      },
+      "source": "https://raw.githubusercontent.com/PreibischLab/RadialSymmetryLocalization/master/documents/tool_comparison_for_paper/deepblink.ipynb",
+      "technique": "file_exploration"
+    }
+  ],
+  "forks_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 14
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/PreibischLab/RS-FISH/forks"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "PreibischLab/RS-FISH"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_title": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": ""
+      },
+      "source": "https://raw.githubusercontent.com/PreibischLab/RadialSymmetryLocalization/master/README.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "has_build_file": [
+    {
+      "confidence": 1,
+      "result": {
+        "format": "dockerfile",
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/PreibischLab/RadialSymmetryLocalization/master/Dockerfile"
+      },
+      "source": "https://raw.githubusercontent.com/PreibischLab/RadialSymmetryLocalization/master/Dockerfile",
+      "technique": "file_exploration"
+    }
+  ],
+  "has_script_file": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/PreibischLab/RadialSymmetryLocalization/master/documents/tool_comparison_for_paper/RS_grid_search_on_cluster/radial_symmetry_grid_search.sh"
+      },
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/PreibischLab/RadialSymmetryLocalization/master/documents/tool_comparison_for_paper/BF_grid_search_on_cluster/fish_quant_grid_search.sh"
+      },
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/PreibischLab/RadialSymmetryLocalization/master/.github/build.sh"
+      },
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/PreibischLab/RadialSymmetryLocalization/master/.github/setup.sh"
+      },
+      "technique": "file_exploration"
+    }
+  ],
+  "images": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/PreibischLab/RadialSymmetryLocalization/master/documents/Tutorial_screenshots/detection_preview.png"
+      },
+      "source": "https://raw.githubusercontent.com/PreibischLab/RadialSymmetryLocalization/master/README.md",
+      "technique": "regular_expression"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/PreibischLab/RadialSymmetryLocalization/master/documents/Tutorial_screenshots/one_spot.png"
+      },
+      "source": "https://raw.githubusercontent.com/PreibischLab/RadialSymmetryLocalization/master/README.md",
+      "technique": "regular_expression"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/PreibischLab/RadialSymmetryLocalization/master/documents/Tutorial_screenshots/calculate_anisotropy_coefficient.png"
+      },
+      "source": "https://raw.githubusercontent.com/PreibischLab/RadialSymmetryLocalization/master/README.md",
+      "technique": "regular_expression"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/PreibischLab/RadialSymmetryLocalization/master/documents/Tutorial_screenshots/adjust_DoG.png"
+      },
+      "source": "https://raw.githubusercontent.com/PreibischLab/RadialSymmetryLocalization/master/README.md",
+      "technique": "regular_expression"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/PreibischLab/RadialSymmetryLocalization/master/documents/Tutorial_screenshots/one_spot_detected.png"
+      },
+      "source": "https://raw.githubusercontent.com/PreibischLab/RadialSymmetryLocalization/master/README.md",
+      "technique": "regular_expression"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/PreibischLab/RadialSymmetryLocalization/master/documents/Tutorial_screenshots/smFISH_embryo.png"
+      },
+      "source": "https://raw.githubusercontent.com/PreibischLab/RadialSymmetryLocalization/master/README.md",
+      "technique": "regular_expression"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/PreibischLab/RadialSymmetryLocalization/master/documents/Tutorial_screenshots/RS_interactive.png"
+      },
+      "source": "https://raw.githubusercontent.com/PreibischLab/RadialSymmetryLocalization/master/README.md",
+      "technique": "regular_expression"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/PreibischLab/RadialSymmetryLocalization/master/documents/Tutorial_screenshots/select_RANSAC.png"
+      },
+      "source": "https://raw.githubusercontent.com/PreibischLab/RadialSymmetryLocalization/master/README.md",
+      "technique": "regular_expression"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/PreibischLab/RadialSymmetryLocalization/master/documents/Tutorial_screenshots/image_min_max.png"
+      },
+      "source": "https://raw.githubusercontent.com/PreibischLab/RadialSymmetryLocalization/master/README.md",
+      "technique": "regular_expression"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/PreibischLab/RadialSymmetryLocalization/master/documents/Tutorial_screenshots/adjust_DoG_values.png"
+      },
+      "source": "https://raw.githubusercontent.com/PreibischLab/RadialSymmetryLocalization/master/README.md",
+      "technique": "regular_expression"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/PreibischLab/RadialSymmetryLocalization/master/documents/Tutorial_screenshots/detection_preview.png"
+      },
+      "source": "https://raw.githubusercontent.com/PreibischLab/RadialSymmetryLocalization/master/README.md",
+      "technique": "regular_expression"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/PreibischLab/RadialSymmetryLocalization/master/documents/Tutorial_screenshots/adjust_RANSAC_values.png"
+      },
+      "source": "https://raw.githubusercontent.com/PreibischLab/RadialSymmetryLocalization/master/README.md",
+      "technique": "regular_expression"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/PreibischLab/RadialSymmetryLocalization/master/documents/Tutorial_screenshots/RANSAC_preview.png"
+      },
+      "source": "https://raw.githubusercontent.com/PreibischLab/RadialSymmetryLocalization/master/README.md",
+      "technique": "regular_expression"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/PreibischLab/RadialSymmetryLocalization/master/documents/Tutorial_screenshots/background.png"
+      },
+      "source": "https://raw.githubusercontent.com/PreibischLab/RadialSymmetryLocalization/master/README.md",
+      "technique": "regular_expression"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/PreibischLab/RadialSymmetryLocalization/master/documents/Tutorial_screenshots/intensity_distribution.png"
+      },
+      "source": "https://raw.githubusercontent.com/PreibischLab/RadialSymmetryLocalization/master/README.md",
+      "technique": "regular_expression"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/PreibischLab/RadialSymmetryLocalization/master/documents/Tutorial_screenshots/display_spots.png"
+      },
+      "source": "https://raw.githubusercontent.com/PreibischLab/RadialSymmetryLocalization/master/README.md",
+      "technique": "regular_expression"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/PreibischLab/RadialSymmetryLocalization/master/documents/Tutorial_screenshots/final_log.png"
+      },
+      "source": "https://raw.githubusercontent.com/PreibischLab/RadialSymmetryLocalization/master/README.md",
+      "technique": "regular_expression"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/PreibischLab/RadialSymmetryLocalization/master/documents/Tutorial_screenshots/results_csv.png"
+      },
+      "source": "https://raw.githubusercontent.com/PreibischLab/RadialSymmetryLocalization/master/README.md",
+      "technique": "regular_expression"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/PreibischLab/RadialSymmetryLocalization/master/documents/Tutorial_screenshots/RS_advanced.png"
+      },
+      "source": "https://raw.githubusercontent.com/PreibischLab/RadialSymmetryLocalization/master/README.md",
+      "technique": "regular_expression"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/PreibischLab/RadialSymmetryLocalization/master/documents/Tutorial_screenshots/Advanced_options.png"
+      },
+      "source": "https://raw.githubusercontent.com/PreibischLab/RadialSymmetryLocalization/master/README.md",
+      "technique": "regular_expression"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/PreibischLab/RadialSymmetryLocalization/master/documents/Tutorial_screenshots/ROI_Manager.png"
+      },
+      "source": "https://raw.githubusercontent.com/PreibischLab/RadialSymmetryLocalization/master/README.md",
+      "technique": "regular_expression"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/PreibischLab/RadialSymmetryLocalization/master/documents/Tutorial_screenshots/detections_tool_fiji.png"
+      },
+      "source": "https://raw.githubusercontent.com/PreibischLab/RadialSymmetryLocalization/master/README.md",
+      "technique": "regular_expression"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/PreibischLab/RadialSymmetryLocalization/master/documents/Tutorial_screenshots/show_detections.png"
+      },
+      "source": "https://raw.githubusercontent.com/PreibischLab/RadialSymmetryLocalization/master/README.md",
+      "technique": "regular_expression"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/PreibischLab/RadialSymmetryLocalization/master/documents/Tutorial_screenshots/detection_tool_bdv.png"
+      },
+      "source": "https://raw.githubusercontent.com/PreibischLab/RadialSymmetryLocalization/master/README.md",
+      "technique": "regular_expression"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/PreibischLab/RadialSymmetryLocalization/master/documents/Tutorial_screenshots/options_bdv.png"
+      },
+      "source": "https://raw.githubusercontent.com/PreibischLab/RadialSymmetryLocalization/master/README.md",
+      "technique": "regular_expression"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/PreibischLab/RadialSymmetryLocalization/master/documents/Tutorial_screenshots/bdv.png"
+      },
+      "source": "https://raw.githubusercontent.com/PreibischLab/RadialSymmetryLocalization/master/README.md",
+      "technique": "regular_expression"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/PreibischLab/RS-FISH/master/documents/Tutorial_screenshots/filter_neurons.png"
+      },
+      "source": "https://raw.githubusercontent.com/PreibischLab/RadialSymmetryLocalization/master/README.md",
+      "technique": "regular_expression"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/PreibischLab/RS-FISH/master/documents/Tutorial_screenshots/mask_filter.png"
+      },
+      "source": "https://raw.githubusercontent.com/PreibischLab/RadialSymmetryLocalization/master/README.md",
+      "technique": "regular_expression"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/PreibischLab/RS-FISH/master/documents/Tutorial_screenshots/workflow.png"
+      },
+      "source": "https://raw.githubusercontent.com/PreibischLab/RadialSymmetryLocalization/master/README.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "installation": [
+    {
+      "confidence": 0.9743856063608615,
+      "result": {
+        "original_header": "Content",
+        "type": "Text_excerpt",
+        "value": "Code source, tutorial, documentation, and example images are available at:  https://github.com/PreibischLab/RS-FISH and https://github.com/PreibischLab/RS-FISH-Spark  \n ### 2.\tDownload & Installation <a name=\"download\">\n</a> \n   \nThe RS-FISH plugin can be downloaded via the Fiji Updater. Go to ```Help > Update \u2026```, click BASH2* and select **Radial Symmetry** in the list. Then click BASH3* and restart Fiji. You will now find the RS-FISH plugin under BASH4*.   \nThe source code is available on [GitHub](https://github.com/PreibischLab/RadialSymmetryLocalization ). If you encounter bugs or want to report a feature request, please report everything there.   \n#### 2.1. Installation as command-line tools \nCommand-line installation requires maven (>=3.8.1) and OpenJDK8 (or newer) on Ubuntu:\n```bash\nsudo apt-get install openjdk-8-jdk maven\n```\nOn other platforms, please find your way and report back if interested. \nNext, please check out this repository and go into the folder\n```\ngit clone https://github.com/PreibischLab/RS-FISH.git\ncd RS-FISH\n```\n \nInstall into your favorite local binary `$PATH` (or leave empty for using the checked out directory):\n```bash\n./install $HOME/bin\n```\nAll dependencies will be downloaded and managed by maven automatically. \n#### 2.2. Installation using Docker container \nAlternatively to installing RS-FISH as a command line tool on your operating system, you can also use it directly from our Docker container.  \nTo build the docker container, git pull the repository and then execute the following command:\n```\ndocker build -t rs_fish:2.3.1 .\n```\nTo pull the docker container directly from Dockerhub, run the following command:\n```\ndocker pull wuennemannflorian/rs_fish:2.3.1\n```\nYou can then run RS-FISH from the container using the following command:\n```\ndocker run -v [your_local_input_folder]:/input -v [your_local_output_folder]:/output rs-fish:2.3.1 /RS-FISH/rs-fish [rs_fish_parameter] --image=/input/[your_file.tif] --output=/output/[your_file.csv]\n```\n \n<img src=\"https://github.com/PreibischLab/RadialSymmetryLocalization/blob/master/documents/Tutorial_screenshots/one_spot.png\" alt=\"RS_FISH screenshot one spot\" width=\"400\"> \nOpen the image with the beads or the smFISH detections and navigate to the ```Plugins > RS-FISH > Tools > Calculate Anisotropy Coefficient```.\nYou will see the dialog window:   \n<img src=\"https://github.com/PreibischLab/RadialSymmetryLocalization/blob/master/documents/Tutorial_screenshots/calculate_anisotropy_coefficient.png\" alt=\"RS_FISH screenshot anisotropy menu\" width=\"400\"> \n<img src=\"https://github.com/PreibischLab/RadialSymmetryLocalization/blob/master/documents/Tutorial_screenshots/adjust_DoG.png\" alt=\"RS_FISH screenshot DoG menu\" width=\"400\"> \n<img src=\"https://github.com/PreibischLab/RadialSymmetryLocalization/blob/master/documents/Tutorial_screenshots/one_spot_detected.png\" alt=\"RS_FISH screenshot one spot detection\" width=\"400\"> \nOnce you are done \u2013 press the **Done** button.   \n<img src=\"https://github.com/PreibischLab/RadialSymmetryLocalization/blob/master/documents/Tutorial_screenshots/smFISH_embryo.png\" alt=\"Embryo with smFISH spots\" width=\"600\"> \n<img src=\"https://github.com/PreibischLab/RadialSymmetryLocalization/blob/master/documents/Tutorial_screenshots/RS_interactive.png\" alt=\"RS_FISH interactive menu\" width=\"600\"> \n<img src=\"https://github.com/PreibischLab/RadialSymmetryLocalization/blob/master/documents/Tutorial_screenshots/select_RANSAC.png\" alt=\"RS_FISH RANSAC dropdown menu\" width=\"400\"> \nOnce you are done with the settings, press the **OK** button.  \nIn the second step, and based on your selection, multiple windows will open.   \n<img src=\"https://github.com/PreibischLab/RadialSymmetryLocalization/blob/master/documents/Tutorial_screenshots/adjust_DoG_values.png\" alt=\"RS_FISH screenshot DoG vals slide bars\" width=\"400\">\n<img src=\"https://github.com/PreibischLab/RadialSymmetryLocalization/blob/master/documents/Tutorial_screenshots/detection_preview.png\" alt=\"RS_FISH detection preview\" width=\"600\"> \n_Important: If you choose to run RANSAC robust fitting, don\u2019t click the Done button on the Difference of Gaussian window at this step; simply continue setting the parameters in the Adjust RANSAC values window._ \n<img src=\"https://github.com/PreibischLab/RadialSymmetryLocalization/blob/master/documents/Tutorial_screenshots/adjust_RANSAC_values.png\" alt=\"RS_FISH screenshot RANSAC vals menu\" width=\"400\"> \n<img src=\"https://github.com/PreibischLab/RadialSymmetryLocalization/blob/master/documents/Tutorial_screenshots/RANSAC_preview.png\" alt=\"RS_FISH RANSAC preview\" width=\"600\"> \n<img src=\"https://github.com/PreibischLab/RadialSymmetryLocalization/blob/master/documents/Tutorial_screenshots/background.png\" alt=\"RS_FISH screenshot background menu\" width=\"400\"> \n<img src=\"https://github.com/PreibischLab/RadialSymmetryLocalization/blob/master/documents/Tutorial_screenshots/intensity_distribution.png\" alt=\"RS_FISH screenshot intensity distribution histogram\" width=\"600\">\n<img src=\"https://github.com/PreibischLab/RadialSymmetryLocalization/blob/master/documents/Tutorial_screenshots/display_spots.png\" alt=\"RS_FISH display spots\" width=\"600\"> \n<img src=\"https://github.com/PreibischLab/RadialSymmetryLocalization/blob/master/documents/Tutorial_screenshots/final_log.png\" alt=\"RS_FISH log\" width=\"600\"> \n<img src=\"https://github.com/PreibischLab/RadialSymmetryLocalization/blob/master/documents/Tutorial_screenshots/results_csv.png\" alt=\"RS_FISH result table\" width=\"400\"> \n<img src=\"https://github.com/PreibischLab/RadialSymmetryLocalization/blob/master/documents/Tutorial_screenshots/RS_advanced.png\" alt=\"RS_FISH advance mode menu\" width=\"600\"> \n<img src=\"https://github.com/PreibischLab/RadialSymmetryLocalization/blob/master/documents/Tutorial_screenshots/Advanced_options.png\" alt=\"RS_FISH advance mode set parameters menu\" width=\"600\"> \nAfter you press **OK**, the computation is done in all RS-FISH steps automatically, and the same **Results table** as above is either saved or displayed.  \n<img src=\"https://github.com/PreibischLab/RadialSymmetryLocalization/blob/master/documents/Tutorial_screenshots/ROI_Manager.png\" alt=\"Fiji ROI Manager with detected spot coordinates\" width=\"400\"> \n\n<img src=\"https://github.com/PreibischLab/RadialSymmetryLocalization/blob/master/documents/Tutorial_screenshots/detections_tool_fiji.png\" alt=\"Show detections in Fiji tool\" width=\"600\"> \n<img src=\"https://github.com/PreibischLab/RadialSymmetryLocalization/blob/master/documents/Tutorial_screenshots/show_detections.png\" alt=\"Embryo with smFISH spots detection overlay\" width=\"600\"> \n<img src=\"https://github.com/PreibischLab/RadialSymmetryLocalization/blob/master/documents/Tutorial_screenshots/options_bdv.png\" alt=\"Options for the display in the Big data viewer\" width=\"600\"> \n<img src=\"https://github.com/PreibischLab/RadialSymmetryLocalization/blob/master/documents/Tutorial_screenshots/bdv.png\" alt=\"Overlay of detected points using the Big Data Viewer\" width=\"800\"> \nFor batch processing instructions and running on computing cluster please see the README in the [example_scripts](https://github.com/PreibischLab/RS-FISH/tree/master/documents/example_scripts) folder. \n"
+      },
+      "source": "https://raw.githubusercontent.com/PreibischLab/RadialSymmetryLocalization/master/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "invocation": [
+    {
+      "confidence": 0.8302085594179411,
+      "result": {
+        "original_header": "Content",
+        "type": "Text_excerpt",
+        "value": " ### 2.\tDownload & Installation <a name=\"download\">\n</a> \n   \nTo build the docker container, git pull the repository and then execute the following command:\n```\ndocker build -t rs_fish:2.3.1 .\n```\nTo pull the docker container directly from Dockerhub, run the following command:\n```\ndocker pull wuennemannflorian/rs_fish:2.3.1\n```\nYou can then run RS-FISH from the container using the following command:\n```\ndocker run -v [your_local_input_folder]:/input -v [your_local_output_folder]:/output rs-fish:2.3.1 /RS-FISH/rs-fish [rs_fish_parameter] --image=/input/[your_file.tif] --output=/output/[your_file.csv]\n```\n \n\n### 4.\tRunning RS-FISH<a name=\"tutorial\">\n</a>  \n### 5.\tShow Detections<a name=\"detections\">\n</a>   \n"
+      },
+      "source": "https://raw.githubusercontent.com/PreibischLab/RadialSymmetryLocalization/master/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "issue_tracker": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/PreibischLab/RS-FISH/issues"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "keywords": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": ""
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "license": [
+    {
+      "confidence": 1,
+      "result": {
+        "name": "GNU General Public License v2.0",
+        "spdx_id": "GPL-2.0",
+        "type": "License",
+        "url": "https://api.github.com/licenses/gpl-2.0",
+        "value": "https://api.github.com/licenses/gpl-2.0"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "RS-FISH"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "owner": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Organization",
+        "value": "PreibischLab"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "programming_languages": [
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Java",
+        "size": 780533,
+        "type": "Programming_language",
+        "value": "Java"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Python",
+        "size": 35567,
+        "type": "Programming_language",
+        "value": "Python"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Jupyter Notebook",
+        "size": 33202,
+        "type": "Programming_language",
+        "value": "Jupyter Notebook"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "ImageJ Macro",
+        "size": 13220,
+        "type": "Programming_language",
+        "value": "ImageJ Macro"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "MATLAB",
+        "size": 12399,
+        "type": "Programming_language",
+        "value": "MATLAB"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Shell",
+        "size": 5482,
+        "type": "Programming_language",
+        "value": "Shell"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Dockerfile",
+        "size": 594,
+        "type": "Programming_language",
+        "value": "Dockerfile"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "readme_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/PreibischLab/RadialSymmetryLocalization/master/README.md"
+      },
+      "technique": "file_exploration"
+    }
+  ],
+  "releases": [
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "mzouink",
+          "type": "User"
+        },
+        "date_created": "2022-06-22T16:55:02Z",
+        "date_published": "2022-09-06T21:14:16Z",
+        "description": "## What's Changed\r\n* eval file folder by @morphogenetics in https://github.com/PreibischLab/RS-FISH/pull/3\r\n\r\n## New Contributors\r\n* @morphogenetics made their first contribution in https://github.com/PreibischLab/RS-FISH/pull/3\r\n\r\n**Full Changelog**: https://github.com/PreibischLab/RS-FISH/commits/2.3.1",
+        "html_url": "https://github.com/PreibischLab/RS-FISH/releases/tag/2.3.1",
+        "name": "2.3.1",
+        "release_id": 76425366,
+        "tag": "2.3.1",
+        "tarball_url": "https://api.github.com/repos/PreibischLab/RS-FISH/tarball/2.3.1",
+        "type": "Release",
+        "url": "https://api.github.com/repos/PreibischLab/RS-FISH/releases/76425366",
+        "value": "https://api.github.com/repos/PreibischLab/RS-FISH/releases/76425366",
+        "zipball_url": "https://api.github.com/repos/PreibischLab/RS-FISH/zipball/2.3.1"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "somef_missing_categories": [
+    "citation",
+    "acknowledgement",
+    "run",
+    "download",
+    "requirements",
+    "contact",
+    "contributors",
+    "documentation",
+    "usage",
+    "faq",
+    "support",
+    "identifier"
+  ],
+  "somef_provenance": {
+    "date": "2024-10-06 05:01:56",
+    "somef_schema_version": "1.0.0",
+    "somef_version": "0.9.5"
+  },
+  "stargazers_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 45
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "type": [
+    {
+      "confidence": 0.82,
+      "result": {
+        "type": "String",
+        "value": "commandline-application"
+      },
+      "technique": "software_type_heuristics"
+    }
+  ]
+}

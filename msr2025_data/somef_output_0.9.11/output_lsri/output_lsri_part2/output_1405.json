@@ -1,0 +1,382 @@
+{
+  "citation": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Citation",
+        "parent_header": [
+          "PipeIT2 (v2.0.0)"
+        ],
+        "type": "Text_excerpt",
+        "value": "If you use PipeIT, please cite Garofoli et al, *PipeIT: A Singularity Container for Molecular Diagnostic Somatic Variant Calling on the Ion Torrent Next-Generation Sequencing Platform* [DOI: 10.1016/j.jmoldx.2019.05.001](https://doi.org/10.1016/j.jmoldx.2019.05.001). \n"
+      },
+      "source": "https://raw.githubusercontent.com/ckynlab/PipeIT2/main/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Version history",
+        "parent_header": [
+          "PipeIT2 (v2.0.0)",
+          "Citation"
+        ],
+        "type": "Text_excerpt",
+        "value": "* **2.0.0**     First release\n\n\n\n"
+      },
+      "source": "https://raw.githubusercontent.com/ckynlab/PipeIT2/main/README.md",
+      "technique": "header_analysis"
+    }
+  ],
+  "code_repository": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/ckynlab/PipeIT2"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_created": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2022-03-08T12:52:33Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_updated": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2022-03-08T12:52:33Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "description": [
+    {
+      "confidence": 0.9991066960997879,
+      "result": {
+        "original_header": "PipeIT2 (v2.0.0)",
+        "type": "Text_excerpt",
+        "value": "PipeIT2 is a somatic variant calling workflow for Ion Torrent sequencing. PipeIT2 is composed of two analysis pipelines, allowing somatic variant calling with and without matched germline samples. In the tumor-gemline workflow, the sequencing of the matched germline control is used to filter out germline variants as well as recurrent sequencing artefacts. An earlier version of this component was published in [Garofoli et al. 2019](https://reader.elsevier.com/reader/sd/pii/S1525157818303386). In the more clinically realistic scenario, where matched germline may not sequenced due to costs and/or availability issues, the tumor-only pipeline leverages unmatched control samples and population genetic databases to define somatic variants.  \n"
+      },
+      "source": "https://raw.githubusercontent.com/ckynlab/PipeIT2/main/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9782058704716582,
+      "result": {
+        "original_header": "Tumor-germline workflow",
+        "type": "Text_excerpt",
+        "value": "The tumor-germline workflow performs somatic variant calling using the sequencing data of a cancer sample together with its matched germline sample. The workflow consists of the following steps:\n1. Variant calling: Variant calling is performed using the Torrent Variant Caller (TVC) version 5.12 (https://github.com/iontorrent/TS), using a set of previously benchmarked low-stringency parameters. The list of parameters is contained in a JSON file present within the container. However, PipeIT2 also allows user-specified TVC parameters provided as a JSON file. \n2. Post-processing of multiallelic variants: Multiallelic variants are frequent in TVC output, particularly in homopolymer or repeat regions, which may also include variants with zero variant allele fraction (VAF). To facilitate downstream filtering and annotation, PipeIT2 splits multiallelic variants into monoallelic variants with norm in BCFtools (http://samtools.github.io/bcftools) and left-aligns the monoallelic variants with the LeftAlignAndTrimVariants function in the Genome Analysis ToolKit (GATK). \n3. Annotation: Variants are annotated by the SnpEff ann function, using the canonical transcripts (defined as the longest protein coding transcript, see Note 2) from the genome version GRCh37.75.\n4. Variant filtration: The GATK VariantFiltration function is used for identifying variants that are outside the target regions or do not meet minimum requirements based on read depth, variant quality score, the number of reads supporting the variants or the VAF ratio between tumor and normal. Given the biological and clinical significance of many hotspot variants, hotspot variants are annotated and whitelisted even when they do not meet the thresholds (see Note 3). We recommend manually reviewing hotspot variants.\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/ckynlab/PipeIT2/main/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9698791312637581,
+      "result": {
+        "original_header": "Tumor-only workflow",
+        "type": "Text_excerpt",
+        "value": "The tumor-only workflow performs somatic variant calling using the sequencing data of a cancer sample without a matched germline sample. Instead of the matched germline sample, the PipeIT2 tumor-only workflow leverages publicly available population databases, namely the 1000 Genomes (1000G) Project, the Exome Aggregation Consortium (ExAC), the NHLBI Exome Sequencing Project (NHLBI-ESP) and the Genome Aggregation Database (GnomAD), to remove likely germline variants. The tumor-only workflow can also perform additional filtering using variants from a panel of normal (PoN), generated from a set of unmatched normal samples. The PoN variants would consist of likely germline variants, as well as systematic sequencing artefacts.  \n1. Variant calling: Variant calling is performed using TVC as described in the tumor-germline workflow, except that TVC is run without a normal sample.\n2. Post-processing of multiallelic variants: Normalization of variants is as described in the tumor-germline workflow.\n3. Annotation: Variants are annotated by the SnpEff ann function, as described in the tumor-germline workflow.\n4. Variant filtration: Similar to the tumor-germline workflow, the GATK VariantFiltration function is used to identify variants outside the target regions and variants which do not meet minimum requirements based on read depth, variant quality, the number of reads supporting the variant and variant allele fraction. Additionally, variants are filtered out if they are in homopolymeric regions. Variants are then annotated for their population frequencies in 1000G, ExAC, NHLBI-ESP and GnomAD using ANNOVAR. Variants with VAF between 40% and 60% which are present in any of the four databases are considered likely germline variants and filtered out. Common variants (variants with a MAF above the population threshold specified with -k) are also removed regardless of the VAF. Hotspot variants are annotated and whitelisted as with the tumor-germline workflow.\n5. Panel of normal filtering (optional): Variants derived from a panel of normal samples (PoN) sequenced using the same sequencing assay can be useful for the filtering of likely germline variants and recurrent sequencing and alignment artefacts. Whitelisted hotspot variants are not filtered out by the PoN filtering.\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/ckynlab/PipeIT2/main/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.8424095658579063,
+      "result": {
+        "original_header": "Input files",
+        "type": "Text_excerpt",
+        "value": "The mandatory input files for the matched tumor-germline pipeline are the tumor and the normal BAM files (the `-t` and `-n` parameters, respectively), and the BED file of the targeted regions (the `-e` parameter). Paths to input files must be relative paths (see Note 4). \nThe mandatory input files for the tumor-only pipeline are the tumor BAM file (the `-t` parameter) and the BED file of the targeted regions (the `-e` parameter). The path to ANNOVAR population databases (the `-c` parameter) is also required for variant filtering. Paths to input files must be relative paths (see Note 4).\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/ckynlab/PipeIT2/main/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9290920921387412,
+      "result": {
+        "original_header": "Parameters",
+        "type": "Text_excerpt",
+        "value": "Optional parameters to customize filtering:\n```\n-q, --quality <n>: The minimum quality score of the variant. The default is 15.\n-s, --min_supporting_reads <n>: The minimal number of reads supporting the variant, used for filtering. The default is 8.\n-m, --min_tumor_depth <n>: The minimum read depth for the tumor sample. The default is 10 for the tumor-germline workflow and 20 for the tumor-only workflow.\n-r, --min_normal_depth <n> (tumor-germline workflow only): The minimum read depth for the normal sample. The default is 10.\n-f, --min_TN_VAF_ratio <n> (tumor-germline workflow only): The minimum VAF ratio between tumor and normal samples. The default is 10.\n-g, --min_allele_fraction <n> (tumor-only workflow only): The minimum VAF in the tumor sample. The default is 0.1.\n-d, --pon <path> (tumor-only workflow only): This parameter can either point to a VCF file containing variants from a panel of normal samples (PoN), or to a .txt file containing the paths to BAM files of a panel of normal samples, one per line. If the .txt file is provided, PipeIT2 will generate the PoN VCF file used for the analysis (see Note 9). \n-b, --homopolymer_run <n> (tumor-only workflow only): The maximum homopolymer length accepted. Variants in homopolymer regions exceeding this length will be filtered out. The value 0 will disable this filter. The default is 4.\n-k, --max_pop_af <n> (tumor-only workflow only): The maximum minor allele frequency of the variant in population databases. The default is 0.005.\n-y, --non_coding <true/false>: Whether PipeIT2 should report non-coding variants in the final output. The default is false. Note: non-coding hotspot mutations are always reported.\n```\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/ckynlab/PipeIT2/main/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9009837859299453,
+      "result": {
+        "original_header": "Output file",
+        "type": "Text_excerpt",
+        "value": "The final output is a VCF file of the variants (<output>.PipeIT.vcf). Tables below list the INFO fields of particular relevance for variant filtering for the tumor-germline and tumor-only pipelines respectively. In both cases, the output VCF file contains the allele counts information (see Note 10) and, if relevant, SnpEff gene annotations. The output VCF of the tumor-only pipeline also contains information regarding homopolymer length of the flanking region and population frequencies. \n"
+      },
+      "source": "https://raw.githubusercontent.com/ckynlab/PipeIT2/main/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.874261859192637,
+      "result": {
+        "original_header": "Table 2: Table of selected INFO fields in the output VCF file of the tumor-only workflow.",
+        "type": "Text_excerpt",
+        "value": "\n| Annotation | Description |\n| :--------- | :---------- |\n| FAO | Flow space alternate allele depth at position |\n| AO | Alternate allele depth at position |\n| FRO | Flow space reference allele depth at position |\n| RO | Reference allele depth at position |\n| AF | Allele frequency |\n| FSAF | Flow alternate allele frequency on the forward strand |\n| FSAR | Flow alternate allele frequency on the reverse strand |\n| SAF | Alternate allele frequency on the forward strand |\n| SAR | Alternate allele frequency on the reverse strand |\n| HRUN | Length of the homopolymer region in the reference genome |\n| ExAC_ALL | Alternate allele frequency in the Exome Aggregation Consortium dataset |\n| esp6500siv2_all | Alternate allele frequency in the NHLBI-ESP project dataset |\n| ANN_1000g2015aug | Alternate allele frequency in the 1000 Genomes Project dataset |\n| gnomAD_genome_ALL | Alternate allele frequency in the gnomAD dataset | \n"
+      },
+      "source": "https://raw.githubusercontent.com/ckynlab/PipeIT2/main/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9168357873237464,
+      "result": {
+        "original_header": "Notes",
+        "type": "Text_excerpt",
+        "value": "1. A Singularity framework is mandatory in order to use PipeIT2. Please refer to the Singularity official documentation (https://sylabs.io/docs/) for more detailed information regarding the installation process.\n  \n2. snpEff by default considers the longest transcript as the canonical transcript. For CDKN2A (ENSG00000147889), PipeIT2 specifies ENST00000498124 as the canonical transcript.\n  \n3. https://github.com/charlottekyng/cancer_hotspots, commit: 74f1198644dd006b6762006959bd98c9b322c5fe, built from cancerhotspots.org. \n4. Because of the way Singularity treats relative and absolute paths, paths to input files have to be relative paths. Relative paths will appear to PipeIT2 as files defined outside of the container, while fully qualified paths refer to files inside the container. Depending on the high performance computing environment, it may be necessary to mount additional files and paths. By default, Singularity automatically mounts certain directories such as the user's home directory, /tmp, /proc, /sys, and /dev inside the container. If the input files are located outside of these mounted directories, the paths of the input files must be specified by using the -B flag. For example, if the BAM and BED files are stored in `/myHPC/a/different/folder/`:\n```\nsingularity run -B /myHPC/a/different/folder/ PipeIT_<version>.img -t path/to/tumor.bam -n path/to/normal.bam -e path/to/region.bed\n```\nFurther information can be found in the Singularity official documentation (https://sylabs.io/docs/). \n6. The ANNOVAR population databases required for the tumor-only workflow are large and therefore not included in the PipeIT2 Singularity image. We have provided a script in PipeIT2 to facilitate the automatic downloading of the databases. The following commands will execute the downloads:\n```\nsingularity exec PipeIT_<version>.img annotate_variation.pl -downdb -webfrom annovar -buildver hg19 esp6500siv2_all humandb/\nsingularity exec PipeIT_<version>.img annotate_variation.pl -downdb -webfrom annovar -buildver hg19 1000g2015aug humandb/\nsingularity exec PipeIT_<version>.img annotate_variation.pl -downdb -webfrom annovar -buildver hg19 exac03 humandb/\nsingularity exec PipeIT_<version>.img annotate_variation.pl -downdb -webfrom annovar -buildver hg19 gnomad_genome humandb/\n``` \n8. The blacklist typically consists of recurrent artefacts identified through the sequencing of normal samples. Some commercially available gene panels come with a blacklist, typically included in the hotspot BED file and these variants are tagged with `BSTRAND=F` (on the forward strand), `BSTRAND=R` (on the reverse strand), or `BSTRAND=B` (on both strands).  \n9. Variants derived from a panel of normal samples (PoN) sequenced using the same sequencing assay can be useful for the filtering of likely germline variants and recurrent sequencing and alignment artefacts. A PoN VCF file can be directly used by PipeIT2 to remove variants present in the file. If a list of BAM files is given, PipeIT2 will call variants as per the variant calling and the post-processing of multiallelic variants steps in the tumor-only workflow and merge the variants from these files into a single PoN VCF to be used for filtering. \n10. TVC provides two types of allele counts: the conventional allele counts and the flow evaluator allele counts. In general, we compute VAF using the flow evaluator allele counts (FAO and FRO), except when they are not reported by TVC, in which case we compute VAF using the conventional allele counts (AO and RO). FAO and FRO are usually equal to AO and RO, respectively, but may also differ due to complex alleles and/or downsampling. FDP and DP are not used for the calculation of VAF.\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/ckynlab/PipeIT2/main/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "download_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/ckynlab/PipeIT2/releases"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 0
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/ckynlab/PipeIT2/forks"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "ckynlab/PipeIT2"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_title": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "PipeIT2 (v2.0.0)"
+      },
+      "source": "https://raw.githubusercontent.com/ckynlab/PipeIT2/main/README.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "identifier": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://doi.org/10.5281/zenodo.6123937"
+      },
+      "source": "https://raw.githubusercontent.com/ckynlab/PipeIT2/main/README.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "installation": [
+    {
+      "confidence": 0.994768182173897,
+      "result": {
+        "original_header": "PipeIT2 (v2.0.0)",
+        "type": "Text_excerpt",
+        "value": "The PipeIT2 Singularity image was built on a CentOS7 Docker image and requires a working Singularity installation (https://sylabs.io/docs/, see Note 1). \n<img src=\"https://github.com/ckynlab/PipeIT2/blob/main/PipeIT2_schema_v2.0.0.png\" align=\"left\" width=\"1000\" >\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/ckynlab/PipeIT2/main/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.8719639564624512,
+      "result": {
+        "original_header": "Tumor-only workflow",
+        "type": "Text_excerpt",
+        "value": "The tumor-only workflow consists of the following steps: \n"
+      },
+      "source": "https://raw.githubusercontent.com/ckynlab/PipeIT2/main/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9994641146415004,
+      "result": {
+        "original_header": "Input files",
+        "type": "Text_excerpt",
+        "value": "The basic command needed to perform the tumor-germline workflow is:\n```\nsingularity run PipeIT_<version>.img -t path/to/tumor.bam -n path/to/normal.bam -e path/to/region.bed \n``` \nThe basic command needed to perform the tumor-only workflow is:\n```\nsingularity run PipeIT_<version>.img -t path/to/tumor.bam -e path/to/region.bed -c path/to/annovar/humandb/folder\n``` \n"
+      },
+      "source": "https://raw.githubusercontent.com/ckynlab/PipeIT2/main/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.98377588431176,
+      "result": {
+        "original_header": "Parameters",
+        "type": "Text_excerpt",
+        "value": "Mandatory parameters:\n```\n-t, --tumor <path>: Path to the BAM file of the tumor sample.\n-n, --normal <path> (tumor-germline workflow only): Path to the BAM file of the germline sample (see Note 5).\n-c, --humandb <path> (tumor-only workflow only): Path to the folder where the ANNOVAR population data is stored (see Note 6). \n-e, --bed <path>: Path to the BED file of the targeted genomic regions.\n``` \nOptional parameters:\n```\n-o, --output <string>: The prefix for the output and intermediate files. When -o is specified, the output and intermediate files will have the prefix <output>. If this is not provided, PipeIT will use the name of the tumor BAM file, minus the bam file extension.\n-u, --unmerged <path>: The path to the unmerged BED file. If this is not provided, PipeIT2 will create it internally (see Note 7).\n-j, --TVC_json <path>: The path to the JSON file that includes the parameters for TVC. If not specified, PipeIT2 will use a set of parameters included within the container image.\n-l, --black_list <path>: The path to the blacklist bed file to be used by TVC (see Note 8).\n-p, --threads <n>:  The number of parallel threads used by TVC. The default is 4.\n-a, --run_annotation <true/false>: Whether to annotate the variants with SnpEff. The default is true.\n-i, --intermediate_files <true/false>: Whether PipeIT2 should keep the intermediate files produced during the analysis. The intermediate files may be useful for debugging and for testing parameters. The default is false. \n``` \n"
+      },
+      "source": "https://raw.githubusercontent.com/ckynlab/PipeIT2/main/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9988092252284642,
+      "result": {
+        "original_header": "Notes",
+        "type": "Text_excerpt",
+        "value": "1. A Singularity framework is mandatory in order to use PipeIT2. Please refer to the Singularity official documentation (https://sylabs.io/docs/) for more detailed information regarding the installation process.\n  \n2. snpEff by default considers the longest transcript as the canonical transcript. For CDKN2A (ENSG00000147889), PipeIT2 specifies ENST00000498124 as the canonical transcript.\n  \n3. https://github.com/charlottekyng/cancer_hotspots, commit: 74f1198644dd006b6762006959bd98c9b322c5fe, built from cancerhotspots.org. \n4. Because of the way Singularity treats relative and absolute paths, paths to input files have to be relative paths. Relative paths will appear to PipeIT2 as files defined outside of the container, while fully qualified paths refer to files inside the container. Depending on the high performance computing environment, it may be necessary to mount additional files and paths. By default, Singularity automatically mounts certain directories such as the user's home directory, /tmp, /proc, /sys, and /dev inside the container. If the input files are located outside of these mounted directories, the paths of the input files must be specified by using the -B flag. For example, if the BAM and BED files are stored in `/myHPC/a/different/folder/`:\n```\nsingularity run -B /myHPC/a/different/folder/ PipeIT_<version>.img -t path/to/tumor.bam -n path/to/normal.bam -e path/to/region.bed\n```\nFurther information can be found in the Singularity official documentation (https://sylabs.io/docs/). \n6. The ANNOVAR population databases required for the tumor-only workflow are large and therefore not included in the PipeIT2 Singularity image. We have provided a script in PipeIT2 to facilitate the automatic downloading of the databases. The following commands will execute the downloads:\n```\nsingularity exec PipeIT_<version>.img annotate_variation.pl -downdb -webfrom annovar -buildver hg19 esp6500siv2_all humandb/\nsingularity exec PipeIT_<version>.img annotate_variation.pl -downdb -webfrom annovar -buildver hg19 1000g2015aug humandb/\nsingularity exec PipeIT_<version>.img annotate_variation.pl -downdb -webfrom annovar -buildver hg19 exac03 humandb/\nsingularity exec PipeIT_<version>.img annotate_variation.pl -downdb -webfrom annovar -buildver hg19 gnomad_genome humandb/\n``` \n7. The unmerged bed can be manually created using the `tvcutils validate_bed --unmerged-detail-bed` option from the Torrent Suite (https://github.com/iontorrent/TS) by providing it with the BED file of the target regions. \n"
+      },
+      "source": "https://raw.githubusercontent.com/ckynlab/PipeIT2/main/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9375128059826233,
+      "result": {
+        "original_header": "Software availability",
+        "type": "Text_excerpt",
+        "value": "PipeIT2 can be downloaded from [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.6123937.svg)](https://doi.org/10.5281/zenodo.6123937).\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/ckynlab/PipeIT2/main/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "issue_tracker": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/ckynlab/PipeIT2/issues"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "keywords": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": ""
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "logo": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/ckynlab/PipeIT2/main/PipeIT2_schema_v2.0.0.png"
+      },
+      "source": "https://raw.githubusercontent.com/ckynlab/PipeIT2/main/README.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "PipeIT2"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "owner": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "User",
+        "value": "ckynlab"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "readme_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/ckynlab/PipeIT2/main/README.md"
+      },
+      "technique": "file_exploration"
+    }
+  ],
+  "run": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Executing PipeIT",
+        "parent_header": [
+          "PipeIT2 (v2.0.0)"
+        ],
+        "type": "Text_excerpt",
+        "value": "PipeIT can be executed as follows:\n```\nsingularity run PipeIT_<version>.img [options]\n```\n\nThe complete list of parameters can be displayed using the following command:\n```\nsingularity run PipeIT_<version>.img --help\n```\n\nThe PipeIT version can be printed on screen using the following command:\n```\nsingularity run PipeIT_<version>.img --version\n```\n"
+      },
+      "source": "https://raw.githubusercontent.com/ckynlab/PipeIT2/main/README.md",
+      "technique": "header_analysis"
+    }
+  ],
+  "somef_missing_categories": [
+    "acknowledgement",
+    "download",
+    "requirements",
+    "contact",
+    "contributors",
+    "documentation",
+    "license",
+    "usage",
+    "faq",
+    "support",
+    "has_build_file",
+    "executable_example"
+  ],
+  "somef_provenance": {
+    "date": "2024-10-04 14:18:32",
+    "somef_schema_version": "1.0.0",
+    "somef_version": "0.9.5"
+  },
+  "stargazers_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 0
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "type": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "non-software"
+      },
+      "technique": "software_type_heuristics"
+    }
+  ]
+}

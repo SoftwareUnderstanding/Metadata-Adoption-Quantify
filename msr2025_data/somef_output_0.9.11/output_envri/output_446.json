@@ -1,0 +1,737 @@
+{
+  "code_repository": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/kavisek/fraud-detection-capstone"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_created": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2018-09-18T16:46:30Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_updated": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2024-04-30T20:37:01Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "description": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "This repo contains my Fraud Detection Capstone that I completed at the end of Full-Time Data Science Program offered by BrainStation in Toronto. Still trying to add more research to this capstone."
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 0.9954310944408908,
+      "result": {
+        "original_header": "Intro to Fraud Detection",
+        "type": "Text_excerpt",
+        "value": "<span>This notebook is an extensive look into different Fraud Detection Models. I started this project without any knowledge of Fraud Detection and slowly worked my up during my education at BrainStation. I initially modeled many more models than presented here, but I decided to cut the majority of them to communicate the best models and reduce the size of this notebook.</span>\n    \n**Dataset:** [Paysim Transactions Logs](https://www.kaggle.com/ntnu-testimon/paysim1)\n     \n"
+      },
+      "source": "https://raw.githubusercontent.com/kavisek/fraud-detection-capstone/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9784663214032393,
+      "result": {
+        "original_header": "Scientific Notes",
+        "type": "Text_excerpt",
+        "value": "-- Most of the heavy lifting is in the function. I have writting some documentation below every custom function.<br>\n-- I created hold out data set containin 50% of the data before I do any of my descriptive analysis. Tne holdout set is used a second test set to make suer my final model is not overfitting on the test scores visible within my confusion matrices. Just trying remove the probability my own personal bias.<br> \n"
+      },
+      "source": "https://raw.githubusercontent.com/kavisek/fraud-detection-capstone/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.8365799877803828,
+      "result": {
+        "original_header": "Functions",
+        "type": "Text_excerpt",
+        "value": "I have created many functions to the make later part of our code more simplistic. You will see some measurement functions which we will use in Keras. a few functions used to plot our confusion matrices. Finally a few transformation functions that transform depentand values from +1/1 to 0/1. \n"
+      },
+      "source": "https://raw.githubusercontent.com/kavisek/fraud-detection-capstone/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9204430870322615,
+      "result": {
+        "original_header": "Pay Sim Finanicial Logs",
+        "type": "Text_excerpt",
+        "value": "This notebook will tackle a problem that comes from a [PaySim](http://www.diva-portal.org/smash/record.jsf?pid=diva2%3A1058442&dswid=7771) Simulator which has provided a dataset of simulated transactions from one month of financial logs. The logs came from a mobile money service within an unknown African nation. In, this next cells I will use this dataset to review some supervised learning approaches to detection. Agents in this dataset are attempting to control customers accounts and empty the funds by transferring to another account and then cashing out of the system. The \"isflaggedfraud\" feature in the dataset is flag this active when someone attempts to transact more than 200,000. We will drop this feature from our supervised model as it is a form of data leakage as all 'isflaggedfraud\" transactions are fraudulent transactions. \n\n```python\n# Plot number of datapoints of each time interval\nplt.figure(figsize=(12,4))\nsns.distplot(sdf.step, color='#756bb1');\nplt.title('Time Series')\nplt.xlabel('Time Step'); plt.ylabel('Density');\n``` \n"
+      },
+      "source": "https://raw.githubusercontent.com/kavisek/fraud-detection-capstone/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.8834203403889015,
+      "result": {
+        "original_header": "Aggregation Statistics",
+        "type": "Text_excerpt",
+        "value": "\n```python\n# View a cross tab for the number of transactions in the dataset\npd.crosstab(sdf.type, sdf.target)\n``` \nIn the description of the data source, the author notes that the cases of fraud within this dataset are acts committed by individuals attempting to empty out a bank account at once. The crosstab shows us that our fraudsters are going about this by transfer the cashout or transferring it to another account. \n\n```python\n# Data Leak: All the cases where \"isflaggedfraud\" = 1, are already\n# fraudualent transractions. I will be removing this feature during\n# the feature engineering of this dataset.\nsdf[['target','isflaggedfraud']].groupby('target').sum()\n``` \nKnow we are going to create some feature that can tell us a bit more about the victim from these fraudulent transactions. I will aggregate our transaction data frame into dataset based on users. The purpose here is to see whether the same users are involved in multiple transactions. Note that this dataset does. \nLooks like dataset only containes information on transfer to external accounts, and not transfer to ones own account (chequeing to savings). This is good to know. \n"
+      },
+      "source": "https://raw.githubusercontent.com/kavisek/fraud-detection-capstone/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9100436296642757,
+      "result": {
+        "original_header": "Creating a Network Graph",
+        "type": "Text_excerpt",
+        "value": "The data is a transaction database retrieved from a relational database. We can you the NetworkX Python package to create a temporary graph database/network. We can then create a network plot to view if there are any patterns within the network. \n\n```python\n# Create a list of all the accounts involved in fraud\nfraud_case_accounts = sdf[sdf.target == 1][['nameorig','namedest']].values\nfraud_case_accounts = fraud_case_accounts.reshape(-1,1)\nfraud_case_accounts_list = np.unique(fraud_case_accounts)\n\n# Generate a dataframe of all the transactions carried out by these\n# individuals\nsdf_fraud_scope = sdf[(sdf.nameorig.isin(fraud_case_accounts_list)) | (\n    sdf.namedest.isin(fraud_case_accounts_list))]\n\n# Print metric counts\nprint('Number of Cases of Fraud:',sdf[sdf.target == 1].shape[0])\nprint('Number of Accounts involved in Fraud (2 per transaction):',\n      len(fraud_case_accounts_list))\nprint('Number of Total Transactions involed with these Accounts:',\n     len(sdf_fraud_scope))\n``` \n    Number of Cases of Fraud: 4176\n    Number of Accounts involved in Fraud (2 per transaction): 8343\n    Number of Total Transactions involed with these Accounts: 19227 \n\n```python\n# Set a new default figure size for plotting\nrcParams['figure.figsize'] = (12.0, 12.0)\n\n# Segment out graph data\ndata = sdf[sdf.target == 1].sample(1000)\ndata = data[['nameorig','namedest','target','amount']]\nG = nx.DiGraph()\n\n# Create temporary graph database/network\nfor i,j,k,l in list(data.itertuples(index=False, name=None)):\n    G.add_edge(i,j, target=k, amount=l )\n\n# Plot the graph network\npos=nx.spring_layout(G)\nnx.draw_networkx_nodes(G,pos, alpha=0.25,\n                       node_size=100,\n                       node_color='#dadaeb',\n                       edgecolors='grey');\nnx.draw_networkx_edges(G,pos,edge_color='#3f007d',\n                       width=1,\n                       arrowsize=10,\n                      arrowstyle='-|>',\n                      )\nplt.title('Fraudalent Transaction Network Graph')\nplt.xlabel('Position')\nplt.ylabel('Position');\n``` \n\nThe plot above is plotting out every fraudulent transaction. The arrow shows us which the money was following. Each not represents a bank account. We can see that many of the bank accounts had been involved in case of fraud once as either the sender and receiver. Next, We will look at all the historical transaction from all these accounts before after the instances of fraud. I want to see if the total amount of transactions show any pattern. If one exists, we could use that information as an explicit feature in our feature engineering. \n\n```python\n# Turn numyp arraay into a series\nAIF_sample = pd.Series(fraud_case_accounts_list)\n\n# Filter out our data by the account that have been involved with fraud\nAIF_sample_df = sdf[(sdf.nameorig.isin(AIF_sample)) | (\n    sdf.namedest.isin(AIF_sample))]\n\nAIF_sample_data = AIF_sample_df[['nameorig','namedest','target','amount']]\n\n# Create a new graph database/network with AIP info \nGF = nx.DiGraph()\nfor i,j,k,l in list(AIF_sample_data.itertuples(index=False, \n                                               name=None)):\n    GF.add_edge(i,j, target=k, amount=l )\n\n    \n# Create a dataframe aggregating neighbour counts for\n# each node \nnode_list = []\nneighbor_amount = []\ncounter = 0\nfor node in list(GF.nodes):\n    counter=0\n    for neighbour in nx.all_neighbors(GF,node):\n        counter+=1\n    node_list.append(node)\n    neighbor_amount.append(counter)\nneighbor_counts = pd.DataFrame({'nodes':node_list,'neighbor_amount': neighbor_amount})\n\n# Print the results of the Aggregation\nprint('Total transaction with AIF accounts:',\n      round(neighbor_counts.neighbor_amount.mean(),4))\nprint('Number of AIF Accounts with 1 Transaction:', \n      len(neighbor_counts[neighbor_counts.neighbor_amount == 1]))\nprint('Number of AIF Accounts with 1+  Transactions:', \n      len(neighbor_counts[neighbor_counts.neighbor_amount > 1].count()))\n``` \n    Total transaction with AIF accounts: 1.6438\n    Number of AIF Accounts with 1 Transaction: 20843\n    Number of AIF Accounts with 1+  Transactions: 2 \n```python\n# Plot the Counts for Number of Transaction excluding unique transactions\nplt.figure(figsize=(10,5))\ndata = neighbor_counts[neighbor_counts.neighbor_amount > 1]\nneighbor_counts_cut = pd.cut(data.neighbor_amount, bins=9, precision=0)\nneighbor_counts_cut.value_counts().plot.barh(color=['#fcfbfd','#efedf5','#dadaeb','#bcbddc',\n                                                    '#9e9ac8','#807dba','#6a51a3','#54278f',\n                                                    '#3f007d'],edgecolor='black');\nplt.title('Transaction Counts for All Accounts involved Fraud (Above 1)')\nplt.ylabel('Bins (Amounts of Transactions)')\nplt.xlabel('Number of Accounts');\n``` \n"
+      },
+      "source": "https://raw.githubusercontent.com/kavisek/fraud-detection-capstone/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9128426114785397,
+      "result": {
+        "original_header": "Feature Engineering",
+        "type": "Text_excerpt",
+        "value": "\nIdeally, we want to see high variance and very little correlation in our feature matrix before modeling. The correlation matrix above shows that new and old balance features are highly correlated. \n\n```python\n# View the summary statistics for new and old balance dest\nsdf[['newbalancedest','oldbalancedest','oldbalanceorig','oldbalanceorig']].describe()\n``` \n\nThe correlation does not merely look like a strong linear correlation. There are two different trends between the feature within this plot.  Segmenting the data by our target value would be the best next step. \n\nWe can see that the lower trend line is a good sign of a fraudulent transaction. It makes sense. The difference between an accounts original and new balance after fraud would be more significant than after a typical transaction. We can use this information to create a mean transaction amount feature for each original accounts within out datasets. By intuition, this feature should help us isolate transactions with higher accuracy. \n"
+      },
+      "source": "https://raw.githubusercontent.com/kavisek/fraud-detection-capstone/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.8137120827168853,
+      "result": {
+        "original_header": "Encoding Data",
+        "type": "Text_excerpt",
+        "value": "\n```python\n# Encode all object colunms to categorical codes\nsdf.type = sdf.type.astype('category').cat.codes\nsdf.nameorig = sdf.nameorig.astype('category').cat.codes\nsdf.namedest = sdf.namedest.astype('category').cat.codes\n\n# Drop is flagged false column (data leak) and new balance (high correlation) feature\nsdf = sdf.drop(['isflaggedfraud'], axis=1)\n\n# Concatenate one-hot encoded type features\nsdf = pd.concat([sdf,pd.get_dummies(sdf.type, 'type', drop_first=True)], axis=1).drop('type',axis=1)\n```\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/kavisek/fraud-detection-capstone/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9212748639120354,
+      "result": {
+        "original_header": "Evaluation Metrics",
+        "type": "Text_excerpt",
+        "value": "The recall is the number of correct results divided by the total number of results. Precision, on the other hand, tells us how many selected items are relevant. Maximizing precision or recall is relatively simple so I also measure the hyperbolic mean between these scores, which would be the F1 scores. Our main metrics will be the Area under the ROC and AUC curve. The ROC is a plot to measure the difference between the TP rate and the FP rate. A higher ROC curve with a larger area under the cure is what I am looking for.\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/kavisek/fraud-detection-capstone/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9714081638176952,
+      "result": {
+        "original_header": "Elliptic Envelope",
+        "type": "Text_excerpt",
+        "value": "Elliptic Envelope model goes about creating an ellipse around our data's hyperplane and segmenting out outliers by placing a boundary around the data. The algorithm assumes that your data follows a Gaussian distribution as the model take bivariate samples of the dataset when calculating this boundary. \n"
+      },
+      "source": "https://raw.githubusercontent.com/kavisek/fraud-detection-capstone/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.8693432011448301,
+      "result": {
+        "original_header": "Unsupervised Models",
+        "type": "Text_excerpt",
+        "value": "The two benchmark models above score well. Next, I will first be reviewing a couple of unsupervised anomaly detection models, that can be used to locates fraudulent transactions within the data by treating cases of fraud as anomalies. I will later move on to superised models. \n"
+      },
+      "source": "https://raw.githubusercontent.com/kavisek/fraud-detection-capstone/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9762876939875502,
+      "result": {
+        "original_header": "Isolation Forest",
+        "type": "Text_excerpt",
+        "value": "In the context of this problem, we can also treat causes for fraud as anomalies. The isolation forest algorithm is a random forest of decision trees that have been modified to detect abnormalities in the data. The algorithm generates an ensemble of decisions tree,  which  use one single feature with the data during their training. Each tree randomly split on a value between the feature's max and min value.  The goal of the individual tree is to isolate each value its splits on into a node. \nAfter the forest has finished training, the model measures the number of splits it took to push the anomalies out of the tree. For a majority of anomalies, it is common for its value to be segmented early on. On average anomalies will have a  shorter depth in across tree. Finally, the isolation forest uses a contamination rate after ranking the max depth of each data point to label anomalies. The algorithm performs pretty well given no labels.  \nThe isolation forest algorithim scores rather well on this problem, its roc_auc score is 0.86~. Given that the model does not use the target labels during training, this is impressive. Other alogrithims such as Meanshift, DBSCAN, and HDBSCAN only scored around just above random (0.50 to 0.55).\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/kavisek/fraud-detection-capstone/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.8893466767930823,
+      "result": {
+        "original_header": "Supervised Models",
+        "type": "Text_excerpt",
+        "value": "To tackle this problem, I will use three standard models, pick the best one based on their f1 score, ro_auc_score, and confusion matrix. I will use an XGBoost classifier, a dense simple neural network, and Random Forest Model.\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/kavisek/fraud-detection-capstone/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9754034081434798,
+      "result": {
+        "original_header": "XG Boost",
+        "type": "Text_excerpt",
+        "value": "XG Boost is a gradient boosting algorithm that contains additional optimizations under the hood. This algorithm has been dominant in the competitive machine learning space in the majority of the last decade. Let run a quick pipeline using this model and view its confusion matrix. \n"
+      },
+      "source": "https://raw.githubusercontent.com/kavisek/fraud-detection-capstone/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.980650121247959,
+      "result": {
+        "original_header": "Dense Neural Network",
+        "type": "Text_excerpt",
+        "value": "Next is a simple two-layer neural network. I have played around with the number of layers. Based on the computation time of my local machine I ended using 128 nodes for the first layers and 64 nodes for the second layers. \nIf you wanted to go further with troubleshooting your neural network. You could go ahead a plot out the training and validation accuracy/loss and the optimal number of ephocs. For the sake of remaining consise, I have removed these plots from this notebook.\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/kavisek/fraud-detection-capstone/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9245942230074946,
+      "result": {
+        "original_header": "Random Forest Classifier",
+        "type": "Text_excerpt",
+        "value": "This model is just a vanilla Random Forest model. Random Forest is an ensembling model that builds our N number of decisions trees and aggregates their results together. The goal here is to have each decision tree overfit differently, so when we aggregate them together in the model the overfitted cancels out, and our model gets better with edge cases. \nHere we see a trade off between the XGBoost model and the Random Forest model. The Random Forest Model has a better f1 and roc_auc score. Yet the model is prone to assigning more false positives then our XGBoost model. Lets test both pipeline on the holdout data we and see if the performance is consistent.\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/kavisek/fraud-detection-capstone/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9638143224866963,
+      "result": {
+        "original_header": "Holdout Scores",
+        "type": "Text_excerpt",
+        "value": "\nUse the ROC AUC and F1 score together I can tell our Random Forest model is more desirable. It balances the trade off between as precision and recall a in better manner. Next I will conduct a grid search on this model and optimize it a bit further. \n"
+      },
+      "source": "https://raw.githubusercontent.com/kavisek/fraud-detection-capstone/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9545655567803133,
+      "result": {
+        "original_header": "Tangent: Auto Encoders",
+        "type": "Text_excerpt",
+        "value": "An autoencoder is a specialized neural network that tries to reconstruct our data after passing the data through a bottleneck within the neural network. We can measure the network performance by measuring its reconstruction error (how different the new data from the training data). A high reconstruction error can be a sign of a fraudulent transaction. As data points that are hard to reconstruct would be anomalies. How does the model know how many points are fraudulent? The number of the points to be declared \"fraudulent\" by the model would be dependent on a predefined threshold we pass through at the end.  \nI created an autoencoder for my capstone, to show that the methodology could be applied to this problem. I have decided to remove the code from this notebook, as the model I created did not perform so well. The reasoning around the poor performance is because most of the fraudulent data points are nested so tightly around the low amounts. The current features in this dataset are not predictive enough. The model performed poorly on locating tightly nested anomalies using a threshold. \n \n"
+      },
+      "source": "https://raw.githubusercontent.com/kavisek/fraud-detection-capstone/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.900007962900784,
+      "result": {
+        "original_header": "Random Forest Grid Search",
+        "type": "Text_excerpt",
+        "value": "    Fitting 5 folds for each of 8 candidates, totalling 40 fits \n\n    [Parallel(n_jobs=-1)]: Done  40 out of  40 | elapsed: 190.8min finished \n"
+      },
+      "source": "https://raw.githubusercontent.com/kavisek/fraud-detection-capstone/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9028511246843174,
+      "result": {
+        "original_header": "Assessing the Final Model",
+        "type": "Text_excerpt",
+        "value": "\nThe best model parameters from our grid search leave us with a model that is overfitting on our training data but performs better on test set than our vanilla original Random Forest Model. If you have the computing power, you can make your grid search larger. In my case, I will end this notebook here, since I am just running this notebook on my local machine.\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/kavisek/fraud-detection-capstone/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.992047349309757,
+      "result": {
+        "original_header": "Conclusion",
+        "type": "Text_excerpt",
+        "value": "From my talks with people in the industry around Toronto. Tree-based models are the currently the defacto algorithm to use in Fraud detection with a relational database. For further predictive/descriptives power in your modeling, I would suggest reading up on graph databases or attempt to wire your data threw neural network.  \n"
+      },
+      "source": "https://raw.githubusercontent.com/kavisek/fraud-detection-capstone/master/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "download_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/kavisek/fraud-detection-capstone/releases"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "executable_example": [
+    {
+      "confidence": 1,
+      "result": {
+        "format": "jupyter_notebook",
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/kavisek/fraud-detection-capstone/master/18-08-26%20Capstone.ipynb"
+      },
+      "source": "https://raw.githubusercontent.com/kavisek/fraud-detection-capstone/master/18-08-26%20Capstone.ipynb",
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "format": "jupyter_notebook",
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/kavisek/fraud-detection-capstone/master/18-10-02%20Passing%20Weights%20to%20Neural%20Network%20within%20a%20Pipeline.ipynb"
+      },
+      "source": "https://raw.githubusercontent.com/kavisek/fraud-detection-capstone/master/18-10-02%20Passing%20Weights%20to%20Neural%20Network%20within%20a%20Pipeline.ipynb",
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "format": "jupyter_notebook",
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/kavisek/fraud-detection-capstone/master/18-10-02%20Intro%20to%20Fraud%20Detection.ipynb"
+      },
+      "source": "https://raw.githubusercontent.com/kavisek/fraud-detection-capstone/master/18-10-02%20Intro%20to%20Fraud%20Detection.ipynb",
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "format": "jupyter_notebook",
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/kavisek/fraud-detection-capstone/master/.ipynb_checkpoints/19-10-01%20Intro%20to%20Fraud%20Detection-checkpoint.ipynb"
+      },
+      "source": "https://raw.githubusercontent.com/kavisek/fraud-detection-capstone/master/.ipynb_checkpoints/19-10-01%20Intro%20to%20Fraud%20Detection-checkpoint.ipynb",
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "format": "jupyter_notebook",
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/kavisek/fraud-detection-capstone/master/.ipynb_checkpoints/18-08-26%20Capstone-checkpoint.ipynb"
+      },
+      "source": "https://raw.githubusercontent.com/kavisek/fraud-detection-capstone/master/.ipynb_checkpoints/18-08-26%20Capstone-checkpoint.ipynb",
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "format": "jupyter_notebook",
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/kavisek/fraud-detection-capstone/master/.ipynb_checkpoints/19-10-02%20Intro%20to%20Fraud%20Detection%20%28WIP%29-checkpoint.ipynb"
+      },
+      "source": "https://raw.githubusercontent.com/kavisek/fraud-detection-capstone/master/.ipynb_checkpoints/19-10-02%20Intro%20to%20Fraud%20Detection%20%28WIP%29-checkpoint.ipynb",
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "format": "jupyter_notebook",
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/kavisek/fraud-detection-capstone/master/.ipynb_checkpoints/18-10-02%20Passing%20Weights%20to%20Neural%20Network%20within%20a%20Pipeline-checkpoint.ipynb"
+      },
+      "source": "https://raw.githubusercontent.com/kavisek/fraud-detection-capstone/master/.ipynb_checkpoints/18-10-02%20Passing%20Weights%20to%20Neural%20Network%20within%20a%20Pipeline-checkpoint.ipynb",
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "format": "jupyter_notebook",
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/kavisek/fraud-detection-capstone/master/.ipynb_checkpoints/18-08-26%20Model%20Analysis-checkpoint.ipynb"
+      },
+      "source": "https://raw.githubusercontent.com/kavisek/fraud-detection-capstone/master/.ipynb_checkpoints/18-08-26%20Model%20Analysis-checkpoint.ipynb",
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "format": "jupyter_notebook",
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/kavisek/fraud-detection-capstone/master/.ipynb_checkpoints/18-10-02%20Intro%20to%20Fraud%20Detection-checkpoint.ipynb"
+      },
+      "source": "https://raw.githubusercontent.com/kavisek/fraud-detection-capstone/master/.ipynb_checkpoints/18-10-02%20Intro%20to%20Fraud%20Detection-checkpoint.ipynb",
+      "technique": "file_exploration"
+    }
+  ],
+  "forks_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 2
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/kavisek/fraud-detection-capstone/forks"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "kavisek/fraud-detection-capstone"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_title": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "Intro to Fraud Detection"
+      },
+      "source": "https://raw.githubusercontent.com/kavisek/fraud-detection-capstone/master/README.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "images": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/kavisek/fraud-detection-capstone/master/output_9_0.png"
+      },
+      "source": "https://raw.githubusercontent.com/kavisek/fraud-detection-capstone/master/README.md",
+      "technique": "regular_expression"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/kavisek/fraud-detection-capstone/master/output_10_0.png"
+      },
+      "source": "https://raw.githubusercontent.com/kavisek/fraud-detection-capstone/master/README.md",
+      "technique": "regular_expression"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/kavisek/fraud-detection-capstone/master/output_11_0.png"
+      },
+      "source": "https://raw.githubusercontent.com/kavisek/fraud-detection-capstone/master/README.md",
+      "technique": "regular_expression"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/kavisek/fraud-detection-capstone/master/output_22_0.png"
+      },
+      "source": "https://raw.githubusercontent.com/kavisek/fraud-detection-capstone/master/README.md",
+      "technique": "regular_expression"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/kavisek/fraud-detection-capstone/master/output_27_0.png"
+      },
+      "source": "https://raw.githubusercontent.com/kavisek/fraud-detection-capstone/master/README.md",
+      "technique": "regular_expression"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/kavisek/fraud-detection-capstone/master/output_30_0.png"
+      },
+      "source": "https://raw.githubusercontent.com/kavisek/fraud-detection-capstone/master/README.md",
+      "technique": "regular_expression"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/kavisek/fraud-detection-capstone/master/output_34_0.png"
+      },
+      "source": "https://raw.githubusercontent.com/kavisek/fraud-detection-capstone/master/README.md",
+      "technique": "regular_expression"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/kavisek/fraud-detection-capstone/master/output_38_0.png"
+      },
+      "source": "https://raw.githubusercontent.com/kavisek/fraud-detection-capstone/master/README.md",
+      "technique": "regular_expression"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/kavisek/fraud-detection-capstone/master/output_40_0.png"
+      },
+      "source": "https://raw.githubusercontent.com/kavisek/fraud-detection-capstone/master/README.md",
+      "technique": "regular_expression"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/kavisek/fraud-detection-capstone/master/output_51_0.png"
+      },
+      "source": "https://raw.githubusercontent.com/kavisek/fraud-detection-capstone/master/README.md",
+      "technique": "regular_expression"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/kavisek/fraud-detection-capstone/master/output_54_0.png"
+      },
+      "source": "https://raw.githubusercontent.com/kavisek/fraud-detection-capstone/master/README.md",
+      "technique": "regular_expression"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/kavisek/fraud-detection-capstone/master/output_59_0.png"
+      },
+      "source": "https://raw.githubusercontent.com/kavisek/fraud-detection-capstone/master/README.md",
+      "technique": "regular_expression"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/kavisek/fraud-detection-capstone/master/output_64_0.png"
+      },
+      "source": "https://raw.githubusercontent.com/kavisek/fraud-detection-capstone/master/README.md",
+      "technique": "regular_expression"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/kavisek/fraud-detection-capstone/master/output_67_0.png"
+      },
+      "source": "https://raw.githubusercontent.com/kavisek/fraud-detection-capstone/master/README.md",
+      "technique": "regular_expression"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/kavisek/fraud-detection-capstone/master/output_71_0.png"
+      },
+      "source": "https://raw.githubusercontent.com/kavisek/fraud-detection-capstone/master/README.md",
+      "technique": "regular_expression"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/kavisek/fraud-detection-capstone/master/output_81_0.png"
+      },
+      "source": "https://raw.githubusercontent.com/kavisek/fraud-detection-capstone/master/README.md",
+      "technique": "regular_expression"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/kavisek/fraud-detection-capstone/master/output_83_0.png"
+      },
+      "source": "https://raw.githubusercontent.com/kavisek/fraud-detection-capstone/master/README.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "installation": [
+    {
+      "confidence": 0.9999997171139343,
+      "result": {
+        "original_header": "Import Preliminaries",
+        "type": "Text_excerpt",
+        "value": "    Numpy version: 1.14.5\n    Pandas version: 0.23.4\n    Sklearn version: 0.19.0\n    Keras version: 2.2.4\n    XBG Boost version: 0.72 \n"
+      },
+      "source": "https://raw.githubusercontent.com/kavisek/fraud-detection-capstone/master/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "invocation": [
+    {
+      "confidence": 0.9435936253545312,
+      "result": {
+        "original_header": "Import Preliminaries",
+        "type": "Text_excerpt",
+        "value": "\n```python\n%matplotlib inline\n%config InlineBackend.figure_format = 'retina'\n\n# Import Modules\nimport datetime\nimport itertools\nimport graphviz\nimport keras\nimport matplotlib.pyplot as plt\nimport networkx as nx\nimport numpy as np\nimport pandas as pd\nimport seaborn as sns\nimport sklearn\nimport tensorflow as tf\nimport warnings\nimport xgboost\n\n# Other Imports\nfrom matplotlib import rcParams, gridspec\nfrom xgboost import XGBClassifier\n\n# Keras Imports\nfrom keras import models, layers\nfrom keras import regularizers\nfrom keras.models import Model, load_model, Sequential\nfrom keras.layers import Input, Dense, Dropout, Embedding\nfrom keras.wrappers.scikit_learn import KerasClassifier\n\n\n# Preprocesing\nfrom sklearn.decomposition import PCA\nfrom sklearn.externals import joblib\nfrom sklearn.utils.class_weight import compute_sample_weight\nfrom sklearn.preprocessing import StandardScaler\n\n# Sklearn Models\nfrom sklearn.dummy import DummyClassifier\nfrom sklearn.ensemble import RandomForestClassifier, IsolationForest\nfrom sklearn.covariance import EllipticEnvelope\nfrom sklearn.pipeline import make_pipeline\nfrom sklearn.utils.class_weight import compute_sample_weight\n\n# Metrics\nfrom sklearn.metrics import (confusion_matrix, precision_recall_curve, auc,\n                             roc_curve, recall_score, classification_report,\n                             f1_score, precision_score, recall_score,\n                             precision_recall_fscore_support, roc_auc_score)\n\n# Model Selection\nfrom sklearn.model_selection import (cross_val_score, KFold, train_test_split,\n                                     GridSearchCV, cross_validate,\n                                     StratifiedKFold)\n\n# Set Numpy and Python Random Seed\nseed = 7\nnp.random.seed(seed)\n\n# Pandas Configuration\npd.set_option('max_columns', 1000)\npd.set_option('max_rows', 100)\npd.set_option('display.float_format', lambda x: '%.3f' % x)\n\n# Warning Configuration\nwarnings.filterwarnings('ignore')\n\n# Plotting Configuration\nrcParams['figure.figsize'] = (12.0, 4.0)\nrcParams.update({'font.size': 10})\ncolors = ['#74a9cf', '#6a51a3']\n\n# Print versions of each package above \nprint(\"Numpy version: {}\".format(np.__version__))\nprint(\"Pandas version: {}\".format(pd.__version__))\nprint(\"Sklearn version: {}\".format(sklearn.__version__))\nprint(\"Keras version: {}\".format(keras.__version__))\nprint(\"XBG Boost version: {}\".format(xgboost.__version__))\n``` \n"
+      },
+      "source": "https://raw.githubusercontent.com/kavisek/fraud-detection-capstone/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9352220285845335,
+      "result": {
+        "original_header": "Functions",
+        "type": "Text_excerpt",
+        "value": "\n```python\ndef anon_to_target(array):\n    '''\n    Converts Prediction in the +1/-1 format to 0/1 format for every value in the array\n\n    Parameter\n    ---------\n    array: numpy array containing only +1/1\n\n    Exmaples\n    ---------\n    >>>> anon_to_targets([1,1,,1,1,-1,1,-1,1])\n    '''\n\n    array = [0 if i == 1 else 1 for i in array]\n    array = np.array(array).reshape(1, -1)[0]\n\n    return array\n\ndef grid_search_groupby(results: pd.DataFrame, param_1: str, param_2: str) -> pd.DataFrame:\n    '''\n    Create a aggregated dataframe from the grid search results use the two\n    hyper paramters that we pass into the function. We will be using this\n    function to plot heatmaps from our grid search.\n\n    Parameters\n    ----------\n    results: DataFrame of Grid Score results.\n\n    Examples\n    ----------\n    >>> (grid_search_groupby(results,'max_depth','n_estimators')\n    >>> grid_search_groupby(results,'max_leaf_nodes','n_estimators')\n    '''\n    assert (type(results) ==  type(pd.DataFrame())), 'results should be a pandas.core.frame.DataFrame'\n    assert (type(param_1) == str), 'param_1 should be a string'\n    assert (type(param_2) == str), 'param_2 should be a string'\n\n    params_df  = pd.DataFrame.from_dict(list(results.params.values))\n    mean_test_score = results.mean_test_score\n    result_shrt_df = pd.concat([mean_test_score, params_df], axis=1)\n    result_shrt_df = result_shrt_df.fillna(value='None') # Fill in Default value None with string\n    result_groupby = result_shrt_df.groupby([param_1, param_2])['mean_test_score'].mean().unstack()\n    return result_groupby\n\ndef plot_confusion_anomoly(model, classes, name,\n                           train_y, test_y, train_x,test_x,\n                           cmap=plt.cm.Purples):\n    '''\n    Function plots a confusion matrix given train and test \n    unsuperived models\n\n    Parameters\n    ----------\n    train_model: sklearn/keras model object to be trained on training data\n    test_moedl: sklearn/keras model object to be trained on test data\n\n    Examples\n    ----------\n    >>>> plot_confusion_anomoly(xg_model, train_x, train_y)\n    >>>> plot_confusion_anomoly(rf_model, train_x, train_y)\n    '''\n    rcParams['figure.figsize'] = (30.0, 22.5)\n\n    # Plot Train Confusion Matrix\n    fig = gridspec.GridSpec(3,3)\n    grid_length = list(range(1,3))\n    tuple_grid = [(i,j) for i in grid_length for j in grid_length]\n\n    plt.subplot2grid((3,3), (0,0))\n    cm = confusion_matrix(train_y, anon_to_target(model.predict(train_x)))\n    plot_confusion_matrix(cm, classes, fontsize=20, \n                          title=name,\n                         normalize=True, cmap=cmap)\n    \n    plt.subplot2grid((3,3), (0,1))\n    cm = confusion_matrix(test_y, anon_to_target(model.predict(test_x)))\n    plot_confusion_matrix(cm, classes, fontsize=20,\n                          title=name,\n                         normalize=True, cmap=cmap);\n\n    return None\n\n\ndef plot_confusion_matrix(cm, classes, fontsize=20,\n                          normalize=False, title='Confusion matrix',\n                          cmap=plt.cm.Blues):\n    '''\n    THE MAIN CONFUSION MATRIX, KAVI DON'T DELTETE BY ACCIDENT AGAIN. Function plots a \n    confusion matrix given a cm matrix and class names\n\n    Parameters\n    ----------\n    cm: sklearn confusion matrix\n    classes: numpy 1D array containing all unique class names\n\n    Examples\n    ---------\n    >>>>\n\n    plot_confusion_matrix(\n    cm,\n    classes,\n    fontsize=25,\n    normalize=True,\n    title=model.name.capitalize() + ': Test Set',\n    cmap=plt.cm.Greens)\n\n    '''\n    cm_num = cm\n    cm_per = cm.astype('float') / cm.sum(axis=1)[:, np.newaxis]\n\n    if normalize:\n        cm = cm.astype('float') / cm.sum(axis=1)[:, np.newaxis]\n        # print(\"Normalized confusion matrix\")\n    else:\n        None\n        # print('Confusion matrix, without normalization')\n\n    # print(cm)\n\n    plt.imshow(cm, interpolation='nearest', cmap=cmap)\n    plt.title(title.replace('_',' ').title()+'\\n', size=fontsize)\n    plt.colorbar()\n    tick_marks = np.arange(len(classes))\n    plt.xticks(tick_marks, classes, rotation=45, size=fontsize)\n    plt.yticks(tick_marks, classes, size=fontsize)\n\n    fmt = '.5f' if normalize else 'd'\n    thresh = cm.max() / 2.\n    for i, j in itertools.product(range(cm.shape[0]), range(cm.shape[1])):\n        # Set color parameters\n        color = \"white\" if cm[i, j] > thresh else \"black\"\n        alignment = \"center\"\n\n        # Plot perentage\n        text = format(cm_per[i, j], '.5f')\n        text = text + '%'\n        plt.text(j, i,\n            text,\n            fontsize=fontsize,\n            verticalalignment='baseline',\n            horizontalalignment='center',\n            color=color)\n        # Plot numeric\n        text = format(cm_num[i, j], 'd')\n        text = '\\n \\n' + text\n        plt.text(j, i,\n            text,\n            fontsize=fontsize,\n            verticalalignment='center',\n            horizontalalignment='center',\n            color=color)\n\n    plt.tight_layout()\n    plt.ylabel('True label'.title(), size=fontsize)\n    plt.xlabel('Predicted label'.title(), size=fontsize)\n\n    return None\n\ndef plot_confusion_normal(model, classes, name, train_x, train_y,\n                          test_x, test_y, cmap=plt.cm.Greens):\n    '''\n    Fuction plota grid and calls the plot_confusion_matrix function\n    to plot two confusion matrices. One for the tarin set and another\n    for the test set\n\n    Parameters\n    ----------\n    cm: sklearn confusion matrix\n    classes: numpy 1D array containing all unique class names\n\n    Examples\n    ----------\n    >>>> plot_confusion_normal(xg_model, train_x, train_y)\n    >>>> plot_confusion_normal(rf_model, train_x, train_y)\n    '''\n\n    # Set the plot size\n    rcParams['figure.figsize'] = (30.0, 22.5)\n\n    # Set up grid\n    plt.figure()\n    fig = gridspec.GridSpec(3, 3)\n    grid_length = list(range(1, 3))\n    tuple_grid = [(i, j) for i in grid_length for j in grid_length]\n\n    # Plot Training Confusion Matrix\n    plt.subplot2grid((3, 3), (0, 0))\n    cm = confusion_matrix(train_y, model.predict(train_x))\n    plot_confusion_matrix(\n        cm,\n        classes=classes,\n        normalize=True,\n        title=name.capitalize() + ': Train Set',\n        cmap=cmap)\n\n    # Plot Testing Confusion Matrix\n    plt.subplot2grid((3, 3), (0, 1))\n    cm = confusion_matrix(test_y, model.predict(test_x))\n    plot_confusion_matrix(\n        cm,\n        classes=classes,\n        normalize=True,\n        title=name.capitalize() + ': Test Set',\n        cmap=cmap)\n\n    return None        \n\n\ndef plot_confusion_neural(model, classes, train_x, train_y, \n                          test_x, test_y, cmap=plt.cm.Oranges):\n    '''\n    Funtion to plot a grid and calls the plot_confusion_matrix function\n    to plot two confusion matrices. One for the tarin set and another\n    for the test set. This function includes a sigmoid function that rounds\n    networks prediction before plotting.\n\n    Parameters\n    ----------\n    cm: sklearn confusion matrix\n    classes: numpy 1D array containing all unique class names\n\n    Examples\n    ----------\n    >>>> plot_confusion_neural(nn_model, train_x, train_y)\n    >>>> plot_confusion_neural(autoencoder, train_x, train_y)\n    '''\n\n    # Set the plot size\n    rcParams['figure.figsize'] = (30.0, 22.5)\n\n    # Set up grid\n    plt.figure()\n    fig = gridspec.GridSpec(3, 3)\n    grid_length = list(range(1, 3))\n    tuple_grid = [(i, j) for i in grid_length for j in grid_length]\n\n    # Plot Training Confusion Matrix\n    plt.subplot2grid((3, 3), (0, 0))\n    cm = confusion_matrix(train_y, model.predict(train_x))\n    plot_confusion_matrix(\n        cm,\n        classes,\n        fontsize=25,\n        normalize=True,\n        title=model.name.capitalize() + ': Train Set',\n        cmap=cmap)\n\n    # Plot Testing Confusion Matrix\n    plt.subplot2grid((3, 3), (0, 1))\n    cm = confusion_matrix(test_y, (model.predict(test_x)))\n    plot_confusion_matrix(\n        cm,\n        classes,\n        fontsize=25,\n        normalize=True,\n        title=model.name.capitalize() + ': Test Set',\n        cmap=cmap)\n\n    return None\n\n\ndef target_to_anon(array):\n    '''\n    Converts prediction in the \n    0/1 standard format to 1/-1 anomoly format for every\n    value in the array\n\n    Parameter\n    ---------\n    array: numpy array containing only +1/1\n\n    Exmaples\n    ---------\n    >>>> anon_to_targets([1,1,,1,1,-1,1,-1,1])\n    '''\n    array = [1 if i == 0 else -1 for i in array]\n    array = np.array(array).reshape(1,-1)[0]\n    return array\n\ndef read_csv(path: str, lower=True) -> pd.DataFrame:\n    '''Read in csv data return dataframe after lowering all columns name\n    \n    Parameters\n    ----------\n    path: Absolulte or Relative Path to csv data\n    \n    '''\n    df = pd.read_csv('Data/Synthetic/synthetic.csv')\n    if lower == True:\n        df.columns = df.columns.str.lower()\n    return df\n\n# Customer summary stastitics dataframe\ndef sum_stat(df:pd.DataFrame) -> pd.DataFrame:\n    '''\n    Plot the summary statitic of a dataframe. The statistics \n    include the normal describe statistics as well as additional\n    median value, and counts on the number of unique values and\n    null values\n    \n    Parameters\n    ----------\n    \n    df: A pandas dataframes of datate\n    '''\n    \n    sum_df = pd.concat([df.describe(), \n           pd.DataFrame(df.nunique(), columns=['nuniques']).T,\n           pd.DataFrame(np.sum(df.isnull(), axis =0), columns=['isnull']).T],\n           axis=0)\n    return sum_df\n```\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/kavisek/fraud-detection-capstone/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9128739629531812,
+      "result": {
+        "original_header": "Import Data",
+        "type": "Text_excerpt",
+        "value": "\n```python\n# Import paysim data\nsdf = read_csv('Data/Synthetic/synthetic.csv')\nsdf = sdf.rename(columns={'isfraud':'target', 'oldbalanceorg':'oldbalanceorig'})\n\n# Create a holdout dataset with 50% of the data. 3 milliion+ rows each.\nholdout_index = np.random.choice(np.arange(0,sdf.shape[0]), size=int(sdf.shape[0]*0.5),replace=False)\nsdf_holdout = sdf[sdf.index.isin(holdout_index)]\nsdf = sdf[~sdf.index.isin(holdout_index)]\nsdf.head(10)\n``` \n"
+      },
+      "source": "https://raw.githubusercontent.com/kavisek/fraud-detection-capstone/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.8945613240390483,
+      "result": {
+        "original_header": "Train-Test Split",
+        "type": "Text_excerpt",
+        "value": "\n```python\n# Ruturr dataframes as nupmy arrays\nX = sdf.drop('target', axis=1).values\ny = sdf.target.values\n\n# Train-test split the data\nX_train, X_test, y_train, y_test = train_test_split(X,y)\n\n# Compute Sample Weights\nweights = compute_sample_weight(class_weight='balanced', y=y_train)\n```\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/kavisek/fraud-detection-capstone/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.8018711290452509,
+      "result": {
+        "original_header": "Benchmark Models",
+        "type": "Text_excerpt",
+        "value": "\n```python\n# Set a new default figure size for plotting\nrcParams['figure.figsize'] = (30.0, 10.0)\n\n# Print the contaminatin rate of the trainin dataset\ncontamination_rate = (sdf['target'].value_counts()/sdf['target'].count())[1]\nprint('Training Contamination Rate:',contamination_rate)\n``` \n"
+      },
+      "source": "https://raw.githubusercontent.com/kavisek/fraud-detection-capstone/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.8556804320164184,
+      "result": {
+        "original_header": "Holdout Scores",
+        "type": "Text_excerpt",
+        "value": "\n```python\nrfr_pipline = joblib.load('Models/fraud_rfr_pipeline.sav')\nxgb_pipline = joblib.load('Models/fraud_xgb_pipeline.sav')\nnn_pipline = joblib.load('Models/fraud_nn_pipeline.sav')\n\nprint('XGB Pipeline ROC AUC Score:',roc_auc_score(y_holdout, xgb_pipline.predict(X_holdout)))\nprint('XGB Pipeline F1 Score:',f1_score(y_holdout, xgb_pipline.predict(X_holdout)), '\\n')\nprint('NN Pipeline ROC AUC Score:',roc_auc_score(y_holdout, nn_pipline.predict(X_holdout)))\nprint('NN Pipeline F1 Score:',f1_score(y_holdout, nn_pipline.predict(X_holdout)), '\\n')\nprint('RFR Pipeline ROC AUC Score:',roc_auc_score(y_holdout, rfr_pipline.predict(X_holdout)))\nprint('RFR Pipeline F1 Score:',f1_score(y_holdout, rfr_pipline.predict(X_holdout)), '\\n')\n``` \n"
+      },
+      "source": "https://raw.githubusercontent.com/kavisek/fraud-detection-capstone/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.8832279937537373,
+      "result": {
+        "original_header": "Random Forest Grid Search",
+        "type": "Text_excerpt",
+        "value": "\n```python\n# Setting up the grid\nrfr_pipeline = joblib.load('Models/fraud_rfr_pipeline.sav')\n\ngrid = {'randomforestclassifier__n_estimators':np.arange(0,250,100)[1:],\n        'randomforestclassifier__max_leaf_nodes':[100,150,200,None]}\n\n# Initialize with GridSearchCV with grid\ngrid_search = GridSearchCV(estimator=rfr_pipeline, param_grid=grid, \n                     scoring='f1', n_jobs=-1, refit=True, cv=5,\n                     return_train_score=True, verbose =0)\n# Fit search\ngrid_search.fit(X_train,y_train);\n``` \n```python\npipeline_results = pd.DataFrame(grid_search.cv_results_)\n\n# Plot grid search results\nplt.figure(figsize = (8.0, 7.0))\nsns.heatmap(grid_search_groupby(pipeline_results,\n                                'randomforestclassifier__n_estimators',\n                                'randomforestclassifier__max_leaf_nodes'),\n           cmap=plt.cm.BuPu, annot=True, fmt='.5f' );\nplt.title('Grid Search Result: Max Depth vs N-Estimators');\nplt.xlabel('Max_Depth')\nplt.ylabel('N_Estimators');\n``` \n"
+      },
+      "source": "https://raw.githubusercontent.com/kavisek/fraud-detection-capstone/master/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "issue_tracker": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/kavisek/fraud-detection-capstone/issues"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "keywords": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": ""
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "fraud-detection-capstone"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "owner": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "User",
+        "value": "kavisek"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "programming_languages": [
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Jupyter Notebook",
+        "size": 23517430,
+        "type": "Programming_language",
+        "value": "Jupyter Notebook"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "readme_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/kavisek/fraud-detection-capstone/master/README.md"
+      },
+      "technique": "file_exploration"
+    }
+  ],
+  "somef_missing_categories": [
+    "citation",
+    "acknowledgement",
+    "run",
+    "download",
+    "requirements",
+    "contact",
+    "contributors",
+    "documentation",
+    "license",
+    "usage",
+    "faq",
+    "support",
+    "identifier",
+    "has_build_file"
+  ],
+  "somef_provenance": {
+    "date": "2024-10-04 00:49:41",
+    "somef_schema_version": "1.0.0",
+    "somef_version": "0.9.5"
+  },
+  "stargazers_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 4
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "type": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "notebook-application"
+      },
+      "technique": "software_type_heuristics"
+    }
+  ]
+}

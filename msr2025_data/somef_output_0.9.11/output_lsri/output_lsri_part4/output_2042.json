@@ -1,0 +1,304 @@
+{
+  "code_repository": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/jstjohn/SeqPrep"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_created": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2011-03-10T17:03:26Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_updated": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2024-10-24T08:23:37Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "description": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "Tool for stripping adaptors and/or merging paired reads with overlap into single reads."
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 0.9432578432812643,
+      "result": {
+        "type": "Text_excerpt",
+        "value": "SeqPrep is a program to merge paired end Illumina reads that are overlapping into a single longer read. It may also just be used for its adapter trimming feature without doing any paired end overlap. When an adapter sequence is present, that means that the two reads must overlap (in most cases) so they are forcefully merged. When reads do not have adapter sequence they must be treated with care when doing the merging, so a much more specific approach is taken. The default parameters were chosen with specificity in mind, so that they could be ran on libraries where very few reads are expected to overlap. It is always safest though to save the overlapping procedure for libraries where you have some prior knowledge that a significant portion of the reads will have some overlap.  \nBefore running SeqPrep make sure to check that the program's defaults are indeed the adapters you are looking for. Try copying the default forward adapter from this file and grep it against your reads doing a word count, also try the same with the reverse adapter with grep. You should see some hits. You can also try using (and validating with grep) `-A GATCGGAAGAGCACACG -B AGATCGGAAGAGCGTCGT` as parameters. To find a list of Illumina adapter sequences you should write to Illumina tech support TechSupport@illumina.com (they do not like people to share the list of sequences outside of their institution). \nChose about 20bp of an adapter sequence where: \n1.    You see the most hits with grep\n2.    When you run a command like `zcat Lane2_0d_2.fastq.gz | head -n 1000000 |grep \"INSERT ADAPTER HERE\" | head` you see the adapter sequence show up at the beginning of a few reads. Also the -A and -B arguments should be as they show up in your data, SeqPrep searches directly for these sequences without doing reverse complementing.\n3.    Check the forward and reverse and make sure that you have roughly the same number of hits via a command to count hits like: `zcat Lane2_0d_2.fastq.gz | head -n 1000000 |grep \"INSERT ADAPTER HERE\" | wc -l` \nAs an additional precaution, the program checks for good read overlap once the adapters are trimmed. If the adapter is trimmed and the reads do not have a reasonable adapter overlap (you can modify this setting with -X) then the reads aren't printed or merged.  \nSee `Test/README.md` for some information on testing out other parameters. `Test/SimTest` has some particularly cool test data which you can use to check out sensitivity and specificity of adapter trimming using different parameters. The results of the test are displayed in `results.html` which uses the google charts API so that the points are interactive and you can easily determine which settings made which points. \n\t-3 <first read discarded fastq filename>\n\t-4 <second read discarded fastq filename>\n\t-h Display this help message and exit (also works with no args) \n\t-6 Input sequence is in phred+64 rather than phred+33 format, the output will still be phred+33 \n\t-q <Quality score cutoff for mismatches to be counted in overlap; default = 13>\n\t-L <Minimum length of a trimmed or merged read to print it; default = 30> \n\t-A <forward read primer/adapter sequence to trim as it would appear at the end of a read (recommend about 20bp of this)\n\t\t (should validate by grepping a file); default (genomic non-multiplexed adapter1) = AGATCGGAAGAGCGGTTCAG>\n\t-B <reverse read primer/adapter sequence to trim as it would appear at the end of a read (recommend about 20bp of this)\n\t\t (should validate by grepping a file); default (genomic non-multiplexed adapter2) = AGATCGGAAGAGCGTCGTGT>\n\t-O <minimum overall base pair overlap with adapter sequence to trim; default = 10>\n\t-M <maximum fraction of good quality mismatching bases for primer/adapter overlap; default = 0.020000>\n\t-N <minimum fraction of matching bases for primer/adapter overlap; default = 0.870000>\n\t-b <adapter alignment band-width; default = 50>\n\t-Q <adapter alignment gap-open; default = 8>\n\t-t <adapter alignment gap-extension; default = 2>\n\t-e <adapter alignment gap-end; default = 2>\n\t-Z <adapter alignment minimum local alignment score cutoff [roughly (2*num_hits) - (num_gaps*gap_open) - (num_gaps*gap_close) - (gap_len*gap_extend) - (2*num_mismatches)]; default = 26>\n\t-w <read alignment band-width; default = 50>\n\t-W <read alignment gap-open; default = 26>\n\t-p <read alignment gap-extension; default = 9>\n\t-P <read alignment gap-end; default = 5>\n\t-X <read alignment maximum fraction gap cutoff; default = 0.125000>\n\t-z <use mask; N will replace adapters> \n\t-y <maximum quality score in output ((phred 33) default = ']' )>\n\t-g <print overhang when adapters are present and stripped (use this if reads are different length)>\n\t-s <perform merging and output the merged reads to this file>\n\t-E <write pretty alignments to this file for visual Examination>\n\t-x <max number of pretty alignments to write (if -E provided); default = 10000>\n\t-o <minimum overall base pair overlap to merge two reads; default = 15>\n\t-m <maximum fraction of good quality mismatching bases to overlap reads; default = 0.020000>\n\t-n <minimum fraction of matching bases to overlap reads; default = 0.900000> \nMy current strategy to deal with ambiguous alignments to low complexity regions is as follows: \n1. I have some minimum requirements for an overlap to be accepted\n2. After the first one is found (ie the one with the maximal overlap between the two sequences), if low complexity filtering is enabled, I keep searching\n3. if a second viable hit is found, I give up and say that it is not a good idea to merge the two reads. \nI check for ambiguous alignments in read overlapping, but not in adapter trimming where the most conservative thing to do is strip the most aggressively aligned adapter (The closest to the beginning of the read). \nTo accept an alignment I allow some fraction of mismatches (currently the floor of 0.06 of the alignment length for adapter and 0.02 of the alignment length for two reads). That means that in most cases for overlapping two reads I don't allow any mismatches between adjacent reads, but if there is a 50bp potential overlap with 1 mismatch over q20 for example, I allow it. Anything below 50 needs to be perfect other than with low quality bases. \nSince we ignore poor quality bases, we could have the case where a single real match followed by a long string of poor quality bases to the end of the read would result in a called overlap. That seemed like a bad idea. To get around that I require that at least some fraction of the overlapping length be matches. Right now I have that parameter set at 0.7 for adapter trimming and 0.75 for read merging, so for a case where only the last 10 bases overlap, at least 7 of those must be matches.  \nSince doing that many floating point multiplications seems like a bad idea, I just have a table that pre-calculates all of those min matches and max mismatch numbers for every overlap length up to the maximum allowed read length. \nFinally I have a parameter you can set which specifies a minimum resulting read length after adapter trimming and/or merging so that ultra short trimmed reads aren't output. \n\nIf interested there is a website where I post my tests of different parameters for SeqPrep on simulated data. There are also a few comparison stats of different programs to trim adapters. The website can be accessed here:\nhttp://hgwdev.cse.ucsc.edu/~jstjohn/seqprep/ \nwhere the pages are named `result(date).html`. The latest ones (as of when I have gotten around to edit this) can be found here: \nNote that although my program is more sensitive and specific than fastq-clipper, I optimized my default parameters based on this test. Results on real data may be\ndifferent, although I believe my method takes advantage of a more realistic adapter model than other software does. For example, even though my program requires\n10bp of adapter to be present at the end of a read to trim it off (by default) there is a backup adapter trimming function that trimms based on strong and\nunambiguous read overlap. Because of this my program can trim the adapter even if it is only present in the last few bases of the read. \n"
+      },
+      "source": "https://raw.githubusercontent.com/jstjohn/SeqPrep/master/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "documentation": [
+    {
+      "confidence": 1,
+      "result": {
+        "format": "wiki",
+        "type": "Url",
+        "value": "https://github.com/jstjohn/SeqPrep/wiki"
+      },
+      "source": "https://raw.githubusercontent.com/jstjohn/SeqPrep/master/README.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "download_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/jstjohn/SeqPrep/releases"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 51
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/jstjohn/SeqPrep/forks"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "jstjohn/SeqPrep"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_title": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": ""
+      },
+      "source": "https://raw.githubusercontent.com/jstjohn/SeqPrep/master/README.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "installation": [
+    {
+      "confidence": 0.8528873155833328,
+      "result": {
+        "type": "Text_excerpt",
+        "value": "Required Arguments: \nArguments for Adapter/Primer Trimming (Optional): \nOptional Arguments for Merging: \nhttp://hgwdev.cse.ucsc.edu/~jstjohn/seqprep/results2011-09-15.html \n"
+      },
+      "source": "https://raw.githubusercontent.com/jstjohn/SeqPrep/master/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "invocation": [
+    {
+      "confidence": 0.8504203865937099,
+      "result": {
+        "type": "Text_excerpt",
+        "value": "\t-f <first read input fastq filename>\n\t-r <second read input fastq filename>\n\t-1 <first read output fastq filename>\n\t-2 <second read output fastq filename> \nFollowing are results from hand testing the three main merge cases. Now to generate similar output automatically just supply the `-E readable_alignment.txt.gz` argument to the program (the output is gzip compressed into the file name specified).  \n"
+      },
+      "source": "https://raw.githubusercontent.com/jstjohn/SeqPrep/master/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "issue_tracker": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/jstjohn/SeqPrep/issues"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "keywords": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": ""
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "license": [
+    {
+      "confidence": 1,
+      "result": {
+        "name": "MIT License",
+        "spdx_id": "MIT",
+        "type": "License",
+        "url": "https://api.github.com/licenses/mit",
+        "value": "https://api.github.com/licenses/mit"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "File_dump",
+        "value": "Copyright (C) 2011 by John St. John\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in\nall copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN\nTHE SOFTWARE.\n\n"
+      },
+      "source": "https://raw.githubusercontent.com/jstjohn/SeqPrep/master/LICENSE",
+      "technique": "file_exploration"
+    }
+  ],
+  "name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "SeqPrep"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "owner": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "User",
+        "value": "jstjohn"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "programming_languages": [
+    {
+      "confidence": 1,
+      "result": {
+        "name": "C",
+        "size": 100995,
+        "type": "Programming_language",
+        "value": "C"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Python",
+        "size": 5844,
+        "type": "Programming_language",
+        "value": "Python"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Shell",
+        "size": 2914,
+        "type": "Programming_language",
+        "value": "Shell"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Makefile",
+        "size": 498,
+        "type": "Programming_language",
+        "value": "Makefile"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "readme_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/jstjohn/SeqPrep/master/README.md"
+      },
+      "technique": "file_exploration"
+    }
+  ],
+  "releases": [
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "jstjohn",
+          "type": "User"
+        },
+        "date_created": "2016-03-18T17:08:25Z",
+        "date_published": "2016-03-18T17:09:40Z",
+        "description": "Bug fix release, no new features.\n",
+        "html_url": "https://github.com/jstjohn/SeqPrep/releases/tag/v1.2",
+        "name": "Updating release with latest PRs accepted.",
+        "release_id": 2842503,
+        "tag": "v1.2",
+        "tarball_url": "https://api.github.com/repos/jstjohn/SeqPrep/tarball/v1.2",
+        "type": "Release",
+        "url": "https://api.github.com/repos/jstjohn/SeqPrep/releases/2842503",
+        "value": "https://api.github.com/repos/jstjohn/SeqPrep/releases/2842503",
+        "zipball_url": "https://api.github.com/repos/jstjohn/SeqPrep/zipball/v1.2"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "somef_missing_categories": [
+    "citation",
+    "acknowledgement",
+    "run",
+    "download",
+    "requirements",
+    "contact",
+    "contributors",
+    "usage",
+    "faq",
+    "support",
+    "identifier",
+    "has_build_file",
+    "executable_example"
+  ],
+  "somef_provenance": {
+    "date": "2024-11-04 09:08:29",
+    "somef_schema_version": "1.0.0",
+    "somef_version": "0.9.5"
+  },
+  "stargazers_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 141
+      },
+      "technique": "GitHub_API"
+    }
+  ]
+}

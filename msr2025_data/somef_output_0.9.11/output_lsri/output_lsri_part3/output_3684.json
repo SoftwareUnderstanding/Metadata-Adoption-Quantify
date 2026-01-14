@@ -1,0 +1,378 @@
+{
+  "citation": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "References",
+        "parent_header": [
+          "LiME \u2013 LightMetaEbwt"
+        ],
+        "type": "Text_excerpt",
+        "value": "[1] V. Guerrini and G. Rosone. Lightweight Metagenomic Classification via eBWT. Alcob 2019. LNCS, vol 11488, pp 112-124.\n\n[2] V. Guerrini, F. A. Louza and G. Rosone. Metagenomic analysis through the extended Burrows-Wheeler transform. BMC Bioinform (2020), 21-S(8): 299, 10.1186/s12859-020-03628-w, Open Access.\n\n"
+      },
+      "source": "https://raw.githubusercontent.com/veronicaguerrini/LiME/master/README.md",
+      "technique": "header_analysis"
+    }
+  ],
+  "code_repository": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/veronicaguerrini/LiME"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_created": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2019-08-21T17:30:39Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_updated": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2024-09-29T00:11:53Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "description": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "Lightweight alignment-free metagenomic classification via EBWT"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 0.9863096619040141,
+      "result": {
+        "original_header": "LiME \u2013 LightMetaEbwt",
+        "type": "Text_excerpt",
+        "value": "LiME is a novel lightweight alignment-free and assembly-free framework for metagenomic classification that is combinatorial by nature and allows us to use little internal memory. In [1], a [preliminary version of LiME](https://github.com/veronicaguerrini/LightMetaEbwt_Alcob) has been introduced together with a new sequence similarity measure based on the properties of the extended Burrows\u2013Wheeler transform. In [2], we now implement two variants of the above similarity measure and improve the overall classification. In addition, the new version of our tool allows to use multiple processors/cores. \nLet *S* be a large collection of biological sequences comprising both reads and genomes. For simplicity, we denote by *R* the subset of reads (metagenomic sample) and by *G* the subset of genomes (reference database). \nIt takes in input:\n- the extended Burrows\u2013Wheeler transform (ebwt), or multi-string BWT, of collection *S*;\n- the longest common prefix array (lcp) of collection *S*;\n- the document array (da) of collection *S*. \nBy calculating a similarity degree between any read in *R* and any genome in *G*, LiME performs the metagenomic classification by assigning any read to a unique taxon of belonging. It is able to classify the reads to several taxonomic levels such as genomes, species or phylum. \n1. By reading da(*S*) and lcp(*S*), we detect *alpha*-clusters, *i.e.*, blocks of of ebwt(*S*) containing symbols belonging both to *R* and to *G* and whose associated suffixes share a common context of a minimum length *alpha*;  \n2. We analyze *alpha*-clusters in order to evaluate a degree of similarity between any read and any genome in *S* by using two different approaches: (a) by reading both da(*S*) and ebwt(*S*), and (b) by reading only da(*S*). \n3. We perform the read assignment: every read in *R* either is assigned to a particular taxon, or it is reported as not classified if the maximum similarity score achieved by *R* is lower than *beta* (threshold value). \nThe above strategy is suitable for classifying reads belonging to a single read collection or a paired-end read collection.\nHowover, since reads' strand direction is unknown, both the original sequences and their reverse complements should be considered to keep reads properly oriented and to improve their classification.\nFor paired-end read collections, thus, the procedures at Step 1. and Step 2. have to be repeated for the data structures of both strands (forward and reverse complement) of both paired-end reads.\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/veronicaguerrini/LiME/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.8393784895101111,
+      "result": {
+        "original_header": "Compile",
+        "type": "Text_excerpt",
+        "value": "```sh\nmake EBWT=0\n```\nMoreover, using the option HIGHER=1, LiME allows to classify reads at any rank between genome and phylum (without specifying a fixed taxonomic level) by taking advantage of the taxonomic lineage of taxa (default HIGHER=0).\n```sh\nmake HIGHER=1\n```\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/veronicaguerrini/LiME/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9294121488847905,
+      "result": {
+        "original_header": "Preprocessing step",
+        "type": "Text_excerpt",
+        "value": "There are mainly two options to obtain the required data structures (ebwt, lcp, da) for *S*:\n- one could build ebwt, lcp, and da starting from a fasta file containing both the reads in *R* and the genomes in *G*;\n- or, one could build the data structures ebwt, lcp, and da separately for the set *G* and the set *R*, and then merge them to obtain ebwt, lcp, and da for the entire collection *S*. \nThe advantage of the latter choice lies on building the data structures of the set *G* of genomes only once if *G* is the same for each experiment. \nTo build ebwt, lcp, and da files from scratch from a single fasta file, one could use BCR [https://github.com/giovannarosone/BCR_LCP_GSA], or egsa [https://github.com/felipelouza/egsa] for instance. Note that egsa tool returns the three data structures in a single file (fastaFile.K.gesa, with K being the number of sequences). The executable file EGSAtoBCR is to convert fastaFile.K.gesa into fileFasta.ebwt, fileFasta.lcp, and fileFasta.da -- use command EGSAtoBCR filefasta K. \nTo merge the two ebwts associated with the sets *R* and *G*, one could use eGap [https://github.com/felipelouza/egap] and set both options *--lcp* and *--da* to have the lcp and da computed. Note that, the running time of eGap can be decreased if a certain threshold *k* is settled for computing the lcp values. Indeed, by using the option *--trlcp k*, as an altenative to *--lcp*, eGap stops merging the two ebwts when the lcp value calculated is *k*, and computes a lcp array in which all lcp values greater than *k* are replaced by the value *k*. \nOn the other hand, exploiting the mathematical properties of the permutation associated with the\nebwt and lcp, one could use BCR [https://github.com/giovannarosone/BCR_LCP_GSA] *incrementally* in order to update the data structures obtained for *G* with th symbols in *R* and to obtain the data structures for the collection *S* (without constructing the eBWT and lcp for *R* from scratch). \nNote that one can specify the maximum available internal memory to be used by egsa and eGap (in MB); in the above two scripts we set 4096 MB (modify the parameters INTMEM to change it).\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/veronicaguerrini/LiME/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9657181342627009,
+      "result": {
+        "original_header": "Datasets",
+        "type": "Text_excerpt",
+        "value": "In Datasets, we provide some examples of simulated/real metagenomic samples. (See for details Datasets/README.md). \nFor instance, the dataset setB2 is a sample of 20,249,373 paired-end short reads (100 bps) stored in setB2_1.fasta and setB2_2.fasta. The database Refs.fasta is the fasta file of reference genomes (number of genomes: 930), whose taxonomic information is in ./Datasets/Reference_database.csv \nAs preprocessing, the data structures ebwt, lcp, and da for the set *G* are constructed. Then, the data structures (ebwt, lcp, da) associated with Refs.fasta are merged to those associated with the sets of reads (setB2_1.fasta and setB2_2.fasta, and setB2_1_RC.fasta and setB2_2_RC.fasta, which contain the reverse complement of setB2_1.fasta and setB2_2.fasta) as to obtain the data structures for the four collections: \nsetB2_1+Refs.fasta, setB2_1_RC+Refs.fasta, setB2_2+Refs.fasta, setB2_2_RC+Refs.fasta. \nHaving the above data structures in the main directory, one could run LiME to assign any pair of reads in setB2 to a species of *G* by using\n```sh\nLiME_paired.sh setB2_1+Refs.fasta setB2_1_RC+Refs.fasta setB2_2+Refs.fasta setB2_2_RC+Refs.fasta RESULTS_setB2 20249373 930 ./Datasets/Reference_database.csv 100 4\n```\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/veronicaguerrini/LiME/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9864435602622889,
+      "result": {
+        "original_header": "Thanks",
+        "type": "Text_excerpt",
+        "value": "<small> Supported by the project Italian MIUR-SIR [CMACBioSeq][240fb5f5] (\"_Combinatorial methods for analysis and compression of biological sequences_\") grant n.~RBSI146R5L. P.I. Giovanna Rosone</small> \n"
+      },
+      "source": "https://raw.githubusercontent.com/veronicaguerrini/LiME/master/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "download_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/veronicaguerrini/LiME/releases"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 0
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/veronicaguerrini/LiME/forks"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "veronicaguerrini/LiME"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_title": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "LiME \u2013 LightMetaEbwt"
+      },
+      "source": "https://raw.githubusercontent.com/veronicaguerrini/LiME/master/README.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "has_script_file": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/veronicaguerrini/LiME/master/LiME_paired.sh"
+      },
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/veronicaguerrini/LiME/master/Install_tools_preprocessing.sh"
+      },
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/veronicaguerrini/LiME/master/Preprocessing.sh"
+      },
+      "technique": "file_exploration"
+    }
+  ],
+  "installation": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Install",
+        "parent_header": [
+          "LiME \u2013 LightMetaEbwt"
+        ],
+        "type": "Text_excerpt",
+        "value": "```sh\ngit clone https://github.com/veronicaguerrini/LiME\ncd LiME\n```"
+      },
+      "source": "https://raw.githubusercontent.com/veronicaguerrini/LiME/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 0.9535481461320588,
+      "result": {
+        "original_header": "Compile",
+        "type": "Text_excerpt",
+        "value": "for the first approach (a) set EBWT=1 (default)\n```sh\nmake\n```\nwhile for running the second approach (b) set EBWT=0\n \n```sh\nmake EBWT=0\n```\nMoreover, using the option HIGHER=1, LiME allows to classify reads at any rank between genome and phylum (without specifying a fixed taxonomic level) by taking advantage of the taxonomic lineage of taxa (default HIGHER=0).\n```sh\nmake HIGHER=1\n```\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/veronicaguerrini/LiME/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9852486638084235,
+      "result": {
+        "original_header": "Preprocessing step",
+        "type": "Text_excerpt",
+        "value": "To build ebwt, lcp, and da files from scratch from a single fasta file, one could use BCR [https://github.com/giovannarosone/BCR_LCP_GSA], or egsa [https://github.com/felipelouza/egsa] for instance. Note that egsa tool returns the three data structures in a single file (fastaFile.K.gesa, with K being the number of sequences). The executable file EGSAtoBCR is to convert fastaFile.K.gesa into fileFasta.ebwt, fileFasta.lcp, and fileFasta.da -- use command EGSAtoBCR filefasta K. \nTo install BCR, egsa and eGap for the preprocessing, one could run\n```sh\nInstall_tools_preprocessing.sh\n```\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/veronicaguerrini/LiME/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.8789849953628135,
+      "result": {
+        "original_header": "Quick test",
+        "type": "Text_excerpt",
+        "value": "After running *Install_tools_preprocessing.sh* and *Preprocessing.sh*\n```sh\nLiME_paired.sh ./DS_merge/reads_1+Refs.fasta ./DS_merge/reads_1_RC+Refs.fasta ./DS_merge/reads_2+Refs.fasta ./DS_merge/reads_2_RC+Refs.fasta RESULTS 10000 3 ./example/LineageFile.csv 100 1\n```\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/veronicaguerrini/LiME/master/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "invocation": [
+    {
+      "confidence": 0.8603670957354791,
+      "result": {
+        "original_header": "Quick test",
+        "type": "Text_excerpt",
+        "value": "After running *Install_tools_preprocessing.sh* and *Preprocessing.sh*\n```sh\nLiME_paired.sh ./DS_merge/reads_1+Refs.fasta ./DS_merge/reads_1_RC+Refs.fasta ./DS_merge/reads_2+Refs.fasta ./DS_merge/reads_2_RC+Refs.fasta RESULTS 10000 3 ./example/LineageFile.csv 100 1\n```\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/veronicaguerrini/LiME/master/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "issue_tracker": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/veronicaguerrini/LiME/issues"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "keywords": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": ""
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "LiME"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "owner": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "User",
+        "value": "veronicaguerrini"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "programming_languages": [
+    {
+      "confidence": 1,
+      "result": {
+        "name": "C++",
+        "size": 59280,
+        "type": "Programming_language",
+        "value": "C++"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Shell",
+        "size": 13767,
+        "type": "Programming_language",
+        "value": "Shell"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Perl",
+        "size": 1601,
+        "type": "Programming_language",
+        "value": "Perl"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Makefile",
+        "size": 1415,
+        "type": "Programming_language",
+        "value": "Makefile"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "readme_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/veronicaguerrini/LiME/master/README.md"
+      },
+      "technique": "file_exploration"
+    }
+  ],
+  "run": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Run",
+        "parent_header": [
+          "LiME \u2013 LightMetaEbwt"
+        ],
+        "type": "Text_excerpt",
+        "value": "The three steps of the method are accomplished by running:\n\n(1) ClusterLCP with input parameters: name of the fasta file, total number of reads in *S*, total number of genomes in *S*, *alpha* and number of threads;\n\n```sh\nClusterLCP ReadsF+Refs.fasta numReads numRefs alpha threads\n```\n\n(2) ClusterBWT_DA with input parameters: name of the fasta file, length of the reads, *beta* and number of threads;\n\n```sh\nClusterBWT_DA ReadsF+Refs.fasta length beta threads\n```\n\nRecall that in order to run ClusterLCP we need to have the two data structures fileFasta.lcp and fileFasta.da computed, while to run ClusterBWT_DA we need only fileFasta.da if EBWT=0, both fileFasta.da and fileFasta.ebwt if EBWT=1.\n\n(3) Classify with input parameters: number of files, files obtained by running ClusterBWT_DA, total number of reads in *S*, total number of genomes in *S*, OutputFile, LineageFile, TaxRank and number of threads;\n\n```sh\nClassify N Input1 ... InputN numReads numRefs OutputFile LineageFile TaxRank threads\n```\n\nOutputFile is the comma-separated file where the classification results will be stored according to the format:\n\n*C/U/A/H,IdSeqRead,TaxID,maxSim*\n\nwhere C=Classified, U=not classified, A=Ambiguous, H=classified at higher ranks (if HIGHER=1).\n\nLineageFile is a semicolon-separated file where genome taxonomy information are stored according to the format:\n\n*Accession_number;Species_TaxID;Genus_TaxID;Family_TaxID;Order_TaxID;Class_TaxID;Phylum_TaxID*\n\nTaxRank is an integer in the range [0,6] that stands for any classification level between genome(=0) and phylum(=6).\n\n\nFor 100bp paired-end read collections, one may run LiME_paired.sh that has *alpha*=16, *beta*=0.25 and TaxRank=1, and takes as input: fasta files, total number of reads in *S*, total number of genomes in *S*, taxonomy information file, length of the reads and number of threads;\n\n```sh\nLiME_paired.sh Reads1F+Refs.fasta Reads1RC+Refs.fasta Reads2F+Refs.fasta Reads2RC+Refs.fasta OutputFile numReads numRefs LineageFile length threads\n```"
+      },
+      "source": "https://raw.githubusercontent.com/veronicaguerrini/LiME/master/README.md",
+      "technique": "header_analysis"
+    }
+  ],
+  "somef_missing_categories": [
+    "acknowledgement",
+    "download",
+    "requirements",
+    "contact",
+    "contributors",
+    "documentation",
+    "license",
+    "usage",
+    "faq",
+    "support",
+    "identifier",
+    "has_build_file",
+    "executable_example"
+  ],
+  "somef_provenance": {
+    "date": "2024-10-06 13:43:00",
+    "somef_schema_version": "1.0.0",
+    "somef_version": "0.9.5"
+  },
+  "stargazers_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 9
+      },
+      "technique": "GitHub_API"
+    }
+  ]
+}

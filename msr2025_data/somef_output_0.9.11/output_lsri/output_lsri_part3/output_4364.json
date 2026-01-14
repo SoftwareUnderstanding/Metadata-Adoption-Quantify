@@ -1,0 +1,679 @@
+{
+  "application_domain": [
+    {
+      "confidence": 15.71,
+      "result": {
+        "type": "String",
+        "value": "Computer Vision"
+      },
+      "technique": "supervised_classification"
+    }
+  ],
+  "code_repository": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/baldassarreFe/graphqa"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_created": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2019-05-13T14:36:03Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_updated": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2024-08-17T16:38:22Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "description": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "Protein quality assessment using Graph Convolutional Networks"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 0.9860570203768076,
+      "result": {
+        "original_header": "Evaluation server",
+        "type": "Text_excerpt",
+        "value": "Try it yourself!\nA simple implementation of an evaluation server is available at this [link](http://isengard.csc.kth.se:8585/).\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/baldassarreFe/graphqa/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9180875971413653,
+      "result": {
+        "original_header": "Testing",
+        "type": "Text_excerpt",
+        "value": "Test GraphQA with all features (residues, multiple-sequence alignment, DSSP):\n```bash\nRUN_PATH='runs/l6_128-512-512_16-64-32_res64_rbf32_sepcategorical_dr.2_bnno_lr.001_wd.00001_ll1_lg1_lr0_co8_allfeats_wonderful_mclean'\nfor data in $(find 'data/' -maxdepth 1 -mindepth 1 -type d); do\n    python -m proteins.test \\\n      \"${RUN_PATH}/experiment.latest.yaml\" \\\n      --model state_dict=\"${RUN_PATH}/model.latest.pt\" \\\n      --test \\\n        data.input=\"${data}\" \\\n        data.output=\"results/allfeatures/$(basename \"${data}\")\" \\\n        data.in_memory=yes \\\n        cpus=1 \\\n        batch_size=200 \ndone\n``` \nTest GraphQA with residue identity features only:\n```bash\nRUN_PATH='runs/residueonly_l8_128-512-512_16-64-64_dr.1_bnno_lr.001_wd.00001_ll1_ll5_co8_priceless_hawking'\nfor data in $(find 'data/' -maxdepth 1 -mindepth 1 -type d); do\n    python -m proteins.test \\\n      \"${RUN_PATH}/experiment.latest.yaml\" \\\n      --model state_dict=\"${RUN_PATH}/model.latest.pt\" \\\n      --test \\\n        data.input=\"${data}\" \\\n        data.output=\"results/residueonly/$(basename \"${data}\")\" \\\n        data.in_memory=yes \\\n        cpus=1 \\\n        batch_size=200 \ndone\n```\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/baldassarreFe/graphqa/master/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "download": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Manual download and preprocessing",
+        "parent_header": [
+          "GraphQA: Protein Model Quality Assessment using Graph Convolutional Networks",
+          "Datasets"
+        ],
+        "type": "Text_excerpt",
+        "value": "The file [`notebooks/README.md`](./notebooks/README.md) contains all information \nto download and preprocess CASP data for training GraphQA. At a high level, the necessary steps are:\n1. Download protein sequences, official native structures, submitted decoy structures, \n   submitted QA predictions, and official QA scores from the CASP website\n2. Run DSSP on all submitted tertiary structures to extract secondary structure features\n3. Run JackHMMER on all protein sequences to compute multiple-sequence alignment features against UniRef50\n4. Score all decoys with respect to the respective native structures, specifically computing: \n   - per-residue: CAD and LDDT scores\n   - per-decoy: GDT_TS, GDT_TS, TM, CAD, LDDT scores\n5. Transform each decoy into a graph data structure suitable for training with PyTorch, including \n   all input and output features computed in the steps above. At this stage, geometric and sequential \n   features are also added to the graph (edges, distances and angles) to avoid computing them during training.  \n\nFirst, run the [DownloadCaspData notebook](./notebooks/01-DownloadCaspData.ipynb) to download \nraw protein data from the CASP website.\n\nThen, prepare all preprocessing tools (some of them require a compilation step, others run in Docker): \n```bash\n# Docker image for DSSP\ndocker build -t dssp 'https://github.com/cmbi/dssp.git#697deab74011bfbd55891e9b8d5d47b8e4ef0e38'\n\n# Sequence database for JackHMMER\nwget 'ftp://ftp.uniprot.org/pub/databases/uniprot/uniref/uniref50/uniref50.fasta.gz'\ntar xzf 'uniref50.fasta.gz'\n\n# Docker image for LDDT score\ndocker pull 'registry.scicore.unibas.ch/schwede/openstructure:2.1.0'\n\n# Voronota binaries for CAD score\nwget 'https://github.com/kliment-olechnovic/voronota/releases/download/v1.21.2744/voronota_1.21.2744.tar.gz'\ntar xzf 'voronota_1.21.2744.tar.gz'\n\n# TMscore source for GDT_TS, GDT_HA, TM scores\nwget 'https://zhanglab.ccmb.med.umich.edu/TM-score/TMscore.cpp'\ng++ -static -O3 -ffast-math -lm -o TMscore TMscore.cpp \n```\n\nRun preprocessing for training:\n```bash\nfor CASP in data/CASP{9..13}; do\n  python -m graphqa.data.preprocess \"$CASP\" \"uniref50.fasta\" \\\n    --train \\\n    --tmscore \"./TMscore\" \\\n    --voronota \"./voronota_1.21.2744/voronota-cadscore\"\ndone\n```\n"
+      },
+      "source": "https://raw.githubusercontent.com/baldassarreFe/graphqa/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Download preprocessed data",
+        "parent_header": [
+          "GraphQA: Protein Model Quality Assessment using Graph Convolutional Networks",
+          "Datasets"
+        ],
+        "type": "Text_excerpt",
+        "value": "Downloading the data and running the preprocessing steps described above can take a long time.\nTo skip these steps and directly download the dataset used for training:\n```bash\nBASE_URL='https://kth.box.com/shared/static/'\nwget -O GraphQA-CASP9.tar.gz  \"${BASE_URL}fm2weje86d7nvulbconzf3pzmmhl2tmm.gz\"\nwget -O GraphQA-CASP10.tar.gz \"${BASE_URL}jdgns10ehenjur1y5dw2lj275aggeu33.gz\"\nwget -O GraphQA-CASP11.tar.gz \"${BASE_URL}tls5yxhsycqpid8pp6i3jv7ew7h0xz6l.gz\"\nwget -O GraphQA-CASP12.tar.gz \"${BASE_URL}cbm3k5ladnq5i42q5fdcbztxwaukde9x.gz\"\nwget -O GraphQA-CASP13.tar.gz \"${BASE_URL}f66fjw67urwxcovfrpar5jd4diyayshl.gz\"\n```\n\nExtract the contents of the tar archives in the corresponding folders under `/data`.\n"
+      },
+      "source": "https://raw.githubusercontent.com/baldassarreFe/graphqa/master/README.md",
+      "technique": "header_analysis"
+    }
+  ],
+  "download_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/baldassarreFe/graphqa/releases"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "executable_example": [
+    {
+      "confidence": 1,
+      "result": {
+        "format": "jupyter_notebook",
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/baldassarreFe/graphqa/master/notebooks/01-DownloadCaspData.ipynb"
+      },
+      "source": "https://raw.githubusercontent.com/baldassarreFe/graphqa/master/notebooks/01-DownloadCaspData.ipynb",
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "format": "jupyter_notebook",
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/baldassarreFe/graphqa/master/notebooks/GraphConnectivityAndSeparationEncoding.ipynb"
+      },
+      "source": "https://raw.githubusercontent.com/baldassarreFe/graphqa/master/notebooks/GraphConnectivityAndSeparationEncoding.ipynb",
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "format": "jupyter_notebook",
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/baldassarreFe/graphqa/master/notebooks/04-CadScore.ipynb"
+      },
+      "source": "https://raw.githubusercontent.com/baldassarreFe/graphqa/master/notebooks/04-CadScore.ipynb",
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "format": "jupyter_notebook",
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/baldassarreFe/graphqa/master/notebooks/03-MultipleSequenceAlignment.ipynb"
+      },
+      "source": "https://raw.githubusercontent.com/baldassarreFe/graphqa/master/notebooks/03-MultipleSequenceAlignment.ipynb",
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "format": "jupyter_notebook",
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/baldassarreFe/graphqa/master/notebooks/ProteinMetrics.ipynb"
+      },
+      "source": "https://raw.githubusercontent.com/baldassarreFe/graphqa/master/notebooks/ProteinMetrics.ipynb",
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "format": "jupyter_notebook",
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/baldassarreFe/graphqa/master/notebooks/09-QaMetrics.ipynb"
+      },
+      "source": "https://raw.githubusercontent.com/baldassarreFe/graphqa/master/notebooks/09-QaMetrics.ipynb",
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "format": "jupyter_notebook",
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/baldassarreFe/graphqa/master/notebooks/RankingMetrics.ipynb"
+      },
+      "source": "https://raw.githubusercontent.com/baldassarreFe/graphqa/master/notebooks/RankingMetrics.ipynb",
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "format": "jupyter_notebook",
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/baldassarreFe/graphqa/master/notebooks/PositionalEncoding.ipynb"
+      },
+      "source": "https://raw.githubusercontent.com/baldassarreFe/graphqa/master/notebooks/PositionalEncoding.ipynb",
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "format": "jupyter_notebook",
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/baldassarreFe/graphqa/master/notebooks/08-Training.ipynb"
+      },
+      "source": "https://raw.githubusercontent.com/baldassarreFe/graphqa/master/notebooks/08-Training.ipynb",
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "format": "jupyter_notebook",
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/baldassarreFe/graphqa/master/notebooks/Zscore.ipynb"
+      },
+      "source": "https://raw.githubusercontent.com/baldassarreFe/graphqa/master/notebooks/Zscore.ipynb",
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "format": "jupyter_notebook",
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/baldassarreFe/graphqa/master/notebooks/06-TmScore.ipynb"
+      },
+      "source": "https://raw.githubusercontent.com/baldassarreFe/graphqa/master/notebooks/06-TmScore.ipynb",
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "format": "jupyter_notebook",
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/baldassarreFe/graphqa/master/notebooks/05-LddtScore.ipynb"
+      },
+      "source": "https://raw.githubusercontent.com/baldassarreFe/graphqa/master/notebooks/05-LddtScore.ipynb",
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "format": "jupyter_notebook",
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/baldassarreFe/graphqa/master/notebooks/02-DsspSecondaryStructure.ipynb"
+      },
+      "source": "https://raw.githubusercontent.com/baldassarreFe/graphqa/master/notebooks/02-DsspSecondaryStructure.ipynb",
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "format": "jupyter_notebook",
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/baldassarreFe/graphqa/master/notebooks/07-Preprocessing.ipynb"
+      },
+      "source": "https://raw.githubusercontent.com/baldassarreFe/graphqa/master/notebooks/07-Preprocessing.ipynb",
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "format": "jupyter_notebook",
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/baldassarreFe/graphqa/master/notebooks/ablations/AblationStudies.ipynb"
+      },
+      "source": "https://raw.githubusercontent.com/baldassarreFe/graphqa/master/notebooks/ablations/AblationStudies.ipynb",
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "format": "jupyter_notebook",
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/baldassarreFe/graphqa/master/notebooks/ablations/EdgeEncodings/EdgeEncodings.ipynb"
+      },
+      "source": "https://raw.githubusercontent.com/baldassarreFe/graphqa/master/notebooks/ablations/EdgeEncodings/EdgeEncodings.ipynb",
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "format": "jupyter_notebook",
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/baldassarreFe/graphqa/master/notebooks/ablations/SeparationEncoding/SeparationEncoding.ipynb"
+      },
+      "source": "https://raw.githubusercontent.com/baldassarreFe/graphqa/master/notebooks/ablations/SeparationEncoding/SeparationEncoding.ipynb",
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "format": "jupyter_notebook",
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/baldassarreFe/graphqa/master/notebooks/grid-searches/GridSearch_2019-09-16_ResidueOnly/GridSearch_2019-09-16_ResidueOnly.ipynb"
+      },
+      "source": "https://raw.githubusercontent.com/baldassarreFe/graphqa/master/notebooks/grid-searches/GridSearch_2019-09-16_ResidueOnly/GridSearch_2019-09-16_ResidueOnly.ipynb",
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "format": "jupyter_notebook",
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/baldassarreFe/graphqa/master/notebooks/grid-searches/GridSearch_2019-09-03/GridSearch_2019-09-03.ipynb"
+      },
+      "source": "https://raw.githubusercontent.com/baldassarreFe/graphqa/master/notebooks/grid-searches/GridSearch_2019-09-03/GridSearch_2019-09-03.ipynb",
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "format": "jupyter_notebook",
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/baldassarreFe/graphqa/master/notebooks/grid-searches/GridSearch_2019-08-18/GridSearch_2091-08-18.ipynb"
+      },
+      "source": "https://raw.githubusercontent.com/baldassarreFe/graphqa/master/notebooks/grid-searches/GridSearch_2019-08-18/GridSearch_2091-08-18.ipynb",
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "format": "jupyter_notebook",
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/baldassarreFe/graphqa/master/notebooks/grid-searches/GridSearch_2019-08-19/GridSearch_2019-08-19.ipynb"
+      },
+      "source": "https://raw.githubusercontent.com/baldassarreFe/graphqa/master/notebooks/grid-searches/GridSearch_2019-08-19/GridSearch_2019-08-19.ipynb",
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "format": "jupyter_notebook",
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/baldassarreFe/graphqa/master/notebooks/grid-searches/GridSearch_2019-08-17/GridSearch_2019-08-17.ipynb"
+      },
+      "source": "https://raw.githubusercontent.com/baldassarreFe/graphqa/master/notebooks/grid-searches/GridSearch_2019-08-17/GridSearch_2019-08-17.ipynb",
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "format": "jupyter_notebook",
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/baldassarreFe/graphqa/master/notebooks/benchmark/Benchmark.ipynb"
+      },
+      "source": "https://raw.githubusercontent.com/baldassarreFe/graphqa/master/notebooks/benchmark/Benchmark.ipynb",
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "format": "jupyter_notebook",
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/baldassarreFe/graphqa/master/notebooks/benchmark/TransmembraneVsSoluble/TransmembraneVsSoluble.ipynb"
+      },
+      "source": "https://raw.githubusercontent.com/baldassarreFe/graphqa/master/notebooks/benchmark/TransmembraneVsSoluble/TransmembraneVsSoluble.ipynb",
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "format": "jupyter_notebook",
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/baldassarreFe/graphqa/master/notebooks/benchmark/other_results_CASP13_raw/ParseCASP13.ipynb"
+      },
+      "source": "https://raw.githubusercontent.com/baldassarreFe/graphqa/master/notebooks/benchmark/other_results_CASP13_raw/ParseCASP13.ipynb",
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "format": "jupyter_notebook",
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/baldassarreFe/graphqa/master/notebooks/old-notebooks/Dataset.ipynb"
+      },
+      "source": "https://raw.githubusercontent.com/baldassarreFe/graphqa/master/notebooks/old-notebooks/Dataset.ipynb",
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "format": "jupyter_notebook",
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/baldassarreFe/graphqa/master/notebooks/old-notebooks/ShortestPathAndCutoff.ipynb"
+      },
+      "source": "https://raw.githubusercontent.com/baldassarreFe/graphqa/master/notebooks/old-notebooks/ShortestPathAndCutoff.ipynb",
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "format": "jupyter_notebook",
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/baldassarreFe/graphqa/master/notebooks/old-notebooks/LossesMSECrossEntropyKLDiv.ipynb"
+      },
+      "source": "https://raw.githubusercontent.com/baldassarreFe/graphqa/master/notebooks/old-notebooks/LossesMSECrossEntropyKLDiv.ipynb",
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "format": "jupyter_notebook",
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/baldassarreFe/graphqa/master/notebooks/old-notebooks/OutputVisualization.ipynb"
+      },
+      "source": "https://raw.githubusercontent.com/baldassarreFe/graphqa/master/notebooks/old-notebooks/OutputVisualization.ipynb",
+      "technique": "file_exploration"
+    }
+  ],
+  "forks_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 8
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/baldassarreFe/graphqa/forks"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "baldassarreFe/graphqa"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_title": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "GraphQA: Protein Model Quality Assessment using Graph Convolutional Networks"
+      },
+      "source": "https://raw.githubusercontent.com/baldassarreFe/graphqa/master/README.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "has_build_file": [
+    {
+      "confidence": 1,
+      "result": {
+        "format": "dockerfile",
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/baldassarreFe/graphqa/master/docker/Dockerfile"
+      },
+      "source": "https://raw.githubusercontent.com/baldassarreFe/graphqa/master/docker/Dockerfile",
+      "technique": "file_exploration"
+    }
+  ],
+  "has_script_file": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/baldassarreFe/graphqa/master/docker/run.sh"
+      },
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/baldassarreFe/graphqa/master/docker/build.sh"
+      },
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/baldassarreFe/graphqa/master/docker/entrypoint.sh"
+      },
+      "technique": "file_exploration"
+    }
+  ],
+  "installation": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Initial setup",
+        "parent_header": [
+          "GraphQA: Protein Model Quality Assessment using Graph Convolutional Networks"
+        ],
+        "type": "Text_excerpt",
+        "value": "Clone repository, install dependencies in a conda environment, install GraphQA:\n```bash\ngit clone https://github.com/baldassarreFe/graphqa\ncd graphqa\n\nexport PATH=\"/usr/local/cuda/bin:${PATH}\"\nexport CPATH=\"/usr/local/cuda/include:${CPATH}\"\nconda env create -n graphqa -f conda.yaml\nconda activate graphqa\npip install .\n```\n"
+      },
+      "source": "https://raw.githubusercontent.com/baldassarreFe/graphqa/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Manual download and preprocessing",
+        "parent_header": [
+          "GraphQA: Protein Model Quality Assessment using Graph Convolutional Networks",
+          "Datasets"
+        ],
+        "type": "Text_excerpt",
+        "value": "The file [`notebooks/README.md`](./notebooks/README.md) contains all information \nto download and preprocess CASP data for training GraphQA. At a high level, the necessary steps are:\n1. Download protein sequences, official native structures, submitted decoy structures, \n   submitted QA predictions, and official QA scores from the CASP website\n2. Run DSSP on all submitted tertiary structures to extract secondary structure features\n3. Run JackHMMER on all protein sequences to compute multiple-sequence alignment features against UniRef50\n4. Score all decoys with respect to the respective native structures, specifically computing: \n   - per-residue: CAD and LDDT scores\n   - per-decoy: GDT_TS, GDT_TS, TM, CAD, LDDT scores\n5. Transform each decoy into a graph data structure suitable for training with PyTorch, including \n   all input and output features computed in the steps above. At this stage, geometric and sequential \n   features are also added to the graph (edges, distances and angles) to avoid computing them during training.  \n\nFirst, run the [DownloadCaspData notebook](./notebooks/01-DownloadCaspData.ipynb) to download \nraw protein data from the CASP website.\n\nThen, prepare all preprocessing tools (some of them require a compilation step, others run in Docker): \n```bash\n# Docker image for DSSP\ndocker build -t dssp 'https://github.com/cmbi/dssp.git#697deab74011bfbd55891e9b8d5d47b8e4ef0e38'\n\n# Sequence database for JackHMMER\nwget 'ftp://ftp.uniprot.org/pub/databases/uniprot/uniref/uniref50/uniref50.fasta.gz'\ntar xzf 'uniref50.fasta.gz'\n\n# Docker image for LDDT score\ndocker pull 'registry.scicore.unibas.ch/schwede/openstructure:2.1.0'\n\n# Voronota binaries for CAD score\nwget 'https://github.com/kliment-olechnovic/voronota/releases/download/v1.21.2744/voronota_1.21.2744.tar.gz'\ntar xzf 'voronota_1.21.2744.tar.gz'\n\n# TMscore source for GDT_TS, GDT_HA, TM scores\nwget 'https://zhanglab.ccmb.med.umich.edu/TM-score/TMscore.cpp'\ng++ -static -O3 -ffast-math -lm -o TMscore TMscore.cpp \n```\n\nRun preprocessing for training:\n```bash\nfor CASP in data/CASP{9..13}; do\n  python -m graphqa.data.preprocess \"$CASP\" \"uniref50.fasta\" \\\n    --train \\\n    --tmscore \"./TMscore\" \\\n    --voronota \"./voronota_1.21.2744/voronota-cadscore\"\ndone\n```\n"
+      },
+      "source": "https://raw.githubusercontent.com/baldassarreFe/graphqa/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 0.9940146571081033,
+      "result": {
+        "original_header": "Prediction",
+        "type": "Text_excerpt",
+        "value": "To make predictions using GraphQA, follow the instructions in [`predictions.md`](./prediction.md).\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/baldassarreFe/graphqa/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9524723386125507,
+      "result": {
+        "original_header": "Training",
+        "type": "Text_excerpt",
+        "value": "Either train with a predefined configuration\n```bash\npython -m proteins.train config/train.yaml --model config/model.yaml --session config/session.yaml [in_memory=yes]\n``` \nLogs and checkpoints can be found in `runs`:\n```bash\ntensorboard --logdir runs\n```\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/baldassarreFe/graphqa/master/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "invocation": [
+    {
+      "confidence": 0.9159161720560233,
+      "result": {
+        "original_header": "Training",
+        "type": "Text_excerpt",
+        "value": "Either train with a predefined configuration\n```bash\npython -m proteins.train config/train.yaml --model config/model.yaml --session config/session.yaml [in_memory=yes]\n``` \n"
+      },
+      "source": "https://raw.githubusercontent.com/baldassarreFe/graphqa/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.8868624601623942,
+      "result": {
+        "original_header": "Testing",
+        "type": "Text_excerpt",
+        "value": "Test GraphQA with all features (residues, multiple-sequence alignment, DSSP):\n```bash\nRUN_PATH='runs/l6_128-512-512_16-64-32_res64_rbf32_sepcategorical_dr.2_bnno_lr.001_wd.00001_ll1_lg1_lr0_co8_allfeats_wonderful_mclean'\nfor data in $(find 'data/' -maxdepth 1 -mindepth 1 -type d); do\n    python -m proteins.test \\\n      \"${RUN_PATH}/experiment.latest.yaml\" \\\n      --model state_dict=\"${RUN_PATH}/model.latest.pt\" \\\n      --test \\\n        data.input=\"${data}\" \\\n        data.output=\"results/allfeatures/$(basename \"${data}\")\" \\\n        data.in_memory=yes \\\n        cpus=1 \\\n        batch_size=200 \ndone\n``` \nTest GraphQA with residue identity features only:\n```bash\nRUN_PATH='runs/residueonly_l8_128-512-512_16-64-64_dr.1_bnno_lr.001_wd.00001_ll1_ll5_co8_priceless_hawking'\nfor data in $(find 'data/' -maxdepth 1 -mindepth 1 -type d); do\n    python -m proteins.test \\\n      \"${RUN_PATH}/experiment.latest.yaml\" \\\n      --model state_dict=\"${RUN_PATH}/model.latest.pt\" \\\n      --test \\\n        data.input=\"${data}\" \\\n        data.output=\"results/residueonly/$(basename \"${data}\")\" \\\n        data.in_memory=yes \\\n        cpus=1 \\\n        batch_size=200 \ndone\n```\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/baldassarreFe/graphqa/master/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "issue_tracker": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/baldassarreFe/graphqa/issues"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "keywords": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": ""
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "graphqa"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "owner": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "User",
+        "value": "baldassarreFe"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "programming_languages": [
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Python",
+        "size": 251109,
+        "type": "Programming_language",
+        "value": "Python"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Dockerfile",
+        "size": 1995,
+        "type": "Programming_language",
+        "value": "Dockerfile"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Shell",
+        "size": 1599,
+        "type": "Programming_language",
+        "value": "Shell"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "readme_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/baldassarreFe/graphqa/master/README.md"
+      },
+      "technique": "file_exploration"
+    }
+  ],
+  "somef_missing_categories": [
+    "citation",
+    "acknowledgement",
+    "run",
+    "requirements",
+    "contact",
+    "contributors",
+    "documentation",
+    "license",
+    "usage",
+    "faq",
+    "identifier"
+  ],
+  "somef_provenance": {
+    "date": "2024-10-06 16:10:20",
+    "somef_schema_version": "1.0.0",
+    "somef_version": "0.9.5"
+  },
+  "stargazers_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 28
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "support": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Ablation studies",
+        "parent_header": [
+          "GraphQA: Protein Model Quality Assessment using Graph Convolutional Networks"
+        ],
+        "type": "Text_excerpt",
+        "value": "Config files for ablation studies are self-contained and can just be run as:\n```bash\nNUM_RUNS_PER_STUDY=5\nfor f in config/ablations/{nodes,edges,layersvscutoff,architecture,localglobalscore,separation_encoding}/*.yaml; do\n    for i in $(seq ${NUM_RUNS_PER_STUDY}); do\n        python -m proteins.train \"${f}\"\n    done\ndone\n```\n"
+      },
+      "source": "https://raw.githubusercontent.com/baldassarreFe/graphqa/master/README.md",
+      "technique": "header_analysis"
+    }
+  ]
+}

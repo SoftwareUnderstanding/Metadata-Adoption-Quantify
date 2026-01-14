@@ -1,0 +1,475 @@
+{
+  "code_repository": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/lganel/SVScore"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_created": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2015-06-09T19:28:30Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_updated": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2023-07-25T12:51:03Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "description": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "Prioritize structural variants based on CADD scores"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 0.9895006912566133,
+      "result": {
+        "original_header": "SVScore",
+        "type": "Text_excerpt",
+        "value": "SVScore is a VCF annotation tool which scores structural variants by predicted pathogenicity based on SNP-based CADD scores. For each variant, SVScore first defines important genomic intervals based on the variant type, breakend confidence intervals, and overlapping exon/intron annotations. It then applies an operation to each interval to aggregate the CADD scores in that interval into an interval score. A score for a given operation defined as the maximum of all interval scores calculated using that operation. SVScore is based on hg19/GRCh37. \n"
+      },
+      "source": "https://raw.githubusercontent.com/lganel/SVScore/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.8290261375366637,
+      "result": {
+        "original_header": "Annotation Files",
+        "type": "Text_excerpt",
+        "value": "  * If planning to use the default (refGene) annotations, simply execute `./generateannotations.pl` to generate the annotation files required by SVScore. If planning to use a custom annotation track, `generateannotations.pl` can be used to generate custom annotation files, or the user can generate them manually (though this is not recommended).\n  * If generating custom annotation files using `generateannotations.pl`, the user must supply an annotation track in which each line represents a transcript and contains the following columns: chromosome, transcript start position, transcript stop position, transcript strand, transcript name, exon start positions (comma-delimited), and exon stop positions (comma-delimited). Command line options must be used to specify each column number. To see usage instructions, execute `./generateannotations.pl --help`. `generateannotations.pl` will create two files in the current directory (or the directory specified using -o), named based on the prefix to the input file - [prefix].introns.bed and [prefix].exons.bed. These should be specified to SVScore using the -e and -f options.\n  * **If generating custom annotation files for SVScore manually, users should ensure that each transcript has a unique name.** Annotation files should contain the following columns, in order:\n    * Exon file:\n      * 1 - Exon chromosome \n      * 2 - Exon start position\n      * 3 - Exon stop position\n      * 4 - Transcript name\n      * 5 - Transcript start position\n      * 6 - Transcript stop position\n      * 7 - Transcript strand\n    * Intron file:\n      * 1 - Intron chromosome\n      * 2 - Intron start position\n      * 3 - Intron stop position\n      * 4 - Transcript name\n      * 5 - Intron number (arbitrary, but must be unique. Line number works well)\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/lganel/SVScore/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9661323089146578,
+      "result": {
+        "original_header": "Output",
+        "type": "Text_excerpt",
+        "value": "SVScore outputs a VCF file with scores added to the INFO field of each variant. The VCF header is also updated to include those scores which are added. Each score field has the following format: SVSCORE\\[op\\](_[interval]), where [op] represents the operation used to calculate that score (see [Operations](#operations)) and [interval] represents the interval over which the score was calculated, which is one of left breakend, right breakend, span (for DEL/DUP), left truncation score (for INV/DEL/INS variants which seem to truncate a transcript on the left side, the interval is from the most likely base of the left breakend to the end of the transcript), and right truncation score. Scores with no interval listed (such as SVSCOREMAX=) are the maximum over all intervals for that operation.\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/lganel/SVScore/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.8854830078059959,
+      "result": {
+        "original_header": "Intervals",
+        "type": "Text_excerpt",
+        "value": "For each variant, scores are calculated over a number of intervals which varies by SV type. The intervals chosen for each SV type, are described in [Supported SV types and intervals](#supported-sv-types-and-intervals)\n* LEFT - confidence interval around the left breakpoint\n* RIGHT - confidence interval around the right breakpoint\n* SPAN - from the most likely base in the left breakpoint confidence interval to the most likely base in the right breakpoint confidence interval\n* LTRUNC - left truncation\n* RTRUNC - right truncation \nTruncation intervals are defined for each transcript which seems to be truncated by a variant. The interval extends from the most likely base of the furthest upstream breakend (LEFT for transcripts on the + strand, RIGHT for those on the - strand) to the end of the transcript. Each truncation score is the maximum over all transcripts truncated by a variant.\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/lganel/SVScore/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9402474076943245,
+      "result": {
+        "original_header": "Supported SV types and intervals",
+        "type": "Text_excerpt",
+        "value": "To function correctly, SVScore requires that POS=END and CIPOS=CIEND for INS variants \nLTRUNC and RTRUNC scores are only calculated when a breakend overlaps an exon or a breakend overlaps an intron which is not also touched by the opposite breakend.\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/lganel/SVScore/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9677858855407951,
+      "result": {
+        "original_header": "Operations",
+        "type": "Text_excerpt",
+        "value": "-o specifies the operation(s) used to calculate SVScores. These operations are applied to each interval of the SV (see [Supported SV types and intervals](#supported-sv-types-and-intervals)). This option takes an arbitrary-length, case insensitive, comma-separated list of operations from the following list:\n* sum - reports the sum of each interval\n* max - reports the maximum of each interval\n* mean - reports the arithmetic mean of each interval\n* meanweighted - reports the arithmetic mean of each interval with the left and right breakends weighted by the probability distribution in the PRPOS and PREND fields of the VCF INFO column \n* top[n] - reports the mean of the [n] largest scores in each interval. If the interval has less than [n] possible breakpoints, then the top[n] score of an interval is equal to the mean score\n* top[n]weighted - reports the mean of the [n] largest scores in each interval with the left and right breakends weighted by the probability distribution in the PRPOS and PREND fields of the VCF INFO column \nFor weighted operations, if PRPOS is not found in the header, SVScore will calculate unweighted means with a warning. If PRPOS or PREND is missing from a variant but is present in the header, that variant will receive a score of -1 for all weighted operations \nFor SPAN/LTRUNC/RTRUNC, these operations are applied to the scores of the bases in the interval. For LEFT/RIGHT intervals, the operations are applied to scores assigned to each possible breakpoint, which is calculated by taking the average of the 2 flanking bases (one on either side of the possible breakpoint)\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/lganel/SVScore/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.946754399052768,
+      "result": {
+        "original_header": "Notes",
+        "type": "Text_excerpt",
+        "value": "The -s option should not be provided if svtools is present in the user's path as \"svtools\". This option should only be used if svtools is installed as \"svtools-XXX\", where XXX is the version number \nInput VCF files may be gzipped, but gzipped files must end with .gz. Uncompressed input files should not end with this suffix. Annotation files may be gzipped or unzipped. SVScore will zip/unzip files as necessary using bgzip and zcat. \nFor multiline variants, primary mate is considered the left breakend and the secondary mate is considered the right breakend. \nIf only one mate line of a multiline variant is present in the VCF file, left and right breakend scores are still calculated, as well as one truncation score if applicable (whether it is the left or right truncation score depends on whether the line describes a primary or secondary mate). There must be a CIEND interval in the INFO field for this to happen. \nVariants with type DEL, DUP, or CNV which are over 1 Mb in length are automatically given a score of 100\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/lganel/SVScore/master/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "documentation": [
+    {
+      "confidence": 1,
+      "result": {
+        "format": "wiki",
+        "type": "Url",
+        "value": "https://github.com/lganel/SVScore/wiki"
+      },
+      "source": "https://raw.githubusercontent.com/lganel/SVScore/master/README.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "download_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/lganel/SVScore/releases"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 5
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/lganel/SVScore/forks"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "lganel/SVScore"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_title": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "SVScore"
+      },
+      "source": "https://raw.githubusercontent.com/lganel/SVScore/master/README.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "installation": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "First Time Setup",
+        "parent_header": [
+          "SVScore"
+        ],
+        "type": "Text_excerpt",
+        "value": "After downloading SVScore, there are a few steps to follow before it is ready to use.\n  1. Test SVScore using `sh tests/test.sh path/to/whole_genome_SNVs.tsv.gz`\n  2. Generate annotation files. For more on this, see [Annotation Files](#annotation-files).\n  3. SVScore assumes the user's version of perl is installed in the default directory (`/usr/bin/perl`). If this is not the case, the first line of all .pl files should be changed to reflect the correct perl installation directory.\n"
+      },
+      "source": "https://raw.githubusercontent.com/lganel/SVScore/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 0.998982897100301,
+      "result": {
+        "original_header": "Annotation Files",
+        "type": "Text_excerpt",
+        "value": "  * If planning to use the default (refGene) annotations, simply execute `./generateannotations.pl` to generate the annotation files required by SVScore. If planning to use a custom annotation track, `generateannotations.pl` can be used to generate custom annotation files, or the user can generate them manually (though this is not recommended).\n  * If generating custom annotation files using `generateannotations.pl`, the user must supply an annotation track in which each line represents a transcript and contains the following columns: chromosome, transcript start position, transcript stop position, transcript strand, transcript name, exon start positions (comma-delimited), and exon stop positions (comma-delimited). Command line options must be used to specify each column number. To see usage instructions, execute `./generateannotations.pl --help`. `generateannotations.pl` will create two files in the current directory (or the directory specified using -o), named based on the prefix to the input file - [prefix].introns.bed and [prefix].exons.bed. These should be specified to SVScore using the -e and -f options.\n  * **If generating custom annotation files for SVScore manually, users should ensure that each transcript has a unique name.** Annotation files should contain the following columns, in order:\n    * Exon file:\n      * 1 - Exon chromosome \n      * 2 - Exon start position\n      * 3 - Exon stop position\n      * 4 - Transcript name\n      * 5 - Transcript start position\n      * 6 - Transcript stop position\n      * 7 - Transcript strand\n    * Intron file:\n      * 1 - Intron chromosome\n      * 2 - Intron start position\n      * 3 - Intron stop position\n      * 4 - Transcript name\n      * 5 - Intron number (arbitrary, but must be unique. Line number works well)\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/lganel/SVScore/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9581958150293265,
+      "result": {
+        "original_header": "Notes",
+        "type": "Text_excerpt",
+        "value": "The -s option should not be provided if svtools is present in the user's path as \"svtools\". This option should only be used if svtools is installed as \"svtools-XXX\", where XXX is the version number \nInput VCF files may be gzipped, but gzipped files must end with .gz. Uncompressed input files should not end with this suffix. Annotation files may be gzipped or unzipped. SVScore will zip/unzip files as necessary using bgzip and zcat. \n"
+      },
+      "source": "https://raw.githubusercontent.com/lganel/SVScore/master/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "issue_tracker": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/lganel/SVScore/issues"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "keywords": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": ""
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "license": [
+    {
+      "confidence": 1,
+      "result": {
+        "name": "MIT License",
+        "spdx_id": "MIT",
+        "type": "License",
+        "url": "https://api.github.com/licenses/mit",
+        "value": "https://api.github.com/licenses/mit"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "SVScore"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "owner": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "User",
+        "value": "lganel"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "programming_languages": [
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Perl",
+        "size": 47490,
+        "type": "Programming_language",
+        "value": "Perl"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Shell",
+        "size": 1656,
+        "type": "Programming_language",
+        "value": "Shell"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "readme_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/lganel/SVScore/master/README.md"
+      },
+      "technique": "file_exploration"
+    }
+  ],
+  "releases": [
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "lganel",
+          "type": "User"
+        },
+        "date_created": "2017-05-10T17:36:38Z",
+        "date_published": "2017-05-10T17:38:51Z",
+        "description": "* Testing now uses custom script instead of diff, allowing for small differences resulting from differing Perl version\r\n* Removed -h\r\n* Removed setup.sh\r\n* Added -o option to generateannotations.pl\r\n* Simplified test.sh, made output look prettier, now works from any directory\r\n* Added compatibility with newer versions of svtools, along with -s option for nonstandard svtools installations",
+        "html_url": "https://github.com/lganel/SVScore/releases/tag/v0.6",
+        "name": "SVScore v0.6",
+        "release_id": 6342642,
+        "tag": "v0.6",
+        "tarball_url": "https://api.github.com/repos/lganel/SVScore/tarball/v0.6",
+        "type": "Release",
+        "url": "https://api.github.com/repos/lganel/SVScore/releases/6342642",
+        "value": "https://api.github.com/repos/lganel/SVScore/releases/6342642",
+        "zipball_url": "https://api.github.com/repos/lganel/SVScore/zipball/v0.6"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "lganel",
+          "type": "User"
+        },
+        "date_created": "2016-06-20T15:53:18Z",
+        "date_published": "2016-06-20T15:54:44Z",
+        "description": "See CHANGES.md for changes. This is a minor release representing a freeze for publication.\n",
+        "html_url": "https://github.com/lganel/SVScore/releases/tag/v0.5.1",
+        "name": "SVScore v0.5.1",
+        "release_id": 3482416,
+        "tag": "v0.5.1",
+        "tarball_url": "https://api.github.com/repos/lganel/SVScore/tarball/v0.5.1",
+        "type": "Release",
+        "url": "https://api.github.com/repos/lganel/SVScore/releases/3482416",
+        "value": "https://api.github.com/repos/lganel/SVScore/releases/3482416",
+        "zipball_url": "https://api.github.com/repos/lganel/SVScore/zipball/v0.5.1"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "lganel",
+          "type": "User"
+        },
+        "date_created": "2016-05-24T20:55:40Z",
+        "date_published": "2016-05-25T16:18:35Z",
+        "description": "See CHANGES.md for what's new\n",
+        "html_url": "https://github.com/lganel/SVScore/releases/tag/v0.5",
+        "name": "SVScore v0.5",
+        "release_id": 3304921,
+        "tag": "v0.5",
+        "tarball_url": "https://api.github.com/repos/lganel/SVScore/tarball/v0.5",
+        "type": "Release",
+        "url": "https://api.github.com/repos/lganel/SVScore/releases/3304921",
+        "value": "https://api.github.com/repos/lganel/SVScore/releases/3304921",
+        "zipball_url": "https://api.github.com/repos/lganel/SVScore/zipball/v0.5"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "lganel",
+          "type": "User"
+        },
+        "date_created": "2015-11-25T16:11:35Z",
+        "date_published": "2015-11-25T16:30:17Z",
+        "description": "See CHANGES.md for new features\n",
+        "html_url": "https://github.com/lganel/SVScore/releases/tag/v0.4",
+        "name": "SVScore v0.4",
+        "release_id": 2185408,
+        "tag": "v0.4",
+        "tarball_url": "https://api.github.com/repos/lganel/SVScore/tarball/v0.4",
+        "type": "Release",
+        "url": "https://api.github.com/repos/lganel/SVScore/releases/2185408",
+        "value": "https://api.github.com/repos/lganel/SVScore/releases/2185408",
+        "zipball_url": "https://api.github.com/repos/lganel/SVScore/zipball/v0.4"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "lganel",
+          "type": "User"
+        },
+        "date_created": "2015-08-17T18:18:33Z",
+        "date_published": "2015-08-17T18:19:19Z",
+        "description": "See CHANGES.md for what's new\n",
+        "html_url": "https://github.com/lganel/SVScore/releases/tag/v0.3",
+        "name": "SVScore 0.3",
+        "release_id": 1683622,
+        "tag": "v0.3",
+        "tarball_url": "https://api.github.com/repos/lganel/SVScore/tarball/v0.3",
+        "type": "Release",
+        "url": "https://api.github.com/repos/lganel/SVScore/releases/1683622",
+        "value": "https://api.github.com/repos/lganel/SVScore/releases/1683622",
+        "zipball_url": "https://api.github.com/repos/lganel/SVScore/zipball/v0.3"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "requirements": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Dependencies",
+        "parent_header": [
+          "SVScore"
+        ],
+        "type": "Text_excerpt",
+        "value": "* A Linux-like system with a Bash-like shell, with sh, cd, sort (**With version sort, i.e. a -V option**), cat, zcat, rm, rmdir, diff, echo, chmod, grep, and awk\n* Perl v5.10.1 or later\n* [vcfanno](https://www.github.com/brentp/vcfanno) v0.0.11\n* [svtools](https://github.com/hall-lab/svtools/releases/latest) v0.2.0 or later\n* whole_genome_SNVs.tsv.gz (and .tbi) - file of all possible hg19/GRCh37 SNVs and associated C scores from v1.3 of [CADD](http://cadd.gs.washington.edu/download) \n* [tabix/bgzip](https://github.com/samtools/htslib)\n* (optional) An custom hg19/GRCh37-based gene/exon track. If one is not supplied, SVScore will download refGene annotations in `generateannotations.pl`. For more information, see [First Time Setup](#first-time-setup)\n\nThe following must be in your path to use SVScore: svtools, vcfanno, tabix\n  "
+      },
+      "source": "https://raw.githubusercontent.com/lganel/SVScore/master/README.md",
+      "technique": "header_analysis"
+    }
+  ],
+  "somef_missing_categories": [
+    "citation",
+    "acknowledgement",
+    "run",
+    "download",
+    "contact",
+    "contributors",
+    "faq",
+    "support",
+    "identifier",
+    "has_build_file",
+    "executable_example"
+  ],
+  "somef_provenance": {
+    "date": "2024-11-04 06:04:33",
+    "somef_schema_version": "1.0.0",
+    "somef_version": "0.9.5"
+  },
+  "stargazers_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 28
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "type": [
+    {
+      "confidence": 0.82,
+      "result": {
+        "type": "String",
+        "value": "commandline-application"
+      },
+      "technique": "software_type_heuristics"
+    }
+  ],
+  "usage": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Usage",
+        "parent_header": [
+          "SVScore"
+        ],
+        "type": "Text_excerpt",
+        "value": "```\nusage: ./svscore.pl [-dv] [-o op] [-e exonfile] [-f intronfile] [-c caddfile] -i vcf\n    -i        Input VCF file. May be bgzip compressed (ending in .vcf.gz). Use \"-i stdin\" if using standard input\n    -d        Debug mode, keeps intermediate and supporting files, displays progress\n    -v        Verbose mode - show all calculated scores (left/right/span/ltrunc/rtrunc, as appropriate)\n    -o        Comma-separated list of operations to perform on CADD score intervals (must be some combination of sum, max, mean, meanweighted, top\\\\d, and top\\\\dweighted - defaults to top10weighted)\n    -e        Points to exon BED file (refGene.exons.bed)\n    -f        Points to intron BED file (refGene.introns.bed)\n    -c        Points to whole_genome_SNVs.tsv.gz (defaults to current directory)\n    -s        Specifies version of svtools to be used (defaults to version installed under name \"svtools\")\n    -t\t      Length threshold, in bp, above which SVs receive an automatic score of 100 (1,000,000)\n\n    --help    Display this message\n    --version Display version\n```\n"
+      },
+      "source": "https://raw.githubusercontent.com/lganel/SVScore/master/README.md",
+      "technique": "header_analysis"
+    }
+  ]
+}

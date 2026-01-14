@@ -1,0 +1,385 @@
+{
+  "application_domain": [
+    {
+      "confidence": 18.49,
+      "result": {
+        "type": "String",
+        "value": "Computer Vision"
+      },
+      "technique": "supervised_classification"
+    }
+  ],
+  "code_repository": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/sarah-ku/hyperTRIBER"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_created": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2019-11-08T19:03:38Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_updated": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2023-11-04T21:45:14Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "description": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Summary",
+        "parent_header": [
+          "hyperTRIBER"
+        ],
+        "type": "Text_excerpt",
+        "value": "hyperTRIBER is an R package used for detecting sites which significant differental editing between conditions using transcriptomics based data. The pipeline was originally developed for hyperTRIBE (targets of RNA binding proteins identified by editing), which allows for the detection of transcripts bound by a given RNA binding protein (RBP) through the detection of edited sites between negative control samples, and cases where the RBP is fused to the hypercatyletic domain of ADAR. However, the approach is highly applicable for general differential editing set-ups.\n "
+      },
+      "source": "https://raw.githubusercontent.com/sarah-ku/hyperTRIBER/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 0.9546527986681196,
+      "result": {
+        "original_header": "hyperTRIBER",
+        "type": "Text_excerpt",
+        "value": "R package for differential RNA editing analysis\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/sarah-ku/hyperTRIBER/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.808593086533696,
+      "result": {
+        "original_header": "Base pileup",
+        "type": "Text_excerpt",
+        "value": "Prior to running the package in R, one needs to run the following command including the custom perl script `hyperTRIBE_mpileup2bases.pl` on their mapped .BAM files for their samples. For example, for a set up with 6 samples (Samp1 to Samp6), would the command look like this:\n```wrap\nsamtools mpileup --max-depth 50000 -Q 30 --skip-indels -f ./reference/reference_genome.fa Samp1.sort.bam Samp2.sort.bam Samp3.sort.bam Samp4.sort.bam Samp5.sort.bam Samp6.sort.bam | perl hyperTRIBE_mpileup2bases.pl> baseCounts_from_mpileup.txt &\n```\nNote that the reference genome is necessary in order to run samtools mpileup.\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/sarah-ku/hyperTRIBER/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.8540896411343469,
+      "result": {
+        "original_header": "Special note to paired-end stranded data",
+        "type": "Text_excerpt",
+        "value": "If your samples are paired-end and stranded you need to provide two .bam files for each sample, one for the forward and one for the reverse strand, not for each side of the mate pair. Here is some code to make this conversion (see for example here: https://www.biostars.org/p/92935/).\n```wrap\nfor f in `cat filenames_samples.txt`\ndo\nmyname=${f}.sorted\n\nname_fwd1=${myname}_fwd1.bam\nname_fwd2=${myname}_fwd2.bam\nname_fwd=${myname}_fwd.bam\n\nname_rev1=${myname}_rev1.bam\nname_rev2=${myname}_rev2.bam\nname_rev=${myname}_rev.bam\n\nsamtools view -bh -f 99 ${myname}.bam > $name_fwd1\nsamtools index $name_fwd1\n\nsamtools view -bh -f 147 ${myname}.bam > $name_fwd2\nsamtools index $name_fwd2\n\nsamtools merge -f $name_fwd $name_fwd1 $name_fwd2\nsamtools index $name_fwd\n\nsamtools view -bh -f 83 ${myname}.bam > $name_rev1\nsamtools index $name_rev1\n\nsamtools view -bh -f 163 ${myname}.bam > $name_rev2\nsamtools index $name_rev2\n\nsamtools merge -f $name_rev $name_rev1 $name_rev2\nsamtools index $name_rev\n\nrm $name_fwd1\nrm $name_fwd2\nrm $name_fwd1.bai\nrm $name_fwd2.bai\n\nrm $name_rev1\nrm $name_rev2\nrm $name_rev1.bai\nrm $name_rev2.bai\ndone\n```\nAfter running the above code you can then create a new file which has all of the samples listed in order which can be passed to the mpileup script.\n```wrap\ntouch myfiles_fwd_rev.txt\nfor f in `cat filenames_samples.txt`\ndo\nprint ${f}.sorted_fwd.bam >> myfiles.txt\nprint ${f}.sorted_rev.bam >> myfiles.txt\ndone\n```\nThen run the mpileup part (confusing: use hyperTRIBE_mpileup2bases.pl and NOT the stranded counterpart here).\n```wrap\nsamtools mpileup --max-depth 500000 -Q 40 --skip-indels -f reference_genome.fa `cat myfiles.txt` | perl hyperTRIBE_mpileup2bases.pl > baseCounts_Q40_stranded.txt &\n```\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/sarah-ku/hyperTRIBER/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.8743147828115526,
+      "result": {
+        "original_header": "Annotation",
+        "type": "Text_excerpt",
+        "value": "Now that we had our significant hits, we wanted to annotate them to the genome to identify locations and structure of our hits. The GTF file for the annotations was fetched from https://www.ensembl.org/Drosophila_melanogaster/Info/Index\n```\n\nquant.mat <- tpm.mat[,names(design_vector[design_vector==\"control\"])]\nquant.vec <- rowMeans(quant.mat)\n\n#Annotate\nposGR <- addGenes(gtfGR = gtf,posGR = posGR,ncore = 10,quant = quant.vec,assignStrand = F,geneids = ids)\nsave(posGR,file=paste0(save_dir,\"/posGR_annotated.Rdat\"))\n```\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/sarah-ku/hyperTRIBER/master/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "download_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/sarah-ku/hyperTRIBER/releases"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 1
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/sarah-ku/hyperTRIBER/forks"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "sarah-ku/hyperTRIBER"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_title": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "hyperTRIBER"
+      },
+      "source": "https://raw.githubusercontent.com/sarah-ku/hyperTRIBER/master/README.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "installation": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Installation",
+        "parent_header": [
+          "hyperTRIBER"
+        ],
+        "type": "Text_excerpt",
+        "value": "The package is installed in R with the following command:\n\n```\nlibrary(devtools)\ninstall_github(\"sarah-ku/hyperTRIBER\")\n```   \n"
+      },
+      "source": "https://raw.githubusercontent.com/sarah-ku/hyperTRIBER/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Preparations",
+        "parent_header": [
+          "hyperTRIBER",
+          "Running the pipeline"
+        ],
+        "type": "Text_excerpt",
+        "value": "```\nproject_id <- \"some_project\"\ndata_list <- data_list[names(design_vector)]\n\n#remember to create folders if they don't exist\nmodel_dir <- \"./results/model/\"\nsave_dir <-  \"./results/model/saved_output/\"\n```\n"
+      },
+      "source": "https://raw.githubusercontent.com/sarah-ku/hyperTRIBER/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 0.8413988750791753,
+      "result": {
+        "original_header": "Base pileup",
+        "type": "Text_excerpt",
+        "value": "Prior to running the package in R, one needs to run the following command including the custom perl script `hyperTRIBE_mpileup2bases.pl` on their mapped .BAM files for their samples. For example, for a set up with 6 samples (Samp1 to Samp6), would the command look like this:\n```wrap\nsamtools mpileup --max-depth 50000 -Q 30 --skip-indels -f ./reference/reference_genome.fa Samp1.sort.bam Samp2.sort.bam Samp3.sort.bam Samp4.sort.bam Samp5.sort.bam Samp6.sort.bam | perl hyperTRIBE_mpileup2bases.pl> baseCounts_from_mpileup.txt &\n```\nNote that the reference genome is necessary in order to run samtools mpileup.\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/sarah-ku/hyperTRIBER/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.923318686418352,
+      "result": {
+        "original_header": "Special note to paired-end stranded data",
+        "type": "Text_excerpt",
+        "value": "If your samples are paired-end and stranded you need to provide two .bam files for each sample, one for the forward and one for the reverse strand, not for each side of the mate pair. Here is some code to make this conversion (see for example here: https://www.biostars.org/p/92935/).\n```wrap\nfor f in `cat filenames_samples.txt`\ndo\nmyname=${f}.sorted\n\nname_fwd1=${myname}_fwd1.bam\nname_fwd2=${myname}_fwd2.bam\nname_fwd=${myname}_fwd.bam\n\nname_rev1=${myname}_rev1.bam\nname_rev2=${myname}_rev2.bam\nname_rev=${myname}_rev.bam\n\nsamtools view -bh -f 99 ${myname}.bam > $name_fwd1\nsamtools index $name_fwd1\n\nsamtools view -bh -f 147 ${myname}.bam > $name_fwd2\nsamtools index $name_fwd2\n\nsamtools merge -f $name_fwd $name_fwd1 $name_fwd2\nsamtools index $name_fwd\n\nsamtools view -bh -f 83 ${myname}.bam > $name_rev1\nsamtools index $name_rev1\n\nsamtools view -bh -f 163 ${myname}.bam > $name_rev2\nsamtools index $name_rev2\n\nsamtools merge -f $name_rev $name_rev1 $name_rev2\nsamtools index $name_rev\n\nrm $name_fwd1\nrm $name_fwd2\nrm $name_fwd1.bai\nrm $name_fwd2.bai\n\nrm $name_rev1\nrm $name_rev2\nrm $name_rev1.bai\nrm $name_rev2.bai\ndone\n```\nAfter running the above code you can then create a new file which has all of the samples listed in order which can be passed to the mpileup script.\n```wrap\ntouch myfiles_fwd_rev.txt\nfor f in `cat filenames_samples.txt`\ndo\nprint ${f}.sorted_fwd.bam >> myfiles.txt\nprint ${f}.sorted_rev.bam >> myfiles.txt\ndone\n```\nThen run the mpileup part (confusing: use hyperTRIBE_mpileup2bases.pl and NOT the stranded counterpart here).\n```wrap\nsamtools mpileup --max-depth 500000 -Q 40 --skip-indels -f reference_genome.fa `cat myfiles.txt` | perl hyperTRIBE_mpileup2bases.pl > baseCounts_Q40_stranded.txt &\n```\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/sarah-ku/hyperTRIBER/master/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "issue_tracker": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/sarah-ku/hyperTRIBER/issues"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "keywords": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": ""
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "hyperTRIBER"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "owner": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "User",
+        "value": "sarah-ku"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "programming_languages": [
+    {
+      "confidence": 1,
+      "result": {
+        "name": "R",
+        "size": 55613,
+        "type": "Programming_language",
+        "value": "R"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Perl",
+        "size": 6409,
+        "type": "Programming_language",
+        "value": "Perl"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "readme_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/sarah-ku/hyperTRIBER/master/README.md"
+      },
+      "technique": "file_exploration"
+    }
+  ],
+  "run": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Running the pipeline",
+        "parent_header": [
+          "hyperTRIBER"
+        ],
+        "type": "Text_excerpt",
+        "value": "Here we prepare the experimental setup for our data\n```\n#load in our text file that we got as an output from \ndata <- read.table(\"./files/baseCounts_from_mpileup.txt\",header=F)\ndim(data)\n\n#create a genomics range of the reference genome base for each of the considered positions.\nlocsGR <- GRanges(Rle(data_drp$V1),IRanges(data_drp$V2,width=1),ref=data_drp$V3,names=paste(data_drp$V1,data_drp$V2,sep=\"_\"))\n\n\nsamp.names <- c(\"Samp1\",\"Samp2\",\"Samp3\",\"Samp4\",\"Samp5\",\"Samp6\")\n\n\ndata_list <- extractCountData(data,samp.names,strand=F)\n\n\n#now produce one design vector per experiment\ndesign_vector <- c(Samp1 = \"control\", Samp2 = \"control\", Samp3 = \"control\", \n                                Samp4 = \"treat\", Samp5 = \"treat\", Samp6 = \"treat\")\n\ntable(design_vector)\n```\n\n\n"
+      },
+      "source": "https://raw.githubusercontent.com/sarah-ku/hyperTRIBER/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Specify our edits of interests.",
+        "parent_header": [
+          "hyperTRIBER",
+          "Running the pipeline"
+        ],
+        "type": "Text_excerpt",
+        "value": "```\nmy_edits <- rbind(c(\"A\",\"G\"),\n                  c(\"G\",\"A\"),\n                  c(\"T\",\"C\"),\n                  c(\"C\",\"T\"),\n                  c(\"A\",\"T\"),\n                  c(\"T\",\"A\"),\n                  c(\"G\",\"T\"),\n                  c(\"T\",\"G\"),\n                  c(\"G\",\"C\"),\n                  c(\"C\",\"G\"),\n                  c(\"A\",\"C\"),\n                  c(\"C\",\"A\"))\n```\n\n"
+      },
+      "source": "https://raw.githubusercontent.com/sarah-ku/hyperTRIBER/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Filter potential positions according to replication and minimum counts",
+        "parent_header": [
+          "hyperTRIBER",
+          "Running the pipeline"
+        ],
+        "type": "Text_excerpt",
+        "value": "Before testing for differential editing between the 'control' and 'treat' samples, we first need to filter down the number of testable positions. The function <b>restrict_data</b> filters out sites based on replication and minimum counts. This step is very important as it reduces the run time of functions that we will be running later.\n\nThe argument <b>edits_of_interest</b> is used to specify the edits that will be looked at. In most cases I default to the full set above and then filter afterwards, but if you incorporate too many edits types that aren't of interest you could reduce power in your analysis.\n\nThe argument <b>min_samp_treat</b> looks at the 'edit' base (for example G if the reference is an A, in the case of an A>G edit) and looks for consistency in edits across the given replicates. For example, the default of <b>min_samp_treat = 2</b> implies that we want to observe the edit in two or more replicates.\n\nThe argument <b>min_count</b> filters sites according to the number of reads covering the edit base in the individual replicates, in at least the number of samples specificied by <b>min_samp_treat</b>. Our minimum amount is set to 2. Therefore, if <b>min_samp_treat = 2</b> then we would be asking for at least 2 replicates with at least 2 reads covering the edit base.\n\nThe argument <b>both_ways</b> is useful for 'two-way' experiments, whereby one is interested in higher editing in either those designated 'control' OR those designated 'treat'. In standard HyperTRIBE set ups whereby the 'control' samples are negative controls (for example with free ADAR only), you would use <b>both_ways = F</b>, since you are only interested in higher editing in the 'treat' samples. If you use the pipeline for more complicated set ups (see for example our single VS triple mutant HyperTRIBE set ups here: https://elifesciences.org/articles/72377, or for standard RNA-editing site detection) it could be helpful to set <b>both_ways = T</b>.\n\n```\ndata_list <- restrict_data(data_list=data_list, design_vector=design_vector, min_samp_treat=2, min_count=2, both_ways = F, edits_of_interest=my_edits)\n```\n"
+      },
+      "source": "https://raw.githubusercontent.com/sarah-ku/hyperTRIBER/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Principal comonent analysis",
+        "parent_header": [
+          "hyperTRIBER",
+          "Running the pipeline"
+        ],
+        "type": "Text_excerpt",
+        "value": "Note that this is not working well (TODO: update this code)\n\n```\nmy_pca <- makeEditPCA(data_list_restricted,editTypes = editTypes,refGR = locsGR,design_vector = design_vector,my_title = \"\",refBased = T,stranded=F)\n```\n"
+      },
+      "source": "https://raw.githubusercontent.com/sarah-ku/hyperTRIBER/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Make model with DEXseq",
+        "parent_header": [
+          "hyperTRIBER",
+          "Running the pipeline"
+        ],
+        "type": "Text_excerpt",
+        "value": "This creates count and annotation files that are compatible with DEXseq, and then runs the model, specifying a given number of cores.\n\nBe careful that this can be a memory and CPU intenstive process, so reduce the number of course if necessarily.\n\n```\ngenerateCountFiles(data_list = data_list,stranded=F,names_vec = row.names(data_list[[1]]),out_dir = model_dir,design_vector = design_vector)\ndxd.res <- make_test(out_dir = model_dir,design_vector = design_vector,ncores=10)\nsave(dxd.res,file=paste0(save_dir,\"/dxd.res.Rdat\"))\n```"
+      },
+      "source": "https://raw.githubusercontent.com/sarah-ku/hyperTRIBER/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Compile hits table from model",
+        "parent_header": [
+          "hyperTRIBER",
+          "Running the pipeline"
+        ],
+        "type": "Text_excerpt",
+        "value": "Here we use FDR to find significant \"hits\" from our DEXseq data and compile it into a table.\n```\nposGR <- getHits(res = dxd.res,stranded=F,fdr = 0.1,fold=1,addMeta = T,ncore=10,include_ref = T,refGR = locsGR,edits_of_interest=my_edits,design_vector=design_vector,data_list=data_list)\n```\n\nHere are some descriptions for the fields in the posGR object: \n\nref : the detected reference base. This amounts to the most abundant base in the control samples. You can check it is the expected base by comparing to the base field, which is the base from the reference genome.\n\ntarg : the detected target base. The test will therefore be for a ref>target edit at that site (for example A>G).\n\nprop: the editing proportion in the non-control samples (for example A/(A+G) for a A>G edit)\n\nprop_ctrl: the editing proportion in the control samples (for example A/(A+G) for a A>G edit)\n\npadj: the adjusted p-value \n\npval: the unadjusted p-value\n\ncontrol_par: this is the test statistic for the controls generated by DEXseq (not the same as, but correlated to, the editing proportion prop_ctrl).\n\ntreat_par: this is the test statistic for the non-controls generated by DEXseq (not the same as, but correlated to, the editing proportion prop).\n\nfold_change: this is the log2 Fold Change calculated by DEXseq\n\ntags_treat: this is the raw number of reads covering the edit base for the non-controls (incase you want to do some filtering on this later).\n\ntags_control: this is the raw number of reads covering the edit base for the controls (incase you want to do some filtering on this later).\n\nbase: this is the detected base from the supplied reference genome. It should generally match the ref.\n\n"
+      },
+      "source": "https://raw.githubusercontent.com/sarah-ku/hyperTRIBER/master/README.md",
+      "technique": "header_analysis"
+    }
+  ],
+  "somef_missing_categories": [
+    "citation",
+    "acknowledgement",
+    "download",
+    "requirements",
+    "contact",
+    "contributors",
+    "documentation",
+    "license",
+    "usage",
+    "faq",
+    "support",
+    "identifier",
+    "has_build_file",
+    "executable_example"
+  ],
+  "somef_provenance": {
+    "date": "2024-10-06 01:46:44",
+    "somef_schema_version": "1.0.0",
+    "somef_version": "0.9.5"
+  },
+  "stargazers_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 4
+      },
+      "technique": "GitHub_API"
+    }
+  ]
+}

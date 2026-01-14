@@ -1,0 +1,531 @@
+{
+  "code_repository": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/ebi-gene-expression-group/selectBCM"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_created": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2020-06-16T16:14:43Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_updated": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2024-02-13T04:47:06Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "description": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "An R tool to detect and correct batch-effects in gene-expression data (Microarray and bulk-RNAseq))"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "SelectBCM tool: Short introduction",
+        "type": "Text_excerpt",
+        "value": "\"Madhulika Mishra, Lucas Barck, Pablo Moreno, Guillaume Heger, Yuyao Song, Janet M. Thornton, Irene Papatheodorou\"\n\n"
+      },
+      "source": "https://raw.githubusercontent.com/ebi-gene-expression-group/selectBCM/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Introduction",
+        "type": "Text_excerpt",
+        "value": "Integrating information from bulk transcriptomes from different experiments can potentially increase the impact of individual studies in areas such as biomedicine. Despite that essential data sources for basic and disease biology are available, adequate integration remains difficult. Batch-effect correction for both experimental and technological variations is one of the main challenges in transcriptomics studies. To handle this, various batch-correction methods(BCMs) have been developed in recent times. However, the lack of a user-friendly workflow to select the most appropriate BCM for the given set of experiments needs to be resolved for applying batch correction at a large scale e.g. for multi-cohort transcriptomic analysis. In this project, we developed an R tool named \u201cSelectBCM Tool\u201d  to increase the reusability and reproducibility of these BCMs, in order to facilitate the  application, comparison and selection of BCMs. Our tools aims to aid choosing the most suitable batch correction method for a set of bulk transcriptomic experiments. \n\n"
+      },
+      "source": "https://raw.githubusercontent.com/ebi-gene-expression-group/selectBCM/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 0.9906347547967013,
+      "result": {
+        "original_header": "Project overview",
+        "type": "Text_excerpt",
+        "value": "* Fetching experiments from [ExpressionAtlas](https://www.ebi.ac.uk/gxa/home) based on a biological factor of interest, such as disease, species and tissue\n* Removing isolated experiments\n* Merging experiments in a single dataset\n* detetction of batch effect in the merged dataset\n* Correcting batch effects\n* Evaluation of batch correction methods \n\nThe above steps have been implemented in a variety of forms including stand-alone tools, scripts or R package functions. By creating SelectBCM we aim to provide the infrastructure to compare equivalent logical steps between workflows, and to \u2018mix and match\u2019 those components for a custom optimal workflow. The current R package provides a flexibility to perform batch correction and evaluation of various batch-correction methods for given dataset. Finally, it provide **performance rank** of each BCMs for the given dataset. \n"
+      },
+      "source": "https://raw.githubusercontent.com/ebi-gene-expression-group/selectBCM/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9892202540835472,
+      "result": {
+        "original_header": "Overview of steps available in SelectBCM",
+        "type": "Text_excerpt",
+        "value": "SelectBCM package has several steps ranging from meta-experiment creation to batch-effect evaluation step. In the current wrapper, scripts are written in a user-friendly way. Short description of each step and example is given below - \n"
+      },
+      "source": "https://raw.githubusercontent.com/ebi-gene-expression-group/selectBCM/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9620914490284573,
+      "result": {
+        "original_header": "loading library",
+        "type": "Text_excerpt",
+        "value": "Sometime loading of 'magrittr','purrr' and 'dplyr' with `SelectBCM` package  is deprecated, therefore, it is recommended to load all of these together. \n**Recommendation:** Computation of scBatch requires high memory allocation for Rcpp, therefore it is advised to increase R memory.\n```r\nlibrary(DESeq2)\nlibrary(SelectBCM)\nlibrary(magrittr)\nlibrary(dplyr)\nlibrary(purrr)\nlibrary(tibble)\nlibrary(gtools)\nlibrary(readr)\nlibrary(Biobase)\n\nlibrary(ggplot2)\nlibrary(scales)\nlibrary(ggpubr)\n```\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/ebi-gene-expression-group/selectBCM/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9576302926850275,
+      "result": {
+        "original_header": "Step2: Removing the isolated experiments",
+        "type": "Text_excerpt",
+        "value": "To correct the `batch effect`, one needs to take the biological characteristics of the samples into account (`gender` in our example). If no sample of an experiment shares biological characteristics with samples from other batches, it is not possible to correct batch effect with these batches because one cannot distinguish the biological difference from the artifact. The function `remove_isolated_experiments` removes the isolated experiments and plots graphs of intersections between the experiments before and after removal.\n```r\nexperiments %<>% remove_isolated_experiments('sex')\n```\n \n**WARNING:** this function only removes the isolated experiment according to the supplied key. Although it is still possible that two or more unconnected groups of experiments remain, within which the experiments are connected. In this case, batch effect correction is not possible and one will have to choose a group of experiments manually. \n"
+      },
+      "source": "https://raw.githubusercontent.com/ebi-gene-expression-group/selectBCM/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.901969452665014,
+      "result": {
+        "original_header": "Step3: Merging experiments in a single dataset",
+        "type": "Text_excerpt",
+        "value": "The function `merge_experiments` merges all the experiments in the list in a single `SummarizedExperiment` or `ExpressionSet` object and doesn't perform any correction. This function has two additional arguments `log` and `filter` (respectively set to `TRUE` and `FALSE` by default). \n* For RNAseq experiments: users have to call `merge_experiment.SummarizedExperiment()` function.\n* For microarray experiment, users have to call `merge_experiment.ExpressionSet()` function.\n*  The `log` argument determines whether to perform log transformation on the data (recommended for bulk RNAseq).\n*  The `filter` argument determines whether to filter genes for which all the samples of a batch have zero-counts. Set it to `TRUE` if user have issues in running ComBat at the next step. \n\n```r\nexperiments %<>% merge_experiment.SummarizedExperiment()\n\n```\n`experiments` is now an only `ExpressionSet` object containing the information about batches both in its `@metadata` and `@colData` slots : \n**Caution:** Sometimes during merging experiment, phenodata (SDRF) file gets corrupted, hence, it is advised to always check meta-data before proceeding further. \n"
+      },
+      "source": "https://raw.githubusercontent.com/ebi-gene-expression-group/selectBCM/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.930288281425937,
+      "result": {
+        "original_header": "Step4: Correcting batch effect",
+        "type": "Text_excerpt",
+        "value": "The function `batch_correction` performs various methods of batch-correction on a given merged dataset and output batch-corrected data as a list. \nShort detail of methods implemented in `batch_correction` function are given below- \n    * **limma**- default limma setting,  more detail about the method can be learnt from Limma  [documentation](https://www.bioconductor.org/packages/release/bioc/manuals/limma/man/limma.pdf).\n    * **GFS**- Gene Fuzzy Score, more detail about the method can be learnt from [publication](https://bmcbioinformatics.biomedcentral.com/articles/10.1186/s12859-016-1327-8).\n    * **Robust quantile normalization**- quantile normalisation method from PreprocessCore package. More information can be obtained from their [documentation](https://www.bioconductor.org/packages//2.7/bioc/html/preprocessCore.html).\n    * **ComBat**- implemented from SVA package. More information can be obtained from their [documentation](https://bioconductor.riken.jp/packages/3.0/bioc/html/sva.html). \nIn the current `batch_correction` method, there are two versions of ComBat- 1) **ComBat1**- for parametric adjustment and, 2) **ComBat2** - for non-parametric adjustment, mean-only version.\n    * **Q_ComBat** - is Quantile+ parametric adjustment of ComBat.\n    * **MNN** - default mnnCorrect function from batchelor package. More information can be obtained from their [documentation](https://bioconductor.org/packages/release/bioc/html/batchelor.html).\n    * **naiveRandRUV_HK** - default naiveRandRUV using Human HK genes from RUVnormalize package. More information can be obtained from their [documentation](https://bioconductor.org/packages/release/bioc/html/RUVnormalize.html). The Human Housekeeping gene list is from this [publication](https://academic.oup.com/gigascience/article/8/9/giz106/5570567). No. of confounders were estimated using both \"leek\" and \"be\" method and then least no. of estimated confounders were used as input for all variants of **naiveRandRUV** method. \n    * **Q_naiveRandRUV_HK** - is Qunatile+ naiveRandRUV_HK\n    * **naiveRandRUV_empi.controls** - default naiveRandRUV using data-empirically derived HK genes from RUVnormalize package.\n    * **Q_naiveRandRUV_empi.controls** -is Qunatile+ naiveRandRUV_empi.controls. \n    * **limma**- default limma setting,  more detail about the method can be learnt from Limma  [documentation](https://www.bioconductor.org/packages/release/bioc/manuals/limma/man/limma.pdf).\n    * **ComBat**- implemented from SVA package. More information can be obtained from their [documentation](https://bioconductor.riken.jp/packages/3.0/bioc/html/sva.html). \n    * **ComBat_seq** - RNAseq version of ComBat, now implemented in `SVA` package. More information can be obtained from this [publication](https://www.biorxiv.org/content/10.1101/2020.01.13.904730v1).\n    * **MNN** - default mnnCorrect function from batchelor package. More information can be obtained from their [documentation](https://bioconductor.org/packages/release/bioc/html/batchelor.html).\n    * **RUVs** - default RUVs function from RUVSeq package.Here, k=1 is used. More information can be obtained from their [documentation](https://bioconductor.org/packages/release/bioc/html/RUVSeq.html).\n    * **scBatch** - batch correction method implemented in scBatch package. More information can be obtained from their [publication](https://academic.oup.com/bioinformatics/article/34/15/2634/4916062).\n    \n    \nThis function has following arguments- \n*  The `experiment` argument is the input merged dataset.\n*  The `model` argument is a R formula mentioning the biological factor to take into account during correction.\n* The `batch` argument is a meta-data column which has information about batch-label. \n* The `k` argument is a no. of confounders for RUV methods and denotes the \"number of factors of unwanted variation to remove\". If k is not provided it will then be estimated from input data.\n* The `filter` argument specifies the gene label for the given dataset. It Should be one of the following string- 'symbol', 'ensembl_gene_id' or 'entrezgene_id' depending on the gene label for the given dataset. \n\n`batch effect` present in the example study can be detected as follows:\n```r\n\ndds_final <- DESeqDataSetFromMatrix(countData = assay(experiments  ),\n                                    colData = colData(experiments), design = ~sex)\n\n####check batch effect in the initial dataset:\n\nvst3 <- varianceStabilizingTransformation(dds_final)\n\nplotPCA(vst3,\"batch\")\n\ndds_final <- estimateSizeFactors(dds_final)\nse <- SummarizedExperiment(log2(counts(dds_final, normalized=TRUE) + 1),\n                           colData=colData(experiments))\n# the call to DESeqTransform() is needed to trigger our plotPCA method.\nplotPCA( DESeqTransform( se ),intgroup =c(\"batch\") )\n\n``` \n**Batch_correction using SelectBCM tool:**\n```r\n\nresult.1 <- batch_correction(dds_final,model=~sex, batch = \"batch\")\nresult.1$data.uncorrected <- se\nresult.1$data.uncorrected1 <- vst3\n\n```\n \n*Output:*  is the list of batch-corrected data:\nBASH3*\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/ebi-gene-expression-group/selectBCM/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9846717457729864,
+      "result": {
+        "original_header": "Step5:  Assessment of batch-correction methods",
+        "type": "Text_excerpt",
+        "value": "The `batch_evaluation` allows users to performs various evaluations on batch-corrected data and output performance list of each method. Since there are no. of ways batch-correction can be evaluated and each method has some limitation, we have used a cocktail of methods to perform analysis. This function has both PCA-inspired as well as biology inspired qualitative assessment protocol for batch-correction. \n\nShort detail of methods implemented in `batch_evaluation` function is given below- \n  * **pvca**- A function for principal variance component analysis. The function is written based on the 'pvcaBatchAssess' function of the PVCA R package and slightly changed to make it more efficient and flexible for both microarray and bulk RNAseq gene-expression data. From https://github.com/dleelab/pvca.\n  * **silhouette**- Determine `batch effect` using the silhouette coefficient (adopted from scone) with default setting (nPcs=3). Taken from `kBET` [package]( https://github.com/theislab/kBET).\n  * **pcRegression**- Determines `batch effect` by a linear model fit of principal components and a batch (categorical) variable with a default setting (n_top=20). Taken from `kBET` [package]( https://github.com/theislab/kBET).\n * **entropy**- Determines the batch effect by computing the entropy of mixing. It is a parameter to quantify the extent of the intermingling of cells from different batches. Taken from `MNN` [package]( https://github.com/MarioniLab/MNN2017).For calculation, first two Pcs are used as input. Since,depending on no. of samples in merged dataset, it is important to choose N1 and N2 for Batchentropy calculation, we have put both arguments as variables here.\n * **HVG.union**-  This analysis calculates fraction of conserved highly variable genes (HVG) according to Brennecke et al., 2013 [publication](https://www.nature.com/articles/nmeth.2645). This calculation also accounts for perseverance of biological heterogeneity by measuring ratio of conservation of HVG genes after batch correction. This function calculates ratio of number of conserved HVG after batch correction/ Union of HVG genes among all the batches. Therefore, this function is less stringent compared to `HVG.intersection` function. \n*  The `result` argument is a list of wrapped batch-corrected experiments obtained from the last step ('batch_correction').\n*  The `batch.factors` is a list of factors to perform `PVCA` analysis. Along with `batch` as factor, one `biological factor` which can be used to assess over-fitting should be provided. Providing more than one `biological factor` here, will create issues while plotting the results in next step.\n* The `experiment` argument is the input merged dataset.\n* The `N1` is the number of randomly picked samples for the BatchEntropy function.\n* The `N2` is the number of nearest neighbours of the sample (from all batches) to check (for BatchEntropy function).\n* The `filter` argument specifies the gene label for the given dataset. It Should be one of following string- 'symbol', 'ensembl_gene_id' or 'entrezgene_id' depending on the gene label for the given dataset. \n\nAssessment of batch-corrected data can be performed as follows:\n```r\nassess.RNAseq <- batch_evaluation.RNAseq(result.1, batch.factors=c(\"batch\",\"sex\"),\n                                         se,5,5,'ensembl_gene_id')\n\n``` \n*Output:* assess.RNAseq is a nested list of evaluation scores for each of the evaluation protocols. \n"
+      },
+      "source": "https://raw.githubusercontent.com/ebi-gene-expression-group/selectBCM/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9478661077375623,
+      "result": {
+        "original_header": "Step6: Ranking of BCMs",
+        "type": "Text_excerpt",
+        "value": "Once assessment is performed, in next step, results obtained from the `batch_evaluation` step, ranking of BCM is the two step analysis- \n* Generation of Diagnostic matrix\n* Plot of Ranks of BCM obatined from Diagnostic matrix \n`diagnostic_matrix.RNAseq` function performs ranking of evaluation data obtained at the previous step. Here, methods are ranked based on their performance and finally `sumRank` is the final Rank of each method for the given input dataset. Rank 1 will be the best performer method. \n*  `diagnostic` is an evaluation list obtained from the previous step `batch_evaluation`. \n\n```r\nfinal <- SelectBCM::diagnostic_matrix.RNAseq(assess.RNAseq)\n``` \n**Output1:** A list of two data-frame- (a) raw - simple data-frame output of evaluation matrix and, (b) ranked- Ranked data-frame of evaluation matrix which has additional column `sumRank` containing final Rank of each method. Ranks are in descending performance order, i.e. the method having score 1 will be the best method.  \na) Diagnostic plot showing the performance of BCMs across evaluation methods, where x-axis is the evaluation protocol and y-axis is the Rank of each batch-correction method.\nb) violin plot to summarise the performance of BCMs \nA bar plot representation of the BCMs where the 1st rank represents the most appropriate BCM for the given set of experiments using sumRank score. \n```r\nbcm_ranking(final)\n``` \n![Diagnostic plot.](/data/Ranking_plot.png)\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/ebi-gene-expression-group/selectBCM/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9556664961774417,
+      "result": {
+        "original_header": "Additional function: Detetction of batch-effects in raw merged dataset",
+        "type": "Text_excerpt",
+        "value": "`detect_effect` performs a subset of evaluation tests of `batch_evaluation` function and provides estimates whether the merged dataset obtained after 'merge_experiments' requires batch correction or not. Higher value of pvca.batch, silhouette, pcRegression and entropy is a direct indicative of batch-effects in raw merged dataset. \n*  The `result` argument is a is the merged dataset obtained from `merge_experiments` step.\n*  The `batch.factors` is a list of factors to perform `PVCA` analysis. Along with `batch` as factor, one `biological factor` which can be used to assess over-fitting should be provided. Providing more than one `biological factor` here, will create issues while plotting the results.\n* The `experiment` argument is again the same merged dataset.\n* The `N1` is the number of randomly picked samples for the BatchEntropy function.\n* The `N2` is the number of nearest neighbours of the sample (from all batches) to check (for BatchEntropy function).\n* The `filter` argument specifies the gene label for the given dataset. It Should be one of the following string- 'symbol', 'ensembl_gene_id' or 'entrezgene_id' depending on the gene label for the given dataset. \nAssessment of batch-effect on raw merged data can be performed like this:\n```r\nbatch_effect.raw <- detect_effect(experiments,experiment = experiments,\n                                  batch.factors=c(\"batch\",\"sex\"),5,5,'ensembl_gene_id')\nResult <- do.call(rbind, lapply(batch_effect.raw, as.matrix)) %>% t %>% as.data.frame()\n``` \nResult:\nBASH2* \n \n"
+      },
+      "source": "https://raw.githubusercontent.com/ebi-gene-expression-group/selectBCM/master/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "documentation": [
+    {
+      "confidence": 1,
+      "result": {
+        "format": "wiki",
+        "type": "Url",
+        "value": "https://github.com/ebi-gene-expression-group/selectBCM/wiki"
+      },
+      "source": "https://raw.githubusercontent.com/ebi-gene-expression-group/selectBCM/master/README.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "download_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/ebi-gene-expression-group/selectBCM/releases"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 1
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/ebi-gene-expression-group/selectBCM/forks"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "ebi-gene-expression-group/selectBCM"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_title": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "SelectBCM tool: Short introduction"
+      },
+      "source": "https://raw.githubusercontent.com/ebi-gene-expression-group/selectBCM/master/README.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "has_build_file": [
+    {
+      "confidence": 1,
+      "result": {
+        "format": "dockerfile",
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/ebi-gene-expression-group/selectBCM/master/Dockerfile"
+      },
+      "source": "https://raw.githubusercontent.com/ebi-gene-expression-group/selectBCM/master/Dockerfile",
+      "technique": "file_exploration"
+    }
+  ],
+  "images": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/ebi-gene-expression-group/selectBCM/master//data/Merge_experiment.png"
+      },
+      "source": "https://raw.githubusercontent.com/ebi-gene-expression-group/selectBCM/master/README.md",
+      "technique": "regular_expression"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/ebi-gene-expression-group/selectBCM/master//data/detect_batcheffect.png"
+      },
+      "source": "https://raw.githubusercontent.com/ebi-gene-expression-group/selectBCM/master/README.md",
+      "technique": "regular_expression"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/ebi-gene-expression-group/selectBCM/master//data/Diagnostic_plot_RNAseq_example.svg"
+      },
+      "source": "https://raw.githubusercontent.com/ebi-gene-expression-group/selectBCM/master/README.md",
+      "technique": "regular_expression"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/ebi-gene-expression-group/selectBCM/master//data/Ranking_plot.png"
+      },
+      "source": "https://raw.githubusercontent.com/ebi-gene-expression-group/selectBCM/master/README.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "installation": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Installation",
+        "type": "Text_excerpt",
+        "value": "It is advised to set up a dedicated [conda](https://docs.conda.io/en/latest/) environment for a new SelectBCM project. To use SelectBCM with conda, run the following commands from a bash shell:\n\n```\nconda env create -n selectBCM -c r r-base=4.2.2\nconda activate selectBCM\nconda install -c conda-forge r-remotes\nR\n```\n\nIn the R session, run the following installation commands:\n\n```R\nremotes::install_github(\"tengfei-emory/scBatch\", ref=\"master\")\nremotes::install_github(\"ebi-gene-expression-group/selectBCM\", ref=\"master\", build=FALSE)\n\n```\n\nAlternatively, we also created Docker images to run SelectBCM R package inside a [Docker](https://www.docker.com/) container on either linux/amd64 or linux/arm64 platforms. We also provide the Docker file of the SelectBCM Docker images for custom container building from scratch.\n\nlinux/amd64: \n\nPull container from Docker and open an interactive R session:\n```\ndocker pull yysong123/selectbcm:amd64\ndocker run -it yysong123/selectbcm:amd64\n```\n\nlinux/arm64:\n```\ndocker pull yysong123/selectbcm:arm64\ndocker run -it yysong123/selectbcm:arm64\n```\n \nFor a [renv](https://rstudio.github.io/renv/articles/renv.html) approach of version control, we provide `renv.lock` for the package dependencies. Install the specific package versions as recorded in `renv.lock` using `renv::restore()` at the local package directory. \n\nSelectBCM can be installed via github-\n\n```R\n\ninstall_github('https://github.com/ebi-gene-expression-group/selectBCM')\n```\n\nOr download the package as `zip` archive and install-\n\n```R\ninstall.packages('selectBCM-master.zip', repos = NULL, type = 'source')\n```\n"
+      },
+      "source": "https://raw.githubusercontent.com/ebi-gene-expression-group/selectBCM/master/README.md",
+      "technique": "header_analysis"
+    }
+  ],
+  "invocation": [
+    {
+      "confidence": 0.8565904557444508,
+      "result": {
+        "original_header": "Step4: Correcting batch effect",
+        "type": "Text_excerpt",
+        "value": "**Batch_correction using SelectBCM tool:**\n```r\n\nresult.1 <- batch_correction(dds_final,model=~sex, batch = \"batch\")\nresult.1$data.uncorrected <- se\nresult.1$data.uncorrected1 <- vst3\n\n```\n \n*Output:*  is the list of batch-corrected data:\nBASH3*\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/ebi-gene-expression-group/selectBCM/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.8638316220537748,
+      "result": {
+        "original_header": "Step6: Ranking of BCMs",
+        "type": "Text_excerpt",
+        "value": "\n**Rank plot** \n"
+      },
+      "source": "https://raw.githubusercontent.com/ebi-gene-expression-group/selectBCM/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.8217701070361271,
+      "result": {
+        "original_header": "Additional function: Detetction of batch-effects in raw merged dataset",
+        "type": "Text_excerpt",
+        "value": "Assessment of batch-effect on raw merged data can be performed like this:\n```r\nbatch_effect.raw <- detect_effect(experiments,experiment = experiments,\n                                  batch.factors=c(\"batch\",\"sex\"),5,5,'ensembl_gene_id')\nResult <- do.call(rbind, lapply(batch_effect.raw, as.matrix)) %>% t %>% as.data.frame()\n``` \nResult:\nBASH2* \n \n"
+      },
+      "source": "https://raw.githubusercontent.com/ebi-gene-expression-group/selectBCM/master/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "issue_tracker": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/ebi-gene-expression-group/selectBCM/issues"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "keywords": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "batch-correction, bulk-rna-seq, gene-expression, microarray-data-analysis"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "selectBCM"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "owner": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Organization",
+        "value": "ebi-gene-expression-group"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "programming_languages": [
+    {
+      "confidence": 1,
+      "result": {
+        "name": "R",
+        "size": 101720,
+        "type": "Programming_language",
+        "value": "R"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Dockerfile",
+        "size": 1285,
+        "type": "Programming_language",
+        "value": "Dockerfile"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "readme_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/ebi-gene-expression-group/selectBCM/master/README.md"
+      },
+      "technique": "file_exploration"
+    }
+  ],
+  "releases": [
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "madhulika-EBI",
+          "type": "User"
+        },
+        "date_created": "2023-01-07T09:25:04Z",
+        "date_published": "2023-01-07T10:51:30Z",
+        "description": "selectBCM tool's first official release.",
+        "html_url": "https://github.com/ebi-gene-expression-group/selectBCM/releases/tag/v2.0.0",
+        "name": "SelectBCM tool",
+        "release_id": 88205519,
+        "tag": "v2.0.0",
+        "tarball_url": "https://api.github.com/repos/ebi-gene-expression-group/selectBCM/tarball/v2.0.0",
+        "type": "Release",
+        "url": "https://api.github.com/repos/ebi-gene-expression-group/selectBCM/releases/88205519",
+        "value": "https://api.github.com/repos/ebi-gene-expression-group/selectBCM/releases/88205519",
+        "zipball_url": "https://api.github.com/repos/ebi-gene-expression-group/selectBCM/zipball/v2.0.0"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "madhulika-EBI",
+          "type": "User"
+        },
+        "date_created": "2020-10-30T21:47:01Z",
+        "date_published": "2020-10-30T22:03:56Z",
+        "html_url": "https://github.com/ebi-gene-expression-group/selectBCM/releases/tag/v1.5",
+        "name": "update",
+        "release_id": 33294046,
+        "tag": "v1.5",
+        "tarball_url": "https://api.github.com/repos/ebi-gene-expression-group/selectBCM/tarball/v1.5",
+        "type": "Release",
+        "url": "https://api.github.com/repos/ebi-gene-expression-group/selectBCM/releases/33294046",
+        "value": "https://api.github.com/repos/ebi-gene-expression-group/selectBCM/releases/33294046",
+        "zipball_url": "https://api.github.com/repos/ebi-gene-expression-group/selectBCM/zipball/v1.5"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "madhulika-EBI",
+          "type": "User"
+        },
+        "date_created": "2020-10-30T21:47:01Z",
+        "date_published": "2020-10-30T21:58:44Z",
+        "html_url": "https://github.com/ebi-gene-expression-group/selectBCM/releases/tag/v1.2",
+        "release_id": 33293894,
+        "tag": "v1.2",
+        "tarball_url": "https://api.github.com/repos/ebi-gene-expression-group/selectBCM/tarball/v1.2",
+        "type": "Release",
+        "url": "https://api.github.com/repos/ebi-gene-expression-group/selectBCM/releases/33293894",
+        "value": "https://api.github.com/repos/ebi-gene-expression-group/selectBCM/releases/33293894",
+        "zipball_url": "https://api.github.com/repos/ebi-gene-expression-group/selectBCM/zipball/v1.2"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "madhulika-EBI",
+          "type": "User"
+        },
+        "date_created": "2020-10-30T21:47:01Z",
+        "date_published": "2023-01-07T10:42:04Z",
+        "html_url": "https://github.com/ebi-gene-expression-group/selectBCM/releases/tag/v1.1",
+        "release_id": 88205360,
+        "tag": "v1.1",
+        "tarball_url": "https://api.github.com/repos/ebi-gene-expression-group/selectBCM/tarball/v1.1",
+        "type": "Release",
+        "url": "https://api.github.com/repos/ebi-gene-expression-group/selectBCM/releases/88205360",
+        "value": "https://api.github.com/repos/ebi-gene-expression-group/selectBCM/releases/88205360",
+        "zipball_url": "https://api.github.com/repos/ebi-gene-expression-group/selectBCM/zipball/v1.1"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "madhulika-EBI",
+          "type": "User"
+        },
+        "date_created": "2020-10-30T10:20:34Z",
+        "date_published": "2020-10-30T12:05:57Z",
+        "html_url": "https://github.com/ebi-gene-expression-group/selectBCM/releases/tag/v1.0",
+        "name": "First relase",
+        "release_id": 33267619,
+        "tag": "v1.0",
+        "tarball_url": "https://api.github.com/repos/ebi-gene-expression-group/selectBCM/tarball/v1.0",
+        "type": "Release",
+        "url": "https://api.github.com/repos/ebi-gene-expression-group/selectBCM/releases/33267619",
+        "value": "https://api.github.com/repos/ebi-gene-expression-group/selectBCM/releases/33267619",
+        "zipball_url": "https://api.github.com/repos/ebi-gene-expression-group/selectBCM/zipball/v1.0"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "somef_missing_categories": [
+    "citation",
+    "acknowledgement",
+    "run",
+    "download",
+    "requirements",
+    "contact",
+    "contributors",
+    "license",
+    "faq",
+    "support",
+    "identifier",
+    "executable_example"
+  ],
+  "somef_provenance": {
+    "date": "2024-10-04 09:25:42",
+    "somef_schema_version": "1.0.0",
+    "somef_version": "0.9.5"
+  },
+  "stargazers_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 2
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "usage": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Step1: Getting data",
+        "parent_header": [
+          "Overview of steps available in SelectBCM"
+        ],
+        "type": "Text_excerpt",
+        "value": "**Loading local data in R:**\nIf the data files are already on the user's local machine, they can be used directly as follows:\n\n**Steps:**\n\n- Put the data files in `.Rdata` format in a directory containing only them. (The R objects contained in those files must be either `SummarizedExperiment` or `ExpressionSet` experiment.)\n- Load all the experiments in a list using the function `load_experiments` \n\n```r\nexperiments <- load_experiments('directory_path')\nexperiments<-load_experiments('./')\n\n```\n\nIf user want to download data from Expression Atlas, they can skip the above and go directly to \"Downloading data from Expression Atlas\".\n\n**Downloading data from Expression Atlas:**\nIn case of data downloading from Expression Atlas, user can use the function `download_experiments_from_ExpressionAtlas` in this way :\n\n```r\nexperiments <- download_experiments_from_ExpressionAtlas('E-MTAB-8549','E-MTAB-5060')\n```\n*** will download RNAseq experiments from expressionatlas.\n\n**Recommendation:** \nMicroarray input data should be preprocessed- appropriately back-ground corrected without any normalization step, probe-to-gene level mapped and log-transformed. It is also recommended to remove low-expressed genes from data if possible. For bulk-RNaseq data, it should be a count matrix.\n\n\n**Output from step 1:**\nThis downloads the experiments in a new directory called **\"experiments\"** in user's working directory and loads all the experiments in R within a list, using `load_experiments` function.\nAfter having loaded the experiments, user will get a list of either `SummarizedExperiment` or list of `ExpressionSet` objects.\n\n**Caution**: Avoid mixing experiments of `SummarizedExperiment` with `ExpressionSet`. Experiments can only belong from any one of the classes only. All the selected experiments should have same gene id format.\n\n"
+      },
+      "source": "https://raw.githubusercontent.com/ebi-gene-expression-group/selectBCM/master/README.md",
+      "technique": "header_analysis"
+    }
+  ]
+}

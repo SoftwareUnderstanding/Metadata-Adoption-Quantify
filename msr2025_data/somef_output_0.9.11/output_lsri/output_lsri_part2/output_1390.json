@@ -1,0 +1,581 @@
+{
+  "code_repository": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/pirl-unc/NeoSplice"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_created": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2021-04-12T14:53:18Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_updated": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2024-06-04T06:47:08Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "description": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Summary of steps",
+        "type": "Text_excerpt",
+        "value": "Multiple steps are needed to identify a novel splice that occurs specifically in tumor cell transcripts whose translation will result in a neopeptide that can be targeted by T cells.  Broadly, these steps are: \r\n\r\n- **Step 1:** Tumor-specific k-mer generation. Using one RNA-seq dataset T of tumor cells and one RNA-seq dataset N of normal cells, tumor-specific k-mer sequences present abundantly in the transcriptome of the tumor cell, but not/rarely expressed in the normal cells are identified.\r\n\r\n- **Step 2:** Prediction of splice variant transcripts.  The splice graph G from the tumor cell RNA-seq data is built, and tumor specific k-mers from above are mapped to novel splice variant transcripts.  Gencode annotations are used to determine whether the novel splice lies within a protein coding region and infer the reading frame of the transcript. \r\n\r\n- **Step 3:** Prediction of splice variant neoantigens. Novel splice junctions contained within each splice variant transcript are translated in the inferred open reading frame.  MHC binding affinity prediction is performed on translated peptide sequences to determine which novel regions may yield a neopeptide.\r\n\r\n.. image:: https://github.com/Benjamin-Vincent-Lab/NeoSplice/blob/master/images/Figure_1.jpg\r\n\r\n\r\n-------------------\r"
+      },
+      "source": "https://raw.githubusercontent.com/Benjamin-Vincent-Lab/NeoSplice/master/README.rst",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Summary of workflow",
+        "type": "Text_excerpt",
+        "value": "\r\nFunctionally, these above steps are accomplished by individual Python2 scripts, alongside the prior listed dependencies.  This workflow is summarized in the below figure:\r\n\r\n.. image:: https://github.com/Benjamin-Vincent-Lab/NeoSplice/blob/master/images/Neosplice_workflow.jpg\r\n\r\nThis workflow is summarized step-by-step below. Additionally, an example **Nextflow** script is provided in the ``./Nextflow_example`` directory of the GitHub repo, which provides the entire workflow as an .nf script.\r\n\r"
+      },
+      "source": "https://raw.githubusercontent.com/Benjamin-Vincent-Lab/NeoSplice/master/README.rst",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 0.8357278592892812,
+      "result": {
+        "original_header": "0. Input files",
+        "type": "Text_excerpt",
+        "value": "The following input files will be referenced in the below workflow steps:\r\n\r\n- **tumor.bam**: Aligned RNA-seq file for tumor sample of interest using a splice-aware aligner.  Currently, we recommend the STAR aligner: https://github.com/alexdobin/STAR\r\n- **normal.bam**: Aligned RNA-seq file for matched-normal sample of interest using a splice-aware aligner.  Currently, we recommend the STAR aligner: https://github.com/alexdobin/STAR\r\n- **reference.fa**: Reference genome fasta file, preferably the same file used to generate the genome index for STAR.\r\n- **reference.gff**: Reference gff3 file, preferably the same build as the .gtf file that was used to generate the genome index for STAR.\r\n- **./Reference_peptidome**: A GRCh38 reference peptidome of 8-11mer peptides is contained within the repository at ``./Reference_peptidome``. If necessary, you can use the script  ``./NeoSplice/generate_reference_peptidome.py`` to generate a different reference build using matching fasta and gff files. Prior to use (step 9), unzip the files contained in this directory using the following command:\r\n\r\n.. code-block:: \r\n\r\n    gunzip ./Reference_peptidome/*\r\n    \r \n"
+      },
+      "source": "https://raw.githubusercontent.com/Benjamin-Vincent-Lab/NeoSplice/master/README.rst",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9852359010569767,
+      "result": {
+        "original_header": "1. augmented_splice_graph.py",
+        "type": "Text_excerpt",
+        "value": "This step builds the splice graph for the tumor, with ``augmented_splice_graph.py`` run for each individual chromosome of interest.  The output for each instance (i.e. chromosome) is a ``.json`` file.  There are several arguments included for this step: **p-error**, **cutoff**, **min-coverage**, and **min-variants**.  While we cannot provide optimal argument recommendations for every sample, below are the values used for simulated read data benchmarking and mass spectrometry validated K562.A2 cell line splice variant neoantigens.  Below is an example for chromosome 1:\r\n\r\n.. code-block::\r\n\r\n    mkdir ./tumor1_splice_graph\r\n    python /NeoSplice/augmented_splice_graph.py build \\\r\n        --bam ./path/to/tumor.bam \\\r\n        --seq chr1 \\\r\n        --genome ./path/to/reference.fa \\\r\n        --min-variants 10 \\\r\n        --cutoff 0.000005 \\\r\n        --gff ./path/to/reference.gff \\\r\n        --out ./tumor_splice_graph\r\n\r \n"
+      },
+      "source": "https://raw.githubusercontent.com/Benjamin-Vincent-Lab/NeoSplice/master/README.rst",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9092174216190196,
+      "result": {
+        "original_header": "2. convert_bam_to_fasta.py",
+        "type": "Text_excerpt",
+        "value": "This step is a simple script to back-convert the STAR-aligned **tumor.bam** and **normal.bam** files back into fasta format:\r\n\r\n.. code-block::\r\n\r\n    python /NeoSplice/convert_bam_to_fasta.py \\\r\n        --bam_file tumor.bam \\\r\n        --R1_out tumor_R1.fasta \\\r\n        --R2_out tumor_R2.fasta\r\n    python /NeoSplice/convert_bam_to_fasta.py \\\r\n        -bam_file normal.bam \\\r\n        --R1_out normal_R1.fasta \\\r\n        --R2_out normal_R2.fasta\r\n\r \n"
+      },
+      "source": "https://raw.githubusercontent.com/Benjamin-Vincent-Lab/NeoSplice/master/README.rst",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9643587976117814,
+      "result": {
+        "original_header": "4. get_max_kmer_length.py",
+        "type": "Text_excerpt",
+        "value": "This step searches for the maximum read length contained within either the tumor or matched-normal files, returning an output value for use in step 5.  If you know this value already, this step can be skipped:\r\n\r\n.. code-block::\r\n\r\n     python /NeoSplice/get_max_kmer_length.py \\\r\n         --tumor_bam tumor.bam \\\r\n         --normal_bam normal.bam\r\n\r \n"
+      },
+      "source": "https://raw.githubusercontent.com/Benjamin-Vincent-Lab/NeoSplice/master/README.rst",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9919253957353327,
+      "result": {
+        "original_header": "5. Kmer_search_bwt.py",
+        "type": "Text_excerpt",
+        "value": "This step uses the MSBWTs generated in step 3 and searches for differentially expressed Kmers between tumor and matched-normal samples.  There are two argument variables that can be adjusted here -- **Tmin** (minimum expression of a given Kmer in the tumor) and **Nmax** (maximum expression of a given Kmer in the normal).  For a Kmer to be considered differentially expressed, it must be > **Tmin** AND < **Nmax**.  Typically, you may consider setting **Tmin** to 20-35 and **Nmax** to 1-4.  The **max_length** argument should be set to the value obtained from **step 4**, or the maximum read length of the input files.\r\n\r\n.. code-block::\r\n\r\n    mkdir .tumor_kmers\r\n    python ./NeoSplice/Kmer_search_bwt.py \\\r\n        --tumor_bwt ./tumor_bwt/ \\\r\n        --normal_bwt ./normal_bwt/ \\\r\n        --processors 1 \\\r\n        --max_length $read_length \\\r\n        --tumor_threshold 20 \\\r\n        --normal_threshold 4  \\\r\n        --outdir ./tumor_kmers/\r\n    cat ./tumor_kmers/Tumor_kmers_* >  ./tumor_kmers/merged_Tumor_kmers.txt\r\n\r \n"
+      },
+      "source": "https://raw.githubusercontent.com/Benjamin-Vincent-Lab/NeoSplice/master/README.rst",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9971082631136331,
+      "result": {
+        "original_header": "6. search_bam.py and Samtools sort/index",
+        "type": "Text_excerpt",
+        "value": "This step uses an Aho\u2013Corasick algorithm (pyahocorasick 1.4.0) to search for the reads that contain tumor specific Kmers in the tumor RNA-seq BAM file.  This method runs in time linear in the size of the BAM file.  For each occurrence, the Kmer-containing portion of the read along with corresponding quality scores and Cigar strings is written to a new BAM file.  This output BAM is then sorted and indexed using Samtools.\r\n\r\n.. code-block::\r\n\r\n    python ./NeoSplice/search_bam.py \\\r\n        --Kmer_file ./tumor_kmers/merged_Tumor_kmers.txt \\\r\n        --input_bam_file tumor.bam \\\r\n        --out_bam_file tumor_Kmer.bam \r\n    samtools sort -m 15G -o tumor_Kmer_sorted.bam tumor_Kmer.bam\r\n    samtools index tumor_Kmer_sorted.bam\r\n\r \n"
+      },
+      "source": "https://raw.githubusercontent.com/Benjamin-Vincent-Lab/NeoSplice/master/README.rst",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9441320098686854,
+      "result": {
+        "original_header": "7. get_splice_junctions.py",
+        "type": "Text_excerpt",
+        "value": "This step collects a list of all splice junctions from the tumor and normal BAM files, storing these in a text file for downstream use.\r\n\r\n.. code-block::\r\n\r\n    python /NeoSplice/get_splice_junctions.py \\\r\n        --input_bam tumor.bam \\\r\n        --out_file tumor_junctions.txt\r\n    python /NeoSplice/get_splice_junctions.py \\\r\n        --input_bam normal.bam \\\r\n        --out_file normal_junctions.txt\r\n\r \n"
+      },
+      "source": "https://raw.githubusercontent.com/Benjamin-Vincent-Lab/NeoSplice/master/README.rst",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9990497065856063,
+      "result": {
+        "original_header": "8. kmer_graph_inference.py",
+        "type": "Text_excerpt",
+        "value": "In this step, each splice variant transcript sequence is identified by depth-first search.  This is then concatenated with the tumor specific Kmer sequence and translated into 8-11mer peptides for MHC-I neoantigen prediction.  Binding affinity to MHC molecules expressed by the tumor for in-silico generated peptides is predicted using NetMHCpan-4.0.  Arguments to consider in this step include **HLA_I** (provide list of NetMHCpan-compatible alleles for antigen prediction), as well as **transcript_min_coverage** (the minimum Kmer coverage necessary for a transcript to be considered).  This command is run for each chromosome of interest, with an example for chromsome 1 shown below:\r\n\r\n.. code-block::\r\n\r\n    python /NeoSplice/kmer_graph_inference.py \\\r\n        --sample tumor \\\r\n        --chromosome chr1 \\\r\n        --bam_file tumor.bam \\\r\n        --gff_file reference.gff \\\r\n        --genome_fasta reference.fasta \\\r\n        --kmer_bam tumor_Kmer_sorted.bam \\\r\n        --splice_graph ./tumor_splice_graph \\\r\n        --tumor_junction_file tumor_junctions.txt \\\r\n        --normal_junction_file normal_junctions.txt \\\r\n        --transcript_min_coverage 15 \\\r\n        --HLA_I ${HLA_i} \\\r\n        --netMHCpan_path ./netMHCpan-4.0-docker/netMHCpan \\\r\n        --outdir ./tumor_output_dir\r\n        \r \n"
+      },
+      "source": "https://raw.githubusercontent.com/Benjamin-Vincent-Lab/NeoSplice/master/README.rst",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.822593145586125,
+      "result": {
+        "original_header": "9. SV_summarization.py",
+        "type": "Text_excerpt",
+        "value": "In this final step, predicted splice variant peptides from above are filtered against the reference peptidome, filtered to peptides with predicted binding affinity >500nM by NetMHCpan-4.0, and summarized into a single output file.  The **data_dir** argument should point to the working directory, one level above the ``outdir`` argument from step 8 (``kmer_graph_inference.py``).  The output from this step provides a summarized text file containing all predicted splice variant neoantigens.\r\n\r\n.. code-block::\r\n\r\n    python /NeoSplice/SV_summarization.py \\\r\n        --ref_dir ./Reference_peptidome \\\r\n        --data_dir .\r\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/Benjamin-Vincent-Lab/NeoSplice/master/README.rst",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9997501680446365,
+      "result": {
+        "type": "Text_excerpt",
+        "value": "\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\r\nNeoSplice: A bioinformatics method for prediction of splice variant neoantigens\r\n\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\r\n\r\nNeoSplice is a novel computational method for splice variant neoantigen prediction based on 1) prediction of tumor-specific k-mers from RNA-seq data, 2) alignment of differentially expressed k-mers to the splice graph, and 3) inference of the variant transcript with MHC binding prediction.  NeoSplice demonstrates high sensitivity and precision (>80% on average across all splice variant classes) through in silico simulated RNA-seq data.  Additionally, predicted splice variant neoantigens in the K562.A2 cell line have been validated using mass spectrometry immunopeptidome analysis.  NeoSplice provides a well-validated platform for prediction of TSA vaccine targets for future cancer antigen vaccine studies to evaluate the clinical efficacy of splice variant neoantigens.\r\n\r\nThe NeoSplice workflow is currently set up for prediction of MHC-I antigens, with future plans to additionally expand to MHC-II prediction.\r\n\r\nNeoSplice is free for academic and non-profit use.\r\n\r\n============\r\nInstallation\r\n============\r\n\r\n------------------- \n"
+      },
+      "source": "https://raw.githubusercontent.com/Benjamin-Vincent-Lab/NeoSplice/master/README.rst",
+      "technique": "supervised_classification"
+    }
+  ],
+  "download_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/Benjamin-Vincent-Lab/NeoSplice/releases"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 4
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/pirl-unc/NeoSplice/forks"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "pirl-unc/NeoSplice"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_title": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": ""
+      },
+      "source": "https://raw.githubusercontent.com/Benjamin-Vincent-Lab/NeoSplice/master/README.rst",
+      "technique": "regular_expression"
+    }
+  ],
+  "has_build_file": [
+    {
+      "confidence": 1,
+      "result": {
+        "format": "dockerfile",
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/Benjamin-Vincent-Lab/NeoSplice/master/Dockerfile"
+      },
+      "source": "https://raw.githubusercontent.com/Benjamin-Vincent-Lab/NeoSplice/master/Dockerfile",
+      "technique": "file_exploration"
+    }
+  ],
+  "installation": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Installation steps",
+        "type": "Text_excerpt",
+        "value": "\r\nUsing a Python 2.7 VirtualEnv:\r\n::\r\n    git clone https://github.com/Benjamin-Vincent-Lab/NeoSplice.git\r\n    cd NeoSplice\r\n    virtualenv .\r\n    source bin/activate\r\n    pip install -r requirements.txt\r\n\r\nUsing Singularity with Docker image:\r\n::\r\n    singularity pull docker://benjaminvincentlab/neosplice:0.0.2\r\n    singularity shell -B </path/with/input_bams_gffs_fa_etc> neosplice_0.0.2.sif\r\n\r\n========\r\nWorkflow\r\n========\r\n\r\n-----------------\r"
+      },
+      "source": "https://raw.githubusercontent.com/Benjamin-Vincent-Lab/NeoSplice/master/README.rst",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 0.9999998762541585,
+      "result": {
+        "original_header": "0. Input files",
+        "type": "Text_excerpt",
+        "value": "The following input files will be referenced in the below workflow steps:\r\n\r\n- **tumor.bam**: Aligned RNA-seq file for tumor sample of interest using a splice-aware aligner.  Currently, we recommend the STAR aligner: https://github.com/alexdobin/STAR\r\n- **normal.bam**: Aligned RNA-seq file for matched-normal sample of interest using a splice-aware aligner.  Currently, we recommend the STAR aligner: https://github.com/alexdobin/STAR\r\n- **reference.fa**: Reference genome fasta file, preferably the same file used to generate the genome index for STAR.\r\n- **reference.gff**: Reference gff3 file, preferably the same build as the .gtf file that was used to generate the genome index for STAR.\r\n- **./Reference_peptidome**: A GRCh38 reference peptidome of 8-11mer peptides is contained within the repository at ``./Reference_peptidome``. If necessary, you can use the script  ``./NeoSplice/generate_reference_peptidome.py`` to generate a different reference build using matching fasta and gff files. Prior to use (step 9), unzip the files contained in this directory using the following command:\r\n\r\n.. code-block:: \r\n\r\n    gunzip ./Reference_peptidome/*\r\n    \r \n"
+      },
+      "source": "https://raw.githubusercontent.com/Benjamin-Vincent-Lab/NeoSplice/master/README.rst",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9015704501122115,
+      "result": {
+        "original_header": "2. convert_bam_to_fasta.py",
+        "type": "Text_excerpt",
+        "value": "This step is a simple script to back-convert the STAR-aligned **tumor.bam** and **normal.bam** files back into fasta format:\r\n\r\n.. code-block::\r\n\r\n    python /NeoSplice/convert_bam_to_fasta.py \\\r\n        --bam_file tumor.bam \\\r\n        --R1_out tumor_R1.fasta \\\r\n        --R2_out tumor_R2.fasta\r\n    python /NeoSplice/convert_bam_to_fasta.py \\\r\n        -bam_file normal.bam \\\r\n        --R1_out normal_R1.fasta \\\r\n        --R2_out normal_R2.fasta\r\n\r \n"
+      },
+      "source": "https://raw.githubusercontent.com/Benjamin-Vincent-Lab/NeoSplice/master/README.rst",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9992787145315598,
+      "result": {
+        "original_header": "4. get_max_kmer_length.py",
+        "type": "Text_excerpt",
+        "value": "This step searches for the maximum read length contained within either the tumor or matched-normal files, returning an output value for use in step 5.  If you know this value already, this step can be skipped:\r\n\r\n.. code-block::\r\n\r\n     python /NeoSplice/get_max_kmer_length.py \\\r\n         --tumor_bam tumor.bam \\\r\n         --normal_bam normal.bam\r\n\r \n"
+      },
+      "source": "https://raw.githubusercontent.com/Benjamin-Vincent-Lab/NeoSplice/master/README.rst",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9981866948502254,
+      "result": {
+        "original_header": "7. get_splice_junctions.py",
+        "type": "Text_excerpt",
+        "value": "This step collects a list of all splice junctions from the tumor and normal BAM files, storing these in a text file for downstream use.\r\n\r\n.. code-block::\r\n\r\n    python /NeoSplice/get_splice_junctions.py \\\r\n        --input_bam tumor.bam \\\r\n        --out_file tumor_junctions.txt\r\n    python /NeoSplice/get_splice_junctions.py \\\r\n        --input_bam normal.bam \\\r\n        --out_file normal_junctions.txt\r\n\r \n"
+      },
+      "source": "https://raw.githubusercontent.com/Benjamin-Vincent-Lab/NeoSplice/master/README.rst",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.8436857629814088,
+      "result": {
+        "original_header": "9. SV_summarization.py",
+        "type": "Text_excerpt",
+        "value": "In this final step, predicted splice variant peptides from above are filtered against the reference peptidome, filtered to peptides with predicted binding affinity >500nM by NetMHCpan-4.0, and summarized into a single output file.  The **data_dir** argument should point to the working directory, one level above the ``outdir`` argument from step 8 (``kmer_graph_inference.py``).  The output from this step provides a summarized text file containing all predicted splice variant neoantigens.\r\n\r\n.. code-block::\r\n\r\n    python /NeoSplice/SV_summarization.py \\\r\n        --ref_dir ./Reference_peptidome \\\r\n        --data_dir .\r\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/Benjamin-Vincent-Lab/NeoSplice/master/README.rst",
+      "technique": "supervised_classification"
+    }
+  ],
+  "invocation": [
+    {
+      "confidence": 0.8176974029413098,
+      "result": {
+        "original_header": "2. convert_bam_to_fasta.py",
+        "type": "Text_excerpt",
+        "value": "This step is a simple script to back-convert the STAR-aligned **tumor.bam** and **normal.bam** files back into fasta format:\r\n\r\n.. code-block::\r\n\r\n    python /NeoSplice/convert_bam_to_fasta.py \\\r\n        --bam_file tumor.bam \\\r\n        --R1_out tumor_R1.fasta \\\r\n        --R2_out tumor_R2.fasta\r\n    python /NeoSplice/convert_bam_to_fasta.py \\\r\n        -bam_file normal.bam \\\r\n        --R1_out normal_R1.fasta \\\r\n        --R2_out normal_R2.fasta\r\n\r \n"
+      },
+      "source": "https://raw.githubusercontent.com/Benjamin-Vincent-Lab/NeoSplice/master/README.rst",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.836876383711779,
+      "result": {
+        "original_header": "7. get_splice_junctions.py",
+        "type": "Text_excerpt",
+        "value": "This step collects a list of all splice junctions from the tumor and normal BAM files, storing these in a text file for downstream use.\r\n\r\n.. code-block::\r\n\r\n    python /NeoSplice/get_splice_junctions.py \\\r\n        --input_bam tumor.bam \\\r\n        --out_file tumor_junctions.txt\r\n    python /NeoSplice/get_splice_junctions.py \\\r\n        --input_bam normal.bam \\\r\n        --out_file normal_junctions.txt\r\n\r \n"
+      },
+      "source": "https://raw.githubusercontent.com/Benjamin-Vincent-Lab/NeoSplice/master/README.rst",
+      "technique": "supervised_classification"
+    }
+  ],
+  "issue_tracker": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/pirl-unc/NeoSplice/issues"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "keywords": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": ""
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "license": [
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Apache License 2.0",
+        "spdx_id": "Apache-2.0",
+        "type": "License",
+        "url": "https://api.github.com/licenses/apache-2.0",
+        "value": "https://api.github.com/licenses/apache-2.0"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "File_dump",
+        "value": "                                 Apache License\n                           Version 2.0, January 2004\n                        http://www.apache.org/licenses/\n\n   TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION\n\n   1. Definitions.\n\n      \"License\" shall mean the terms and conditions for use, reproduction,\n      and distribution as defined by Sections 1 through 9 of this document.\n\n      \"Licensor\" shall mean the copyright owner or entity authorized by\n      the copyright owner that is granting the License.\n\n      \"Legal Entity\" shall mean the union of the acting entity and all\n      other entities that control, are controlled by, or are under common\n      control with that entity. For the purposes of this definition,\n      \"control\" means (i) the power, direct or indirect, to cause the\n      direction or management of such entity, whether by contract or\n      otherwise, or (ii) ownership of fifty percent (50%) or more of the\n      outstanding shares, or (iii) beneficial ownership of such entity.\n\n      \"You\" (or \"Your\") shall mean an individual or Legal Entity\n      exercising permissions granted by this License.\n\n      \"Source\" form shall mean the preferred form for making modifications,\n      including but not limited to software source code, documentation\n      source, and configuration files.\n\n      \"Object\" form shall mean any form resulting from mechanical\n      transformation or translation of a Source form, including but\n      not limited to compiled object code, generated documentation,\n      and conversions to other media types.\n\n      \"Work\" shall mean the work of authorship, whether in Source or\n      Object form, made available under the License, as indicated by a\n      copyright notice that is included in or attached to the work\n      (an example is provided in the Appendix below).\n\n      \"Derivative Works\" shall mean any work, whether in Source or Object\n      form, that is based on (or derived from) the Work and for which the\n      editorial revisions, annotations, elaborations, or other modifications\n      represent, as a whole, an original work of authorship. For the purposes\n      of this License, Derivative Works shall not include works that remain\n      separable from, or merely link (or bind by name) to the interfaces of,\n      the Work and Derivative Works thereof.\n\n      \"Contribution\" shall mean any work of authorship, including\n      the original version of the Work and any modifications or additions\n      to that Work or Derivative Works thereof, that is intentionally\n      submitted to Licensor for inclusion in the Work by the copyright owner\n      or by an individual or Legal Entity authorized to submit on behalf of\n      the copyright owner. For the purposes of this definition, \"submitted\"\n      means any form of electronic, verbal, or written communication sent\n      to the Licensor or its representatives, including but not limited to\n      communication on electronic mailing lists, source code control systems,\n      and issue tracking systems that are managed by, or on behalf of, the\n      Licensor for the purpose of discussing and improving the Work, but\n      excluding communication that is conspicuously marked or otherwise\n      designated in writing by the copyright owner as \"Not a Contribution.\"\n\n      \"Contributor\" shall mean Licensor and any individual or Legal Entity\n      on behalf of whom a Contribution has been received by Licensor and\n      subsequently incorporated within the Work.\n\n   2. Grant of Copyright License. Subject to the terms and conditions of\n      this License, each Contributor hereby grants to You a perpetual,\n      worldwide, non-exclusive, no-charge, royalty-free, irrevocable\n      copyright license to reproduce, prepare Derivative Works of,\n      publicly display, publicly perform, sublicense, and distribute the\n      Work and such Derivative Works in Source or Object form.\n\n   3. Grant of Patent License. Subject to the terms and conditions of\n      this License, each Contributor hereby grants to You a perpetual,\n      worldwide, non-exclusive, no-charge, royalty-free, irrevocable\n      (except as stated in this section) patent license to make, have made,\n      use, offer to sell, sell, import, and otherwise transfer the Work,\n      where such license applies only to those patent claims licensable\n      by such Contributor that are necessarily infringed by their\n      Contribution(s) alone or by combination of their Contribution(s)\n      with the Work to which such Contribution(s) was submitted. If You\n      institute patent litigation against any entity (including a\n      cross-claim or counterclaim in a lawsuit) alleging that the Work\n      or a Contribution incorporated within the Work constitutes direct\n      or contributory patent infringement, then any patent licenses\n      granted to You under this License for that Work shall terminate\n      as of the date such litigation is filed.\n\n   4. Redistribution. You may reproduce and distribute copies of the\n      Work or Derivative Works thereof in any medium, with or without\n      modifications, and in Source or Object form, provided that You\n      meet the following conditions:\n\n      (a) You must give any other recipients of the Work or\n          Derivative Works a copy of this License; and\n\n      (b) You must cause any modified files to carry prominent notices\n          stating that You changed the files; and\n\n      (c) You must retain, in the Source form of any Derivative Works\n          that You distribute, all copyright, patent, trademark, and\n          attribution notices from the Source form of the Work,\n          excluding those notices that do not pertain to any part of\n          the Derivative Works; and\n\n      (d) If the Work includes a \"NOTICE\" text file as part of its\n          distribution, then any Derivative Works that You distribute must\n          include a readable copy of the attribution notices contained\n          within such NOTICE file, excluding those notices that do not\n          pertain to any part of the Derivative Works, in at least one\n          of the following places: within a NOTICE text file distributed\n          as part of the Derivative Works; within the Source form or\n          documentation, if provided along with the Derivative Works; or,\n          within a display generated by the Derivative Works, if and\n          wherever such third-party notices normally appear. The contents\n          of the NOTICE file are for informational purposes only and\n          do not modify the License. You may add Your own attribution\n          notices within Derivative Works that You distribute, alongside\n          or as an addendum to the NOTICE text from the Work, provided\n          that such additional attribution notices cannot be construed\n          as modifying the License.\n\n      You may add Your own copyright statement to Your modifications and\n      may provide additional or different license terms and conditions\n      for use, reproduction, or distribution of Your modifications, or\n      for any such Derivative Works as a whole, provided Your use,\n      reproduction, and distribution of the Work otherwise complies with\n      the conditions stated in this License.\n\n   5. Submission of Contributions. Unless You explicitly state otherwise,\n      any Contribution intentionally submitted for inclusion in the Work\n      by You to the Licensor shall be under the terms and conditions of\n      this License, without any additional terms or conditions.\n      Notwithstanding the above, nothing herein shall supersede or modify\n      the terms of any separate license agreement you may have executed\n      with Licensor regarding such Contributions.\n\n   6. Trademarks. This License does not grant permission to use the trade\n      names, trademarks, service marks, or product names of the Licensor,\n      except as required for reasonable and customary use in describing the\n      origin of the Work and reproducing the content of the NOTICE file.\n\n   7. Disclaimer of Warranty. Unless required by applicable law or\n      agreed to in writing, Licensor provides the Work (and each\n      Contributor provides its Contributions) on an \"AS IS\" BASIS,\n      WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or\n      implied, including, without limitation, any warranties or conditions\n      of TITLE, NON-INFRINGEMENT, MERCHANTABILITY, or FITNESS FOR A\n      PARTICULAR PURPOSE. You are solely responsible for determining the\n      appropriateness of using or redistributing the Work and assume any\n      risks associated with Your exercise of permissions under this License.\n\n   8. Limitation of Liability. In no event and under no legal theory,\n      whether in tort (including negligence), contract, or otherwise,\n      unless required by applicable law (such as deliberate and grossly\n      negligent acts) or agreed to in writing, shall any Contributor be\n      liable to You for damages, including any direct, indirect, special,\n      incidental, or consequential damages of any character arising as a\n      result of this License or out of the use or inability to use the\n      Work (including but not limited to damages for loss of goodwill,\n      work stoppage, computer failure or malfunction, or any and all\n      other commercial damages or losses), even if such Contributor\n      has been advised of the possibility of such damages.\n\n   9. Accepting Warranty or Additional Liability. While redistributing\n      the Work or Derivative Works thereof, You may choose to offer,\n      and charge a fee for, acceptance of support, warranty, indemnity,\n      or other liability obligations and/or rights consistent with this\n      License. However, in accepting such obligations, You may act only\n      on Your own behalf and on Your sole responsibility, not on behalf\n      of any other Contributor, and only if You agree to indemnify,\n      defend, and hold each Contributor harmless for any liability\n      incurred by, or claims asserted against, such Contributor by reason\n      of your accepting any such warranty or additional liability.\n\n   END OF TERMS AND CONDITIONS\n\n   APPENDIX: How to apply the Apache License to your work.\n\n      To apply the Apache License to your work, attach the following\n      boilerplate notice, with the fields enclosed by brackets \"[]\"\n      replaced with your own identifying information. (Don't include\n      the brackets!)  The text should be enclosed in the appropriate\n      comment syntax for the file format. We also recommend that a\n      file or class name and description of purpose be included on the\n      same \"printed page\" as the copyright notice for easier\n      identification within third-party archives.\n\n   Copyright [yyyy] [name of copyright owner]\n\n   Licensed under the Apache License, Version 2.0 (the \"License\");\n   you may not use this file except in compliance with the License.\n   You may obtain a copy of the License at\n\n       http://www.apache.org/licenses/LICENSE-2.0\n\n   Unless required by applicable law or agreed to in writing, software\n   distributed under the License is distributed on an \"AS IS\" BASIS,\n   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n   See the License for the specific language governing permissions and\n   limitations under the License.\n"
+      },
+      "source": "https://raw.githubusercontent.com/Benjamin-Vincent-Lab/NeoSplice/master/LICENSE",
+      "technique": "file_exploration"
+    }
+  ],
+  "name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "NeoSplice"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "owner": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Organization",
+        "value": "pirl-unc"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "programming_languages": [
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Emacs Lisp",
+        "size": 4918486,
+        "type": "Programming_language",
+        "value": "Emacs Lisp"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Python",
+        "size": 115024,
+        "type": "Programming_language",
+        "value": "Python"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Perl",
+        "size": 44349,
+        "type": "Programming_language",
+        "value": "Perl"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Nextflow",
+        "size": 7450,
+        "type": "Programming_language",
+        "value": "Nextflow"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Roff",
+        "size": 7166,
+        "type": "Programming_language",
+        "value": "Roff"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Shell",
+        "size": 5704,
+        "type": "Programming_language",
+        "value": "Shell"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Dockerfile",
+        "size": 1755,
+        "type": "Programming_language",
+        "value": "Dockerfile"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Pep8",
+        "size": 383,
+        "type": "Programming_language",
+        "value": "Pep8"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "readme_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/Benjamin-Vincent-Lab/NeoSplice/master/README.rst"
+      },
+      "technique": "file_exploration"
+    }
+  ],
+  "releases": [
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "spvensko",
+          "type": "User"
+        },
+        "date_created": "2021-05-17T17:35:43Z",
+        "date_published": "2021-05-17T17:46:57Z",
+        "description": "Update with SV_summarization.py.",
+        "html_url": "https://github.com/pirl-unc/NeoSplice/releases/tag/0.0.3",
+        "release_id": 43077024,
+        "tag": "0.0.3",
+        "tarball_url": "https://api.github.com/repos/pirl-unc/NeoSplice/tarball/0.0.3",
+        "type": "Release",
+        "url": "https://api.github.com/repos/pirl-unc/NeoSplice/releases/43077024",
+        "value": "https://api.github.com/repos/pirl-unc/NeoSplice/releases/43077024",
+        "zipball_url": "https://api.github.com/repos/pirl-unc/NeoSplice/zipball/0.0.3"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "DanteBortone",
+          "type": "User"
+        },
+        "date_created": "2021-05-04T16:02:07Z",
+        "date_published": "2021-05-04T17:39:52Z",
+        "description": "Initial release",
+        "html_url": "https://github.com/pirl-unc/NeoSplice/releases/tag/v0.0.0",
+        "name": "Initial release",
+        "release_id": 42431032,
+        "tag": "v0.0.0",
+        "tarball_url": "https://api.github.com/repos/pirl-unc/NeoSplice/tarball/v0.0.0",
+        "type": "Release",
+        "url": "https://api.github.com/repos/pirl-unc/NeoSplice/releases/42431032",
+        "value": "https://api.github.com/repos/pirl-unc/NeoSplice/releases/42431032",
+        "zipball_url": "https://api.github.com/repos/pirl-unc/NeoSplice/zipball/v0.0.0"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "requirements": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "System requirements",
+        "type": "Text_excerpt",
+        "value": "- multi-string BWT (MSBWT): https://github.com/holtjma/msbwt\r\n- MSBWT-IS: https://github.com/holtjma/msbwt-is\r\n- NetMHCpan 4.0\r\n\r\n------------\r"
+      },
+      "source": "https://raw.githubusercontent.com/Benjamin-Vincent-Lab/NeoSplice/master/README.rst",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Dependencies",
+        "type": "Text_excerpt",
+        "value": "- Python 2.7\r\n- networkx 1.11\r\n- pyahocorasick 1.4.0\r\n- bcbio-gff 0.6.4\r\n- pyfaidx 0.5.3.1\r\n- pysam 0.14.1\r\n- biopython 1.70\r\n- scipy 1.2.0\r\n\r\n------------------\r"
+      },
+      "source": "https://raw.githubusercontent.com/Benjamin-Vincent-Lab/NeoSplice/master/README.rst",
+      "technique": "header_analysis"
+    }
+  ],
+  "run": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "3. Run multi-string BWT",
+        "type": "Text_excerpt",
+        "value": "This step uses the MSBWT-IS tool developed by Holt and colleagues (https://github.com/holtjma/msbwt-is), followed by a bash script to convert the output format for downstream compatibility:\r\n\r\n.. code-block::\r\n     \r\n    mkdir ./tumor_bwt/\r\n    mkdir ./normal_bwt/\r\n    mkdir ./tumor_bwt_temp/\r\n    mkdir ./normal_bwt_temp/\r\n    ./msbwt-is/msbwtis tumor_bwt_temp/ tumor_R1.fasta tumor_R2.fasta\r\n    ./msbwt-is/msbwtis normal_bwt_temp/ normal_R1.fasta normal_R2.fasta\r\n    bash ./NeoSplice/convert_BWT_format.bash ./tumor_bwt_temp ./tumor_bwt \r\n    bash ./NeoSplice/convert_BWT_format.bash ./normal_bwt_temp ./normal_bwt\r\n\r"
+      },
+      "source": "https://raw.githubusercontent.com/Benjamin-Vincent-Lab/NeoSplice/master/README.rst",
+      "technique": "header_analysis"
+    }
+  ],
+  "somef_missing_categories": [
+    "citation",
+    "acknowledgement",
+    "download",
+    "contact",
+    "contributors",
+    "documentation",
+    "usage",
+    "faq",
+    "support",
+    "identifier",
+    "executable_example"
+  ],
+  "somef_provenance": {
+    "date": "2024-10-04 14:15:10",
+    "somef_schema_version": "1.0.0",
+    "somef_version": "0.9.5"
+  },
+  "stargazers_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 9
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "type": [
+    {
+      "confidence": 0.82,
+      "result": {
+        "type": "String",
+        "value": "commandline-application"
+      },
+      "technique": "software_type_heuristics"
+    }
+  ],
+  "workflows": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/Benjamin-Vincent-Lab/NeoSplice/master/Nextflow_example/NeoSplice_nextflow_example.nf"
+      },
+      "technique": "file_exploration"
+    }
+  ]
+}

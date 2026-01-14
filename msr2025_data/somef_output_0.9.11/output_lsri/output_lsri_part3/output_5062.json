@@ -1,0 +1,331 @@
+{
+  "citation": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Citation",
+        "parent_header": [
+          "MLSTar"
+        ],
+        "type": "Text_excerpt",
+        "value": "If you use `MLSTar` in your publications, please cite:\n\nFerr\u00e9s I, Iraola G. MLSTar: automatic multilocus sequence typing of bacterial genomes in R. PeerJ. 2018;6 [https://doi.org/10.7717/peerj.5098](https://doi.org/10.7717/peerj.5098).\n"
+      },
+      "source": "https://raw.githubusercontent.com/iferres/MLSTar/master/README.md",
+      "technique": "header_analysis"
+    }
+  ],
+  "code_repository": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/iferres/MLSTar"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_created": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2017-03-30T17:49:39Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_updated": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2024-03-23T15:37:40Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "description": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "An easy way of MLSTyping your genomes in R."
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 0.9517221624545043,
+      "result": {
+        "original_header": "MLSTar",
+        "type": "Text_excerpt",
+        "value": "This R package allows you to easily determine the Multi Locus Sequence Type (MLST) of your genomes. It also works as an interface between [PubMLST](https://pubmlst.org/) through their [RESTful API](https://pubmlst.org/rest/), so you don't have to bother downloading and collecting files: the application does it automatically. Today the package works in Unix-based systems. \n*Note: cgMLST and wgMLST are not yet fully supported since the RESTful API interphase for theses cases is a little different than the one for the standard 7 loci schemes. See [issues#11](https://github.com/iferres/MLSTar/issues/11) for more details.*\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/iferres/MLSTar/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9414834445857949,
+      "result": {
+        "original_header": "Standard workflow",
+        "type": "Text_excerpt",
+        "value": "The first step in your analysis should be to check the in pubmlst.org database if your organism of interest is available. So, first load the package and then run `listPubmlst_orgs()` function, printing only the first 50 elements:\n``` r\nlibrary(MLSTar)\n```\n \nLets say we are interested in Leptospira genus, which is in the place 47 (*place may change over time*) in the list above. So:\n``` r\nlst <- listPubmlst_orgs() \nlst[47]\n```\n \nNow, lets check for available MLST schemes for this organism:\n``` r\nlistPubmlst_schemes(org = lst[47])\n```\n \nAs you can see, `listPubmlst_schemes` return a list with the loci names corresponding to each scheme. As an attribute of each list element there is information about each mlst scheme. \nThe hard way implies calling `downloadPubmlst_seq(org = lst[43], scheme = 1)` and then `downloadPubmlst_profile(org = lst[43], scheme = 1)` functions included in this package to download the scheme fasta files and the profile tab file for the organism and the scheme of interest, and then passing the files to the subsequent `doMLST()` function to `schemeFastas` and `schemeProfile` arguments. \nThe easy way is to left those arguments `NULL` (default), and let the `doMLST()` function do it for you. \nIn this example we have 10 pathogenic *Leptospira borgpetersenii* genomes(\\*\\* \\* **), in fasta format. (** \\* \\*\\*: Because of portability, just the corresponding alleles of each genomes are written in the fasta files for the scheme 1, and not the whole genomes. The purpose is to show the functions and not to provide a real case example.) \nThe result is an object of class `\"mlst\"` which is a `list` of 2 `data.frame`s and a series of attributes. The first `data.frame` show the result for this set of genomes, and the second is the MLST profile used:\n``` r\n# Attributes\nattributes(x)\n```\n    ## $names\n    ## [1] \"result\"  \"profile\"\n    ## \n    ## $infiles\n    ##  [1] \"1049762.3.fasta\" \"1049765.3.fasta\" \"1049766.3.fasta\"\n    ##  [4] \"1049773.3.fasta\" \"1049780.3.fasta\" \"1049781.3.fasta\"\n    ##  [7] \"1218567.3.fasta\" \"174.14.fasta\"    \"174.15.fasta\"   \n    ## [10] \"174.17.fasta\"   \n    ## \n    ## $org\n    ## [1] \"leptospira\"\n    ## \n    ## $scheme\n    ## [1] 1\n    ## \n    ## $write\n    ## [1] \"none\"\n    ## \n    ## $pid\n    ## [1] 90\n    ## \n    ## $scov\n    ## [1] 0.9\n    ## \n    ## $class\n    ## [1] \"mlst\"\n``` r\n# Result\nx$result\n```\n    ##           glmU_1 pntA_1 sucA_1 tpiA_1 pfkB_1 mreA_1 caiB_1  ST\n    ## 1049762.3     24     32     30     36     67     26     12 149\n    ## 1049765.3     24     27     30     34     67     27     11 143\n    ## 1049766.3     24     27     30     34     67     27     51  NA\n    ## 1049773.3     24     28     35     34     37     27     28 154\n    ## 1049780.3     24     28     36     34     37     27     28 155\n    ## 1049781.3     24     32     30     36     67     26     12 149\n    ## 1218567.3     26     30     28     35     39     29     29 152\n    ## 174.14        24     28     26     34     37     27     28 147\n    ## 174.15        24     28     30     34     37     27     28 148\n    ## 174.17        24     27     30     34     67     u1     28  NA\n``` r\n# Profile (leptospira, scheme 1)\nhead(x$profile)\n```\n \nAs you can see, each row is a genome, and each column is a scheme locus. The number refers to the allele number id. \nA `\"u\"` plus an integer in the `result` `data.frame` means that a new allele was found, e.g. the mreA\\_1 gene in the last genome: this allele has not been yet reported in the pubmlst database. New alleles are named according to whether are the same or not, for example, if the same mreA\\_1 allele had been found in other genome, we would see another `\"u1\"` in the correspondig cell of the `data.frame`. If a different, but not reported nethier, allele had been found, we will see a `\"u1\"` in one of the cell, and a `\"u2\"` in the other. If option `write` is set to `\"new\"`, then a fasta file is written with this new allele. If this option is set to `\"all\"`, all alleles are written (both reported and not reported at pubmlst.org). \nA `<NA>` means that no allele was found, i.e. no blastn local alignment pass the inclusion threshold (by default, this threshold are a percentage identity grater or equal to 90, and a subject coverage greater or equal to 0.9). In this example this was no the case for any of the screened genomes. \n"
+      },
+      "source": "https://raw.githubusercontent.com/iferres/MLSTar/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9926488139429117,
+      "result": {
+        "original_header": "Minimum Spanning Tree",
+        "type": "Text_excerpt",
+        "value": "The `mlst` class defined in this package include a `plot` method which uses [APE](http://ape-package.ird.fr/) for compute a minimum spanning tree (mst), and [igraph](http://igraph.org/) to build and object of class `igraph` and to plot it. In this case red nodes corresponds to the pubmlst reported `ST`s, blue nodes are the ones detected, and white ones are those for which no `ST` was possible to assign.\n``` r\nset.seed(4)\nplot(x)\n```\n \nBeware with plotting the whole profile: a extensive MLST profile with, for instance, a model organism could consume a lot of resources and take a long time. The distance and *mst* computation scale exponentially with the number of elements. In this cases you can choose to plot just your isolates:\n``` r\nplot(x, what = 'result')\n```\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/iferres/MLSTar/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9758408688635525,
+      "result": {
+        "original_header": "Binary Tree",
+        "type": "Text_excerpt",
+        "value": "The *mst* is the default plot method, but a binary tree can also be plotted, and in this case an object of class `phylo` (see APE package) is returned invisibly:\n``` r\n\nlayout(cbind(1,2))\nplot(x, type = 'phylo')\nplot(x, type = 'phylo', \n     plot.phylo.args = list(type = 'fan'), \n     tiplabels.args = list(offset = 0.1))\n     \n\n```\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/iferres/MLSTar/master/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "download_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/iferres/MLSTar/releases"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 10
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/iferres/MLSTar/forks"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "iferres/MLSTar"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_title": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "MLSTar"
+      },
+      "source": "https://raw.githubusercontent.com/iferres/MLSTar/master/README.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "images": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "http://raw.githubusercontent.com/iferres/MLSTar/master/vignettes/readme_files/figure-markdown_github/unnamed-chunk-8-1.png"
+      },
+      "source": "https://raw.githubusercontent.com/iferres/MLSTar/master/README.md",
+      "technique": "regular_expression"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "http://raw.githubusercontent.com/iferres/MLSTar/master/vignettes/readme_files/figure-markdown_github/unnamed-chunk-10-1.png"
+      },
+      "source": "https://raw.githubusercontent.com/iferres/MLSTar/master/README.md",
+      "technique": "regular_expression"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "http://raw.githubusercontent.com/iferres/MLSTar/master/vignettes/readme_files/figure-markdown_github/pairs-chunk.png"
+      },
+      "source": "https://raw.githubusercontent.com/iferres/MLSTar/master/README.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "installation": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Installation",
+        "parent_header": [
+          "MLSTar"
+        ],
+        "type": "Text_excerpt",
+        "value": "The easiest way to install this package is using `devtools`:\n\n``` r\ndevtools::install_github('iferres/MLSTar')\n```\n"
+      },
+      "source": "https://raw.githubusercontent.com/iferres/MLSTar/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 0.9500041437693212,
+      "result": {
+        "original_header": "Standard workflow",
+        "type": "Text_excerpt",
+        "value": "    ## Loading required package: igraph \n    ## \n    ## Attaching package: 'igraph' \n    ## Loading required package: ape \n    ## \n    ## Attaching package: 'ape' \nLet see an example with toy data attached on this package:\n``` r\n#First we list the atteched tar.gz file\ntgz <- system.file('extdata', 'example.tar.gz', package = 'MLSTar')\ngenomes <- untar(tarfile = tgz, list = T)\n#Decompress them\nuntar(tarfile = tgz,exdir = tempdir())\ngenomes <- list.files(path = tempdir(), \n                      pattern = paste0(genomes, collapse = '|'), \n                      full.names = TRUE)\ngenomes\n```\n \n    ##  [1] \"/tmp/RtmpksRhvS/1049762.3.fasta\" \"/tmp/RtmpksRhvS/1049765.3.fasta\"\n    ##  [3] \"/tmp/RtmpksRhvS/1049766.3.fasta\" \"/tmp/RtmpksRhvS/1049773.3.fasta\"\n    ##  [5] \"/tmp/RtmpksRhvS/1049780.3.fasta\" \"/tmp/RtmpksRhvS/1049781.3.fasta\"\n    ##  [7] \"/tmp/RtmpksRhvS/1218567.3.fasta\" \"/tmp/RtmpksRhvS/174.14.fasta\"   \n    ##  [9] \"/tmp/RtmpksRhvS/174.15.fasta\"    \"/tmp/RtmpksRhvS/174.17.fasta\" \n"
+      },
+      "source": "https://raw.githubusercontent.com/iferres/MLSTar/master/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "issue_tracker": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/iferres/MLSTar/issues"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "keywords": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "genome, microbial-genomics, mlst, pubmlst, r"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "license": [
+    {
+      "confidence": 1,
+      "result": {
+        "name": "MIT License",
+        "spdx_id": "MIT",
+        "type": "License",
+        "url": "https://api.github.com/licenses/mit",
+        "value": "https://api.github.com/licenses/mit"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "File_dump",
+        "value": "MIT License\n\nCopyright (c) 2017 Ignacio Ferr\u00e9s\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.\n"
+      },
+      "source": "https://raw.githubusercontent.com/iferres/MLSTar/master/LICENSE",
+      "technique": "file_exploration"
+    }
+  ],
+  "name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "MLSTar"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "owner": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "User",
+        "value": "iferres"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "programming_languages": [
+    {
+      "confidence": 1,
+      "result": {
+        "name": "R",
+        "size": 39655,
+        "type": "Programming_language",
+        "value": "R"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "readme_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/iferres/MLSTar/master/README.md"
+      },
+      "technique": "file_exploration"
+    }
+  ],
+  "requirements": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Requirements",
+        "parent_header": [
+          "MLSTar",
+          "Installation"
+        ],
+        "type": "Text_excerpt",
+        "value": "`MLSTar` depends on [BLAST+](https://blast.ncbi.nlm.nih.gov/Blast.cgi?CMD=Web&PAGE_TYPE=BlastDocs&DOC_TYPE=Download) software, and must be installed in your `$PATH` prior to run this package.\n\n*Note: There seems to be incompatibility with MacOS X Mavericks 10.9.5. It was tested and works on MacOS>10.11.2 El Capitan.*\n"
+      },
+      "source": "https://raw.githubusercontent.com/iferres/MLSTar/master/README.md",
+      "technique": "header_analysis"
+    }
+  ],
+  "somef_missing_categories": [
+    "acknowledgement",
+    "run",
+    "download",
+    "contact",
+    "contributors",
+    "documentation",
+    "usage",
+    "faq",
+    "support",
+    "identifier",
+    "has_build_file",
+    "executable_example"
+  ],
+  "somef_provenance": {
+    "date": "2024-10-06 18:40:06",
+    "somef_schema_version": "1.0.0",
+    "somef_version": "0.9.5"
+  },
+  "stargazers_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 17
+      },
+      "technique": "GitHub_API"
+    }
+  ]
+}

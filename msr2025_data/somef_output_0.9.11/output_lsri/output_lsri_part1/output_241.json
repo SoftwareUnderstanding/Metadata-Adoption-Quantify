@@ -1,0 +1,449 @@
+{
+  "acknowledgement": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Acknowledgment",
+        "parent_header": [
+          "Galaxy Image Analysis"
+        ],
+        "type": "Text_excerpt",
+        "value": "\r\nThis work has been supported by the BMBF-funded Heidelberg Center for Human Bioinformatics (HD-HuB) within the German Network for Bioinformatics Infrastructure (de.NBI) #031A537C.\r\n\r\n"
+      },
+      "source": "https://raw.githubusercontent.com/BMCV/galaxy-image-analysis/master/README.md",
+      "technique": "header_analysis"
+    }
+  ],
+  "application_domain": [
+    {
+      "confidence": 83.46,
+      "result": {
+        "type": "String",
+        "value": "Computer Vision"
+      },
+      "technique": "supervised_classification"
+    }
+  ],
+  "citation": [
+    {
+      "confidence": 1,
+      "result": {
+        "format": "cff",
+        "type": "File_dump",
+        "value": "cff-version: 1.2.0\nmessage: \"If you use this software, please cite it as below.\"\npreferred-citation:\n  type: article\n  journal: \"Journal of Biotechnology\"\n  month: 7\n  start: 70 # First page number\n  end: 75 # Last page number\n  title: \"Workflows for microscopy image analysis and cellular phenotyping\"\n  doi: 10.1016/j.jbiotec.2017.07.019\n  volume: 261\n  year: 2017\n  authors:\n  - family-names: \"Wollmann\"\n    given-names: \"Thomas\"\n    orcid: \"https://orcid.org/0000-0002-4741-3844\"\n  - family-names: \"Erfle\"\n    given-names: \"Holger\"\n  - family-names: \"Eils\"\n    given-names: \"Roland\"\n  - family-names: \"Rohr\"\n    given-names: \"Karl\"\n  - family-names: \"Gunkel\"\n    given-names: \"Manuel\"\n    orcid: \"https://orcid.org/0000-0002-5363-8943\"\n"
+      },
+      "source": "https://raw.githubusercontent.com/BMCV/galaxy-image-analysis/master/CITATION.cff",
+      "technique": "file_exploration"
+    }
+  ],
+  "code_of_conduct": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "File_dump",
+        "value": "Code of Conduct\n===============\n\nAs part of the Galaxy Community, this project is committed to providing a\nwelcoming and harassment-free experience for everyone. We therefore expect\nparticipants to abide by our Code of Conduct, which can be found at:\n\nhttps://galaxyproject.org/community/coc/\n"
+      },
+      "source": "https://raw.githubusercontent.com/BMCV/galaxy-image-analysis/master/CODE_OF_CONDUCT.md",
+      "technique": "file_exploration"
+    }
+  ],
+  "code_repository": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/BMCV/galaxy-image-analysis"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "contributing_guidelines": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "File_dump",
+        "value": "# Contributing\n\nThis document is the attempt to collect some rough rules for tools to follow in this repository, to facilitate their consistency and interoperability. This document is an extension to the [Naming and Annotation Conventions for Tools in the Image Community in Galaxy](https://doi.org/10.37044/osf.io/w8dsz) and compatibility should be maintained. This document is work in progress.\n\n**How to Contribute:**\n\n* Make sure you have a [GitHub account](https://github.com/signup/free)\n* Make sure you have git [installed](https://help.github.com/articles/set-up-git)\n* Fork the repository on [GitHub](https://github.com/BMCV/galaxy-image-analysis/fork)\n* Make the desired modifications - consider using a [feature branch](https://github.com/Kunena/Kunena-Forum/wiki/Create-a-new-branch-with-git-and-manage-branches).\n* Try to stick to the [Conventions for Tools in the Image Community](https://doi.org/10.37044/osf.io/w8dsz) and the [IUC standards](http://galaxy-iuc-standards.readthedocs.org/en/latest/) whenever you can\n* Make sure you have added the necessary tests for your changes and they pass.\n* Open a [pull request](https://help.github.com/articles/using-pull-requests) with these changes.\n\n## Terminology\n\n**Label maps** are images with pixel-level annotations, usually corresponding to distinct image regions (e.g., objects). We avoid the terms *label image* and *labeled image*, since these can be easily confused with image-level annotations (instead of pixel-level). The labels (pixel values) must uniquely identify the labeled image regions (i.e. labels must be unique, even for non-adjacent image regions). If a label semantically corresponds to the image background, that label should be 0.\n\n**Binary images** are a special case of label maps with only two labels (e.g., image background and image foreground). To facilitate visual perception, the foreground label should correspond to white (value 255 for `uint8` images and value 65535 for `uint16` images), since background corresponds to the label 0, which is black.\n\n**Intensity images** are images which are *not* label maps (and thus neither binary images).\n\n## File types\n\nIn tool wrappers which use a Python script, image loading should be performed by using the `giatools` package (see https://github.com/BMCV/galaxy-image-analysis/pull/119).\nIf such wrappers only support single-channel 2-D images, the structure of the input should be verified right after loading the image:\n```python\nim = giatools.io.imread(args.input)\nim = np.squeeze(im)  # remove axes with length 1\nassert im.ndim == 2\n```\n\nTools with **label map inputs** should accept PNG and TIFF files. Tools with **label map outputs** should produce either `uint16` single-channel PNG or `uint16` single-channel TIFF. Using `uint8` instead of `uint16` is also acceptable, if there definetely are no more than 256 different labels. Using `uint8` should be preferred for binary images.\n\n> [!NOTE]  \n> It is a common misconception that PNG files must be RGB or RGBA, and that only `uint8` pixel values are supported. For example, the `cv2` module (OpenCV) can be used to create single-channel PNG files, or PNG files with `uint16` pixel values. Such files can then be read by `giatools.io.imread` or `skimage.io.imread` without issues (however, `skimage.io.imwrite` seems not to be able to write such PNG files).\n\nTools with **intensity image inputs** should accept PNG and TIFF files. Tools with **intensity image outputs** can be any data type and either PNG or TIFF. Image outputs meant for visualization (e.g., segmentation overlays, charts) should be PNG.\n\n## Testing\n\n### Testing infrastructure\n\nThe support for the new [`image_diff` output verification method](https://docs.galaxyproject.org/en/latest/dev/schema.html#tool-tests-test-output) and [assertions for image data](https://docs.galaxyproject.org/en/latest/dev/schema.html#assertions-for-image-data) for Galaxy tool testing probably won't be available in Galaxy before 24.1 is released.\n\nMeanwhile, they are already available in the CI of the **galaxy-image-analyis** repostiroy! \ud83c\udf89 https://github.com/BMCV/galaxy-image-analysis/pull/117\n\nTo also use them locally, you need to install the development versions of two Galaxy packages, pillow, and tifffile:\n```python\npython -m pip install git+https://git@github.com/kostrykin/galaxy.git@galaxy-image-analysis#subdirectory=packages/util\npython -m pip install git+https://git@github.com/kostrykin/galaxy.git@galaxy-image-analysis#subdirectory=packages/tool_util\npython -m pip install pillow tifffile\n```\n\nThe [galaxy-image-analysis branch](https://github.com/kostrykin/galaxy/tree/galaxy-image-analysis) of the <https://github.com/kostrykin/galaxy> fork is the same as the [23.1 release of Galaxy](https://github.com/galaxyproject/galaxy/tree/release_23.1), plus the support for the image-based verification extensions.\n\nIn addition, instead of running `planemo test`, you should use:\n```python\nplanemo test --galaxy_source https://github.com/kostrykin/galaxy --galaxy_branch galaxy-image-analysis\n```\nLinting with `planemo lint` works as usual.\n\n### Writing tests\n\nWe recommend using macros for verification of image outputs. The macros are loaded as follows:\n```xml\n<macros>\n    <import>tests.xml</import>\n</macros>\n```\n\n#### Testing binary image outputs\n\nFor testing of **binary image outputs** we recommend using the `mae` metric (mean absolute error). The default value for `eps` of 0.01 is rather strict, and for 0/1 binary images this asserts that at most 1% of the image pixels are labeled differently:\n```xml\n<expand macro=\"tests/binary_image_diff\" name=\"output\" value=\"output.tif\" ftype=\"tiff\"/>\n```\nFor 0/255 binary images, the same 1% tolerance would be achieved by increasing `eps` to 2.25. The macro also ensures that the image contains two distinct label values.\n\n#### Testing label map outputs\n\nFor testing of non-binary **label map outputs** with interchangeable labels, we recommend using the `iou` metric (one minus the *intersection over the union*). With the default value of `eps` of 0.01, this asserts that there is no labeled image region with an *intersection over the union* of less than 99%:\n```xml\n<expand macro=\"tests/label_image_diff\" name=\"output\" value=\"output.tif\" ftype=\"tiff\"/>\n```\nLabel 0 is commonly connotated as the image background, and is not interchangable by default. Use `pin_labels=\"\"` to make it interchangable.\n\n#### Testing intensity image outputs\n\nFor testing of **intensity image outputs** we recommend the `rms` metric (root mean square), because it is very sensitive to large pixel value differences, but tolerates smaller differences:\n```xml\n<expand macro=\"tests/intensity_image_diff\" name=\"output\" value=\"output.tif\" ftype=\"tiff\"/>\n```\nFor `uint8` and `uint16` images, increasing the default value of `eps` to `1.0` should be tolerable, if required.\n\n## Future extensions\n\nBelow is a list of open questions:\n\n- **How do we want to cope with multi-channel label maps?** For example, do or can we distinguish RGB labels from multi-channel binary masks, which are sometimes used to represent overlapping objects?\n\n- How can we distinguish multi-channel 2-D images from single-channel 3-D images?\n\n- How can we make clear to the user, whether a tool requires a 2-D image or also supports 3-D?\n"
+      },
+      "source": "https://raw.githubusercontent.com/BMCV/galaxy-image-analysis/master/CONTRIBUTING.md",
+      "technique": "file_exploration"
+    }
+  ],
+  "date_created": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2016-06-22T21:07:48Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_updated": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2024-09-27T18:45:40Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "description": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "Galaxy tools for image analysis"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 0.9915442605499265,
+      "result": {
+        "original_header": "Galaxy Image Analysis",
+        "type": "Text_excerpt",
+        "value": "\r\nGalaxy Image Analysis is mainly developed by the [Biomedical Computer Vision (BMCV) Group](http://www.bioquant.uni-heidelberg.de/research/groups/biomedical_computer_vision.html) at Heidelberg University. If you would like to contribute, please see [our contribution instructions](CONTRIBUTING.md).\r\n\r\nGalaxy Image Analysis is part of the [Image Community in Galaxy](https://imaging.usegalaxy.eu).\r\n\r\nIf Galaxy Image Analysis helped with the analysis of your data, please do not forget to cite: <https://doi.org/10.1016/j.jbiotec.2017.07.019>\r\n\r \n"
+      },
+      "source": "https://raw.githubusercontent.com/BMCV/galaxy-image-analysis/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.8490251194081511,
+      "result": {
+        "original_header": "Image processing",
+        "type": "Text_excerpt",
+        "value": "\r\n- [Apply anisotropic diffusion](https://usegalaxy.eu/root?tool_id=toolshed.g2.bx.psu.edu/repos/imgteam/anisotropic_diffusion/ip_anisotropic_diffusion) with MedPy\r\n- [Apply a morphological operation](https://usegalaxy.eu/root?tool_id=toolshed.g2.bx.psu.edu/repos/imgteam/morphological_operations/morphological_operations) with SciPy\r\n- [Concatenate images or channels](https://usegalaxy.eu/root?tool_id=toolshed.g2.bx.psu.edu/repos/imgteam/concat_channels/ip_concat_channels)\r\n- [Filter 2D image](https://usegalaxy.eu/root?tool_id=toolshed.g2.bx.psu.edu/repos/imgteam/2d_simple_filter/ip_filter_standard) with scikit-image\r\n- [Perform color decomposition](https://usegalaxy.eu/root?tool_id=toolshed.g2.bx.psu.edu/repos/imgteam/color_deconvolution/ip_color_deconvolution)\r\n- [Perform histogram equalization](https://usegalaxy.eu/root?tool_id=toolshed.g2.bx.psu.edu/repos/imgteam/2d_histogram_equalization/ip_histogram_equalization) with scikit-image\r\n- [Permutate image axes](https://usegalaxy.eu/root?tool_id=toolshed.g2.bx.psu.edu/repos/imgteam/permutate_axis/ip_permutate_axis)\r\n- [Process images using arithmetic expressions](https://usegalaxy.eu/root?tool_id=toolshed.g2.bx.psu.edu/repos/imgteam/image_math/image_math) with NumPy\r\n- [Remove image background](https://usegalaxy.eu/root?tool_id=toolshed.g2.bx.psu.edu/repos/imgteam/background_removal/background_removal/0.24.0+galaxy0) with scikit-image\r\n- [Scale image](https://usegalaxy.eu/root?tool_id=toolshed.g2.bx.psu.edu/repos/imgteam/scale_image/ip_scale_image) with scikit-image\r\n- [Show image info](https://usegalaxy.eu/root?tool_id=toolshed.g2.bx.psu.edu/repos/imgteam/image_info/ip_imageinfo) with Bioformats\r\n- [Slice image into patches](https://usegalaxy.eu/root?tool_id=toolshed.g2.bx.psu.edu/repos/imgteam/slice_image/ip_slice_image)\r\n- [Switch axis coordinates](https://usegalaxy.eu/root?tool_id=toolshed.g2.bx.psu.edu/repos/imgteam/imagecoordinates_flipaxis/imagecoordinates_flipaxis)\r\n\r \n"
+      },
+      "source": "https://raw.githubusercontent.com/BMCV/galaxy-image-analysis/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.8595443420252514,
+      "result": {
+        "original_header": "Segmentation, partitioning, and detection",
+        "type": "Text_excerpt",
+        "value": "\r\n- [Compute Voronoi tessellation](https://usegalaxy.eu/root?tool_id=toolshed.g2.bx.psu.edu/repos/imgteam/voronoi_tesselation/voronoi_tessellation) with scikit-image\r\n- [Count objects in label map](https://usegalaxy.eu/root?tool_id=toolshed.g2.bx.psu.edu/repos/imgteam/count_objects/ip_count_objects)\r\n- [Extract 2D features](https://usegalaxy.eu/root?tool_id=toolshed.g2.bx.psu.edu/repos/imgteam/2d_feature_extraction/ip_2d_feature_extraction) with scikit-image\r\n- [Filter label map by rules](https://usegalaxy.eu/root?tool_id=toolshed.g2.bx.psu.edu/repos/imgteam/2d_filter_segmentation_by_features/ip_2d_filter_segmentation_by_features)\r\n- [Merge neighbors in label map](https://usegalaxy.eu/root?tool_id=toolshed.g2.bx.psu.edu/repos/imgteam/mergeneighboursinlabelimage/ip_merge_neighbours_in_label)\r\n- [Perform 2D spot detection](https://usegalaxy.eu/root?tool_id=toolshed.g2.bx.psu.edu/repos/imgteam/spot_detection_2d/ip_spot_detection_2d)\r\n- [Perform segmentation in densely packed 3-D volumetric images](https://usegalaxy.eu/root?tool_id=toolshed.g2.bx.psu.edu/repos/imgteam/plantseg/plantseg/1.8.1+galaxy0) with PlantSeg\r\n- [Perform segmentation using region-based fitting of overlapping ellipses](https://usegalaxy.eu/root?tool_id=toolshed.g2.bx.psu.edu/repos/imgteam/rfove/rfove/2023.11.12+galaxy0) with RFOVE\r\n- [Perform segmentation using deformable shape models](https://usegalaxy.eu/root?tool_id=toolshed.g2.bx.psu.edu/repos/imgteam/superdsm/ip_superdsm) with SuperDSM\r\n- [Split label map using morphological operators](https://usegalaxy.eu/root?tool_id=toolshed.g2.bx.psu.edu/repos/imgteam/split_labelmap/ip_split_labelmap)\r\n- [Threshold image](https://usegalaxy.eu/root?tool_id=toolshed.g2.bx.psu.edu/repos/imgteam/2d_auto_threshold/ip_threshold) with scikit-image\r\n\r \n"
+      },
+      "source": "https://raw.githubusercontent.com/BMCV/galaxy-image-analysis/master/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "download_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/BMCV/galaxy-image-analysis/releases"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 16
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/BMCV/galaxy-image-analysis/forks"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "BMCV/galaxy-image-analysis"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_title": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "Galaxy Image Analysis"
+      },
+      "source": "https://raw.githubusercontent.com/BMCV/galaxy-image-analysis/master/README.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "has_script_file": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/BMCV/galaxy-image-analysis/master/util/shrink_tiff.sh"
+      },
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/BMCV/galaxy-image-analysis/master/util/scale_image.sh"
+      },
+      "technique": "file_exploration"
+    }
+  ],
+  "identifier": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://doi.org/10.1016/j.jbiotec.2017.07.019"
+      },
+      "source": "https://raw.githubusercontent.com/BMCV/galaxy-image-analysis/master/README.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "installation": [
+    {
+      "confidence": 0.9887780632761254,
+      "result": {
+        "original_header": "Image processing",
+        "type": "Text_excerpt",
+        "value": "\r\n- [Apply anisotropic diffusion](https://usegalaxy.eu/root?tool_id=toolshed.g2.bx.psu.edu/repos/imgteam/anisotropic_diffusion/ip_anisotropic_diffusion) with MedPy\r\n- [Apply a morphological operation](https://usegalaxy.eu/root?tool_id=toolshed.g2.bx.psu.edu/repos/imgteam/morphological_operations/morphological_operations) with SciPy\r\n- [Concatenate images or channels](https://usegalaxy.eu/root?tool_id=toolshed.g2.bx.psu.edu/repos/imgteam/concat_channels/ip_concat_channels)\r\n- [Filter 2D image](https://usegalaxy.eu/root?tool_id=toolshed.g2.bx.psu.edu/repos/imgteam/2d_simple_filter/ip_filter_standard) with scikit-image\r\n- [Perform color decomposition](https://usegalaxy.eu/root?tool_id=toolshed.g2.bx.psu.edu/repos/imgteam/color_deconvolution/ip_color_deconvolution)\r\n- [Perform histogram equalization](https://usegalaxy.eu/root?tool_id=toolshed.g2.bx.psu.edu/repos/imgteam/2d_histogram_equalization/ip_histogram_equalization) with scikit-image\r\n- [Permutate image axes](https://usegalaxy.eu/root?tool_id=toolshed.g2.bx.psu.edu/repos/imgteam/permutate_axis/ip_permutate_axis)\r\n- [Process images using arithmetic expressions](https://usegalaxy.eu/root?tool_id=toolshed.g2.bx.psu.edu/repos/imgteam/image_math/image_math) with NumPy\r\n- [Remove image background](https://usegalaxy.eu/root?tool_id=toolshed.g2.bx.psu.edu/repos/imgteam/background_removal/background_removal/0.24.0+galaxy0) with scikit-image\r\n- [Scale image](https://usegalaxy.eu/root?tool_id=toolshed.g2.bx.psu.edu/repos/imgteam/scale_image/ip_scale_image) with scikit-image\r\n- [Show image info](https://usegalaxy.eu/root?tool_id=toolshed.g2.bx.psu.edu/repos/imgteam/image_info/ip_imageinfo) with Bioformats\r\n- [Slice image into patches](https://usegalaxy.eu/root?tool_id=toolshed.g2.bx.psu.edu/repos/imgteam/slice_image/ip_slice_image)\r\n- [Switch axis coordinates](https://usegalaxy.eu/root?tool_id=toolshed.g2.bx.psu.edu/repos/imgteam/imagecoordinates_flipaxis/imagecoordinates_flipaxis)\r\n\r \n"
+      },
+      "source": "https://raw.githubusercontent.com/BMCV/galaxy-image-analysis/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9635955289003412,
+      "result": {
+        "original_header": "Image conversion",
+        "type": "Text_excerpt",
+        "value": "\r\n- [Convert binary image to label map](https://usegalaxy.eu/root?tool_id=toolshed.g2.bx.psu.edu/repos/imgteam/binary2labelimage/ip_binary_to_labelimage)\r\n- [Convert binary image to points (center of masses)](https://usegalaxy.eu/root?tool_id=toolshed.g2.bx.psu.edu/repos/imgteam/binaryimage2points/ip_binaryimage_to_points)\r\n- [Convert binary image to points (point coordinates)](https://usegalaxy.eu/root?tool_id=toolshed.g2.bx.psu.edu/repos/imgteam/coordinates_of_roi/ip_coordinates_of_roi)\r\n- [Convert image format](https://usegalaxy.eu/root?tool_id=toolshed.g2.bx.psu.edu/repos/imgteam/bfconvert/ip_convertimage) with Bioformats\r\n- [Convert label map to binary image](https://usegalaxy.eu/root?tool_id=toolshed.g2.bx.psu.edu/repos/imgteam/label_to_binary/label_to_binary) with NumPy\r\n- [Convert label map to points (center of masses)](https://usegalaxy.eu/root?tool_id=toolshed.g2.bx.psu.edu/repos/imgteam/labelimage2points/ip_labelimage_to_points)\r\n- [Convert point coordinates to label map](https://usegalaxy.eu/root?tool_id=toolshed.g2.bx.psu.edu/repos/imgteam/points2labelimage/ip_points_to_label)\r\n- [Convert single-channel to multi-channel image](https://usegalaxy.eu/root?tool_id=toolshed.g2.bx.psu.edu/repos/imgteam/repeat_channels/repeat_channels) with NumPy\r\n- [Convert to OME-Zarr](https://usegalaxy.eu/root?tool_id=toolshed.g2.bx.psu.edu/repos/imgteam/bioformats2raw/bf2raw) with Bioformats\r\n\r \n"
+      },
+      "source": "https://raw.githubusercontent.com/BMCV/galaxy-image-analysis/master/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "issue_tracker": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/BMCV/galaxy-image-analysis/issues"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "keywords": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "usegalaxy, usegalaxy-eu"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "license": [
+    {
+      "confidence": 1,
+      "result": {
+        "name": "MIT License",
+        "spdx_id": "MIT",
+        "type": "License",
+        "url": "https://api.github.com/licenses/mit",
+        "value": "https://api.github.com/licenses/mit"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "File_dump",
+        "value": "The MIT License (MIT)\n\nCopyright (c) 2016-2022 Biomedical Computer Vision Group, Heidelberg University \n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.\n"
+      },
+      "source": "https://raw.githubusercontent.com/BMCV/galaxy-image-analysis/master/LICENSE.md",
+      "technique": "file_exploration"
+    }
+  ],
+  "name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "galaxy-image-analysis"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "owner": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Organization",
+        "value": "BMCV"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "programming_languages": [
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Python",
+        "size": 133359,
+        "type": "Programming_language",
+        "value": "Python"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Mako",
+        "size": 2018,
+        "type": "Programming_language",
+        "value": "Mako"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Shell",
+        "size": 792,
+        "type": "Programming_language",
+        "value": "Shell"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "JavaScript",
+        "size": 554,
+        "type": "Programming_language",
+        "value": "JavaScript"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "readme_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/BMCV/galaxy-image-analysis/master/README.md"
+      },
+      "technique": "file_exploration"
+    }
+  ],
+  "somef_missing_categories": [
+    "run",
+    "download",
+    "requirements",
+    "contact",
+    "contributors",
+    "documentation",
+    "usage",
+    "faq",
+    "support",
+    "has_build_file",
+    "executable_example"
+  ],
+  "somef_provenance": {
+    "date": "2024-10-03 23:59:07",
+    "somef_schema_version": "1.0.0",
+    "somef_version": "0.9.5"
+  },
+  "stargazers_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 14
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "workflows": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/BMCV/galaxy-image-analysis/master/workflows/Galaxy-Workflow-Co-registration_of_MSI_image_and_real_image_with_landmarks.ga"
+      },
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/BMCV/galaxy-image-analysis/master/workflows/Galaxy-Workflow-GTN_Tutorial__Introduction_to_Imaging.ga"
+      },
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/BMCV/galaxy-image-analysis/master/workflows/Galaxy-Workflow-GTN_Tutorial_RNAi_screen_analysis_analyze_screen.ga"
+      },
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/BMCV/galaxy-image-analysis/master/workflows/Galaxy-Workflow-Cell_Counting.ga"
+      },
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/BMCV/galaxy-image-analysis/master/workflows/Galaxy-Workflow-Registration_of_images_based_on_intensity_information.ga"
+      },
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/BMCV/galaxy-image-analysis/master/workflows/Galaxy-Workflow-Registration_of_images_based_on_landmarks.ga"
+      },
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/BMCV/galaxy-image-analysis/master/workflows/Galaxy-Workflow-GTN_Tutorial_RNAi_screen_analysis_feature_extraction.ga"
+      },
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/BMCV/galaxy-image-analysis/master/workflows/Galaxy-Workflow-Segmentation.ga"
+      },
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/BMCV/galaxy-image-analysis/master/workflows/Galaxy-Workflow-Spot_tracking.ga"
+      },
+      "technique": "file_exploration"
+    }
+  ]
+}

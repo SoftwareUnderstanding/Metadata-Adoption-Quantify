@@ -1,0 +1,1113 @@
+{
+  "code_repository": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/brentp/mosdepth"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_created": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2017-08-24T16:32:11Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_updated": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2024-10-30T02:05:03Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "description": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "fast BAM/CRAM depth calculation for WGS, exome, or targeted sequencing"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 0.9766017169132547,
+      "result": {
+        "original_header": "D4",
+        "type": "Text_excerpt",
+        "value": "D4 is a format created by [Hao Hou](https://github.com/38) in the Quinlan lab. It is\nincorporated into `mosdepth` as of version 0.3.0 for per-base output with the `--d4` flag.\nIt improves write speed dramatically; for one test-case it takes **24.8s** to write a\nper-base.bed.gz with mosdepth compared to **7.7s** to write a d4 file. For the same case,\nrunning `mosdepth` without writing per-base takes 5.9 seconds so D4 greatly mitigates\nthe cost of outputing per-base depth **and** the output is more useful.\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/brentp/mosdepth/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9451743916367956,
+      "result": {
+        "original_header": "distribution output",
+        "type": "Text_excerpt",
+        "value": "This is **useful for QC**. \nThe `$prefix.mosdepth.global.dist.txt` file contains, a cumulative distribution indicating the\nproportion of total bases (or the proportion of the `--by` for `$prefix.mosdepth.region.dist.txt`) that were covered\nfor at least a given coverage value. It does this for each chromosome, and for the\nwhole genome. \nThe last value in each chromosome will be coverage level of 0 aligned with\n1.0 bases covered at that level. \nA python plotting script is provided in `scripts/plot-dist.py` that will make\nplots like below. Use is `python scripts/plot-dist.py \\*global.dist.txt` and the output\nis `dist.html` with a plot for the full set along with one for each chromosome. \nUsing something like that, we can plot the distribution from the entire genome.\nBelow we show this for samples with ~60X coverage: \n"
+      },
+      "source": "https://raw.githubusercontent.com/brentp/mosdepth/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9057589248746725,
+      "result": {
+        "original_header": "thresholds",
+        "type": "Text_excerpt",
+        "value": "given a set of regions to the `--by` argment, `mosdepth` can report the number of bases in each region that\nare covered at or above each threshold value given to `--thresholds`. e.g:\n```\nmosdepth --by exons.bed --thresholds 1,10,20,30 $prefix $bam\n``` \nThis is extremely efficient. In our tests, excluding per-base output (`-n`) and using this argument with\n111K exons and 12 values to `--thresholds` increases the run-time by < 5%.\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/brentp/mosdepth/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9304037129540604,
+      "result": {
+        "original_header": "quantize",
+        "type": "Text_excerpt",
+        "value": "It also allows outputting regions of low, high, and \"callable\" coverage as in [GATK's callable loci tool](https://software.broadinstitute.org/gatk/documentation/tooldocs/current/org_broadinstitute_gatk_tools_walkers_coverage_CallableLoci.php). \nAn example of quantize arguments:\n```\n--quantize 0:1:4:100:200: # ... arbitary number of quantize bins.\n``` \nindicates bins of: 0:1, 1:4, 4:100, 100:200, 200:infinity\nwhere the upper endpoint is non-inclusive. \nThe default for `mosdepth` is to output labels as above (0:1, 1:4, 4:100... etc.) \nIn this case, the bin label is replaced by the text in the appropriate environment variable. \nThis is very efficient. In our tests, excluding per-base output (`-n`) and using this argument with\n9 bins to `--quantize` increases the run-time by ~ 20%. In contrast, the difference in time with\nand without `-n` can be 2-fold.\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/brentp/mosdepth/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9848926159231922,
+      "result": {
+        "original_header": "how it works",
+        "type": "Text_excerpt",
+        "value": "As it encounters each chromosome, `mosdepth` creates an array the length of the chromosome.\nFor every start it encounters, it increments the value in that position of the array. For every\nstop, it decrements that position. From this, the depth at a particular position is the\ncumulative sum of all array positions preceding it (a similar algorithm is used in BEDTools\nwhere starts and stops are tracked separately). `mosdepth` **avoids double-counting\noverlapping mate-pairs** and it **tracks every aligned part of every read using the CIGAR\noperations**. Because of this data structure, the the coverage `distribution` calculation\ncan be done without a noticeable increase in run-time. The image below conveys the concept: \nThis array accounting is very fast. There are no extra allocations or objects to track and\nit is also conceptually simple. For these reasons, it is faster than `samtools depth` which\nworks by using the [pileup](http://samtools.sourceforge.net/pileup.shtml) machinery that\ntracks each read, each base. \nThe `mosdepth` method has some limitations. Because a large array is allocated and it is\nrequired (in general) to take the cumulative sum of all preceding positions to know the depth\nat any position, it is slower for small, 1-time regional queries. It is, however fast for\nwindow-based or BED-based regions, because it first calculates the full chromosome coverage\nand then reports the coverage for each region in that chromosome. Another downside is it uses\nmore memory than samtools. The amount of memory is approximately equal to 32-bits * longest chrom\nlength, so for the 249MB chromosome 1, it will require 1GB of memory. \n`mosdepth` is written in [nim](https://nim-lang.org/) and it uses our [htslib](https://github.com/samtools/htslib)\nvia our nim wrapper [hts-nim](https://github.com/brentp/hts-nim/)\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/brentp/mosdepth/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.8722549981849811,
+      "result": {
+        "original_header": "Accuracy",
+        "type": "Text_excerpt",
+        "value": "We compared `samtools depth` with default arguments to `mosdepth` without overlap detection and discovered **no\ndifferences across the entire chromosome**.\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/brentp/mosdepth/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9755124078922257,
+      "result": {
+        "type": "Text_excerpt",
+        "value": "+ per-base depth about 2x as fast `samtools depth`--about 25 minutes of CPU time for a 30X genome.\n+ mean per-window depth given a window size--as would be used for CNV calling.\n+ the mean per-region given a BED file of regions.\n* the mean or median per-region cumulative coverage histogram given a window size\n+ a distribution of proportion of bases covered at or above a given threshold for each chromosome and genome-wide.\n+ quantized output that merges adjacent bases as long as they fall in the same coverage bins e.g. (10-20)\n+ threshold output to indicate how many bases in each region are covered at the given thresholds.\n+ A summary of mean depths per chromosome and within specified regions per chromosome.\n+ a  file (better than bigwig). \nwhen appropriate, the output files are bgzipped and indexed for ease of use. \n"
+      },
+      "source": "https://raw.githubusercontent.com/brentp/mosdepth/master/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "documentation": [
+    {
+      "confidence": 1,
+      "result": {
+        "format": "wiki",
+        "type": "Url",
+        "value": "https://github.com/brentp/mosdepth/wiki"
+      },
+      "source": "https://raw.githubusercontent.com/brentp/mosdepth/master/README.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "download_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/brentp/mosdepth/releases"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 100
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/brentp/mosdepth/forks"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "brentp/mosdepth"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_title": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": ""
+      },
+      "source": "https://raw.githubusercontent.com/brentp/mosdepth/master/README.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "has_script_file": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/brentp/mosdepth/master/functional-tests.sh"
+      },
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/brentp/mosdepth/master/scripts/compare-time.sh"
+      },
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/brentp/mosdepth/master/scripts/install.sh"
+      },
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/brentp/mosdepth/master/scripts/build.sh"
+      },
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/brentp/mosdepth/master/scripts/hbb.sh"
+      },
+      "technique": "file_exploration"
+    }
+  ],
+  "images": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://user-images.githubusercontent.com/1739/29646192-2a2a6126-883f-11e7-91ab-049295eb3531.png"
+      },
+      "source": "https://raw.githubusercontent.com/brentp/mosdepth/master/README.md",
+      "technique": "regular_expression"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://user-images.githubusercontent.com/1739/29646191-2a246564-883f-11e7-951a-aa68d7a1a6ed.png"
+      },
+      "source": "https://raw.githubusercontent.com/brentp/mosdepth/master/README.md",
+      "technique": "regular_expression"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://user-images.githubusercontent.com/1739/29647913-d79ab028-8848-11e7-86cf-60d4b087bc3b.png"
+      },
+      "source": "https://raw.githubusercontent.com/brentp/mosdepth/master/README.md",
+      "technique": "regular_expression"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://user-images.githubusercontent.com/1739/31246294-256d1b7c-a9ca-11e7-8e28-6c4d07cba3f5.png"
+      },
+      "source": "https://raw.githubusercontent.com/brentp/mosdepth/master/README.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "installation": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Installation",
+        "type": "Text_excerpt",
+        "value": "\nThe simplest option is to download the [binary from the releases](https://github.com/brentp/mosdepth/releases).\n\nAnother quick way is to [![install with bioconda](https://img.shields.io/badge/install%20with-bioconda-brightgreen.svg?style=flat-square)](http://bioconda.github.io/recipes/mosdepth/README.html)\n\nIt can also be installed with `brew` as `brew install brewsci/bio/mosdepth` or used via docker with quay:\n```\ndocker pull quay.io/biocontainers/mosdepth:0.3.3--h37c5b7d_2\ndocker run -v /hostpath/:/opt/mount quay.io/biocontainers/mosdepth:0.2.4--he527e40_0 mosdepth -n --fast-mode -t 4 --by 1000 /opt/mount/sample /opt/mount/$bam\n```\n\nThe binary from releases is static, with no dependencies. If you build it yourself,\n`mosdepth` requires htslib version 1.4 or later. If you get an error\nabout \"`libhts.so` not found\", set `LD_LIBRARY_PATH` to the directory that\ncontains `libhts.so`. e.g.\n\n`LD_LIBRARY_PATH=~/src/htslib/ mosdepth -h`\n\nIf you get the error `could not import: hts_check_EOF` you may need to\ninstall a more recent version of htslib.\n\nIf you do want to install from source, see the [install.sh](https://github.com/brentp/mosdepth/blob/master/scripts/install.sh).\n\nIf you use archlinux, you can [install as a package](https://aur.archlinux.org/packages/mosdepth/)\n"
+      },
+      "source": "https://raw.githubusercontent.com/brentp/mosdepth/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 0.9388473935327117,
+      "result": {
+        "original_header": "quantize",
+        "type": "Text_excerpt",
+        "value": "To change what is reported as the bin number, a user can set environment variables e.g.:\n```\nexport MOSDEPTH_Q0=NO_COVERAGE\nexport MOSDEPTH_Q1=LOW_COVERAGE\nexport MOSDEPTH_Q2=CALLABLE\nexport MOSDEPTH_Q3=HIGH_COVERAGE\n```\n \nIn this case, the bin label is replaced by the text in the appropriate environment variable. \n"
+      },
+      "source": "https://raw.githubusercontent.com/brentp/mosdepth/master/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "invocation": [
+    {
+      "confidence": 0.8593006355807221,
+      "result": {
+        "original_header": "distribution output",
+        "type": "Text_excerpt",
+        "value": "A python plotting script is provided in `scripts/plot-dist.py` that will make\nplots like below. Use is `python scripts/plot-dist.py \\*global.dist.txt` and the output\nis `dist.html` with a plot for the full set along with one for each chromosome. \n"
+      },
+      "source": "https://raw.githubusercontent.com/brentp/mosdepth/master/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "issue_tracker": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/brentp/mosdepth/issues"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "keywords": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "coverage, depth, exome, genome, hacktoberfest, nim, nim-lang, sequencing, wgs"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "license": [
+    {
+      "confidence": 1,
+      "result": {
+        "name": "MIT License",
+        "spdx_id": "MIT",
+        "type": "License",
+        "url": "https://api.github.com/licenses/mit",
+        "value": "https://api.github.com/licenses/mit"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "File_dump",
+        "value": "MIT License\n\nCopyright (c) 2017 Brent Pedersen\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.\n"
+      },
+      "source": "https://raw.githubusercontent.com/brentp/mosdepth/master/LICENSE",
+      "technique": "file_exploration"
+    }
+  ],
+  "logo": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://user-images.githubusercontent.com/1739/29678184-da1f384c-88ba-11e7-9d98-df4fe3a59924.png"
+      },
+      "source": "https://raw.githubusercontent.com/brentp/mosdepth/master/README.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "mosdepth"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "owner": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "User",
+        "value": "brentp"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "programming_languages": [
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Nim",
+        "size": 40601,
+        "type": "Programming_language",
+        "value": "Nim"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Shell",
+        "size": 10426,
+        "type": "Programming_language",
+        "value": "Shell"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Python",
+        "size": 4387,
+        "type": "Programming_language",
+        "value": "Python"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "readme_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/brentp/mosdepth/master/README.md"
+      },
+      "technique": "file_exploration"
+    }
+  ],
+  "releases": [
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "brentp",
+          "type": "User"
+        },
+        "date_created": "2024-08-27T19:31:09Z",
+        "date_published": "2024-08-27T19:37:33Z",
+        "description": "v0.3.9\r\n======\r\n+ fix d4 output (#237)\r\n+ (thanks for @kojix2 for fixes on docopt and for nim >=2)",
+        "html_url": "https://github.com/brentp/mosdepth/releases/tag/v0.3.9",
+        "name": "fix for d4",
+        "release_id": 172221939,
+        "tag": "v0.3.9",
+        "tarball_url": "https://api.github.com/repos/brentp/mosdepth/tarball/v0.3.9",
+        "type": "Release",
+        "url": "https://api.github.com/repos/brentp/mosdepth/releases/172221939",
+        "value": "https://api.github.com/repos/brentp/mosdepth/releases/172221939",
+        "zipball_url": "https://api.github.com/repos/brentp/mosdepth/zipball/v0.3.9"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "brentp",
+          "type": "User"
+        },
+        "date_created": "2024-04-17T09:53:18Z",
+        "date_published": "2024-04-17T09:58:19Z",
+        "description": "v0.3.8\r\n======\r\n+ mosdepth is now much faster on bams/crams with a large number of contigs (#229)\r\n\r\nthanks @ohickl for reporting and providing a test-case.",
+        "html_url": "https://github.com/brentp/mosdepth/releases/tag/v0.3.8",
+        "name": "fix for bams/crams with *many* contigs",
+        "release_id": 151522706,
+        "tag": "v0.3.8",
+        "tarball_url": "https://api.github.com/repos/brentp/mosdepth/tarball/v0.3.8",
+        "type": "Release",
+        "url": "https://api.github.com/repos/brentp/mosdepth/releases/151522706",
+        "value": "https://api.github.com/repos/brentp/mosdepth/releases/151522706",
+        "zipball_url": "https://api.github.com/repos/brentp/mosdepth/zipball/v0.3.8"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "brentp",
+          "type": "User"
+        },
+        "date_created": "2024-03-20T11:37:46Z",
+        "date_published": "2024-03-20T11:41:51Z",
+        "description": "v0.3.7\r\n======\r\n+ support CRAM v3.1. only updates htslib that binary is built with to v1.19.1 (#224 thanks @adthrasher for reporting and testing)\r\n",
+        "html_url": "https://github.com/brentp/mosdepth/releases/tag/v0.3.7",
+        "name": "support cram v 3.1",
+        "release_id": 147444515,
+        "tag": "v0.3.7",
+        "tarball_url": "https://api.github.com/repos/brentp/mosdepth/tarball/v0.3.7",
+        "type": "Release",
+        "url": "https://api.github.com/repos/brentp/mosdepth/releases/147444515",
+        "value": "https://api.github.com/repos/brentp/mosdepth/releases/147444515",
+        "zipball_url": "https://api.github.com/repos/brentp/mosdepth/zipball/v0.3.7"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "brentp",
+          "type": "User"
+        },
+        "date_created": "2023-11-22T07:41:07Z",
+        "date_published": "2023-11-22T07:44:33Z",
+        "description": "v0.3.6\r\n======\r\n+ allow filtering on fragment length thanks @LudvigOlsen for implementing! (#214)\r\n+ fix bug where empty chromosomes are not reported as having 0 depth (#216)\r\n\r\nThe new optional arguments: \r\n```\r\n  -l --min-frag-len <min-frag-len>  minimum insert size. reads with a smaller insert size than this are ignored [default: -1]\r\n  -u --max-frag-len <max-frag-len>  maximum insert size. reads with a larger insert size than this are ignored. [default: -1]\r\n```\r\n\r\n",
+        "html_url": "https://github.com/brentp/mosdepth/releases/tag/v0.3.6",
+        "name": "filter on fragment length",
+        "release_id": 130945755,
+        "tag": "v0.3.6",
+        "tarball_url": "https://api.github.com/repos/brentp/mosdepth/tarball/v0.3.6",
+        "type": "Release",
+        "url": "https://api.github.com/repos/brentp/mosdepth/releases/130945755",
+        "value": "https://api.github.com/repos/brentp/mosdepth/releases/130945755",
+        "zipball_url": "https://api.github.com/repos/brentp/mosdepth/zipball/v0.3.6"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "brentp",
+          "type": "User"
+        },
+        "date_created": "2023-09-15T08:21:39Z",
+        "date_published": "2023-09-15T08:24:06Z",
+        "description": "v0.3.5\r\n======\r\n+ fix bug with summary min for regions (#207 thanks to Xavier for supplying test-case)\r\n",
+        "html_url": "https://github.com/brentp/mosdepth/releases/tag/v0.3.5",
+        "name": "summary min_depth on regions",
+        "release_id": 121262401,
+        "tag": "v0.3.5",
+        "tarball_url": "https://api.github.com/repos/brentp/mosdepth/tarball/v0.3.5",
+        "type": "Release",
+        "url": "https://api.github.com/repos/brentp/mosdepth/releases/121262401",
+        "value": "https://api.github.com/repos/brentp/mosdepth/releases/121262401",
+        "zipball_url": "https://api.github.com/repos/brentp/mosdepth/zipball/v0.3.5"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "brentp",
+          "type": "User"
+        },
+        "date_created": "2023-06-23T15:43:26Z",
+        "date_published": "2023-06-23T15:47:51Z",
+        "description": "v0.3.4\r\n======\r\n+ bump version for build supporting gs:// urls\r\n+ dont error on regions larger than chromosome.\r\n",
+        "html_url": "https://github.com/brentp/mosdepth/releases/tag/v0.3.4",
+        "name": "v0.3.4",
+        "release_id": 109712572,
+        "tag": "v0.3.4",
+        "tarball_url": "https://api.github.com/repos/brentp/mosdepth/tarball/v0.3.4",
+        "type": "Release",
+        "url": "https://api.github.com/repos/brentp/mosdepth/releases/109712572",
+        "value": "https://api.github.com/repos/brentp/mosdepth/releases/109712572",
+        "zipball_url": "https://api.github.com/repos/brentp/mosdepth/zipball/v0.3.4"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "brentp",
+          "type": "User"
+        },
+        "date_created": "2022-02-02T07:52:57Z",
+        "date_published": "2022-02-02T08:44:16Z",
+        "description": "v0.3.3\r\n======\r\n+ allow specifying a custom index by passing '/path/to/bam##idx##/other-path/to/index.bai'\r\n",
+        "html_url": "https://github.com/brentp/mosdepth/releases/tag/v0.3.3",
+        "name": "custom index location",
+        "release_id": 58493942,
+        "tag": "v0.3.3",
+        "tarball_url": "https://api.github.com/repos/brentp/mosdepth/tarball/v0.3.3",
+        "type": "Release",
+        "url": "https://api.github.com/repos/brentp/mosdepth/releases/58493942",
+        "value": "https://api.github.com/repos/brentp/mosdepth/releases/58493942",
+        "zipball_url": "https://api.github.com/repos/brentp/mosdepth/zipball/v0.3.3"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "brentp",
+          "type": "User"
+        },
+        "date_created": "2021-07-19T07:09:34Z",
+        "date_published": "2021-07-19T07:13:59Z",
+        "description": "when using read-groups, there was an intermittent error that would sometimes skip reads.\r\nthanks @chrisamiller for reporting and providing a test-case.\r\n\r\n",
+        "html_url": "https://github.com/brentp/mosdepth/releases/tag/v0.3.2",
+        "name": "readgroups fix",
+        "release_id": 46392583,
+        "tag": "v0.3.2",
+        "tarball_url": "https://api.github.com/repos/brentp/mosdepth/tarball/v0.3.2",
+        "type": "Release",
+        "url": "https://api.github.com/repos/brentp/mosdepth/releases/46392583",
+        "value": "https://api.github.com/repos/brentp/mosdepth/releases/46392583",
+        "zipball_url": "https://api.github.com/repos/brentp/mosdepth/zipball/v0.3.2"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "brentp",
+          "type": "User"
+        },
+        "date_created": "2020-09-29T21:40:39Z",
+        "date_published": "2020-09-29T21:44:09Z",
+        "description": "+ fix bug with regions and d4 that would cause error even when --d4 was not used.\r\n",
+        "html_url": "https://github.com/brentp/mosdepth/releases/tag/v0.3.1",
+        "name": "bugfix",
+        "release_id": 31960238,
+        "tag": "v0.3.1",
+        "tarball_url": "https://api.github.com/repos/brentp/mosdepth/tarball/v0.3.1",
+        "type": "Release",
+        "url": "https://api.github.com/repos/brentp/mosdepth/releases/31960238",
+        "value": "https://api.github.com/repos/brentp/mosdepth/releases/31960238",
+        "zipball_url": "https://api.github.com/repos/brentp/mosdepth/zipball/v0.3.1"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "brentp",
+          "type": "User"
+        },
+        "date_created": "2020-09-16T15:05:05Z",
+        "date_published": "2020-09-16T15:54:53Z",
+        "description": "This release adds support for writing [d4](https://github.com/38/d4-format) files. See Aaron's poster [here](https://twitter.com/aaronquinlan/status/1305939059022295042)\r\n\r\n## d4 is awesome\r\n`d4` is a toolset and format written by [Hao Hou](https://github.com/38) from the [Quinlan Lab](https://quinlanlab.org). \r\n\r\n`mosdepth` provides many options while calculating depth because it is **slow to re-parse the per-base.bed.gz files**. In\r\nmany cases, it's faster to re-parse a cram file than to scan large regions from the per-base bed files. In addition, writing per-base.bed.gz has always been a bottleneck in mosdepth even after it was optimized some in last release.\r\n\r\nThis release has a static d4utils binary for linux below that will allow users to manipulate d4 files.\r\n\r\n#### d4 is much faster to write:\r\n\r\nHere are mosdepth run times on a smallish cram test-case:\r\n\r\n+ mosdepth without per-base: **5.9s**\r\n+ mosdepth with per-base bed.gz: **24.8s**\r\n+ mosdepth with per-base d4: **7.7s**\r\n\r\nNote that using `d4` output greatly mitigates the cost of writing the per-base output.\r\nWith d4  **mosdepth can write per-base output for a 23X CRAM in 2m15s**\r\n\r\n#### d4 output is much more useful.\r\n\r\nOnce the d4 file is created, it is much faster to access. [d4](https://github.com/38/d4-format) includes command line utilities to view, get stats, and manipulate d4 files. These eventually will replace much of the functionality in mosdepth like `quantize`, `histogram (dist.txt)`, `regions.bed.gz` etc since the operations are so fast.\r\n\r\n## why not bigwig\r\n\r\nI made several pull requests to Devon Ryan's excellent [BigWig library](https://github.com/dpryan79/libBigWig) to improve speed and attempt to reduce memory usage: [#41](https://github.com/dpryan79/libBigWig/pull/41), [#42](https://github.com/dpryan79/libBigWig/pull/42), [#43](https://github.com/dpryan79/libBigWig/pull/43). \r\n\r\nI also wrote a [bigwig library for nim](https://github.com/brentp/bigwig-nim) that uses libBigWig and used that to prototype bigwig output for `mosdepth`. However, bigwig output dramatically increased the memory usage in `mosdepth` such that it was not viable.\r\n\r\nWe will show in the coming manuscript (and see the [poster](https://twitter.com/aaronquinlan/status/1305939059022295042)) that `d4` is much faster to create and use than `bigwig` and results in smaller file sizes.\r\n\r\n\r\n",
+        "html_url": "https://github.com/brentp/mosdepth/releases/tag/v0.3.0",
+        "name": "D4 support!",
+        "release_id": 31410084,
+        "tag": "v0.3.0",
+        "tarball_url": "https://api.github.com/repos/brentp/mosdepth/tarball/v0.3.0",
+        "type": "Release",
+        "url": "https://api.github.com/repos/brentp/mosdepth/releases/31410084",
+        "value": "https://api.github.com/repos/brentp/mosdepth/releases/31410084",
+        "zipball_url": "https://api.github.com/repos/brentp/mosdepth/zipball/v0.3.0"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "brentp",
+          "type": "User"
+        },
+        "date_created": "2020-03-02T20:55:16Z",
+        "date_published": "2020-03-02T20:59:01Z",
+        "description": "0.2.9\r\n=====\r\n+ modifies region.dist.txt to contain the aggregate coverage of each window when -b (integer) is specified\r\n  (otherwise region.dist.txt and global.disk.txt are identical with -b (integer) )\r\n+ improve speed by ~30% when using per-base output with better int2str method (see below fore more details)\r\n\r\n| Command | Mean [s] | Min [s] | Max [s] | Relative |\r\n|:---|---:|---:|---:|---:|\r\n| `mosdepth_v028 -x $exome` | 231.300 \u00b1 8.175 | 222.166 | 242.883 | 1.73 \u00b1 0.07 |\r\n| `mosdepth_v029 -x $exome` | 184.653 \u00b1 7.520 | 176.238 | 192.636 | 1.38 \u00b1 0.07 |\r\n| `mosdepth_v028 -x -t 4 $exome` | 170.924 \u00b1 3.811 | 166.359 | 175.284 | 1.28 \u00b1 0.04 |\r\n| `mosdepth_v029 -x -t 4 $exome` | 133.504 \u00b1 3.151 | 129.220 | 138.062 | 1.00 |\r\n\r\n",
+        "html_url": "https://github.com/brentp/mosdepth/releases/tag/v0.2.9",
+        "name": "speed and region.dist.txt coverage",
+        "release_id": 24146496,
+        "tag": "v0.2.9",
+        "tarball_url": "https://api.github.com/repos/brentp/mosdepth/tarball/v0.2.9",
+        "type": "Release",
+        "url": "https://api.github.com/repos/brentp/mosdepth/releases/24146496",
+        "value": "https://api.github.com/repos/brentp/mosdepth/releases/24146496",
+        "zipball_url": "https://api.github.com/repos/brentp/mosdepth/zipball/v0.2.9"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "brentp",
+          "type": "User"
+        },
+        "date_created": "2020-01-07T16:38:35Z",
+        "date_published": "2020-01-07T16:53:46Z",
+        "description": "0.2.8\r\n=====\r\n+ fix off-by-one error in CSI index (but not data) of output bed files (#98)",
+        "html_url": "https://github.com/brentp/mosdepth/releases/tag/v0.2.8",
+        "name": "fix indexing",
+        "release_id": 22653398,
+        "tag": "v0.2.8",
+        "tarball_url": "https://api.github.com/repos/brentp/mosdepth/tarball/v0.2.8",
+        "type": "Release",
+        "url": "https://api.github.com/repos/brentp/mosdepth/releases/22653398",
+        "value": "https://api.github.com/repos/brentp/mosdepth/releases/22653398",
+        "zipball_url": "https://api.github.com/repos/brentp/mosdepth/zipball/v0.2.8"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "brentp",
+          "type": "User"
+        },
+        "date_created": "2020-01-06T16:45:47Z",
+        "date_published": "2020-01-06T17:10:26Z",
+        "description": "this release updates mosdepth to work with htslib 1.10 and the static binary is built with htslib 1.10.\r\nthis fixes several bugs opened for mosdepth.\r\n\r\n0.2.7\r\n=====\r\n+ small optimizations\r\n+ exit with 1 on bad help #80\r\n+ fix check on remote bam (brentp/hts-nim#48)\r\n+ fix erroneous assert #99\r\n+ update static binary to htslib 1.10 (this fixes other bugs reported and closed in mosdepth)\r\n",
+        "html_url": "https://github.com/brentp/mosdepth/releases/tag/v0.2.7",
+        "name": "htslib 1.10",
+        "release_id": 22623859,
+        "tag": "v0.2.7",
+        "tarball_url": "https://api.github.com/repos/brentp/mosdepth/tarball/v0.2.7",
+        "type": "Release",
+        "url": "https://api.github.com/repos/brentp/mosdepth/releases/22623859",
+        "value": "https://api.github.com/repos/brentp/mosdepth/releases/22623859",
+        "zipball_url": "https://api.github.com/repos/brentp/mosdepth/zipball/v0.2.7"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "brentp",
+          "type": "User"
+        },
+        "date_created": "2019-05-16T03:15:08Z",
+        "date_published": "2019-05-20T15:41:46Z",
+        "description": "+ this release adds a new `*.mosdepth.summary.txt` output file added by  @danielecook. It reports some statistics for each chromosome.\r\n+ it also adds a `--median` flag to be applied to the regions given in `--by`. The default is to use mean. This mode is recommended for more stable estimate of depth.\r\n+ fix for #54 for quantize. \r\n\r\nTo get started, use:\r\n```\r\nwget https://github.com/brentp/mosdepth/releases/download/v0.2.6/mosdepth && chmod +x ./mosdepth && ./mosdepth -h\r\n```\r\n\r\nThat is the (recommended) static binary. To use one that depends on your local htslib (libhts.so), download [this binary](https://github.com/brentp/mosdepth/releases/download/v0.2.6/mosdepth_shared)",
+        "html_url": "https://github.com/brentp/mosdepth/releases/tag/v0.2.6",
+        "name": "median and summary file",
+        "release_id": 17466326,
+        "tag": "v0.2.6",
+        "tarball_url": "https://api.github.com/repos/brentp/mosdepth/tarball/v0.2.6",
+        "type": "Release",
+        "url": "https://api.github.com/repos/brentp/mosdepth/releases/17466326",
+        "value": "https://api.github.com/repos/brentp/mosdepth/releases/17466326",
+        "zipball_url": "https://api.github.com/repos/brentp/mosdepth/zipball/v0.2.6"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "brentp",
+          "type": "User"
+        },
+        "date_created": "2019-02-26T18:06:11Z",
+        "date_published": "2019-03-07T17:26:25Z",
+        "description": "0.2.5\r\n====\r\n+ remove dependency on PCRE (this makes it easier to run on many older systems)\r\n+ don't double count fully overlapping reads (thanks to @jaudoux for the fix in #73)\r\n+ static binary : the binary is completely static but will not allow access over S3/Http\r\n\r\nwget https://github.com/brentp/mosdepth/releases/download/v0.2.5/mosdepth && chmod +x ./mosdepth && ./mosdepth -h\r\n\r\nshould work on all linux 64 bit systems.",
+        "html_url": "https://github.com/brentp/mosdepth/releases/tag/v0.2.5",
+        "name": "static build. pair overlap edge-cases.",
+        "release_id": 15977139,
+        "tag": "v0.2.5",
+        "tarball_url": "https://api.github.com/repos/brentp/mosdepth/tarball/v0.2.5",
+        "type": "Release",
+        "url": "https://api.github.com/repos/brentp/mosdepth/releases/15977139",
+        "value": "https://api.github.com/repos/brentp/mosdepth/releases/15977139",
+        "zipball_url": "https://api.github.com/repos/brentp/mosdepth/zipball/v0.2.5"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "brentp",
+          "type": "User"
+        },
+        "date_created": "2018-11-19T17:47:46Z",
+        "date_published": "2018-11-19T17:56:12Z",
+        "description": "this release adds a `--fast-mode` flag that makes mosdepth almost twice as fast. It does not look at mate overlap and it doesn't look at insertion or deletion events **in the cigar** -- it will still show large deletions with coverage changes and it still skips soft clipped portions of reads. This behavior is likely desirable in many cases and will result in an additional 2X speedup.\r\n\r\n0.2.4\r\n=====\r\n+ Add optional `--include-flag` to allow counting only reads that have some bits in the specified flag set.\r\n  This will only be used rarely--e.g. to count only supplemental reads, use `-F 0 --include-flag 2048`.\r\n+ Fix case when only a single argument was given to --quantize\r\n+ add --read-groups option to allow specifying that only certain read-groups should be used in the depth calculation. (#60)\r\n+ add --fast-mode that does not look at internal cigar operations like (I)insertions or (D)eletions, but does consider soft and\r\n  hard-clips at the end of the alignment. Also does not correct for mate overlap. This makes mosdepth as much as **2X faster for \r\n  CRAM** and is likely the desired mode for people using the depth for CNV or general coverage values as drops in coverage\r\n  due to CIGAR operations are often not of interest for coverage-based analyses.\r\n",
+        "html_url": "https://github.com/brentp/mosdepth/releases/tag/v0.2.4",
+        "name": "fast mode",
+        "release_id": 14082333,
+        "tag": "v0.2.4",
+        "tarball_url": "https://api.github.com/repos/brentp/mosdepth/tarball/v0.2.4",
+        "type": "Release",
+        "url": "https://api.github.com/repos/brentp/mosdepth/releases/14082333",
+        "value": "https://api.github.com/repos/brentp/mosdepth/releases/14082333",
+        "zipball_url": "https://api.github.com/repos/brentp/mosdepth/zipball/v0.2.4"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "brentp",
+          "type": "User"
+        },
+        "date_created": "2018-05-01T18:51:16Z",
+        "date_published": "2018-05-01T19:00:46Z",
+        "description": "0.2.3\r\n=====\r\n+ fix bug in region.dist with chromosomes in bam header, but without any reads. thanks (@vladsaveliev for reporting)\r\n+ support for chromosomes larger than 2^29. (thanks @kaspernie for reporting #41)",
+        "html_url": "https://github.com/brentp/mosdepth/releases/tag/v0.2.3",
+        "name": "large chroms and region.dist bug.",
+        "release_id": 10801552,
+        "tag": "v0.2.3",
+        "tarball_url": "https://api.github.com/repos/brentp/mosdepth/tarball/v0.2.3",
+        "type": "Release",
+        "url": "https://api.github.com/repos/brentp/mosdepth/releases/10801552",
+        "value": "https://api.github.com/repos/brentp/mosdepth/releases/10801552",
+        "zipball_url": "https://api.github.com/repos/brentp/mosdepth/zipball/v0.2.3"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "brentp",
+          "type": "User"
+        },
+        "date_created": "2018-03-22T17:15:58Z",
+        "date_published": "2018-03-19T18:31:07Z",
+        "description": "This contains a bugfix for a very rare (but major) bug that occurs when successive chromosomes have the same length. The data from the first chrom was not cleared and then polluted the counts for the subsequent chrom. Thanks to Kate B. for reporting and providing a simple test-case.\r\n\r\nIt also changes the dist output file name(s). Before only a single dist file was created. Now, there will always be a `$prefix.global.dist.txt` and if `--by` is specified, there will also be a `$prefix.region.dist.txt`. Thanks to Alistair W for suggesting.\r\n\r\nSee below for more details.\r\n\r\n0.2.2\r\n=====\r\n+ fix overflow with huge intervals to --by\r\n+ **NOTE** change to output file name of `*.dist.txt`. A file named `$prefix.mosdepth.global.dist.txt`\r\n  will always be created and `$prefix.mosdepth.region.dist.txt` will be created if `--by` is specified.\r\n  Previously, there was only a single file named `$prefix.mosdepth.dist.txt` which no longer exists.\r\n  This allows users to, for example, use --by to see coverage of gene regions for WGS, and to see the\r\n  global WGS coverage and the coverage in their genes of interest.\r\n+ fix bug that would manifest with consecutive chromosomes of the same length. chromosomes other than\r\n  the first of a given length would have incorrect values.\r\n",
+        "html_url": "https://github.com/brentp/mosdepth/releases/tag/v0.2.2",
+        "name": "dist changes!",
+        "release_id": 10157589,
+        "tag": "v0.2.2",
+        "tarball_url": "https://api.github.com/repos/brentp/mosdepth/tarball/v0.2.2",
+        "type": "Release",
+        "url": "https://api.github.com/repos/brentp/mosdepth/releases/10157589",
+        "value": "https://api.github.com/repos/brentp/mosdepth/releases/10157589",
+        "zipball_url": "https://api.github.com/repos/brentp/mosdepth/zipball/v0.2.2"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "brentp",
+          "type": "User"
+        },
+        "date_created": "2018-01-12T16:08:12Z",
+        "date_published": "2018-01-12T16:14:05Z",
+        "description": "v0.2.1\r\n=====\r\n+ allow unsorted bed as input to --by\r\n+ allow setting precision with env var, e.g. `MOSDEPTH_PRECISION=5`\r\n+ moderate performance increase.\r\n+ build using holy-build box to better support systems with older libc.\r\n",
+        "html_url": "https://github.com/brentp/mosdepth/releases/tag/v0.2.1",
+        "release_id": 9215005,
+        "tag": "v0.2.1",
+        "tarball_url": "https://api.github.com/repos/brentp/mosdepth/tarball/v0.2.1",
+        "type": "Release",
+        "url": "https://api.github.com/repos/brentp/mosdepth/releases/9215005",
+        "value": "https://api.github.com/repos/brentp/mosdepth/releases/9215005",
+        "zipball_url": "https://api.github.com/repos/brentp/mosdepth/zipball/v0.2.1"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "brentp",
+          "type": "User"
+        },
+        "date_created": "2017-10-24T18:52:33Z",
+        "date_published": "2017-10-24T18:55:23Z",
+        "description": "0.2.0\r\n====\r\n+ **~2X speed improvement for CRAM** by not decoding unused base-qualities.\r\n+ add new `--thresholds` argument. See README for usage. thresholds and quantization are highly recommended over\r\n+ when using quantize, labels now indicate the range of depths encompassed by that region.\r\n+ for quantize and per-base, mosdepth will output all chromosomes in the bam header, even if they have no alignments.\r\n  this makes it so that mosdepth output for files aligned to the same reference have the same number and order of chromosomes\r\n  and same total base coverage\r\n  per-base output when possible as they are more compact and faster to output.\r\n+ fix bug with dist output for chroms larger than 2.1 billion bases that also affected total output in some cases.\r\n",
+        "html_url": "https://github.com/brentp/mosdepth/releases/tag/v0.2.0",
+        "name": "thresholds argument and CRAM",
+        "release_id": 8242956,
+        "tag": "v0.2.0",
+        "tarball_url": "https://api.github.com/repos/brentp/mosdepth/tarball/v0.2.0",
+        "type": "Release",
+        "url": "https://api.github.com/repos/brentp/mosdepth/releases/8242956",
+        "value": "https://api.github.com/repos/brentp/mosdepth/releases/8242956",
+        "zipball_url": "https://api.github.com/repos/brentp/mosdepth/zipball/v0.2.0"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "brentp",
+          "type": "User"
+        },
+        "date_created": "2017-10-09T18:01:57Z",
+        "date_published": "2017-10-09T18:08:31Z",
+        "description": "This is a breaking release. A given output will be unchanged, but the command-line usage to get it will be different. I apologize for the change in use, but not for the increase in utility. In order to expose the utility of mosdepth across more (and multiple simultaneous) uses, mosdepth now requires a prefix for outputs rather than sending it to stdout. Usage as of this release looks as below. Where previous usage was e.g.\r\n\r\n`mosdepth $bam > $output`\r\n\r\ncurrent usage becomes:\r\n\r\n`mosdepth $output_prefix $bam`\r\n\r\nThis is explained in more detail in the help:\r\n\r\n```\r\nmosdepth 0.1.9\r\n\r\n  Usage: mosdepth [options] <prefix> <BAM-or-CRAM>\r\n\r\nArguments:\r\n\r\n  <prefix>       outputs: `{prefix}.mosdepth.dist.txt`\r\n                          `{prefix}.per-base.bed.gz` (unless -n/--no-per-base is specified)\r\n                          `{prefix}.regions.bed.gz` (if --by is specified)\r\n                          `{prefix}.quantized.bed.gz` (if --quantize is specified)\r\n\r\n  <BAM-or-CRAM>  the alignment file for which to calculate depth.\r\n\r\nCommon Options:\r\n  \r\n  -t --threads <threads>     number of BAM decompression threads [default: 0]\r\n  -c --chrom <chrom>         chromosome to restrict depth calculation.\r\n  -b --by <bed|window>       optional BED file or (integer) window-sizes.\r\n  -n --no-per-base           dont output per-base depth (skipping this output will speed execution).\r\n  -f --fasta <fasta>         fasta file for use with CRAM files.\r\n\r\nOther options:\r\n\r\n  -F --flag <FLAG>            exclude reads with any of the bits in FLAG set [default: 1796]\r\n  -q --quantize <segments>    write quantized output, see docs for description.\r\n  -Q --mapq <mapq>            mapping quality threshold [default: 0]\r\n  -h --help                   show help\r\n```",
+        "html_url": "https://github.com/brentp/mosdepth/releases/tag/v0.1.9",
+        "name": "mosdepth prefix",
+        "release_id": 8051593,
+        "tag": "v0.1.9",
+        "tarball_url": "https://api.github.com/repos/brentp/mosdepth/tarball/v0.1.9",
+        "type": "Release",
+        "url": "https://api.github.com/repos/brentp/mosdepth/releases/8051593",
+        "value": "https://api.github.com/repos/brentp/mosdepth/releases/8051593",
+        "zipball_url": "https://api.github.com/repos/brentp/mosdepth/zipball/v0.1.9"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "brentp",
+          "type": "User"
+        },
+        "date_created": "2017-09-08T12:52:19Z",
+        "date_published": "2017-09-08T13:12:42Z",
+        "description": "+ handle track lines\r\n+ report message on bad bed lines (and skip).\r\n\r\nNOTE that the default binary below requires a fairly modern version of GLIBC. If that fails for you with an error like:\r\n`/lib64/libc.so.6: version `GLIBC_2.14' not found`\r\n\r\nthen use the `mosdepth_old_glibc` binary.",
+        "html_url": "https://github.com/brentp/mosdepth/releases/tag/v0.1.7",
+        "name": "better support for beds with non-region lines",
+        "release_id": 7684791,
+        "tag": "v0.1.7",
+        "tarball_url": "https://api.github.com/repos/brentp/mosdepth/tarball/v0.1.7",
+        "type": "Release",
+        "url": "https://api.github.com/repos/brentp/mosdepth/releases/7684791",
+        "value": "https://api.github.com/repos/brentp/mosdepth/releases/7684791",
+        "zipball_url": "https://api.github.com/repos/brentp/mosdepth/zipball/v0.1.7"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "brentp",
+          "type": "User"
+        },
+        "date_created": "2017-09-06T03:19:19Z",
+        "date_published": "2017-09-06T03:22:13Z",
+        "description": "when using --by, there was an extra tab between the chrom and start columns. This fixes that.",
+        "html_url": "https://github.com/brentp/mosdepth/releases/tag/v0.1.6",
+        "name": "remove extra tab",
+        "release_id": 7647022,
+        "tag": "v0.1.6",
+        "tarball_url": "https://api.github.com/repos/brentp/mosdepth/tarball/v0.1.6",
+        "type": "Release",
+        "url": "https://api.github.com/repos/brentp/mosdepth/releases/7647022",
+        "value": "https://api.github.com/repos/brentp/mosdepth/releases/7647022",
+        "zipball_url": "https://api.github.com/repos/brentp/mosdepth/zipball/v0.1.6"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "brentp",
+          "type": "User"
+        },
+        "date_created": "2017-09-02T02:25:34Z",
+        "date_published": "2017-09-02T02:32:25Z",
+        "description": "+ fixed when a window-size larger than the chromosome length was specified, windows would be output until overflow.\r\n+ limit size of dist file by only reporting novel values\r\n+ cap memory use even for very deep coverage.\r\n\r\nthanks to @tomsasani for reporting several issues.\r\n",
+        "html_url": "https://github.com/brentp/mosdepth/releases/tag/v0.1.5",
+        "name": "bugfixes related to `distribution` and large window sizes",
+        "release_id": 7612679,
+        "tag": "v0.1.5",
+        "tarball_url": "https://api.github.com/repos/brentp/mosdepth/tarball/v0.1.5",
+        "type": "Release",
+        "url": "https://api.github.com/repos/brentp/mosdepth/releases/7612679",
+        "value": "https://api.github.com/repos/brentp/mosdepth/releases/7612679",
+        "zipball_url": "https://api.github.com/repos/brentp/mosdepth/zipball/v0.1.5"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "brentp",
+          "type": "User"
+        },
+        "date_created": "2017-09-01T20:15:14Z",
+        "date_published": "2017-09-01T20:13:39Z",
+        "description": "fix off-by-1 error that affected MT chromosome.\r\n",
+        "html_url": "https://github.com/brentp/mosdepth/releases/tag/v0.1.4",
+        "name": "MT",
+        "release_id": 7610602,
+        "tag": "v0.1.4",
+        "tarball_url": "https://api.github.com/repos/brentp/mosdepth/tarball/v0.1.4",
+        "type": "Release",
+        "url": "https://api.github.com/repos/brentp/mosdepth/releases/7610602",
+        "value": "https://api.github.com/repos/brentp/mosdepth/releases/7610602",
+        "zipball_url": "https://api.github.com/repos/brentp/mosdepth/zipball/v0.1.4"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "brentp",
+          "type": "User"
+        },
+        "date_created": "2017-08-29T19:19:42Z",
+        "date_published": "2017-08-29T19:22:30Z",
+        "description": "see: https://github.com/brentp/mosdepth/issues/3#issuecomment-325764806\r\n\r\n+ new -F flag allows setting exclude  flag\r\n+ if --by argument is a bed file with >= 4 columns, the 4th column is transferred to the output.\r\n\r\n",
+        "html_url": "https://github.com/brentp/mosdepth/releases/tag/v0.1.3",
+        "name": "options",
+        "release_id": 7562695,
+        "tag": "v0.1.3",
+        "tarball_url": "https://api.github.com/repos/brentp/mosdepth/tarball/v0.1.3",
+        "type": "Release",
+        "url": "https://api.github.com/repos/brentp/mosdepth/releases/7562695",
+        "value": "https://api.github.com/repos/brentp/mosdepth/releases/7562695",
+        "zipball_url": "https://api.github.com/repos/brentp/mosdepth/zipball/v0.1.3"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "brentp",
+          "type": "User"
+        },
+        "date_created": "2017-08-29T13:40:28Z",
+        "date_published": "2017-08-29T13:42:31Z",
+        "description": "linux binary below.",
+        "html_url": "https://github.com/brentp/mosdepth/releases/tag/v0.1.2",
+        "name": "usability improvements",
+        "release_id": 7557580,
+        "tag": "v0.1.2",
+        "tarball_url": "https://api.github.com/repos/brentp/mosdepth/tarball/v0.1.2",
+        "type": "Release",
+        "url": "https://api.github.com/repos/brentp/mosdepth/releases/7557580",
+        "value": "https://api.github.com/repos/brentp/mosdepth/releases/7557580",
+        "zipball_url": "https://api.github.com/repos/brentp/mosdepth/zipball/v0.1.2"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "brentp",
+          "type": "User"
+        },
+        "date_created": "2017-08-24T16:33:54Z",
+        "date_published": "2017-08-24T16:35:26Z",
+        "description": "the binary below is for linux.",
+        "html_url": "https://github.com/brentp/mosdepth/releases/tag/v0.1.1",
+        "name": "mosdepth inital release.",
+        "release_id": 7512291,
+        "tag": "v0.1.1",
+        "tarball_url": "https://api.github.com/repos/brentp/mosdepth/tarball/v0.1.1",
+        "type": "Release",
+        "url": "https://api.github.com/repos/brentp/mosdepth/releases/7512291",
+        "value": "https://api.github.com/repos/brentp/mosdepth/releases/7512291",
+        "zipball_url": "https://api.github.com/repos/brentp/mosdepth/zipball/v0.1.1"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "somef_missing_categories": [
+    "citation",
+    "acknowledgement",
+    "run",
+    "download",
+    "requirements",
+    "contact",
+    "contributors",
+    "faq",
+    "support",
+    "identifier",
+    "has_build_file",
+    "executable_example"
+  ],
+  "somef_provenance": {
+    "date": "2024-11-04 07:53:05",
+    "somef_schema_version": "1.0.0",
+    "somef_version": "0.9.5"
+  },
+  "stargazers_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 698
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "usage": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "usage",
+        "type": "Text_excerpt",
+        "value": "```\nmosdepth 0.3.9\n\n  Usage: mosdepth [options] <prefix> <BAM-or-CRAM>\n\nArguments:\n\n  <prefix>       outputs: `{prefix}.mosdepth.global.dist.txt`\n                          `{prefix}.mosdepth.summary.txt`\n                          `{prefix}.per-base.bed.gz` (unless -n/--no-per-base is specified)\n                          `{prefix}.regions.bed.gz` (if --by is specified)\n                          `{prefix}.quantized.bed.gz` (if --quantize is specified)\n                          `{prefix}.thresholds.bed.gz` (if --thresholds is specified)\n\n  <BAM-or-CRAM>  the alignment file for which to calculate depth.\n\nCommon Options:\n\n  -t --threads <threads>     number of BAM decompression threads [default: 0]\n  -c --chrom <chrom>         chromosome to restrict depth calculation.\n  -b --by <bed|window>       optional BED file or (integer) window-sizes.\n  -n --no-per-base           dont output per-base depth. skipping this output will speed execution\n                             substantially. prefer quantized or thresholded values if possible.\n  -f --fasta <fasta>         fasta file for use with CRAM files [default: ].\n  --d4                       output per-base depth in d4 format.\n\nOther options:\n\n  -F --flag <FLAG>                  exclude reads with any of the bits in FLAG set [default: 1796]\n  -i --include-flag <FLAG>          only include reads with any of the bits in FLAG set. default is unset. [default: 0]\n  -x --fast-mode                    dont look at internal cigar operations or correct mate overlaps (recommended for most use-cases).\n  -q --quantize <segments>          write quantized output see docs for description.\n  -Q --mapq <mapq>                  mapping quality threshold. reads with a quality less than this value are ignored [default: 0]\n  -l --min-frag-len <min-frag-len>  minimum insert size. reads with a smaller insert size than this are ignored [default: -1]\n  -u --max-frag-len <max-frag-len>  maximum insert size. reads with a larger insert size than this are ignored. [default: -1]\n  -T --thresholds <thresholds>      for each interval in --by, write number of bases covered by at\n                                    least threshold bases. Specify multiple integer values separated\n                                    by ','.\n  -m --use-median                   output median of each region (in --by) instead of mean.\n  -R --read-groups <string>         only calculate depth for these comma-separated read groups IDs.\n  -h --help                         show help\n```\nIf you use mosdepth please cite [the publication in bioinformatics](https://academic.oup.com/bioinformatics/article/doi/10.1093/bioinformatics/btx699/4583630?guestAccessKey=35b55064-4566-4ab3-a769-32916fa1c6e6)\n\n\nSee the section below for more info on distribution.\n\nIf `--by` is a BED file with 4 or more columns, it is assumed the the 4th column is the name.\nThat name will be propagated to the `mosdepth` output in the 4th column with the depth in the 5th column.\nIf you don't want this behavior, simply send a bed file with 3 columns.\n"
+      },
+      "source": "https://raw.githubusercontent.com/brentp/mosdepth/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "exome example",
+        "parent_header": [
+          "usage"
+        ],
+        "type": "Text_excerpt",
+        "value": "To calculate the coverage in each exome capture region:\n```\nmosdepth --by capture.bed sample-output sample.exome.bam\n```\nFor a 5.5GB exome BAM and all 1,195,764 ensembl exons as the regions,\nthis completes in 1 minute 38 seconds with a single CPU.\n\nPer-base output will go to `sample-output.per-base.bed.gz`,\nthe mean for each region will go to `sample-output.regions.bed.gz`;\neach of those will be written along with a CSI index that can be\nused for tabix queries.\nThe distribution of depths will go to `sample-output.mosdepth.dist.txt`\n"
+      },
+      "source": "https://raw.githubusercontent.com/brentp/mosdepth/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "WGS example",
+        "parent_header": [
+          "usage"
+        ],
+        "type": "Text_excerpt",
+        "value": "For 500-base windows\n\n```\nmosdepth -n --fast-mode --by 500 sample.wgs $sample.wgs.cram\n```\n\n`-n` means don't output per-base data, this will make `mosdepth`\na bit faster as there is some cost to outputting that much text.\n\n--fast-mode avoids the extra calculations of mate pair overlap and cigar operations,\nand also allows htslib to extract less data from CRAM, providing a substantial speed\nimprovement.\n"
+      },
+      "source": "https://raw.githubusercontent.com/brentp/mosdepth/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Callable regions example",
+        "parent_header": [
+          "usage"
+        ],
+        "type": "Text_excerpt",
+        "value": "To create a set of \"callable\" regions as in [GATK's callable loci tool](https://software.broadinstitute.org/gatk/documentation/tooldocs/current/org_broadinstitute_gatk_tools_walkers_coverage_CallableLoci.php):\n\n```\n# by setting these ENV vars, we can control the output labels (4th column)\nexport MOSDEPTH_Q0=NO_COVERAGE   # 0 -- defined by the arguments to --quantize\nexport MOSDEPTH_Q1=LOW_COVERAGE  # 1..4\nexport MOSDEPTH_Q2=CALLABLE      # 5..149\nexport MOSDEPTH_Q3=HIGH_COVERAGE # 150 ...\nmosdepth -n --quantize 0:1:5:150: $sample.quantized $sample.wgs.bam\n```\n\nFor this case. A regions with depth of 0 are labelled as \"NO_COVERAGE\", those with\ncoverage of 1,2,3,4 are labelled as \"LOW_COVERAGE\" and so on.\n\nThe result is a BED file where adjacent bases with depths that fall into the same\nbin are merged into a single region with the 4th column indicating the label.\n\n"
+      },
+      "source": "https://raw.githubusercontent.com/brentp/mosdepth/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Distribution only with modified precision",
+        "parent_header": [
+          "usage"
+        ],
+        "type": "Text_excerpt",
+        "value": "To get only the distribution value, without the depth file or the per-base and using 3 threads:\n\n```\nMOSDEPTH_PRECISION=5 mosdepth -n -t 3 $sample $bam\n```\n\nOutput will go to `$sample.mosdepth.dist.txt`\n\nThis also forces the output to have 5 decimals of precision rather than the default of 2.\n"
+      },
+      "source": "https://raw.githubusercontent.com/brentp/mosdepth/master/README.md",
+      "technique": "header_analysis"
+    }
+  ]
+}

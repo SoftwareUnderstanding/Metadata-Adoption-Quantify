@@ -1,0 +1,486 @@
+{
+  "application_domain": [
+    {
+      "confidence": 16.54,
+      "result": {
+        "type": "String",
+        "value": "Computer Vision"
+      },
+      "technique": "supervised_classification"
+    }
+  ],
+  "code_repository": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/trieschlab/PymoNNto"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_created": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2020-03-26T16:11:41Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_updated": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2024-04-14T03:29:45Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "description": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "The \"Python Modular Neural Network Toolbox\" allows you to create neuron groups, define their behaviour and connect them with synapse groups."
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 0.9979973866699299,
+      "result": {
+        "original_header": "PymoNNto",
+        "type": "Text_excerpt",
+        "value": "\r\n<img width=\"200\" src=\"https://raw.githubusercontent.com/trieschlab/PymoNNto/Images/logo.png\"><br>\r\n\r\nThe \"Python modular neural network toolbox\" allows you to create different Neuron-Groups, define their Behavior and connect them with Synapse-Groups.\r\n\r\nWith this Simulator you can create all kinds of biological plausible networks, which, for example, mimic the learning mechanisms of cortical structures.\r\n\r\nPymoNNto has many useful tools to speed up research and development, which are not limited to neural networks.\r\nExamples for this are the Evolution package for parameter optimization or the Storage Manager for data access.\r\n\r\n![User interface example](https://raw.githubusercontent.com/trieschlab/PymoNNto/Images/overview_vg.png)\r\n\r\n\r\n\r\n\r\n\r\n\r \n"
+      },
+      "source": "https://raw.githubusercontent.com/trieschlab/PymoNNto/master/readme.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9417018361988979,
+      "result": {
+        "original_header": "Basic Code Structure",
+        "type": "Text_excerpt",
+        "value": "\r\nThe following code creates a network of 100 neurons with recurrent connections and simulates them for 1000 iterations. What is still missing are some behavior modules. This modules have to be passed to the NeuronGrop to definde what the neurons are supposed to do at each timestep.\r\n\r\n\r\n```python\r\nfrom PymoNNto import *\r\nMy_Network = Network()\r\nNeuronGroup(net=My_Network, tag='my_neurons', size=100)\r\nSynapseGroup(net=My_Network, src='my_neurons', dst='my_neurons', tag='GLUTAMATE')\r\nMy_Network.initialize()\r\nMy_Network.simulate_iterations(1000)\r\n```\r\n\r \n"
+      },
+      "source": "https://raw.githubusercontent.com/trieschlab/PymoNNto/master/readme.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9884421338287052,
+      "result": {
+        "original_header": "Behavior",
+        "type": "Text_excerpt",
+        "value": "\r\nEach Behavior Module has the following layout where `initialize` is called when the Network is initialized, while\r\n`iteration` is called repeatedly every timestep. `neurons` points to the parent neuron group the behavior belongs to or some other parent object the beaviour is attached to.\r\n\r\nIn this example we define a variable `voltage` and a `threshold`. The activity-vector is initialized with 0 values for each neuron. \r\nAt each timestep a spike is created if the voltage is above the threshold value. After that, the voltage vector is decreased with factor 0.9 and random input is added.\r\n\r\nWhen we combine the previous code blocks we can add the `Basic_Behavior` to the NeuronGroup.\r\nThe number in front of each behavior (1 and 9) have to be positive and determine the order of execution for each module inside and accross NeuronGroups.\r\n\r\nTo plot the neurons activity over time, we also have to create a `Recorder`. Here the voltage and the mean-voltage are stored at each timestep.\r\nAt the end the data is plotted via the tagging system (see tagging system section).\r\n\r\n```python\r\nclass Basic_Behavior(Behavior):\r\n\r\n    def initialize(self, neurons):\r\n        neurons.voltage = neurons.vector()\r\n        self.threshold = 0.5\r\n\r\n    def iteration(self, neurons):\r\n        neurons.spike = neurons.voltage > self.threshold\r\n        neurons.voltage[neurons.spike] = 0.0 #reset\r\n        \r\n        neurons.voltage *= 0.9 #voltage decay\r\n        neurons.voltage += neurons.vector('uniform',density=0.01) #noise\r\n        \r\n...\r\n\r\n# Add behavior to NeuronGroup\r\nNeuronGroup(net=My_Network, tag='my_neurons', size=100, behavior={\r\n    1: Basic_Behavior(),\r\n    9: Recorder(['voltage', 'np.mean(voltage)'], tag='my_recorder')\r\n})\r\n\r\n...\r\n\r\nimport matplotlib.pyplot as plt\r\nplt.plot(My_Network['n.voltage', 0, 'np'][:,0:10])\r\nplt.plot(My_Network['np.mean(n.voltage)', 0], color='black')\r\nplt.axhline(My_Network.my_neurons.Basic_Behavior.threshold, color='black')\r\nplt.show()\r\n```\r\n\r\n<img width=\"300\" src=\"https://raw.githubusercontent.com/trieschlab/PymoNNto/Images/basics2_1.png\"><br>\r\n\r\n\r \n"
+      },
+      "source": "https://raw.githubusercontent.com/trieschlab/PymoNNto/master/readme.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9735596609769717,
+      "result": {
+        "original_header": "Synapses and Input",
+        "type": "Text_excerpt",
+        "value": "\r\nWe can add more behavior modues to make the activity of the neurons more complex. Here the module `Input_Behavior` is added. \r\nIn `initialize` the synapse matrix is created, which stores one weight-value from each neuron to each neuron. \r\nThe Function `iteration` defines how the information is propagated to each neuron (dot product) and adds some term for random input. \r\nThe for loops are not neccessary here, because we only have one SynapseGroup. \r\nThis solution, however, also works with multiple Neuron- and SynapseGroups. \r\nWith `synapse.src` and `synapse.dst` you can access the source and destination NeuronGroups assigned to a SynapseGroup.\r\n\r\n\r\nHere we also add an event recorder to plot the spikes of the NeuronGroup.\r\n\r\n```python\r\nfrom PymoNNto import *\r\n\r\n\r\nclass Basic_Behavior(Behavior):\r\n    ...\r\n\r\n\r\nclass Input_Behavior(Behavior):\r\n\r\n    def initialize(self, neurons):\r\n        for synapse in neurons.synapses(afferent, 'GLUTAMATE'):\r\n            synapse.W = synapse.matrix('uniform', density=0.1)\r\n            synapse.enabled = synapse.W > 0\r\n\r\n    def iteration(self, neurons):\r\n        for synapse in neurons.synapses(afferent, 'GLUTAMATE'):\r\n            neurons.voltage += synapse.W.dot(synapse.src.spike) / synapse.src.size * 10\r\n\r\n\r\nMy_Network = Network()\r\n\r\nNeuronGroup(net=My_Network, tag='my_neurons', size=100, behavior={\r\n    1: Basic_Behavior(),\r\n    2: Input_Behavior(),\r\n    9: Recorder(['voltage', 'np.mean(voltage)'], tag='my_recorder'),\r\n    10: EventRecorder('spike', tag='my_event_recorder')\r\n})\r\n\r\nmy_syn = SynapseGroup(net=My_Network, src='my_neurons', dst='my_neurons', tag='GLUTAMATE')\r\n\r\nMy_Network.initialize()\r\n\r\nMy_Network.simulate_iterations(1000)\r\n\r\n# plotting:\r\n\r\nimport matplotlib.pyplot as plt\r\n\r\nplt.plot(My_Network['voltage', 0, 'np'][:, 0:10])\r\nplt.plot(My_Network['np.mean(voltage)', 0], color='black')\r\nplt.axhline(My_Neurons['Basic_Behavior', 0].threshold, color='black')\r\nplt.xlabel('iterations')\r\nplt.ylabel('voltage')\r\nplt.show()\r\n\r\nplt.plot(My_Network['spike.t', 0], My_Network['spike.i', 0], '.k')\r\nplt.xlabel('iterations')\r\nplt.ylabel('neuron index')\r\nplt.show()\r\n\r\n\r\n```\r\n\r\n<img width=\"300\" src=\"https://raw.githubusercontent.com/trieschlab/PymoNNto/Images/basics2_2.png\"><img width=\"300\" src=\"https://raw.githubusercontent.com/trieschlab/PymoNNto/Images/basics2_3.png\"><br>\r\n\r\n<img width=\"600\" src=\"https://raw.githubusercontent.com/trieschlab/PymoNNto/Images/basics2_4.png\"><br>\r\n\r \n"
+      },
+      "source": "https://raw.githubusercontent.com/trieschlab/PymoNNto/master/readme.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.988178680316096,
+      "result": {
+        "original_header": "Tagging System",
+        "type": "Text_excerpt",
+        "value": "\r\nTo access the tagged objects we can use the `[]` operator which returns a list of objects tagged with the given tag.\r\nE.g. `['my_tag']` gives you a list of all objects tagged with `my_tag`. \r\nTags searches use a caching system so it is very fast an can be used for repeated calls inside of Behaviors.\r\nUnique tags can be accessed like simple variables via their parents like `My_Network.my_neurons`.\r\n\r\n\r\nHere are some examples:\r\n\r\n```python\r\nMy_Network = Network()\r\nNeuronGroup(net=My_Network, tag='my_neurons', size=100, behavior={\r\n    1: Basic_Behavior(),\r\n    9: Recorder(['voltage', 'np.mean(voltage)'], tag='my_recorder')\r\n})\r\nSynapseGroup(net=My_Network, src='my_neurons', dst='my_neurons', tag='S1,GLUTAMATE')\r\n\r\n################################\r\n################################\r\n################################\r\n\r\n#Unique tag access:\r\nMy_Network.my_neurons\r\nMy_Network.my_neurons.Basic_Behavior\r\nMy_Network.my_neurons.Recorder\r\nMy_Network.my_neurons.my_recorder\r\nMy_Network.S1\r\n\r\n#[] tag search\r\nMy_Network['my_neurons']\r\n=> [<PymoNNto.NetworkCore.Neuron_Group.NeuronGroup object at 0x00000195F4878670>]\r\n\r\nMy_Network['my_recorder']\r\nMy_Network.my_neurons['my_recorder'] \r\n=> [<PymoNNto.NetworkBehavior.Recorder.Recorder.Recorder object at 0x0000021F1B61D5E0>]\r\n\r\nMy_Network['np.mean(voltage)']\r\nMy_Network.my_neurons['voltage']\r\nMy_Network.my_neurons.my_recorder['np.mean(voltage)']\r\n=> [[array(data iteration 1), array(data iteration 2), array(data iteration 3), ...]]\r\n\r\nMy_Neurons['voltage', 0] \r\n#is equivalent to \r\nMy_Neurons['voltage'][0] \r\n```\r\n\r \n"
+      },
+      "source": "https://raw.githubusercontent.com/trieschlab/PymoNNto/master/readme.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9888089805776594,
+      "result": {
+        "original_header": "User Interface",
+        "type": "Text_excerpt",
+        "value": "\r\nTo control and evaluate the model from the \"Basics\" section with PymoNNto's interactive graphical user interface we can replace the pyplot functions, the recorder and the simulate_iterations with code to launch the Network_UI.\r\n\r\nLike other parts of PymoNNto, the Network_UI is modular.\r\nIt consists of multiple UI_modules, which we can be freely chosen.\r\nHere, we use the function get_default_UI_modules to get a list of standard modules applicable to most networks.\r\n\r\nget_default_UI_modules receives a list of neuron variable names as well as a list of all the synapse variable names we want to display.\r\nThe first neuron variable in the list will be used to set the brightness of the network activity grid module (blue rectangle on image)\r\n\r\nNetwork_UI is initialized with the Network object, the ui module list, the window title.\r\nAdditional to this, the attribute group_display_count defines how much activity grid modules we want to display, in case we want to see multiple NeuronGroups at once.\r\nThe base color of the grid module can be defined by setting the MyNeuronGroup.color=(r,g,b,alpha) variable.\r\n\r\nWe can also set group_tags=[] and transmitters=[] (lists of strings) manually if we only want to display groups with certain tags or transmitters.\r\n\r\nIf we set reduced_layout to True we can remove the axis labels of the plots, so we get bigger plotting areas and a cleaner look.\r\n\r\nTo correctly render the output, some UI_modules require additional specifications or adjustment of the code.\r\nIn this example, the sidebar_activity_module, displays the activity of the neurons on a grid and allows to select individual neurons.\r\nThe size of the grid is specified as a property of the neuron group via a NeuronDimension module (here replaced with get_squared_dim(100) to get a 10x10 grid), which creates spatial coordinates for each neuron stored in the vectors x, y and z.\r\n\r\n```python\r\nfrom PymoNNto import *\r\n\r\n\r\nclass Basic_Behavior(Behavior):\r\n\r\n    def initialize(self, neurons):\r\n        neurons.voltage = neurons.vector()\r\n        self.leak_factor = 0.9\r\n        self.threshold = 0.5\r\n\r\n    def iteration(self, neurons):\r\n        firing = neurons.voltage > self.threshold\r\n        neurons.spike = firing.astype(neurons.def_dtype)  # spikes\r\n        neurons.voltage[firing] = 0.0  # reset\r\n\r\n        neurons.voltage *= self.leak_factor  # voltage decay\r\n        neurons.voltage += neurons.vector('uniform', density=0.01)  # noise\r\n\r\n\r\nclass Input_Behavior(Behavior):\r\n\r\n    def initialize(self, neurons):\r\n        for synapse in neurons.synapses(afferent, 'GLUTAMATE'):\r\n            synapse.W = synapse.matrix('uniform', density=0.1)\r\n            synapse.enabled = synapse.W > 0\r\n\r\n    def iteration(self, neurons):\r\n        for synapse in neurons.synapses(afferent, 'GLUTAMATE'):\r\n            neurons.voltage += synapse.W.dot(synapse.src.spike) / synapse.src.size * 10\r\n\r\n\r\nMy_Network = Network()\r\n\r\nMy_Neurons = NeuronGroup(net=My_Network, tag='my_neurons', size=get_squared_dim(100), behavior={\r\n    1: Basic_Behavior(),\r\n    2: Input_Behavior()\r\n})\r\n\r\nMy_Neurons.visualize_module()\r\n\r\nmy_syn = SynapseGroup(net=My_Network, src='my_neurons', dst='my_neurons', tag='GLUTAMATE')\r\n\r\nMy_Network.initialize()\r\n\r\nMy_Network.simulate_iterations(1000, measure_block_time=True)\r\n\r\nfrom PymoNNto.Exploration.Network_UI import *\r\n\r\nmy_UI_modules = get_default_UI_modules(['voltage', 'spike'], ['W'])\r\nNetwork_UI(My_Network, modules=my_UI_modules, label='My_Network_UI', group_display_count=1).show()\r\n\r\n```\r\n\r\n<img width=\"600\" src=\"https://raw.githubusercontent.com/trieschlab/PymoNNto/Images/Basic_Tab.png\"><br>\r\n\r\n\r\nThere is a huge variety of useful UI Tabs. Examples can be seen here:\r\n\r\n![User interface example](https://raw.githubusercontent.com/trieschlab/PymoNNto/Images/UI_Evolution_Manager.png)\r\n\r\n![Multi_Group_Tab](https://raw.githubusercontent.com/trieschlab/PymoNNto/Images/Multi_Group_Tab.png)\r\n\r\n![User interface example](https://raw.githubusercontent.com/trieschlab/PymoNNto/Images/OpenGLTab.png)\r\n\r\n![User interface example](https://raw.githubusercontent.com/trieschlab/PymoNNto/Images/Sun_Gravity_Plot_Tab.png)\r\n\r \n"
+      },
+      "source": "https://raw.githubusercontent.com/trieschlab/PymoNNto/master/readme.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "documentation": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/trieschlab/PymoNNto/tree/master/docs"
+      },
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "format": "readthedocs",
+        "type": "Url",
+        "value": "https://pymonnto.readthedocs.io/"
+      },
+      "source": "https://raw.githubusercontent.com/trieschlab/PymoNNto/master/readme.md",
+      "technique": "regular_expression"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "format": "wiki",
+        "type": "Url",
+        "value": "https://github.com/trieschlab/PymoNNto/wiki"
+      },
+      "source": "https://raw.githubusercontent.com/trieschlab/PymoNNto/master/readme.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "download_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/trieschlab/PymoNNto/releases"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 10
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/trieschlab/PymoNNto/forks"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "trieschlab/PymoNNto"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_title": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "PymoNNto"
+      },
+      "source": "https://raw.githubusercontent.com/trieschlab/PymoNNto/master/readme.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "images": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/trieschlab/PymoNNto/Images/overview_vg.png"
+      },
+      "source": "https://raw.githubusercontent.com/trieschlab/PymoNNto/master/readme.md",
+      "technique": "regular_expression"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/trieschlab/PymoNNto/Images/basics2_1.png"
+      },
+      "source": "https://raw.githubusercontent.com/trieschlab/PymoNNto/master/readme.md",
+      "technique": "regular_expression"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/trieschlab/PymoNNto/Images/basics2_2.png"
+      },
+      "source": "https://raw.githubusercontent.com/trieschlab/PymoNNto/master/readme.md",
+      "technique": "regular_expression"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/trieschlab/PymoNNto/Images/basics2_3.png"
+      },
+      "source": "https://raw.githubusercontent.com/trieschlab/PymoNNto/master/readme.md",
+      "technique": "regular_expression"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/trieschlab/PymoNNto/Images/basics2_4.png"
+      },
+      "source": "https://raw.githubusercontent.com/trieschlab/PymoNNto/master/readme.md",
+      "technique": "regular_expression"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/trieschlab/PymoNNto/Images/Basic_Tab.png"
+      },
+      "source": "https://raw.githubusercontent.com/trieschlab/PymoNNto/master/readme.md",
+      "technique": "regular_expression"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/trieschlab/PymoNNto/Images/UI_Evolution_Manager.png"
+      },
+      "source": "https://raw.githubusercontent.com/trieschlab/PymoNNto/master/readme.md",
+      "technique": "regular_expression"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/trieschlab/PymoNNto/Images/Multi_Group_Tab.png"
+      },
+      "source": "https://raw.githubusercontent.com/trieschlab/PymoNNto/master/readme.md",
+      "technique": "regular_expression"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/trieschlab/PymoNNto/Images/OpenGLTab.png"
+      },
+      "source": "https://raw.githubusercontent.com/trieschlab/PymoNNto/master/readme.md",
+      "technique": "regular_expression"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/trieschlab/PymoNNto/Images/Sun_Gravity_Plot_Tab.png"
+      },
+      "source": "https://raw.githubusercontent.com/trieschlab/PymoNNto/master/readme.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "installation": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "File_dump",
+        "value": "# PIP Installation\n\nPymoNNto requires Python3 and can be installen via pip with the following command:\n\n`pip install PymoNNto`\n\n\n# Manual Installation\n\nIf you want to extend the PymoNNto code you can also clone the git repository with\n\n`git clone git@github.com:trieschlab/PymoNNto.git --branch master --depth 1`\n\nand manually install the packages defined in requirements.txt\n\n"
+      },
+      "source": "https://raw.githubusercontent.com/trieschlab/PymoNNto/master/docs/Introduction/installation.md",
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "PIP Installation",
+        "type": "Text_excerpt",
+        "value": "\r\nPymoNNto requires Python3 and can be installen via pip with the following command:\r\n\r\n`pip install PymoNNto`\r\n\r\n\r"
+      },
+      "source": "https://raw.githubusercontent.com/trieschlab/PymoNNto/master/readme.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Manual Installation",
+        "type": "Text_excerpt",
+        "value": "\r\nIf you want to extend the PymoNNto code you can also clone the git repository with\r\n\r\n`git clone git@github.com:trieschlab/PymoNNto.git --branch master --depth 1`\r\n\r\nand manually install the packages defined in requirements.txt\r\n\r\n\r\n\r"
+      },
+      "source": "https://raw.githubusercontent.com/trieschlab/PymoNNto/master/readme.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 0.9773302206468985,
+      "result": {
+        "type": "Text_excerpt",
+        "value": "https://pymonnto.readthedocs.io/ \n"
+      },
+      "source": "https://raw.githubusercontent.com/trieschlab/PymoNNto/master/readme.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "invocation": [
+    {
+      "confidence": 0.8508808285962115,
+      "result": {
+        "original_header": "Synapses and Input",
+        "type": "Text_excerpt",
+        "value": "\r\nWe can add more behavior modues to make the activity of the neurons more complex. Here the module `Input_Behavior` is added. \r\nIn `initialize` the synapse matrix is created, which stores one weight-value from each neuron to each neuron. \r\nThe Function `iteration` defines how the information is propagated to each neuron (dot product) and adds some term for random input. \r\nThe for loops are not neccessary here, because we only have one SynapseGroup. \r\nThis solution, however, also works with multiple Neuron- and SynapseGroups. \r\nWith `synapse.src` and `synapse.dst` you can access the source and destination NeuronGroups assigned to a SynapseGroup.\r\n\r\n\r\nHere we also add an event recorder to plot the spikes of the NeuronGroup.\r\n\r\n```python\r\nfrom PymoNNto import *\r\n\r\n\r\nclass Basic_Behavior(Behavior):\r\n    ...\r\n\r\n\r\nclass Input_Behavior(Behavior):\r\n\r\n    def initialize(self, neurons):\r\n        for synapse in neurons.synapses(afferent, 'GLUTAMATE'):\r\n            synapse.W = synapse.matrix('uniform', density=0.1)\r\n            synapse.enabled = synapse.W > 0\r\n\r\n    def iteration(self, neurons):\r\n        for synapse in neurons.synapses(afferent, 'GLUTAMATE'):\r\n            neurons.voltage += synapse.W.dot(synapse.src.spike) / synapse.src.size * 10\r\n\r\n\r\nMy_Network = Network()\r\n\r\nNeuronGroup(net=My_Network, tag='my_neurons', size=100, behavior={\r\n    1: Basic_Behavior(),\r\n    2: Input_Behavior(),\r\n    9: Recorder(['voltage', 'np.mean(voltage)'], tag='my_recorder'),\r\n    10: EventRecorder('spike', tag='my_event_recorder')\r\n})\r\n\r\nmy_syn = SynapseGroup(net=My_Network, src='my_neurons', dst='my_neurons', tag='GLUTAMATE')\r\n\r\nMy_Network.initialize()\r\n\r\nMy_Network.simulate_iterations(1000)\r\n\r\n# plotting:\r\n\r\nimport matplotlib.pyplot as plt\r\n\r\nplt.plot(My_Network['voltage', 0, 'np'][:, 0:10])\r\nplt.plot(My_Network['np.mean(voltage)', 0], color='black')\r\nplt.axhline(My_Neurons['Basic_Behavior', 0].threshold, color='black')\r\nplt.xlabel('iterations')\r\nplt.ylabel('voltage')\r\nplt.show()\r\n\r\nplt.plot(My_Network['spike.t', 0], My_Network['spike.i', 0], '.k')\r\nplt.xlabel('iterations')\r\nplt.ylabel('neuron index')\r\nplt.show()\r\n\r\n\r\n```\r\n\r\n<img width=\"300\" src=\"https://raw.githubusercontent.com/trieschlab/PymoNNto/Images/basics2_2.png\"><img width=\"300\" src=\"https://raw.githubusercontent.com/trieschlab/PymoNNto/Images/basics2_3.png\"><br>\r\n\r\n<img width=\"600\" src=\"https://raw.githubusercontent.com/trieschlab/PymoNNto/Images/basics2_4.png\"><br>\r\n\r \n"
+      },
+      "source": "https://raw.githubusercontent.com/trieschlab/PymoNNto/master/readme.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "issue_tracker": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/trieschlab/PymoNNto/issues"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "keywords": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": ""
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "license": [
+    {
+      "confidence": 1,
+      "result": {
+        "name": "MIT License",
+        "spdx_id": "MIT",
+        "type": "License",
+        "url": "https://api.github.com/licenses/mit",
+        "value": "https://api.github.com/licenses/mit"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "File_dump",
+        "value": "MIT License\n\nCopyright (c) 2023, Marius Vieth\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.\n\n"
+      },
+      "source": "https://raw.githubusercontent.com/trieschlab/PymoNNto/master/LICENSE",
+      "technique": "file_exploration"
+    }
+  ],
+  "logo": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/trieschlab/PymoNNto/Images/logo.png"
+      },
+      "source": "https://raw.githubusercontent.com/trieschlab/PymoNNto/master/readme.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "PymoNNto"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "owner": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Organization",
+        "value": "trieschlab"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "programming_languages": [
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Python",
+        "size": 780016,
+        "type": "Programming_language",
+        "value": "Python"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "readme_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/trieschlab/PymoNNto/master/readme.md"
+      },
+      "technique": "file_exploration"
+    }
+  ],
+  "releases": [
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "gitmv",
+          "type": "User"
+        },
+        "date_created": "2021-07-14T12:39:14Z",
+        "date_published": "2021-07-14T12:46:31Z",
+        "description": "Tested with:\r\npython 3.8\r\n\r\nnumpy 1.18.5\r\ntensorflow 2.3.1\r\n\r\nmatplotlib 3.2.2\r\npyqtgraph 0.11.0\r\nparamiko 2.7.1\r\nPyQt5 5.15.0\r\nscikit-learn 0.23.1\r\nscipy 1.5.0\r\nscp 0.13.2\r\nsympy 1.6.2\r\nimageio 2.8.0\r\nPillow 7.1.2\r\n\r\n\r\n",
+        "html_url": "https://github.com/trieschlab/PymoNNto/releases/tag/1.0",
+        "name": "Release Version1",
+        "release_id": 46185095,
+        "tag": "1.0",
+        "tarball_url": "https://api.github.com/repos/trieschlab/PymoNNto/tarball/1.0",
+        "type": "Release",
+        "url": "https://api.github.com/repos/trieschlab/PymoNNto/releases/46185095",
+        "value": "https://api.github.com/repos/trieschlab/PymoNNto/releases/46185095",
+        "zipball_url": "https://api.github.com/repos/trieschlab/PymoNNto/zipball/1.0"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "somef_missing_categories": [
+    "citation",
+    "acknowledgement",
+    "run",
+    "download",
+    "requirements",
+    "contact",
+    "contributors",
+    "usage",
+    "faq",
+    "support",
+    "identifier",
+    "has_build_file",
+    "executable_example"
+  ],
+  "somef_provenance": {
+    "date": "2024-10-06 02:14:53",
+    "somef_schema_version": "1.0.0",
+    "somef_version": "0.9.5"
+  },
+  "stargazers_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 17
+      },
+      "technique": "GitHub_API"
+    }
+  ]
+}

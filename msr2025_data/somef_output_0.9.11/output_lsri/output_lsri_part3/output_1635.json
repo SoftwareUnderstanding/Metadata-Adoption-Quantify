@@ -1,0 +1,326 @@
+{
+  "citation": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Reference",
+        "parent_header": [
+          "GBS-SBG"
+        ],
+        "type": "Text_excerpt",
+        "value": "`Tiruvayipati, et al. \"GBS-SBG - GBS Serotyping by Genome Sequencing.\" Microb Genom. 2021 Dec;7(12). doi: 10.1099/mgen.0.000688`\n- [Pubmed](https://pubmed.ncbi.nlm.nih.gov/34895403/)\n- [Microbial Genomics](https://www.microbiologyresearch.org/content/journal/mgen/10.1099/mgen.0.000688)\n\nNote this was originally released as a preprint on [bioRxiv](https://www.biorxiv.org/content/10.1101/2021.06.16.448630v1), but that version is superseded by the Microbial Genomics publication.\n"
+      },
+      "source": "https://raw.githubusercontent.com/swainechen/GBS-SBG/main/README.md",
+      "technique": "header_analysis"
+    }
+  ],
+  "code_repository": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/swainechen/GBS-SBG"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_created": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2021-05-03T06:10:17Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_updated": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2024-02-21T19:55:07Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "description": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Introduction",
+        "parent_header": [
+          "GBS-SBG"
+        ],
+        "type": "Text_excerpt",
+        "value": "This repository contains a curated reference file which can be used for serotyping Streptococcus agalactiae (Group B Streptococcus, or GBS), in silico with whole genome sequencing data. The reference file (GBS-SBG.fasta) is designed to be usable for both short-read mapping and assembly-based strategies.\n\nThe fasta file is designed to be immediately usable with [SRST2](https://github.com/katholt/srst2), but this only means the fasta headers have been formatted specially. Otherwise it should still usable for other reference-based typing pipelines.\n\nTo do an assembly-based call, the GBS-SBG.pl script is included. This script uses only core Perl modules.\n- It does require the [BLAST+](https://blast.ncbi.nlm.nih.gov/Blast.cgi?CMD=Web&PAGE_TYPE=BlastDocs&DOC_TYPE=Download) suite of programs to be installed. The location can be specified with the -blast command line parameter.\n- It also requires the GBS-SBG.fasta file. The location can be specified with the -ref command line parameter. However, if this file can't be found, the script will attempt to download a copy directly from this repository.\n"
+      },
+      "source": "https://raw.githubusercontent.com/swainechen/GBS-SBG/main/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 0.9608560258872985,
+      "result": {
+        "original_header": "Short Read serotype calling",
+        "type": "Text_excerpt",
+        "value": "We recommend using SRST2. This fasta file is already formatted for SRST2, so you can run (for example):\n```\nsrst2 --input_pe strainA_1.fastq.gz strainA_2.fastq.gz --output strainA_test --log --gene_db GBS-SBG.fasta\n```\nFor details on SRST2 installation, options, and other documentation, we refer you to the [SRST2 website](https://github.com/katholt/srst2).\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/swainechen/GBS-SBG/main/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.8423075324507721,
+      "result": {
+        "original_header": "Assembly-based serotype calling",
+        "type": "Text_excerpt",
+        "value": "We have implemented a reasonably self-contained script that takes an assembly and produces a serotype call. You can use whatever assembly program you like. We do assume that you have an assembly for a single isolate (i.e. no mixtures or metagenomic assemblies). \nYou should see this output:\n```\nUsage: ./GBS-SBG.pl <assembly_fasta_file> [ -name <string> ] [ -best ] [ -blastn <path_to_blastn> ] [ -ref <GBS-SBG references> ] [ -debug ]\n\n<assembly_fasta_file> should be a regular multi-fasta file with assembled contigs or a complete genome.\nYou should specify the -name parameter, all output will be prefixed by that string. Defaults to the input filename.\nThe -best option only prints out one call (with possible uncertainty information). Default behavior is to also print the next best call if any of the following are true for the \"best\" serotype call:\n - Overall coverage < 0.9\n - Overall percent ID < 90\n - Number of contigs > 1\n - Number of BLASTN hits > 1\n - BitScore for next best serotype is >0.9*BitScore for the best serotype\n\nRequires BLAST+ version 2.7.0 or above. Will look on your path, or you can specify the blastn binary with -blast.\nRequires GBS-SBG references (typically GBS-SBG.fasta), will try looking in a few places, otherwise will try to pull directly from https://github.com/swainechen/GBS-SBG.\n\nMore complete documentation available at https://github.com/swainechen/GBS-SBG.\n``` \nThe basic command is:\n```\n./GBS-SBG.pl assemblyfile.fasta -name assemblyname\n```\nIf the program has problems finding blastn, you can tell it where to look with the `-blast /path/to/blastn` parameter.\nThe program will look in the same directory as the script itself for the GBS-SBG.fasta reference file. If it can't find it, it will download that file automatically from this repository into a temporary directory (which will get cleaned up automatically).\nThe program will also take care of making the blast databases, running blast, and then parsing the output to produce a call.\nThe default cutoffs correspond to those used in SRST2 - at least 90% identity over at least 90% of the total length of the reference sequence is required, and the highest identity and coverage determine the \"best\" call. \nIf you are running this on many assemblies, you should make sure the GBS-SBG.fasta reference is already downloaded and findable by the program. You can specify the location with the `-ref /path/to/GBS-SBG.fasta` parameter. The blast databases will then only be made once and reused for each time the program runs.\nYou should also consider using the `-best` parameter, which will only output the \"best\" serotype call, along with any potential uncertainty flags.\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/swainechen/GBS-SBG/main/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9059741747785934,
+      "result": {
+        "original_header": "Uncertainty flags (for assembly-based calling)",
+        "type": "Text_excerpt",
+        "value": "When these fall further below certain threshholds, default behavior is to also report the next best hit. This can be suppressed with the `-best` option (i.e. only print the best call). Alternatively, more information (including all the BLASTN data) can be obtained by using the `-debug` option - specifying this also will result in persistence of the temporary directory and all the intermediate files. \n"
+      },
+      "source": "https://raw.githubusercontent.com/swainechen/GBS-SBG/main/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "download_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/swainechen/GBS-SBG/releases"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 2
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/swainechen/GBS-SBG/forks"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "swainechen/GBS-SBG"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_title": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "GBS-SBG"
+      },
+      "source": "https://raw.githubusercontent.com/swainechen/GBS-SBG/main/README.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "installation": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Quick Start (assuming you have BLAST+ installed and available on your path):",
+        "parent_header": [
+          "GBS-SBG"
+        ],
+        "type": "Text_excerpt",
+        "value": "```\ngit clone https://github.com/swainechen/GBS-SBG\ncd GBS-SBG\n./GBS-SBG.pl <assembly fasta file> -name <some name>\n```\n"
+      },
+      "source": "https://raw.githubusercontent.com/swainechen/GBS-SBG/main/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 0.9999842499257467,
+      "result": {
+        "original_header": "Short Read serotype calling",
+        "type": "Text_excerpt",
+        "value": "We recommend using SRST2. This fasta file is already formatted for SRST2, so you can run (for example):\n```\nsrst2 --input_pe strainA_1.fastq.gz strainA_2.fastq.gz --output strainA_test --log --gene_db GBS-SBG.fasta\n```\nFor details on SRST2 installation, options, and other documentation, we refer you to the [SRST2 website](https://github.com/katholt/srst2).\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/swainechen/GBS-SBG/main/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9985859123206272,
+      "result": {
+        "original_header": "Assembly-based serotype calling",
+        "type": "Text_excerpt",
+        "value": "To run this, clone this repository (or just download the GBS-SBG.pl script):\n```\ngit clone https://github.com/swainechen/GBS-SBG\n```\nYou should take a look at the built-in help for syntax:\nBASH2* \nYou should see this output:\n```\nUsage: ./GBS-SBG.pl <assembly_fasta_file> [ -name <string> ] [ -best ] [ -blastn <path_to_blastn> ] [ -ref <GBS-SBG references> ] [ -debug ]\n\n<assembly_fasta_file> should be a regular multi-fasta file with assembled contigs or a complete genome.\nYou should specify the -name parameter, all output will be prefixed by that string. Defaults to the input filename.\nThe -best option only prints out one call (with possible uncertainty information). Default behavior is to also print the next best call if any of the following are true for the \"best\" serotype call:\n - Overall coverage < 0.9\n - Overall percent ID < 90\n - Number of contigs > 1\n - Number of BLASTN hits > 1\n - BitScore for next best serotype is >0.9*BitScore for the best serotype\n\nRequires BLAST+ version 2.7.0 or above. Will look on your path, or you can specify the blastn binary with -blast.\nRequires GBS-SBG references (typically GBS-SBG.fasta), will try looking in a few places, otherwise will try to pull directly from https://github.com/swainechen/GBS-SBG.\n\nMore complete documentation available at https://github.com/swainechen/GBS-SBG.\n``` \nIf you are running this on many assemblies, you should make sure the GBS-SBG.fasta reference is already downloaded and findable by the program. You can specify the location with the `-ref /path/to/GBS-SBG.fasta` parameter. The blast databases will then only be made once and reused for each time the program runs.\nYou should also consider using the `-best` parameter, which will only output the \"best\" serotype call, along with any potential uncertainty flags.\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/swainechen/GBS-SBG/main/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.8858772174556104,
+      "result": {
+        "original_header": "Uncertainty flags (for assembly-based calling)",
+        "type": "Text_excerpt",
+        "value": "When these fall further below certain threshholds, default behavior is to also report the next best hit. This can be suppressed with the `-best` option (i.e. only print the best call). Alternatively, more information (including all the BLASTN data) can be obtained by using the `-debug` option - specifying this also will result in persistence of the temporary directory and all the intermediate files. \nNote if you're using the GBS-SBG databases with SRST2, you should refer to the [SRST2 documentation for a description of how they report uncertainty and mismatches](https://github.com/katholt/srst2#output-files).\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/swainechen/GBS-SBG/main/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "issue_tracker": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/swainechen/GBS-SBG/issues"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "keywords": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": ""
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "license": [
+    {
+      "confidence": 1,
+      "result": {
+        "name": "MIT License",
+        "spdx_id": "MIT",
+        "type": "License",
+        "url": "https://api.github.com/licenses/mit",
+        "value": "https://api.github.com/licenses/mit"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "File_dump",
+        "value": "MIT License\n\nCopyright (c) 2021 Swaine Chen\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.\n"
+      },
+      "source": "https://raw.githubusercontent.com/swainechen/GBS-SBG/main/LICENSE",
+      "technique": "file_exploration"
+    }
+  ],
+  "name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "GBS-SBG"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "owner": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "User",
+        "value": "swainechen"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "programming_languages": [
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Perl",
+        "size": 18057,
+        "type": "Programming_language",
+        "value": "Perl"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "readme_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/swainechen/GBS-SBG/main/README.md"
+      },
+      "technique": "file_exploration"
+    }
+  ],
+  "somef_missing_categories": [
+    "acknowledgement",
+    "run",
+    "download",
+    "requirements",
+    "contact",
+    "contributors",
+    "documentation",
+    "faq",
+    "support",
+    "identifier",
+    "has_build_file",
+    "executable_example"
+  ],
+  "somef_provenance": {
+    "date": "2024-10-06 05:41:55",
+    "somef_schema_version": "1.0.0",
+    "somef_version": "0.9.5"
+  },
+  "stargazers_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 3
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "type": [
+    {
+      "confidence": 0.82,
+      "result": {
+        "type": "String",
+        "value": "commandline-application"
+      },
+      "technique": "software_type_heuristics"
+    }
+  ],
+  "usage": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Quick Start (assuming you have BLAST+ installed and available on your path):",
+        "parent_header": [
+          "GBS-SBG"
+        ],
+        "type": "Text_excerpt",
+        "value": "```\ngit clone https://github.com/swainechen/GBS-SBG\ncd GBS-SBG\n./GBS-SBG.pl <assembly fasta file> -name <some name>\n```\n"
+      },
+      "source": "https://raw.githubusercontent.com/swainechen/GBS-SBG/main/README.md",
+      "technique": "header_analysis"
+    }
+  ]
+}

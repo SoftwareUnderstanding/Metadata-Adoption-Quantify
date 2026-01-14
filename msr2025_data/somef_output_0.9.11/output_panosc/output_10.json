@@ -1,0 +1,1076 @@
+{
+  "application_domain": [
+    {
+      "confidence": 0.8822392604945865,
+      "result": {
+        "type": "String",
+        "value": "Semantic web"
+      },
+      "technique": "supervised_classification"
+    }
+  ],
+  "code_repository": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/silx-kit/h5web"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "contributing_guidelines": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "File_dump",
+        "value": "# Contributing\n\n- [Quick start](#quick-start)\n- [Development](#development)\n  - [`pnpm` cheat sheet](#pnpm-cheat-sheet)\n  - [Dependency management](#dependency-management)\n    - [DefinitelyTyped packages](#definitelytyped-packages)\n    - [Workspace dependencies](#workspace-dependencies)\n  - [Icon set](#icon-set)\n  - [CSS Modules](#css-modules)\n- [Build](#build)\n  - [Package builds](#package-builds)\n- [Code quality](#code-quality)\n  - [Fixing and formatting](#fixing-and-formatting)\n  - [Editor integration](#editor-integration)\n- [Testing](#testing)\n  - [Feature tests](#feature-tests)\n    - [Fake timers](#fake-timers)\n    - [Debugging](#debugging)\n  - [Providers](#providers)\n  - [Visual regression](#visual-regression)\n- [Deployment](#deployment)\n- [Release process](#release-process)\n  - [Beta testing](#beta-testing)\n  - [Local testing](#local-testing)\n\n## Quick start\n\n```bash\npnpm install\npnpm start\n```\n\nOnce the development server has started, press `o` to open the development URL\nin your browser, or `h` to show all the available keyboard shortcuts.\n\n## Development\n\n- `pnpm start` - start the H5Web stand-alone demo\n- `pnpm start:storybook` - start the component library's\n  [Storybook](https://storybook.js.org/docs/react/get-started/introduction)\n  documentation site at http://localhost:6006\n\n### `pnpm` cheat sheet\n\n- `pnpm install` - install the dependencies of every project in the workspace\n  and of the workspace itself\n- `pnpm --filter <project-name> add [-D] <pkg-name>` -\n  [add a dependency](https://pnpm.io/cli/add) to a project in the workspace\n- `pnpm [run] <script> [--<arg>]` - run a workspace script\n- `pnpm [run] \"/<regex>/\" [--<arg>]` - run multiple workspace scripts in\n  parallel\n- `pnpm [run] --filter {packages/*} [--parallel] <script> [--<arg>]` -\n  [run a script](https://pnpm.io/cli/run) in every project in the `packages`\n  folder\n- `pnpm [exec] <binary>` - run a binary located in `node_modules/.bin`\n  (equivalent to `npx <pkg-name>` for a package installed in the workspace)\n- `pnpm dlx <pkg-name>` - fetch a package from the registry and run its default\n  command binary (equivalent to `npx <pkg-name>`)\n- `pnpm why -r <pkg-name>` - show all project and packages that depend on the\n  specified package\n- `pnpm outdated -r` - list outdated dependencies in the workspace\n- `pnpm up -rL <pkg-name>` - update a package to the latest version in every\n  project\n\n### Dependency management\n\n1. Run `pnpm outdated -r` to list dependencies that can be upgraded.\n1. Read the changelogs and release notes of the dependencies you'd like to\n   upgrade. Look for potential breaking changes, and for bug fixes and new\n   features that may help improve the codebase.\n1. Run `pnpm up -rL <pkg-name>` to upgrade a dependency to the latest version in\n   all projects. Alternatively, you can either replace `-r` with `--filter` to\n   target specific projects, or edit the relevant `package.json` file(s)\n   manually and run `pnpm install` (but make sure to specify an exact dependency\n   version rather than a range - i.e. don't prefix the version with a caret or a\n   tilde).\n\n> If you run into peer dependency warnings and other package resolution issues,\n> note that `pnpm` offers numerous solutions for dealing with them, like\n> [`pnpm.peerDependencyRules.allowedVersions`](https://pnpm.io/package_json#pnpmpeerdependencyrulesallowedversions).\n\n#### [DefinitelyTyped](https://github.com/DefinitelyTyped/DefinitelyTyped) packages\n\nThe major versions of `@types/*` packages must be aligned with the major\nversions of the packages they provide types for\u2014i.e. `foo@x.y.z` requires\n`@types/foo@^x`.\n\nFor convenience, some `@types` packages can be quickly upgraded to their latest\nminor/patch version by running `pnpm up -r`.\n\n#### Workspace dependencies\n\nTo reference a workspace dependency, use pnpm's\n[workspace protocol](https://pnpm.io/workspaces#workspace-protocol-workspace)\nwith the `*` alias - e.g. `\"@h5web/lib\": \"workspace:*\"`. This tells pnpm to link\nthe dependency to its corresponding workspace folder, and saves you from having\nto keep the version of the dependency up to date. During publishing, pnpm\nautomatically replaces `workspace:*` with the correct version.\n\nA workspace dependency's `package.json` must include a `main` field pointing to\nthe dependency's source entry file - e.g. `src/index.ts`. This is the key to\nthis monorepo set-up, as it avoids having to run watch tasks in separate\nterminals to automatically rebuild dependencies during development.\n\nObviously, a package's `main` field cannot point to its source TypeScript entry\nfile once published, as consumers may not understand TypeScript. Additionally,\n`package.json` needs to point to more entry files (type declarations, ESM build,\netc.) and do so in a way that is compatible with various toolchains (webpack 4,\nwebpack 5, Parcel, Rollup, Vite, CRA, etc.) pnpm provides a nice solution to\nthis problem in the form of the\n[`publishConfig` field](https://pnpm.io/package_json#publishconfig).\n\n### Icon set\n\nH5Web uses the [Feather icon set](https://react-icons.netlify.com/#/icons/fi).\nIcons can be imported as React components from `react-icons/fi`.\n\n### CSS Modules\n\nStyles are written with\n[CSS Modules](https://github.com/css-modules/css-modules). Global styles should\nbe avoided.\n\nIn most cases, a component that needs styling should come with its own CSS\nModules file - e.g. `MyComponent.module.css`. If multiple components need to use\nthe same style rules, they may import the same CSS Modules file:\n\n```tsx\nimport styles from './ThisComponent.module.css';\nimport otherComponentStyles from './OtherComponent.module.css';\n```\n\nHowever, it is better to write reusable components or take advantage of a CSS\nModules feature called **composition**:\n\n```css\n/* utils.module.css */\n.baseBtn {\n  color: green;\n}\n\n/* ThisComponent.module.css */\n.thisBtn {\n  composes: baseBtn from './utils.module.css';\n  color: blue;\n}\n\n.selectedBtn {\n  composes: thisBtn;\n  color: red;\n}\n```\n\nTo avoid\n[style ordering issues](https://github.com/privatenumber/vite-css-modules/issues/7),\nmodules that are composed from other modules (`utils.module.css` in the example\nabove) should be used solely for composition and never be imported. In other\nwords, you should never compose from a class located in the CSS Modules file of\nanother React component:\n\n```css\n/*\n  >>> BAD <<<\n  If `OtherComponent.module.css` gets imported after `ThisComponent.module.css,\n  the `.baseBtn` rule will end up after `.thisBtn` and `color: blue` will be applied.\n*/\n\n/* OtherComponent.module.css */\n.baseBtn {\n  color: blue;\n}\n\n/* ThisComponent.module.css */\n.thisBtn {\n  composes: baseBtn from './OtherComponent.module.css';\n  color: red;\n}\n\n/*\n  >>> GOOD <<<\n  Move `.baseBtn` to a utility module.\n*/\n\n/* utils.module.css */\n.baseBtn {\n  color: blue;\n}\n\n/* OtherComponent.module.css */\n.otherBtn {\n  composes: baseBtn from './utils.module.css';\n}\n\n/* ThisComponent.module.css */\n.thisBtn {\n  composes: baseBtn from './utils.module.css';\n  color: red;\n}\n```\n\n## Build\n\n- `pnpm build` - build the H5Web stand-alone demo\n- `pnpm build:storybook` - build the component library's Storybook documentation\n  site\n- `pnpm serve` - serve the built demo at http://localhost:5173\n- `pnpm serve:storybook` - serve the built Storybook at http://localhost:6006\n- `pnpm packages` - build packages (cf. details below)\n\n### Package builds\n\nThe build process of `@h5web/lib` works as follows:\n\n1. First, Vite builds the JS bundles (ESM and CommonJS) in library mode starting\n   from the package's entrypoint: `src/index.ts`. The bundles are placed in the\n   output `dist` directory and referenced from `package.json`.\n\n   The JS build also generates a file called `style.css` in the `dist` folder\n   that contains the compiled CSS modules that Vite comes across while building\n   the React components. These styles are called \"local\" styles.\n\n2. Second, we run two scripts in parallel: `build:css` and `build:dts`.\n   - The job of `build:css` is to build the package's global styles and\n     concatenate them with the local styles compiled at the first step. To do\n     so, we run Vite again but with a different config: `vite.styles.config.js`,\n     and a different entrypoint: `src/styles.ts`. The output files are placed in\n     a temporary folder: `dist/temp`. We then concatenate `dist/temp/style.css`\n     (the global styles) and `dist/style.css` (the local styles) and output the\n     result to `dist/styles.css`, which is the stylesheet referenced from\n     `package.json` that consumers need to import.\n   - The job of `build:dts` is to generate type declarations for package\n     consumers who use TypeScript. This is a two step process: first we generate\n     type declarations for all TS files in the `dist-ts` folder with `tsc`, then\n     we use Rollup to merge all the declarations into a single file:\n     `dist/index.d.ts`, which is referenced from `package.json`. Note that since\n     `@h5web/shared` is not a published package, it cannot be marked as an\n     external dependency; its types must therefore be inlined into\n     `dist/index.d.ts`, so we make sure to tell Rollup where to find them.\n\nThe build process of `@h5web/app` is the same with one exception: in addition to\nimporting the package's global styles, `src/styles.ts` also imports the `lib`\npackage's distributed styles - i.e. the output of the lib's `build:css` script.\nThe lib's distributed styles include both its global _and_ local styles. This\nallows us to provide a single CSS bundle for consumers of `@h5web/app` to\nimport.\n\nThe build process of`@h5web/h5wasm` is also the same as the lib's, but since the\npackage does not include any styles, `vite build` does not generate a\n`style.css` file and there's no `build:css` script.\n\nFinally, since `@h5web/shared` is not a published package, it does not need to\nbe built with Vite. However, its types do need to be built with `tsc` so that\nother packages can inline them in their own `dist/index.d.ts`.\n\n## Code quality\n\n- `pnpm lint` - run Prettier, ESLint and TypeScript on the entire workspace\n- `pnpm lint:prettier` - check that every file is formatted with Prettier\n- `pnpm lint:eslint` - lint every project with ESLint\n- `pnpm [--filter <project-name|{folder/*}>] lint:eslint` - lint specific\n  projects\n- `pnpm lint:root:eslint` - lint files that don't belong to projects\n- `pnpm lint:tsc` - type-check every project with TypeScript\n- `pnpm [--filter <project-name|{folder/*}>] lint:tsc` - type-check specific\n  projects\n- `pnpm lint:cypress:tsc` - type-check the `cypress` folder\n- `pnpm --filter @h5web/<lib|app> analyze` - analyze a package's bundle (run\n  only after building the package)\n- `pnpm --filter storybook exec storybook doctor` - diagnose problems with\n  Storybook installation\n\n### Fixing and formatting\n\n- `pnpm lint:prettier --write` - format all files with Prettier\n- `pnpm lint:eslint --fix` - auto-fix linting issues in every project\n- `pnpm [--filter <project-name|{folder/*}>] lint:eslint --fix` - auto-fix\n  linting issues in specific projects\n\n### Editor integration\n\nMost editors support fixing and formatting files automatically on save. The\nconfiguration for VSCode is provided out of the box, so all you need to do is\ninstall the recommended extensions.\n\n## Testing\n\n- `pnpm test` - run unit and feature tests with [Vitest](https://vitest.dev/) in\n  watch mode (or once when on the CI)\n  > For the providers test to work, the sample HDF5 file must first be created\n  > and the h5grove support server must be running in a separate terminal; see\n  > `pnpm support:*` scripts and [_Providers tests_](#providers-tests) section.\n- `pnpm test run` - run unit and feature tests once\n- `pnpm test [run] <filter>` - run tests matching the given filter\n- `pnpm test -- --project <lib|app|...>` - run Vitest on a specific project\n- `pnpm support:setup` - create/update Poetry environments required for\n  [testing the providers](#providers-tests)\n- `pnpm support:sample` - create `sample.h5`\n- `pnpm support:h5grove` - start h5grove support server\n- `pnpm cypress` - open the\n  [Cypress](https://docs.cypress.io/guides/overview/why-cypress.html) end-to-end\n  test runner (local dev server must be running in separate terminal)\n- `pnpm cypress:run` - run end-to-end tests once (local dev server must be\n  running in separate terminal)\n\n> Vitest is able to run on the entire monorepo thanks to the\n> [workspace configuration](https://vitest.dev/guide/workspace.html) defined in\n> `vitest.workspace.ts`. It then uses each project's Vite configuration to\n> decide how to run the tests.\n\n### Feature tests\n\nThe `@h5web/app` package includes feature tests written with\n[React Testing Library](https://testing-library.com/docs/react-testing-library/intro)\nand running in a [JSDOM environment](https://vitest.dev/guide/environment.html).\nThey are located under `src/__tests__`. Each file covers a particular subtree of\ncomponents of H5Web.\n\nH5Web's feature tests typically consist in rendering the entire app with mock\ndata (i.e. inside `MockProvider`), executing an action like a real user would\n(e.g. clicking on a button, pressing a key, etc.), and then expecting something\nto happen in the DOM as a result. Most tests, perform multiple actions and\nexpectations consecutively to minimise the overhead of rendering the entire app\nagain and again.\n\n`MockProvider` resolves most requests instantaneously to save time in tests, but\nits API's methods are still called asynchronously like other providers. This\nmeans that during tests, `Suspense` loading fallbacks render just like they\nwould normally; they just don't stick around in the DOM for long.\n\nThis adds a bit of complexity when testing, as React doesn't like when something\nhappens after a test has completed. In fact, we have to ensure that every\ncomponent that suspends inside a test **finishes loading before the end of that\ntest**. To do so, you can use Testing Library's asynchronous APIs for\n[finding elements](https://testing-library.com/docs/dom-testing-library/api-async/#findby-queries)\nand [interacting with them](https://testing-library.com/docs/user-event), as\nwell as Vitest's [`waitFor``](https://vitest.dev/api/vi.html#vi-waitfor-0-34-5)\nutility.\n\n#### Fake timers\n\nTo allow developing and testing loading interfaces, as well as features like\ncancel/retry, `MockProvider` adds an artificial delay of 3s (`SLOW_TIMEOUT`) to\nsome requests, notably to value requests for datasets prefixed with `slow_`.\n\nIn order for this artificial delay to not slow down feature tests, we must use\n[fake timers](https://testing-library.com/docs/using-fake-timers/). This is done\nby setting the `withFakeTimers` option when calling `renderApp()`:\n\n```ts\nrenderApp({ withFakeTimers: true });\n```\n\n#### Debugging\n\nYou can use Testing Library's\n[`prettyDOM` utility](https://testing-library.com/docs/dom-testing-library/api-debugging#prettydom)\nto log the state of the DOM anywhere in your tests:\n\n```ts\nconsole.debug(prettyDOM()); // if you use `console.log` without mocking it, the test will fail\nconsole.debug(prettyDOM(screen.getByText('foo'))); // you can also print out a specific element\n```\n\nTo ensure that the entire DOM is printed out in the terminal, you may have to\nset environment variable `DEBUG_PRINT_LIMIT`\n[to a large value](https://testing-library.com/docs/dom-testing-library/api-debugging#automatic-logging)\nwhen calling `pnpm test`.\n\n### Providers\n\nTwo data providers are currently tested through their respective APIs:\n`H5GroveApi` and `H5WasmApi`. Each API test (`<provider>-api.test.ts`) works as\nfollows:\n\n1. It instanciates the API using a sample file called `sample.h5`, located in\n   `support/sample/dist`, that contains a lot of HDF5 datasets of various shapes\n   and types.\n1. It retrieves the values of all the datasets in the sample file and stores\n   them in an object.\n1. It takes a snapshot of that object and compares it to the existing snapshot\n   (`<provider>-api.test.ts.snap`).\n1. If the new snapshot is the same, the test succeeds; if the new snapshot\n   differs, the test fails and the differences are shown.\n\nTo get up and running with testing the providers locally, we recommend using\npyenv and Poetry:\n\n1. Install the Python version specified in `.python-version` with\n   [pyenv](https://github.com/pyenv/pyenv):\n   ```bash\n   pyenv install\n   ```\n1. Install [Poetry](https://python-poetry.org/docs/) with\n   [pipx](https://pipx.pypa.io/stable/installation/):\n   ```bash\n   pipx install poetry\n   ```\n1. Create the Poetry environements:\n   ```bash\n   pyenv exec pnpm support:setup\n   ```\n\nOnce the Poetry environments are created, you can create `sample.h5`, start\nh5grove and run the API tests:\n\n```bash\npyenv exec pnpm support:sample\npyenv exec pnpm support:h5grove\npyenv exec pnpm test api\n```\n\n> If the Python version specified in `.python-version` is globally available on\n> your system, you may run the scripts above without `pyenv exec`.\n\n> If you need to intervene on the `support` projects and the Python version\n> specified in `.python-version` is not globally available, make sure to run all\n> Poetry commands from the root of the monorepo as follows:\n\n    ```bash\n    pyenv exec poetry -C support/<project> <cmd>\n    pyenv exec poetry -C support/<project> add <dep>\n    pyenv exec poetry -C support/<project> run python <script>.py\n    ```\n\nIf you're unable to create the sample file (for instance because your\nenvironment lacks support for `float128`), you may\n[download it from silx.org](http://www.silx.org/pub/h5web/sample.h5) and place\nit into the `support/sample/dist` folder. However, please beware that the file\nmay not be up to date.\n\n### Visual regression\n\nCypress is used for end-to-end testing but also for visual regression testing.\nThe idea is to take a screenshot (or \"snapshot\") of the app in a known state and\ncompare it with a previously approved \"reference snapshot\". If any pixel has\nchanged, the test fails and a diff image highlighting the differences is\ncreated.\n\nTaking consistent screenshots across platforms is impossible because the exact\nrendering of the app depends on the GPU. For this reason, visual regression\ntests are run only on the CI. This is done through an environment variable\ncalled `CYPRESS_TAKE_SNAPSHOTS`.\n\nVisual regression tests may fail in the CI, either expectedly (e.g. when\nimplementing a new feature) or unexpectedly (when detecting a regression). When\nthis happens, the diff images and debug screenshots that Cypress generates are\nuploaded as artifacts of the workflow, which can be downloaded and reviewed.\n\nIf the visual regressions are expected, the version-controlled reference\nsnapshots can be updated by posting a comment in the Pull Request with this\nexact text: `/approve`. This triggers the _Approve snapshots_ workflow, which\nruns Cypress again but this time telling it to update the reference snapshots\nwhen it finds differences and to pass the tests. Once Cypress has updated the\nreference snapshots, the workflow automatically opens a PR to merge the new\nand/or updated snapshots into the working branch. After this PR is merged, the\nvisual regression tests in the working branch succeed and the branch can be\nmerged into `main`.\n\nHere is the summarised workflow (also described with screenshots in\n[PR #306](https://github.com/silx-kit/h5web/pull/306)):\n\n1. Push your working branch and open a PR.\n2. If the `e2e` job of the _Lint & Test_ CI workflow fails, check out the logs.\n3. If the fail is caused by a visual regression (i.e. if a test fails on a\n   `cy.matchImageSnapshot()` call), download the workflow's artifacts.\n4. Review the snapshot diffs. If the visual regression is unexpected: fix the\n   bug, push it and start from step 2 again. If the visual regression is\n   expected: continue to step 5.\n5. In the PR, post a comment with `/approve`.\n6. Go to the _Actions_ page and wait for the _Approve snapshots_ workflow to\n   complete.\n7. Go to the newly opened PR titled _Update Cypress reference snapshots_.\n8. Review the new reference snapshots once more and merge the PR.\n9. Go back to your main PR and wait for the jobs of the _Lint & Test_ workflow\n   to succeed.\n\n> It is also possible to download the artifacts from the CI and manually\n> commit/push the updated snapshots without going through the steps above. This\n> may be the best option if, for instance, the visual diffing tests fail on the\n> `main` branch after a commit is pushed to it directly or after a PR is\n> forcefully merged.\n\n## Deployment\n\n- The project's `main` branch is continuously deployed to\n  https://h5web.panosc.eu/ with [Netlify](https://www.netlify.com/).\n- The component library's Storybook documentation site is deployed to GitHub\n  Pages on every release: https://h5web-docs.panosc.eu\n\n> Note that the version of pnpm that Netlify installs by default is outdated and\n> incompatible with this monorepo. We use the\n> [`packageManager` entry](https://docs.netlify.com/configure-builds/manage-dependencies/#pnpm)\n> in the root `package.json` to specify a more recent version.\n\n## Release process\n\nTo release a new version and publish the packages to NPM:\n\n1. Check out `main` and pull the latest changes.\n1. Make sure your working tree doesn't have uncommitted changes and that the\n   latest commit on `main` has passed the CI.\n1. Run `pnpm version [ patch | minor | major | <new-version> ]`\n\n> The `pnpm version` command:\n>\n> 1. bumps the version in the workspace's `package.json`;\n> 1. copies the new version into each package's `package.json` (via the\n>    `version` script);\n> 1. commits and tags the changes, and then pushes the new commit and the new\n>    tag to the remote repository (via the `postversion` script).\n>\n> This, in turn, triggers the _Publish packages_ and _Deploy Storybook_\n> workflows on the CI, which builds and publishes the packages to NPM (with\n> `pnpm -r publish`) and deploys the Storybook site.\n>\n> A few things happen when `pnpm publish` runs for each package:\n>\n> 1. First, it triggers a `prepack` script that removes the `type` field from\n>    the package's `package.json`. The reason for this workaround is explained\n>    in [#1219](https://github.com/silx-kit/h5web/issues/1219).\n> 2. Then, pnpm modifies `package.json` further by merging in the content of the\n>    [`publishConfig` field](https://pnpm.io/package_json#publishconfig).\n> 3. Finally, the package gets published to NPM. Note that it's possible to\n>    publish to a local registry for testing purposes (e.g.\n>    [Verdaccio](https://verdaccio.org/)) by overriding NPM's default\n>    [`registry` configuration](https://docs.npmjs.com/cli/v9/using-npm/registry).\n\nOnce the CI workflows have run successfully:\n\n- Make sure the new package versions are available on NPM and that the live\n  Storybook site still works as expected.\n- Upgrade and test the packages in apps and code sandboxes, as required.\n- Write and publish [release notes](https://github.com/silx-kit/h5web/releases)\n  on GitHub.\n\n### Beta testing\n\nThe beta release process described below allows publishing packages to NPM with\nthe `next` tag (instead of the default `latest` tag) so they can be beta-tested\nbefore the official release.\n\n1. Follow steps 1 and 2 of the normal release process.\n1. At step 3, run `pnpm version <x.y.z-beta.0>` (incrementing the beta version\n   number as needed).\n\nThe CI will then build and deploy the packages with `pnpm publish --tag next`.\nOnce the _Publish packages_ workflow has run successfully, check that the beta\npackages are published with the correct tag by running\n`npm dist-tag ls @h5web/lib`. This command should print something like:\n\n```\nlatest: <a.b.c>\nnext: <x.y.z>-beta.0\n```\n\nYou can then install the beta packages with `npm install @h5web/lib@next` or the\nlike and make sure that they work as expected. Once you're done testing, follow\nthe normal release process, making sure to run `pnpm version <x.y.z>` at step 3\n(without the `beta` suffix).\n\nOnce you've completed the release process, you may remove the `next` tag from\nthe obsolete beta packages by running\n`npm dist-tag rm @h5web/lib@<x.y.z-beta.0> next`\n\n### Local testing\n\nTo test a package locally in another project without publishing it to NPM,\nfollow these steps:\n\n1. Run `pnpm packages`.\n1. Navigate to the package's directory - e.g. `cd packages/app`.\n1. Run `pnpm pack` to pack the package into a tarball, optionally passing a\n   target directory for the tarball with `--pack-destination <dir>`.\n1. Navigate to the project in which you want to install and test the package.\n1. Install the tarball with the project's package manager (e.g.\n   `pnpm add <path-to-tarball>`).\n\n> Like `pnpm publish`, `pnpm pack` runs the package's `prepack` script, which\n> removes `\"type\": \"module\"` from `package.json`, so don't forget to revert this\n> change when you're done.\n"
+      },
+      "source": "https://raw.githubusercontent.com/silx-kit/h5web/main/CONTRIBUTING.md",
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Contributing",
+        "parent_header": [
+          "H5Web: React components for data visualization and exploration"
+        ],
+        "type": "Text_excerpt",
+        "value": "Want to help improve H5Web? We're always looking for feedback, bug reports and\nfeature requests, so don't hesitate to\n[open an issue](https://github.com/silx-kit/h5web/issues/new/choose) or\n[start a discussion](https://github.com/silx-kit/h5web/discussions).\n\nIf you'd like to know more about contributing to the codebase, please check out\nthe [CONTRIBUTING](CONTRIBUTING.md) guide.\n"
+      },
+      "source": "https://raw.githubusercontent.com/silx-kit/h5web/main/README.md",
+      "technique": "header_analysis"
+    }
+  ],
+  "date_created": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2020-02-21T15:24:53Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_updated": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2024-10-02T08:04:11Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "description": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "React components for data visualization and exploration"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 0.9930526703827119,
+      "result": {
+        "original_header": "H5Web: React components for data visualization and exploration",
+        "type": "Text_excerpt",
+        "value": "H5Web is a collection of React components to visualize and explore data. It\nconsists of three packages: \n- **@h5web/lib**: visualization components built with\n  [react-three-fiber](https://github.com/react-spring/react-three-fiber).\n- **@h5web/app**: a component to explore and visualize data stored in HDF5 (or\n  HDF5-like) files, and data providers to connect this component to various\n  back-end solutions.\n- **@h5web/h5wasm**: an additional data provider that can read HDF5 files\n  straight in the browser. \n> While H5Web was initially built with the HDF5 format in mind, `@h5web/lib`\n> visualization components are not tied to HDF5 and can be used to visualize\n> data from any source. Also, `@h5web/app` lets you write your own data provider\n> and can therefore work with any other hierarchical data format. \n"
+      },
+      "source": "https://raw.githubusercontent.com/silx-kit/h5web/main/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.8940005176215648,
+      "result": {
+        "original_header": "<a href=\"https://www.npmjs.com/package/@h5web/lib\">@h5web/lib</a>",
+        "type": "Text_excerpt",
+        "value": "H5Web's component library, which includes the main visualization components\n(`LineVis`, `HeatmapVis`, etc.) as well as some of their lower-level building\nblocks (`VisCanvas`, `ColorBar`, etc.) \nThe library is documented in a Storybook site accessible at\nhttps://h5web-docs.panosc.eu. \nSome examples of usage of `@h5web/lib`: \n"
+      },
+      "source": "https://raw.githubusercontent.com/silx-kit/h5web/main/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9708701136582844,
+      "result": {
+        "original_header": "<a href=\"https://www.npmjs.com/package/@h5web/app\">@h5web/app</a>",
+        "type": "Text_excerpt",
+        "value": "HDF5 viewer component (`App`) and built-in data providers. \nData providers are components that fetch data from HDF5 back-end solutions and\nprovide this data to the app through React Context. H5Web currently includes\nthree providers, two of which are available in the `@h5web/app` package: \n- `H5GroveProvider` for server implementations based on\n  [h5grove](https://github.com/silx-kit/h5grove), like\n  [jupyterlab-h5web](https://github.com/silx-kit/jupyterlab-h5web)\n- `HsdsProvider` for [HSDS](https://github.com/HDFGroup/hsds)\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/silx-kit/h5web/main/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9927097176891785,
+      "result": {
+        "original_header": "<a href=\"https://www.npmjs.com/package/@h5web/h5wasm\">@h5web/h5wasm</a>",
+        "type": "Text_excerpt",
+        "value": "This package includes two additional data providers, `H5WasmLocalFileProvider`\nand `H5WasmBufferProvider`, that can read HDF5 files straight in the browser\nthanks to the [h5wasm](https://github.com/usnistgov/h5wasm) library.\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/silx-kit/h5web/main/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.8756575601070428,
+      "result": {
+        "original_header": "Ecosystem",
+        "type": "Text_excerpt",
+        "value": "- [myHDF5](https://myhdf5.hdfgroup.org/) \u2013 online HDF5 file viewing service\n- [jupyterlab-h5web](https://github.com/silx-kit/jupyterlab-h5web) \u2013 H5Web\n  extension for JupyterLab\n- [vscode-h5web](https://github.com/silx-kit/vscode-h5web) \u2013 H5Web extension for\n  Visual Studio Code\n- [h5whale](https://github.com/silx-kit/h5whale) \u2013 full-stack Docker application\n  to visualise HDF5 files\n- [h5grove](https://github.com/silx-kit/h5grove) \u2013 core utilities to serve HDF5\n  file contents\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/silx-kit/h5web/main/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "download_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/silx-kit/h5web/releases"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 18
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/silx-kit/h5web/forks"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "silx-kit/h5web"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_title": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "H5Web: React components for data visualization and exploration"
+      },
+      "source": "https://raw.githubusercontent.com/silx-kit/h5web/main/README.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "identifier": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://doi.org/10.5281/zenodo.6458452"
+      },
+      "source": "https://raw.githubusercontent.com/silx-kit/h5web/main/README.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "images": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://user-images.githubusercontent.com/2936402/107791492-4c512980-6d54-11eb-8ba4-4a1433bdfeea.gif"
+      },
+      "source": "https://raw.githubusercontent.com/silx-kit/h5web/main/README.md",
+      "technique": "regular_expression"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/silx-kit/h5web/assets/2936402/0c967dbc-b70b-43e1-93aa-f340889da01a"
+      },
+      "source": "https://raw.githubusercontent.com/silx-kit/h5web/main/README.md",
+      "technique": "regular_expression"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/silx-kit/h5web/assets/2936402/0677a610-3812-4867-a9e6-967ec7d36675"
+      },
+      "source": "https://raw.githubusercontent.com/silx-kit/h5web/main/README.md",
+      "technique": "regular_expression"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/silx-kit/h5web/assets/2936402/71c5bebb-7d12-4315-8382-d2e36d5240f2"
+      },
+      "source": "https://raw.githubusercontent.com/silx-kit/h5web/main/README.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "installation": [
+    {
+      "confidence": 0.8207244577186197,
+      "result": {
+        "original_header": "Ecosystem",
+        "type": "Text_excerpt",
+        "value": "- [myHDF5](https://myhdf5.hdfgroup.org/) \u2013 online HDF5 file viewing service\n- [jupyterlab-h5web](https://github.com/silx-kit/jupyterlab-h5web) \u2013 H5Web\n  extension for JupyterLab\n- [vscode-h5web](https://github.com/silx-kit/vscode-h5web) \u2013 H5Web extension for\n  Visual Studio Code\n- [h5whale](https://github.com/silx-kit/h5whale) \u2013 full-stack Docker application\n  to visualise HDF5 files\n- [h5grove](https://github.com/silx-kit/h5grove) \u2013 core utilities to serve HDF5\n  file contents\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/silx-kit/h5web/main/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "issue_tracker": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/silx-kit/h5web/issues"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "keywords": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "data-visualization, hdf5, react, visualization"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "license": [
+    {
+      "confidence": 1,
+      "result": {
+        "name": "MIT License",
+        "spdx_id": "MIT",
+        "type": "License",
+        "url": "https://api.github.com/licenses/mit",
+        "value": "https://api.github.com/licenses/mit"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "File_dump",
+        "value": "# MIT License\n\n**Copyright (c) 2020 European Synchrotron Radiation Facility**\n\nPermission is hereby granted, free of charge, to any person obtaining a copy of\nthis software and associated documentation files (the \"Software\"), to deal in\nthe Software without restriction, including without limitation the rights to\nuse, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of\nthe Software, and to permit persons to whom the Software is furnished to do so,\nsubject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS\nFOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR\nCOPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER\nIN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN\nCONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.\n"
+      },
+      "source": "https://raw.githubusercontent.com/silx-kit/h5web/main/LICENSE.md",
+      "technique": "file_exploration"
+    }
+  ],
+  "name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "h5web"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "owner": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Organization",
+        "value": "silx-kit"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "programming_languages": [
+    {
+      "confidence": 1,
+      "result": {
+        "name": "TypeScript",
+        "size": 845587,
+        "type": "Programming_language",
+        "value": "TypeScript"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "MDX",
+        "size": 57701,
+        "type": "Programming_language",
+        "value": "MDX"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "CSS",
+        "size": 50312,
+        "type": "Programming_language",
+        "value": "CSS"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "JavaScript",
+        "size": 16662,
+        "type": "Programming_language",
+        "value": "JavaScript"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Python",
+        "size": 9928,
+        "type": "Programming_language",
+        "value": "Python"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "HTML",
+        "size": 538,
+        "type": "Programming_language",
+        "value": "HTML"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "readme_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/silx-kit/h5web/main/README.md"
+      },
+      "technique": "file_exploration"
+    }
+  ],
+  "releases": [
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "axelboc",
+          "type": "User"
+        },
+        "date_created": "2024-09-13T11:49:45Z",
+        "date_published": "2024-09-16T06:55:48Z",
+        "description": "**Full Changelog**: https://github.com/silx-kit/h5web/compare/v12.0.0...v13.0.0\r\n\r\n### @h5web/app\r\n\r\n- :warning: **Breaking change:** `[H5GroveProvider]` Now requires `h5grove@2.3.0` #1709\r\n- :sparkles: Preserve **dimension mapping and slicing** when possible, notably when toggling inspect mode or selecting another dataset with the same dimensions https://github.com/silx-kit/h5web/issues/1572#issuecomment-1945556759 #1698\r\n- :sparkles: Support visualizing **enum** datasets and signals #1498 #1688\r\n- `[H5GroveProvider]` Support inspecting metadata of committed datatypes #1699 #1710\r\n- New [`enableBigIntSerialization`](https://github.com/silx-kit/h5web/blob/main/packages/app/README.md#enablebigintserialization) utility to enable big integer serialization in consumer apps. #1706\r\n    Invoke this function before rendering H5Web to allow the _Raw_ visualization and metadata inspector to serialize and display big integers. This is needed only when working with a provider that can return int-64 values as JavaScript [big integers](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Data_structures#bigint_type) (currently only `MockProvider`).\r\n\r\n### @h5web/lib\r\n\r\n- :warning: **Breaking change:** Change signature of [`useGeometry`](https://h5web-docs.panosc.eu/?path=/docs/utilities--docs#usegeometry) hook to fix React warning. #1684 #1687\r\n    Previously, the `params` parameter could be set to `false` or `undefined` to skip updating the geometry (e.g. when the R3F object is hidden). Now, it is required. The fourth parameter, `isInteractive` is replaced with a configuration object with two options: `isInteractive` and `skipUpdates`.\r\n- :warning: **Breaking change:** `[ScalarVis]` Remove prop `formatter` and change prop `value` to accept an already-formatted string \u2014 see #1705 for migration examples.\r\n- :warning: **Breaking change:** `[MatrixVis]` Replace props `dataArray` and `formatter` with props `dims` and `cellFormatter` \u2014 see #1702 for migration example.\r\n- :bug: `[VisCanvas]` Customize frustrum only when using orthographic camera #1685 #1686\r\n- Add CSS property `--h5w-overflowMenu-control--justify` to customise alignment of controls in overflow menu #1695 #1696\r\n\r\n### @h5web/h5wasm\r\n\r\n- :sparkles: Support **variable-length** datasets #1692\r\n- Support inspecting metadata of committed datatypes #1699 #1708\r\n\r\n### Screenshots\r\n\r\n#### Preserving dimension mapping\r\n\r\n![maintain-dim-mapping](https://github.com/user-attachments/assets/80c2843b-049e-4189-bf98-25296f3d1ea9)\r\n\r\n#### Enum datasets visualisation\r\n\r\n![image](https://github.com/user-attachments/assets/ca3f17e4-43d4-4337-96f7-2afdd714ea20)\r\n\r\n![image](https://github.com/user-attachments/assets/2194a7f3-7dc8-4fff-9807-dfc25c2fe9c5)\r\n\r\n#### Variable-length support with h5wasm\r\n\r\n![image](https://github.com/user-attachments/assets/9fade487-c390-44a9-a806-b8024fca6ffc)\r\n\r\n![image](https://github.com/user-attachments/assets/f072bf03-3aab-45e6-a0db-c0e0b142a548)\r\n",
+        "html_url": "https://github.com/silx-kit/h5web/releases/tag/v13.0.0",
+        "name": "H5Web 13",
+        "release_id": 174919080,
+        "tag": "v13.0.0",
+        "tarball_url": "https://api.github.com/repos/silx-kit/h5web/tarball/v13.0.0",
+        "type": "Release",
+        "url": "https://api.github.com/repos/silx-kit/h5web/releases/174919080",
+        "value": "https://api.github.com/repos/silx-kit/h5web/releases/174919080",
+        "zipball_url": "https://api.github.com/repos/silx-kit/h5web/zipball/v13.0.0"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "axelboc",
+          "type": "User"
+        },
+        "date_created": "2024-06-25T13:26:43Z",
+        "date_published": "2024-06-25T13:52:24Z",
+        "description": "**Full Changelog**: https://github.com/silx-kit/h5web/compare/v11.2.0...v12.0.0\r\n\r\n### @h5web/app\r\n\r\n- :sparkles: `< NX Line, NX Heatmap >` Support complex auxiliary signals #1676 #1680\r\n- :sparkles: `< Line >` Replace _Autoscale_ toggle in toolbar with domain widget to allow customising the `y` axis domain #1665\r\n- :sparkles: `< Compound >` Visualize compound scalar datasets #1674\r\n- :sparkles: `< Raw >` Add toggle to fit raw JPEG/PNG images to viewport (on by default) #1633\r\n- :sparkles: `[H5GroveProvider, HsdsProvider]` Add prop [`resetKeys`](https://github.com/silx-kit/h5web/blob/main/packages/app/README.md#resetkeys-unknown-optional) to reset fetch cache when file content changes #1673\r\n- :bug: `< Raw >` Disable dark mode on raw JPEG/PNG images #1628\r\n- :bug: Fix alignment of toolbar controls in overflow menu #1647 \r\n- :bug: Don't capitalize attribute names in metadata viewer #1671 \r\n- :zap: Reduce delay when slicing through a dimension whenever the target slice is already in the cache #1634 #1667\r\n- Make variable-length string types explicit in metadata viewer #1620\r\n- Allow inspecting HDF5 string padding metadata with h5grove (>=2.2.0), h5wasm and HSDS providers #1659\r\n- Errors that occur when retrieving dataset values are no longer stored in the provider's cache, which allows for retrying #1661\r\n- Throw error when encountering `axes` or `auxiliary_signals` attributes with dataset paths #1671 \r\n\r\n### @h5web/lib\r\n\r\n#### :warning: **Breaking changes**\r\n\r\n- `[Btn]` Prop `onClick` now receives the `MouseEvent` as first parameter #1653\r\n  - :point_right: Please make sure you don't pass a state setter as is, like `onClick={toggleOpen}`; if you do, refactor with an arrow function instead: `onClick={() => toggleOpen()}`\r\n- `[Selector]` Remove prop `optionComponent` #1652\r\n  - :point_right: Use new `renderOption` prop instead, which accepts an inline render function instead of a component\r\n- Remove component `ColorMapOption` #1652\r\n  - :point_right: Use new `ColorMapGradient` component instead, which renders only the horizontal color map gradient preview\r\n- Remove deprecated components `GridToggler` and `FlipYAxisToggler` #1653\r\n  - :point_right: Use `ToggleBtn` directly instead\r\n- `[ExportMenu]` Remove prop `align` #1653\r\n  - :point_right: The popup is now smart enough to remain within the bounds of the viewport\r\n\r\n#### Other changes\r\n\r\n- :gear: Remove `react-aria-menubutton` dependency to get rid of peer dependency warning\r\n  - :point_right: You may now revert any package manager configuration that you had made to [silence the warning](https://github.com/silx-kit/h5web/issues/1531)\r\n- :bug: `[Line]` Fix subtle [glitch](https://github.com/silx-kit/h5web/issues/1626#issuecomment-2082921944) between two points with finite and infinite/NaN coordinates #1632\r\n- `[VisCanvas]` Tweak camera frustrum to provide wider `z` range, and export [`Z_MIN` and `Z_MAX`](https://h5web-docs.panosc.eu/?path=/docs/utilities--docs#constants) constants #1632\r\n- `[SelectionTool]` Start selection on `pointerdown` instead of `pointermove` #1625\r\n- `[Btn]` Add prop `withArrow` to display a drop-down arrow #1653\r\n- `[Btn]` Forward `ref` and any valid HTML attributes to the `button` element (`HTMLAttributes<HTMLButtonElement>`) #1653\r\n- New `ComplexVisTypeSelector` toolbar component and `ComplexVisType` enum #1652\r\n\r\n### @h5web/h5wasm\r\n\r\n- :warning: **Breaking change**: Rename `H5WasmProvider` to [**`H5WasmBufferProvider`**](https://github.com/silx-kit/h5web/blob/64059ff2d6c28db83b5254889fcc32f4038611e9/packages/h5wasm/README.md#h5wasmbufferprovider) #1664\r\n- :sparkles: `[H5WasmLocalFileProvider, H5WasmBufferProvider]` Load compression plugins for datasets with compressed virtual sources within the same file #1662\r\n- :sparkles: `[H5WasmLocalFileProvider]` Add prop [`resetKeys`](https://github.com/silx-kit/h5web/tree/64059ff2d6c28db83b5254889fcc32f4038611e9/packages/h5wasm#resetkeys-unknown-optional) to reset fetch cache when file content changes #1673\r\n- :zap: `[H5WasmBufferProvider]` Now implemented with a Web Worker, which may reduce UI lag when accessing large datasets.\r\n\r\n### Screenshots\r\n\r\n#### Complex auxiliary signals\r\n\r\n| _NX Line_ | _NX Heatmap_ |\r\n| --- | --- |\r\n| ![image](https://github.com/silx-kit/h5web/assets/2936402/c904c7f8-e7e1-448b-98c3-c0b9ed54754a) | ![image](https://github.com/silx-kit/h5web/assets/2936402/44df38fd-aefe-432a-b63d-367073d26b44) |\r\n\r\n#### Scalar compound\r\n\r\n![image](https://github.com/silx-kit/h5web/assets/2936402/fa5f12d6-7b64-4997-9285-64a501f5cf46)\r\n\r\n#### Fit JPEG/PNG images\r\n\r\n![fit-raw-image](https://github.com/silx-kit/h5web/assets/2936402/cd09e3dd-a0a5-4990-a1dc-7ecac1964f9f)",
+        "html_url": "https://github.com/silx-kit/h5web/releases/tag/v12.0.0",
+        "name": "H5Web 12",
+        "release_id": 161661249,
+        "tag": "v12.0.0",
+        "tarball_url": "https://api.github.com/repos/silx-kit/h5web/tarball/v12.0.0",
+        "type": "Release",
+        "url": "https://api.github.com/repos/silx-kit/h5web/releases/161661249",
+        "value": "https://api.github.com/repos/silx-kit/h5web/releases/161661249",
+        "zipball_url": "https://api.github.com/repos/silx-kit/h5web/zipball/v12.0.0"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "axelboc",
+          "type": "User"
+        },
+        "date_created": "2024-04-18T14:24:03Z",
+        "date_published": "2024-04-18T14:25:59Z",
+        "description": "**Full Changelog**: https://github.com/silx-kit/h5web/compare/v11.1.1...v11.2.0\r\n\r\n\ud83c\udf89 This release brings a new provider, **[`H5WasmLocalFileProvider`](https://github.com/silx-kit/h5web/tree/main/packages/h5wasm#h5wasmlocalfileprovider)**. Contrary to `H5WasmProvider`, which requires files to be loaded entirely into memory, `H5WasmLocalFileProvider` uses a web worker to enable partial reads. This allows reading local HDF5 files of **virtually any size**! Keep an eye out for upcoming releases of [myHDF5](https://myhdf5.hdfgroup.org/) and the [VS Code extension](https://marketplace.visualstudio.com/items?itemName=h5web.vscode-h5web), or give it a try right away in the [h5wasm demo](https://h5web.panosc.eu/h5wasm)!\r\n\r\n### @h5web/app\r\n\r\n* \u2728 `< RGB >` Allow flipping RGB visualizations on X and Y https://github.com/silx-kit/h5web/pull/1608\r\n* \u2728 Add _NX Note_ visualization with support for JSON MIME type https://github.com/silx-kit/h5web/pull/1606\r\n* \ud83d\udc1b  Fix styling of raw JPEG/PNG images in some contexts https://github.com/silx-kit/h5web/pull/1600\r\n\r\n### @h5web/lib\r\n\r\n- `[RgbVis]` Add props `flipXAxis` and `flipYAxis` https://github.com/silx-kit/h5web/pull/1608\r\n\r\n### @h5web/h5wasm\r\n\r\n* \ud83e\udd73 Add new `H5WasmLocalFileProvider`, which supports **reading local HDF5 files of any size** https://github.com/silx-kit/h5web/pull/1604\r\n* Improve support for empty datasets and attributes https://github.com/silx-kit/h5web/pull/1602\r\n\r\n### Screenshots\r\n\r\n#### New _NX Note_ visualization\r\n\r\n![image](https://github.com/silx-kit/h5web/assets/2936402/32d94295-d0c8-4290-bc94-87277e08fbad)\r\n\r\n#### Flipping _RGB_ visualization\r\n\r\n![rbg-flip-xy](https://github.com/silx-kit/h5web/assets/2936402/b8d3438b-0073-4ff3-b7a1-9a96c8a2607c)\r\n",
+        "html_url": "https://github.com/silx-kit/h5web/releases/tag/v11.2.0",
+        "name": "v11.2.0",
+        "release_id": 151118842,
+        "tag": "v11.2.0",
+        "tarball_url": "https://api.github.com/repos/silx-kit/h5web/tarball/v11.2.0",
+        "type": "Release",
+        "url": "https://api.github.com/repos/silx-kit/h5web/releases/151118842",
+        "value": "https://api.github.com/repos/silx-kit/h5web/releases/151118842",
+        "zipball_url": "https://api.github.com/repos/silx-kit/h5web/zipball/v11.2.0"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "axelboc",
+          "type": "User"
+        },
+        "date_created": "2024-03-26T09:51:30Z",
+        "date_published": "2024-03-26T10:25:03Z",
+        "description": "**Full Changelog**: https://github.com/silx-kit/h5web/compare/v11.1.0...v11.1.1\r\n\r\n- :bug: Fix styling regressions introduced with v11.1.0 in both `@h5web/app` and `@h5web/lib`.",
+        "html_url": "https://github.com/silx-kit/h5web/releases/tag/v11.1.1",
+        "name": "v11.1.1",
+        "release_id": 148442185,
+        "tag": "v11.1.1",
+        "tarball_url": "https://api.github.com/repos/silx-kit/h5web/tarball/v11.1.1",
+        "type": "Release",
+        "url": "https://api.github.com/repos/silx-kit/h5web/releases/148442185",
+        "value": "https://api.github.com/repos/silx-kit/h5web/releases/148442185",
+        "zipball_url": "https://api.github.com/repos/silx-kit/h5web/zipball/v11.1.1"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "axelboc",
+          "type": "User"
+        },
+        "date_created": "2024-03-25T08:20:33Z",
+        "date_published": "2024-03-25T08:26:49Z",
+        "description": "**Full Changelog**: https://github.com/silx-kit/h5web/compare/v11.0.0...v11.1.0\r\n\r\n### @h5web/app\r\n\r\n* \u2728 `< Heatmap >` Add toolbar control to flip `X` axis #1573 #1574\r\n* \u2728 `< NX Heatmap >` Support auxiliary signals #1500 #1577\r\n* \u2728 `< Raw >` Display JPEG/PNG images stored as opaque datasets (requires `h5grove>=2.1.0`) #1554 #1587 #1590\r\n\r\n### @h5web/lib\r\n\r\n* \u2728 `[HeatmapVis]` New prop `flipXAxis` to flip heatmap horizontally\r\n* \u2728 Add props `className` and `style` to all visualization components (`HeatmapVis`, `LineVis`, `RgbVis`, etc.)\r\n* \u26a0\ufe0f Deprecate components `FlipYAxis` and `GridToggler` (to be removed in H5Web 12) \u2014 use `ToggleBtn` directly instead.\r\n\r\n### @h5web/h5wasm\r\n\r\n* \ud83d\udc1b Convert all bigints to number in `H5WasmProvider` without exceptions, notably in nested compound datasets, to fix error in _Raw_ visualization #1536 #1581\r\n* 5\ufe0f\u20e3 Propagate HDF5 errors to viewer so they can be properly handled and displayed #1570 #1586\r\n  * H5Web no longer has to guess ahead of time whether a compression filter is supported or not; it can now request the dataset knowing that if a decompression error occurs, it will be able to detect the error and inform the user. This means that some compressed datasets may now be displayed when they didn't use to be.\r\n\r\n### Screenshots\r\n\r\n#### Flip `X` axis\r\n\r\n![flip-x](https://github.com/silx-kit/h5web/assets/2936402/0ccd1d04-ca3e-4114-96fa-c85b13e9bb90)\r\n\r\n#### Auxiliary signal selection\r\n\r\n![nx-image-aux](https://github.com/silx-kit/h5web/assets/2936402/2ccb63d2-5d26-4e62-8f36-4755238b1622)",
+        "html_url": "https://github.com/silx-kit/h5web/releases/tag/v11.1.0",
+        "name": "v11.1.0",
+        "release_id": 147882353,
+        "tag": "v11.1.0",
+        "tarball_url": "https://api.github.com/repos/silx-kit/h5web/tarball/v11.1.0",
+        "type": "Release",
+        "url": "https://api.github.com/repos/silx-kit/h5web/releases/147882353",
+        "value": "https://api.github.com/repos/silx-kit/h5web/releases/147882353",
+        "zipball_url": "https://api.github.com/repos/silx-kit/h5web/zipball/v11.1.0"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "axelboc",
+          "type": "User"
+        },
+        "date_created": "2024-02-15T12:28:33Z",
+        "date_published": "2024-02-15T12:35:17Z",
+        "description": "**Full Changelog**: https://github.com/silx-kit/h5web/compare/v10.1.0...v11.0.0\r\n\r\n\ud83c\udf89 `H5WasmProvider` now supports loading the **Blosc2** and **Bitshuffle** compression plugins provided by @bmaranville in [h5wasm-plugins@0.0.3](https://github.com/h5wasm/h5wasm-plugins/releases). Keep an eye out for upcoming releases of [myHDF5](https://myhdf5.hdfgroup.org/) and the [VS Code extension](https://marketplace.visualstudio.com/items?itemName=h5web.vscode-h5web), or check out the [h5wasm demo](https://h5web.panosc.eu/h5wasm?url=https%3A%2F%2Fwww.silx.org%2Fpub%2Fh5web%2Ffilters.h5)!\r\n\r\n### @h5web/app\r\n\r\n- \u26a0\ufe0f **Breaking change** `[H5GroveProvider]` now requires [`h5grove@2.0.0`](https://github.com/silx-kit/h5grove/releases/tag/v2.0.0) #1557\r\n  - \u2728 External links are now included in search results thanks to improvements to the `/paths` endpoint.\r\n  - \u2728 Advanced HDF5 types, such as `H5T_ENUM`, `H5T_OPAQUE`, `H5T_ARRAY`, `H5T_VLEN`, `H5T_REFERENCE`, are now properly parsed and displayed in the metadata viewer thanks to improvements to the `/metadata` endpoint.\r\n- \ud83d\udc1b Fix import issues with Vitest #1562 #1564 #1565\r\n- \ud83d\udee0\ufe0f Reduce bundle size and runtime footprint in consumer applications #1537 #1564 #1571\r\n- `[H5GroveProvider, HsdsProvider]` Document using React's [`key`](https://github.com/silx-kit/h5web/blob/main/packages/app/README.md#key-key-optional) attribute to ensure the viewer displays up-to-date metadata and dataset values when the content of the current HDF5 file changes #1559\r\n- `[H5GroveProvider]` Take advantage of h5grove's [`dtype=safe`](https://silx-kit.github.io/h5grove/api.html#/paths/~1data/get) type conversions to fetch `float16` and `float128` datasets as binary (`Float32Array` and `Float64Array` respectively) instead of JSON #1561\r\n- `[H5GroveProvider]` Recommend memoising [`axiosConfig`](https://github.com/silx-kit/h5web/blob/main/packages/app/README.md#axiosconfig-axiosrequestconfig-optional) object with `useMemo` #1559\r\n\r\n### @h5web/lib\r\n\r\n- \u26a0\ufe0f Remove `mockMetadata`, `findMockEntity` and `getMockDataArray` #1537\r\n- \u26a0\ufe0f Instead of holding entire, plain JS arrays, the [`mockValues`](https://h5web-docs.panosc.eu/?path=/docs/utilities--docs#mock-values) object now provides factory functions to generate mock ndarrays only when needed \u2014 e.g. `mockValues.twoD()` returns a mock ndarray with dimensions `[20, 41]` #1537\r\n- \ud83d\udc1b Fix import issues with Vitest #1562 #1564 #1565\r\n- \ud83d\udee0\ufe0f Reduce bundle size and runtime footprint in consumer applications #1537 #1564 #1571\r\n- Export [`toTypedNdArray`](https://h5web-docs.panosc.eu/?path=/docs/utilities--docs#totypedndarray) utility to convert a plain `number[]` ndarray into a typed ndarray #1537\r\n\r\n### @h5web/h5wasm\r\n\r\n- \u2728 `[H5WasmProvider]` Support loading **Blosc2** and **Bitshuffle** compression plugins provided in [h5was-plugins@0.0.3](https://github.com/h5wasm/h5wasm-plugins/releases) #1524\r\n  - \u26a0\ufe0f The type of the [`getPlugin`](https://github.com/silx-kit/h5web/blob/main/packages/h5wasm/README.md#getplugin-name-plugin--promisearraybuffer--undefined) function prop has changed: it now accepts a `Plugin` enum value as argument.\r\n- \u2728 `[H5WasmProvider]` Correctly parse the following advanced HDF5 types: `H5T_OPAQUE`, `H5T_VLEN`, and `H5T_REFERENCE` so they no longer appear as _Unknown_ in the metadata viewer #1556\r\n- \ud83d\udc1b `[H5WasmProvider]` Fix issue when switching between two files with the same NeXus `default` path #1568",
+        "html_url": "https://github.com/silx-kit/h5web/releases/tag/v11.0.0",
+        "name": "H5Web 11",
+        "release_id": 142111871,
+        "tag": "v11.0.0",
+        "tarball_url": "https://api.github.com/repos/silx-kit/h5web/tarball/v11.0.0",
+        "type": "Release",
+        "url": "https://api.github.com/repos/silx-kit/h5web/releases/142111871",
+        "value": "https://api.github.com/repos/silx-kit/h5web/releases/142111871",
+        "zipball_url": "https://api.github.com/repos/silx-kit/h5web/zipball/v11.0.0"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "axelboc",
+          "type": "User"
+        },
+        "date_created": "2023-12-18T13:17:46Z",
+        "date_published": "2023-12-18T13:29:13Z",
+        "description": "**Full Changelog**: https://github.com/silx-kit/h5web/compare/v10.0.0...v10.1.0\r\n\r\n:tada: This release brings initial support for **loading compressed datasets with `H5WasmProvider`**. Keep an eye out for upcoming releases of [myHDF5](https://myhdf5.hdfgroup.org/) and the [VS Code extension](https://marketplace.visualstudio.com/items?itemName=h5web.vscode-h5web), or give it a try right away in the [h5wasm demo](https://h5web.panosc.eu/h5wasm)! Big thanks to @bmaranville for making common HDF5 compression plugins available through the [h5wasm-plugins](https://github.com/h5wasm/h5wasm-plugins) package. :trophy: \r\n\r\n> :warning: This version includes [a change](https://github.com/silx-kit/h5web/pull/1528) that unwillingly breaks support for Create React App. However, since CRA is no longer maintained, we have decided to not revert the change. If this is causing issues with other set-ups, please let us know.\r\n\r\n### @h5web/app\r\n\r\n- :bug: `< NX Heatmap >` Fix min axis array length off by 1 in error message #1521\r\n\r\n### @h5web/lib\r\n\r\n- :sparkles: New **[`useGeometry`](https://h5web-docs.panosc.eu/?path=/docs/utilities--docs#usegeometry)** hook, `H5WebGeometry` abstract class, and [`createBufferAttribute`](https://h5web-docs.panosc.eu/?path=/docs/utilities--docs#createbufferattr) and [`createIndex`](https://h5web-docs.panosc.eu/?path=/docs/utilities--docs#createindex) utilities, to **ease creation/update of buffer geometries** #1515\r\n  - The [`DataCurve`](https://h5web-docs.panosc.eu/?path=/docs/building-blocks-datacurve--docs) component is now a simple abstraction on top of **three new components**, each of which comes with its own custom `H5WebGeometry` class(es). You are free to use these components directly, or to reuse, extend or just get inspiration from the new geometry classes for your own custom components:\r\n    - **[`Line`](https://h5web-docs.panosc.eu/?path=/docs/building-blocks-line--docs)** + `LineGeometry`\r\n    - **[`Glyphs`](https://h5web-docs.panosc.eu/?path=/docs/building-blocks-glyphs--docs)** + `GlyphsGeometry`\r\n    - **[`ErrorBars`](https://h5web-docs.panosc.eu/?path=/docs/building-blocks-errorbars--docs)** + `ErroBarsGeometry` and `ErrorCapsGeometry`\r\n  - Other experimental components have been refactored and now come with their own custom geometry classes as well (`ScatterPointsGeometry`, `SurfaceMeshGeometry`).\r\n- :bug: `[HeatmapVis]` Fix min axis array length off by 1 in error message #1521\r\n- :bug: `[LineVis]` Forward `ignoreValue` prop to auxiliary `DataCurve`(s) [#1515](https://github.com/silx-kit/h5web/pull/1515/files#diff-39551548723d1dcb0c3af1998206d2e21c5344957d7749192135883fada294a9)\r\n\r\n### @h5web/h5wasm\r\n\r\n- :sparkles: Allow consumer applications to load the following **compression plugins** on demand: **Blosc, bzip2, LZ4, LZF, SZ, ZFP and Zstandard** #1522\r\n  - Consumers must implement the new function prop [`getPlugin`](https://www.npmjs.com/package/@h5web/h5wasm#getplugin-name-string--promisearraybuffer--undefined) of `H5WasmProvider`. This async function is called whenever a dataset compressed with one (or more) of the supported plugins is requested; it receives the name of the plugin as argument and should return the plugin's `*.so` shared library file as an array buffer if available.\r\n  - Fetching the plugins' library files is the responsibility of the consumer application, as this depends on how/where the files are served, whether they are loaded via a bundler like Vite or webpack, etc. For an example of loading plugin files from the [h5wasm-plugins](https://github.com/h5wasm/h5wasm-plugins) package in a Vite project, see [`plugin-utils.ts`](https://github.com/silx-kit/h5web/blob/7ae283567090088117b3f8ca4b57ec5ac5e872da/apps/demo/src/h5wasm/plugin-utils.ts) in the `demo` project.\r\n- :bug: Fix NextJS import issue #1525",
+        "html_url": "https://github.com/silx-kit/h5web/releases/tag/v10.1.0",
+        "name": "v10.1.0",
+        "release_id": 134281993,
+        "tag": "v10.1.0",
+        "tarball_url": "https://api.github.com/repos/silx-kit/h5web/tarball/v10.1.0",
+        "type": "Release",
+        "url": "https://api.github.com/repos/silx-kit/h5web/releases/134281993",
+        "value": "https://api.github.com/repos/silx-kit/h5web/releases/134281993",
+        "zipball_url": "https://api.github.com/repos/silx-kit/h5web/zipball/v10.1.0"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "axelboc",
+          "type": "User"
+        },
+        "date_created": "2023-10-17T08:57:35Z",
+        "date_published": "2023-10-17T09:09:53Z",
+        "description": "**Full Changelog**: https://github.com/silx-kit/h5web/compare/v9.0.0...v10.0.0\r\n\r\n### :partying_face: H5Web is now on React 18!\r\n\r\nIf your application is on React 17, you will need to upgrade to [React 18](https://react.dev/) before you can upgrade to H5Web 10. Going forward, H5Web 9 will receive only critical bug fixes, and only upon request.\r\n\r\n### @h5web/app\r\n\r\n* :tada: Upgrade React to **v18** #1119\r\n  * :warning: **Breaking change**: please upgrade `react` and `react-dom` to v18.x\r\n* :sparkles: `< Line, Heatmap >` Support visualizing boolean datasets #1498 #1499\r\n* :bug: `< Raw >` Fix layout when content overflows #1488\r\n\r\n### @h5web/lib\r\n\r\n* :tada: Upgrade React to **v18** and [`@react-three/fiber`](https://docs.pmnd.rs/react-three-fiber/getting-started/introduction) to **v8** #1119 #1494\r\n  * :warning: **Breaking change**: please upgrade `react` and `react-dom` to v18.x, and `@react-three/fiber` to v8.x\r\n* :bug: `[RawVis]` Fix layout when content overflows #1488\r\n* :warning: `[LineVis, HeatmapVis]` Prop `dtype`, which controls the dtype displayed in the tooltip, must now be provided directly as a string #1512\r\n* :warning: `[VisCanvas]` React Three Fiber now adds an extra `div` wrapper around the `canvas` element #1494\r\n\r\n#### Experimental\r\n\r\n* :bug: `[useDrag]` Fix unstable drag while zooming #1487\r\n\r\n### @h5web/h5wasm\r\n\r\n* :sparkles: `[H5WasmProvider]` Support (u)int64 data inside compound datasets (so they can be visualized with `MatrixVis`) #1503",
+        "html_url": "https://github.com/silx-kit/h5web/releases/tag/v10.0.0",
+        "name": "H5Web 10 \u2013 now with React 18",
+        "release_id": 125381358,
+        "tag": "v10.0.0",
+        "tarball_url": "https://api.github.com/repos/silx-kit/h5web/tarball/v10.0.0",
+        "type": "Release",
+        "url": "https://api.github.com/repos/silx-kit/h5web/releases/125381358",
+        "value": "https://api.github.com/repos/silx-kit/h5web/releases/125381358",
+        "zipball_url": "https://api.github.com/repos/silx-kit/h5web/zipball/v10.0.0"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "axelboc",
+          "type": "User"
+        },
+        "date_created": "2023-09-05T07:49:21Z",
+        "date_published": "2023-09-05T09:02:16Z",
+        "description": "**Full Changelog**: https://github.com/silx-kit/h5web/compare/v8.0.0...v9.0.0\r\n\r\n### @h5web/app\r\n\r\n- :sparkles: `[H5GroveProvider, MockProvider]` Support exporting `< Raw >` visualizations to JSON #1485\r\n- :sparkles: Allow zooming on very thin selection boxes #1482\r\n- :bug: Fix heatmap snapshot feature and, more generally, fix saving WebGL canvas as image via \"save image as\" #1453 #1460 \r\n- :warning: A number of CSS custom properties related to the domain widget (previously called \"domain slider\") have been renamed \u2014 cf. #1456. If you customise these properties in your app, please rename them.\r\n\r\n### @h5web/lib\r\n\r\n#### Canvas\r\n\r\n- :bug: `[VisCanvas]` Fix saving WebGL canvas as image via \"save image as\" #1453 #1460 \r\n- :warning: The DOM structure created by `VisCanvas` has [changed significantly](https://github.com/silx-kit/h5web/pull/1467), which may impact advanced use cases \u2014 see also #1471\r\n\r\n#### Interactions\r\n\r\n- :sparkles: `[SelectToZoom, SelectionTool]` Allow cancelling [selection-based interactions](https://h5web-docs.panosc.eu/?path=/docs/building-blocks-interactions-selectiontool--docs) with right click #1370 #1463\r\n- :sparkles: `[SelectToZoom]` Allow zooming on very thin selection boxes #1482\r\n- :sparkles: :warning: Allow interacting with canvas through other interactive elements, like SVG elements. Interactive elements on top of the canvas must now take care of stopping the propagation of events that might lead to conflicting interactions before they bubble up the DOM (typically `pointerdown` to prevent panning/selecting).  #1388 #1473\r\n\r\n#### HTML/SVG overlays\r\n\r\n- :sparkles:  :warning: `[Overlay]` Overflow canvas bounds by default \u2014 to hide the overflow, simply pass the appropriate [inline style](https://github.com/silx-kit/h5web/pull/1470) #1470\r\n- :bug: `[Annotation]` Fix position of [overflowing annotations](https://h5web-docs.panosc.eu/?path=/story/building-blocks-annotation--overflow-canvas) #1467\r\n- :bug: `[SvgRect]` Fix rectangle with inset stroke disappearing when width or height is close to zero (internally, `SvgRect` now renders a `path` element instead of a `rect`) #1482\r\n- :warning: `[Html]` Remove prop `container` and stop wrapping children with an extra `div` element #1465\r\n  - If you were using prop `container`, we now recommend rendering the children [through a React Portal](https://h5web-docs.panosc.eu/?path=/story/building-blocks-html--portal) instead. The three DOM containers rendered by `VisCanvas` are now available [in the context](https://h5web-docs.panosc.eu/?path=/docs/context--docs), so you can use them as portal targets (cf. #1467 and #1479). However, remember that this is for advanced use cases only; the following `Html`-based components should be used in priority: [`Annotation`](https://h5web-docs.panosc.eu/?path=/docs/building-blocks-annotation--docs), [`Overlay`](https://h5web-docs.panosc.eu/?path=/docs/building-blocks-overlay--docs), [`SvgElement`](https://h5web-docs.panosc.eu/?path=/docs/building-blocks-svgelement--docs), and [`FloatingControl`](https://h5web-docs.panosc.eu/?path=/docs/toolbar-floatingcontrol--docs).\r\n\r\n#### Toolbar\r\n\r\n- :bug: `[DomainWidget]` (previously `DomainSlider`): Moving one histogram marker now toggles off autoscale only for the corresponding bound (i.e. min _or_ max, not both) #1422 #1439\r\n  - :warning: `[Histogram]` Replace prop `onChange` with two props: `onChangeMin` and `onChangeMax` #1439\r\n- :warning: Rename `DomainSlider` to [`DomainWidget`](https://h5web-docs.panosc.eu/?path=/docs/toolbar-domainwidget--docs) and export internal components #1382 #1377 #1445\r\n  - :sparkles: Export component [`DomainSlider`](https://h5web-docs.panosc.eu/?path=/docs/toolbar-domainslider--docs), which now corresponds to the slider part of the `DomainWidget` #1448 \r\n  - :sparkles: Export component [`DomainControls`](https://h5web-docs.panosc.eu/?path=/docs/toolbar-domainslider--docs), which corresponds to the content of the `DomainWidget`'s popup (with the bound inputs, autoscale buttons, histogram, etc.) #1455\r\n  - :warning: As a result of these changes, a number of CSS custom properties have been renamed \u2014 cf. #1456\r\n- Export component `ColorMapOption` #1461\r\n- `[ExportMenu]` Add prop `align` to change the alignment of the _Export_ menu popup (defaults to `\"center\"`) #1485 \r\n\r\n#### Utilities & hooks\r\n \r\n- :warning: Rename hook `useCanvasEvents` to [`useCanvasEvent`](https://h5web-docs.panosc.eu/?path=/docs/utilities--docs#usecanvasevent) \u2014 the hook must now be called once per event to listen for, similarly to react-hookz' [`useEventListener`](https://react-hookz.github.io/web/?path=/docs/dom-useeventlistener--example), and the given listener function no longer needs to be wrapped with `useCallback`. Note that, in relation to #1388, `useCanvasEvent` no longer registers events on the `canvas` element but on a parent container. #1481\r\n- :sparkles: Add hook [`useInteraction`](https://h5web-docs.panosc.eu/?path=/docs/utilities--docs#useinteraction) \u2014 use it to register and control your own canvas interactions #1475 #1477\r\n- :sparkles: Add hook [`useModifierKeyPressed`](https://h5web-docs.panosc.eu/?path=/docs/utilities--docs#usemodifierkeypressed) \u2014 use it to keep track of the pressed state of one or more modifier keys #1475 #1477\r\n- :sparkles: Add _experimental_ hook [`useDrag`](https://h5web-docs.panosc.eu/?path=/docs/utilities--docs#usedrag) \u2014 use it to make [SVG and other elements on top of the canvas draggable](https://h5web-docs.panosc.eu/?path=/docs/experimental-usedrag--docs) (e.g. moveable/resizeable ROIs) #1478\r\n\r\n### @h5web/h5wasm\r\n\r\n- :sparkles: `[H5WasmProvider]` Support exporting `< Raw >` visualizations to JSON #1485\r\n- `[H5WasmProvider]` Parse nested array types returned by h5wasm #1486\r\n\r\n### Screenshots\r\n\r\n#### Experimental [`useDrag` hook](https://h5web-docs.panosc.eu/?path=/docs/experimental-usedrag--docs)\r\n\r\nThis recording also demonstrates interacting with the canvas through other interactive elements.\r\n\r\n![Peek 2023-08-18 16-29](https://github.com/silx-kit/h5web/assets/2936402/1d830a12-9236-4093-a7d4-b35a725d1d39)",
+        "html_url": "https://github.com/silx-kit/h5web/releases/tag/v9.0.0",
+        "name": "v9.0.0",
+        "release_id": 119807641,
+        "tag": "v9.0.0",
+        "tarball_url": "https://api.github.com/repos/silx-kit/h5web/tarball/v9.0.0",
+        "type": "Release",
+        "url": "https://api.github.com/repos/silx-kit/h5web/releases/119807641",
+        "value": "https://api.github.com/repos/silx-kit/h5web/releases/119807641",
+        "zipball_url": "https://api.github.com/repos/silx-kit/h5web/zipball/v9.0.0"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "loichuder",
+          "type": "User"
+        },
+        "date_created": "2023-05-25T14:31:38Z",
+        "date_published": "2023-05-25T14:33:43Z",
+        "description": "**Full Changelog**: https://github.com/silx-kit/h5web/compare/v7.1.0...v8.0.0\r\n\r\n### @h5web/app\r\n\r\n- :warning: **Breaking change** `[App]` Remove prop `explorerOpen`, which was deprecated in favor of `sidebarOpen` in [v7.1.0](https://github.com/silx-kit/h5web/releases/tag/v7.1.0) #1438 \r\n- :sparkles: `< NX >` Show NeXus axis labels when hovering dimension buttons `D0`, `D1`, ...  #1426 #1435 \r\n- \u2728 `< Heatmap >` Add `Cubehelix` colormap #1420\r\n- :bug: `< NX Line >` Fix wrong colors in the tooltip legend in dark mode #1432\r\n- :bug: `< Complex Line >` Remove unsupported scale types from drop-down selector in toolbar #1431\r\n\r\n### @h5web/lib\r\n\r\n- :warning: **Breaking change** Props and parameters that accept scale type(s) (i.e. `ScaleType` or `ScaleType[]`) are now more strictly typed to ensure that only supported scale types are provided #1431 \r\n  - This notably affects `VisCanvas`, `LineVis`, `HeatmapVis`, `RgbVis`, `ScatterVis`, `extendDomain`, and `getAxisDomain`\r\n- :warning: **Breaking change** `[ScaleSelector]` Prop `options` is now required \u2013 i.e. you must now always provide an array of scale type options #1431\r\n  - For convenience, the following arrays of scale types are now available: `AXIS_SCALE_TYPES` (linear, log, symlog), `COLOR_SCALE_TYPES` (linear, log, symlog, sqrt), as well as their corresponding union types: `AxisScaleType`, `ColorScaleType`\r\n- \u2728 Add `Cubehelix` to the list of possible interpolators https://github.com/silx-kit/h5web/issues/1420\r\n- :bug: `[LineVis]` Fix wrong colors in tooltip in dark mode when `auxiliaries` arrays are provided #1432\r\n- `[ToggleGroup.Btn]` Add prop `hint` to show tooltip on hover #1435 \r\n\r\n### @h5web/h5wasm\r\n\r\n- :sparkles: Parse and display chunks information when present #1433  \r\n- :bug: Fix support for big-endian numbers #1421 #1424 \r\n\r\n### Screenshots\r\n\r\n#### Axis hints in dimension mapper\r\n\r\n![Peek 2023-05-23 14-33](https://github.com/silx-kit/h5web/assets/2936402/b1e1a9ba-59fc-4fcd-86ea-cda7aeee80a5)\r\n\r\n#### Cubehelix colormap\r\n\r\n![image](https://user-images.githubusercontent.com/2936402/232078136-82895501-b073-4681-8677-37f4d67613b5.png)\r\n",
+        "html_url": "https://github.com/silx-kit/h5web/releases/tag/v8.0.0",
+        "name": "v8.0.0",
+        "release_id": 103814332,
+        "tag": "v8.0.0",
+        "tarball_url": "https://api.github.com/repos/silx-kit/h5web/tarball/v8.0.0",
+        "type": "Release",
+        "url": "https://api.github.com/repos/silx-kit/h5web/releases/103814332",
+        "value": "https://api.github.com/repos/silx-kit/h5web/releases/103814332",
+        "zipball_url": "https://api.github.com/repos/silx-kit/h5web/zipball/v8.0.0"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "axelboc",
+          "type": "User"
+        },
+        "date_created": "2023-04-13T08:06:10Z",
+        "date_published": "2023-04-13T08:07:02Z",
+        "description": "**Full Changelog**: https://github.com/silx-kit/h5web/compare/v7.0.1...v7.1.0\r\n\r\n\ud83d\udd0d H5Web now allows **searching for datasets, groups and other entities** in an HDF5 file by text.\r\n\r\n\ud83d\udc40 Keep an eye out for the next releases of [jupyterlab-h5web](https://github.com/silx-kit/jupyterlab-h5web), [vscode-h5web](https://github.com/silx-kit/vscode-h5web) and [myHDF5](https://myhdf5.hdfgroup.org/), or check out [one of the demos](https://h5web.panosc.eu/) to see the feature in action!\r\n\r\n### @h5web/app\r\n\r\n- \u2728 Show search panel in sidebar when supported by provider (currently `H5GroveProvider`, `H5WasmProvider` and `MockProvider`) https://github.com/silx-kit/h5web/issues/1348 https://github.com/silx-kit/h5web/pull/1367 https://github.com/silx-kit/h5web/pull/1391\r\n  - `[H5GroveProvider, MockProvider]` Implement method `getSearchablePaths` to support searching through entities in the viewer https://github.com/silx-kit/h5web/pull/1367 https://github.com/silx-kit/h5web/pull/1394\r\n  - \u26a0\ufe0f `[App]` **Rename prop `explorerOpen` to `sidebarOpen`**; `explorerOpen` still works but is now deprecated and will be removed in the next major release https://github.com/silx-kit/h5web/pull/1404\r\n- \u2728 `< Heatmap, Line >` Support [NetCDF's `_FillValue` attribute](https://cfconventions.org/cf-conventions/cf-conventions.html#missing-data) to indicate missing data. When the attribute is set, the given value is ignored when computing the data domain and when rendering the line and heatmap visualizations. https://github.com/silx-kit/h5web/issues/1181 https://github.com/silx-kit/h5web/pull/1381 https://github.com/silx-kit/h5web/pull/1395\r\n- \ud83d\udc1b `< Heatmap >` `+Infinity` and `-Infinity` no longer appear as transparent; they are now displayed with the lowest/highest colors of the selected color map just like any other under/over values https://github.com/silx-kit/h5web/issues/1372 https://github.com/silx-kit/h5web/pull/1374\r\n- \ud83d\udc1b Fix full-screen button when H5Web is integrated into a larger application, like JupyterLab https://github.com/silx-kit/h5web/issues/1365 https://github.com/silx-kit/h5web/pull/1383\r\n- \u26a1 `< Line, Scatter >` Optimise creation and update of internal Three.js geometries and remove misleading error bars in case of negative error values https://github.com/silx-kit/h5web/pull/1390 https://github.com/silx-kit/h5web/pull/1393\r\n\r\n### @h5web/lib\r\n\r\n- \u2728 `[HeatmapVis, LineVis, DataCurve]` Add prop [`ignoreValue`](https://h5web-docs.panosc.eu/?path=/story/visualizations-heatmapvis--ignore-value) to allow ignoring values when computing the domain and rendering the heatmap/line visualization. The prop accepts a callback that is called for each value in the data array; if the callback returns `true`, the value is ignored. https://github.com/silx-kit/h5web/pull/1381\r\n- \u2728 `[HeatmapMesh]` Add optional prop [`mask`](https://h5web-docs.panosc.eu/?path=/story/building-blocks-heatmapmesh--mask), a uint8 ndarray that indicates which data values to mask (`255`) and which to show (`0`) https://github.com/silx-kit/h5web/pull/1395\r\n- \u2728 `[HeatmapMesh]` Add prop [`badColor`](https://h5web-docs.panosc.eu/?path=/story/building-blocks-heatmapmesh--bad-color), which defaults to transparent, to control the color used to display `NaN` and other bad values (i.e. values not supported by the selected scale, and values ignored via the new `mask` prop) https://github.com/silx-kit/h5web/issues/1372 https://github.com/silx-kit/h5web/pull/1374\r\n  - :warning: Note that the default colour for bad values used to be white.\r\n- \u2728 Stack elements that appear on top of the `canvas` (i.e. HTML/SVG elements, axis grid, tooltip, etc.) in the most predictable way possible, and [document the new default stacking order](http://localhost:6006/?path=/story/stacking--page) and how to tweak it https://github.com/silx-kit/h5web/pull/1387\r\n  - \u26a0\ufe0f The parent container of the canvas (i.e. available from react-three-fiber's internal state via `gl.parentElement`) now has `pointer-event: none`, which means that overlays, annotations, SVG elements and other HTML elements that get appended to this container no longer respond to pointer events by default. You can therefore remove your own `pointer-events: none` declarations from those elements. For elements that are meant to be interactive, you can restore interactivity with `pointer-events: auto`.\r\n- \ud83d\udc1b `[HeatmapVis, HeatmapMesh]` `+Infinity` and `-Infinity` no longer appear as transparent ; they are now displayed with the lowest/highest colors of the selected color map just like any other under/over values https://github.com/silx-kit/h5web/issues/1372 https://github.com/silx-kit/h5web/pull/1374\r\n- `[SelectToZoom, AxialSelectToZoom]` Add prop [`minZoom`](https://h5web-docs.panosc.eu/?path=/story/building-blocks-interactions-selecttozoom--min-zoom) to allow changing the default minimum zoom size of 20px https://github.com/silx-kit/h5web/pull/1384\r\n- `[Toolbar]` Add prop [`overflowChildren`](https://h5web-docs.panosc.eu/?path=/story/toolbar-toolbar--overflow-children) to forcefully render elements inside the overflow menu regardless of screen size https://github.com/silx-kit/h5web/pull/1378 by @PeterC-DLS \r\n- `[DomainSlider]` Add prop [`disabled`](https://h5web-docs.panosc.eu/?path=/story/toolbar-domainslider--disabled) to disable the slider and tooltip https://github.com/silx-kit/h5web/pull/1385\r\n- New [`SvgCircle`](https://h5web-docs.panosc.eu/?path=/story/building-blocks-svgelement--default) component https://github.com/silx-kit/h5web/pull/1389\r\n- `[LineVis, DataCurve, ScatterVis]` Optimise creation and update of internal Three.js geometries and fix edge cases with error values <= 0 https://github.com/silx-kit/h5web/pull/1390 https://github.com/silx-kit/h5web/pull/1393\r\n- `[getDomain, useDomain]` Add optional parameter [`ignoreValue`](https://h5web-docs.panosc.eu/?path=/story/utilities--page#getdomain), a callback to ignore values from the domain computation https://github.com/silx-kit/h5web/pull/1381\r\n- Add CSS custom properties `--h5w-toolbar--height` and `--h5w-btn--height` to control the height of the toolbar and toolbar buttons https://github.com/silx-kit/h5web/pull/1402\r\n\r\n#### Experimental\r\n\r\n- `[TiledHeatmapMesh]` Remove background mesh to keep canvas transparent where tiles are loading https://github.com/silx-kit/h5web/pull/1376\r\n\r\n### @h5web/h5wasm\r\n\r\n- \ud83d\udc1b `[H5WasmProvider]` Fix support for unsigned 64-bit integers https://github.com/silx-kit/h5web/issues/1371 https://github.com/silx-kit/h5web/pull/1375\r\n- `[H5WasmProvider]` Implement method `getSearchablePaths` to support searching through entities in the viewer https://github.com/silx-kit/h5web/pull/1367\r\n\r\n### Screenshots\r\n\r\n#### Search panel\r\n\r\n[Screencast from 21-03-2023 17:00:24.webm](https://user-images.githubusercontent.com/42204205/226667755-a74d3820-f15a-4e3a-9694-3536218cdf89.webm)\r\n\r\n#### Ignore/mask values\r\n\r\n![image](https://user-images.githubusercontent.com/2936402/231500377-df393350-f717-4185-a1b7-35738a20812b.png)\r\n\r\n![image](https://user-images.githubusercontent.com/2936402/231500703-2cb1a572-67dd-4f81-b89d-d9f12118b3c5.png)\r\n\r\n#### Default stacking order\r\n\r\n![image](https://user-images.githubusercontent.com/2936402/231502889-dc404b9a-440e-438a-8b76-df377c2305ea.png)\r\n",
+        "html_url": "https://github.com/silx-kit/h5web/releases/tag/v7.1.0",
+        "name": "v7.1.0",
+        "release_id": 99099951,
+        "tag": "v7.1.0",
+        "tarball_url": "https://api.github.com/repos/silx-kit/h5web/tarball/v7.1.0",
+        "type": "Release",
+        "url": "https://api.github.com/repos/silx-kit/h5web/releases/99099951",
+        "value": "https://api.github.com/repos/silx-kit/h5web/releases/99099951",
+        "zipball_url": "https://api.github.com/repos/silx-kit/h5web/zipball/v7.1.0"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "axelboc",
+          "type": "User"
+        },
+        "date_created": "2023-02-22T08:01:54Z",
+        "date_published": "2023-02-22T08:05:40Z",
+        "description": "**Full Changelog**: https://github.com/silx-kit/h5web/compare/v7.0.0...v7.0.1\r\n\r\n### @h5web/lib\r\n\r\n- :bug: **[`useCameraState`](https://h5web-docs.panosc.eu/?path=/story/utilities--page#usecamerastate)** Fix regression introduced in [v7.0.0](https://github.com/silx-kit/h5web/releases/tag/v7.0.0) (PR #1361) and affecting cases where the `factory` function references external dependencies (i.e. props, state and other local variables) \u2014 `useCameraState` would ignore changes to those dependencies and return a stale state. This bug was also affecting the **`Annotation`** and **`DataToHtml`** components (but not @h5web/app). #1368 \r\n  - If you don't use `useCameraState` directly, upgrading should suffice.\r\n  - If you use `useCameraState` directly, you'll need to revert some of the changes you made when upgrading to 7.0.0. More specifically, you'll need to pass once again a **dependency array** as second argument to the hook and reconfigure the `react-hooks/exhaustive-deps` linting rule in your project. See the [documentation for `useCameraState`](https://h5web-docs.panosc.eu/?path=/story/utilities--page#usecamerastate) for more details.",
+        "html_url": "https://github.com/silx-kit/h5web/releases/tag/v7.0.1",
+        "name": "v7.0.1",
+        "release_id": 93168398,
+        "tag": "v7.0.1",
+        "tarball_url": "https://api.github.com/repos/silx-kit/h5web/tarball/v7.0.1",
+        "type": "Release",
+        "url": "https://api.github.com/repos/silx-kit/h5web/releases/93168398",
+        "value": "https://api.github.com/repos/silx-kit/h5web/releases/93168398",
+        "zipball_url": "https://api.github.com/repos/silx-kit/h5web/zipball/v7.0.1"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "axelboc",
+          "type": "User"
+        },
+        "date_created": "2023-02-10T14:06:51Z",
+        "date_published": "2023-02-10T14:38:40Z",
+        "description": ":point_right:  **These release notes appear cropped on the _Releases_ page. You'll find them in full on their [dedicated page](https://github.com/silx-kit/h5web/releases/tag/v7.0.0).** :point_left: \r\n\r\n**Full Changelog**: https://github.com/silx-kit/h5web/compare/v6.6.1...v7.0.0 \u2014 big thanks to @PeterC-DLS for #1311, #1324 and #1356 :people_holding_hands: \r\n\r\n**tldr;** This release includes numerous breaking changes and new features to the component library, `@h5web/lib`. Highlights include: a simpler way to control the aspect ratio of the visualization; a more powerful `SelectionTool` component with support for validating and transforming selections; a more flexible API to render SVG shapes on top of the canvas.\r\n\r\n### @h5web/app\r\n\r\n- :sparkle: Select-to-zoom interactions now zoom only on areas of at least 20x20px. This avoids inadvertently zooming on very small areas. Visual clues are provided to help users determine when selections being drawn become big enough to zoom on. #1345\r\n- :bug: Fix error when switching from `< NX Heatmap >` to `< NX Line >` with an axis dataset longer than the signal dataset by one value (i.e. pixel boundaries) #1350 #1352\r\n- :bug: When drawing a zoom selection, the stroke of the rectangle is no longer partially cropped by the canvas. #1346\r\n\r\n### @h5web/lib\r\n\r\n> Open the sections below to see the changes.\r\n\r\n<details>\r\n<summary>\r\n<strong>:warning: Breaking changes</strong>\r\n</summary>\r\n\r\n- **`[HeatmapVis, RgbVis]`** Remove prop `layout`, now replaced with prop `aspect` (cf. _New features_). #1284\r\n  - `layout=\"cover\"` :point_right: replace with `aspect=\"equal\"` (default)\r\n  - `layout=\"fill\"` :point_right: replace with `aspect=\"auto\"`\r\n  - `layout=\"contain\"` :point_right: remove; equivalent behaviour can be achieved by constraining the size of the visualization's container. #1283\r\n- **`[VisCanvas]`** Remove prop `visRatio`, now replaced with prop `aspect` (cf. _New features_). #1284\r\n  - `visRatio={undefined}` :point_right: replace with `aspect=\"auto\"` (default)\r\n  - `visRatio={cols / rows}` (i.e. orthonormal basis) :point_right: replace with `aspect=\"equal\"` (the correct `visRatio` is computed internally)\r\n  - `visRatio={(cols / rows) / aspect}` :point_right: replace with `aspect={aspect}`\r\n- **`[VisCanvas]`** Remove prop `canvasRatio`, which allowed restricting the canvas to a specific ratio. The canvas now always fills the available space (i.e. parent container minus axes). Migration: remove prop and constrain size of visualization container. #1283\r\n- **`[DefaultInteractions, SelectToZoom]`** Remove prop `keepRatio`. Interaction components now adjust their behaviours automatically when used inside a canvas with an aspect ratio (cf. _New features_). #1287\r\n- **`[SelectionTool, AxialSelectionTool]`** Callback props `onSelectionChange` and `onSelectionEnd` can now receive `undefined` when the user cancels the selection with <kbd>Escape</kbd> or releases the modifier key (if any). You may use the new `onValidSelection` callback instead of `onSelectionEnd` if you only care about successful selections. #1360 \r\n- **`[SelectionTool, AxialSelectionTool]`** The shape of selection objects passed to callback props and to the render prop has changed - cf. the [new interface](https://github.com/silx-kit/h5web/blob/dd808c9f2a9e969d573a33c8f2e16ab022520bb4/packages/lib/src/interactions/models.ts#L12-L16) vs. the [old interface](https://github.com/silx-kit/h5web/blob/3e21159a7946b128346b4902f1ec1a0e07f98e53/packages/lib/src/interactions/models.ts#L10-L15)\r\n- Remove `SelectionRect` and `SelectionLine`. Use the new `DataToHtml`, `SvgElement`, `SvgRect` and `SvgLine` components instead. See code example below.\r\n- Rename `useAxisSystemContext()` to [**`useVisCanvasContext()`**](https://h5web-docs.panosc.eu/?path=/story/context--page) #1291\r\n- Utility **`getAxisValues`** now returns `NumArray` (i.e. `TypedArray | number[]`) instead of `number[]`. #1357\r\n- [**`useCameraState`**](https://h5web-docs.panosc.eu/?path=/story/utilities--page#usecamerastate) The callback parameter no longer receives a `context` argument, and the second parameter is removed (i.e. the array dependencies \u00e0 la `useCallback`), which means that ESLint rule `react-hooks/exhaustive-deps` no longer has to be configured in consumer projects. #1361\r\n- **`dataToHtml, getVisibleDomains`** must now be retrieved from [context](https://h5web-docs.panosc.eu/?path=/story/context--page) and no longer require a `context` argument. #1342 \r\n- Rename `getWorldFOV` to **`getFovBox`** and move to [context](https://h5web-docs.panosc.eu/?path=/story/context--page); it no longer requires a `context` argument and returns a `Box` instance (cf. _New features_). #1361\r\n- Hook [**`useCanvasEvents`**](https://h5web-docs.panosc.eu/?path=/story/utilities--page#usecanvasevents) and [context](https://h5web-docs.panosc.eu/?path=/story/context--page) utilities **`dataToHtml, dataToWorld, worldToData`** now work solely with `Vector3` instances; they no longer accept/return `Vector2` instances. More generally, computations in all three coordinate spaces (HTML, world, data) are now performed with `Vector3` only to avoid cluttering the codebase with `Vector3 <-> Vector2` conversions (cf. notably, the new `Box` class, as well as the `Rect` type used for selection rectangles). We recommend you do the same when implementing your own interactivity features. #1300 #1341\r\n- Callbacks passed to **`useCanvasEvents`** no longer receive points in camera space (i.e. property `cameraPt`).\r\n</details>\r\n\r\n<details>\r\n<summary>\r\n<strong>:rocket: New features</strong>\r\n</summary>\r\n\r\n- `VisCanvas` now renders an `svg` element that overlays the canvas. Use the new [**`SvgElement`**](https://h5web-docs.panosc.eu/?path=/story/building-blocks-svgelement--default) component to append any SVG shape to it from anywhere inside the `VisCanvas` component tree. See code example and screen recording below. #1322\r\n- New **`SvgRect`** and **`SvgLine`** components to simplify rendering SVG `rect` and `line` elements from a tuple of `Vector3` points. `SvgRect` also provides a way to simulate rendering the stroke outside or inside of the rectangle (instead of centred on the boundary). These components are for convenience only; don't hesitate to render `rect`, `line` and any other SVG element directly. #1332 #1346\r\n- New **`DataToHtml`** component to convert points from data space to HTML space directly in JSX. Useful to render SVG shapes on the canvas and update them automatically when the user zooms or pans. See code example below.\r\n- New [**`Box`**](https://h5web-docs.panosc.eu/?path=/story/utilities--page#box) utility class based on Three's [`Box 3`](https://threejs.org/docs/?q=box#api/en/math/Box3), but with a more convenient API and some useful additional methods. Particularly handy when implementing interactivity features (zoom selection, SVG ROIs, etc.) #1323 #1359\r\n- **`[LineVis]`** Allow passing abscissa array longer than data array (i.e. the abscissa array gets cropped) #1352\r\n- **`[VisCanvas]`** Add prop `aspect`, which works similarly to matplotlib's [`Axes.set_aspect`](https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.set_aspect.html) #1284:\r\n  - `aspect=\"auto\"`: the visualization is to fill the entire canvas (default; i.e. the internal `visRatio` is set to `undefined`);\r\n  - `aspect=\"equal\"`: one ordinate unit is to be displayed with the same number of pixels on screen as one abscissa unit (equivalent to `aspect={1}`; i.e. orthonormal basis);\r\n  - `aspect={2}`: one ordinate unit is to be displayed with _twice_ the number of pixels on screen as one abscissa unit.\r\n- **`[VisCanvas]`** Add `nice` property to `abscissaConfig` and `ordinateConfig` props. This passes through to D3 to allow it to extend the domains to [nice values](https://github.com/d3/d3-scale#continuous_nice) when appropriate. #1324\r\n- **`[SelectToZoom, AxialSelectToZoom]`** Enforce minimum selection size of 20x20px, with help of visual clues, to avoid inadvertently zooming when users mean to click. #1345\r\n- **`[XAxisZoom, YAxisZoom, AxialSelectToZoom]`** now disable themselves when used inside a canvas with an aspect ratio (equal or custom). #1287\r\n- **`[SelectToZoom]`** now configures its own behaviour automatically according to the canvas' aspect ratio (or lack thereof). #1287\r\n- **`[SelectionTool, AxialSelectionTool]`** Add props `validate` and `onValidSelection` to support validating selections. See code examples and screen recordings below. Callback props `onSelectionChange` and `onSelectionEnd`, as well as the `children` render prop, all receive a boolean flag conveying whether the selection they are invoked with is valid. #1345 \r\n- **`[SelectionTool, AxialSelectionTool]`** The selection objects passed to the render prop and to the callback props now include the selection rectangle in HTML space (in addition to world and data space). This is likely what you want to use in the render prop to render the selection rectangle in SVG. See code examples below. #1343\r\n- **`[SelectionTool]`** Add prop `transform` to allow transforming the selection while it is being drawn. The render prop and `onSelectionChange` both receive the transformed selection object as first parameter and the raw, untransformed selection object as second parameter. This feature is used internally by `AxialSelectionTool` to transform the user's selection into a selection that spans the entire width or height of the canvas. For another example, check out story [_Rect With Transform_](https://h5web-docs.panosc.eu/?path=/story/building-blocks-selectiontool--rect-with-transform). #1301 #1340 #1349\r\n- **`[Histogram]`** Add prop `showLeftAxis`, which defaults to `true`, to allow hiding the left axis (with `showLeftAxis={false}`) #1295\r\n- **`[DataCurve, ScatterPoints]`** Accept typed arrays for abscissas and ordinates #1357\r\n- **`getValueToIndexScale, getAxisDomain, getAxisValues`** Accept typed arrays as argument #1357\r\n- [**`useCameraState`**](https://h5web-docs.panosc.eu/?path=/story/utilities--page#usecamerastate) Allow passing equality function as second parameter to skip unnecessary re-renders. #1361\r\n</details>\r\n\r\n<details>\r\n<summary>\r\n<strong>:hammer_and_pick: New <a href=\"https://h5web-docs.panosc.eu/?path=/story/context--page\" target=\"_blank\">context</a> properties</strong>\r\n</summary>\r\n\r\n- **`canvasSize`** \u2013 the size of the canvas (equivalent to `useThree((state) => state.size)`) #1288\r\n- **`canvasRatio`** \u2013 the aspect ratio of the canvas (i.e. `width / height`) #1288\r\n- **`canvasBox`** \u2013 a `Box` instance that spans the entire canvas; useful for HTML-space computations, like clipping/clamping other boxes/points to the bounds of the canvas. #1361\r\n- **`visRatio`** \u2013 the ratio of the visualization, computed internally by `VisCanvas` from the axis domains and `aspect` prop. Defined when the canvas has an equal/custom aspect ratio; `undefined` otherwise. #1287\r\n- **`worldToHtml, htmlToWorld, dataToHtml, htmlToData`** \u2013 space-conversion utilities; `dataToHtml` was previously available as a direct import #1302 #1342\r\n- **`getVisibleDomains, getFovBox`** \u2013 camera-based utilities previous available as direct imports #1361\r\n</details>\r\n\r\n<details>\r\n<summary>\r\n<strong>:bug: Bug fixes</strong>\r\n</summary>\r\n\r\n- **`[SelectionTool, AxialSelectionTool]`**:\r\n  - Fix `onSelectionStart` callback called before user actually starts moving the mouse. #1318\r\n  - Fix `onSelectionChange` callback not called on first pointer move. #1339\r\n  - Fix `onSelectionEnd` callback not called when cancelling selection with <kbd>Escape</kbd>. #1360\r\n  - Invoke callbacks asynchronously, after render prop, to avoid bugs such as a potential persisted selection being displayed on top of the active selection for one render. #1318\r\n  - Wait for next available animation frame before re-rendering `SelectionTool` to avoid overloading the main thread when `onPointerMove` is triggered many times in a row. #1298\r\n</details>\r\n\r\n### Examples\r\n\r\n#### Drawing SVG shapes from data coordinates\r\n\r\nExample taken from story [_Building Blocks / SvgElement / Default_](https://h5web-docs.panosc.eu/?path=/story/building-blocks-svgelement--default):\r\n\r\n![Peek 2023-02-08 10-19](https://user-images.githubusercontent.com/2936402/217487545-93b8851d-f361-44cb-9d61-938974e41733.gif)\r\n\r\n<details>\r\n<summary>See the code</summary>\r\n\r\n```tsx\r\n<DataToHtml points={[new Vector3(2, 8), new Vector3(4, 6), new Vector3(3, 2), new Vector3(6, 4), new Vector3(6, 6), new Vector3(7, 7)]}>\r\n  {(pt1, pt2, pt3, pt4, pt5, pt6) => (\r\n    <SvgElement>\r\n      <SvgRect className={styles.rect} coords={[pt1, pt2]} />\r\n      <SvgLine\r\n        coords={[pt3, pt4]}\r\n        stroke=\"darkblue\"\r\n        strokeWidth={5}\r\n        strokeDasharray={15}\r\n        strokeLinecap=\"round\"\r\n      />\r\n      <SvgRect\r\n        coords={[pt5, pt6]}\r\n        fill=\"none\"\r\n        stroke=\"teal\"\r\n        strokeWidth={10}\r\n        strokePosition=\"outside\"\r\n      />\r\n    </SvgElement>\r\n  )}\r\n</DataToHtml>\r\n```\r\n</details>\r\n\r\nYou can make your SVG elements interactive by simply registering event handlers on them (e.g. `onPointerDown={handlePointerDown}`) and by applying styles to them like `:hover` (i.e. via `className` or `style`). Just make sure to apply at least [`pointer-events: auto`](https://developer.mozilla.org/en-US/docs/Web/CSS/pointer-events) to the elements so they can respond to pointer events (the SVG overlay has `pointer-events: none` to let events through to the canvas). Note that pointer events intercepted by SVG elements do not currently \"bubble up\" to the canvas, since the SVG overlay is not a child of the canvas. This limitation should be resolved in a future release of H5Web.\r\n\r\nInternally, `DataToHtml` retrieves space conversion utility `dataToHtml` from [context](https://h5web-docs.panosc.eu/?path=/story/context--page) and uses [`useCameraState`](https://h5web-docs.panosc.eu/?path=/story/utilities--page#usecamerastate) to keep the HTML points up to date as the user interacts with the canvas. It then invokes the `children` render prop with those points on every render. For advanced use cases, especially when optimising for performance, don't hesitate to perform the conversions and invoke `useCameraState` yourself, perhaps with an equality function.\r\n\r\n#### Validating selections\r\n\r\nExample taken from story [_Building Blocks / SelectionTool / LineWithLengthValidation_](https://h5web-docs.panosc.eu/?path=/story/building-blocks-selectiontool--line-with-length-validation):\r\n\r\n![Peek 2023-02-08 14-21](https://user-images.githubusercontent.com/2936402/217541856-ee7261e6-f74b-4fa1-9d48-8378dfb18272.gif)\r\n\r\n<details>\r\n<summary>See the code</summary>\r\n\r\n```tsx\r\n<SelectionTool validate={({ html: [start, end] }) => start.distanceTo(end) >= 100}>\r\n  {({ html: htmlSelection }, _, isValid) => (\r\n    <SvgElement>\r\n      <SvgLine\r\n        coords={htmlSelection}\r\n        stroke={isValid ? 'teal' : 'orangered'}\r\n        strokeWidth={3}\r\n        strokeLinecap=\"round\"\r\n      />\r\n    </SvgElement>\r\n  )}\r\n</SelectionTool>\r\n```\r\n</details>\r\n\r\nExample taken from story [_Building Blocks / AxialSelectionTool / WithValidation_](https://h5web-docs.panosc.eu/?path=/story/building-blocks-axialselectiontool--with-validation):\r\n\r\n![Peek 2023-02-08 14-24](https://user-images.githubusercontent.com/2936402/217542971-0e756f10-3dfa-4d3c-b043-b736dafcb48d.gif)\r\n\r\n<details>\r\n<summary>See the code</summary>\r\n\r\n```tsx\r\n<AxialSelectionTool\r\n  axis=\"x\"\r\n  validate={({ html }) => Box.fromPoints(...html).hasMinSize(200)} // note the use of the new `Box` utility class\r\n  onValidSelection={({ data: dataSelection }) => { /* save `dataSelection` somehow */ }}\r\n>\r\n  {({ html: htmlSelection }, _, isValid) => (\r\n    <SvgElement>\r\n      <SvgRect\r\n        coords={htmlSelection}\r\n        fill={isValid ? 'teal' : 'orangered'}\r\n        fillOpacity={0.5}\r\n      />\r\n    </SvgElement>\r\n  )}\r\n</AxialSelectionTool>\r\n```\r\n</details>",
+        "html_url": "https://github.com/silx-kit/h5web/releases/tag/v7.0.0",
+        "name": "v7.0.0",
+        "release_id": 91234915,
+        "tag": "v7.0.0",
+        "tarball_url": "https://api.github.com/repos/silx-kit/h5web/tarball/v7.0.0",
+        "type": "Release",
+        "url": "https://api.github.com/repos/silx-kit/h5web/releases/91234915",
+        "value": "https://api.github.com/repos/silx-kit/h5web/releases/91234915",
+        "zipball_url": "https://api.github.com/repos/silx-kit/h5web/zipball/v7.0.0"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "loichuder",
+          "type": "User"
+        },
+        "date_created": "2022-11-15T14:38:21Z",
+        "date_published": "2022-11-15T14:41:48Z",
+        "description": "**Full Changelog**: https://github.com/silx-kit/h5web/compare/v6.6.0...v6.6.1\r\n\r\n### @h5web/app\r\n\r\n* :bug: Fix _Compression filters_ table appearing even if there was no filter when inspecting datasets #1282 \r\n\r\n### @h5web/lib\r\n\r\n* :bug: `[Histogram]` Fix interaction area not centered on the markers when interactive. #1277 \r\n* :bug: `[Histogram]` Markers can no longer be dragged beyond the histogram or each other. #1281",
+        "html_url": "https://github.com/silx-kit/h5web/releases/tag/v6.6.1",
+        "name": "v6.6.1",
+        "release_id": 83125142,
+        "tag": "v6.6.1",
+        "tarball_url": "https://api.github.com/repos/silx-kit/h5web/tarball/v6.6.1",
+        "type": "Release",
+        "url": "https://api.github.com/repos/silx-kit/h5web/releases/83125142",
+        "value": "https://api.github.com/repos/silx-kit/h5web/releases/83125142",
+        "zipball_url": "https://api.github.com/repos/silx-kit/h5web/zipball/v6.6.1"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "loichuder",
+          "type": "User"
+        },
+        "date_created": "2022-11-10T10:01:58Z",
+        "date_published": "2022-11-10T11:05:03Z",
+        "description": "**Full Changelog**: https://github.com/silx-kit/h5web/compare/v6.5.0...v6.6.0\r\n\r\n### @h5web/app\r\n\r\n* :sparkles: `< RGB, NX RGB >` Support stacks of RGB images #1259\r\n* :sparkles: `< RGB, NX RGB >` Allow transposing RGB images #1259\r\n* :sparkles: `< NX RGB >` Support custom axes #1262 \r\n* :bug: `< NX RGB >` Fix detection of RGB datasets inside `NXdata` groups #1259 \r\n* :warning: CSS variable `--h5w-domainSlider-histogram-indicator--color` was renamed `--h5w-domainSlider-histogram-marker--color`\r\n* ` < Heatmap, NX Heatmap >` In the slider to select the colormap range, selecting a range smaller than the data domain no longer reduces the slider extent\r\n\r\n### @h5web/lib\r\n\r\n* :sparkles: Expose the [`Histogram`](https://h5web-docs.panosc.eu/?path=/story/toolbar-histogram--default) component used in `DomainSlider` to display a histogram with markers selecting a range of bins. The markers can be made interactive through the `onChange` prop. #1261\r\n* \u2728 `[DomainSlider]` The domain can now be changed by clicking on the histogram markers (note that the `histogram` prop must be provided for the histogram to appear). #1267 \r\n  * :warning: CSS variable `--h5w-domainSlider-histogram-indicator--color` was renamed `--h5w-domainSlider-histogram-marker--color`\r\n* \u2728 `[VisCanvas]` New prop `showAxes` to toggle the display of axes (default: `true`). #1265 \r\n* `useCombinedDomain` Improve typings #1269 \r\n\r\n#### Experimental\r\n\r\n* :warning: `TiledHeatmapMesh` no longer renders a tooltip. Please use the new `TiledTooltipMesh` component. #1258\r\n* :sparkles: New component `TiledTooltipMesh` with prop `renderTooltip` to customise the content of the tooltip #1258 \r\n* :bug: `[TiledHeatmapMesh]` Fix regression where tiled heatmap was being flipped horizontally and vertically #1270\r\n\r\n### Screenshots\r\n\r\n#### NeXus RGB image with 4 dimensions\r\n\r\n![image](https://user-images.githubusercontent.com/2936402/201073454-33e06a3b-bdc7-4f52-acc6-05db4a632a94.png)\r\n",
+        "html_url": "https://github.com/silx-kit/h5web/releases/tag/v6.6.0",
+        "name": "v6.6.0",
+        "release_id": 82642087,
+        "tag": "v6.6.0",
+        "tarball_url": "https://api.github.com/repos/silx-kit/h5web/tarball/v6.6.0",
+        "type": "Release",
+        "url": "https://api.github.com/repos/silx-kit/h5web/releases/82642087",
+        "value": "https://api.github.com/repos/silx-kit/h5web/releases/82642087",
+        "zipball_url": "https://api.github.com/repos/silx-kit/h5web/zipball/v6.6.0"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "loichuder",
+          "type": "User"
+        },
+        "date_created": "2022-11-02T13:52:30Z",
+        "date_published": "2022-11-02T14:59:13Z",
+        "description": "**Full Changelog**: https://github.com/silx-kit/h5web/compare/v6.4.1...v6.5.0\r\n\r\n* The `\"type\"` field was removed from the `package.json` of published packages, which should accommodate more setups #1219.\r\n\r\n### @h5web/app\r\n\r\n* :sparkles: `< NX Spectrum, NX Image >` Rename visualizations \"NX Line\" and \"NX Heatmap\" respectively to reduce NeXus jargon #1244\r\n* \u2728 `[H5GroveProvider, HsdsProvider, MockProvider]` New prop `getExportURL` to generate client-side exports of datasets/slices, amongst other advanced use cases. See [README of @h5web/app](https://github.com/silx-kit/h5web/tree/v6.5.0/packages/app#getexporturl-args--url----promiseurl--blob--undefined-optional) for a complete description.\r\n* \u2728 In addition to the support of <kbd>ArrowUp</kbd> or <kbd>ArrowDown</kbd> for focused entities in the explorer, we have now support for:\r\n  * <kbd>ArrowLeft</kbd>: Focus the parent group or collapse an opened group\r\n  * <kbd>ArrowRight</kbd>: Focus the first child or expand a closed group (no effect for non-group entities)\r\n  * <kbd>Home</kbd>: Focus the root group\r\n  * <kbd>End</kbd>: Focus the last visible entity in the file tree \r\n* \u2728 Make focused entry in toolbar more visible #1234\r\n* :bug: Fix ordinate tick labels appearing underneath axis label by tweaking format, reducing font-size and adjusting axis offsets #1250 #1251 \r\n* \ud83d\udc1b `< Heatmap, NX Image, NX Scatter >` Fix a visual bug where the domain slider could seem to merge with the overflow menu #1235\r\n* Default font size for tick labels (`--h5w-tickLabels--fontSize`) and color bar bounds (`--h5w-colorBar-bounds--fontSize`) is now `0.75em` #1251 \r\n\r\n### @h5web/lib\r\n \r\n* \u2728 `[Selector, ColorMapSelector, ScaleSelector]` Add an outline to the focused entry. The color of the outline can be set via the new CSS variable `--h5w-selector-option-focus--outlineColor` . #1234\r\n* :bug: Fix ordinate tick labels appearing underneath axis label by tweaking format, reducing font-size and adjusting axis offsets #1250 #1251\r\n* :bug: `[Selector, DomainSlider]` Fix stacking of opened menus (could merge with the overflow menu of the toolbar) #1235\r\n* `[LineVis, ScatterVis]` Remove outer `1rem` margin #1251 \r\n\r\n### @h5web/h5wasm\r\n\r\n* \u2728 `[H5WasmProvider]` New prop `getExportURL` to generate client-side exports of datasets/slices. See [README of @h5web/app](https://github.com/silx-kit/h5web/tree/v6.5.0/packages/app#getexporturl-args--url----promiseurl--blob--undefined-optional) for a complete description.\r\n* :sparkles: `[H5WasmProvider]` Display dataset compression filters in metadata viewer #1253 \r\n* :sparkles: `[H5WasmProvider]` Show error when visualizing dataset compressed with external filters #1253 \r\n* :sparkles: `[H5WasmProvider]` Add basic support for datatypes #1252 \r\n\r\n### Screenshots\r\n\r\n#### NX Line, NX Heatmap\r\n\r\n![image](https://user-images.githubusercontent.com/2936402/199498639-b4b3f2c3-eca6-4cf3-ae00-9c3fb0b76159.png)\r\n\r\n#### Keyboard arrows navigation in explorer\r\n\r\n![Peek 2022-11-02 14-02](https://user-images.githubusercontent.com/2936402/199496535-fcf22e6d-f551-4bfd-b5a5-c7ba4bee642f.gif)\r\n\r\n#### Dataset compressed with external filter in [H5Wasm demo](https://h5web.panosc.eu/h5wasm?url=https%3A%2F%2Fwww.silx.org%2Fpub%2Fh5web%2Fwater_224.h5)\r\n\r\n![image](https://user-images.githubusercontent.com/2936402/199495347-1ec7538c-29e9-43c2-b53b-a6e25da9d940.png)\r\n\r\n#### Tick labels format/font-size\r\n\r\n![image](https://user-images.githubusercontent.com/2936402/199496168-0b9466d4-5385-46c6-b5d9-477d86416fa8.png)\r\n",
+        "html_url": "https://github.com/silx-kit/h5web/releases/tag/v6.5.0",
+        "name": "v6.5.0",
+        "release_id": 81053992,
+        "tag": "v6.5.0",
+        "tarball_url": "https://api.github.com/repos/silx-kit/h5web/tarball/v6.5.0",
+        "type": "Release",
+        "url": "https://api.github.com/repos/silx-kit/h5web/releases/81053992",
+        "value": "https://api.github.com/repos/silx-kit/h5web/releases/81053992",
+        "zipball_url": "https://api.github.com/repos/silx-kit/h5web/zipball/v6.5.0"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "loichuder",
+          "type": "User"
+        },
+        "date_created": "2022-10-13T12:04:03Z",
+        "date_published": "2022-10-14T07:08:14Z",
+        "description": "**Full Changelog**: https://github.com/silx-kit/h5web/compare/v6.4.0...v6.4.1\r\n\r\n### @h5web/app\r\n\r\n*  Prevent scroll of containers when navigating the explorer with the keyboard #1230 \r\n*  Added visual cue when moving through dropdown entries in the toolbar\r\n\r\n### @h5web/lib\r\n\r\n*  `[Selector]` Change background color when focusing option. The color can be set via `--h5w-selector-option-hover--bgColor`\r\n",
+        "html_url": "https://github.com/silx-kit/h5web/releases/tag/v6.4.1",
+        "release_id": 79769908,
+        "tag": "v6.4.1",
+        "tarball_url": "https://api.github.com/repos/silx-kit/h5web/tarball/v6.4.1",
+        "type": "Release",
+        "url": "https://api.github.com/repos/silx-kit/h5web/releases/79769908",
+        "value": "https://api.github.com/repos/silx-kit/h5web/releases/79769908",
+        "zipball_url": "https://api.github.com/repos/silx-kit/h5web/zipball/v6.4.1"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "axelboc",
+          "type": "User"
+        },
+        "date_created": "2022-10-12T09:17:55Z",
+        "date_published": "2022-10-12T10:37:49Z",
+        "description": "**Full Changelog**: https://github.com/silx-kit/h5web/compare/v6.3.0...v6.4.0\r\n\r\n### @h5web/app\r\n\r\n* \u2728 When an entity in the explorer has focus (as indicated by a focus outline), pressing <kbd>ArrowUp</kbd> or <kbd>ArrowDown</kbd> on the keyboard now moves focus to the next or previous entity (similarly to <kbd>Tab</kbd> and <kbd>Shift+Tab</kbd>). Pressing <kbd>Enter</kbd> (or <kbd>Space</kbd>) then selects the entity.\r\n* \u2728 `< NX Image >` Enable or disable \"keep ratio\" automatically based on axis units:\r\n  * if the `units` attributes of the two axis datasets are equal, enable \"keep ratio\";\r\n  * if the `units` attributes differ or only one `units` attribute is present, disable \"keep ratio\";\r\n  * if no `units` attributes are present, apply the user's preferred setting as before.\r\n* \ud83d\udc1b `< Scalar >` Don't collapse line breaks and tabs #1217 \r\n* \ud83d\udc1b `< Raw, Scalar >` Handle overflowing content better #1228 \r\n* `< NX Spectrum, NX Image, NX Scatter >` `SILX_style` options are no longer persisted across visualizations. When the user selects a plottable NeXus group with a `SILX_style` attribute, the plot configuration options suggested by the attribute (signal/axes scale types) now override the user's preferred options _only_ for the current visualization and until the user decides otherwise. #1213 \r\n* `[H5GroveProvider]`  Improve error message when user does not have permission to access the file #1218\r\n  * \u26a0\ufe0f This change requires [h5grove@1.2.0](https://github.com/silx-kit/h5grove/releases/tag/v1.2.0) #1218\r\n* `[App]` Add prop [`propagateErrors`](https://github.com/silx-kit/h5web/blob/v6.4.0/packages/app/README.md#propagateerrors-boolean-optional), which defaults to `false`, to control whether errors should be let through the top-level error boundary in order to be handled by the consumer application #1211 \r\n* `[App]` Focus the explorer on first render #1221 \r\n\r\n### @h5web/lib\r\n\r\n* \u2728 New [`AxialSelectionTool`](https://h5web-docs.panosc.eu/?path=/story/building-blocks-selection--axial-selection) component to allow drawing selections along a given axis #1225 \r\n* \u2728 Add tooltip to experimental [`TiledHeatmapMesh`](https://h5web-docs.panosc.eu/?path=/story/experimental-tiledheatmapmesh--default) component\r\n* `[ScatterVis]` Make `colorMap` prop optional (now defaults to `'Viridis'`) #1210 \r\n* `[TooltipMesh]` Add prop `size` to allow resizing the mesh #1193\r\n",
+        "html_url": "https://github.com/silx-kit/h5web/releases/tag/v6.4.0",
+        "name": "v6.4.0",
+        "release_id": 79608733,
+        "tag": "v6.4.0",
+        "tarball_url": "https://api.github.com/repos/silx-kit/h5web/tarball/v6.4.0",
+        "type": "Release",
+        "url": "https://api.github.com/repos/silx-kit/h5web/releases/79608733",
+        "value": "https://api.github.com/repos/silx-kit/h5web/releases/79608733",
+        "zipball_url": "https://api.github.com/repos/silx-kit/h5web/zipball/v6.4.0"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "loichuder",
+          "type": "User"
+        },
+        "date_created": "2022-09-27T09:41:57Z",
+        "date_published": "2022-09-27T14:54:42Z",
+        "description": "**Full Changelog**: https://github.com/silx-kit/h5web/compare/v6.2.1...v6.3.0\r\n\r\n### @h5web/app\r\n\r\n* :sparkles: `[App]` Add prop `disableDarkMode` to disable automatic switch to dark mode #1190\r\n* :sparkles: `[H5WasmProvider]` Support passing filename with slashes #1203\r\n\r\n### @h5web/lib\r\n\r\n* :sparkles: `[LineVis]` Make auxiliary labels optional #1207\r\n\r\n",
+        "html_url": "https://github.com/silx-kit/h5web/releases/tag/v6.3.0",
+        "name": "v6.3.0",
+        "release_id": 78266700,
+        "tag": "v6.3.0",
+        "tarball_url": "https://api.github.com/repos/silx-kit/h5web/tarball/v6.3.0",
+        "type": "Release",
+        "url": "https://api.github.com/repos/silx-kit/h5web/releases/78266700",
+        "value": "https://api.github.com/repos/silx-kit/h5web/releases/78266700",
+        "zipball_url": "https://api.github.com/repos/silx-kit/h5web/zipball/v6.3.0"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "axelboc",
+          "type": "User"
+        },
+        "date_created": "2022-09-06T09:16:49Z",
+        "date_published": "2022-09-06T09:45:37Z",
+        "description": "**Full Changelog**: https://github.com/silx-kit/h5web/compare/v6.2.0...v6.2.1\r\n\r\n### @h5web/lib\r\n\r\n- :warning: Bump minimal peer dependency version of `three` from 0.120 to 0.138 #1194 (oversight from #1170)\r\n  - \ud83d\udc49 **Please upgrade `three` if you haven't already done so when installing `@h5web/lib` v6.2.0**\r\n\r\n### @h5web/h5wasm\r\n \r\n- :bug: Fix display of attribute values in metadata viewer for [several dtypes](https://h5web.panosc.eu/h5wasm?url=https%3A%2F%2Fwww.silx.org%2Fpub%2Fh5web%2Fdtype_attrs.h5%20), including `int64`, `float`, and `complex` #1191\r\n- :bug: Fix `Unknown` dtype in metadata viewer for string datasets #1192",
+        "html_url": "https://github.com/silx-kit/h5web/releases/tag/v6.2.1",
+        "name": "v6.2.1",
+        "release_id": 76356080,
+        "tag": "v6.2.1",
+        "tarball_url": "https://api.github.com/repos/silx-kit/h5web/tarball/v6.2.1",
+        "type": "Release",
+        "url": "https://api.github.com/repos/silx-kit/h5web/releases/76356080",
+        "value": "https://api.github.com/repos/silx-kit/h5web/releases/76356080",
+        "zipball_url": "https://api.github.com/repos/silx-kit/h5web/zipball/v6.2.1"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "loichuder",
+          "type": "User"
+        },
+        "date_created": "2022-08-11T13:06:25Z",
+        "date_published": "2022-08-11T13:18:20Z",
+        "description": "**Full Changelog**: https://github.com/silx-kit/h5web/compare/v6.1.0...v6.2.0\r\n\r\n### @h5web/app\r\n\r\n- :sparkles: `<Matrix>` Add support for nD datasets with `Compound` HDF5 type #1169  \r\n- :sparkles: `<Matrix>` Numbers formatting can be set to scientific notation (default), fixed-point notation, or automatic #1183 \r\n- :bug: `<Heatmap, Line, NX>` Fix superimposition of reset zoom button with canvas elements #1184 \r\n\r\n### @h5web/lib\r\n\r\n- :warning: **Only compatible with `three>=0.138`**\r\n- :bug: `[VisCanvas]` Fix superimposition of floating toolbar with canvas elements  #1184 \r\n\r\n### @h5web/h5wasm\r\n \r\n- :sparkles: Add support for datasets with `int64` values #1179 \r\n- :bug: Fix support of 2D boolean datasets #1179 ",
+        "html_url": "https://github.com/silx-kit/h5web/releases/tag/v6.2.0",
+        "release_id": 74195543,
+        "tag": "v6.2.0",
+        "tarball_url": "https://api.github.com/repos/silx-kit/h5web/tarball/v6.2.0",
+        "type": "Release",
+        "url": "https://api.github.com/repos/silx-kit/h5web/releases/74195543",
+        "value": "https://api.github.com/repos/silx-kit/h5web/releases/74195543",
+        "zipball_url": "https://api.github.com/repos/silx-kit/h5web/zipball/v6.2.0"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "axelboc",
+          "type": "User"
+        },
+        "date_created": "2022-07-13T06:53:43Z",
+        "date_published": "2022-07-13T07:03:14Z",
+        "description": "**Full Changelog**: https://github.com/silx-kit/h5web/compare/v6.0.1...v6.1.0\r\n\r\n### @h5web/app\r\n\r\n- :sparkles: `<Matrix>` Add support for 1D datasets with `Compound` HDF5 type #1161 \r\n  \r\n  ![image](https://user-images.githubusercontent.com/42204205/177741485-bc3ae3e7-6b3e-4f58-9439-2984cd6c5a8c.png)\r\n\r\n- :sparkles: `<NX Spectrum>` Add support for auxiliary signals with [associated error datasets](https://h5web-docs.panosc.eu/?path=/story/visualizations-linevis--auxiliary-errors) (e.g. datasets `secondary` and `secondary_errors` in the screenshot below) #1162 \r\n\r\n  ![image](https://user-images.githubusercontent.com/42204205/177788143-0083a48b-46e0-43e6-a06a-cd72d0f26b1b.png)\r\n\r\n### @h5web/lib\r\n \r\n- `[LineVis]` Entries of the `auxiliaries` array props can now include an optional `errors` dataset #1162\r\n- `[MatrixVis]` Add prop `columnHeaders` to customize the labels of the column header cells #1161 \r\n- `[Pan]` Add prop `id` to override the internal interaction ID `'Pan'`. This allows using [multiple `Pan` components](https://h5web-docs.panosc.eu/?path=/story/building-blocks-interactions-pan--two-components) with different mouse button/modifier key combinations. #1166 \r\n- `getDomains` and `useDomains` now accept a third parameter `errorArrays`, which accepts an optional array of numeric error arrays #1162 ",
+        "html_url": "https://github.com/silx-kit/h5web/releases/tag/v6.1.0",
+        "name": "v6.1.0",
+        "release_id": 71798701,
+        "tag": "v6.1.0",
+        "tarball_url": "https://api.github.com/repos/silx-kit/h5web/tarball/v6.1.0",
+        "type": "Release",
+        "url": "https://api.github.com/repos/silx-kit/h5web/releases/71798701",
+        "value": "https://api.github.com/repos/silx-kit/h5web/releases/71798701",
+        "zipball_url": "https://api.github.com/repos/silx-kit/h5web/zipball/v6.1.0"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "axelboc",
+          "type": "User"
+        },
+        "date_created": "2022-07-07T06:49:08Z",
+        "date_published": "2022-07-11T11:11:00Z",
+        "description": "**Full Changelog**: https://github.com/silx-kit/h5web/compare/v6.0.0...v6.0.1\r\n\r\n### @h5web/app\r\n\r\n- :bug: Fix detection of pressed modifier keys when window regains focus #1153 \r\n\r\n### @h5web/lib\r\n\r\n- :bug: `[Pan, SelectToZoom, SelectionTool]` Fix detection of pressed modifier keys when the `modifierKey` prop changes #1153 \r\n- :bug: Fix detection of pressed modifier keys when window regains focus #1153 ",
+        "html_url": "https://github.com/silx-kit/h5web/releases/tag/v6.0.1",
+        "name": "v6.0.1",
+        "release_id": 71683973,
+        "tag": "v6.0.1",
+        "tarball_url": "https://api.github.com/repos/silx-kit/h5web/tarball/v6.0.1",
+        "type": "Release",
+        "url": "https://api.github.com/repos/silx-kit/h5web/releases/71683973",
+        "value": "https://api.github.com/repos/silx-kit/h5web/releases/71683973",
+        "zipball_url": "https://api.github.com/repos/silx-kit/h5web/zipball/v6.0.1"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "loichuder",
+          "type": "User"
+        },
+        "date_created": "2022-07-06T11:53:36Z",
+        "date_published": "2022-07-06T12:03:04Z",
+        "description": "**Full Changelog**: https://github.com/silx-kit/h5web/compare/v5.0.0...v6.0.0\r\n\r\n- :tada: URL can now be supplied in [H5Wasm demo](https://h5web.panosc.eu/h5wasm) to view remote files #1147\r\n\r\n### @h5web/app\r\n\r\n- :warning: **Breaking change** `[H5GroveProvider]` now accepts the full axios config as prop rather than only params #1139 \r\n- :sparkles: `[H5GroveProvider]` Parse dtype of compound datasets as `Compound` rather than `Unknown`. Field dtypes are also parsed and can be viewed in the `Raw` inspection. Requires [h5grove@1.1.0](https://github.com/silx-kit/h5grove/releases/tag/v1.1.0). #1137 \r\n- :sparkles: `< Heatmap, Line, NX, RGB >` Allow select-to-zoom on a single axis:\r\n  - <kbd>Ctrl+Alt+Drag</kbd> for zoom on X\r\n  - <kbd>Ctrl+Shift+Drag</kbd> for zoom on Y\r\n\r\n### @h5web/lib\r\n\r\n- :sparkles: New [`AxialSelectToZoom`](https://h5web-docs.panosc.eu/?path=/story/building-blocks-interactions-axialselecttozoom--default-x) component to allow selection zoom on a single axis #1145\r\n- :sparkles: New [`DefaultInteractions`](https://h5web-docs.panosc.eu/?path=/story/building-blocks-interactions-defaultinteractions--default) component that combines all of the built-in interactions used in the core visualizations (pan, zoom, axial zoom, select-to-zoom, and axial select-to-zoom) #1145\r\n- :sparkles: `[Pan, Zoom, SelectionTool, SelectToZoom]` Prop `modifierKey` now accepts an array of  keys to allow triggering the interaction on a combination of [multiple modifier keys](https://h5web-docs.panosc.eu/?path=/story/building-blocks-interactions-zoom--multiple-modifier-keys) #1144\r\n- :sparkles: `[Pan]` Prop `button` now accepts [multiple buttons](https://h5web-docs.panosc.eu/?path=/story/building-blocks-interactions-pan--two-buttons) that can trigger the pan #1149 \r\n- :sparkles: `[DataCurve]` Add prop `onDataPointClick`, `onDataPointEnter`, `onDataPointLeave` to allow responding to [clicks and hovers on data points](https://h5web-docs.panosc.eu/?path=/story/building-blocks-datacurve--interactive) #1146 #1154 #1156 \r\n- :sparkles: `[DataCurve]` Add prop `glyphType` and `glyphSize` to tune the glyph aspect #1157 \r\n- :sparkles: `[VisCanvas]` Add prop `raycasterThreshold` to change the interaction radius for [Points](https://threejs.org/docs/#api/en/core/Raycaster.params). This threshold is adapted dynamically when zooming. #1155 \r\n- :bug: Warn when trying to register two interactions with the same internal ID (for instance, when trying to render two `Pan` components at the same time) #1151 \r\n- Export `MouseButton` and `GlyphType` enums #1142 #1157  \r\n",
+        "html_url": "https://github.com/silx-kit/h5web/releases/tag/v6.0.0",
+        "name": "v6.0.0",
+        "release_id": 70651052,
+        "tag": "v6.0.0",
+        "tarball_url": "https://api.github.com/repos/silx-kit/h5web/tarball/v6.0.0",
+        "type": "Release",
+        "url": "https://api.github.com/repos/silx-kit/h5web/releases/70651052",
+        "value": "https://api.github.com/repos/silx-kit/h5web/releases/70651052",
+        "zipball_url": "https://api.github.com/repos/silx-kit/h5web/zipball/v6.0.0"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "axelboc",
+          "type": "User"
+        },
+        "date_created": "2022-06-15T11:50:45Z",
+        "date_published": "2022-06-15T11:53:32Z",
+        "description": "**Full Changelog**: https://github.com/silx-kit/h5web/compare/v4.1.0...v5.0.0\r\n\r\n- :tada: H5Web versions now have [their own DOIs](https://zenodo.org/record/6514375) for citation purposes. You can find the latest DOI on the Zenodo badge at the top of the [repo's README](https://github.com/silx-kit/h5web) #1114\r\n- The [H5Wasm demo](https://h5web.panosc.eu/h5wasm) is now more permissive: it lets you drop files with any extensions and doesn't require files to start with the HDF5 file signature (aka _magic number_) #1131 \r\n- The [`TiledHeatmapMesh` stories](https://h5web-docs.panosc.eu/?path=/story/experimental-tiledheatmapmesh--default) are a lot more fluid, now that the mandlebrot computations are performed in Web Workers #1124 \r\n\r\n### @h5web/app\r\n\r\n- :warning: **Breaking change** `[H5GroveProvider]` now requires [h5grove@1.0.0](https://github.com/silx-kit/h5grove/releases/tag/v1.0.0) #1128\r\n- :sparkles: Constrain panning and select-to-zoom interactions to left mouse button only #1129\r\n- :sparkles: Invert single-hue colormaps (dark to light instead of light to dark) for consistency with perceptually-uniform colormaps like Viridis #1106\r\n- :sparkles: `[H5WasmProvider]` Improve parsing of dataset and attribute dtypes (integer, float, string) #1098\r\n- :sparkles: `[H5WasmProvider]` Add support for complex and boolean dtypes #1111 #1112\r\n- :sparkles: `[H5WasmProvider]` Support requesting dataset slices #1103\r\n- :bug: `[H5WasmProvider]` Show soft and external links as unresolved entities in metadata viewer #1101\r\n- :bug: Resolve issues with TypeScript types #1099 \r\n\r\n### @h5web/lib\r\n\r\n- :warning: **Breaking change** Event handlers registered via [`useCanvasEvents`](https://h5web-docs.panosc.eu/?path=/story/utilities--page#usecanvasevents) now receive the coordinates of interaction events in multiple coordinate spaces: `htmlPt`, `cameraPt`, `worldPt` (:warning: renamed from `unprojectedPoint`), and `dataPt` (which can save you from calling `worldToData` yourself). #1116\r\n- :sparkles: Invert single-hue interpolators (dark to light instead of light to dark) #1106\r\n- :sparkles: `[Annotation, Html]` Add prop `overflowCanvas`, which defaults to `false`, to control whether the children of `Html` can overflow the canvas  #1113\r\n- :sparkles: Expose and document the following hook and utilities that were previously experimental: #1136\r\n  - **[`useCameraState`](https://h5web-docs.panosc.eu/?path=/story/utilities--page#usecamerastate)**, which can re-render a component by updating a local state as the user pans/zooms;\r\n  - four [camera-based utilities](https://h5web-docs.panosc.eu/?path=/story/utilities--page#camera-based-utilities):, which are meant to be called inside `useCameraState` and DOM event handlers:\r\n    - `worldToCamera` to convert a point from world space to **camera** space;\r\n    - `dataToHtml` to convert a point from data space to **HTML** space;\r\n    - `getWorldFOV` to compute the field of view of the camera in **world** space; and\r\n    - `getVisibleDomains` to compute the field of view of the camera in **data** space.\r\n- :bug: `[Annotation, Html]` Prevent annotations and other Html elements from overflowing the canvas #1108\r\n- :bug: `[ScatterVis]` Fix tooltip not appearing for first point #1115\r\n- `[Pan, SelectToZoom, SelectionTool]` Constrain interaction to a single mouse button: #1129\r\n  - `[Pan]` left button by default, but configurable to either left or middle via new `button` prop;\r\n  - `[SelectToZoom, SelectionTool]` left button, not configurable.\r\n- Add utility `getAxisValues`, and memoised hook `useAxisValues`, to generate an array of axis values of a requested length (or to convert an existing typed array of values to a plain JS array) #1123 \r\n- `[SelectionTool]` Render prop and event callbacks now receive the start and end points of the selection in world space in addition to data space #1135 \r\n",
+        "html_url": "https://github.com/silx-kit/h5web/releases/tag/v5.0.0",
+        "name": "v5.0.0",
+        "release_id": 69272208,
+        "tag": "v5.0.0",
+        "tarball_url": "https://api.github.com/repos/silx-kit/h5web/tarball/v5.0.0",
+        "type": "Release",
+        "url": "https://api.github.com/repos/silx-kit/h5web/releases/69272208",
+        "value": "https://api.github.com/repos/silx-kit/h5web/releases/69272208",
+        "zipball_url": "https://api.github.com/repos/silx-kit/h5web/zipball/v5.0.0"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "axelboc",
+          "type": "User"
+        },
+        "date_created": "2022-05-03T14:02:33Z",
+        "date_published": "2022-05-03T14:22:24Z",
+        "description": "**Full Changelog**: https://github.com/silx-kit/h5web/compare/v4.0.0...v4.1.0\r\n\r\n\ud83c\udf1f The demo site has a **[brand new homepage](https://h5web.panosc.eu/)**! Accessing the demos of the built-in data providers is now much simpler. #1083 \r\n\r\n### \u2728 NEW PACKAGE: @h5web/h5wasm\r\n\r\n- \u2728 New `H5WasmProvider` by @bmaranville to read HDF5 files straight in the browser. Try opening an HDF5 file from your local machine in H5Web in [our new demo](https://h5web.panosc.eu/h5wasm)! #1031 #1080\r\n- \ud83d\udc49 Check out the [package's `README`](https://github.com/silx-kit/h5web/tree/main/packages/h5wasm) to learn more about installing and using this new package and provider.\r\n\r\n### @h5web/app\r\n\r\n- \u2728 Display chunk shape and compression info in dataset metadata when supplied by data provider (currently `H5GroveProvider`) #1084\r\n- \ud83d\udc1b `< Heatmap, NX Image, RGB >` Make sure vis ratio is respected when \"keep ratio\" becomes enabled and user had previously zoomed in on an axis #1081\r\n- \ud83d\udc1b Fix zooming out requiring one extra mouse wheel turn #1095 \r\n- New `useDataContext` hook to allow using the built-in data providers in custom applications. See [@h5web/app's `README`](https://github.com/silx-kit/h5web/blob/main/packages/app/README.md#context) for more information and usage examples. #1090\r\n- Support NeXus v2 specification for [finding plotable data](https://manual.nexusformat.org/datarules.html#find-plottable-data-v2), in which the `signal` and `axes` attributes are located on the signal dataset rather than on the `NXdata` group #1060 #1087\r\n\r\n### @h5web/lib\r\n\r\n- \ud83d\udc1b `[VisCanvas]`  Make sure vis ratio is respected when \"keep ratio\" becomes enabled and user had previously zoomed in on an axis  #1081\r\n- \ud83d\udc1b `[Annotation]` Fix positioning of annotation on zoom when `scaleOnZoom` is enabled #1074 \r\n- \ud83d\udc1b `[Zoom, XAxisZoom, YAxisZoom]` Fix zooming out requiring one extra mouse wheel turn #1095 \r\n- `[Annotation]` Add prop `center` to center the annotation on the given coordinates #1074\r\n- `[Pan]` Stop panning temporarily if configured `modifierKey` is released #1075\r\n\r\n### Screenshots\r\n\r\n#### Homepage for H5Web's demo site\r\n\r\n![Demo homepage](https://user-images.githubusercontent.com/2936402/165323312-81ac4cd4-2922-42a2-85d8-e0be604b251b.png)\r\n\r\n#### H5Wasm demo\r\n\r\n![H5Wasm demo](https://user-images.githubusercontent.com/2936402/164713844-9c34d792-7323-481d-84b6-0a510900941e.gif)\r\n\r\n#### Chunk shape and compression info with H5Grove\r\n\r\n![image](https://user-images.githubusercontent.com/2936402/166464565-ba6369f1-ac70-406e-85b0-b8df810b9421.png)\r\n",
+        "html_url": "https://github.com/silx-kit/h5web/releases/tag/v4.1.0",
+        "name": "v4.1.0",
+        "release_id": 65898213,
+        "tag": "v4.1.0",
+        "tarball_url": "https://api.github.com/repos/silx-kit/h5web/tarball/v4.1.0",
+        "type": "Release",
+        "url": "https://api.github.com/repos/silx-kit/h5web/releases/65898213",
+        "value": "https://api.github.com/repos/silx-kit/h5web/releases/65898213",
+        "zipball_url": "https://api.github.com/repos/silx-kit/h5web/zipball/v4.1.0"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "loichuder",
+          "type": "User"
+        },
+        "date_created": "2022-04-13T13:00:42Z",
+        "date_published": "2022-04-13T15:17:37Z",
+        "description": "**Full Changelog**: https://github.com/silx-kit/h5web/compare/v3.0.2...v4.0.0\r\n\r\n### @h5web/app\r\n\r\n- \u26a0\ufe0f **Breaking change** `[App]` Prop `startFullscreen` is renamed to [`explorerOpen`](https://github.com/silx-kit/h5web/tree/main/packages/app#exploreropen-boolean-optional), as the term \"full screen\" was misleading. Note that the logic is inverted: the prop now defaults to `true` and has to be set to `false` in order to close the explorer on first render. #1042\r\n  - The query param to pass in the URL to start the demo [with the explorer closed](https://h5web.panosc.eu/?wide) is now called `wide` instead of `fullscreen`. If your app uses a query param called `fullscreen`, you may want to rename it as well.\r\n- \u2728 New `< NX Scatter >` visualization for NXdata groups with 1D signal and two axis datasets. #1040\r\n- \u2728 Add button in top bar to tell browser to go full screen #1042 \r\n- \u2728 `< NX Spectrum >` Show auxiliary values with colored handles in tooltip #1041 #1049\r\n- \ud83d\udc1b `< Heatmap, Line, RGB, NX >` Fix tooltip remaining visible while dragging #1039\r\n- `< NX Image >` Allow switching to `< NX Spectrum >` when interpretation is not known or specified #1016 \r\n- `< Heatmap, RGB, NX Image >` When drawing a zoom selection box with a ratio constraint (with <kbd>Ctrl</kbd> + drag):\r\n  - the effective zoom box now corresponds exactly to the area that will be zoomed on. #1033 \r\n  - the effective zoom box is now centred around the selection box #1059 \r\n\r\n### @h5web/lib\r\n\r\n- \u26a0\ufe0f **Breaking change** `[LineVis]` Prop `auxArrays` is renamed to `auxiliaries` and now accepts an array of objects to allow passing a label for each auxiliary array #1041\r\n  - \u2728 This allows the tooltip to show the [auxiliaries' labels, values and colors](https://h5web-docs.panosc.eu/?path=/story/visualizations-linevis--auxiliary-arrays)\r\n- \u26a0\ufe0f **Breaking change** `[ScatterVis]` Props `dataAbscissas` and `abscissaLabel` are removed in favour of the new `abscissaParams` prop, and props `dataOrdinates` and `ordinateLabel` are removed in favour of `ordinateParams` #1047\r\n  - \u2728 This brings support for [non-linear axis scale types](https://h5web-docs.panosc.eu/?path=/story/visualizations-scattervis--axis-scale-types) on the scatter visualization\r\n- \u26a0\ufe0f **Breaking change** `[Html]` [`Html`](https://h5web-docs.panosc.eu/?path=/story/building-blocks-html--default) now focuses solely on rendering HTML elements from inside `VisCanvas`. `groupProps`, `followCamera` and `scaleOnZoom` props were therefore removed. The HTML elements are rendered in a `div` that is appended next to the `canvas` element by default. Prop `container` can be used to provide a different container for the `div`.  #1036 \r\n  - If you were using `Html` to overlay HTML on top of the entire canvas, please look at the new [`Overlay`](https://h5web-docs.panosc.eu/?path=/story/building-blocks-overlay--default) component instead.\r\n  - If you were using `Html` with `followCamera` and/or `scaleOnZoom`, please look at [`Annotation`](https://h5web-docs.panosc.eu/?path=/story/visualizations-heatmapvis-display--with-annotation). `Annotation` is positioned in the data space and therefore follows the camera automatically; it also has a `scaleOnZoom` prop.\r\n- \u26a0\ufe0f **Breaking change** `[HeatmapMesh]` The mesh is no longer automatically flipped when `ordinateConfig.flip` is `true` as this behavior could be undesirable #1052 . The new `scale` prop can be used to re-implement this behavior:\r\n    ```tsx\r\n    <HeatmapMesh scale={[1, ordinateConfig.flip ? -1 : 1, 1] ... />\r\n    ```\r\n- \u26a0\ufe0f **Breaking change** `TiledHeatmap` renamed to [`TiledHeatmapMesh`](https://h5web-docs.panosc.eu/?path=/story/building-blocks-tiledheatmapmesh--default) #1069\r\n- \u2728 New component [`Overlay`](https://h5web-docs.panosc.eu/?path=/story/building-blocks-overlay--default) to render HTML elements inside a `div` that covers the entire canvas #1030\r\n- \u2728 New component [`FloatingControl`](https://h5web-docs.panosc.eu/?path=/story/toolbar-floatingtoolbar--default) to add HTML controls to the floating toolbar in the bottom-right corner of the canvas (such as buttons, legend...) #1030\r\n- \u2728 `[HeatmapVis, LineVis, ScatterVis]` Add prop `interactions` to [override the default interactions configuration](https://h5web-docs.panosc.eu/?path=/story/visualizations-heatmapvis--change-interaction-keys); each interaction can now be fully removed or temporarily disabled and can be assigned to a different modifier key (or no modifier key at all): #1023\r\n    ```tsx\r\n    interactions={{\r\n      Pan: false,\r\n      Zoom: { disabled: isZoomDisabled, modifierKey: 'Control' },\r\n      SelectToZoom: { modifierKey: undefined }\r\n    }}\r\n    ```\r\n- \u2728 `[ScatterVis]` [Show tooltip](https://h5web-docs.panosc.eu/?path=/story/visualizations-scattervis--default) when hovering scatter points #1070\r\n- \ud83d\udc1b `[SelectionLine, SelectionRect]` Lines and rectangles now remain at the right coordinates in the data space regardless of zoom/pan #1067\r\n- \ud83d\udc1b `[Toolbar]` Fix toolbar menus appearing underneath visualizations #1022 \r\n- \ud83d\udc1b `[DomainSlider, Histogram]` Fix support for typed histogram values #1024\r\n- \ud83d\udc1b `[ScatterVis]` Make `children` prop optional #1027\r\n- \ud83d\udc1b `[ScatterVis]` Fix undesirable outlines on scatter points #1071\r\n- \ud83d\udc1b `[TooltipMesh, HeatmapVis, LineVis]` Fix tooltip remaining visible while dragging #1039\r\n- \ud83d\udcdc The `AxisSystemContext` documentation has moved to a [dedicated page](https://h5web-docs.panosc.eu/?path=/story/context--page).\r\n- \ud83d\udcdc The `DataCurve` component is now [officially documented](https://h5web-docs.panosc.eu/?path=/story/building-blocks-datacurve--default)\r\n- `[ScatterVis]` Add prop `onPointClick` to run a callback when a scatter point is clicked #1051 \r\n- `[TiledHeatmapMesh]` Add support for flipped axes and non-index axes #1035 #1052 \r\n- `[SelectToZoom]` The ratio-constrained zoom rectangle is now [centered around](https://h5web-docs.panosc.eu/?path=/story/building-blocks-selecttozoom--keep-ratio) the selection rectangle and bound to the vis size when possible #1033 #1059 \r\n- `[XAxisZoom, YAxisZoom, SelectToZoom]` Remove default value for `modifierKey` prop so it can be left unset #1020\r\n- `[Pan, Zoom, XAxisZoom, YAxisZoom, SelectToZoom]` Pressing a modifier key that is not assigned to any interaction component no longer prevents interactions from taking effect #1020\r\n- `[SelectionTool, SelectToZoom]` Selection can be canceled by pressing <kbd>Esc</kbd> #1056 \r\n- `[SelectionTool]` Add prop `id`, defaulting to `\"Selection\"`. When using multiple `SelectionTool` components in the same `VisCanvas` (e.g. select-to-zoom and profile selection), please use a different `id` for each to ensure that they both function properly. #1023 \r\n- `[Separator]` Toolbar separator can now be passed any HTML attributes #1042\r\n\r\n### Screenshots\r\n\r\n#### New `NX Scatter` visusalization\r\n\r\n![image](https://user-images.githubusercontent.com/42204205/162920515-7fc8a75c-ccb1-45dc-8d88-a10bc45b02d6.png)\r\n\r\n#### Centered zoom box with ratio constraint \r\n\r\n![Improved ratio-constrained](https://user-images.githubusercontent.com/42204205/162921591-62f39753-58b6-484a-b346-e932487d00f4.gif)\r\n\r\n#### Auxiliary values and colors in `NX Spectrum` tooltip\r\n\r\n![image](https://user-images.githubusercontent.com/2936402/163154223-2af450c9-c87f-4c7e-b897-83395c046405.png)\r\n\r\n#### Button to go full screen\r\n\r\n![image](https://user-images.githubusercontent.com/2936402/163153947-9825e5a5-3835-4ac2-820a-1a2c06116431.png)\r\n\r\n#### `ScatterVis` tooltip\r\n\r\n![image](https://user-images.githubusercontent.com/2936402/163157080-9d80a978-82cd-4391-9c3f-1fa7f4a41dfe.png)",
+        "html_url": "https://github.com/silx-kit/h5web/releases/tag/v4.0.0",
+        "name": "v4.0.0",
+        "release_id": 63648365,
+        "tag": "v4.0.0",
+        "tarball_url": "https://api.github.com/repos/silx-kit/h5web/tarball/v4.0.0",
+        "type": "Release",
+        "url": "https://api.github.com/repos/silx-kit/h5web/releases/63648365",
+        "value": "https://api.github.com/repos/silx-kit/h5web/releases/63648365",
+        "zipball_url": "https://api.github.com/repos/silx-kit/h5web/zipball/v4.0.0"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "axelboc",
+          "type": "User"
+        },
+        "date_created": "2022-03-14T12:43:27Z",
+        "date_published": "2022-03-14T12:58:18Z",
+        "description": "**Full Changelog**: https://github.com/silx-kit/h5web/compare/v3.0.0...v3.0.2\r\n\r\n### @h5web/app, @h5web/lib\r\n\r\n- \ud83d\udc1b Fix compatibility issue with Create React App v5 50c9ef8e8bebeace2ea54b7c925a54c69271542a\r\n- \ud83d\udc1b Fix flickering of selection #1011 \r\n- \ud83d\udc1b Fix selection tool not working when window doesn't have focus #1011\r\n- New CSS custom property to customize color of shortcuts in interactivity help popup: `--h5w-interactionHelp-shortcut--color` #1012 ",
+        "html_url": "https://github.com/silx-kit/h5web/releases/tag/v3.0.2",
+        "name": "v3.0.2",
+        "release_id": 61755958,
+        "tag": "v3.0.2",
+        "tarball_url": "https://api.github.com/repos/silx-kit/h5web/tarball/v3.0.2",
+        "type": "Release",
+        "url": "https://api.github.com/repos/silx-kit/h5web/releases/61755958",
+        "value": "https://api.github.com/repos/silx-kit/h5web/releases/61755958",
+        "zipball_url": "https://api.github.com/repos/silx-kit/h5web/zipball/v3.0.2"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "axelboc",
+          "type": "User"
+        },
+        "date_created": "2022-03-11T14:43:04Z",
+        "date_published": "2022-03-14T12:57:37Z",
+        "description": "**Full Changelog**: https://github.com/silx-kit/h5web/compare/v2.0.0...v3.0.0\r\n\r\n### :point_right: [@h5web/app](https://www.npmjs.com/package/@h5web/app) and [@h5web/lib](https://www.npmjs.com/package/@h5web/lib) are now compatible with Create React App v5! #1000 \ud83c\udf89 \r\n\r\n### @h5web/app\r\n\r\n- \u2728 `< Heatmap, Line, NX, RGB >` Add **select-to-zoom feature**: press <kbd>Ctrl</kbd> and drag the pointer to draw a selection on which to zoom #981 #990\r\n- \u2728 `< Heatmap, Line, NX, RGB >` Show **button to reset zoom** once user starts to zoom in #991\r\n- \u2728 `< Heatmap, Line, NX, RGB >` Show **help button** in toolbar to document interactivity features #1005 \r\n- \u2728 `< Line, NX Spectrum >` Change default curve colors to increase contrast and help distinguish auxiliary curves from one another. Also provide more distinct colors in dark mode. #1008 \r\n- \u2728 `< Matrix >` Improve sizing of cells:\r\n  - Compute widths of content cells based on dataset type to avoid cropping (notably for fixed-length strings and booleans) #980\r\n  - Add toolbar control for users to be able to adjust width of content cells (notably when width cannot be computed programmatically - e.g. with variable-length strings) #980\r\n  - Reduce width of header column #976\r\n  - Crop overflowing cell contents (instead of wrapping) #980\r\n  - \ud83d\udc47 See `@h5web/lib` below for changes to CSS custom properties for customization purposes #980\r\n- \ud83d\udc1b Fix responsiveness of dimension mapper/slicer #975\r\n- \ud83d\udc1b Fix stretching of ordinate axis on Chrome when using browser zoom (cf. https://github.com/silx-kit/jupyterlab-h5web/issues/80) #977\r\n\r\n### @h5web/lib\r\n\r\n- \u26a0\ufe0f **Breaking changes** Rename components `PanMesh`, `ZoomMesh`, `XAxisZoomMesh` and `YAxisZoomMesh` to `Pan`, `Zoom`, `XAxisZoom` and `YAxisZoom`  #995 #996\r\n- \u26a0\ufe0f **Breaking changes** Rename component `SelectionMesh` to `SelectionTool` and [change its API](https://h5web-docs.panosc.eu/?path=/story/building-blocks-selection--selecting-regions). It is now up to the consumer to render the selection while the user is drawing it. This is done by passing a render function as child of `SelectionTool` - e.g. `<SelectionTool>{(selection) => <SelectionLine {...selection} />}</SelectionTool>`. #981 #996\r\n  - \u26a0\ufe0f Remove obsolete components `LineSelectionMesh` and `RectSelectionMesh`\r\n  - \u26a0\ufe0f `[SelectionTool]` Remove prop `selectionComponent` in favor of the [`children` render prop](https://reactjs.org/docs/render-props.html#using-props-other-than-render)\r\n  - \u26a0\ufe0f `[SelectionTool]` Stop persisting selection after pointer is released to support more selection use cases. It is now up to the consumer to persist the selection (cf. below for new callback props)\r\n  - \u2728 New `SelectionLine` and `SelectionRect` components\r\n  - \u2728 `[SelectionTool]` Remove callback prop `onSelection` in favor of three new callback props (see below): `onSelectionStart`, `onSelectionChange`, `onSelectionEnd`. For instance, you may use `onSelectionEnd` to persist a new selection, `onSelectionStart` to clear a previously persisted selection, and `onSelectionChange` to display the coordinates of the selection that the user is currently drawing.\r\n- \u26a0\ufe0f **Breaking change** `[ScatterVis]` Rename prop `data` to `dataArray` in line with other visualizations. `dataArray` accepts an ndarray (plain or typed) instead of a plain JS array. #983\r\n- \u2728 New component [`TiledHeatmap`](https://h5web-docs.panosc.eu/?path=/story/building-blocks-tiledheatmap--default) for **visualizing very large images as tiles**, with support for zoom-based level-of-detail pyramids #967\r\n- \u2728 New component [`SelectToZoom`](https://h5web-docs.panosc.eu/?path=/story/building-blocks-zoomselection--default) to allow **zooming by drawing a selection** #981\r\n- \u2728 New component [`ResetZoomButton`](https://h5web-docs.panosc.eu/?path=/story/building-blocks-panzoom-zoom--default) to provide a quick way for users to **reset the zoom** #991\r\n- \u2728 `[HeatmapVis, LineVis, RgbVis, ScatterVis]` Add select-to-zoom feature (bound to <kbd>Ctrl</kbd> key) #990\r\n- \u2728 `[HeatmapVis, LineVis, RgbVis, ScatterVis]` Show button to reset zoom once user starts to zoom in #991\r\n- \u2728 `[LineVis]` Change default curve colors to increase contrast and help distinguish auxiliary curves from one another. Also provide better colors in dark mode. #1008 \r\n- \ud83d\udc1b Fix stretching of ordinate axis on Chrome when using browser zoom (cf. https://github.com/silx-kit/jupyterlab-h5web/issues/80) #977\r\n- \ud83d\udc1b `[SelectionTool]` (previously `SelectionMesh`) Fix selection interaction when cursor leaves canvas #995\r\n- `[ScatterVis]` Add props `abscissaLabel`, `ordinateLabel`, `title` and `children`, in line with other visualizations #983\r\n- `[ScatterVis]` Add prop `size` to control the size of the scattered points  #983\r\n- `[MatrixVis]` Reduce width of header column #976\r\n- `[VisMesh]` Add prop `size` to override the mesh's size (which otherwise defaults to the `visSize` provided by `AxisSystem`) #967\r\n- `[HeatmapMesh]` App prop `size` to override the mesh's size (forwarded to `VisMesh`) #967\r\n- New hook [`useCanvasEvents`](https://h5web-docs.panosc.eu/?path=/story/utilities--page#usecanvasevents) to register event listeners on the canvas (useful to implement custom interactions) #995 #996 #1007\r\n- New utility `worldToHtml` available [through `AxisSystemContext`](https://h5web-docs.panosc.eu/?path=/story/utilities--page#axissystemcontext) #1001\r\n- Improve documentation of [`getSafeDomain`](https://h5web-docs.panosc.eu/?path=/story/utilities--page#getsafedomain) #979\r\n- Changes to [CSS custom properties](https://h5web-docs.panosc.eu/?path=/story/customization--page#toolbar): #980\r\n  - New property to customize background color of shortcuts in interactivity help popup: `--h5w-interactionHelp-shortcut--bgColor`\r\n  - New properties to customize shadow colors of toolbar input fields (for new Matrix cell width control): `--h5w-toolbar-input--shadowColor`, `--h5w-toolbar-input-hover--shadowColor`, `--h5w-toolbar-input-focus--shadowColor`\r\n  - New property to customize text color of toolbar control labels: `--h5w-toolbar-label--color`\r\n  - `--h5w-selector-label--color` now defaults to `var(--h5w-toolbar-label--color, royalblue)` instead of just `royalblue`\r\n\r\n### Screenshots\r\n\r\n#### [Mandelbrot demo](https://h5web-docs.panosc.eu/?path=/story/building-blocks-tiledheatmap--default) of new `TiledHeatmap` component\r\n\r\n![image](https://user-images.githubusercontent.com/2936402/157624584-285a2c6a-9fb7-4407-af69-fc8fdb8509b0.png)\r\n\r\n#### Select-to-zoom feature + button to reset zoom\r\n\r\n![select-to-zoom](https://user-images.githubusercontent.com/2936402/157647065-ad414653-01e7-4741-81c8-b1d187a6bdd8.gif)\r\n\r\n#### Select-to-zoom feature with ratio constraint\r\n\r\n![select-to-zoom-ratio](https://user-images.githubusercontent.com/2936402/157703669-787c7d05-d703-4958-8a2e-65d831667909.gif)\r\n\r\n#### Help button\r\n\r\n![image](https://user-images.githubusercontent.com/2936402/157886485-c60291ac-56c2-4ee3-88c4-da7b1623ebd9.png)\r\n\r\n#### New curve colors in Line vis\r\n\r\n![image](https://user-images.githubusercontent.com/2936402/157855192-e2d99790-685e-498c-8763-b3dff5a71148.png)\r\n\r\n#### Cell-width toolbar control in Matrix vis\r\n\r\n![image](https://user-images.githubusercontent.com/2936402/155306940-e1ff6e52-5487-4e72-9f13-86392b96c847.png)",
+        "html_url": "https://github.com/silx-kit/h5web/releases/tag/v3.0.0",
+        "name": "v3.0.0",
+        "release_id": 61472210,
+        "tag": "v3.0.0",
+        "tarball_url": "https://api.github.com/repos/silx-kit/h5web/tarball/v3.0.0",
+        "type": "Release",
+        "url": "https://api.github.com/repos/silx-kit/h5web/releases/61472210",
+        "value": "https://api.github.com/repos/silx-kit/h5web/releases/61472210",
+        "zipball_url": "https://api.github.com/repos/silx-kit/h5web/zipball/v3.0.0"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "axelboc",
+          "type": "User"
+        },
+        "date_created": "2022-02-16T15:23:42Z",
+        "date_published": "2022-02-17T12:57:34Z",
+        "description": "### @h5web/app\r\n\r\n- :warning: **Breaking change** Importing the styles now requires importing [only one stylesheet](https://github.com/silx-kit/h5web/blob/main/packages/app/README.md#getting-started-) named `styles.css` (note the `s`) #942:\r\n    ```css\r\n    /* BEFORE */\r\n    @import '@h5web/app/dist/style-lib.css';\r\n    @import '@h5web/app/dist/style.css';\r\n    \r\n    /* AFTER */\r\n    @import '@h5web/app/dist/styles.css';\r\n    ```\r\n- :sparkles: `< Line >` Allow **zooming on a specific axis** with mouse wheel by pressing `Alt` for `x` or `Shift` for `y` #949 #953\r\n- :sparkles: Restore last selected visualization when switching back from inspect mode to display mode #954\r\n- :sparkles: Select most advanced visualization automatically when switching between datasets, unless user has manually selected a less advanced visualization #954\r\n- :zap: `[H5GroveProvider]` Datasets fetched as binary typed arrays are no longer converted to plain JavaScript `number` arrays. H5Web is now capable of handling those **raw typed arrays without any conversion** in most cases (see below for caveats with shader-based visualizations). This leads to significant speed ups and memory savings for very large datasets. #946 #950 #951 #952 #956 #960 #964 \r\n    - `< Heatmap >`: `float32` and `uint8` data arrays are passed directly to the shader; everything else is converted to `float32`;\r\n    - `< RGB >`: `float32` and `uint8` data arrays are passed directly to the shader; `float64` arrays are converted to `float32`; `int8` arrays are converted to `number[]` and their values incremented by 128 before being converted to `uint8`; everything else is converted to `uint8`.\r\n- :bug: Fix issue with `react-keyed-flatten-children` import in Angular project #914\r\n- `[App]` Add prop `initialPath` to select a path on initial load #937\r\n- `< RGB >` RGB/BGR flip now performed entirely in shader #969\r\n- Avoid copying ndarray when no slicing/mapping is needed #973\r\n- Add [CodeSandbox examples](https://github.com/silx-kit/h5web/blob/main/packages/app/README.md#examples) in README to demonstrate use of package in Create React App and Vite projects. #929\r\n\r\n### @h5web/lib\r\n\r\n- :warning: **Breaking change** Stylesheet [renamed to `styles.css`](https://github.com/silx-kit/h5web/blob/main/packages/lib/README.md#getting-started-) (note the `s`) #942:\r\n    ```css\r\n    /* BEFORE */\r\n    @import '@h5web/lib/dist/style.css';\r\n    \r\n    /* AFTER */\r\n    @import '@h5web/lib/dist/styles.css';\r\n    ```\r\n- :warning: **Breaking change** `PanZoomMesh` removed in favour of two separate components: [`PanMesh`](https://h5web-docs.panosc.eu/?path=/story/building-blocks-panzoom-pan--default) and [`ZoomMesh`](https://h5web-docs.panosc.eu/?path=/story/building-blocks-panzoom-zoom--default) #953 #955 #957:\r\n    ```tsx\r\n    // BEFORE\r\n    <PanZoomMesh />\r\n    \r\n    // AFTER\r\n    <PanMesh />\r\n    <ZoomMesh />\r\n    ```\r\n- :sparkles: `[LineVis]` Add axial zoom interactivity (mouse wheel + `Alt` key for `x` axis; mouse wheel + `Shift` key for `y` axis)\r\n- :sparkles: New [`XAxisZoomMesh` component](https://h5web-docs.panosc.eu/?path=/story/building-blocks-panzoom-x-zoom--default) to enable constrained zooming on the `x` axis, by default bound to the `Alt` key\r\n- :sparkles: New [`YXAxisZoomMesh` component](https://h5web-docs.panosc.eu/?path=/story/building-blocks-panzoom-y-zoom--default) to enable constrained zooming on the `y` axis, by default bound to the`Shift` key\r\n- :sparkles: New [`RectSelectionMesh`, `LineSelectionMesh` and `SelectionMesh` components](https://h5web-docs.panosc.eu/?path=/story/building-blocks-viscanvas-selection--selecting-regions) to draw selection rectangles and lines on the canvas (or other custom shapes with `SelectionMesh`'s `selectionComponent` prop). #941 #944 #947 #959\r\n- :sparkles: `PanMesh`, `ZoomMesh`, `XAxisZoomMesh` and `YAxisZoomMesh` can all be disabled dynamically with optional prop `disabled`, and can all be bound to a specific key with optional prop `modifierKey`. By default, `PanMesh` and `ZoomMesh` are _not_ bound to any key. #947 #949 #953\r\n- :sparkles: `[HeatmapMesh]` Now officially documented [in Storybook](https://h5web-docs.panosc.eu/?path=/story/building-blocks-heatmapmesh--default) #948\r\n- :sparkles: `[HeatmapMesh]` Props `values` and `alphaValues` now accept `float32`,`uint8` and `uint16` typed ndarrays. `uint16` arrays are interpreted as [half-floats](https://h5web-docs.panosc.eu/?path=/story/building-blocks-heatmapmesh--half-float-texture). #946 #950 #960\r\n    - :warning: **Breaking change** Props `values` and `alphaValues` no longer accept plain `number[]` ndarrays; you must convert them to one of the supported typed ndarrays beforehand - e.g. `ndarray(Float32Array.from(numNdArr.data), numNdArr.shape)`\r\n- :sparkles: `[HeatmapMesh]` Add optional [prop `magFilter`](https://h5web-docs.panosc.eu/?path=/story/building-blocks-heatmapmesh--linear-mag-filter) to override ThreeJS' default texture filter (i.e. `NearestFilter`) #948\r\n- :zap: `[HeatmapVis]` Props `dataArray` and `alpha.array` now accept [typed ndarrays](https://h5web-docs.panosc.eu/?path=/story/visualizations-heatmapvis--typed-array) - e.g. `NdArray<Float32Array>`. Prefer `float32` and `uint8` arrays for performance as they are passed directly to the shader. #946 #950 #960\r\n- :zap: `[LineVis]` Props `dataArray`, `errorsArray` and `auxArrays` now accept [typed ndarrays](https://h5web-docs.panosc.eu/?path=/story/visualizations-linevis--typed-arrays) #951\r\n- :zap: `[MatrixVis]` Prop `dataArray` now accepts [typed ndarrays](https://h5web-docs.panosc.eu/?path=/story/visualizations-matrixvis--typed-array) #952\r\n- :bug: `[ScatterVis]` Fix y-axis domain computation #971\r\n- :bug: `[HeatmapVis]` No longer flip children when `flipY` is set to `true` #945\r\n- `[MatrixVis]` Prop `sticky` is now optional and defaults to `true` #952\r\n- `[DataCurve]` Add optional prop `visible` to control the visibility of the curve #965\r\n- `[getDomain, getDomains, useDomain, useDomains]` Accept typed arrays and typed ndarrays - e.g. `Float32Array`, `NdArray<Uint16Array>`, etc. #950\r\n- Add hook [`useVisibleDomains`](https://h5web-docs.panosc.eu/?path=/story/utilities--page#usevisibledomains) to compute the x and y-axis domains at the current camera position and zoom level #936\r\n- Add hook [`useFrameRendering`](https://h5web-docs.panosc.eu/?path=/story/utilities--page#useframerendering) to re-render a React component on every React Three Fiber frame (e.g. when panning/zooming) #933 \r\n- Add utility [`getValueToIndexScale`](https://h5web-docs.panosc.eu/?path=/story/utilities--page#getvaluetoindexscale) and corresponding memoised hook to create threshold scales, which are particularly useful to recover indices from axis values in tooltips #968\r\n- Provide functions `dataToWorld` and `worldToData` through [`AxisSystemContext`](https://h5web-docs.panosc.eu/?path=/story/utilities--page#axissystemcontext) to convert vectors from data space to world space and back #935\r\n- Add [CodeSandbox examples](https://github.com/silx-kit/h5web/blob/main/packages/lib/README.md#examples) in README to demonstrate use of package in Create React App and Vite projects. #929\r\n\r\n### Screenshots\r\n\r\n#### Axial zooming\r\n\r\n![Peek 2022-02-17 12-05](https://user-images.githubusercontent.com/2936402/154468698-f1a976a8-5210-4e86-8009-856da9cb3b25.gif)\r\n\r\n#### Rectangle selection\r\n\r\n![image](https://user-images.githubusercontent.com/2936402/154463667-8dce8eac-b699-49d3-a20f-da1e61cfb4c4.png)\r\n",
+        "html_url": "https://github.com/silx-kit/h5web/releases/tag/v2.0.0",
+        "name": "v2.0.0",
+        "release_id": 59716147,
+        "tag": "v2.0.0",
+        "tarball_url": "https://api.github.com/repos/silx-kit/h5web/tarball/v2.0.0",
+        "type": "Release",
+        "url": "https://api.github.com/repos/silx-kit/h5web/releases/59716147",
+        "value": "https://api.github.com/repos/silx-kit/h5web/releases/59716147",
+        "zipball_url": "https://api.github.com/repos/silx-kit/h5web/zipball/v2.0.0"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "somef_missing_categories": [
+    "citation",
+    "acknowledgement",
+    "run",
+    "download",
+    "requirements",
+    "contact",
+    "contributors",
+    "documentation",
+    "faq",
+    "support",
+    "has_build_file",
+    "executable_example"
+  ],
+  "somef_provenance": {
+    "date": "2024-10-04 13:08:07",
+    "somef_schema_version": "1.0.0",
+    "somef_version": "0.9.5"
+  },
+  "stargazers_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 183
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "usage": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Demos",
+        "parent_header": [
+          "H5Web: React components for data visualization and exploration"
+        ],
+        "type": "Text_excerpt",
+        "value": "The [demo app](https://h5web.panosc.eu/) demonstrates the use of the built-in\ndata providers and visualizations. Several demos are available, one per data\nprovider:\n\n- [**H5GroveProvider**](https://h5web.panosc.eu/h5grove)\n- [**HsdsProvider**](https://h5web.panosc.eu/hsds)\n- [**H5WasmLocalFileProvider**](https://h5web.panosc.eu/h5wasm) (when browsing\n  for a local file)\n- [**H5WasmBufferProvider**](https://h5web.panosc.eu/h5wasm) (when supplying the\n  URL of a remote file)\n- [**MockProvider**](https://h5web.panosc.eu/mock)\n"
+      },
+      "source": "https://raw.githubusercontent.com/silx-kit/h5web/main/README.md",
+      "technique": "header_analysis"
+    }
+  ]
+}

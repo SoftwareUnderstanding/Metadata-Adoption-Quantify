@@ -1,0 +1,384 @@
+{
+  "code_repository": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/UNC-Major-Lab/MSAcquisitionSimulator"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_created": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2015-09-10T14:31:18Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_updated": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2023-08-23T09:36:07Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "description": [
+    {
+      "confidence": 0.9946957334283272,
+      "result": {
+        "original_header": "**MSAcquisitionSimulator**",
+        "type": "Text_excerpt",
+        "value": "*MSAcquisitionSimulator* is a collection of three command-line tools that simulate data-dependent acquisition algorithms on *in silico* generated ground truth data of liquid chromatography-mass spectrometry proteomics experiments. \n \n"
+      },
+      "source": "https://raw.githubusercontent.com/DennisGoldfarb/MSAcquisitionSimulator/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9986953343147988,
+      "result": {
+        "original_header": "**Ground truth generation**",
+        "type": "Text_excerpt",
+        "value": "**Digestion**  \n*In silico* digestion is not performed in the same way as it is in a typical database search engine. Instead of having hard cut-offs for the maximum number of missed cleavages and minimum number of enzymatic termini, *GroundTruthSimulator* calculates the probability of each peptide's existence based on each enzyme's probability of cleavage. For a particular peptide, the probability of its existence from a single copy of a protein =(1 - ( PROB(no cleavage at n-term)) * (1-PROB(no cleavage at c-term)) * PRODUCT_over_all_missed_cleavages(PROB(cleavage)) ). To determine the number of copies that will exist of this peptide, we multiply the final digestion probability by the protein abundance.  \n**Post-translational modifications**  \nSimilarly to digestion, *GroundTruthSimulator* does not have hard cut-offs for the maximum number of dynamic modifications. Even the idea of dynamic vs static modifications is not used. Each modification has a user-defined probability of occupying a particular site (e.g. there are probably serines that are *never* phosphorylated), and a user-defined percentage of that residue that will be modified (e.g. if a particular serine *is* chosen to be phosphorylated, maybe only 1% of it ever exists in that form at any given time). A \"static\" modification can be simulated by setting both values to 100%. Candidate modification sites are first randomly assigned to each protein based on each PTM's probability of occupying a particular site. For each peptide created during the digestion process, modification combinations are created and their probability existing from a single protein is calculated. Combinations with low abundance are pruned.  The probability of a particular modification combination = PRODUCT_over_all_modification_states(PROB(modification state)). The probability of the modification state being \"no modification\" for a specific peptide's residue is 1 - SUM_over_all_modifications(PROB(modification)).  \n**Retention time**  \nDetermined via the BioLCCC library (http://pythonhosted.org/pyteomics.biolccc/)  \n**Elution shape**  \nThe shape of an ion's elution profile is modeled by an Exponential Gaussian Hybrid (EGH) function as described in \u201cA Hybrid of Exponential and Gaussian Functions as a Model of Asymmetric Chromatographic Peaks\u201d, by Kevin Lan and James W. Jorgenson, Journal of Chromatography, Part A, 915, 1-13 (2001).  \n**Ionization efficiency**  \nThe probability of a peptide ionizing is sampled from a uniform random distribution between 0 and 1.  \n**Charge state distribution**  \nThe probability a peptide is has a charge of k is equal to a binomial distribution with n = the number of basic residues + 1 (for the n-terminus) and probability of success p = .7 + uniform_random(0,0.3).  \n**Isotopic distribution**  \nAn ion's isotopic distribution is determined with the libmercury++ library based on Rockwood, A.L. and Haimi, P.: \"Efficent calculation of Accurate Masses of Isotopic Peaks\", Journal of The American Society for Mass Spectrometry. JASMS 03-2263, 2006.  \n**Ion abundance**  \nWe assume that digestion, modifications, ionization efficiency, charge, and isotopic distributions are all independent of each other. Therefore, an ion with charge z and isotope m has total abundance = Protein abundance x prob(digestion) x prob(PTMs) x prob(ionization efficiency) x prob(charge state = z) x prob(isotope = m)   \nIf at any point in the simulation, the abundance gets below the filter threshold set in ground_truth.conf, then it is filtered and not included in the latter stages of the simulator. \n"
+      },
+      "source": "https://raw.githubusercontent.com/DennisGoldfarb/MSAcquisitionSimulator/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9878803022055732,
+      "result": {
+        "original_header": "**MS1 Scan**",
+        "type": "Text_excerpt",
+        "value": "**Ion abundance**  \nThe elution shape is numerically integrated using Simpson's method one millisecond at a time for every ion present at the current time and m/z constraints. This integration continues until we've reached the target total ion count, or the maximum injection time.  \n**Scan time**  \nThe elapsed time for a scan is equal to max(injection_time, transient_time) + scan_overhead_time. This models the scan time for a QExactive-like instrument.  \n**Raw signals**  \nThe Cauchy-Lorentz distribution is used to model the peak shape for each ion. The raw signal is a mixture of these distributions and therefore the intensity at each m/z is equal to the sum of the contribution from each ion's distribution. These signals are then centroided. A dynamic range cut-off is applied by removing all peaks whose signal intensity is less than the intensity of the base peak (most intense peak) divided by the user-specific dynamic range. \n"
+      },
+      "source": "https://raw.githubusercontent.com/DennisGoldfarb/MSAcquisitionSimulator/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.992493140594982,
+      "result": {
+        "original_header": "**MS2 Scan**",
+        "type": "Text_excerpt",
+        "value": "Raw signals are generated for the precursor ions only. Fragmentation is not modeled. Scan time and ion abundance are computed identically as an MS1 scan.  \n**Sequence determination**  \nFirst, the precursor ion fraction (PIF) is calculated for each peptide in the scan. The PIF of a peptide is defined as the sum of ion intensities for all ions of that peptide (i.e. the sum of all isotope intensities for that peptide) divided by the total ion intensity of the scan. Next, a peptide is randomly selected from these peptides - weighted by their PIF. If the peptide is in the peptide database used to simulate a database search, and within the user-defined mass tolerance, then the peptide-spectrum-match (PSM) sequence is set to this peptide. Otherwise, we randomly (uniformly) choose a sequence from the peptides in the database search (including reverse decoys) that are within our mass tolerance of the targeted precursor m/z.  \n**Probability determination**  \n If the PSM sequence was mapped to a peptide in the scan, then the PSM probability is set to that peptide's PIF. Otherwise, the PSM probability is sampled from a truncated exponential distribution between 0 and 1. This null distribution's lambda parameter is set by the user in the configuration file. Reasonable defaults for all parameters are provided.   \n"
+      },
+      "source": "https://raw.githubusercontent.com/DennisGoldfarb/MSAcquisitionSimulator/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9569256278405884,
+      "result": {
+        "original_header": "**Acquisition loop**",
+        "type": "Text_excerpt",
+        "value": "The acquisition simulator can be described by this pseudocode (nearly identical to the actual code). The controller (an acquisition algorithm) gives scan requests, the oracle generates data for that request, the controller processes that data, and the current time is updated.  \n```cpp\nwhile (current_time < acquisition_length) {\n\tscanRequest = controller.get_scan_request();\n\tscan = oracle.get_scan_data(scan_request, current_time);\n\tcontroller.process_scan(scan);\n\tcurrent_time += scan.elapsed_time;\n}\n``` \n"
+      },
+      "source": "https://raw.githubusercontent.com/DennisGoldfarb/MSAcquisitionSimulator/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9562354899539169,
+      "result": {
+        "original_header": "**Creating a Custom Acquisition Controller**",
+        "type": "Text_excerpt",
+        "value": "* Implement a constructor that takes in a *std::vector\\<std::string\\>* parameter which should be parsed by boost::program_options. Use *AbstractTopN* as an example.   \n* A ScanRequest consists of the min_mz and max_mz for an MS1 and also a BasicPeak (mz, intensity) for the target precursor peak, and parent_scan_id for an MS2. Again see *AbstractTopN* for an example.   \n* An MS1Scan consists of a *std::vector\\<BasicPeak\\>*, time_of_scan, elapsed_time, scan_id, and scan_type (MS1 or MS2).   \n* An MS2Scan also contains the PIF for each peptide, total ion intensity, the targeted precursor peak, the PSM sequence and probability, and a list of proteins the peptide maps to.  \n\t\t\n* Register your controller with the get_controller() function in mainAcquisitionSimulator.cpp so that it will be used when the acquisition.conf file provides the name of your controller.\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/DennisGoldfarb/MSAcquisitionSimulator/master/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "download_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/DennisGoldfarb/MSAcquisitionSimulator/releases"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 2
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/UNC-Major-Lab/MSAcquisitionSimulator/forks"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "UNC-Major-Lab/MSAcquisitionSimulator"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_title": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "MSAcquisitionSimulator"
+      },
+      "source": "https://raw.githubusercontent.com/DennisGoldfarb/MSAcquisitionSimulator/master/README.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "installation": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "**Installation Procedures**",
+        "parent_header": [
+          "**MSAcquisitionSimulator**"
+        ],
+        "type": "Text_excerpt",
+        "value": "  \n**Prerequisites**  \n1. CMake 2.8+  \n2. g++ 4.7.x or 4.8.x (Encounteded errors with 4.9.2)  \n3. Boost 1.48+ including the compiled program_options library  \n**Build**  \n1. Clone the project onto your computer  \n2. Navigate to the project root directory  \n3. Execute the following commands:  \n```ShellSession\n$ git clone https://github.com/DennisGoldfarb/MSAcquisitionSimulator.git\n$ cd MSAcquisitionSimulator/build/\n$ cmake ../src\n$ make\n$ cd ../bin/\n$ ls\nAcquisitionSimulator  FASTASampler  GroundTruthSimulator\n```\nif g++ and/or boost are not in your path, use this command:  \n```ShellSession\n$ cmake ../src -DCMAKE_CXX_COMPILER=/path/to/g++ -DBOOST_ROOT=/path/to/boost/root/boost-1.48.0/\n```\nThe three compiled binary files, *FASTASampler*, *GroundTruthSimulator*, and *AcquisitionSimulator* should be in [project_root]/bin/  \n"
+      },
+      "source": "https://raw.githubusercontent.com/DennisGoldfarb/MSAcquisitionSimulator/master/README.md",
+      "technique": "header_analysis"
+    }
+  ],
+  "issue_tracker": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/UNC-Major-Lab/MSAcquisitionSimulator/issues"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "keywords": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": ""
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "license": [
+    {
+      "confidence": 1,
+      "result": {
+        "name": "MIT License",
+        "spdx_id": "MIT",
+        "type": "License",
+        "url": "https://api.github.com/licenses/mit",
+        "value": "https://api.github.com/licenses/mit"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "File_dump",
+        "value": "The MIT License (MIT)\n\nCopyright (c) 2015 DennisGoldfarb\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.\n"
+      },
+      "source": "https://raw.githubusercontent.com/DennisGoldfarb/MSAcquisitionSimulator/master/LICENSE",
+      "technique": "file_exploration"
+    }
+  ],
+  "name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "MSAcquisitionSimulator"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "owner": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Organization",
+        "value": "UNC-Major-Lab"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "programming_languages": [
+    {
+      "confidence": 1,
+      "result": {
+        "name": "C++",
+        "size": 318209,
+        "type": "Programming_language",
+        "value": "C++"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "C",
+        "size": 9413,
+        "type": "Programming_language",
+        "value": "C"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "CMake",
+        "size": 5679,
+        "type": "Programming_language",
+        "value": "CMake"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "readme_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/DennisGoldfarb/MSAcquisitionSimulator/master/README.md"
+      },
+      "technique": "file_exploration"
+    }
+  ],
+  "releases": [
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "DennisGoldfarb",
+          "type": "User"
+        },
+        "date_created": "2015-10-02T16:32:55Z",
+        "date_published": "2015-10-02T16:38:55Z",
+        "html_url": "https://github.com/UNC-Major-Lab/MSAcquisitionSimulator/releases/tag/v1.0.2",
+        "name": "v1.0.2",
+        "release_id": 1903378,
+        "tag": "v1.0.2",
+        "tarball_url": "https://api.github.com/repos/UNC-Major-Lab/MSAcquisitionSimulator/tarball/v1.0.2",
+        "type": "Release",
+        "url": "https://api.github.com/repos/UNC-Major-Lab/MSAcquisitionSimulator/releases/1903378",
+        "value": "https://api.github.com/repos/UNC-Major-Lab/MSAcquisitionSimulator/releases/1903378",
+        "zipball_url": "https://api.github.com/repos/UNC-Major-Lab/MSAcquisitionSimulator/zipball/v1.0.2"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "DennisGoldfarb",
+          "type": "User"
+        },
+        "date_created": "2015-10-01T02:52:26Z",
+        "date_published": "2015-10-01T02:57:12Z",
+        "html_url": "https://github.com/UNC-Major-Lab/MSAcquisitionSimulator/releases/tag/v1.0.1",
+        "name": "v1.0.1",
+        "release_id": 1894112,
+        "tag": "v1.0.1",
+        "tarball_url": "https://api.github.com/repos/UNC-Major-Lab/MSAcquisitionSimulator/tarball/v1.0.1",
+        "type": "Release",
+        "url": "https://api.github.com/repos/UNC-Major-Lab/MSAcquisitionSimulator/releases/1894112",
+        "value": "https://api.github.com/repos/UNC-Major-Lab/MSAcquisitionSimulator/releases/1894112",
+        "zipball_url": "https://api.github.com/repos/UNC-Major-Lab/MSAcquisitionSimulator/zipball/v1.0.1"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "DennisGoldfarb",
+          "type": "User"
+        },
+        "date_created": "2015-09-29T16:28:21Z",
+        "date_published": "2015-09-30T16:28:02Z",
+        "html_url": "https://github.com/UNC-Major-Lab/MSAcquisitionSimulator/releases/tag/v1.0.0",
+        "name": "v1.0.0",
+        "release_id": 1891358,
+        "tag": "v1.0.0",
+        "tarball_url": "https://api.github.com/repos/UNC-Major-Lab/MSAcquisitionSimulator/tarball/v1.0.0",
+        "type": "Release",
+        "url": "https://api.github.com/repos/UNC-Major-Lab/MSAcquisitionSimulator/releases/1891358",
+        "value": "https://api.github.com/repos/UNC-Major-Lab/MSAcquisitionSimulator/releases/1891358",
+        "zipball_url": "https://api.github.com/repos/UNC-Major-Lab/MSAcquisitionSimulator/zipball/v1.0.0"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "somef_missing_categories": [
+    "citation",
+    "acknowledgement",
+    "run",
+    "download",
+    "requirements",
+    "contact",
+    "contributors",
+    "documentation",
+    "faq",
+    "support",
+    "identifier",
+    "has_build_file",
+    "executable_example"
+  ],
+  "somef_provenance": {
+    "date": "2024-11-04 06:54:03",
+    "somef_schema_version": "1.0.0",
+    "somef_version": "0.9.5"
+  },
+  "stargazers_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 3
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "type": [
+    {
+      "confidence": 0.82,
+      "result": {
+        "type": "String",
+        "value": "commandline-application"
+      },
+      "technique": "software_type_heuristics"
+    }
+  ],
+  "usage": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "**Usage**",
+        "parent_header": [
+          "**MSAcquisitionSimulator**"
+        ],
+        "type": "Text_excerpt",
+        "value": "*MSAcquisitionSimulator* comprises of three separate programs.  \n\n*FASTASampler* takes a .fasta file as input (it can be gzipped) and outputs another .fasta file. The output contains a random subset of proteins, with each protein header appended with a '#' followed by a value for that protein's abundance. The distribution of abundance and the size of the protein subset is determined by the user.\n\n```ShellSession\n$ ./FASTASampler --help\nUSAGE: FASTASampler [options] input.fasta\n\nOptions:\n  --help                                Print usage and exit.\n  -d [ --distribution ] arg             Choose abundance distribution. Options:\n                                        normal, lognormal\n  -m [ --mean ] arg (=10)               The mean of the normal distribution, or\n                                        m parameter for log-normal (log10).\n  -s [ --stdev ] arg (=0.90000000000000002)\n                                        The standard deviation of the normal \n                                        distribution, or s parameter for \n                                        log-normal (log10). 99.97% of the data \n                                        will be within +-3 standard deviations\n  -p [ --percentage ] arg (=1)          Percentage of proteins to sample from. \n                                        Takes precedence over --numprot.\n  -n [ --numprot ] arg                  Number of proteins to sample from \n                                        FASTA.\n  -o [ --fasta_out ] arg (=sample.sim.fasta)\n                                        output path for sampled FASTA file.\n```\n\n*GroundTruthSimulator* takes as input the sampled .fasta file from *FASTASampler* and a configuration file. An example configuration file is found in the root directory: *ground_truth.conf*. This program outputs the ground truth data necessary for acquisition simulation. It models post-translational modifications (PTMs), digestion, chromatographic separation, electrospray ionization, and isotopic distributions.\n\n```ShellSession\n$ ./GroundTruthSimulator --help\n\nUSAGE: GroundTruthSimulator [options] input.fasta\n\nOptions:\n  --help                                Print usage and exit.\n  -c [ --config ] arg (=ground_truth.conf)\n                                        Input path to config file.\n  -o [ --ground_truth_out_path ] arg (=ground_truth.tab)\n                                        Output path for ground truth file.\n\n```\n\n*AcquisitionSimulator* takes as input the ground truth file from *GroundTruthSimulator* and a configuration file. An example configuration file is found in the root directory: *acquisition.conf*. One of the parameters in the config file is the path to the FASTA file used to simulate a database search, **make sure to edit this to a path on your computer!** This program simulates a user selected data-dependent acquisition algorithm on the ground truth data. It models chromatographic elution shape, ion accumulation, MS1 spectra, scan time durations, and database search peptide-spectrum-matches (PSMs). It currently does not simulate MS2 fragmentation spectra. The output includes an mzML file, a .fido file, and a targetDecoy.txt file. The .fido file includes all PSMs in the format required for Fido to perform protein inference, and the targetDecoy.txt file contains the list of forward and decoy protein names used for the FidoChooseParameters program. Fido is available here: http://noble.gs.washington.edu/proj/fido/\n\n```ShellSession\n$ ./AcquisitionSimulator --help\n\nUSAGE: AcquisitionSimulator [options] ground_truth.tab\n\nOptions:\n  --help                                Print usage and exit.\n  -c [ --conf ] arg (=acquisition.conf) Input path to config file.\n  -o [ --mzml_out_path ] arg (=sample.mzML)\n                                        output path for mzML file.\n  -f [ --fido_out_path ] arg (=sample.fido)\n                                        output path for fido file.\n``` \n**Example**\n\nYou can download UniProt's human proteome <a href=\"http://www.uniprot.org/uniprot/?query=proteome:UP000005640\" target=\"_blank\">here</a>. This is an example using 1% of the proteome:\n```ShellSession\n$ ./FASTASampler -dlognormal -m10 -s0.9 -p0.01 -o sampled_human_swissprot.fasta ~/Downloads/uniprot_homo_sapiens_proteome.fasta.gz \n\nNumber of proteins in FASTA: 91618\nNumber of proteins sampled: 916\n\nAbundance distribution statistics\nMin: 7.74848e+06\tMax: 7.40865e+12\tDynamic range: 5.98052\nMedian: 1.18331e+10\tMean: 8.63132e+10\tStdev: 3.98826e+11\n```\nThe next command was run with the default ground_truth.conf file.\n```ShellSession\n$ ./GroundTruthSimulator -c ../ground_truth.conf -o ground_truth_human.tab sampled_human_swissprot.fasta \n\nModification registered: Carbamidomethyl car C H3,C2,N1,O1 1 0.77 0.9999 \nModification registered: Oxidation ox M O1 0.5 1.8215 0.05 \nEnzyme registered: TrypsinR R P\nEnzyme registered: TrypsinK K P\nEnzyme registered: Random * \n\nNumber of proteins processed: 916 of 916. Currently processing: sp|Q9NQH7|XPP3_HUMAN. Abundance: 7.63723e+10. Sequence length: 507\nNumber of peptides processed: 2947632 of 2947632. Number of ions passing abundance thresholds: 3552781\nElapsed time: 640 seconds\n\nIon abundance distribution\n\t\tx-axis: log2(count)\n14\t*\n13\t***\n12\t********\n11\t***********\n10\t**************\n9\t***************\n8\t*****************\n7\t******************\n6\t*******************\n5\t********************\n4\t*********************\ny-axis: log10(ion abundance)\n\nMost abundant ion for protein\n\t\tx-axis: log2(count)\n14\t*\n13\t\n12\t*****\n11\t********\n10\t*********\n9\t*********\n8\t*******\n7\t****\n6\t***\n5\t**\ny-axis: log10(ion abundance)\nSorting ions by retention time. This might take a while..\n```\nThe next command was run with the default acquisition.conf file.\n```ShellSession\n$ ./AcquisitionSimulator -c ../acquisition.conf -f human.fido ground_truth_human.tab\n\nPTM registered: Carbamidomethyl C H3,C2,N1,O1\nEnzyme registered: Trypsin RK P\nParsing FASTA file and digesting proteins...\nDigestion complete.\nSimulating Acquisition:\nCurrent time: 10800 seconds. MS1 count: 2985. MS2 count: 26757. Num PSMs >= 0.9: 2365\nSimulation Complete.\nElapsed time: 161 seconds\n```\nIf you've installed Fido (http://noble.gs.washington.edu/proj/fido/) then you can perform protein inference on the results: \n```ShellSession\n$ Fido human.fido .01 .1 .01 > human_fido_results.txt\n$ less human_fido_results.txt\n1 { sp|P57075|UBS3A_HUMAN }\n1 { sp|Q96N96|SPT13_HUMAN }\n1 { sp|Q86UQ4|ABCAD_HUMAN }\n1 { sp|P07202|PERT_HUMAN }\n1 { sp|Q9Y5L0|TNPO3_HUMAN }\n1 { sp|Q8IX01|SUGP2_HUMAN }\n1 { sp|Q9P2G1|AKIB1_HUMAN }\n1 { sp|Q96RG2|PASK_HUMAN }\n...\n$ less human_fido_results.txt | grep -v \"REV_\" | grep \"^1\" | wc -l\n68\n$ less human_fido_results.txt | grep -v \"REV_\" | grep \"^0.9\" | wc -l\n113\n```\nDecoy proteins are prepended with \"REV_\". You can also use FidoChooseParameters, however it appears to choose a high protein prior probability, and we know what the true prior is.\n```ShellSession\n$ FidoChooseParameters human.fido targetDecoy.txt\n...\nUsing best gamma, alpha, beta = 0.7 0.04 0.01\n...\n```\nThe mzML file generated can be inspected with the jmzreader-gui among other tools (https://code.google.com/p/jmzreader/downloads/list). Below is a screenshot of a simulated MS1 scan.\n![Image of simulated MS1] (https://github.com/DennisGoldfarb/MSAcquisitionSimulator/blob/master/SimulatedMS1.png)\n"
+      },
+      "source": "https://raw.githubusercontent.com/DennisGoldfarb/MSAcquisitionSimulator/master/README.md",
+      "technique": "header_analysis"
+    }
+  ]
+}

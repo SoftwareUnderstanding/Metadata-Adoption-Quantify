@@ -1,0 +1,477 @@
+{
+  "code_repository": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/zamboni-lab/SLAW"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_created": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2021-10-26T07:00:18Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_updated": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2024-09-10T07:45:52Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "description": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "Scalable and self-optimizing processing workflow for untargeted LC-MS"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Introduction",
+        "parent_header": [
+          "SLAW"
+        ],
+        "type": "Text_excerpt",
+        "value": "SLAW is a scalable, containerized workflow for untargeted LC-MS processing (DDA only).\nIt was developed by Alexis Delabriere in the [Zamboni Lab](https://imsb.ethz.ch/research/zamboni.html) at ETH Zurich.\nAn explanation of the advantages of SLAW and its motivations of development can be found in this [blog post](https://metabolomics.blog/2021/07/02/slaw/).\nIn brief, the core advantages of SLAW are:\n\n* Complete processing including peak picking, sample alignment, pick picking, grouping of isotopologues and adducts, gap-filling by data recursion, extraction of consolidated MS2 spectra (only for DDA experiments! DIA-MS2 spectra will be skipped) and isotopic data\n* Scalability: SLAW can process thousands of samples efficiently\n* Wrapping of three main peak picking algorithms: Centwave, FeatureFinderMetabo, ADAP\n* Automated parameter optimization for picking, alignment, gap-filling\n\nIf you want to use SLAW, please cite the following paper:\n\n> Delabriere A, Warmer P, Brennsteiner V and Zamboni N, *SLAW: A scalable and self-optimizing processing workflow for untargeted LC-MS*, Anal. Chem. 2021 (https://doi.org/10.1021/acs.analchem.1c02687)\n"
+      },
+      "source": "https://raw.githubusercontent.com/zamboni-lab/SLAW/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Technical description",
+        "parent_header": [
+          "SLAW"
+        ],
+        "type": "Text_excerpt",
+        "value": "Please refer to the paper.\nAdditional information is given in the wiki section.\n"
+      },
+      "source": "https://raw.githubusercontent.com/zamboni-lab/SLAW/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 0.9993352321069782,
+      "result": {
+        "original_header": ":warning:Important note",
+        "type": "Text_excerpt",
+        "value": "This public repository  is updated and maintained according to users' requests and reported issues. \nSLAW is under continuous and active development in our lab. As this work includes a lot of customization to our workflows and environment, we don't publish novel features unless there is a specific request. Hence, please use the Issues tab to submit your ideas or problems.   \n \n"
+      },
+      "source": "https://raw.githubusercontent.com/zamboni-lab/SLAW/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9070997071890688,
+      "result": {
+        "original_header": "Input files",
+        "type": "Text_excerpt",
+        "value": "SLAW uses three (types of) inputs that have to be in a **unique folder**: \n* **Raw MS data in mzML format**.\nFiles can include MS1 and DDA-MS2 scans.\nDIA-MS is not supported.\n**All data must be centroided and of unique polarity**.\nCentroided mzML can be obtained with ProteoWizard.\nDiscard all profile data and always prioritize the centroid data provided by vendor's software, e.g. with the filter `peakPicking vendor msLevel=1-2`.\n* A `parameters.txt` file including all preferences and settings that govern SLAW's behavior.\nIf a `parameters.txt` is missing, a default file is created upon executing the Docker.\nIn this case, execution of SLAW stops.\nMore details on parameters are provided below. \n* A `samples.csv` file that defines the file types.\nIn principle, this csv file consists of two columns (no headers).\nThe first column (from the left) reports the file names (with mzML ending).\nOnly the basename to the sample will be considered, e.g. if the name includes a full path like `C:/some/path/to/sample1.mzML` only the `sample1.mzML` part will be matched against the file names found in the same folder.\nFrom top to bottom, rows should follow the order of injection.\nThe second column (from the left) must be one of the following four (case insensitive):\n  * **QC**: QC samples used as reference during parameter optimization, to extract reference peaks for RT alignment, to detect isotopes/adducts, etc.\n  Ideally, QC samples are pooled study samples that are scattered (intercalated) through the whole sequences.\n  If no QC samples are defined, or the `samples.csv` is missing, SLAW will pick random sample files.\n  * **samples**: Samples of all kind (study samples, calibrants, spike-ins, etc.).\n  They should contain MS1 scans and optionally MS2 data. \n  * **MS2**: indicates files that include primarily MS2 spectra and should not be considered for MS1 peak picking and quantification.\n  MS2 spectra will be mapped to MS1 features (identified in QC and samples) after alignment.\n  MS2 is typically used to flag files used with targeted MS2, iterative MS2, or generally DDA-heavy files.\n  * **blank**: Blanks will be discarded from the final peaktable. \nA well-formatted example of `*.csv` file is (from test_data):\n```\npath,type\nQC1.mzML,QC\nS1.mzML,sample\nS2.mzML,sample\nDDA1.mzML,MS2\nDDA2.mzML,MS2\nQC2.mzML,QC\n```\n \nThe `*.csv` file is optional.\nIf missing, SLAW will pick random samples and proceed with optimization.\n   \n"
+      },
+      "source": "https://raw.githubusercontent.com/zamboni-lab/SLAW/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9763578931597519,
+      "result": {
+        "original_header": "Parameters",
+        "type": "Text_excerpt",
+        "value": "The `parameters.txt` includes all settings used in processing, organized by topic.\nMore details are provided in the file.\nIn most cases, the `parameters.txt` file lists a value and a min-max range.\nThe range is only used when SLAW is asked to optimize parameters (see paper for details). \nThe most important parameter is `optimization > need_optimization > true/false`, and indicates whether SLAW will attemp to optimize parameters (i.e. those flagged with `essential`) using QC files.\nDepending on the size of the files and the peak picking algorithm, optimization can take several hours.\nTo avoid long processing time, the optimization is switched off (`False`) by default.\nHowever, the default settings are unlikely to work for all LC-MS settings.\nTherefore, it is surely worth to execute it at least once by switchinig the parameter to `True`.\nThe optimization will produced a `parameters.txt` which is optimal for the given data set.\nIf the chromatographic and MS conditions are stable, the optimized `parameters.txt` file can simply be reused in subsequent runs with optmization toggled off (`False`). \nThe second most important parameter is `noise_level_MS1`.\nIt allows to cut low abundance centroids.\nOn TOF data, these features include artifacts (e.g. peak ringing) and noise that bias and slow down optimization.\nBy setting `noise_level_MS1` to a number between `20-500` for TOFs and `1E4-1E5` for Orbitraps, we cut the grass.\nThe threshold is instrument and scan-rate dependent.\nThe best way to define the number is to inspect visually a MS1 scan in the raw data.\nFYR, we typically use 100-150 for Agilent QTOFs (6550, 6546) and Sciex 7600 ZenoTOF.   \nPeak picking: three algorithms are included: centWave (XCMS), ADAP (mzMine), and FeatureFinderMetabo (openMS).\nDepending on the type of instrument, scan rate, baseline, peak shapes, ..., they perform differently.\nIn our experience, centWave is generally quite robust and our default.\nFeatureFinderMetabo in openMS is faster, and therefore of particular interest for large studies, large files, or for optimizing parameters related to chromtographic peak shape. \n"
+      },
+      "source": "https://raw.githubusercontent.com/zamboni-lab/SLAW/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9988389771117934,
+      "result": {
+        "original_header": "Missing speed?",
+        "type": "Text_excerpt",
+        "value": "* Don't use ADAP with parameter optimization.\nIt's slower than the others, with obvious consequences on run time.\nThe fastest is openMS.\nBased on our experience with different types of TOF and Orbi spectra (some of which is reported in the paper), we recommend to use centWave as default.\nOpenMS might be preferred for fast processing of large LC-MS studies with thousands of injections.\n* Increase `noise_level_MS1` to `10-100`.\n* Use a local folder as input.\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/zamboni-lab/SLAW/master/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "documentation": [
+    {
+      "confidence": 1,
+      "result": {
+        "format": "wiki",
+        "type": "Url",
+        "value": "https://github.com/zamboni-lab/SLAW/wiki"
+      },
+      "source": "https://raw.githubusercontent.com/zamboni-lab/SLAW/master/README.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "download_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/zamboni-lab/SLAW/releases"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 3
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/zamboni-lab/SLAW/forks"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "zamboni-lab/SLAW"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_title": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "SLAW"
+      },
+      "source": "https://raw.githubusercontent.com/zamboni-lab/SLAW/master/README.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "has_build_file": [
+    {
+      "confidence": 1,
+      "result": {
+        "format": "dockerfile",
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/zamboni-lab/SLAW/master/Dockerfile"
+      },
+      "source": "https://raw.githubusercontent.com/zamboni-lab/SLAW/master/Dockerfile",
+      "technique": "file_exploration"
+    }
+  ],
+  "has_script_file": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/zamboni-lab/SLAW/master/run_lcms_processing.sh"
+      },
+      "technique": "file_exploration"
+    }
+  ],
+  "installation": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Installation",
+        "parent_header": [
+          "SLAW"
+        ],
+        "type": "Text_excerpt",
+        "value": "The source code provided here is meant for developers.\nFor users, **the recommended way to use SLAW is to pull the container from *DockerHub***.\nThe SLAW container comes preconfigured with all components and - thanks to the self-optimizing algorithms - it can be used as a black box:\n\n```\ndocker pull zambonilab/slaw:latest\n```\n"
+      },
+      "source": "https://raw.githubusercontent.com/zamboni-lab/SLAW/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 0.9306024343202793,
+      "result": {
+        "original_header": "Input files",
+        "type": "Text_excerpt",
+        "value": "The `parameters.txt` file is mandatory.\nIf missing, SLAW will create a default file and stop.\nUpon editing, you'll have to restart processing. \nThe `*.csv` file is optional.\nIf missing, SLAW will pick random samples and proceed with optimization.\n   \n"
+      },
+      "source": "https://raw.githubusercontent.com/zamboni-lab/SLAW/master/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "invocation": [
+    {
+      "confidence": 0.8632732422123263,
+      "result": {
+        "original_header": "Input files",
+        "type": "Text_excerpt",
+        "value": "A well-formatted example of `*.csv` file is (from test_data):\n```\npath,type\nQC1.mzML,QC\nS1.mzML,sample\nS2.mzML,sample\nDDA1.mzML,MS2\nDDA2.mzML,MS2\nQC2.mzML,QC\n```\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/zamboni-lab/SLAW/master/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "issue_tracker": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/zamboni-lab/SLAW/issues"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "keywords": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": ""
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "license": [
+    {
+      "confidence": 1,
+      "result": {
+        "name": "GNU General Public License v2.0",
+        "spdx_id": "GPL-2.0",
+        "type": "License",
+        "url": "https://api.github.com/licenses/gpl-2.0",
+        "value": "https://api.github.com/licenses/gpl-2.0"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "File_dump",
+        "value": "GNU GENERAL PUBLIC LICENSE\n   Version 2, June 1991\n\nCopyright (C) 1989, 1991 Free Software Foundation, Inc.\n               51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA\nEveryone is permitted to copy and distribute verbatim copies\nof this license document, but changing it is not allowed.\n\n  Preamble\n\nThe licenses for most software are designed to take away your\nfreedom to share and change it.  By contrast, the GNU General Public\nLicense is intended to guarantee your freedom to share and change free\nsoftware--to make sure the software is free for all its users.  This\nGeneral Public License applies to most of the Free Software\nFoundation's software and to any other program whose authors commit to\nusing it.  (Some other Free Software Foundation software is covered by\nthe GNU Library General Public License instead.)  You can apply it to\nyour programs, too.\n\nWhen we speak of free software, we are referring to freedom, not\nprice.  Our General Public Licenses are designed to make sure that you\nhave the freedom to distribute copies of free software (and charge for\nthis service if you wish), that you receive source code or can get it\nif you want it, that you can change the software or use pieces of it\nin new free programs; and that you know you can do these things.\n\nTo protect your rights, we need to make restrictions that forbid\nanyone to deny you these rights or to ask you to surrender the rights.\nThese restrictions translate to certain responsibilities for you if you\ndistribute copies of the software, or if you modify it.\n\nFor example, if you distribute copies of such a program, whether\ngratis or for a fee, you must give the recipients all the rights that\nyou have.  You must make sure that they, too, receive or can get the\nsource code.  And you must show them these terms so they know their\nrights.\n\nWe protect your rights with two steps: (1) copyright the software, and\n(2) offer you this license which gives you legal permission to copy,\ndistribute and/or modify the software.\n\nAlso, for each author's protection and ours, we want to make certain\nthat everyone understands that there is no warranty for this free\nsoftware.  If the software is modified by someone else and passed on, we\nwant its recipients to know that what they have is not the original, so\nthat any problems introduced by others will not reflect on the original\nauthors' reputations.\n\nFinally, any free program is threatened constantly by software\npatents.  We wish to avoid the danger that redistributors of a free\nprogram will individually obtain patent licenses, in effect making the\nprogram proprietary.  To prevent this, we have made it clear that any\npatent must be licensed for everyone's free use or not licensed at all.\n\nThe precise terms and conditions for copying, distribution and\nmodification follow.\n\f\nGNU GENERAL PUBLIC LICENSE\nTERMS AND CONDITIONS FOR COPYING, DISTRIBUTION AND MODIFICATION\n\n0. This License applies to any program or other work which contains\na notice placed by the copyright holder saying it may be distributed\nunder the terms of this General Public License.  The \"Program\", below,\nrefers to any such program or work, and a \"work based on the Program\"\nmeans either the Program or any derivative work under copyright law:\nthat is to say, a work containing the Program or a portion of it,\neither verbatim or with modifications and/or translated into another\nlanguage.  (Hereinafter, translation is included without limitation in\nthe term \"modification\".)  Each licensee is addressed as \"you\".\n\nActivities other than copying, distribution and modification are not\ncovered by this License; they are outside its scope.  The act of\nrunning the Program is not restricted, and the output from the Program\nis covered only if its contents constitute a work based on the\nProgram (independent of having been made by running the Program).\nWhether that is true depends on what the Program does.\n\n1. You may copy and distribute verbatim copies of the Program's\nsource code as you receive it, in any medium, provided that you\nconspicuously and appropriately publish on each copy an appropriate\ncopyright notice and disclaimer of warranty; keep intact all the\nnotices that refer to this License and to the absence of any warranty;\nand give any other recipients of the Program a copy of this License\nalong with the Program.\n\nYou may charge a fee for the physical act of transferring a copy, and\nyou may at your option offer warranty protection in exchange for a fee.\n\n2. You may modify your copy or copies of the Program or any portion\nof it, thus forming a work based on the Program, and copy and\ndistribute such modifications or work under the terms of Section 1\nabove, provided that you also meet all of these conditions:\n\na) You must cause the modified files to carry prominent notices\nstating that you changed the files and the date of any change.\n\nb) You must cause any work that you distribute or publish, that in\nwhole or in part contains or is derived from the Program or any\npart thereof, to be licensed as a whole at no charge to all third\nparties under the terms of this License.\n\nc) If the modified program normally reads commands interactively\nwhen run, you must cause it, when started running for such\ninteractive use in the most ordinary way, to print or display an\nannouncement including an appropriate copyright notice and a\nnotice that there is no warranty (or else, saying that you provide\na warranty) and that users may redistribute the program under\nthese conditions, and telling the user how to view a copy of this\nLicense.  (Exception: if the Program itself is interactive but\ndoes not normally print such an announcement, your work based on\nthe Program is not required to print an announcement.)\n\f\nThese requirements apply to the modified work as a whole.  If\nidentifiable sections of that work are not derived from the Program,\nand can be reasonably considered independent and separate works in\nthemselves, then this License, and its terms, do not apply to those\nsections when you distribute them as separate works.  But when you\ndistribute the same sections as part of a whole which is a work based\non the Program, the distribution of the whole must be on the terms of\nthis License, whose permissions for other licensees extend to the\nentire whole, and thus to each and every part regardless of who wrote it.\n\nThus, it is not the intent of this section to claim rights or contest\nyour rights to work written entirely by you; rather, the intent is to\nexercise the right to control the distribution of derivative or\ncollective works based on the Program.\n\nIn addition, mere aggregation of another work not based on the Program\nwith the Program (or with a work based on the Program) on a volume of\na storage or distribution medium does not bring the other work under\nthe scope of this License.\n\n3. You may copy and distribute the Program (or a work based on it,\nunder Section 2) in object code or executable form under the terms of\nSections 1 and 2 above provided that you also do one of the following:\n\na) Accompany it with the complete corresponding machine-readable\nsource code, which must be distributed under the terms of Sections\n1 and 2 above on a medium customarily used for software interchange; or,\n\nb) Accompany it with a written offer, valid for at least three\nyears, to give any third party, for a charge no more than your\ncost of physically performing source distribution, a complete\nmachine-readable copy of the corresponding source code, to be\ndistributed under the terms of Sections 1 and 2 above on a medium\ncustomarily used for software interchange; or,\n\nc) Accompany it with the information you received as to the offer\nto distribute corresponding source code.  (This alternative is\nallowed only for noncommercial distribution and only if you\nreceived the program in object code or executable form with such\nan offer, in accord with Subsection b above.)\n\nThe source code for a work means the preferred form of the work for\nmaking modifications to it.  For an executable work, complete source\ncode means all the source code for all modules it contains, plus any\nassociated interface definition files, plus the scripts used to\ncontrol compilation and installation of the executable.  However, as a\nspecial exception, the source code distributed need not include\nanything that is normally distributed (in either source or binary\nform) with the major components (compiler, kernel, and so on) of the\noperating system on which the executable runs, unless that component\nitself accompanies the executable.\n\nIf distribution of executable or object code is made by offering\naccess to copy from a designated place, then offering equivalent\naccess to copy the source code from the same place counts as\ndistribution of the source code, even though third parties are not\ncompelled to copy the source along with the object code.\n\f\n4. You may not copy, modify, sublicense, or distribute the Program\nexcept as expressly provided under this License.  Any attempt\notherwise to copy, modify, sublicense or distribute the Program is\nvoid, and will automatically terminate your rights under this License.\nHowever, parties who have received copies, or rights, from you under\nthis License will not have their licenses terminated so long as such\nparties remain in full compliance.\n\n5. You are not required to accept this License, since you have not\nsigned it.  However, nothing else grants you permission to modify or\ndistribute the Program or its derivative works.  These actions are\nprohibited by law if you do not accept this License.  Therefore, by\nmodifying or distributing the Program (or any work based on the\nProgram), you indicate your acceptance of this License to do so, and\nall its terms and conditions for copying, distributing or modifying\nthe Program or works based on it.\n\n6. Each time you redistribute the Program (or any work based on the\nProgram), the recipient automatically receives a license from the\noriginal licensor to copy, distribute or modify the Program subject to\nthese terms and conditions.  You may not impose any further\nrestrictions on the recipients' exercise of the rights granted herein.\nYou are not responsible for enforcing compliance by third parties to\nthis License.\n\n7. If, as a consequence of a court judgment or allegation of patent\ninfringement or for any other reason (not limited to patent issues),\nconditions are imposed on you (whether by court order, agreement or\notherwise) that contradict the conditions of this License, they do not\nexcuse you from the conditions of this License.  If you cannot\ndistribute so as to satisfy simultaneously your obligations under this\nLicense and any other pertinent obligations, then as a consequence you\nmay not distribute the Program at all.  For example, if a patent\nlicense would not permit royalty-free redistribution of the Program by\nall those who receive copies directly or indirectly through you, then\nthe only way you could satisfy both it and this License would be to\nrefrain entirely from distribution of the Program.\n\nIf any portion of this section is held invalid or unenforceable under\nany particular circumstance, the balance of the section is intended to\napply and the section as a whole is intended to apply in other\ncircumstances.\n\nIt is not the purpose of this section to induce you to infringe any\npatents or other property right claims or to contest validity of any\nsuch claims; this section has the sole purpose of protecting the\nintegrity of the free software distribution system, which is\nimplemented by public license practices.  Many people have made\ngenerous contributions to the wide range of software distributed\nthrough that system in reliance on consistent application of that\nsystem; it is up to the author/donor to decide if he or she is willing\nto distribute software through any other system and a licensee cannot\nimpose that choice.\n\nThis section is intended to make thoroughly clear what is believed to\nbe a consequence of the rest of this License.\n\f\n8. If the distribution and/or use of the Program is restricted in\ncertain countries either by patents or by copyrighted interfaces, the\noriginal copyright holder who places the Program under this License\nmay add an explicit geographical distribution limitation excluding\nthose countries, so that distribution is permitted only in or among\ncountries not thus excluded.  In such case, this License incorporates\nthe limitation as if written in the body of this License.\n\n9. The Free Software Foundation may publish revised and/or new versions\nof the General Public License from time to time.  Such new versions will\nbe similar in spirit to the present version, but may differ in detail to\naddress new problems or concerns.\n\nEach version is given a distinguishing version number.  If the Program\nspecifies a version number of this License which applies to it and \"any\nlater version\", you have the option of following the terms and conditions\neither of that version or of any later version published by the Free\nSoftware Foundation.  If the Program does not specify a version number of\nthis License, you may choose any version ever published by the Free Software\nFoundation.\n\n10. If you wish to incorporate parts of the Program into other free\nprograms whose distribution conditions are different, write to the author\nto ask for permission.  For software which is copyrighted by the Free\nSoftware Foundation, write to the Free Software Foundation; we sometimes\nmake exceptions for this.  Our decision will be guided by the two goals\nof preserving the free status of all derivatives of our free software and\nof promoting the sharing and reuse of software generally.\n\n  NO WARRANTY\n\n11. BECAUSE THE PROGRAM IS LICENSED FREE OF CHARGE, THERE IS NO WARRANTY\nFOR THE PROGRAM, TO THE EXTENT PERMITTED BY APPLICABLE LAW.  EXCEPT WHEN\nOTHERWISE STATED IN WRITING THE COPYRIGHT HOLDERS AND/OR OTHER PARTIES\nPROVIDE THE PROGRAM \"AS IS\" WITHOUT WARRANTY OF ANY KIND, EITHER EXPRESSED\nOR IMPLIED, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF\nMERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.  THE ENTIRE RISK AS\nTO THE QUALITY AND PERFORMANCE OF THE PROGRAM IS WITH YOU.  SHOULD THE\nPROGRAM PROVE DEFECTIVE, YOU ASSUME THE COST OF ALL NECESSARY SERVICING,\nREPAIR OR CORRECTION.\n\n12. IN NO EVENT UNLESS REQUIRED BY APPLICABLE LAW OR AGREED TO IN WRITING\nWILL ANY COPYRIGHT HOLDER, OR ANY OTHER PARTY WHO MAY MODIFY AND/OR\nREDISTRIBUTE THE PROGRAM AS PERMITTED ABOVE, BE LIABLE TO YOU FOR DAMAGES,\nINCLUDING ANY GENERAL, SPECIAL, INCIDENTAL OR CONSEQUENTIAL DAMAGES ARISING\nOUT OF THE USE OR INABILITY TO USE THE PROGRAM (INCLUDING BUT NOT LIMITED\nTO LOSS OF DATA OR DATA BEING RENDERED INACCURATE OR LOSSES SUSTAINED BY\nYOU OR THIRD PARTIES OR A FAILURE OF THE PROGRAM TO OPERATE WITH ANY OTHER\nPROGRAMS), EVEN IF SUCH HOLDER OR OTHER PARTY HAS BEEN ADVISED OF THE\nPOSSIBILITY OF SUCH DAMAGES.\n\n END OF TERMS AND CONDITIONS\n\f\n"
+      },
+      "source": "https://raw.githubusercontent.com/zamboni-lab/SLAW/master/LICENSE",
+      "technique": "file_exploration"
+    }
+  ],
+  "name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "SLAW"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "owner": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Organization",
+        "value": "zamboni-lab"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "programming_languages": [
+    {
+      "confidence": 1,
+      "result": {
+        "name": "R",
+        "size": 379454,
+        "type": "Programming_language",
+        "value": "R"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Python",
+        "size": 209049,
+        "type": "Programming_language",
+        "value": "Python"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "C++",
+        "size": 48517,
+        "type": "Programming_language",
+        "value": "C++"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "C#",
+        "size": 11334,
+        "type": "Programming_language",
+        "value": "C#"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Shell",
+        "size": 5260,
+        "type": "Programming_language",
+        "value": "Shell"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Dockerfile",
+        "size": 1508,
+        "type": "Programming_language",
+        "value": "Dockerfile"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "C",
+        "size": 456,
+        "type": "Programming_language",
+        "value": "C"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "readme_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/zamboni-lab/SLAW/master/README.md"
+      },
+      "technique": "file_exploration"
+    }
+  ],
+  "releases": [
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "htmonkey",
+          "type": "User"
+        },
+        "date_created": "2022-10-07T11:15:14Z",
+        "date_published": "2022-10-28T19:03:48Z",
+        "description": "Original version described in the paper",
+        "html_url": "https://github.com/zamboni-lab/SLAW/releases/tag/v1.0.0",
+        "release_id": 81388567,
+        "tag": "v1.0.0",
+        "tarball_url": "https://api.github.com/repos/zamboni-lab/SLAW/tarball/v1.0.0",
+        "type": "Release",
+        "url": "https://api.github.com/repos/zamboni-lab/SLAW/releases/81388567",
+        "value": "https://api.github.com/repos/zamboni-lab/SLAW/releases/81388567",
+        "zipball_url": "https://api.github.com/repos/zamboni-lab/SLAW/zipball/v1.0.0"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "somef_missing_categories": [
+    "citation",
+    "acknowledgement",
+    "run",
+    "download",
+    "requirements",
+    "contact",
+    "contributors",
+    "faq",
+    "support",
+    "identifier",
+    "executable_example"
+  ],
+  "somef_provenance": {
+    "date": "2024-10-06 02:29:28",
+    "somef_schema_version": "1.0.0",
+    "somef_version": "0.9.5"
+  },
+  "stargazers_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 26
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "type": [
+    {
+      "confidence": 0.82,
+      "result": {
+        "type": "String",
+        "value": "commandline-application"
+      },
+      "technique": "software_type_heuristics"
+    }
+  ],
+  "usage": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Quick start",
+        "parent_header": [
+          "SLAW"
+        ],
+        "type": "Text_excerpt",
+        "value": "SLAW is executed by running the Docker container in  a terminal window (on Linux) or in the Powershell (on Windows, don't use Powershell ISE).\nAll input files (all mzML files and, optionally `parameters.txt` and `samples.csv`) must be present in a single input folder.\nIn addition, **a local output folder must be created**.\nBoth folders must be mounted with the `-v` option to either `/input` and `/output` when running the container:\n\n```\ndocker run --rm -v PATH_INPUT:/input -v PATH_OUTPUT:/output zambonilab/slaw:latest\n```\n\nIn the above example, `PATH_INPUT` and `PATH_OUTPUT` should be replaced with the full path of the aforementioned input and output folder.\nAn example can be found at the end of this section.\nCopying without updating will trigger an error because the paths are invalid. \n\nIf you specified the paths correctly and they exist, you should see the following text:\n\n```\n2020-12-02|12:39:28|INFO: Total memory available: 7556 and 6 cores. The workflow will use 1257 Mb by core on 5 cores.\n....\n2020-12-02|12:39:31|INFO: Parameters file generated please check the parameters values/ranges and toggle optimization if needed.\n```\n\n**If the output folder did not contain a `parameters.txt` file**, SLAW creates a default version and stops.\nThis allows to adjust settings.\nUpon editing, processing can then be resumed by running the same command as above.\n\n**If the `parameters.txt` file existed**, SLAW reads all settings and proceeds with execution.\n\n```\n2020-12-02|12:39:37|INFO: Total memory available: 7553 and 6 cores. The workflow will use 1257 Mb by core on 5 cores.\n2020-12-02|12:39:37|INFO: Guessing polarity from file:DDA1.mzML\n2020-12-02|12:39:38|INFO: Polarity detected: positive\n2020-12-02|12:39:39|INFO: STEP: initialisation TOTAL_TIME:2.05s LAST_STEP:2.05s\n...\n2020-12-02|12:41:04|INFO: STEP: gap-filling TOTAL_TIME:86.86s LAST_STEP:15.17s\n2020-12-02|12:41:30|INFO: Annotation finished\n2020-12-02|12:41:30|INFO: STEP: annotation TOTAL_TIME:112.74s LAST_STEP:25.87s\n```\n\nExample data are provided in the `test_data` folder of this repository.\nThese data have been heavily filtered to allow quick testing (i.e. we removed low abundant centroids).\nAn example of input folder is given in the `test_data/mzML` folder, and an example of parameters file (which will be generated by SLAW if you run it on an empty folder) is given in `test_data/parameters.txt`.\n \n\nDuring execution, SLAW generates the following **output files** in `PATH_OUTPUT`:\n\n* *datamatrices*:\nThe complete table with rows corresponding to features (ions) and the columns corresponding to samples.\nThree types of matrices are generated: before clustering and annotation of adducts/ions, after, and after upon collapsing adducts and ions.\n* *fused_mgf*:\nThe consensus MS2 spectra consolidated in a single MGF (Mascot Generic Format) file.\nFor each feature in the data matrix we report MS2 spectra for each collisional energy (if available) and a fused one.\n* *OPENMS/CENTWAVE/ADAP*: \nStores the individual peak tables and ms-ms spectra for each sample as obtained from the peak pickers.\n* *temp_optim*:\nIf parameter optimization was done, this folder includes all key files and results created during parameter optimization.\n"
+      },
+      "source": "https://raw.githubusercontent.com/zamboni-lab/SLAW/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Notes",
+        "parent_header": [
+          "SLAW",
+          "Quick start"
+        ],
+        "type": "Text_excerpt",
+        "value": "* We recommend using a local folder as output.\nNetwork mounts create problems.\n* More CPU cores will accelerate computation.\nIf you are running parallel containers, the number can be set with `-e NCORES=n`.\nHowever a high number of cores (n>80) may encounter internal R limitations, there keep this number below `80`.\n* A verbose execution can be activated with `-e LOGGING=DEBUG`.\nTherefore, a more complete command-line example on a Windows machine is:\n\n```\ndocker run --rm -v D:\\mydata\\input_folder_with_mzML:/input -v D:\\mydata\\output_folder:/output -e NCORES=16 -e LOGGING=DEBUG zambonilab/slaw:latest\n```\n"
+      },
+      "source": "https://raw.githubusercontent.com/zamboni-lab/SLAW/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Use on HPC nodes",
+        "parent_header": [
+          "SLAW"
+        ],
+        "type": "Text_excerpt",
+        "value": "If you need to run SLAW on a HPC infrastructure that does not provide the rights to operate Docker, an equivalent container is available from Singularity.\nAs SingularityHub went read-only, the recommended way to get the singularity container is to pull it from DockerHub:\n\n```\n singularity pull slaw.sif docker://zambonilab/slaw:latest\n```\n\nA similar processing can be run using singularity like this:\n\n```\nsingularity run -C -W workspace_folder -B PATH_OUTPUT:/output  -B MZML_FOLDER:/input slaw.sif\n```\n"
+      },
+      "source": "https://raw.githubusercontent.com/zamboni-lab/SLAW/master/README.md",
+      "technique": "header_analysis"
+    }
+  ]
+}

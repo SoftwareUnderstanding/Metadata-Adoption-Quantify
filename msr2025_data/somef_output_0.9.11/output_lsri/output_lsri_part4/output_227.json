@@ -1,0 +1,876 @@
+{
+  "application_domain": [
+    {
+      "confidence": 20.12,
+      "result": {
+        "type": "String",
+        "value": "Natural Language Processing"
+      },
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 4.91,
+      "result": {
+        "type": "String",
+        "value": "Audio"
+      },
+      "technique": "supervised_classification"
+    }
+  ],
+  "citation": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "To cite the package:",
+        "parent_header": [
+          "scSplit"
+        ],
+        "type": "Text_excerpt",
+        "value": "Xu, J., Falconer, C., Nguyen, Q. et al. Genotype-free demultiplexing of pooled single-cell RNA-seq. Genome Biol 20, 290 (2019). https://doi.org/10.1186/s13059-019-1852-7\n"
+      },
+      "source": "https://raw.githubusercontent.com/jon-xu/scSplit/master/README.md",
+      "technique": "header_analysis"
+    }
+  ],
+  "code_repository": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/jon-xu/scSplit"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_created": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2018-08-20T01:30:00Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_updated": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2024-09-14T09:05:26Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "description": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "Genotype-free demultiplexing of pooled single-cell RNA-Seq, using a hidden state model for identifying genetically distinct samples within a mixed population."
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 0.8803977029506433,
+      "result": {
+        "original_header": "1. Data quality control and filtering",
+        "type": "Text_excerpt",
+        "value": "   a) Filter processed BAM in a way that reads with any of following patterns be removed: read quality lower than 10,  being unmapped segment, being secondary alignment, not passing filters, being PCR or optical duplicate, or being supplementary alignment.\n   \n   e.g. samtools view -S -b -q 10 -F 3844 processed.bam > filtered.bam\n   \n   b) If necessary, remove duplicated reads based on UMI using tools like rmdup in UMI-tools.\n   \n   c) Sort and index the BAM file, using sort, index commands in samtools.\n    \n"
+      },
+      "source": "https://raw.githubusercontent.com/jon-xu/scSplit/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9378252881251884,
+      "result": {
+        "original_header": "2. Calling for single-nucleotide variants",
+        "type": "Text_excerpt",
+        "value": "   a) Use freebayes v1.2 to call SNVs from the mixed sample BAM file after being processed in the first step, set the parameters for freebayes so that no insertion and deletions (indels), nor Multi-nucleotide polymorphysim (MNP) or complex events would be captured, set minimum allele count to 2 and set minimum base quality to 1.\n   \n   e.g. freebayes -f <reference.fa> -iXu -C 2 -q 1 filtered_rmdup_sorted.bam > snv.vcf\n   \n   This step could take very long (up to 30 hours if not using parallel processing).  In order to fasten the calling process, user can split the BAM by chromosome and call SNVs separately and merge the vcf files afterwards.\n   \n   Users can opt to use GATK or other SNV calling tools as well.  \n   \n   b) The output VCF file should be further filtered using bcftools so that only the SNVs with quality score larger than 30 would be kept.\n   \n   e.g. bcftools filter -i '%QUAL>30' snv.vcf -o filtered.vcf\n    \n"
+      },
+      "source": "https://raw.githubusercontent.com/jon-xu/scSplit/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9312247101225021,
+      "result": {
+        "original_header": "3. Building allele count matrices",
+        "type": "Text_excerpt",
+        "value": "   a) Run \"scSplit count\" and get two .csv files (\"ref_filtered.csv\" and \"alt_filtered.csv\") as output.\n   \n   input parameters:\n      \n        -v, --vcf, VCF from mixed BAM\n        -i, --bam, mixed sample BAM        \n        -b, --bar, barcodes whitelist\n        -t, --tag, tag for barcode (default: \"CB\")\n        -c, --com, common SNVs    \n        -r, --ref, output Ref count matrix        \n        -a, --alt, output Alt count matrix\n        -o, --out, output directory\n        \n        e.g. scSplit count -v filtered.vcf -i filtered_rmdup_sorted.bam -b barcodes.tsv -r ref_filtered.csv -a alt_filtered.csv -o .\n   \n   b) It is **strongly recommended** to use below SNV list to filter the matrices to improve prediction accuracy: \n      Common SNPs (e.g. Human common SNPs from 1000 Genome project)\n   \n      hg19: http://ftp.1000genomes.ebi.ac.uk/vol1/ftp/release/20130502/\n   \n      hg38: http://ftp.1000genomes.ebi.ac.uk/vol1/ftp/data_collections/1000_genomes_project/release/\n        \n      To process the genotype files of common SNPs, either download per-chromosome files and concatenate them using bcftools or download the whole genome file, take the first two columns of the vcf file and replace the tab with colon sign so that each line is one SNV, e.g., \"1:10177\". \n      \n      Processed common SNVs for hg38 can be found here: https://melbourne.figshare.com/articles/dataset/Common_SNVS_hg38/17032163 \n   Please specify the common SNVs in scSplit count using -c/--com parameter, please make sure your common SNVs list does not have header row, and also please make sure the chromosome format in common SNV file is consistent with that in your data, e.g if your data use \"chr1\" rather than \"1\" to indicate the chromosome, you need to add \"chr\" at the beginning of each row of the common SNVs file before running scSplit.\n   \n   c) When building count matrices, the genotypes of each allele will be checked and only those heterozygous thus informative SNVs will be kept.  This is achieved by checking GL/GP/PL/GT fields in the VCF file, while only one in order will be used if existed.\n   \n   d) This step could be memory consuming, if the number of SNVs and/or cells are high. As a guideline, building matrices for 60,000 SNVs and 10,000 cells might need more than 30GB RAM to run, please allow enough RAM resource for running the script.\n   \n   e) Typical runtime for this step is about one hour, depending on the nature of the data and the resources being allocated.\n   \n   f) Typical number of filtered SNVs after this step is usually between 10,000 and 30,000.\n   \n   g) If this step fails, please check: 1) is your barcode tag in the BAM files \"CB\" - if not, you need to specify it using -t/--tag; 2) are you working on a mixed sample VCF rather than a simple merge of individual genotypes? 3) is the correct whitelist barcode file being used? The whitelist should be the trusted barcodes from your sequencing result, not the whole barcode library of the sequencing protocol.\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/jon-xu/scSplit/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9319518968545388,
+      "result": {
+        "original_header": "4. Demultiplexing and generate ALT P/A matrix",
+        "type": "Text_excerpt",
+        "value": "   a) Use the two generated allele counts matrices files to demultiplex the cells into different samples.  Doublet sample will not have the same sample ID every time, which will be explicitly indicated in the log file\n   \n   b) Users can filter out doublets using dedicated tools like DoubletFinder before demultiplexing the sample (in this case please use -d 0 for demultiplexing pure singlets). \n   c) Run \"scSplit run\" with input parameters:\n      \n        -r, --ref, input Ref count matrix        \n        -a, --alt, input Alt count matrix        \n        -n, --num, expected number of mixed samples (-n 0: autodetect mode)\n        -o, --out, output directory\n        -s, --sub, (optional) maximum number of subpopulations in autodetect mode, default: 10\n        -e, --ems, (optional) number of EM repeats to avoid local maximum, default: 30\n        -d, --dbl, (optional) correction for doublets, \"-d 0\" means you would expect no doublets.  There will be no refinement on the results if this optional parameter is not specified or specified percentage is less than doublet rates detected during the run\n        -v, --vcf, (optional) known individual genotypes to limit distinguishing variants to available variants, so that users do not need to redo genotyping on selected variants, otherwise any variants could be selected as distinguishing variants. \n      \"scSplit_result.csv\": barcodes assigned to each of the N+1 cluster (N singlets and 1 doublet cluster), doublet marked as DBL-<n> (n stands for the cluster number), e.g SNG-0 means the cluster 0 is a singlet cluster.\n      \"scSplit_dist_variants.txt\": the distinguishing variants that can be used to genotype and assign sample to clusters\n      \"scSplit_dist_matrix.csv\": the ALT allele Presence/Absence (P/A) matrix on distinguishing variants for all samples as a reference in assigning sample to clusters, NOT including the doublet cluster, whose sequence number would be different every run (please pay enough attention to this)\n      \"scSplit_PA_matrix.csv\": the full ALT allele Presence/Absence (P/A) matrix for all samples, NOT including the doublet cluster, whose sequence number would be different every run (please pay enough attention to this)\n      \"scSplit_P_s_c.csv\", the probability of each cell belonging to each sample\n      \"scSplit.log\" log file containing information for current run, iterations, and final Maximum Likelihood and doublet sample\n      \n   e) This step is also memory consuming, and the RAM needed is highly dependent on the quantity of SNVs from last step and the number of cells. As a guideline, a matrix with 60,000 SNVs and 10,000 cells might need more than 50GB RAM to run, please allow enough RAM resource for running the script.\n   \n   f) Typical runtime for this step is about half an hour, with default parameters, depending on the nature of the data and the resources being allocated.\n   \n   g) scSplit will add one pseudo cluster to represent doublets.\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/jon-xu/scSplit/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9247587093529503,
+      "result": {
+        "original_header": "5. (Optional) Generate sample genotypes based on the split result",
+        "type": "Text_excerpt",
+        "value": "        e.g. scSplit genotype -r ref_filtered.csv -a alt_filtered.csv -p scSplit_P_s_c.csv -o results\n        \n   b) VCF file (\"scSplit.vcf\") will be generated for the logarithm-transformed genotype likelihoods for all sample models.\n   c) User can compare the genotypes on interesting SNPs with known sample genotypes on these SNPs and link the scSplit cluster to the samples. The largest value of GP or GL indicates the most probable genotype, e.g. GP 0.0, 0.295, 0.705 indicates a genotype of 1/1. \n"
+      },
+      "source": "https://raw.githubusercontent.com/jon-xu/scSplit/master/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "download_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/jon-xu/scSplit/releases"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 9
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/jon-xu/scSplit/forks"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "jon-xu/scSplit"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_title": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "scSplit"
+      },
+      "source": "https://raw.githubusercontent.com/jon-xu/scSplit/master/README.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "images": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/jon-xu/scSplit/master/man/workflow.png"
+      },
+      "source": "https://raw.githubusercontent.com/jon-xu/scSplit/master/README.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "installation": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "How to install:",
+        "parent_header": [
+          "scSplit"
+        ],
+        "type": "Text_excerpt",
+        "value": "  1) install python 3.6+\n  2) make sure below python packages can be imported:\n  \n    numpy, pandas, pysam, PyVCF, scikit-learn, scipy, statistics\n  3) \"git clone https://<span></span>github.com/jon-xu/scSplit\" or \"pip  install scSplit\" or simply download the scSplit file\n  4) run with \"\\<PATH\\>/scSplit \\<command\\> \\<args\\>\" or \"python \\<PATH\\>/scSplit \\<command\\> \\<args\\>\" \n"
+      },
+      "source": "https://raw.githubusercontent.com/jon-xu/scSplit/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 0.9341369396005753,
+      "result": {
+        "original_header": "4. Demultiplexing and generate ALT P/A matrix",
+        "type": "Text_excerpt",
+        "value": "   d) Below files will be generated: \n"
+      },
+      "source": "https://raw.githubusercontent.com/jon-xu/scSplit/master/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "invocation": [
+    {
+      "confidence": 0.8098515375219082,
+      "result": {
+        "original_header": "3. Building allele count matrices",
+        "type": "Text_excerpt",
+        "value": "   a) Run \"scSplit count\" and get two .csv files (\"ref_filtered.csv\" and \"alt_filtered.csv\") as output.\n   \n   input parameters:\n      \n        -v, --vcf, VCF from mixed BAM\n        -i, --bam, mixed sample BAM        \n        -b, --bar, barcodes whitelist\n        -t, --tag, tag for barcode (default: \"CB\")\n        -c, --com, common SNVs    \n        -r, --ref, output Ref count matrix        \n        -a, --alt, output Alt count matrix\n        -o, --out, output directory\n        \n        e.g. scSplit count -v filtered.vcf -i filtered_rmdup_sorted.bam -b barcodes.tsv -r ref_filtered.csv -a alt_filtered.csv -o .\n   \n   b) It is **strongly recommended** to use below SNV list to filter the matrices to improve prediction accuracy: \n"
+      },
+      "source": "https://raw.githubusercontent.com/jon-xu/scSplit/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.8145072874229955,
+      "result": {
+        "original_header": "4. Demultiplexing and generate ALT P/A matrix",
+        "type": "Text_excerpt",
+        "value": "        e.g. scSplit run -r ref_filtered.csv -a alt_filtered.csv -n 8 -o results\n        \n        # below command will tell the script to expect 20% doublets if the natually found doublets are less than that:\n        e.g. scSplit run -r ref_filtered.csv -a alt_filtered.csv -n 8 -o results -d 0.2\n        \n        # (beta) -n 0 -s <sub>, let system decide the optimal sample number between 2 and <sub>\n        e.g. scSplit run -r ref_filtered.csv -a alt_filtered.csv -n 0 -o results -s 12 \n"
+      },
+      "source": "https://raw.githubusercontent.com/jon-xu/scSplit/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9026987237695755,
+      "result": {
+        "original_header": "5. (Optional) Generate sample genotypes based on the split result",
+        "type": "Text_excerpt",
+        "value": "   a) Run \"scSplit genotype\" with input parameters:\n       \n        -r, --ref, Ref count CSV as output        \n        -a, --alt, Alt count CSV as output\n        -p, --psc, generated P(S|C)\n        -o, --out, output directory \n"
+      },
+      "source": "https://raw.githubusercontent.com/jon-xu/scSplit/master/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "issue_tracker": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/jon-xu/scSplit/issues"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "keywords": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": ""
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "license": [
+    {
+      "confidence": 1,
+      "result": {
+        "name": "MIT License",
+        "spdx_id": "MIT",
+        "type": "License",
+        "url": "https://api.github.com/licenses/mit",
+        "value": "https://api.github.com/licenses/mit"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "File_dump",
+        "value": "MIT License\n\nCopyright (c) 2019 jon-xu\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.\n"
+      },
+      "source": "https://raw.githubusercontent.com/jon-xu/scSplit/master/LICENSE",
+      "technique": "file_exploration"
+    }
+  ],
+  "name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "scSplit"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "owner": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "User",
+        "value": "jon-xu"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "programming_languages": [
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Python",
+        "size": 36370,
+        "type": "Programming_language",
+        "value": "Python"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "readme_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/jon-xu/scSplit/master/README.md"
+      },
+      "technique": "file_exploration"
+    }
+  ],
+  "releases": [
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "jon-xu",
+          "type": "User"
+        },
+        "date_created": "2023-02-08T03:24:14Z",
+        "date_published": "2023-02-08T03:26:41Z",
+        "description": "Code corrected due to the deprecation of np.matrix().",
+        "html_url": "https://github.com/jon-xu/scSplit/releases/tag/v1.0.9",
+        "name": "v1.0.9",
+        "release_id": 91689645,
+        "tag": "v1.0.9",
+        "tarball_url": "https://api.github.com/repos/jon-xu/scSplit/tarball/v1.0.9",
+        "type": "Release",
+        "url": "https://api.github.com/repos/jon-xu/scSplit/releases/91689645",
+        "value": "https://api.github.com/repos/jon-xu/scSplit/releases/91689645",
+        "zipball_url": "https://api.github.com/repos/jon-xu/scSplit/zipball/v1.0.9"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "jon-xu",
+          "type": "User"
+        },
+        "date_created": "2021-01-17T08:34:51Z",
+        "date_published": "2021-01-17T08:37:50Z",
+        "description": "Save memory space for the count matrices\r\n",
+        "html_url": "https://github.com/jon-xu/scSplit/releases/tag/v1.0.8",
+        "name": "v1.0.8",
+        "release_id": 36510727,
+        "tag": "v1.0.8",
+        "tarball_url": "https://api.github.com/repos/jon-xu/scSplit/tarball/v1.0.8",
+        "type": "Release",
+        "url": "https://api.github.com/repos/jon-xu/scSplit/releases/36510727",
+        "value": "https://api.github.com/repos/jon-xu/scSplit/releases/36510727",
+        "zipball_url": "https://api.github.com/repos/jon-xu/scSplit/zipball/v1.0.8"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "jon-xu",
+          "type": "User"
+        },
+        "date_created": "2020-04-10T22:44:06Z",
+        "date_published": "2020-04-11T03:11:26Z",
+        "description": "Quick bug fix in generating count matrices",
+        "html_url": "https://github.com/jon-xu/scSplit/releases/tag/v1.0.7",
+        "name": "v1.0.7",
+        "release_id": 25409882,
+        "tag": "v1.0.7",
+        "tarball_url": "https://api.github.com/repos/jon-xu/scSplit/tarball/v1.0.7",
+        "type": "Release",
+        "url": "https://api.github.com/repos/jon-xu/scSplit/releases/25409882",
+        "value": "https://api.github.com/repos/jon-xu/scSplit/releases/25409882",
+        "zipball_url": "https://api.github.com/repos/jon-xu/scSplit/zipball/v1.0.7"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "jon-xu",
+          "type": "User"
+        },
+        "date_created": "2020-04-01T08:39:52Z",
+        "date_published": "2020-04-01T08:42:48Z",
+        "description": "User control of output directory in scSplit count",
+        "html_url": "https://github.com/jon-xu/scSplit/releases/tag/v1.0.6",
+        "name": "v1.0.6",
+        "release_id": 25079409,
+        "tag": "v1.0.6",
+        "tarball_url": "https://api.github.com/repos/jon-xu/scSplit/tarball/v1.0.6",
+        "type": "Release",
+        "url": "https://api.github.com/repos/jon-xu/scSplit/releases/25079409",
+        "value": "https://api.github.com/repos/jon-xu/scSplit/releases/25079409",
+        "zipball_url": "https://api.github.com/repos/jon-xu/scSplit/zipball/v1.0.6"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "jon-xu",
+          "type": "User"
+        },
+        "date_created": "2020-03-30T04:40:35Z",
+        "date_published": "2020-03-30T04:41:24Z",
+        "description": "allow user control of output directory",
+        "html_url": "https://github.com/jon-xu/scSplit/releases/tag/v1.0.5",
+        "name": "v1.0.5",
+        "release_id": 24984724,
+        "tag": "v1.0.5",
+        "tarball_url": "https://api.github.com/repos/jon-xu/scSplit/tarball/v1.0.5",
+        "type": "Release",
+        "url": "https://api.github.com/repos/jon-xu/scSplit/releases/24984724",
+        "value": "https://api.github.com/repos/jon-xu/scSplit/releases/24984724",
+        "zipball_url": "https://api.github.com/repos/jon-xu/scSplit/zipball/v1.0.5"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "jon-xu",
+          "type": "User"
+        },
+        "date_created": "2020-01-10T06:57:56Z",
+        "date_published": "2020-01-10T07:00:58Z",
+        "description": "Model refining on P(S) and model likelihood \r\nLog enhancement\r\n",
+        "html_url": "https://github.com/jon-xu/scSplit/releases/tag/v1.0.4",
+        "name": "v1.0.4",
+        "release_id": 22733663,
+        "tag": "v1.0.4",
+        "tarball_url": "https://api.github.com/repos/jon-xu/scSplit/tarball/v1.0.4",
+        "type": "Release",
+        "url": "https://api.github.com/repos/jon-xu/scSplit/releases/22733663",
+        "value": "https://api.github.com/repos/jon-xu/scSplit/releases/22733663",
+        "zipball_url": "https://api.github.com/repos/jon-xu/scSplit/zipball/v1.0.4"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "jon-xu",
+          "type": "User"
+        },
+        "date_created": "2019-12-03T11:27:14Z",
+        "date_published": "2019-12-04T00:02:57Z",
+        "description": "Bug fix for generating sample genotypes after demultiplexing.\r\n",
+        "html_url": "https://github.com/jon-xu/scSplit/releases/tag/v1.0.3",
+        "name": "v1.0.3",
+        "release_id": 21946774,
+        "tag": "v1.0.3",
+        "tarball_url": "https://api.github.com/repos/jon-xu/scSplit/tarball/v1.0.3",
+        "type": "Release",
+        "url": "https://api.github.com/repos/jon-xu/scSplit/releases/21946774",
+        "value": "https://api.github.com/repos/jon-xu/scSplit/releases/21946774",
+        "zipball_url": "https://api.github.com/repos/jon-xu/scSplit/zipball/v1.0.3"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "jon-xu",
+          "type": "User"
+        },
+        "date_created": "2019-11-27T12:12:23Z",
+        "date_published": "2019-11-27T12:14:36Z",
+        "description": "Bug fix for the calculation of model overall likelihood\r\nBug fix for identifying distinguishing variants when doublets are not expected",
+        "html_url": "https://github.com/jon-xu/scSplit/releases/tag/v1.0.2",
+        "name": "v1.0.2",
+        "release_id": 21798616,
+        "tag": "v1.0.2",
+        "tarball_url": "https://api.github.com/repos/jon-xu/scSplit/tarball/v1.0.2",
+        "type": "Release",
+        "url": "https://api.github.com/repos/jon-xu/scSplit/releases/21798616",
+        "value": "https://api.github.com/repos/jon-xu/scSplit/releases/21798616",
+        "zipball_url": "https://api.github.com/repos/jon-xu/scSplit/zipball/v1.0.2"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "jon-xu",
+          "type": "User"
+        },
+        "date_created": "2019-11-12T23:43:26Z",
+        "date_published": "2019-11-14T00:08:31Z",
+        "description": "extend the support of different genotype fields in VCF (e.g. PL from GATK)",
+        "html_url": "https://github.com/jon-xu/scSplit/releases/tag/v1.0.1",
+        "name": "v1.0.1",
+        "release_id": 21458917,
+        "tag": "v1.0.1",
+        "tarball_url": "https://api.github.com/repos/jon-xu/scSplit/tarball/v1.0.1",
+        "type": "Release",
+        "url": "https://api.github.com/repos/jon-xu/scSplit/releases/21458917",
+        "value": "https://api.github.com/repos/jon-xu/scSplit/releases/21458917",
+        "zipball_url": "https://api.github.com/repos/jon-xu/scSplit/zipball/v1.0.1"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "jon-xu",
+          "type": "User"
+        },
+        "date_created": "2019-09-29T23:13:52Z",
+        "date_published": "2019-09-30T00:11:25Z",
+        "description": "Official release",
+        "html_url": "https://github.com/jon-xu/scSplit/releases/tag/1.0.0",
+        "name": "v1.0.0",
+        "release_id": 20338743,
+        "tag": "1.0.0",
+        "tarball_url": "https://api.github.com/repos/jon-xu/scSplit/tarball/1.0.0",
+        "type": "Release",
+        "url": "https://api.github.com/repos/jon-xu/scSplit/releases/20338743",
+        "value": "https://api.github.com/repos/jon-xu/scSplit/releases/20338743",
+        "zipball_url": "https://api.github.com/repos/jon-xu/scSplit/zipball/1.0.0"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "jon-xu",
+          "type": "User"
+        },
+        "date_created": "2019-09-19T00:22:46Z",
+        "date_published": "2019-09-19T00:25:06Z",
+        "description": "Bug fix for demultiplexing unbalanced populations",
+        "html_url": "https://github.com/jon-xu/scSplit/releases/tag/v0.8.5",
+        "name": "v0.8.5",
+        "release_id": 20094492,
+        "tag": "v0.8.5",
+        "tarball_url": "https://api.github.com/repos/jon-xu/scSplit/tarball/v0.8.5",
+        "type": "Release",
+        "url": "https://api.github.com/repos/jon-xu/scSplit/releases/20094492",
+        "value": "https://api.github.com/repos/jon-xu/scSplit/releases/20094492",
+        "zipball_url": "https://api.github.com/repos/jon-xu/scSplit/zipball/v0.8.5"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "jon-xu",
+          "type": "User"
+        },
+        "date_created": "2019-09-15T23:39:03Z",
+        "date_published": "2019-09-15T23:40:16Z",
+        "description": "Allow user specify barcode tag when generating allele count matrices (default: \"CB\")\r\n",
+        "html_url": "https://github.com/jon-xu/scSplit/releases/tag/v0.8.4",
+        "name": "v0.8.4",
+        "release_id": 20001616,
+        "tag": "v0.8.4",
+        "tarball_url": "https://api.github.com/repos/jon-xu/scSplit/tarball/v0.8.4",
+        "type": "Release",
+        "url": "https://api.github.com/repos/jon-xu/scSplit/releases/20001616",
+        "value": "https://api.github.com/repos/jon-xu/scSplit/releases/20001616",
+        "zipball_url": "https://api.github.com/repos/jon-xu/scSplit/zipball/v0.8.4"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "jon-xu",
+          "type": "User"
+        },
+        "date_created": "2019-08-10T02:52:45Z",
+        "date_published": "2019-08-10T02:57:20Z",
+        "description": "enable demultiplexing 10+ mixed samples",
+        "html_url": "https://github.com/jon-xu/scSplit/releases/tag/v0.8.3",
+        "name": "v0.8.3",
+        "release_id": 19205587,
+        "tag": "v0.8.3",
+        "tarball_url": "https://api.github.com/repos/jon-xu/scSplit/tarball/v0.8.3",
+        "type": "Release",
+        "url": "https://api.github.com/repos/jon-xu/scSplit/releases/19205587",
+        "value": "https://api.github.com/repos/jon-xu/scSplit/releases/19205587",
+        "zipball_url": "https://api.github.com/repos/jon-xu/scSplit/zipball/v0.8.3"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "jon-xu",
+          "type": "User"
+        },
+        "date_created": "2019-08-09T05:32:10Z",
+        "date_published": "2019-08-07T01:30:09Z",
+        "description": "new function (beta) to allow demultiplexing unknown number of samples\r\npickle dump of whole final model removed\r\noutput format change for scSplit_dist_matrix.csv and scSplit_PA_matrix.csv\r\noutput format change for scSplit_result.csv: \u201cDBL\u201d -> \u201cDBL-\u201d",
+        "html_url": "https://github.com/jon-xu/scSplit/releases/tag/v0.8.2",
+        "name": "v0.8.2",
+        "release_id": 19122904,
+        "tag": "v0.8.2",
+        "tarball_url": "https://api.github.com/repos/jon-xu/scSplit/tarball/v0.8.2",
+        "type": "Release",
+        "url": "https://api.github.com/repos/jon-xu/scSplit/releases/19122904",
+        "value": "https://api.github.com/repos/jon-xu/scSplit/releases/19122904",
+        "zipball_url": "https://api.github.com/repos/jon-xu/scSplit/zipball/v0.8.2"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "jon-xu",
+          "type": "User"
+        },
+        "date_created": "2019-08-09T05:32:10Z",
+        "date_published": "2019-07-29T00:40:54Z",
+        "description": "added common SNVs filtering as part of the scSplit count function with -c/--com parameter\r\nall cell assignments put in one file\r\ndoublet expectation added to allow user to increase doublets based on expectation\r\n",
+        "html_url": "https://github.com/jon-xu/scSplit/releases/tag/v0.8.1",
+        "name": "v0.8.1",
+        "release_id": 18915584,
+        "tag": "v0.8.1",
+        "tarball_url": "https://api.github.com/repos/jon-xu/scSplit/tarball/v0.8.1",
+        "type": "Release",
+        "url": "https://api.github.com/repos/jon-xu/scSplit/releases/18915584",
+        "value": "https://api.github.com/repos/jon-xu/scSplit/releases/18915584",
+        "zipball_url": "https://api.github.com/repos/jon-xu/scSplit/zipball/v0.8.1"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "jon-xu",
+          "type": "User"
+        },
+        "date_created": "2019-08-09T05:32:10Z",
+        "date_published": "2019-07-22T20:49:46Z",
+        "description": "re-package the scripts into:\r\n\r\nscSplit count (previous matrices.py)\r\nscSplit run (previous main.py)\r\nscSplit genotype (previous genotype.py)",
+        "html_url": "https://github.com/jon-xu/scSplit/releases/tag/v0.7.5",
+        "name": "v0.7.5",
+        "release_id": 18784560,
+        "tag": "v0.7.5",
+        "tarball_url": "https://api.github.com/repos/jon-xu/scSplit/tarball/v0.7.5",
+        "type": "Release",
+        "url": "https://api.github.com/repos/jon-xu/scSplit/releases/18784560",
+        "value": "https://api.github.com/repos/jon-xu/scSplit/releases/18784560",
+        "zipball_url": "https://api.github.com/repos/jon-xu/scSplit/zipball/v0.7.5"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "jon-xu",
+          "type": "User"
+        },
+        "date_created": "2019-08-09T05:32:10Z",
+        "date_published": "2019-07-01T02:52:59Z",
+        "description": "Bug fixings - \"ValueError: setting an array element with a sequence\" when generating distinguishing variants\r\nNew function - output the whole Presence/Absence Matrix for alternative alleles for all variants\r\n",
+        "html_url": "https://github.com/jon-xu/scSplit/releases/tag/v0.6.0",
+        "name": "v0.6.0",
+        "release_id": 18320867,
+        "tag": "v0.6.0",
+        "tarball_url": "https://api.github.com/repos/jon-xu/scSplit/tarball/v0.6.0",
+        "type": "Release",
+        "url": "https://api.github.com/repos/jon-xu/scSplit/releases/18320867",
+        "value": "https://api.github.com/repos/jon-xu/scSplit/releases/18320867",
+        "zipball_url": "https://api.github.com/repos/jon-xu/scSplit/zipball/v0.6.0"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "jon-xu",
+          "type": "User"
+        },
+        "date_created": "2019-08-09T05:32:10Z",
+        "date_published": "2019-05-09T01:34:34Z",
+        "description": "enabled user-specified doublet proportion\r\nbugs fixed",
+        "html_url": "https://github.com/jon-xu/scSplit/releases/tag/v0.5.0",
+        "name": "v0.5.0",
+        "release_id": 17237096,
+        "tag": "v0.5.0",
+        "tarball_url": "https://api.github.com/repos/jon-xu/scSplit/tarball/v0.5.0",
+        "type": "Release",
+        "url": "https://api.github.com/repos/jon-xu/scSplit/releases/17237096",
+        "value": "https://api.github.com/repos/jon-xu/scSplit/releases/17237096",
+        "zipball_url": "https://api.github.com/repos/jon-xu/scSplit/zipball/v0.5.0"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "jon-xu",
+          "type": "User"
+        },
+        "date_created": "2019-08-09T05:32:10Z",
+        "date_published": "2019-04-15T12:10:03Z",
+        "description": "- doublet detection improved\r\n- LL calculation improved\r\n",
+        "html_url": "https://github.com/jon-xu/scSplit/releases/tag/v0.4.0",
+        "name": "v0.4.0",
+        "release_id": 16764181,
+        "tag": "v0.4.0",
+        "tarball_url": "https://api.github.com/repos/jon-xu/scSplit/tarball/v0.4.0",
+        "type": "Release",
+        "url": "https://api.github.com/repos/jon-xu/scSplit/releases/16764181",
+        "value": "https://api.github.com/repos/jon-xu/scSplit/releases/16764181",
+        "zipball_url": "https://api.github.com/repos/jon-xu/scSplit/zipball/v0.4.0"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "jon-xu",
+          "type": "User"
+        },
+        "date_created": "2019-08-09T05:32:10Z",
+        "date_published": "2019-04-08T03:11:55Z",
+        "description": "changed PA matrix to RR/AA matrix\r\nbug fixing - distinguishing variants detection in cases where not enough can be found for the whole matrix",
+        "html_url": "https://github.com/jon-xu/scSplit/releases/tag/v0.3.0",
+        "name": "v0.3.0",
+        "release_id": 16610011,
+        "tag": "v0.3.0",
+        "tarball_url": "https://api.github.com/repos/jon-xu/scSplit/tarball/v0.3.0",
+        "type": "Release",
+        "url": "https://api.github.com/repos/jon-xu/scSplit/releases/16610011",
+        "value": "https://api.github.com/repos/jon-xu/scSplit/releases/16610011",
+        "zipball_url": "https://api.github.com/repos/jon-xu/scSplit/zipball/v0.3.0"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "jon-xu",
+          "type": "User"
+        },
+        "date_created": "2019-08-09T05:32:10Z",
+        "date_published": "2019-03-20T01:33:16Z",
+        "description": "Important bug fixing: fixed PCA n_component in previous release caused runtime error.\r\n",
+        "html_url": "https://github.com/jon-xu/scSplit/releases/tag/v0.2.0",
+        "name": "v0.2.0",
+        "release_id": 16221073,
+        "tag": "v0.2.0",
+        "tarball_url": "https://api.github.com/repos/jon-xu/scSplit/tarball/v0.2.0",
+        "type": "Release",
+        "url": "https://api.github.com/repos/jon-xu/scSplit/releases/16221073",
+        "value": "https://api.github.com/repos/jon-xu/scSplit/releases/16221073",
+        "zipball_url": "https://api.github.com/repos/jon-xu/scSplit/zipball/v0.2.0"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "jon-xu",
+          "type": "User"
+        },
+        "date_created": "2019-08-09T05:32:10Z",
+        "date_published": "2019-01-25T04:43:04Z",
+        "description": "A few functional updates are included in this release:\r\n\r\nmain.py: former sc_split_main.py, new functions added to detect distinguishing alleles after samples are split, so that people can use them as a reference to get samples identified; command line arguments allowed\r\nmatrices.py: former sc_split_matrices.py, command line arguments allowed\r\ngenotype.py: former sc_split_vcf.py, command line arguments allowed\r\nsimulation.py: former sc_split_simu.py, command line arguments allowed\r\nvalidate.py: newly added, users can use this to validate the genotypes based on the scSplit result compared to known vcf\r\n",
+        "html_url": "https://github.com/jon-xu/scSplit/releases/tag/v0.1.0",
+        "name": "v0.1.0",
+        "release_id": 15174477,
+        "tag": "v0.1.0",
+        "tarball_url": "https://api.github.com/repos/jon-xu/scSplit/tarball/v0.1.0",
+        "type": "Release",
+        "url": "https://api.github.com/repos/jon-xu/scSplit/releases/15174477",
+        "value": "https://api.github.com/repos/jon-xu/scSplit/releases/15174477",
+        "zipball_url": "https://api.github.com/repos/jon-xu/scSplit/zipball/v0.1.0"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "jon-xu",
+          "type": "User"
+        },
+        "date_created": "2019-04-15T12:07:56Z",
+        "date_published": "2018-12-19T06:27:19Z",
+        "description": "This is the first release of scSplit as a genotype-free tool for demultiplexing pooled single cell samples.\r\n\r\nThis version of scSplit toolset contains below script:\r\n\r\nsc_split_matrices.py: build SNV x barcode Matrices (reference and alternative alleles)\r\nsc_split_main.py: main script to conduct reference free AF-based demultiplexing\r\nsc_split_vcf.py: generate vcf file containing simulated genotypes according to demultiplexing assignments\r\nsc_split_simu.py: simulate BAM and allele fraction matrices based on provided vcf and BAM reads\r\n",
+        "html_url": "https://github.com/jon-xu/scSplit/releases/tag/v0.pre",
+        "name": "v0.pre",
+        "release_id": 14607786,
+        "tag": "v0.pre",
+        "tarball_url": "https://api.github.com/repos/jon-xu/scSplit/tarball/v0.pre",
+        "type": "Release",
+        "url": "https://api.github.com/repos/jon-xu/scSplit/releases/14607786",
+        "value": "https://api.github.com/repos/jon-xu/scSplit/releases/14607786",
+        "zipball_url": "https://api.github.com/repos/jon-xu/scSplit/zipball/v0.pre"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "somef_missing_categories": [
+    "acknowledgement",
+    "run",
+    "download",
+    "requirements",
+    "contact",
+    "contributors",
+    "documentation",
+    "usage",
+    "faq",
+    "support",
+    "identifier",
+    "has_build_file",
+    "executable_example"
+  ],
+  "somef_provenance": {
+    "date": "2024-11-04 02:32:36",
+    "somef_schema_version": "1.0.0",
+    "somef_version": "0.9.5"
+  },
+  "stargazers_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 40
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "type": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "non-software"
+      },
+      "technique": "software_type_heuristics"
+    }
+  ]
+}

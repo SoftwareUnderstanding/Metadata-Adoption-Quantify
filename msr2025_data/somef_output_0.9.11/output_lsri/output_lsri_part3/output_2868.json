@@ -1,0 +1,337 @@
+{
+  "code_repository": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/tkoomar/VCFdbR"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_created": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2020-04-24T13:59:53Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_updated": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2024-05-18T19:44:09Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "description": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "These scripts reformat a VCF into a SQLite database, with R"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 0.9953701629558029,
+      "result": {
+        "original_header": "VCFdbR",
+        "type": "Text_excerpt",
+        "value": "\nThis processing pipeline converts a VCF into an SQLite representation, using R. This readme only covers the practical matters of executing the pipeline. Please [see the wiki](https://github.com/tkoomar/VCFdbR/wiki)  or [FAQ](https://github.com/tkoomar/VCFdbR/wiki/FAQ) for more detailed discussions and tutorials covering how to use a VCFdb once it is created.  \n"
+      },
+      "source": "https://raw.githubusercontent.com/tkoomar/VCFdbR/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9304792358384801,
+      "result": {
+        "original_header": "A few important notes",
+        "type": "Text_excerpt",
+        "value": "VCFdbR was designed with Linux-based high performance computing clusters in mind, but it should work on any distro. It has not been tested on Windows or Mac operating systems, and changes to specifically support them are not planned.  \nThe main benefit of a SQLite database in this context is quick searching of huge datasets with minimal RAM overhead. This entire concept is based on the adage that _\"storage is cheaper than time\"_. No matter the options you choose, plan for the resulting database to take up at least 10 times as much disk space as the gzipped VCF used to create the database in the first place. \n \n"
+      },
+      "source": "https://raw.githubusercontent.com/tkoomar/VCFdbR/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9038572795173653,
+      "result": {
+        "original_header": "How do I convert a VCF to a VCFdb?",
+        "type": "Text_excerpt",
+        "value": "The only input required for VCFdbR is a [tabix-indexed](https://www.biostars.org/p/59492/) and properly formatted VCF, with *no multiallelic sites*. From the command line, you can call the master pipeline script `VCFdb.R` with `Rscript`. \n```{shell}\n$ Rscript VCFdb.R --prefix [character] --vcf [character] --mode ['file'|'table']\n```\n \n* The string passed to `--prefix` will be the name of the output database and associated files\n* The string passed to `--vcf` should be the path to the VCF from which the database will be created\n* The `--mode` argument must be passed either the string `'file'` or `'table'`\n    * `'table'` mode produces a \"Table-GT\" database where the genotypes are stored in a table within the SQLite database. \n      * This is ideal for smaller cohorts, as it allows for querying and filtering on genotypes and qualities without reading them into memory. It also keeps all the data together in a single file. \n      * *Unless you are dealing with thousands of whole-genomes or tens of thousands of exomes, `'table'` is likely the optimal mode.*\n    * `'file'` mode produces a \"File-GT\" database where the genotypes are stored as individual files in a directory. The SQLite database will only contain the various variant annotations present in the VCF. \n        * This is ideal when working with very large cohorts that may result in final databases that are so large as to violate filesystem or SQLite database size limits for individual files. However, the resulting database is significnatly less portable and care should be taken when choosing where to store the database. \n        * If your hard disk is fast, this has the added benefit of allowing genotypes to be written in parallel, via the `--threads` argument\n        * This mode puts a column in the database pointing to the locaiton of the genotype files on the filesystem, this is why _**it is not reccomended to move the File-GT genotype folder after creation.**_ Consider where you build the database carefully. \n            * It is possible, but will require manually altering the paths in the `geno` column of the `variant_impact` table. Plus, moving the thousands or millions of individual genotype files will be exceptionally slow. \n* It is common for VCFs to have complex FORMAT fields which contain multiple values. The VariantAnnotation package in R does not handle these particularly efficiently, so the default behavior of VCFdbR is to ignore such fields. See the bottom of this readme for more information on this topic. \n \n"
+      },
+      "source": "https://raw.githubusercontent.com/tkoomar/VCFdbR/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9473183325762112,
+      "result": {
+        "original_header": "So what exactly does VCFdbR do?",
+        "type": "Text_excerpt",
+        "value": "VCFdbR takes data in the difficult-to-parse and search [Variant Call File](https://samtools.github.io/hts-specs/VCFv4.2.pdf) format and converts it to a SQLite database that can be indexed, allowing for rapid searching. This makes exploratory analyis significantly faster and removes the need to read the entire VCF into memory at once. This design was inspired by the fantastic [GEMINI](https://gemini.readthedocs.io/en/latest/), but has some critical changes to allow for processing very large cohorts and remvoes a lot of overhead by not providing its own bespoke interface to the database.  \nFor example, a variant specified like this in a VCF:\n```{text}\n#CHROM  POS     ID      REF     ALT     QUAL    FILTER  INFO    FORMAT  HG00096 HG00097 HG00099\n22      16120773        rs577167963     G       A       100     PASS    AC=1;AF=0.000199681;AN=5008;NS=2504;DP=20455;EAS_AF=0;AMR_AF=0;AFR_AF=0;EUR_AF=0.001;SAS_AF=0;AA=G|||;VT=SNP;CSQ=A|upstream_gene_variant|MODIFIER|LA16c-60H5.7|ENSG00000215270|Transcript|ENST00000398242|processed_pseudogene||||||||||rs577167963|1|1947|1||SNV|Clone_based_vega_gene||YES|||||||||Ensembl|G|G|||||||0.0002|0|0|0|0.001|0|||0.001|MODIFIER|NBEAP3|ENSG00000223875|Transcript|ENST00000420638|unprocessed_pseudogene||1/3|ENST00000420638.1:n.233-1860C>T|YES|||||||||Ensembl|G|G|||||||0.0002|0|0|0|0.001|0|||0.001|EUR||||||||      GT      0|0     1|0      1|1\n``` \nFinally, the genotypes themselves would be located on the `varint_geno` table, where they are in \"long\" format. This has the advantage of allowing variants to be quickly filered by SQL based on genotype or quality score (not present in this example): \n"
+      },
+      "source": "https://raw.githubusercontent.com/tkoomar/VCFdbR/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9593781141390161,
+      "result": {
+        "original_header": "Complex `FORMAT` fields",
+        "type": "Text_excerpt",
+        "value": "By default, FORMAT fields with more than 1 value (see below) are excluded from databases, because they are reletively inefficient to parse. \n```\n##FORMAT=<ID=RD,Number=2,Type=Integer,Description=\"Reference forward, reverse reads\">\n```\nIf you want to handle these, there are 3 primary optons: \n1. If the FORMAT field has a **fixed** number of values (i.e. if it does not have `Number=.`), it can be parsed into multiple columns by passing the `--include-multivalue-gt` argument to `VCFdb.R`. Note that this requres the `reshape2` package, and testing has found it to be exceptionally slow for larger number of samples (100's or more)\n2. If the FORMAT field has a **fixed** number of values, split it apart into multiple FORMAT fields within the VCF (before building the database with VCFdbR). **For VCFs with many samples, this is the best option**. \n3. If the field does not have a consistent number of values (i.e. if `Number=.`), then the only option is to import that field as a character by altering the VCF header so that `Number=1,Type=String`. This is because SQLite do not have a data type comparable to R's `list()`. Downstream processing of the string will be needed, which means the field will not be suitable for filtering upon until data has been collected into memory from the database. \n    *   Note that many callers seem to give FORMAT fields `Number=.`, even though there is actually always fixed number. In this case, you may able to just alter the VCF header to correctly specify the number of values that are present in the field (which may even be just 1)\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/tkoomar/VCFdbR/master/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "documentation": [
+    {
+      "confidence": 1,
+      "result": {
+        "format": "wiki",
+        "type": "Url",
+        "value": "https://github.com/tkoomar/VCFdbR/wiki"
+      },
+      "source": "https://raw.githubusercontent.com/tkoomar/VCFdbR/master/README.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "download_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/tkoomar/VCFdbR/releases"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 5
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/tkoomar/VCFdbR/forks"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "tkoomar/VCFdbR"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_title": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "VCFdbR"
+      },
+      "source": "https://raw.githubusercontent.com/tkoomar/VCFdbR/master/README.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "has_script_file": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/tkoomar/VCFdbR/master/toy-data/DO-NOT-RUN-make-toy-data.sh"
+      },
+      "technique": "file_exploration"
+    }
+  ],
+  "installation": [
+    {
+      "confidence": 0.8903115412124287,
+      "result": {
+        "original_header": "How do I convert a VCF to a VCFdb?",
+        "type": "Text_excerpt",
+        "value": "The only input required for VCFdbR is a [tabix-indexed](https://www.biostars.org/p/59492/) and properly formatted VCF, with *no multiallelic sites*. From the command line, you can call the master pipeline script `VCFdb.R` with `Rscript`. \n```{shell}\n$ Rscript VCFdb.R --prefix [character] --vcf [character] --mode ['file'|'table']\n```\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/tkoomar/VCFdbR/master/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "issue_tracker": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/tkoomar/VCFdbR/issues"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "keywords": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": ""
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "license": [
+    {
+      "confidence": 1,
+      "result": {
+        "name": "MIT License",
+        "spdx_id": "MIT",
+        "type": "License",
+        "url": "https://api.github.com/licenses/mit",
+        "value": "https://api.github.com/licenses/mit"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "File_dump",
+        "value": "MIT License\n\nCopyright (c) 2020 Tanner Koomar\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.\n"
+      },
+      "source": "https://raw.githubusercontent.com/tkoomar/VCFdbR/master/LICENSE",
+      "technique": "file_exploration"
+    }
+  ],
+  "name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "VCFdbR"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "owner": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "User",
+        "value": "tkoomar"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "programming_languages": [
+    {
+      "confidence": 1,
+      "result": {
+        "name": "R",
+        "size": 39105,
+        "type": "Programming_language",
+        "value": "R"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Shell",
+        "size": 2132,
+        "type": "Programming_language",
+        "value": "Shell"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "readme_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/tkoomar/VCFdbR/master/README.md"
+      },
+      "technique": "file_exploration"
+    }
+  ],
+  "related_documentation": [
+    {
+      "confidence": 1,
+      "result": {
+        "format": "readthedocs",
+        "type": "Url",
+        "value": "https://gemini.readthedocs.io/"
+      },
+      "source": "https://raw.githubusercontent.com/tkoomar/VCFdbR/master/README.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "run": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "What do I need to run VCFdbR?",
+        "parent_header": [
+          "VCFdbR"
+        ],
+        "type": "Text_excerpt",
+        "value": "First, you need to [clone this repository](https://help.github.com/en/github/creating-cloning-and-archiving-repositories/cloning-a-repository). \n\nSeveral R packages are required to be available. If you want to ensure you have all of the require packages, and that they are up to date, run the following code (in R) install these packages:\n```{r}\n> install.packages('tidyverse', 'dbplyr', 'magrittr', 'progress', 'DBI', 'RSQLite')\n> if (!requireNamespace(\"BiocManager\", quietly = TRUE)) {install.packages(\"BiocManager\")}\n> BiocManager::install(\"VariantAnnotation\")\n```\n\nIf you are unfamiliar with executing R scripts from the command line via `Rscript`, I would suggest [reading up on it](https://support.rstudio.com/hc/en-us/articles/218012917-How-to-run-R-scripts-from-the-command-line).\n\nFinally, you need a ([bgzipped and tabix indexed](https://davetang.org/muse/2013/02/22/using-tabix/)) VCF to convert! \n\n**This VCF needs to have all multialleleic sites split.** All fields which once had one value per alternate allele (`Number=A`) also need to be converted to a single value (`Number=1`). You can do that with `bcftools`:\n\n```\n$ bcftools norm -c ws -f [REF GENOME FASTA] -m - [YOUR VCF] | sed -e 's/Number=A/Number=1/g' | bgzip -c > [OUTPUT VCF]\n$ tabix [OUTPUT VCF]\n```\n\nAlso, if your VCF has been annotated with VEP, you might need to do a little munging in order for the CSQ column to be parsed correctly. This can be done as part of the VEP run, or afterwords, using `sed`:\n\n```\n$ zcat [YOUR VCF] | sed '/^#/\\! s/;;/;/g' | bgzip -c > [OUTPUT VCF]\n$ tabix [OUTPUT VCF]\n```\n"
+      },
+      "source": "https://raw.githubusercontent.com/tkoomar/VCFdbR/master/README.md",
+      "technique": "header_analysis"
+    }
+  ],
+  "somef_missing_categories": [
+    "citation",
+    "acknowledgement",
+    "download",
+    "requirements",
+    "contact",
+    "contributors",
+    "usage",
+    "faq",
+    "support",
+    "identifier",
+    "has_build_file",
+    "executable_example"
+  ],
+  "somef_provenance": {
+    "date": "2024-10-06 10:36:36",
+    "somef_schema_version": "1.0.0",
+    "somef_version": "0.9.5"
+  },
+  "stargazers_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 14
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "type": [
+    {
+      "confidence": 0.82,
+      "result": {
+        "type": "String",
+        "value": "commandline-application"
+      },
+      "technique": "software_type_heuristics"
+    }
+  ]
+}

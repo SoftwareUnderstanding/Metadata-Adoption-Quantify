@@ -1,0 +1,272 @@
+{
+  "code_repository": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/ds763/PRoGeM"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_created": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2017-07-10T14:22:18Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_updated": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2024-03-06T10:31:55Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "description": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "A general analysis framework and tool for the PRioritisation of candidate causal Genes at Molecular QTLs"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 0.9540079523667999,
+      "result": {
+        "original_header": "1) How ProGeM works (in brief)",
+        "type": "Text_excerpt",
+        "value": "ProGeM adopts a two-pronged strategy consisting of a *\"bottom-up\"* and a *\"top-down\"* component, based on the underlying assumptions that in order for a given gene to mediate a molecular QTL that gene must be: (i) impacted functionally by either the sentinel or a corresponding proxy variant (bottom-up) and, (ii) that gene must then in turn impact the functioning of a molecular mechanism or biological process involved in the phenotype in question (top-down). \n**Proximal candidates**: \n    (i) ProGeM will identify the nearest genes to each sentinel variant.  The user can specify how many nearest genes they would like to pull out (default is 3), which can also be filtered on the basis of biotype of interest (default is \"protein-coding\").\n    (ii) ProGeM will also identify all genes that overlap the so-called \"LD region\" surrounding each sentinel variant.  This is defined as the range between the left-most and right-most sentinel/proxy variant plus an overhang.  The user can specify the size of the overhang (default is 5kb).  \n**Distal candidates**:\n    (iii) ProGeM will search GTEx v6p data to identify cis-eQTL target genes of sentinel and proxy variants.  The user can specify the tissues of interest (default is all GTEx tissues, n=44).\n    \nProGeM will also annotate bottom-up candidates with information from a user-supplied Variant Effect Predictor (VEP) output.  The pipeline annotates using the IMPACT column, which categorises variants according to whether their expected impact on gene function is \"HIGH\", \"MODERATE\", \"LOW\", or \"MODIFIER\".  ProGeM will highlight any bottom-up candidate mediating genes that contain either a sentinel or a proxy variant expected to exert a HIGH or a MODERATE IMPACT.  According the VEP, the IMPACT categories encompass the following variant CONSEQUENCES (http://www.ensembl.org/info/genome/variation/predicted_data.html):\n``` r\nHIGH_impact <- c(\"transcript_ablation\", \"splice_acceptor_variant\", \"splice_donor_variant\", \n                 \"stop_gained\", \"frameshift_variant\", \"stop_lost\", \"start_lost\", \n                 \"transcript_amplification\")\n\nMODERATE_impact <- c(\"inframe_insertion\", \"inframe_deletion\", \"missense_variant\", \n                     \"protein_altering_variant\", \"regulatory_region_ablation\")\n\nLOW_impact <- c(\"splice_region_variant\", \"incomplete_terminal_codon_variant\", \"stop_retained_variant\",                    \"synonymous_variant\")\n\nMODIFIER_impact <- c(\"coding_sequence_variant\", \"mature_miRNA_variant\", \"5_prime_UTR_variant\", \n                     \"3_prime_UTR_variant\", \"non_coding_transcript_exon_variant\", \"intron_variant\", \n                     \"NMD_transcript_variant\", \"non_coding_transcript_variant\", \"upstream_gene_variant\",\n                     \"downstream_gene_variant\", \"TFBS_ablation\", \"TFBS_amplification\", \n                     \"TF_binding_site_variant\", \"regulatory_region_amplification\", \n                     \"feature_elongation\", \"regulatory_region_variant\", \"feature_truncation\", \n                     \"intergenic_variant\")\n```\n \n**1.2. Top-down**. ProGeM has been designed to identify top-down candidates by pulling out genes that (i) reside \"locally\" to a sentinel variant AND (ii) have previously been implicated in the broad molecular phenotype in question.  For the former, the user can specify how \"locally\" is defined (the default is +/-500kb), and for the latter, we provide an .RData file containing a list of genes involved in metabolic-related molecular phenotypes.  The user can of course prepare a similar .RData file containing genes relating to other molecular phenotypes (i.e., lipidomics) for input to ProGeM.  OUr .RData file containing metabolic-related genes was prepared as follows: \n- **(ii)** Kyoto Encyclopedia of Genes and Genomes (KEGG): all genes annotated to the top-level metabolism pathway (hsa01100) \n- **(iii)** Orphanet: all genes annotated to the \"rare inborn errors of metabolism\" (ORPHA:68367) category \n- **(v)** Mouse Genome Informatics (MGI): all human orthologs of mouse genes annotated to the Mammalian Phenotype term \"abnormal metabolism\" (MP:0005266) \n**1.3. Cooccurring candidates**. ProGeM will also prioritise genes that appear as both bottom-up AND top-down candidates for a given sentinel variant.  These genes are so-called \"concurrent\" genes and should be considered primary causal candidates based on the fact that they satisfy both of the above-mentioned underlying assumptions of a causal gene.\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/ds763/ProGeM/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9655818325562127,
+      "result": {
+        "original_header": "3) ProGeM input files",
+        "type": "Text_excerpt",
+        "value": "The user must prepare and save three files to the same directory already containing the ProGeM_*.R and .RData files.  These three files must contain and be formatted as follows: \n**3.1.** A tab-separated .txt file containing rsIDs, chromosomes, and GRCh37 coordinates (both start and end) of your sentinel variants of interest across four columns with the below column names.  In cases where there is no rsID for a sentinel variant then the notation \"chr:start\" should be used (i.e., 1:11856378).\n    \nrsID | CHR | START | END \n--- | --- | --- | ---\nrs1801133 | 1 | 11856378 | 11856378\nrs532545 | 1 | 20915172 | 20915172\nrs1697421 | 1 | 21823292 | 21823292 \n**3.2.** A tab-separated .txt file containing rsIDs, chromosomes, and GRCh37 coordinates (both start and end) of proxies for your sentinel variants; along with the corresponding sentinel rsIDs and r2 value across six columns in total with the below column names.  Your proxies can be derived either directly from your sample or, for example, from 1000 genomes data.  If proxies have not been pre-filtered prior to input, then ProGeMM will filter based on a user-defined r2 threshold (default r2 is 0.8) if desired. \n**3.3.** The output (as a .txt file) after running the Variant Effect Predictor (VEP: http://grch37.ensembl.org/Homo_sapiens/Tools/VEP) using both sentinels and proxies as input.  The user is free to decide upon the parameters used to run the VEP, though the output must contain a column with (i) sentinel rsIDs as well as a column with (ii) proxy rsIDs - in the \"ProGeM_settings.R\" files the user is asked to indicate the column indices of their VEP output that contains this information.  For VEP records/rows corresponding directly to a sentinel variant, then the sentinel rsID should be entered in both the sentinel rsID and the proxy rsID column.  Further, in the VEP output there should be a separate record/row for each sentinel-proxy combination, meaning that if a variant is a proxy for more than one sentinel variant in your dataset, then there should be more than one VEP record/row for that proxy variant.   \n"
+      },
+      "source": "https://raw.githubusercontent.com/ds763/ProGeM/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9322931177613042,
+      "result": {
+        "original_header": "5) ProGeM output files",
+        "type": "Text_excerpt",
+        "value": "Each row provides annotation of a *\"bottom-up\"* candidate mediating gene, the corresponding sentinel rsID is indicated in **column 1**; **columns 2-4** provide basic annotation of candidate mediators; **columns 5-10** are boolean variables, with 0=FALSE and 1=TRUE; **columns 11-12** are nominal variables referring to VEP IMPACT annotation with 0=MODIFIER or LOW IMPACT, 1=MODERATE IMPACT, 2=HIGH IMPACT. \nEach row provides annotation of a *\"top-down\"* candidate mediating gene based solely on top-down evidence, the corresponding sentinel rsID is indicated in **column 1**; **columns 2-4** provide basic annotation of candidate mediators; **columns 5-9** are boolean variables indicating whether the candidate mediator is metabolic-related according to the database in question, with 0=FALSE and 1=TRUE; **column 10** represents a simple score corresponding to the sum of columns 5-9 for each row; i.e., how many databases [out of 5] highlighted a given *top-down* candidate mediator as being involved in metabolism. \nEach row corresponds to a candidate mediating gene with both *bottom-up* and *top-down* evidence, the corresponding sentinel rsID is indicated in **column 1**; **columns 2-4** provide basic annotation of so-called *\"cooccurring\"* candidates. \nIn addition to the above three summary output files, ProGeM also writes additional data files to enable the user to probe for more in-depth information should they wish: \n**- \"OUTPUT_lead_cis_eQTLs.txt\":** contains all cis-eQTL targets for all sentinel variants across each of the user-specified tissues from GTEx. \n**- \"OUTPUT_proxy_cis_eQTLs.txt\":** contains all cis-eQTL targets for all proxy variants across each of the user-specified tissues from GTEx. \n**- \"OUTPUT_nearest_genes.txt\":** contains basic annotation of genes nearest to each sentinel variant, filtered on the basis of user-specified biotype(s) of interest.  This file contains the distance (bp) between each TSS and the corresponding sentinel variants.  Further, this file will be particularly useful if the user specified to pull out more than the three nearest genes, as the bottom-up summary will only annotate the first three.\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/ds763/ProGeM/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9518343636936125,
+      "result": {
+        "type": "Text_excerpt",
+        "value": "---\ntitle: \"ProGeM\"\noutput: html_document\n---\n```{r setup, include=FALSE}\nknitr::opts_chunk$set(echo = FALSE)\n```\n  \nProGeM (**Pr**ioritisation **o**f candidate causal **Ge**nes at **M**olecular QTLs) is a pipeline for the prioritisation of candidate causal genes - or mediating genes - for molecular quantitative trait loci (QTL) in an automatable fashion.\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/ds763/ProGeM/master/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "download_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/ds763/ProGeM/releases"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 4
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/ds763/PRoGeM/forks"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "ds763/PRoGeM"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_title": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": ""
+      },
+      "source": "https://raw.githubusercontent.com/ds763/ProGeM/master/README.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "installation": [
+    {
+      "confidence": 0.9253141517407325,
+      "result": {
+        "original_header": "5) ProGeM output files",
+        "type": "Text_excerpt",
+        "value": "**5.1. \"OUTPUT_bottom_up_summary.txt\"**  \n**5.2. \"OUTPUT_top_down_scores.txt\"** \n**5.3. \"OUTPUT_cooccurring_candidates.txt\"** \n"
+      },
+      "source": "https://raw.githubusercontent.com/ds763/ProGeM/master/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "invocation": [
+    {
+      "confidence": 0.8798388935325886,
+      "result": {
+        "original_header": "5) ProGeM output files",
+        "type": "Text_excerpt",
+        "value": "After successful completion, ProGeM will write multiple data tables to file within a user-specified output directory.  The three main summary files are: \n"
+      },
+      "source": "https://raw.githubusercontent.com/ds763/ProGeM/master/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "issue_tracker": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/ds763/PRoGeM/issues"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "keywords": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": ""
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "PRoGeM"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "owner": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "User",
+        "value": "ds763"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "programming_languages": [
+    {
+      "confidence": 1,
+      "result": {
+        "name": "R",
+        "size": 33911,
+        "type": "Programming_language",
+        "value": "R"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "readme_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/ds763/ProGeM/master/README.md"
+      },
+      "technique": "file_exploration"
+    }
+  ],
+  "run": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "4) Running ProGeM",
+        "type": "Text_excerpt",
+        "value": "After downloading, preparing, and making local copies of the necessary files (see above), the user should specify their preferred parameters in the \"ProGeM_settings.R\" file where indicated.  This file can then be saved and sourced, and ProGeMM will then run in its entirety - simple as that.  In our tests, ProGeM will fully process 213 sentinel variants in ~12-15 minutes on a standard desktop computer (4GB RAM, dual core i3 processor at 3.40GHz) running Window's 7.\n\n"
+      },
+      "source": "https://raw.githubusercontent.com/ds763/ProGeM/master/README.md",
+      "technique": "header_analysis"
+    }
+  ],
+  "somef_missing_categories": [
+    "citation",
+    "acknowledgement",
+    "download",
+    "requirements",
+    "contact",
+    "contributors",
+    "documentation",
+    "license",
+    "faq",
+    "support",
+    "identifier",
+    "has_build_file",
+    "executable_example"
+  ],
+  "somef_provenance": {
+    "date": "2024-10-06 08:19:56",
+    "somef_schema_version": "1.0.0",
+    "somef_version": "0.9.5"
+  },
+  "stargazers_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 6
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "usage": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "2) Before you begin",
+        "type": "Text_excerpt",
+        "value": "**2.1.** Download the necessary files to run ProGeM and place them ALL locally into a directory of your choosing.   Your directry should contain the following files:\n\n- **\"ProGeM_settings.R\"** (a series of ProGeM settings that require user input)\n- **\"ProGeM_functions.R\"** (a series of required functions)\n- **\"ProGeM_commands.R\"** (a series of execution commands)\n- **\"GRCh37_genes.RData\"** (a GRCh37 gene model based on a GTF file [\"Homo_sapiens.GRCh37.82.gtf\"] downloaded from ensembl)\n- **\"annotated_metabolic_genes.RData\"** (OPTIONAL: a list of GRanges objects containing so-called metabolic-related genes according to five open source databases - see further details below)\n\n**2.2.** Download a zipped folder containing cis-eQTL data (v7) from the Genotype-Tissue Expression (GTEx) project: https://www.gtexportal.org/home/.  At this site click on the drop-down menu \"Datasets\" and then click on \"Download\" - you'll need to register for an account with GTEx first.  The name of the folder you need to download is \"GTEx_Analysis_v7_eQTL.tar.gz\" (728M), which contains eGene and significant SNP-gene associations based on permutations.  Unzip this folder and place ALL files locally in a directory of your choosing (preferably not the one containing the ProGeMM_*.R and .RData files from above).\n\n**2.3.** Finally, ensure you have downloaded the following R packages and dependencies:\n\n- **GenomicAlignments** (https://bioconductor.org/packages/release/bioc/html/GenomicAlignments.html)\n- **GenomicFeatures** (http://bioconductor.org/packages/release/bioc/html/GenomicFeatures.html)\n- **GenomicRanges** (https://bioconductor.org/packages/release/bioc/html/GenomicRanges.html)\n- **biomaRt** (https://bioconductor.org/packages/release/bioc/html/biomaRt.html)\n- **data.table** (https://cran.r-project.org/web/packages/data.table/data.table.pdf)\n    \n``` r\nsource(\"https://bioconductor.org/biocLite.R\")\nbiocLite(\"GenomicAlignments\", \"GenomicFeatures\", \"GenomicRanges\", \"biomaRt\")\ninstall.packages(\"data.table\")\n```\n\n"
+      },
+      "source": "https://raw.githubusercontent.com/ds763/ProGeM/master/README.md",
+      "technique": "header_analysis"
+    }
+  ]
+}

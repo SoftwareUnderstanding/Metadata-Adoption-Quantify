@@ -1,0 +1,461 @@
+{
+  "code_repository": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/chung-lab/SCAFE"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_created": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2021-03-10T20:45:25Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_updated": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2024-05-27T14:49:57Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "description": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "Single Cell Analysis of Five'Ends"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 0.9410649410963916,
+      "result": {
+        "type": "Text_excerpt",
+        "value": "<h1 align=\"center\"> <i>SCAFE</i> (Single Cell Analysis of Five-prime Ends)</h1> \n"
+      },
+      "source": "https://raw.githubusercontent.com/chung-lab/scafe/main/README.html",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9694914999500294,
+      "result": {
+        "original_header": "Input **.bam* files",
+        "type": "Text_excerpt",
+        "value": "*SCAFE* (Single Cell Analysis of Five-prime Ends) provides an end-to-end solution for processing of single cell 5\u2019end RNA-seq data. It takes a read alignment file \\(\\*.bam\\) from single-cell RNA-5\u2019end-sequencing (e.g. 10xGenomics Chromimum\u00ae), precisely maps the cDNA 5'ends (i.e. transcription start sites, TSS), filters for the artefacts and identifies genuine TSS clusters using logistic regression. Based on the TSS clusters, it defines transcribed cis-regulatory elements (tCRE) and annotated them to gene models. It then counts the UMI in tCRE in single cells and returns a tCRE UMI/cellbarcode matrix ready for downstream analyses, e.g. cell-type clustering, linking promoters to enhancers by co-activity *etc*. \n## Table of contents\n* [Publications](#1)\n* [Versions](#2)\n* [What does *SCAFE* do?](#3)\n* [How does *SCAFE* do it?](#4)\n* [Dependencies](#5)\n* [Installation](#6)\n* [Getting started with demo data](#7)\n* [Run *SCAFE* on your own data](#8)\n* [Wishlist](#9) \nJonathan Moody and Tsukasa Kouno *et al*. Profiling of transcribed cis-regulatory elements in single cells. [bioRxiv 2021.04.04.438388](https://www.biorxiv.org/content/10.1101/2021.04.04.438388v1) \n## Versions<a name=\"2\"></a>\n### [See here for developmental releases](https://github.com/chung-lab/SCAFE/tree/dev)\n### [v1.0.0]() (Lastest Stable release) [June 6, 2022] \t\n* auto detects mode for TSO identification and trimming (in ***scafe.tool.sc.bam\\_to\\_ctss***)\n* use tabix/bgzip for fast indexing of ctss bed\n* annotate hyperactive distal locus, analogous to super-enhancer (in ***scafe.tool.cm.annotate***)\n* annotate potential alternative promoters beyond reference transcript 5'ends (in ***scafe.tool.cm.annotate***)\n* aggregate multiple ctss without considering UMI/Cellbarcode, for scalability, replacing 'pool' tools and workflows (in ***scafe.tool.cm.aggregate*** and ***scafe.workflow.cm.aggregate***)\n* ***scafe.tool.sc.link*** is now obsolete and thus monocle3 and cicero are not needed.\n* calculate the directionality of tCREs (in ***scafe.tool.cm.directionality***) \n### *SCAFE* extracts transcribed cis-regulatory elements from single-cell RNA-5\u2019end-sequencing data\nProfiling of cis-regulatory elements (CREs, mostly promoters and enhancers) in single cells allows us to interrogate the cell-type specific contexts of gene regulation and genetic predisposition to diseases. Single-cell RNA-5\u2019end-sequencing methods (sc-end5-seq, available from [10xGenomics Chromimum\u00ae](https://kb.10xgenomics.com/hc/en-us/articles/360000939852-What-is-the-difference-between-Single-Cell-3-and-5-Gene-Expression-libraries-)) theorectically captures the 5'end of cDNA, which represents transcription start sites (TSS). Measuring the RNA output at TSS allows us to precisely locate transcribed CREs (tCREs) on the genome, enabling the quantification of promoter and enhancer activities in single cells. **Figure (a)** shows the sc-end5-seq signal at the two promoters of gene *DHX30*. It highlights the consistency between sc-end5-seq and sc-ATAC-seq data, as well as the dynamic alternaitve TSS usage between cell states (i.e. resting and stimulated immune cells). *SCAFE* identify genuine TSS information from sc-end5-seq data. **Figure (b)** illustrates the stretagies of SCAFE to defined tCRE from TSS information. **Figure (c)** shows the proximal and distal tCREs defined by *SCAFE* at *PTGER4* locus. **Figure (d)** shows the activities of the proximal and distal tCREs at *PTGER4* locus in resting and simulated immune cells, demonstarting the capability of *SCAFE* to study CRE activities in single cells. \n### *SCAFE* Core Tools and Workflows\n*SCAFE* consists of [a set of perl programs](scripts/) for processing of sc-end5-seq data. Major tools are listed in **Figure (a)**. *SCAFE* accepts read alignment in *\\*.bam* format from 10xGenomics Chromimum\u00ae software *cellranger*. Tool ***bam\\_to\\_ctss*** extracts the 5\u2019 position of reads, taking the 5\u2019 unencoded-Gs into account. Tool ***remove\\_strand\\_invader*** removes read 5\u2019ends that are strand invasion artifacts by aligning the TS oligo sequence to the immediate upstream sequence of the read 5\u2019end. Tool *cluster* performs clustering of read 5\u2019ends using 3rd-party tool *Paraclu*. Tool ***filter*** extracts the properties of TSS clusters and performs multiple logistic regression to distinguish genuine TSS clusters from artifacts. Tool ***annotate*** define tCREs by merging closely located TSS clusters and annotate tCREs based on their proximity to known genes. Tool ***count*** counts the number of UMI within each tCRE in single cells and generates a tCRE-Cell UMI count matrix. SCAFE tools were also implemented workflows for processing of individual samples or aggregateing of multiple samples. \n*P.S.* *SCAFE* also accepts bulk 5'end RNA-Seq data (e.g. bulk CAGE). See [scripts](scripts/) for details. \n### *SCAFE* discovers *de novo* genunie TSS clusters and tCREs\nA fraction of TSS identified based on read 5\u2032ends from template switching (TS) reactions (used in 10xGenomics Chromimum\u00ae) may not be genuine, attributed to various artefacts including strand invasion and other sources. This results in excessive artifactual TSS misidentified along the gene body, collectively known as \u201cexon painting\u201d. While strand invasion artefacts can be specifically minimized by considering the complementarity of TSS upstream sequence to TS oligo sequence, a non-negligible fraction of artefactual TSS remains after filtering for strand invasion. To minimize the artifactual TSS, *SCAFE* examines the properties of TSS clusters, as shown in **Figure (b)**, and devised a classifier to identify genuine TSS based on multiple logistic regression. This classifier, i.e. logistic probability, achieved excellent performance with AUC>0.98 across sequencing depths and outperformed all individual metrics. This is implemented in the tool ***filter***. \n### perl\n*SCAFE* is mainly written in perl (**v5.24.1 or later**). All scripts are standalone applications and **DO NOT require installations** of extra perl modules. Check whether perl is properly installed on your system.\n```shell\n#--- Check your perl version\nperl --version\n```\n \n### R\n*SCAFE* relies on R for logistic regression, ROC analysis and graph plotting. Rscript **(v3.6.1 or later)** and the following R packages have to be properly installed: \nNote: *scafe.tool.sc.link* is now obsolete since v1.0.0 now and thus [monocle3](https://cole-trapnell-lab.github.io/monocle3/docs/installation/) and [cicero](https://cole-trapnell-lab.github.io/cicero-release/docs_m3/#installing-cicero) are not needed.\n   \n### Other 3rd party applications\n*SCAFE* also relies on a number of 3rd party applications. The binaries and executables (Linux) of these applications are distributed with this reprository in the directory ./resources/bin and **DO NOT require installations**. \n### OS\nSCAFE was developed and tested on Debian GNU/Linux 9, with R (3.6.1) and perl (5.24.1) installed. Running SACFE on other OS with other version of R and perl are not guranteed. In you want to run *SCAFE* on other OS, we would recommend running it from docker container, see [below](#1). If you would like to run *SCAFE* natively on other OS, you have to ensure the R and perl versions, and might consider downloading and compiling the other 3rd party applications from their own sources. The binaries of 3rd party applications have to be execuatble in *SCAFE* directoty at ./resources/bin/. \n"
+      },
+      "source": "https://raw.githubusercontent.com/chung-lab/scafe/main/README.html",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.8840337217355854,
+      "result": {
+        "original_header": "Docker image<a name=\"docker\"></a>",
+        "type": "Text_excerpt",
+        "value": "To install docker, please see [here](https://www.docker.com/). Noted that all files reads/writes are within the docker container by default. To share files (i.e. input and output of *SCAFE*) between the container and the host, please see [here](https://flaviocopes.com/docker-access-files-outside-container/). If you are running Docker on a labtop, make sure the allocated resources (e.g. memory and disk space) are enough, see [here](https://docs.docker.com/docker-for-mac/). We suggest to allocate at least 16GB of memory.\n```shell\n#---to pull the docker image\ndocker pull cchon/scafe:latest\n\n#---to run scafe within a docker container, run\ndocker run -it cchon/scafe:latest\n```\nThe Docker image can also be used with [Singularity](https://docs.sylabs.io/guides/3.5/user-guide/introduction.html) container platform, with additional options specified as the followings.\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/chung-lab/scafe/main/README.html",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9269442833767618,
+      "result": {
+        "original_header": "Input **.bam* files",
+        "type": "Text_excerpt",
+        "value": "```shell\n#---to pull the docker image using singularity\nsingularity pull docker://cchon/scafe:latest\n\n#---to run scafe within a singularity container, run\nsingularity shell --writable --env APPEND_PATH=/SCAFE/scripts --env LC_ALL=C docker://cchon/scafe:latest\n\n```\n## Getting started with demo data<a name=\"7\"></a>\nNow you have enssured all dependencies and downloaded SCAFE, time to get the demo data and test a few runs on the demo data. \n### Download demo data and reference genome\nDemo data and reference genome must be downloaded for testing *SCAFE* on your system.\n```shell\n#--- download the demo data using script download.demo.input\nscafe.download.demo.input\n\t\n#--- download the reference genome hg19.gencode_v32lift37 for testing demo data\nscafe.download.resources.genome --genome=hg19.gencode_v32lift37\n```\n### Test run a single cell solo workflow for demo data\nNow, let's test *SCAFE* with a workflow (*workflow.sc.solo*) that processes one library of single cell 5'end RNA-seq data. First we check out the help message of *workflow.sc.solo*. Remember you can always check the help message for all scripts of *SCAFE* using the *--help* flag. \n```shell\n#--- check out the help message of workflow.sc.solo\nscafe.workflow.sc.solo --help\n```\nIt should print the help message as the followings:\n \n```shell\nUsage:\n               5'-O~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~AAA-3'\n                            O~~~AA      O~~         O~       O~~~~~~~AO~~~~~~~~A\n                          O~~    O~~ O~~   O~~     O~O~~     O~~      O~~       \n                           O~~      O~~           O~  O~~    O~~      O~~       \n                             O~~    O~~          O~~   O~~   O~~~~~AA O~~~~~~A  \n                                O~~ O~~         O~~~~~A O~~  O~~      O~~       \n                          O~~    O~~ O~~   O~~ O~~       O~~ O~~      O~~       \n                            O~~~~A     O~~~   O~~         O~~O~~      O~~~~~~~AA\n           \u250c\u2500\u1405 5'-O~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-3'\n     ...===\u2534========================================================================================...\n\n                          Single Cell Analysis of Five-prime End (SCAFE) Tool Suite \n                                    ---> scafe.workflow.sc.solo <---\n                      <--- workflow, single-cell mode, process a single sample --->\n\n     Description:\n       This workflow process a single sample, from a cellranger bam file to tCRE UMI/cellbarcode count matrix\n\n     Usage:\n       scafe.workflow.sc.solo [options] --run_bam_path --run_cellbarcode_path --genome --run_tag --run_outDir\n   \n       --run_bam_path                  <required> [string] bam file from cellranger, can be read 1 only or pair-end\n       --run_cellbarcode_path          <required> [string] tsv file contains a list of cell barcodes,\n                                                           barcodes.tsv.gz from cellranger\n       --genome                        <required> [string] name of genome reference, e.g. hg19.gencode_v32lift37\n       --run_tag                       <required> [string] prefix for the output files\n       --run_outDir                    <required> [string] directory for the output files\n       --training_signal_path          (optional) [string] quantitative signal (e.g. ATAC -logP, in bigwig format), or binary genomic \n                                                           regions (e.g. annotated CRE, in bed format) used for training of logical \n                                                           regression model If null, $usr_glm_model_path must be supplied for \n                                                           pre-built logical regression model. It overrides usr_glm_model_path \n                                                           (default=null)\n       --testing_signal_path           (optional) [string] quantitative signal (e.g. ATAC -logP, in bigwig format), or binary genomic \n                                                           regions (e.g. annotated CRE, in bed format) used for testing the performance \n                                                           of the logical regression model. If null, annotated TSS from $genome will be \n                                                           used as binary genomic regions. (default=null)\n       --detect_TS_oligo (optional) [match|trim|skip|auto] in bam_to_ctss step, the modes of detecting TS oligo. 1. match: search for \n                                                           TS oligo sequence on the read, identify the TSO/cDNA junction as 5'end of \n                                                           the read. This works only when the error rate of the TS oligo region on \n                                                           the read is low, otherwise a considerable number of read will be invalid. \n                                                           2. trim: assuming the 1st N bases of the reads are TS oligo, without \n                                                           checking the actual sequence. N is determined by the length of TS oligo. \n                                                           3. skip: assuming the TS oligo was not sequenced, the 1st base of the read\n                                                           will be treated as the 1st base after the TS oligo. 4. auto: automatically \n                                                           determines the best mode, best of the observed error rate of the TS oligo\n                                                           and the frequency of 5'end softclipped bases by the aligner. If softcliped \n                                                           bases is close to the length of TS oligo, mode 1 or 2 will be chosen, \n                                                           depending on the observed error rate of the TS oligo (error rate <= 0.1, \n                                                           mode 1 will be chosen or mode 2 otherwise). If softcliped base os close to \n                                                           zero, mode 3 will be chosen. (default=auto).\n       --max_thread                   (optional) [integer] maximum number of parallel threads, capped at 10 to \n                                                           avoid memory overflow (default=5)\n       --overwrite                     (optional) [yes/no] erase run_outDir before running (default=no)\n\n     Dependencies:\n       R packages: 'ROCR','PRROC', 'caret', 'e1071', 'ggplot2', 'scales', 'reshape2'\n       bigWigAverageOverBed\n       bedGraphToBigWig\n       bedtools\n       samtools\n       paraclu\n       paraclu-cut.sh\n       tabix\n       bgzip\n\n     For demo, cd to SCAFE dir and run,\n       scafe.workflow.sc.solo \\\n       --overwrite=yes \\\n       --run_bam_path=./demo/input/sc.solo/demo.cellranger.bam \\\n       --run_cellbarcode_path=./demo/input/sc.solo/demo.barcodes.tsv.gz \\\n       --genome=hg19.gencode_v32lift37 \\\n       --run_tag=demo \\\n       --run_outDir=./demo/output/sc.solo/\n``` \n### Input *\\*.bam* files\n*SCAFE* maps the cDNA 5'end by identifying the junction between the TS oligo and the cDNA on **Read 1** of sc-end5-seq data on the 10xGenomics Chromimum\u00ae platform. Therefore, **Read 1** must be sequenced long enough (e.g. >50nt) to allow mappnig to genome. The *\\*.bam* files are commonly generated from 10xGenomics Chromimum\u00ae *cellranger count* pipeline. When running [*cellranger count*](https://support.10xgenomics.com/single-cell-gene-expression/software/pipelines/latest/using/count), the *--chemistry*  option must be *SC5P-PE* (Pair-end). The *\\*.bam* generated from both *--chemistry fiveprime* and *--chemistry SC5P-R2* options are **NOT COMPATIBLE** with *SCAFE* as the former will remove the junction between the TS oligo and the cDNA on Read 1 and the latter does not even contain Read 1. If users sequecnced Read 1 only, they could run [*cellranger count*](https://support.10xgenomics.com/single-cell-gene-expression/software/pipelines/latest/using/count) with *--chemistry SC5P-PE* option by supplying *cellranger* a *dummy* Read 2 fastq with Read 1 reverse complemented. If users wish to generate their own *\\*.bam* from other custom pipelines, make sure that: \n"
+      },
+      "source": "https://raw.githubusercontent.com/chung-lab/scafe/main/README.html",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9650209867391392,
+      "result": {
+        "type": "Text_excerpt",
+        "value": "1. the UMI and cellbarcode information must be present in the *\\*.bam* file as custom tags CB:Z and UB:Z respectively, in this order.\n2. TS oligo sequence must keep intact on Read 1. \nWe recommend most users to run *SCAFE* using workflows with default options. There are 3 types of workflow: **(1)** \"***solo***\" for processing of a single library, **(2)** \"***aggregate***\" for aggregating of multiple libraries and **(3)** \"***subsample***\" for down-sampling a single library (for assessment of sequencing depth). \"***solo***\" accepts *\\*.bam* while \"***aggregate***\"/\"***subsample***\" accepts *\\*.ctss.bed* files (generated from *tool.sc.bam\\_to\\_ctss*). For multiple libraries, we recommend users to first run either *workflow.sc.solo* or *tool.sc.bam\\_to\\_ctss* on indiviudal libraries, and then take the *\\*.ctss.bed* file from all libraries to run *workflow.cm.aggregate*. Aggregating of libraries for defining tCRE is recommended because **(1)** it generally increases the sensitivity of tCRE detection and **(2)** it produces a common set of tCREs for all libraries so the IDs are portable between libraries. Please check the help messages for details of running the workflows: \n```shell\n#--- check out the help message of the three single cell workflows\nscafe.workflow.sc.solo --help\nscafe.workflow.cm.aggregate --help\nscafe.workflow.sc.subsample --help\n\n```\n### Run *SCAFE* individual tools with custom options \nFor the sake of flexibiity, *SCAFE* allows users to run individual tools with custom options for exploring the effect of cutoffs or supplying alternative intermediate inputs. See [here](scripts/) for the full list of tools and their usage. Let's walk through  a couple of individual tools with the demo data.\n* ***tool.sc.bam\\_to\\_ctss***: First, we convert a cellranger *\\*.bam* file to *\\*.ctss.bed* files. \"ctss\" refers as capped TSS, and *\\*.ctss.bed* file is a common format for storing TSS information. For procedural convenenice, *tool.sc.bam\\_to\\_ctss* generates multiple *\\*.ctss.bed* files at various levels of collapsing the signal (e.g. piling up UMI at TSS or not, summing up UMI of different cellbarcode or not). By default, the *tool.sc.bam\\_to\\_ctss* process **ONLY** primary alignments regardless of MAPQ. If users wants to, for example, include also secondary aligments with a minimum MAPQ (e.g. 10), the user could run as the followings:\n```shell\n#--- check out the help message of tool.sc.bam_to_ctss\nscafe.tool.sc.bam_to_ctss --help\n\n#--- run tool.sc.bam_to_ctss with custom options\nscafe.tool.sc.bam_to_ctss \\\n--min_MAPQ 10 \\\n--exclude_flag '128,4' \\\n--overwrite=yes \\\n--bamPath=./demo/input/sc.solo/demo.cellranger.bam \\\n--genome=hg19.gencode_v32lift37 \\\n--outputPrefix=demo \\\n--outDir=./demo/output/sc.solo/bam_to_ctss/\n```\n* ***tool.cm.remove\\_strand\\_invader***: Then, we removes the strand invader artefacts from the *\\*.ctss.bed* file generated from  *tool.sc.bam\\_to\\_ctss*. Please refer to [here](https://academic.oup.com/nar/article/41/3/e44/2902349) for the rationale of removing strand invader artefacts. If the users would like to use a more stringent cutoff to define strand invader artefacts, e.g. --min\\_edit\\_distance=3 and --min\\_end\\_non\\_G\\_num=1, so that less reads will be removed, and the user could run as the followings: \n \n### Making a custom reference genome\nCurrently, four reference genomes ara available. See `./scripts/scafe.download.resources.genome` for downloading. Alternatively, some users might work on genomes of other organisms, or prefer to use custom gene models for annotating tCREs.  *tool.cm.prep_genome* converts user-supplied genome *\\*.fasta* and gene model *\\*.gtf* into necessary files for *SCAFE*. You can check out the help message for inputs of *tool.cm.prep_genome* and then test run a demo using TAIR10 genome with AtRTDv2 gene model.\n```shell\n#--- check out the help message of tool.cm.prep_genome\nscafe.tool.cm.prep_genome --help\n\n#--- run the tool on the TAIR10 assembly with gene model AtRTDv2 \nscafe.tool.cm.prep_genome \\\n--overwrite=yes \\\n--gtf_path=./demo/input/genome/TAIR10.AtRTDv2.gtf.gz \\\n--fasta_path=./demo/input/genome/TAIR10.genome.fa.gz \\\n--chrom_list_path=./demo/input/genome/TAIR10.chrom_list.txt \\\n--mask_bed_path=./demo/input/genome/TAIR10.ATAC.bed.gz \\\n--outputPrefix=TAIR10.AtRTDv2 \\\n--outDir=./demo/output/genome/\n```\n### Run *SCAFE* with bulk CAGE data \n*SCAFE* also accepts *.\\*bam* files from bulk CAGE. The major difference between singel cell and bulk workflow is cellbarcode is not considered. Otherwise, the options between single cell and bulk workflow are large the same. Please check the help messages for details of running the workflows: \n \n"
+      },
+      "source": "https://raw.githubusercontent.com/chung-lab/scafe/main/README.html",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9865048189850092,
+      "result": {
+        "original_header": "Wishlist",
+        "type": "Text_excerpt",
+        "value": "* *bam\\_to\\_ctss* error check for various problems in bam file, e.g. bams with read 2 only\n* enable the use of system-wide bins for common 3rd party software (e.g. bedtools samtools)\n* update genome resources with updated genocode versions \n"
+      },
+      "source": "https://raw.githubusercontent.com/chung-lab/scafe/main/README.html",
+      "technique": "supervised_classification"
+    }
+  ],
+  "download_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/chung-lab/scafe/releases"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 11
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/chung-lab/SCAFE/forks"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "chung-lab/SCAFE"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_title": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": ""
+      },
+      "source": "https://raw.githubusercontent.com/chung-lab/scafe/main/README.html",
+      "technique": "regular_expression"
+    }
+  ],
+  "has_build_file": [
+    {
+      "confidence": 1,
+      "result": {
+        "format": "dockerfile",
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/chung-lab/scafe/main/docker/v1.0.0/Dockerfile"
+      },
+      "source": "https://raw.githubusercontent.com/chung-lab/scafe/main/docker/v1.0.0/Dockerfile",
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "format": "dockerfile",
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/chung-lab/scafe/main/docker/v0.9.0-beta/Dockerfile"
+      },
+      "source": "https://raw.githubusercontent.com/chung-lab/scafe/main/docker/v0.9.0-beta/Dockerfile",
+      "technique": "file_exploration"
+    }
+  ],
+  "has_script_file": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/chung-lab/scafe/main/demo/run_all_tests.sh"
+      },
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/chung-lab/scafe/main/docker/v1.0.0/build_docker_image.sh"
+      },
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/chung-lab/scafe/main/resources/bin/paraclu/paraclu-cut.sh"
+      },
+      "technique": "file_exploration"
+    }
+  ],
+  "images": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/chung-lab/scafe/main/.github/images/tCRE_definition.png?"
+      },
+      "source": "https://raw.githubusercontent.com/chung-lab/scafe/main/README.html",
+      "technique": "regular_expression"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/chung-lab/scafe/main/.github/images/flowchart.png?"
+      },
+      "source": "https://raw.githubusercontent.com/chung-lab/scafe/main/README.html",
+      "technique": "regular_expression"
+    }
+  ],
+  "installation": [
+    {
+      "confidence": 0.9529071360746729,
+      "result": {
+        "original_header": "Input **.bam* files",
+        "type": "Text_excerpt",
+        "value": "## Dependencies<a name=\"5\"></a>\n### TL;DR\nGo straight to the [Docker Image](#docker) section if you do not want to deal with dependencies and already have [docker](https://www.docker.com/) installed. \n### perl\n*SCAFE* is mainly written in perl (**v5.24.1 or later**). All scripts are standalone applications and **DO NOT require installations** of extra perl modules. Check whether perl is properly installed on your system.\n```shell\n#--- Check your perl version\nperl --version\n```\n \n### R\n*SCAFE* relies on R for logistic regression, ROC analysis and graph plotting. Rscript **(v3.6.1 or later)** and the following R packages have to be properly installed: \n"
+      },
+      "source": "https://raw.githubusercontent.com/chung-lab/scafe/main/README.html",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 1.0,
+      "result": {
+        "original_header": "R",
+        "type": "Text_excerpt",
+        "value": "* [ROCR](https://cran.r-project.org/web/packages/ROCR/readme/README.html), [PRROC](https://cran.r-project.org/web/packages/PRROC/index.html), [caret](https://cran.r-project.org/web/packages/caret/index.html), [e1071](https://cran.r-project.org/web/packages/e1071/index.html), [ggplot2](https://ggplot2.tidyverse.org/), [scales](https://cran.r-project.org/web/packages/scales/index.html), [reshape2](https://cran.r-project.org/web/packages/reshape2/index.html), [docopt](https://cran.r-project.org/web/packages/docopt/index.html), [R.utils]()\n```shell\n#--- Check your Rscript version, must be 3.6.1 ot later\nRscript --version\n\n#--- Check your R packages, install if missing\nRscript -e 'install.packages(\"ROCR\")'\nRscript -e 'install.packages(\"PRROC\")'\nRscript -e 'install.packages(\"caret\")'\nRscript -e 'install.packages(\"e1071\")'\nRscript -e 'install.packages(\"ggplot2\")'\nRscript -e 'install.packages(\"scales\")'\nRscript -e 'install.packages(\"reshape2\")'\nRscript -e 'install.packages(\"R.utils\")'\n```\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/chung-lab/scafe/main/README.html",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9933628120030058,
+      "result": {
+        "original_header": "Input **.bam* files",
+        "type": "Text_excerpt",
+        "value": "### OS\nSCAFE was developed and tested on Debian GNU/Linux 9, with R (3.6.1) and perl (5.24.1) installed. Running SACFE on other OS with other version of R and perl are not guranteed. In you want to run *SCAFE* on other OS, we would recommend running it from docker container, see [below](#1). If you would like to run *SCAFE* natively on other OS, you have to ensure the R and perl versions, and might consider downloading and compiling the other 3rd party applications from their own sources. The binaries of 3rd party applications have to be execuatble in *SCAFE* directoty at ./resources/bin/. \n## Installation<a name=\"6\"></a>\nOnce you ensured the above dependencies are met, you are ready to download *SCAFE* to your system. \n### Clone this respository\n```shell\n#--- make a directory to install SCAFE\nmkdir -pm 755 /my/path/to/install/\ncd /my/path/to/install/\n\n#--- Obtain SCAFE from github\ngit clone https://github.com/chung-lab/SCAFE\ncd SCAFE\n\n#--- export SCAFE scripts dir to PATH for system-wide call of SCAFE commands \necho \"export PATH=\\$PATH:$(pwd)/scripts\" >>~/.bashrc\nsource ~/.bashrc\n\n#--- making sure the scripts and binaries are executable\nchmod 755 -R ./scripts/\nchmod 755 -R ./resources/bin/\n```\n### Check the dependencies\nTo ensure the dependencies, please run check.dependencies.\n \n```shell\n#--- run check.dependencies to check \nscafe.check.dependencies\n```\n### Docker image<a name=\"docker\"></a>\nIf you have docker installed on your system, you might also consider pulling the *SCAFE* docker image and run it in a docker container. Once you are logged into the *SCAFE* docker container, the following tutorial on the demo data can be ran with exactly the same command.  \n```shell\n#---to pull the docker image using singularity\nsingularity pull docker://cchon/scafe:latest\n\n#---to run scafe within a singularity container, run\nsingularity shell --writable --env APPEND_PATH=/SCAFE/scripts --env LC_ALL=C docker://cchon/scafe:latest\n\n```\n## Getting started with demo data<a name=\"7\"></a>\nNow you have enssured all dependencies and downloaded SCAFE, time to get the demo data and test a few runs on the demo data. \n"
+      },
+      "source": "https://raw.githubusercontent.com/chung-lab/scafe/main/README.html",
+      "technique": "supervised_classification"
+    }
+  ],
+  "issue_tracker": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/chung-lab/SCAFE/issues"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "keywords": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": ""
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "license": [
+    {
+      "confidence": 1,
+      "result": {
+        "name": "MIT License",
+        "spdx_id": "MIT",
+        "type": "License",
+        "url": "https://api.github.com/licenses/mit",
+        "value": "https://api.github.com/licenses/mit"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "File_dump",
+        "value": "MIT License\n\nCopyright (c) 2021 chung-lab\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.\n"
+      },
+      "source": "https://raw.githubusercontent.com/chung-lab/scafe/main/LICENSE",
+      "technique": "file_exploration"
+    }
+  ],
+  "name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "SCAFE"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "owner": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "User",
+        "value": "chung-lab"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "programming_languages": [
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Perl",
+        "size": 1071448,
+        "type": "Programming_language",
+        "value": "Perl"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "R",
+        "size": 31991,
+        "type": "Programming_language",
+        "value": "R"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Dockerfile",
+        "size": 3150,
+        "type": "Programming_language",
+        "value": "Dockerfile"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Shell",
+        "size": 1845,
+        "type": "Programming_language",
+        "value": "Shell"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "readme_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/chung-lab/scafe/main/README.html"
+      },
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/chung-lab/scafe/main/README.md"
+      },
+      "technique": "file_exploration"
+    }
+  ],
+  "related_documentation": [
+    {
+      "confidence": 1,
+      "result": {
+        "format": "readthedocs",
+        "type": "Url",
+        "value": "https://bedtools.readthedocs.io/"
+      },
+      "source": "https://raw.githubusercontent.com/chung-lab/scafe/main/README.html",
+      "technique": "regular_expression"
+    }
+  ],
+  "releases": [
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "chung-lab",
+          "type": "User"
+        },
+        "date_created": "2022-08-12T07:09:09Z",
+        "date_published": "2022-08-25T13:48:04Z",
+        "description": "This is the first stable release. It will be published with a companion manuscript in a scientific journal.\r\n\r\n**Full Changelog**: https://github.com/chung-lab/SCAFE/compare/v0.9.0-beta...v1.0.0",
+        "html_url": "https://github.com/chung-lab/SCAFE/releases/tag/v1.0.0",
+        "name": "v1.0.0 : First stable release for publication",
+        "release_id": 75347012,
+        "tag": "v1.0.0",
+        "tarball_url": "https://api.github.com/repos/chung-lab/SCAFE/tarball/v1.0.0",
+        "type": "Release",
+        "url": "https://api.github.com/repos/chung-lab/SCAFE/releases/75347012",
+        "value": "https://api.github.com/repos/chung-lab/SCAFE/releases/75347012",
+        "zipball_url": "https://api.github.com/repos/chung-lab/SCAFE/zipball/v1.0.0"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "chung-lab",
+          "type": "User"
+        },
+        "date_created": "2021-04-27T11:49:24Z",
+        "date_published": "2022-06-06T00:55:55Z",
+        "description": "This the very first beta release and somewhat buggy and has performance issues. We are currently testing SCAFE under various user-scenerios to make sure it runs for most users. A stable release will be made public at the time when its companion manuscript is published in a scientific journal.",
+        "html_url": "https://github.com/chung-lab/SCAFE/releases/tag/v0.9.0-beta",
+        "name": "v0.9.0-beta : Initial pre-release",
+        "release_id": 68677361,
+        "tag": "v0.9.0-beta",
+        "tarball_url": "https://api.github.com/repos/chung-lab/SCAFE/tarball/v0.9.0-beta",
+        "type": "Release",
+        "url": "https://api.github.com/repos/chung-lab/SCAFE/releases/68677361",
+        "value": "https://api.github.com/repos/chung-lab/SCAFE/releases/68677361",
+        "zipball_url": "https://api.github.com/repos/chung-lab/SCAFE/zipball/v0.9.0-beta"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "somef_missing_categories": [
+    "citation",
+    "acknowledgement",
+    "run",
+    "download",
+    "requirements",
+    "contact",
+    "contributors",
+    "documentation",
+    "usage",
+    "faq",
+    "support",
+    "identifier",
+    "executable_example"
+  ],
+  "somef_provenance": {
+    "date": "2024-10-06 06:42:02",
+    "somef_schema_version": "1.0.0",
+    "somef_version": "0.9.5"
+  },
+  "stargazers_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 43
+      },
+      "technique": "GitHub_API"
+    }
+  ]
+}

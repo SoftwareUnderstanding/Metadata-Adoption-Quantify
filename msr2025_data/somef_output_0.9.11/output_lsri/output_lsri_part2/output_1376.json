@@ -1,0 +1,483 @@
+{
+  "citation": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "References",
+        "parent_header": [
+          "MIAMI"
+        ],
+        "type": "Text_excerpt",
+        "value": "a\\) Huang, W., Hennrick, K., & Drew, S. (2013). A colorful future of\nquantitative pathology: validation of Vectra technology using\nchromogenic multiplexed immunohistochemistry and prostate tissue\nmicroarrays. Human pathology, 44(1), 29-38.\n\nb\\) Keren, L., Bosse, M., Thompson, S., Risom, T., Vijayaragavan, K.,\nMcCaffrey, E., \u2026 & Angelo, M. (2019). MIBI-TOF: A multiplexed imaging\nplatform relates cellular phenotypes and tissue structure. Science\nadvances, 5(10), eaax5851.\n\nc\\) Principe, J. C. (2010). Information theoretic learning: Renyi\u2019s\nentropy and kernel perspectives. Springer Science & Business Media.\n\nd\\) Keren, L., Bosse, M., Marquez, D., Angoshtari, R., Jain, S., Varma,\nS., \u2026 & Angelo, M. (2018). A structured tumor-immune microenvironment in\ntriple negative breast cancer revealed by multiplexed ion beam imaging.\nCell, 174(6), 1373-1387.\n\ne\\) Wand, M. P., & Jones, M. C. (1994). Multivariate plug-in bandwidth\nselection. Computational Statistics, 9(2), 97-116.\n\nf\\) Silverman, B. W. (2018). Density estimation for statistics and data\nanalysis. Routledge.\n"
+      },
+      "source": "https://raw.githubusercontent.com/sealx017/MIAMI/main/README.Rmd",
+      "technique": "header_analysis"
+    }
+  ],
+  "code_repository": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/sealx017/MIAMI"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_created": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2022-02-08T01:20:48Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_updated": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2023-02-21T14:51:07Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "description": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "Mutual information based analysis of multiplex imaging data"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 0.9803733453275028,
+      "result": {
+        "original_header": "MIAMI",
+        "type": "Text_excerpt",
+        "value": "Souvik Seal and Debashis Ghosh \nThis is an R package implementing the proposed method from the paper,\n\u201cMIAMI: Mutual Information-based Analysis of Multiplex Imaging data\u201d.\nThe package provides a thorough pipeline for performing marker\nco-expression analysis of multiplex imaging data, such as Vectra (Huang\net. al.\u00a02013) and MIBI data (Keren et. al.\u00a02019). The package also\nprovides standalone functions for computing several mutual information\n(MI) theoretic measures (Principe 2010), such as EQMI\\*, EQMI and CSQMI\nfor quantifying the dependence between random variables in general\ndatasets (definitions are available below in the appendix).\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/sealx017/MIAMI/main/README.Rmd",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.8130253985201513,
+      "result": {
+        "original_header": "Loading the package",
+        "type": "Text_excerpt",
+        "value": "We install and load the developmental version of MIAMI from GitHub.\n``` r\nsuppressMessages(devtools::install_github('sealx017/MIAMI'))\nrequire(MIAMI)\n```\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/sealx017/MIAMI/main/README.Rmd",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9763335714181168,
+      "result": {
+        "original_header": "Compute EQMI*, EQMI and CSQMI with an arbitrary data matrix",
+        "type": "Text_excerpt",
+        "value": "-   We start by showing how to compute the MI-based measures, EQMI\\*,\n    EQMI, and CSQMI (Principe 2010) between any arbitrary set of random\n    variables (r.v.\u2019s) from a general data-frame i.e., when the data\n    does not necessarily come from multiplex imaging platforms. We\n    create a matrix named Data_matrix with 2500 samples and 5 columns\n    corresponding to five r.v.\u2019s and use it in the function named QMI to\n    estimate the measures. \n-   A novelty of the estimation algorithm is that the quantities are\n    computed in a step-wise fashion. It means that along with the EQMI\\*\n    between the full set of markers, one can easily extract the EQMI\\*\n    between several smaller sets of markers. For example, with\n    ![p](http://chart.apis.google.com/chart?cht=tx&chl=p \"p\") = 5\n    markers, (1, 2, 3, 4, 5), the EQMI\\* between all the following sets\n    of markers can be extracted in a single estimation procedure, \n-   The estimation algorithm requires selecting bandwidth parameters for\n    each of the r.v.\u2019s. the default option, bandwidth = \u201cHpi\u201d uses the\n    multivariate plug-in bandwidth matrix described in Wand, M. P., &\n    Jones, M. C. (1994). However, in larger datasets (especially, for\n    large ![p](http://chart.apis.google.com/chart?cht=tx&chl=p \"p\")) for\n    faster computation, bandwidth = \u201cInd\u201d, which chooses bandwidth by\n    Silverman\u2019s rule (Silverman, B.W. (2018)) for every r.v., can be\n    used.\n``` r\nData_matrix = marker_data[1:2500, -1]\nQMIs = QMI(Data_matrix, bandwidth = \"HPI\", measure = \"All\", var_names = T)\nprint(QMIs)\n# $EQMI_star\n#               Estimate\n# EQMI*_12    0.01650183\n# EQMI*_123   0.19007064\n# EQMI*_1234  0.36213356\n# EQMI*_12345 0.56960589\n# \n# $EQMI\n#               Estimate\n# EQMI_12       6.200363\n# EQMI_123    283.226354\n# EQMI_1234  1574.540741\n# EQMI_12345 8456.344853\n# \n# $CSQMI\n#               Estimate\n# CSQMI_12    0.01822507\n# CSQMI_123   0.27834795\n# CSQMI_1234  0.55462570\n# CSQMI_12345 0.96711185\n# \n# $Bandwidth_parameters\n#             h1           h2           h3           h4           h5\n# 1 0.0001129059 3.739611e-05 0.0003045994 0.0005547427 0.0005718942\n```\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/sealx017/MIAMI/main/README.Rmd",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9742868072469516,
+      "result": {
+        "original_header": "Computing subject specific EQMI* values with the imaging data",
+        "type": "Text_excerpt",
+        "value": "We return to the analysis of multiplex imaging data. We compute the\nEQMI\\* of all the subjects using the function QMI_all and store the\nvalues in a matrix whose every row corresponds to a subject.\n``` r\nEQMI_vector = QMI_all(marker_data, bandwidth = \"Ind\", measure = \"EQMI_star\", progress_bar = \"False\")\nknitr::kable(head(EQMI_vector), format=\"markdown\")\n```\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/sealx017/MIAMI/main/README.Rmd",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9848531240285474,
+      "result": {
+        "original_header": "Association testing with survival outcome",
+        "type": "Text_excerpt",
+        "value": "Using the vector of estimated EQMI\\* of all the subjects, we perform\nassociation analysis with two clinical outcomes, survival and\nrecurrence. We have the outcomes, the time to death and the time to\nrecurrence and the respective censoring indicators (= 0 for an event) as\nthe columns of the matrix named clinical_data. We have one single\ncovariate, Age in the same matrix. Below, we create a matrix named\nsurv_dat with all the subject IDs and their survival outcomes, and\nanother matrix named covariates with the subject IDs and available\ncovariates which, in this case, is just Age. We then use the function\nCox_PH to fit the proportional hazard (PH) model outputting a table of\np-values. To add higher order terms in the PH model, change degree to \\>\n1.\n``` r\nsurv_dat = clinical_data[,c(1,4:5)]\ncovariates = clinical_data[,c(1,6)]\nSurvCox = Cox_PH(surv_dat, covariates, EQMI_vector, degree = 1)\nknitr::kable(SurvCox, format=\"markdown\")\n```\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/sealx017/MIAMI/main/README.Rmd",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.8769748514007466,
+      "result": {
+        "original_header": "Association testing with recurrence outcome",
+        "type": "Text_excerpt",
+        "value": "Below, we create a matrix named recur_dat with all the subject IDs and\ntheir recurrence outcomes, and use the same covariates matrix as\nearlier. We again use the Cox_PH function and get the p-values.\n``` r\nrecur_dat = clinical_data[,c(1:3)]\nRecurCox = Cox_PH(recur_dat, covariates, EQMI_vector, degree = 1)\nknitr::kable(RecurCox, format=\"markdown\")\n```\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/sealx017/MIAMI/main/README.Rmd",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9898349096622059,
+      "result": {
+        "original_header": "Univariate marginal density",
+        "type": "Text_excerpt",
+        "value": "We provide a few basic functions to estimate and plot the univariate\nmarginal densities of the random variables. We go back to the matrix\nnamed Data_matrix which has 2500 samples and 5 columns corresponding to\nfive r.v.\u2019s. We look at first two columns (call them, X_1 and X_2) and\nestimate their kernel density estimates as f_1 and f_2 using the\nfunction dens_univ.\u00a0Next, using the function univ_dens_plot, we plot f_1\nand f_2. The default number of grids is, ngrids = 1024 and the bandwidth\nparameter is selected using Silverman\u2019s rule.\n``` r\nX_1 = Data_matrix[,1]\nX_2 = Data_matrix[,2]  \n\nf_1 = univ_dens(X_1, ngrids = 1024)\nf_2 = univ_dens(X_2, ngrids = 1024)\n\np1 = univ_dens_plot(f_1)\np2 = univ_dens_plot(f_2)\n```\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/sealx017/MIAMI/main/README.Rmd",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9796153551930046,
+      "result": {
+        "original_header": "Bivariate joint density",
+        "type": "Text_excerpt",
+        "value": "We estimate the bivariate joint density of X_1 and X_2, as f_12 using\nthe function biv_dens. Next, using the function biv_dens_plot, we plot\nf_12. The default number of grids is, ngrids = 512 and the bandwidth\nmatrix used is the multivariate plug-in bandwidth matrix described in\nWand, M. P., & Jones, M. C. (1994). It may be easy to interpret the\nestimated density focusing only on the smaller values of\n![X_1](http://chart.apis.google.com/chart?cht=tx&chl=X_1 \"X_1\") and\n![X_2](http://chart.apis.google.com/chart?cht=tx&chl=X_2 \"X_2\") since\nboth the r.v.\u2019s usually have most of the values close to 0. Hence, we\nuse two thresholds (q1, q2) to display the estimated density only\nbetween 70% quantiles of both the r.v.\u2019s.\n``` r\n\nf_12 = biv_dens(cbind(X_1, X_2), ngrids = 512)\nq1 = quantile(X_1, 0.7); q2 = quantile(X_2, 0.7)\np = biv_dens_plot(f_12, maxs = c(q1, q2))\n```\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/sealx017/MIAMI/main/README.Rmd",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9906071612201068,
+      "result": {
+        "original_header": "Definition of the measures",
+        "type": "Text_excerpt",
+        "value": "Here, we show the mathematical definitions of the three different\nMI-based measures, EQMI\\*, EQMI and CSQMI, implemented in this package. \n![f\\_{12 \\\\ldots p}(x\\_{1}, x\\_{2}, \\\\ldots , x\\_{p})](http://chart.apis.google.com/chart?cht=tx&chl=f_%7B12%20%5Cldots%20p%7D%28x_%7B1%7D%2C%20x_%7B2%7D%2C%20%5Cldots%20%2C%20x_%7Bp%7D%29 \"f_{12 \\ldots p}(x_{1}, x_{2}, \\ldots , x_{p})\")\nis the joint PDF and\n![f\\_{1}(x\\_{1}), f\\_{2}(x\\_{2}), \\\\ldots f\\_{p}(x\\_{p})](http://chart.apis.google.com/chart?cht=tx&chl=f_%7B1%7D%28x_%7B1%7D%29%2C%20f_%7B2%7D%28x_%7B2%7D%29%2C%20%5Cldots%20f_%7Bp%7D%28x_%7Bp%7D%29 \"f_{1}(x_{1}), f_{2}(x_{2}), \\ldots f_{p}(x_{p})\")\nare the marginal PDFs of the\n![p](http://chart.apis.google.com/chart?cht=tx&chl=p \"p\") variables. The\ndetails of the efficient algorithm used for estimating\n![V_J, V_C](http://chart.apis.google.com/chart?cht=tx&chl=V_J%2C%20V_C \"V_J, V_C\")\nand ![V_M](http://chart.apis.google.com/chart?cht=tx&chl=V_M \"V_M\") can\nbe found in the manuscript, \u201cMIAMI: Mutual Information-based Analysis of\nMultiplex Imaging data\u201d.\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/sealx017/MIAMI/main/README.Rmd",
+      "technique": "supervised_classification"
+    }
+  ],
+  "download_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/sealx017/MIAMI/releases"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 0
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/sealx017/MIAMI/forks"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "sealx017/MIAMI"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_title": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "MIAMI"
+      },
+      "source": "https://raw.githubusercontent.com/sealx017/MIAMI/main/README.Rmd",
+      "technique": "regular_expression"
+    }
+  ],
+  "images": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "http://chart.apis.google.com/chart?cht=tx&amp;chl=p"
+      },
+      "source": "https://raw.githubusercontent.com/sealx017/MIAMI/main/README.Rmd",
+      "technique": "regular_expression"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "http://chart.apis.google.com/chart?cht=tx&amp;chl=p"
+      },
+      "source": "https://raw.githubusercontent.com/sealx017/MIAMI/main/README.Rmd",
+      "technique": "regular_expression"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "http://chart.apis.google.com/chart?cht=tx&amp;chl=p"
+      },
+      "source": "https://raw.githubusercontent.com/sealx017/MIAMI/main/README.Rmd",
+      "technique": "regular_expression"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/sealx017/MIAMI/main/README_files/figure-gfm/Computing univ density-1.png"
+      },
+      "source": "https://raw.githubusercontent.com/sealx017/MIAMI/main/README.Rmd",
+      "technique": "regular_expression"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/sealx017/MIAMI/main/README_files/figure-gfm/Computing univ density-2.png"
+      },
+      "source": "https://raw.githubusercontent.com/sealx017/MIAMI/main/README.Rmd",
+      "technique": "regular_expression"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "http://chart.apis.google.com/chart?cht=tx&amp;chl=X_1"
+      },
+      "source": "https://raw.githubusercontent.com/sealx017/MIAMI/main/README.Rmd",
+      "technique": "regular_expression"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "http://chart.apis.google.com/chart?cht=tx&amp;chl=X_2"
+      },
+      "source": "https://raw.githubusercontent.com/sealx017/MIAMI/main/README.Rmd",
+      "technique": "regular_expression"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/sealx017/MIAMI/main/README_files/figure-gfm/Computing biv density-1.png"
+      },
+      "source": "https://raw.githubusercontent.com/sealx017/MIAMI/main/README.Rmd",
+      "technique": "regular_expression"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/sealx017/MIAMI/main/Formulas.png"
+      },
+      "source": "https://raw.githubusercontent.com/sealx017/MIAMI/main/README.Rmd",
+      "technique": "regular_expression"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "http://chart.apis.google.com/chart?cht=tx&amp;chl=f_%7B12%20%5Cldots%20p%7D%28x_%7B1%7D%2C%20x_%7B2%7D%2C%20%5Cldots%20%2C%20x_%7Bp%7D%29"
+      },
+      "source": "https://raw.githubusercontent.com/sealx017/MIAMI/main/README.Rmd",
+      "technique": "regular_expression"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "http://chart.apis.google.com/chart?cht=tx&amp;chl=f_%7B1%7D%28x_%7B1%7D%29%2C%20f_%7B2%7D%28x_%7B2%7D%29%2C%20%5Cldots%20f_%7Bp%7D%28x_%7Bp%7D%29"
+      },
+      "source": "https://raw.githubusercontent.com/sealx017/MIAMI/main/README.Rmd",
+      "technique": "regular_expression"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "http://chart.apis.google.com/chart?cht=tx&amp;chl=p"
+      },
+      "source": "https://raw.githubusercontent.com/sealx017/MIAMI/main/README.Rmd",
+      "technique": "regular_expression"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "http://chart.apis.google.com/chart?cht=tx&amp;chl=V_J%2C%20V_C"
+      },
+      "source": "https://raw.githubusercontent.com/sealx017/MIAMI/main/README.Rmd",
+      "technique": "regular_expression"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "http://chart.apis.google.com/chart?cht=tx&amp;chl=V_M"
+      },
+      "source": "https://raw.githubusercontent.com/sealx017/MIAMI/main/README.Rmd",
+      "technique": "regular_expression"
+    }
+  ],
+  "installation": [
+    {
+      "confidence": 0.9997866498852037,
+      "result": {
+        "original_header": "Loading the package",
+        "type": "Text_excerpt",
+        "value": "We install and load the developmental version of MIAMI from GitHub.\n``` r\nsuppressMessages(devtools::install_github('sealx017/MIAMI'))\nrequire(MIAMI)\n```\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/sealx017/MIAMI/main/README.Rmd",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.90283775065794,
+      "result": {
+        "original_header": "Association testing with survival outcome",
+        "type": "Text_excerpt",
+        "value": "| Variable      |   p-value |\n|:--------------|----------:|\n| EQMI\\*\\_12    | 0.0685692 |\n| EQMI\\*\\_123   | 0.0373026 |\n| EQMI\\*\\_1234  | 0.0467573 |\n| EQMI\\*\\_12345 | 0.0150054 |\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/sealx017/MIAMI/main/README.Rmd",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.90283775065794,
+      "result": {
+        "original_header": "Association testing with recurrence outcome",
+        "type": "Text_excerpt",
+        "value": "| Variable      |   p-value |\n|:--------------|----------:|\n| EQMI\\*\\_12    | 0.0609279 |\n| EQMI\\*\\_123   | 0.0268636 |\n| EQMI\\*\\_1234  | 0.0119667 |\n| EQMI\\*\\_12345 | 0.0128277 |\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/sealx017/MIAMI/main/README.Rmd",
+      "technique": "supervised_classification"
+    }
+  ],
+  "issue_tracker": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/sealx017/MIAMI/issues"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "keywords": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": ""
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "MIAMI"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "owner": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "User",
+        "value": "sealx017"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "programming_languages": [
+    {
+      "confidence": 1,
+      "result": {
+        "name": "R",
+        "size": 21299,
+        "type": "Programming_language",
+        "value": "R"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "TeX",
+        "size": 5650,
+        "type": "Programming_language",
+        "value": "TeX"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "readme_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/sealx017/MIAMI/main/README.Rmd"
+      },
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/sealx017/MIAMI/main/README.md"
+      },
+      "technique": "file_exploration"
+    }
+  ],
+  "somef_missing_categories": [
+    "acknowledgement",
+    "run",
+    "download",
+    "requirements",
+    "contact",
+    "contributors",
+    "documentation",
+    "license",
+    "faq",
+    "support",
+    "identifier",
+    "has_build_file",
+    "executable_example"
+  ],
+  "somef_provenance": {
+    "date": "2024-10-04 14:12:28",
+    "somef_schema_version": "1.0.0",
+    "somef_version": "0.9.5"
+  },
+  "stargazers_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 1
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "usage": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Loading the example datasets",
+        "parent_header": [
+          "MIAMI"
+        ],
+        "type": "Text_excerpt",
+        "value": "Next, we import the example files named, \u201cMarker_Data.csv\u201d and\n\u201cClinical_Data.csv\u201d. The first one has expression data of five markers\n(![p](http://chart.apis.google.com/chart?cht=tx&chl=p \"p\") = 5), HLA-DR,\nCD45RO, H3K27me3, H3K9ac and HLA_Class_1 for 39 subjects. The second one\nhas data of two clinical outcomes, recurrence and survival and one\ncovariate, Age for the same set of subjects. Both of these files are\nextracted from the triple-negative breast cancer MIBI data first\npublished in Keren et. al.\u00a02018. The files have a common column named\n\u201cID\u201d denoting subject IDs.\n\n``` r\ndata(\"marker_data\")\nknitr::kable(head(marker_data), format=\"markdown\")\n```\n\n|  ID |    HLA.DR |    CD45RO | HLA_Class_1 |  H3K27me3 |    H3K9ac |\n|----:|----------:|----------:|------------:|----------:|----------:|\n|   1 | 0.0887767 | 0.0029441 |   0.2295286 | 0.1766168 | 0.0704011 |\n|   1 | 0.0118106 | 0.1407535 |   0.2150085 | 0.5186082 | 0.2832617 |\n|   1 | 0.0000000 | 0.0000000 |   0.0178665 | 0.2305889 | 0.0206786 |\n|   1 | 0.0125603 | 0.0000000 |   0.2317846 | 0.4331141 | 0.2314381 |\n|   1 | 0.1843811 | 0.0339638 |   0.1492079 | 0.7069783 | 0.4647193 |\n|   1 | 0.0832260 | 0.0000000 |   0.1986478 | 0.7122134 | 0.4879173 |\n\n``` r\ndata(\"clinical_data\")\nknitr::kable(head(clinical_data), format=\"markdown\")\n```\n\n|  ID | Recurrence | Recurrence_time | Survival | Survival_time | Age |\n|----:|-----------:|----------------:|---------:|--------------:|----:|\n|   1 |          0 |               9 |        0 |          2612 |  77 |\n|   2 |          1 |             745 |        0 |           745 |  67 |\n|   3 |          1 |            3130 |        1 |          3130 |  42 |\n|   4 |          0 |              31 |        1 |          2523 |  41 |\n|   5 |          1 |            1683 |        1 |          1683 |  64 |\n|   6 |          1 |            2275 |        1 |          2275 |  53 |\n"
+      },
+      "source": "https://raw.githubusercontent.com/sealx017/MIAMI/main/README.Rmd",
+      "technique": "header_analysis"
+    }
+  ]
+}

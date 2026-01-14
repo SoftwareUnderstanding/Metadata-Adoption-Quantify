@@ -1,0 +1,1056 @@
+{
+  "acknowledgement": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Acknowledgements",
+        "parent_header": [
+          "Medaka"
+        ],
+        "type": "Text_excerpt",
+        "value": "We thank [Joanna Pineda](https://github.com/jopineda) and\n[Jared Simpson](https://github.com/jts) for providing htslib code samples which aided\ngreatly development of the optimised feature generation code, and for testing the\nversion 0.4 release candidates.\n\nWe thank [Devin Drown](https://github.com/devindrown) for\n[working through](https://github.com/nanoporetech/medaka/issues/70)\nuse of `medaka` with his RTX 2080 GPU.\n"
+      },
+      "source": "https://raw.githubusercontent.com/nanoporetech/medaka/master/README.md",
+      "technique": "header_analysis"
+    }
+  ],
+  "code_repository": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/nanoporetech/medaka"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_created": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2017-06-07T14:01:06Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_updated": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2024-10-03T20:14:38Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "description": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "Sequence correction provided by ONT Research"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 0.9981229938181752,
+      "result": {
+        "original_header": "Medaka",
+        "type": "Text_excerpt",
+        "value": "\n`medaka` is a tool to create consensus sequences and variant calls from\nnanopore sequencing data. This task is performed using neural networks applied\na pileup of individual sequencing reads against a reference sequence, mostly commonly\neither a draft assembly or a database reference sequence. It provides\nstate-of-the-art results outperforming sequence-graph based methods and\nsignal-based methods, whilst also being faster. \n"
+      },
+      "source": "https://raw.githubusercontent.com/nanoporetech/medaka/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9262919160401539,
+      "result": {
+        "original_header": "Features",
+        "type": "Text_excerpt",
+        "value": "  * Requires only basecalled data. (`.fasta` or `.fastq`)\n  * Improved accuracy over graph-based methods (e.g. Racon).\n  * 50X faster than Nanopolish (and can run on GPUs).\n  * Includes extras for implementing and training bespoke correction\n    networks.\n  * Works on Linux and MacOS.\n  * Open source (Oxford Nanopore Technologies PLC. Public License Version 1.0) \nFor creating draft assemblies we recommend [Flye](https://github.com/fenderglass/Flye).\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/nanoporetech/medaka/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9414876571990115,
+      "result": {
+        "original_header": "Models",
+        "type": "Text_excerpt",
+        "value": "Recent basecaller versions annotate their output with their model version.\nIn such cases medaka can inspect the files and attempt to select an appropriate\nmodel for itself. This typically works best in the case of BAM output from\nbasecallers. It will work also for FASTQ input provided the FASTQ has been\ncreated from basecaller output using:\n```\nsamtools fastq -T '*' dorado.bam | gzip -c > dorado.fastq.gz\n```\n \n**Bacterial and plasmid sequencing** \nFor native data with bacterial modifications, such as bacterial isolates,\nmetagenomic samples, or plasmids expressed in bacteria, there is a research\nmodel that shows improved consensus accuracy. This model is compatible with\nseveral basecaller versions for the R10 chemistries. By adding the flag `--bacteria`\nthe bacterial model will be selected if it is compatible with the input basecallers:\n```\nmedaka_consensus -i ${BASECALLS} -d ${DRAFT} -o ${OUTDIR} -t ${NPROC} --bacteria\n```\nA legacy default model will be used if the bacterial model is not compatible with\nthe input files. The model selection can be confirmed by running:\n```\nmedaka tools resolve_model --auto_model consensus_bacteria <input.bam/input.fastq>\n```\n \n**When automatic selection is unsuccessful, and older basecallers** \nIf the name of the basecaller model used is known, but has been lost from the input\nfiles, the basecaller model can been provided to medaka directly. It must however\nbe appended with either `:consensus` or `:variant` according to whether the user\nwishing to use the consensus or variant calling medaka model. For example:\n```\nmedaka inference input.bam output.hdf \\\n    --model dna_r10.4.1_e8.2_400bps_hac@v4.1.0:variant\n```\n \nHistorically medaka models followed a nomenclature describing both the chemistry\nand basecaller versions. These old models are now deprecated, users are encouraged\nto rebasecall their data with a more recent basecaller version prior to using medaka. \n"
+      },
+      "source": "https://raw.githubusercontent.com/nanoporetech/medaka/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9390503116724274,
+      "result": {
+        "original_header": "Improving parallelism",
+        "type": "Text_excerpt",
+        "value": "The `medaka_consensus` program is good for simple datasets but perhaps not\noptimal for running large datasets at scale. A higher level of parallelism\ncan be achieved by running independently the component steps of\n`medaka_consensus`. The program performs three tasks: \n1. alignment of reads to input assembly (via `mini_align` which is a thin\n   veil over `minimap2`)\n2. running of consensus algorithm across assembly regions\n   (`medaka inference`)\n3. aggregation of the results of 2. to create consensus sequences\n   (`medaka sequence`) \nThe three steps are discrete, and can be split apart and run independently. In\nmost cases, Step 2. is the bottleneck and can be trivially parallelized. The\n`medaka consensus` program can be supplied a `--regions`\nargument which will restrict its action to particular assembly sequences from\nthe `.bam` file output in Step 1. Therefore individual jobs can be run for batches\nof assembly sequences simultaneously. In the final step, `medaka stitch`\ncan take as input one or more of the `.hdf` files output by Step 2. \nSo in summary something like this is possible:\n```\n# align reads to assembly\nmini_align -i basecalls.fasta -r assembly.fasta -P -m \\\n    -p calls_to_draft.bam -t <threads>\n# run lots of jobs like this:\nmkdir results\nmedaka inference calls_to_draft.bam results/contigs1-4.hdf \\\n    --region contig1 contig2 contig3 contig4\n...\n# wait for jobs, then collate results\nmedaka sequence results/*.hdf polished.assembly.fasta\n```\n \nIt is not recommended to specify a value of `--threads` greater than 2 for\n`medaka inference` since the compute scaling efficiency is poor beyond this.\nNote also that `medaka inference` may been seen to use resources equivalent to\n`<threads> + 4` as an additional 4 threads are used for reading and preparing\ninput data. \n"
+      },
+      "source": "https://raw.githubusercontent.com/nanoporetech/medaka/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9216093934381749,
+      "result": {
+        "original_header": "Origin of the draft sequence",
+        "type": "Text_excerpt",
+        "value": "Processing a draft sequence from alternative sources (e.g. the output of\n[canu](https://github.com/marbl/canu) or\n[wtdbg2](https://github.com/ruanjue/wtdbg2)) may lead to different results. \n> Historical correction\n> models in medaka were trained to correct draft sequences output from the canu\n> assembler with [racon](https://github.com/lbcb-sci/racon) applied either once,\n> or four times iteratively. For contemporary models this is not the case and\n> medaka should be used directly on the output of Flye. \n"
+      },
+      "source": "https://raw.githubusercontent.com/nanoporetech/medaka/master/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "download_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/nanoporetech/medaka/releases"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 74
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/nanoporetech/medaka/forks"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "nanoporetech/medaka"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_title": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "Medaka"
+      },
+      "source": "https://raw.githubusercontent.com/nanoporetech/medaka/master/README.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "has_script_file": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/nanoporetech/medaka/master/build-wheels.sh"
+      },
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/nanoporetech/medaka/master/conda/build.sh"
+      },
+      "technique": "file_exploration"
+    }
+  ],
+  "installation": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Installation",
+        "parent_header": [
+          "Medaka"
+        ],
+        "type": "Text_excerpt",
+        "value": "Medaka can be installed in one of several ways.\n\n**Installation with pip**\n\nOfficial binary releases of medaka are available on\n[PyPI](https://pypi.org/project/medaka/) and can be installed using pip:\n\n    pip install medaka\n\nOn contemporaray Linux and macOS platforms this will install a precompiled binary,\non other platforms a source distribution may be fetched and compiled.\n\nWe recommend using medaka within a virtual environment, viz.:\n\n    python3 -m venv medaka\n    . ./medaka/bin/activate\n    pip install --upgrade pip\n    pip install medaka\n\nUsing this method requires the user to provide several binaries:\n\n * [samtools](https://github.com/samtools/samtools),\n * [minimap2](https://github.com/lh3/minimap2),\n * [tabix](https://github.com/samtools/htslib), and\n * [bgzip](https://github.com/samtools/htslib)\n\nand place these within the `PATH`. `samtools/bgzip/tabix` versions >=1.14 and\n`minimap2` version >=2.17 are recommended as these are those used in development\nof medaka.\n\nThe default installation has the capacity to run on a GPU (see _Using a GPU_ below),\nor on CPU. If you are using `medaka` exclusively on CPU, and don't need the ability\nto run on GPU, you may wish to install the CPU-only version with:\n\n    pip install medaka-cpu --extra-index-url https://download.pytorch.org/whl/cpu\n\n\n**Installation with conda**\n\n> The bioconda medaka packages are not supported by Oxford Nanopore Technologies.\n\nFor those who prefer the conda package manager, medaka is available via the\n[anaconda.org](https://anaconda.org/nanoporetech/medaka) channel:\n\n    conda create -n medaka -c conda-forge -c nanoporetech -c bioconda medaka\n\nInstallations with this method will bundle the additional tools required to run\nan end-to-end correction workflow.\n\n**Installation from source**\n\n> This method is useful only when the above methods have failed, \n> as it will assist in building various dependencies. Its unlikely that\n> our developers will be able to provide further assistance in your\n> specific circumstances if you install using this method.\n\nMedaka can be installed from its source quite easily on most systems.\n\n Before installing medaka it may be required to install some\n prerequisite libraries, best installed by a package manager. On Ubuntu\n theses are:\n >     bzip2 g++ zlib1g-dev libbz2-dev liblzma-dev libffi-dev libncurses5-dev\n >     libcurl4-gnutls-dev libssl-dev curl make cmake wget python3-all-dev\n >     python-virtualenv\n In addition it is required to install and set up git LFS before cloning\n the repository.\n\nA Makefile is provided to fetch, compile and install all direct dependencies\ninto a python virtual environment. To set-up the environment run:\n\n    # Note: certain files are stored in git-lfs, https://git-lfs.github.com/,\n    #       which must therefore be installed first.\n    git clone https://github.com/nanoporetech/medaka.git\n    cd medaka\n    make install\n    . ./venv/bin/activate\n\nUsing this method both `samtools` and `minimap2` are built from source and need\nnot be provided by the user.\n\nWhen building from source, to install a CPU-only version without the capacity to\nrun on GPU, modify the above to:\n\n    MEDAKA_CPU=1 make install\n\n\n**Using a GPU**\n\nSince version 2.0 `medaka` uses PyTorch. Prior versions (v1.x) used Tensorflow.\n\nThe default version of PyTorch that is installed when building from source or \nwhen installing through `pip` can make immediate use of GPUs via NVIDIA CUDA.\nHowever, note that the `torch` package is compiled against specific versions of\nthe CUDA and cuDNN libraries; users are directed to the \n[torch installation](https://pytorch.org/get-started/locally/) pages for further\ninformation. cuDNN can be obtained from the \n[cuDNN Archive](https://developer.nvidia.com/rdp/cudnn-archive), whilst CUDA from\nthe [CUDA Toolkit Archive](https://developer.nvidia.com/cuda-toolkit-archive).\n\n> Installation with conda is a little different. See the\n> [conda-forge]https://conda-forge.org/docs/user/tipsandtricks/#installing-cuda-enabled-packages-like-tensorflow-and-pytorch)\n> documentation. In summary, the conda package should do something sensible\n> bespoke to the computer it is being installed on.\n\nAs described above, if the capability to run on GPU is not required, `medaka-cpu`\ncan be installed with a CPU-only version of PyTorch that doesn't depend on the\nCUDA libraries, as follows:\n\n    pip install medaka-cpu --extra-index-url https://download.pytorch.org/whl/cpu\n\nif using the prebuilt packages, or \n\n    MEDAKA_CPU=1 make install\n\nif building from source.\n\n*GPU Usage notes*\n\nDepending on your GPU, `medaka` may show out of memory errors when running.\nTo avoid these the inference batch size can be reduced from the default\nvalue by setting the `-b` option when running `medaka_consensus`. A value\n`-b 100` is suitable for 11Gb GPUs.\n\n"
+      },
+      "source": "https://raw.githubusercontent.com/nanoporetech/medaka/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 0.8607359609858234,
+      "result": {
+        "original_header": "Features",
+        "type": "Text_excerpt",
+        "value": "For creating draft assemblies we recommend [Flye](https://github.com/fenderglass/Flye).\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/nanoporetech/medaka/master/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "issue_tracker": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/nanoporetech/medaka/issues"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "keywords": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "medaka, nanopore"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "license": [
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Other",
+        "spdx_id": "NOASSERTION",
+        "type": "License",
+        "url": null,
+        "value": null
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "File_dump",
+        "value": "Oxford Nanopore Technologies PLC. Public License Version 1.0\n=============================================================\n\n1. Definitions\n--------------\n\n1.1. \"Contributor\"\n    means each individual or legal entity that creates, contributes to\n    the creation of, or owns Covered Software.\n\n1.2. \"Contributor Version\"\n    means the combination of the Contributions of others (if any) used\n    by a Contributor and that particular Contributor\u2019s Contribution.\n\n1.3. \"Contribution\"\n    means Covered Software of a particular Contributor.\n\n1.4. \"Covered Software\"\n    means Source Code Form to which the initial Contributor has attached\n    the notice in Exhibit A, the Executable Form of such Source Code\n    Form, and Modifications of such Source Code Form, in each case\n    including portions thereof.\n\n1.5. \"Executable Form\"\n    means any form of the work other than Source Code Form.\n\n1.6. \"Larger Work\"\n    means a work that combines Covered Software with other material, in\n    a separate file or files, that is not Covered Software.\n\n1.7. \"License\"\n    means this document.\n\n1.8. \"Licensable\"\n    means having the right to grant, to the maximum extent possible,\n    whether at the time of the initial grant or subsequently, any and\n    all of the rights conveyed by this License.\n\n1.9. \"Modifications\"\n    means any of the following:\n\n    (a)\t  any file in Source Code Form that results from an addition to,\n          deletion from, or modification of the contents of Covered\n          Software; or\n    (b)   any new file in Source Code Form that contains any Covered\n          Software.\n\n1.10. \"Research Purposes\"\n    means use for internal research and not intended for or directed\n    towards commercial advantages or monetary compensation; provided,\n    however, that monetary compensation does not include sponsored\n    research of research funded by grants.\n\n1.11  \"Secondary License\"\n    means either the GNU General Public License, Version 2.0, the GNU\n    Lesser General Public License, Version 2.1, the GNU Affero General\n    Public License, Version 3.0, or any later versions of those\n    licenses.\n\n1.12. \"Source Code Form\"\n    means the form of the work preferred for making modifications.\n\n1.13. \"You\" (or \"Your\")\n    means an individual or a legal entity exercising rights under this\n    License. For legal entities, \"You\" includes any entity that\n    controls, is controlled by, or is under common control with You. For\n    purposes of this definition, \"control\" means (a) the power, direct\n    or indirect, to cause the direction or management of such entity,\n    whether by contract or otherwise, or (b) ownership of more than\n    fifty percent (50%) of the outstanding shares or beneficial\n    ownership of such entity.\n\n2. License Grants and Conditions\n--------------------------------\n\n2.1. Grants\n\nEach Contributor hereby grants You a world-wide, royalty-free,\nnon-exclusive license under Contributor copyrights Licensable by such\nContributor to use, reproduce, make available, modify, display,\nperform, distribute, and otherwise exploit solely for Research Purposes\nits Contributions, either on an unmodified basis, with Modifications,\nor as part of a Larger Work.\n\n2.2. Effective Date\n\nThe licenses granted in Section 2.1 with respect to any Contribution\nbecome effective for each Contribution on the date the Contributor\nfirst distributes such Contribution.\n\n2.3. Limitations on Grant Scope\n\nThe licenses granted in this Section 2 are the only rights granted under\nthis License. No additional rights or licenses will be implied from the\ndistribution or licensing of Covered Software under this License. The\nLicense is incompatible with Secondary Licenses.  Notwithstanding\nSection 2.1 above, no copyright license is granted:\n\n(a) for any code that a Contributor has removed from Covered Software;\n    or\n\n(b) use of the Contributions or its Contributor Version other than for\nResearch Purposes only; or\n\n(c) for infringements caused by: (i) Your and any other third party\u2019s\nmodifications of Covered Software, or (ii) the combination of its\nContributions with other software (except as part of its Contributor\nVersion).\n\nThis License does not grant any rights in the patents, trademarks,\nservice marks, or logos of any Contributor (except as may be necessary\nto comply with the notice requirements in Section 3.4).\n\n2.4. Subsequent Licenses\n\nNo Contributor makes additional grants as a result of Your choice to\ndistribute the Covered Software under a subsequent version of this\nLicense (see Section 10.2) or under the terms of a Secondary License\n(if permitted under the terms of Section 3.3).\n\n2.5. Representation\n\nEach Contributor represents that the Contributor believes its\nContributions are its original creation(s) or it has sufficient rights\nto grant the rights to its Contributions conveyed by this License.\n\n2.6. Fair Use\n\nThis License is not intended to limit any rights You have under\napplicable copyright doctrines of fair use, fair dealing, or other\nequivalents.\n\n2.7. Conditions\n\nSections 3.1, 3.2, 3.3, and 3.4 are conditions of the licenses granted\nin Section 2.1.\n\n3. Responsibilities\n-------------------\n\n3.1. Distribution of Source Form\n\nAll distribution of Covered Software in Source Code Form, including any\nModifications that You create or to which You contribute, must be under\nthe terms of this License. You must inform recipients that the Source\nCode Form of the Covered Software is governed by the terms of this\nLicense, and how they can obtain a copy of this License. You may not\nattempt to alter or restrict the recipients\u2019 rights in the Source Code Form.\n\n3.2. Distribution of Executable Form\n\nIf You distribute Covered Software in Executable Form then:\n\n(a) such Covered Software must also be made available in Source Code\n    Form, as described in Section 3.1, and You must inform recipients of\n    the Executable Form how they can obtain a copy of such Source Code\n    Form by reasonable means in a timely manner, at a charge no more\n    than the cost of distribution to the recipient; and\n\n(b) You may distribute such Executable Form under the terms of this\n    License.\n\n3.3. Distribution of a Larger Work\n\nYou may create and distribute a Larger Work under terms of Your choice,\nprovided that You also comply with the requirements of this License for\nthe Covered Software. The Larger Work may not be a combination of Covered\nSoftware with a work governed by one or more Secondary Licenses.\n\n3.4. Notices\n\nYou may not remove or alter the substance of any license notices\n(including copyright notices, patent notices, disclaimers of warranty,\nor limitations of liability) contained within the Source Code Form of\nthe Covered Software, except that You may alter any license notices to\nthe extent required to remedy known factual inaccuracies.\n\n3.5. Application of Additional Terms\n\nYou may not choose to offer, or charge a fee for use of the Covered\nSoftware or a fee for, warranty, support, indemnity or liability\nobligations to one or more recipients of Covered Software.  You must\nmake it absolutely clear that any such warranty, support, indemnity, or\nliability obligation is offered by You alone, and You hereby agree to\nindemnify every Contributor for any liability incurred by such\nContributor as a result of warranty, support, indemnity or liability\nterms You offer. You may include additional disclaimers of warranty and\nlimitations of liability specific to any jurisdiction.\n\n4. Inability to Comply Due to Statute or Regulation\n---------------------------------------------------\n\nIf it is impossible for You to comply with any of the terms of this\nLicense with respect to some or all of the Covered Software due to\nstatute, judicial order, or regulation then You must: (a) comply with\nthe terms of this License to the maximum extent possible; and (b)\ndescribe the limitations and the code they affect. Such description must\nbe placed in a text file included with all distributions of the Covered\nSoftware under this License. Except to the extent prohibited by statute\nor regulation, such description must be sufficiently detailed for a\nrecipient of ordinary skill to be able to understand it.\n\n5. Termination\n--------------\n\n5.1. The rights granted under this License will terminate automatically\nif You fail to comply with any of its terms.\n\n5.2. If You initiate litigation against any entity by asserting an\ninfringement claim (excluding declaratory judgment actions,\ncounter-claims, and cross-claims) alleging that a Contributor Version\ndirectly or indirectly infringes, then the rights granted to\nYou by any and all Contributors for the Covered Software under Section\n2.1 of this License shall terminate.\n\n5.3. In the event of termination under Sections 5.1 or 5.2 above, all\nend user license agreements (excluding distributors and resellers) which\nhave been validly granted by You or Your distributors under this License\nprior to termination shall survive termination.\n\n************************************************************************\n*                                                                      *\n*  6. Disclaimer of Warranty                                           *\n*  -------------------------                                           *\n*                                                                      *\n*  Covered Software is provided under this License on an \"as is\"       *\n*  basis, without warranty of any kind, either expressed, implied, or  *\n*  statutory, including, without limitation, warranties that the       *\n*  Covered Software is free of defects, merchantable, fit for a        *\n*  particular purpose or non-infringing. The entire risk as to the     *\n*  quality and performance of the Covered Software is with You.        *\n*  Should any Covered Software prove defective in any respect, You     *\n*  (not any Contributor) assume the cost of any necessary servicing,   *\n*  repair, or correction. This disclaimer of warranty constitutes an   *\n*  essential part of this License. No use of any Covered Software is   *\n*  authorized under this License except under this disclaimer.         *\n*                                                                      *\n************************************************************************\n\n************************************************************************\n*                                                                      *\n*  7. Limitation of Liability                                          *\n*  --------------------------                                          *\n*                                                                      *\n*  Under no circumstances and under no legal theory, whether tort      *\n*  (including negligence), contract, or otherwise, shall any           *\n*  Contributor, or anyone who distributes Covered Software as          *\n*  permitted above, be liable to You for any direct, indirect,         *\n*  special, incidental, or consequential damages of any character      *\n*  including, without limitation, damages for lost profits, loss of    *\n*  goodwill, work stoppage, computer failure or malfunction, or any    *\n*  and all other commercial damages or losses, even if such party      *\n*  shall have been informed of the possibility of such damages. This   *\n*  limitation of liability shall not apply to liability for death or   *\n*  personal injury resulting from such party\u2019s negligence to the       *\n*  extent applicable law prohibits such limitation, but in such event, *\n*  and to the greatest extent permissible, damages will be limited to  *\n*  direct damages not to exceed one hundred dollars. Some              *\n*  jurisdictions do not allow the exclusion or limitation of           *\n*  incidental or consequential damages, so this exclusion and          *\n*  limitation may not apply to You.                                    *\n*                                                                      *\n************************************************************************\n\n8. Litigation\n-------------\n\nAny litigation relating to this License may be brought only in the\ncourts of a jurisdiction where the defendant maintains its principal\nplace of business and such litigation shall be governed by laws of that\njurisdiction, without reference to its conflict-of-law provisions.\nNothing in this Section shall prevent a party\u2019s ability to bring\ncross-claims or counter-claims.\n\n9. Miscellaneous\n----------------\n\nThis License represents the complete agreement concerning the subject\nmatter hereof. If any provision of this License is held to be\nunenforceable, such provision shall be reformed only to the extent\nnecessary to make it enforceable. Any law or regulation which provides\nthat the language of a contract shall be construed against the drafter\nshall not be used to construe this License against a Contributor.\n\n10. Versions of the License\n---------------------------\n\n10.1. New Versions\n\nOxford Nanopore Technologies PLC. is the license steward. Except as\nprovided in Section 10.3, no one other than the license steward has the\nright to modify or publish new versions of this License. Each version\nwill be given a distinguishing version number.\n\n10.2. Effect of New Versions\n\nYou may distribute the Covered Software under the terms of the version\nof the License under which You originally received the Covered Software,\nor under the terms of any subsequent version published by the license\nsteward.\n\n10.3. Modified Versions\n\nIf you create software not governed by this License, and you want to\ncreate a new license for such software, you may create and use a\nmodified version of this License if you rename the license and remove\nany references to the name of the license steward (except to note that\nsuch modified license differs from this License).\n\nExhibit A - Source Code Form License Notice\n-------------------------------------------\n\n  This Source Code Form is subject to the terms of the Oxford Nanopore\n  Technologies PLC. Public License, v. 1.0. Full licence can be found\n  obtained from support@nanoporetech.com\n\nIf it is not possible or desirable to put the notice in a particular\nfile, then You may include the notice in a location (such as a LICENSE\nfile in a relevant directory) where a recipient would be likely to look\nfor such a notice.\n\nYou may add additional accurate notices of copyright ownership.\n"
+      },
+      "source": "https://raw.githubusercontent.com/nanoporetech/medaka/master/LICENSE",
+      "technique": "file_exploration"
+    }
+  ],
+  "logo": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/nanoporetech/medaka/raw/master/images/ONT_logo_590x106.png"
+      },
+      "source": "https://raw.githubusercontent.com/nanoporetech/medaka/master/README.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "medaka"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "owner": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Organization",
+        "value": "nanoporetech"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "programming_languages": [
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Python",
+        "size": 642583,
+        "type": "Programming_language",
+        "value": "Python"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "C",
+        "size": 97843,
+        "type": "Programming_language",
+        "value": "C"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Shell",
+        "size": 19682,
+        "type": "Programming_language",
+        "value": "Shell"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "C++",
+        "size": 14396,
+        "type": "Programming_language",
+        "value": "C++"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Makefile",
+        "size": 9594,
+        "type": "Programming_language",
+        "value": "Makefile"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "readme_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/nanoporetech/medaka/master/README.md"
+      },
+      "technique": "file_exploration"
+    }
+  ],
+  "releases": [
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "ontresearch",
+          "type": "User"
+        },
+        "date_created": "2024-09-11T12:15:58Z",
+        "date_published": "2024-09-11T13:55:53Z",
+        "description": "Switched from tensorflow to pytorch.\n\nExisting models for recent basecallers have been converted to the new format.\nPytorch format models contain a ``_pt`` suffix in the filename.\n\n### Changed\n- Inference is now performed using PyTorch instead of TensorFlow.\n- The `medaka consensus` command has been renamed to `medaka inference` to reflect\n  its function in running an arbitrary model and avoid confusion with `medaka_consensus`.\n- The `medaka stitch` command has been renamed to `medaka sequence` to reflect its\n  function in creating a consensus sequence.\n- The `medaka variant` command has been renamed to `medaka vcf` to reflect its function\n  in consolidating variants and avoid confusion with `medaka_variant`.\n- Order of arguments to `medaka vcf` has been changed to be more consistent\n  with `medaka sequence`.\n- The helper script `medaka_haploid_variant` has been renamed `medaka_variant` to\n  save typing.\n- Make `--ignore_read_groups` option available to more medaka subcommands including `inference`.\n### Removed\n- The `medaka snp` command has been removed. This was long defunct as diploid SNP calling\n  had been deprecated, and `medaka variant` is used to create VCFs for current models.\n- Loading models in hdf format has been deprecated.\n- Deleted minimap2 and racon wrappers in `medaka/wrapper.py`.\n### Added\n- Release conda packages for Linux (x86 and aarch64) and macOS (arm64).\n- Option `--lr_schedule` allows using cosine learning rate schedule in training.\n- Option `--max_valid_samples` to set number of samples in a training validation batch.\n### Fixed\n- Training models with DiploidLabelScheme uses categorical cross-entropy loss\n  instead of binary cross-entropy.\n\n",
+        "html_url": "https://github.com/nanoporetech/medaka/releases/tag/v2.0.0",
+        "name": "v2.0.0",
+        "release_id": 174563745,
+        "tag": "v2.0.0",
+        "tarball_url": "https://api.github.com/repos/nanoporetech/medaka/tarball/v2.0.0",
+        "type": "Release",
+        "url": "https://api.github.com/repos/nanoporetech/medaka/releases/174563745",
+        "value": "https://api.github.com/repos/nanoporetech/medaka/releases/174563745",
+        "zipball_url": "https://api.github.com/repos/nanoporetech/medaka/zipball/v2.0.0"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "ontresearch",
+          "type": "User"
+        },
+        "date_created": "2024-07-12T13:35:54Z",
+        "date_published": "2024-07-12T13:56:23Z",
+        "description": "\n(Probably) final version of medaka using tensorflow. Future versions will use\npytorch instead.\n\n### Fixed\n- medaka_consensus: only keep bam tags if input file matches joint polishing pipeline.\n- Pin numpy to <2.0.0.\n### Added\n- Consensus and variant models lookup for v3.5.1 Dorado models.\n\n",
+        "html_url": "https://github.com/nanoporetech/medaka/releases/tag/v1.12.1",
+        "name": "v1.12.1",
+        "release_id": 165196142,
+        "tag": "v1.12.1",
+        "tarball_url": "https://api.github.com/repos/nanoporetech/medaka/tarball/v1.12.1",
+        "type": "Release",
+        "url": "https://api.github.com/repos/nanoporetech/medaka/releases/165196142",
+        "value": "https://api.github.com/repos/nanoporetech/medaka/releases/165196142",
+        "zipball_url": "https://api.github.com/repos/nanoporetech/medaka/zipball/v1.12.1"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "ontresearch",
+          "type": "User"
+        },
+        "date_created": "2024-05-20T09:27:34Z",
+        "date_published": "2024-05-20T10:04:28Z",
+        "description": "### Fixed\n- tandem: Use haplotag 0 in unphased mode.\n- tandem: Don't run consensus if regions set is empty.\n### Added\n- Models for version 5 basecaller models.\n- Expose `sym_indels` option for training.\n- Expose `--min_mapq` minimum  mapping quality alignment fitering option for medaka consensus. \n- tandem: Option `--ignore_read_groups` to ignore read groups present in input file.\n- Wrapper script `medaka_consensus_joint` and convenience tools (`prepare_tagged_bam`,\n  `get_model_dtypes`) to facilitate joint polishing with multiple datatypes.\n\n",
+        "html_url": "https://github.com/nanoporetech/medaka/releases/tag/v1.12.0",
+        "name": "v1.12.0",
+        "release_id": 156485607,
+        "tag": "v1.12.0",
+        "tarball_url": "https://api.github.com/repos/nanoporetech/medaka/tarball/v1.12.0",
+        "type": "Release",
+        "url": "https://api.github.com/repos/nanoporetech/medaka/releases/156485607",
+        "value": "https://api.github.com/repos/nanoporetech/medaka/releases/156485607",
+        "zipball_url": "https://api.github.com/repos/nanoporetech/medaka/zipball/v1.12.0"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "ontresearch",
+          "type": "User"
+        },
+        "date_created": "2023-12-05T17:16:40Z",
+        "date_published": "2023-12-06T14:28:42Z",
+        "description": "### Added\n- Consensus and variant models for v4.3.0 dorado models.\n\n\n",
+        "html_url": "https://github.com/nanoporetech/medaka/releases/tag/v1.11.3",
+        "name": "v1.11.3",
+        "release_id": 132855885,
+        "tag": "v1.11.3",
+        "tarball_url": "https://api.github.com/repos/nanoporetech/medaka/tarball/v1.11.3",
+        "type": "Release",
+        "url": "https://api.github.com/repos/nanoporetech/medaka/releases/132855885",
+        "value": "https://api.github.com/repos/nanoporetech/medaka/releases/132855885",
+        "zipball_url": "https://api.github.com/repos/nanoporetech/medaka/zipball/v1.11.3"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "ontresearch",
+          "type": "User"
+        },
+        "date_created": "2023-11-29T21:33:43Z",
+        "date_published": "2023-11-29T22:14:30Z",
+        "description": "### Added\n- Parsing model information from fastq headers output by Guppy and MinKNOW.\n### Changed\n- Additional explanatory information in VCF INFO fields concerning depth calculations.\n\n",
+        "html_url": "https://github.com/nanoporetech/medaka/releases/tag/v1.11.2",
+        "name": "v1.11.2",
+        "release_id": 131999368,
+        "tag": "v1.11.2",
+        "tarball_url": "https://api.github.com/repos/nanoporetech/medaka/tarball/v1.11.2",
+        "type": "Release",
+        "url": "https://api.github.com/repos/nanoporetech/medaka/releases/131999368",
+        "value": "https://api.github.com/repos/nanoporetech/medaka/releases/131999368",
+        "zipball_url": "https://api.github.com/repos/nanoporetech/medaka/zipball/v1.11.2"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "ontresearch",
+          "type": "User"
+        },
+        "date_created": "2023-10-24T13:40:24Z",
+        "date_published": "2023-10-24T14:25:51Z",
+        "description": "### Fixed\n- Do not exit if model cannot be interpreted, use the default instead.\n- An issue with co-ordinate handling in computing variants from alignments.\n### Added\n- Ability to use basecaller model name as --model argument.\n- Better handling or errors when running abpoa.\n\n",
+        "html_url": "https://github.com/nanoporetech/medaka/releases/tag/v1.11.1",
+        "name": "v1.11.1",
+        "release_id": 126429770,
+        "tag": "v1.11.1",
+        "tarball_url": "https://api.github.com/repos/nanoporetech/medaka/tarball/v1.11.1",
+        "type": "Release",
+        "url": "https://api.github.com/repos/nanoporetech/medaka/releases/126429770",
+        "value": "https://api.github.com/repos/nanoporetech/medaka/releases/126429770",
+        "zipball_url": "https://api.github.com/repos/nanoporetech/medaka/zipball/v1.11.1"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "ontresearch",
+          "type": "User"
+        },
+        "date_created": "2023-10-23T13:57:36Z",
+        "date_published": "2023-10-23T14:59:18Z",
+        "description": "### Fixed\n- Correct suffix of consensus file when `medaka_consensus` outputs a fastq.\n### Added\n- Choice of model file can be introspected from input files. For BAM files the\n  read group (RG) headers are searched according to the dorado\n  [specification](https://github.com/nanoporetech/dorado/blob/master/documentation/SAM.md),\n  whilst for .fastq files the comment section of a number of reads are checked\n  for corresponding read group information. In the latter case see README for\n  information on correctly converting basecaller output to .fastq whilst\n  maintaining the relevant meta information.\n- `medaka tools resolve_model` can display the model that would automatically\n  be used for a given input file.\n### Changed\n- If no model is provided on command-line interface (medaka consensus,\n  medaka_consensus, and medaka_haploid_variant) automatic attempts will be made\n  to choose the appropriate model.\n\n",
+        "html_url": "https://github.com/nanoporetech/medaka/releases/tag/v1.11.0",
+        "name": "v1.11.0",
+        "release_id": 126261696,
+        "tag": "v1.11.0",
+        "tarball_url": "https://api.github.com/repos/nanoporetech/medaka/tarball/v1.11.0",
+        "type": "Release",
+        "url": "https://api.github.com/repos/nanoporetech/medaka/releases/126261696",
+        "value": "https://api.github.com/repos/nanoporetech/medaka/releases/126261696",
+        "zipball_url": "https://api.github.com/repos/nanoporetech/medaka/zipball/v1.11.0"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "ontresearch",
+          "type": "User"
+        },
+        "date_created": "2023-10-16T12:24:21Z",
+        "date_published": "2023-10-16T15:22:55Z",
+        "description": "### Changed\n- Tensorflow logging level no longer set from Python.\n- spoa and parasail are now strict requirements.\n### Fixed\n- Sort VCF before annotating in `medaka_haploid_variant`.\n- Ignore errors when deleting temporary files.\n- The output of the first POA run not being used in the second iteration in smolecule command.\n### Added\n- Support for Python 3.11.\n- `--spoa_min_coverage` option to smolecule command.\n### Removed\n- Support for Python 3.7.\n\n",
+        "html_url": "https://github.com/nanoporetech/medaka/releases/tag/v1.10.0",
+        "name": "v1.10.0",
+        "release_id": 125256706,
+        "tag": "v1.10.0",
+        "tarball_url": "https://api.github.com/repos/nanoporetech/medaka/tarball/v1.10.0",
+        "type": "Release",
+        "url": "https://api.github.com/repos/nanoporetech/medaka/releases/125256706",
+        "value": "https://api.github.com/repos/nanoporetech/medaka/releases/125256706",
+        "zipball_url": "https://api.github.com/repos/nanoporetech/medaka/zipball/v1.10.0"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "ontresearch",
+          "type": "User"
+        },
+        "date_created": "2023-08-15T12:47:16Z",
+        "date_published": "2023-08-15T13:32:01Z",
+        "description": "### Fixed\n- A long-standing bug in pileup_counts that manifests for single-position pileups on ARM64.\n\n",
+        "html_url": "https://github.com/nanoporetech/medaka/releases/tag/v1.9.1",
+        "name": "v1.9.1",
+        "release_id": 117309455,
+        "tag": "v1.9.1",
+        "tarball_url": "https://api.github.com/repos/nanoporetech/medaka/tarball/v1.9.1",
+        "type": "Release",
+        "url": "https://api.github.com/repos/nanoporetech/medaka/releases/117309455",
+        "value": "https://api.github.com/repos/nanoporetech/medaka/releases/117309455",
+        "zipball_url": "https://api.github.com/repos/nanoporetech/medaka/zipball/v1.9.1"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "ontresearch",
+          "type": "User"
+        },
+        "date_created": "2023-08-09T13:23:36Z",
+        "date_published": "2023-08-09T16:22:25Z",
+        "description": "### Added\n- Added `medaka tandem` targeted tandem repeat variant calling.\n\n",
+        "html_url": "https://github.com/nanoporetech/medaka/releases/tag/v1.9.0",
+        "name": "v1.9.0",
+        "release_id": 115792173,
+        "tag": "v1.9.0",
+        "tarball_url": "https://api.github.com/repos/nanoporetech/medaka/tarball/v1.9.0",
+        "type": "Release",
+        "url": "https://api.github.com/repos/nanoporetech/medaka/releases/115792173",
+        "value": "https://api.github.com/repos/nanoporetech/medaka/releases/115792173",
+        "zipball_url": "https://api.github.com/repos/nanoporetech/medaka/zipball/v1.9.0"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "ontresearch",
+          "type": "User"
+        },
+        "date_created": "2023-08-08T15:02:00Z",
+        "date_published": "2023-08-08T15:59:03Z",
+        "description": "### Added\n* Updated features related to fetching of trimmed reads.\n### Changed\n* Refactored smolecule module.\n* Faster inference and stitching of many short contigs.\n* Tensorflow version 2.10 (allows for aarch64 wheels).\n\n",
+        "html_url": "https://github.com/nanoporetech/medaka/releases/tag/v1.8.2",
+        "name": "v1.8.2",
+        "release_id": 115638561,
+        "tag": "v1.8.2",
+        "tarball_url": "https://api.github.com/repos/nanoporetech/medaka/tarball/v1.8.2",
+        "type": "Release",
+        "url": "https://api.github.com/repos/nanoporetech/medaka/releases/115638561",
+        "value": "https://api.github.com/repos/nanoporetech/medaka/releases/115638561",
+        "zipball_url": "https://api.github.com/repos/nanoporetech/medaka/zipball/v1.8.2"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "ontresearch",
+          "type": "User"
+        },
+        "date_created": "2023-06-08T15:06:08Z",
+        "date_published": "2023-06-08T15:29:03Z",
+        "description": "### Added\n- Expose qualities parameter in medaka_consensus script with `-q` parameter.\n\n",
+        "html_url": "https://github.com/nanoporetech/medaka/releases/tag/v1.8.1",
+        "name": "v1.8.1",
+        "release_id": 107854398,
+        "tag": "v1.8.1",
+        "tarball_url": "https://api.github.com/repos/nanoporetech/medaka/tarball/v1.8.1",
+        "type": "Release",
+        "url": "https://api.github.com/repos/nanoporetech/medaka/releases/107854398",
+        "value": "https://api.github.com/repos/nanoporetech/medaka/releases/107854398",
+        "zipball_url": "https://api.github.com/repos/nanoporetech/medaka/zipball/v1.8.1"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "ontresearch",
+          "type": "User"
+        },
+        "date_created": "2023-05-18T14:15:00Z",
+        "date_published": "2023-05-18T14:41:04Z",
+        "description": "### Added\n- Consensus and variant models for v4.1 and v4.2 basecallers.\n### Changed\n- Changed default models to be r1041_e8.2_400bps_v4.2 models\n- Clip probabilities in `_phred()` rather than adding smallest float.\n\n",
+        "html_url": "https://github.com/nanoporetech/medaka/releases/tag/v1.8.0",
+        "name": "v1.8.0",
+        "release_id": 103472750,
+        "tag": "v1.8.0",
+        "tarball_url": "https://api.github.com/repos/nanoporetech/medaka/tarball/v1.8.0",
+        "type": "Release",
+        "url": "https://api.github.com/repos/nanoporetech/medaka/releases/103472750",
+        "value": "https://api.github.com/repos/nanoporetech/medaka/releases/103472750",
+        "zipball_url": "https://api.github.com/repos/nanoporetech/medaka/zipball/v1.8.0"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "ontresearch",
+          "type": "User"
+        },
+        "date_created": "2023-02-13T16:14:17Z",
+        "date_published": "2023-02-13T16:33:54Z",
+        "description": "### Added\n- Consensus polishing models for Version 4 basecallers.\n- Wheel builds for newer Python versions.\n### Fixed\n- Deprecated numpy.unicode use.\n### Changed\n- Set minimum Python version to 3.7.\n- Updated tensorflow requirement to 2.8.\n- Put lower bound on numpy requirement.\n### Removed\n- Dropped support for Python 3.6. Security support for Python 3.6 was ended on 23 Dec 2021;\n  as such we have removed support for Python 3.6 and suggest users update their Python version.\n\n",
+        "html_url": "https://github.com/nanoporetech/medaka/releases/tag/v1.7.3",
+        "name": "v1.7.3",
+        "release_id": 92242722,
+        "tag": "v1.7.3",
+        "tarball_url": "https://api.github.com/repos/nanoporetech/medaka/tarball/v1.7.3",
+        "type": "Release",
+        "url": "https://api.github.com/repos/nanoporetech/medaka/releases/92242722",
+        "value": "https://api.github.com/repos/nanoporetech/medaka/releases/92242722",
+        "zipball_url": "https://api.github.com/repos/nanoporetech/medaka/zipball/v1.7.3"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "ontresearch",
+          "type": "User"
+        },
+        "date_created": "2022-09-21T09:24:15Z",
+        "date_published": "2022-09-21T09:50:28Z",
+        "description": "### Added\n- New models for R10.4.1 E8.2 260bps based sequencing chemistries.\n### Changed\n- Updated Hac and Fast models for R10.4.1 E8.2 400bps based sequencing chemistries.\n- Removed models for Fast basecallers from pypi package\n\n",
+        "html_url": "https://github.com/nanoporetech/medaka/releases/tag/v1.7.2",
+        "name": "v1.7.2",
+        "release_id": 77751937,
+        "tag": "v1.7.2",
+        "tarball_url": "https://api.github.com/repos/nanoporetech/medaka/tarball/v1.7.2",
+        "type": "Release",
+        "url": "https://api.github.com/repos/nanoporetech/medaka/releases/77751937",
+        "value": "https://api.github.com/repos/nanoporetech/medaka/releases/77751937",
+        "zipball_url": "https://api.github.com/repos/nanoporetech/medaka/zipball/v1.7.2"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "ontresearch",
+          "type": "User"
+        },
+        "date_created": "2022-08-26T16:24:50Z",
+        "date_published": "2022-08-26T16:39:55Z",
+        "description": "### Fixed\n- medaka variant IndexError on long insertion\n\n",
+        "html_url": "https://github.com/nanoporetech/medaka/releases/tag/v1.7.1",
+        "name": "v1.7.1",
+        "release_id": 75487507,
+        "tag": "v1.7.1",
+        "tarball_url": "https://api.github.com/repos/nanoporetech/medaka/tarball/v1.7.1",
+        "type": "Release",
+        "url": "https://api.github.com/repos/nanoporetech/medaka/releases/75487507",
+        "value": "https://api.github.com/repos/nanoporetech/medaka/releases/75487507",
+        "zipball_url": "https://api.github.com/repos/nanoporetech/medaka/zipball/v1.7.1"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "ontresearch",
+          "type": "User"
+        },
+        "date_created": "2022-08-11T09:00:55Z",
+        "date_published": "2022-08-11T09:21:55Z",
+        "description": "### Added\n- capability to fill gaps in consensus sequence with a designated character \n  (e.g. 'N') instead of content from a reference sequence.\n- option `-r` in `medaka_consensus` to set the designated fill character.\n- option `--fill_char` in `medaka stitch` to set the designated fill character.\n### Fixed\n- CUDA initialization errors during `medaka smolecule`s stitch phase.\n\n",
+        "html_url": "https://github.com/nanoporetech/medaka/releases/tag/v1.7.0",
+        "name": "v1.7.0",
+        "release_id": 74182404,
+        "tag": "v1.7.0",
+        "tarball_url": "https://api.github.com/repos/nanoporetech/medaka/tarball/v1.7.0",
+        "type": "Release",
+        "url": "https://api.github.com/repos/nanoporetech/medaka/releases/74182404",
+        "value": "https://api.github.com/repos/nanoporetech/medaka/releases/74182404",
+        "zipball_url": "https://api.github.com/repos/nanoporetech/medaka/zipball/v1.7.0"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "ontresearch",
+          "type": "User"
+        },
+        "date_created": "2022-06-20T11:23:57Z",
+        "date_published": "2022-06-20T12:31:23Z",
+        "description": "### Added\n- New models for R10.4.1 E8.2 400bps based sequencing chemistries.\n\n### Fixed\n- DiploidZygosityLabelScheme renaming.\n\n",
+        "html_url": "https://github.com/nanoporetech/medaka/releases/tag/v1.6.1",
+        "name": "v1.6.1",
+        "release_id": 69843587,
+        "tag": "v1.6.1",
+        "tarball_url": "https://api.github.com/repos/nanoporetech/medaka/tarball/v1.6.1",
+        "type": "Release",
+        "url": "https://api.github.com/repos/nanoporetech/medaka/releases/69843587",
+        "value": "https://api.github.com/repos/nanoporetech/medaka/releases/69843587",
+        "zipball_url": "https://api.github.com/repos/nanoporetech/medaka/zipball/v1.6.1"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "ontresearch",
+          "type": "User"
+        },
+        "date_created": "2022-03-09T15:47:30Z",
+        "date_published": "2022-03-09T16:42:35Z",
+        "description": "### Changed\n- Updated to tensorflow~=2.7.0.\n- Do not always force recreation of minimap2 index in helper scripts.\n- PyPI wheel releases now built with libdeflate for faster BAM reading.\n### Fixed\n- Inclusion of inserted bases immediately after deletion in pileup counts.\n### Added\n- Makefile can now build environment for macOS M1.\n- Publish ARMv8 wheels compatible with NVIDIA's [Jetpack 4.6.1 binary](https://developer.download.nvidia.com/compute/redist/jp/v461/tensorflow).\n- `--qualities` option for `smolecule` and `stitch` to output consensus fastq.\n\n",
+        "html_url": "https://github.com/nanoporetech/medaka/releases/tag/v1.6.0",
+        "name": "v1.6.0",
+        "release_id": 61396551,
+        "tag": "v1.6.0",
+        "tarball_url": "https://api.github.com/repos/nanoporetech/medaka/tarball/v1.6.0",
+        "type": "Release",
+        "url": "https://api.github.com/repos/nanoporetech/medaka/releases/61396551",
+        "value": "https://api.github.com/repos/nanoporetech/medaka/releases/61396551",
+        "zipball_url": "https://api.github.com/repos/nanoporetech/medaka/zipball/v1.6.0"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "ontresearch",
+          "type": "User"
+        },
+        "date_created": "2021-12-13T12:12:48Z",
+        "date_published": "2021-12-13T12:28:15Z",
+        "description": "### Changed\n- Updated tensorflow requirement to ~=2.5.2.\n- Spruced-up documentation.\n### Added\n- Light testing of Docker build.\n### Removed\n- Remove `medaka_variant` in deference of clair3.\n\n",
+        "html_url": "https://github.com/nanoporetech/medaka/releases/tag/v1.5.0",
+        "name": "v1.5.0",
+        "release_id": 55178731,
+        "tag": "v1.5.0",
+        "tarball_url": "https://api.github.com/repos/nanoporetech/medaka/tarball/v1.5.0",
+        "type": "Release",
+        "url": "https://api.github.com/repos/nanoporetech/medaka/releases/55178731",
+        "value": "https://api.github.com/repos/nanoporetech/medaka/releases/55178731",
+        "zipball_url": "https://api.github.com/repos/nanoporetech/medaka/zipball/v1.5.0"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "ontresearch",
+          "type": "User"
+        },
+        "date_created": "2021-09-23T10:20:11Z",
+        "date_published": "2021-09-23T10:45:39Z",
+        "description": "### Changed\n- tensorflow requirement to ~=2.2.2\n### Added\n- R10.4 E8.1 consensus models for Guppy version 5.0.15.\n\n",
+        "html_url": "https://github.com/nanoporetech/medaka/releases/tag/v1.4.4",
+        "name": "v1.4.4",
+        "release_id": 50122922,
+        "tag": "v1.4.4",
+        "tarball_url": "https://api.github.com/repos/nanoporetech/medaka/tarball/v1.4.4",
+        "type": "Release",
+        "url": "https://api.github.com/repos/nanoporetech/medaka/releases/50122922",
+        "value": "https://api.github.com/repos/nanoporetech/medaka/releases/50122922",
+        "zipball_url": "https://api.github.com/repos/nanoporetech/medaka/zipball/v1.4.4"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "ontresearch",
+          "type": "User"
+        },
+        "date_created": "2021-06-21T16:57:03Z",
+        "date_published": "2021-06-21T17:11:13Z",
+        "description": "### Fixed\n- `medaka tools` now displays its help rather than an error.\n### Added\n- `medaka tools download_models can download specific models.\n\n",
+        "html_url": "https://github.com/nanoporetech/medaka/releases/tag/v1.4.3",
+        "name": "v1.4.3",
+        "release_id": 44977407,
+        "tag": "v1.4.3",
+        "tarball_url": "https://api.github.com/repos/nanoporetech/medaka/tarball/v1.4.3",
+        "type": "Release",
+        "url": "https://api.github.com/repos/nanoporetech/medaka/releases/44977407",
+        "value": "https://api.github.com/repos/nanoporetech/medaka/releases/44977407",
+        "zipball_url": "https://api.github.com/repos/nanoporetech/medaka/zipball/v1.4.3"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "ontresearch",
+          "type": "User"
+        },
+        "date_created": "2021-06-15T14:22:01Z",
+        "date_published": "2021-06-15T14:43:47Z",
+        "description": "### Fixed\n- Missing sites in gVCF output.\n### Changed\n- Rewrittern algorithm for determining VCF records from RNN outputs for clarity\n  and speed.\n\n",
+        "html_url": "https://github.com/nanoporetech/medaka/releases/tag/v1.4.2",
+        "name": "v1.4.2",
+        "release_id": 44652006,
+        "tag": "v1.4.2",
+        "tarball_url": "https://api.github.com/repos/nanoporetech/medaka/tarball/v1.4.2",
+        "type": "Release",
+        "url": "https://api.github.com/repos/nanoporetech/medaka/releases/44652006",
+        "value": "https://api.github.com/repos/nanoporetech/medaka/releases/44652006",
+        "zipball_url": "https://api.github.com/repos/nanoporetech/medaka/zipball/v1.4.2"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "ontresearch",
+          "type": "User"
+        },
+        "date_created": "2021-06-02T23:09:36Z",
+        "date_published": "2021-06-02T23:30:27Z",
+        "description": "### Fixed\n- Inclusion of select models in distributions.\n\n",
+        "html_url": "https://github.com/nanoporetech/medaka/releases/tag/v1.4.1",
+        "name": "v1.4.1",
+        "release_id": 44008613,
+        "tag": "v1.4.1",
+        "tarball_url": "https://api.github.com/repos/nanoporetech/medaka/tarball/v1.4.1",
+        "type": "Release",
+        "url": "https://api.github.com/repos/nanoporetech/medaka/releases/44008613",
+        "value": "https://api.github.com/repos/nanoporetech/medaka/releases/44008613",
+        "zipball_url": "https://api.github.com/repos/nanoporetech/medaka/zipball/v1.4.1"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "ontresearch",
+          "type": "User"
+        },
+        "date_created": "2021-06-02T20:55:54Z",
+        "date_published": "2021-06-02T21:49:38Z",
+        "description": "### Added\n- Models for Guppy version 5.0.7.\n\n",
+        "html_url": "https://github.com/nanoporetech/medaka/releases/tag/v1.4.0",
+        "name": "v1.4.0",
+        "release_id": 44005434,
+        "tag": "v1.4.0",
+        "tarball_url": "https://api.github.com/repos/nanoporetech/medaka/tarball/v1.4.0",
+        "type": "Release",
+        "url": "https://api.github.com/repos/nanoporetech/medaka/releases/44005434",
+        "value": "https://api.github.com/repos/nanoporetech/medaka/releases/44005434",
+        "zipball_url": "https://api.github.com/repos/nanoporetech/medaka/zipball/v1.4.0"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "ontresearch",
+          "type": "User"
+        },
+        "date_created": "2021-05-19T13:30:29Z",
+        "date_published": "2021-05-19T13:45:50Z",
+        "description": "### Fixed\n- Issue whereby tensorflow would spawn many threads that do not exit.\n\n",
+        "html_url": "https://github.com/nanoporetech/medaka/releases/tag/v1.3.4",
+        "name": "v1.3.4",
+        "release_id": 43217541,
+        "tag": "v1.3.4",
+        "tarball_url": "https://api.github.com/repos/nanoporetech/medaka/tarball/v1.3.4",
+        "type": "Release",
+        "url": "https://api.github.com/repos/nanoporetech/medaka/releases/43217541",
+        "value": "https://api.github.com/repos/nanoporetech/medaka/releases/43217541",
+        "zipball_url": "https://api.github.com/repos/nanoporetech/medaka/zipball/v1.3.4"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "ontresearch",
+          "type": "User"
+        },
+        "date_created": "2021-05-11T14:40:07Z",
+        "date_published": "2021-05-11T14:57:47Z",
+        "description": "### Fixed\n- Added missing default option to arparse instance in smolecule command.\n- Copy across contigs with no aligned reads during `medaka stitch`.\n- Quote strings in bash scripts to allow filenames with spaces.\n\n",
+        "html_url": "https://github.com/nanoporetech/medaka/releases/tag/v1.3.3",
+        "name": "v1.3.3",
+        "release_id": 42778669,
+        "tag": "v1.3.3",
+        "tarball_url": "https://api.github.com/repos/nanoporetech/medaka/tarball/v1.3.3",
+        "type": "Release",
+        "url": "https://api.github.com/repos/nanoporetech/medaka/releases/42778669",
+        "value": "https://api.github.com/repos/nanoporetech/medaka/releases/42778669",
+        "zipball_url": "https://api.github.com/repos/nanoporetech/medaka/zipball/v1.3.3"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "ontresearch",
+          "type": "User"
+        },
+        "date_created": "2021-04-15T12:29:08Z",
+        "date_published": "2021-04-15T12:44:50Z",
+        "description": "### Fixed\n- Typo in `medaka_consensus` causing a syntax error.\n\n",
+        "html_url": "https://github.com/nanoporetech/medaka/releases/tag/v1.3.2",
+        "name": "v1.3.2",
+        "release_id": 41479928,
+        "tag": "v1.3.2",
+        "tarball_url": "https://api.github.com/repos/nanoporetech/medaka/tarball/v1.3.2",
+        "type": "Release",
+        "url": "https://api.github.com/repos/nanoporetech/medaka/releases/41479928",
+        "value": "https://api.github.com/repos/nanoporetech/medaka/releases/41479928",
+        "zipball_url": "https://api.github.com/repos/nanoporetech/medaka/zipball/v1.3.2"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "ontresearch",
+          "type": "User"
+        },
+        "date_created": "2021-04-15T11:15:07Z",
+        "date_published": "2021-04-15T11:35:17Z",
+        "description": "### Added\n - Option to output VCF record for all reference positions from\n   `medaka variant`.\n\n",
+        "html_url": "https://github.com/nanoporetech/medaka/releases/tag/v1.3.1",
+        "name": "v1.3.1",
+        "release_id": 41476050,
+        "tag": "v1.3.1",
+        "tarball_url": "https://api.github.com/repos/nanoporetech/medaka/tarball/v1.3.1",
+        "type": "Release",
+        "url": "https://api.github.com/repos/nanoporetech/medaka/releases/41476050",
+        "value": "https://api.github.com/repos/nanoporetech/medaka/releases/41476050",
+        "zipball_url": "https://api.github.com/repos/nanoporetech/medaka/zipball/v1.3.1"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "ontresearch",
+          "type": "User"
+        },
+        "date_created": "2021-04-12T17:15:42Z",
+        "date_published": "2021-04-12T17:29:59Z",
+        "description": "### Changed\n - Haploid variant calling reverted to old-style methodology.\n### Fixed\n - Early exits on error in `medaka_consensus` and `medaka_variant`.\n - `INFO` field of VCFs is now correctly `.` when empty.\n \n\n",
+        "html_url": "https://github.com/nanoporetech/medaka/releases/tag/v1.3.0",
+        "name": "v1.3.0",
+        "release_id": 41294794,
+        "tag": "v1.3.0",
+        "tarball_url": "https://api.github.com/repos/nanoporetech/medaka/tarball/v1.3.0",
+        "type": "Release",
+        "url": "https://api.github.com/repos/nanoporetech/medaka/releases/41294794",
+        "value": "https://api.github.com/repos/nanoporetech/medaka/releases/41294794",
+        "zipball_url": "https://api.github.com/repos/nanoporetech/medaka/zipball/v1.3.0"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "somef_missing_categories": [
+    "citation",
+    "run",
+    "download",
+    "requirements",
+    "contact",
+    "contributors",
+    "documentation",
+    "faq",
+    "identifier",
+    "has_build_file",
+    "executable_example"
+  ],
+  "somef_provenance": {
+    "date": "2024-10-04 09:12:34",
+    "somef_schema_version": "1.0.0",
+    "somef_version": "0.9.5"
+  },
+  "stargazers_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 411
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "support": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Help",
+        "parent_header": [
+          "Medaka"
+        ],
+        "type": "Text_excerpt",
+        "value": "**Licence and Copyright**\n\n\u00a9 2018- Oxford Nanopore Technologies Ltd.\n\n`medaka` is distributed under the terms of the Oxford Nanopore Technologies PLC. Public License Version 1.0\n\n**Research Release**\n\nResearch releases are provided as technology demonstrators to provide early\naccess to features or stimulate Community development of tools. Support for\nthis software will be minimal and is only provided directly by the developers.\nFeature requests, improvements, and discussions are welcome and can be\nimplemented by forking and pull requests. However much as we would\nlike to rectify every issue and piece of feedback users may have, the\ndevelopers may have limited resource for support of this software. Research\nreleases may be unstable and subject to rapid iteration by Oxford Nanopore\nTechnologies.\n"
+      },
+      "source": "https://raw.githubusercontent.com/nanoporetech/medaka/master/README.md",
+      "technique": "header_analysis"
+    }
+  ],
+  "usage": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Usage",
+        "parent_header": [
+          "Medaka"
+        ],
+        "type": "Text_excerpt",
+        "value": "`medaka` can be run using its default settings through the `medaka_consensus`\nprogram. An assembly in `.fasta` format and basecalls in `.fasta` or `.fastq`\nformats are required. The program uses both `samtools` and `minimap2`. If\nmedaka has been installed using the from-source method these will be present\nwithin the medaka environment, otherwise they will need to be provided by\nthe user.\n\n    source ${MEDAKA}  # i.e. medaka/venv/bin/activate\n    NPROC=$(nproc)\n    BASECALLS=basecalls.fa\n    DRAFT=draft_assm/assm_final.fa\n    OUTDIR=medaka_consensus\n    medaka_consensus -i ${BASECALLS} -d ${DRAFT} -o ${OUTDIR} -t ${NPROC}\n\nThe variables `BASECALLS`, `DRAFT`, and `OUTDIR` in the above should be set\nappropriately. The `-t` option specifies the number of CPU threads to use. \n\nWhen `medaka_consensus` has finished running, the consensus will be saved to\n`${OUTDIR}/consensus.fasta`.\n\n\n**Haploid variant calling**\n\nVariant calling for haploid samples is enabled through the `medaka_variant`\nworkflow:\n\n    medaka_variant -i <reads.fastq> -r <ref.fasta>\n    \nwhich requires the reads as a `.fasta` or `.fastq` and a reference sequence as a\n`.fasta` file.\n\n\n**Diploid variant calling**\n\nThe diploid variant calling workflow that was historically implemented\nwithin the medaka package has been surpassed in accuracy and compute performance by\nother methods, it has therefore been deprecated. Our current recommendation for\nperforming this task is to use [Clair3](https://github.com/HKU-BAL/Clair3) either directly\nor through the Oxford Nanopore Technologies provided Nextflow implementation available\nthrough [EPI2ME Labs](https://labs.epi2me.io/wfindex#variant-calling).\n\n"
+      },
+      "source": "https://raw.githubusercontent.com/nanoporetech/medaka/master/README.md",
+      "technique": "header_analysis"
+    }
+  ]
+}

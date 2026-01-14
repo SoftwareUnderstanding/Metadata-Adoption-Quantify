@@ -1,0 +1,1413 @@
+{
+  "code_repository": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/brentp/slivar"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_created": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2018-12-17T16:50:03Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_updated": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2024-08-18T07:37:20Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "description": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "genetic variant expressions, annotation, and filtering for great good."
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Summary Table",
+        "parent_header": [
+          "Table of Contents"
+        ],
+        "type": "Text_excerpt",
+        "value": "slivar outputs a summary table with rows of samples and columns of expression where each value\nindicates the number of variants that passed the expression in each sample. By default, this goes to STDOUT\nbut if the environment variable `SLIVAR_SUMMARY_FILE` is set, `slivar` will write the summary to that file\ninstead.\n"
+      },
+      "source": "https://raw.githubusercontent.com/brentp/slivar/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 0.996081436554144,
+      "result": {
+        "original_header": "slivar: filter/annotate variants in VCF/BCF format with simple expressions <a href=\"https://travis-ci.com/brentp/slivar\"><img alt=\"Build Status\" src=\"https://travis-ci.com/brentp/slivar.svg?branch=master\" /></a>",
+        "type": "Text_excerpt",
+        "value": "slivar is a set of command-line tools that enables rapid querying and filtering of VCF files. \nIt facilitates operations on trios and [groups](#groups) and allows arbitrary expressions using simple javascript.\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/brentp/slivar/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9748046676129013,
+      "result": {
+        "original_header": "use-cases for `slivar`",
+        "type": "Text_excerpt",
+        "value": "+ annotate variants with [gnomad](https://gnomad.broadinstitute.org/) allele frequencies from combined exomes + whole genomes at > 30K variants/second using only a 1.5GB compressed annotation file.\n+ call *denovo* variants with a simple expression that uses *mom*, *dad*, *kid* labels that is applied to each trio in a cohort (as inferred from a pedigree file).\n  `kid.het && mom.hom_ref && dad.hom_ref && kid.DP > 10 && mom.DP > 10 && dad.DP > 10`\n+ define and filter on arbitrary groups with labels. For example, 7 sets of samples each with 1 normal and 3 tumor time-points:\n  `normal.AD[0] = 0 && tumor1.AB  < tumor2.AB && tumor2.AB < tumor3.AB`\n+ filter variants with simple expressions:\n  `variant.call_rate > 0.9 && variant.FILTER == \"PASS\" && INFO.AC < 22 && variant.num_hom_alt == 0`\n+ see [using slivar for rare disease research](https://github.com/brentp/slivar/wiki/rare-disease) \n"
+      },
+      "source": "https://raw.githubusercontent.com/brentp/slivar/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.8801703772665123,
+      "result": {
+        "original_header": "QuickStart",
+        "type": "Text_excerpt",
+        "value": "To get started quickly, grab a static binary [for the latest release](https://github.com/brentp/slivar/releases/latest) and\nthen follow [this example](https://github.com/brentp/slivar/wiki/rare-disease#full-analysis-for-trios-with-unaffected-parents) \nThe pedigree format is explained [here](https://github.com/brentp/slivar/wiki/pedigree-file)\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/brentp/slivar/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9622830278182498,
+      "result": {
+        "original_header": "expr",
+        "type": "Text_excerpt",
+        "value": "`expr` allows filtering on (abstracted) trios and groups. For example, given a VCF (and ped/fam file) with\n100 trios, `slivar` will apply an expression with `kid`, `mom`, `dad` identifiers to each trio that it automatically\nextracts. \n`expr` can also be used, for example to annotate with population allele frequencies from a `gnotate` file without\nany sample filtering. See [the wiki](https://github.com/brentp/slivar/wiki/gnotate) for more detail and [the gnotate](#gnotation-files)\nsection for gnotation files that we distribute for `slivar`. \n"
+      },
+      "source": "https://raw.githubusercontent.com/brentp/slivar/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9712337298365116,
+      "result": {
+        "original_header": "trio",
+        "type": "Text_excerpt",
+        "value": "when --trio is used, `slivar` finds all trios in a VCF, PED pair and let's the user specify an expression with indentifiers\nof `kid`, `mom`, `dad` that is applied to each possible trio. For example, a simple expression to call\n*de novo* variants:\n```javascript\nvariant.FILTER == 'PASS' && \\                         # \nvariant.call_rate > 0.95 && \\                         # genotype must be known for most of cohort.\nINFO.gnomad_af < 0.001 && \\                           # rare in gnomad (must be in INFO [but see below])\nkid.het && mom.hom_ref && dad.hom_ref && \\            # also unknown\nkid.DP > 7 && mom.DP > 7 && dad.DP > 7 && \\           # sufficient depth in all\n(mom.AD[1] + dad.AD[1]) == 0                          # no evidence for alternate in the parents\n```\n \nThis requires passing variants that are rare in gnomad that have the expected genotypes and do\nnot have any alternate evidence in the parents. If there are 200 trios in the `ped::vcf` given, then this expression\nwill be tested on each of those 200 trios. \n\n```bash\nslivar expr \\\n   --pass-only \\ # output only variants that pass one of the filters (default is to output all variants)\n   --vcf $vcf \\\n   --ped $ped \\\n   # compressed zip that allows fast annotation so that `gnomad_af` is available in the expressions below.\n   --gnotate $gnomad_af.zip \\ \n   # any valid javascript is allowed in a file here. provide functions to be used below.\n   --js js/slivar-functions.js \\ \n   --out-vcf annotated.bcf \\\n   # this filter is applied before the trio filters and can speed evaluation if it is stringent.\n   --info \"variant.call_rate > 0.9\" \\ \n   --trio \"denovo:kid.het && mom.hom_ref && dad.hom_ref \\\n                   && kid.AB > 0.25 && kid.AB < 0.75 \\\n                   && (mom.AD[1] + dad.AD[1]) == 0 \\\n                   && kid.GQ >= 20 && mom.GQ >= 20 && dad.GQ >= 20 \\\n                   && kid.DP >= 12 && mom.DP >= 12 && dad.DP >= 12\" \\\n   --trio \"informative:kid.GQ > 20 && dad.GQ > 20 && mom.GQ > 20 && kid.alts == 1 && \\\n           ((mom.alts == 1 && dad.alts == 0) || (mom.alts == 0 && dad.alts == 1))\" \\\n   --trio \"recessive:trio_autosomal_recessive(kid, mom, dad)\"\n\n``` \nNote that `slivar` does not give direct access to the genotypes, instead exposing \n`hom_ref`, `het`, `hom_alt` and `unknown` or via `alts` where 0 is homozygous reference, 1 is heterozygous, 2 is\nhomozygous alternate and -1 when the genotype is unknown. It is recommended to **decompose** a VCF before sending to `slivar` \nHere it is assumed that `trio_autosomal_recessive` is defined in `slivar-functions.js`; an example implementation of that\nand other useful functions is provided [here](https://github.com/brentp/slivar/blob/4856c503a15f2647270a2ac24e4e1b1455208e34/js/slivar-functions.js).\nNote that it's often better to use --family-expr instead as it's more flexible than trio expressions. \n"
+      },
+      "source": "https://raw.githubusercontent.com/brentp/slivar/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9742746462594567,
+      "result": {
+        "original_header": "Family Expressions",
+        "type": "Text_excerpt",
+        "value": "Trios are a nice abstraction for cohorts consisting of only trios, but for more general uses, there is `--family-expr`\nfor example, given either a duo, or a quartet, we can find variants present only in affected samples with:\n```\t\t\n --family-expr \"aff_only:fam.every(function(s) { return s.het == s.affected && s.hom_ref == !s.affected && s.GQ > 5 })\"\n```\n \nNote that this does not explicitly check for transmission or non-transmission between parents and off-spring\nso it is less transparent than the `trio` mode, but more flexible. \n"
+      },
+      "source": "https://raw.githubusercontent.com/brentp/slivar/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9466097322256081,
+      "result": {
+        "original_header": "Groups",
+        "type": "Text_excerpt",
+        "value": "A `trio` is a special-case of a `group` that can be inferred from a pedigree. For more specialized use-cases, a `group` can be\nspecified. For example we could, instead of  using `--trio`, use a `group` file like:\n```\n#kid\tmom\tdad\nsample1\tsample2\tsample3\nsample4\tsample5\tsample6\nsample7\tsample8\tsample9\n``` \nwhere `sample10` will be available as \"sibling\" in the first family and an expression like:\n```bash\nkid.alts == 1 && mom.alts == 0 && dad.alts == 0 and sibling.alts == 0\n```\ncould be specified and it would automatically be applied to each of the 3 families. \nAnother example could be looking at somatic variants with 3 samples, each with a normal and 4 time-points of a tumor:\n```\n#normal\ttumor1\ttumor2\ttumor3\ttumor4\nss1\tss8\tss9\tss10\tss11\nss2\tss12\tss13\tss14\tss15\t\nss3\tss16\tss17\tss18\tss19\t\n``` \nwhere, again each row is a sample and the ID's (starting with \"ss\") will be injected for each sample to allow a single\nexpression like:\n```bash\nnormal.hom_ref && normal.DP > 10 \\\n  && tumor1.AB > 0 \\\n  && tumor1.AB < tumor2.AB \\\n  && tumor2.AB < tumor3.AB \\\n  && tumor3.AB < tumor4.AB\n``` \nto find a somatic variant that has increasing frequency (AB is allele balance) along the tumor time-points.\nMore detail on groups is provided [here](https://github.com/brentp/slivar/wiki/groups-in-slivar)\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/brentp/slivar/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.8706966828318753,
+      "result": {
+        "original_header": "Sample Expressions",
+        "type": "Text_excerpt",
+        "value": "Each sample that passes this expression will be have its sample id appended to the INFO field of `hi_quality` which\nis added to the output VCF. \n"
+      },
+      "source": "https://raw.githubusercontent.com/brentp/slivar/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9517281541167123,
+      "result": {
+        "original_header": "make-gnotate",
+        "type": "Text_excerpt",
+        "value": "this will pull `AF_popmax` and `nhomalt` from the INFO field and put them into `gnomad.zip` as `gnomad_popmax_af` and `gnomad_num_homalt` respectively.\nThe resulting zip file will contain the union of values seen in the exome and genomes files with the maximum value for any intersection.\nNote that the names (`gnomad_popmax_af` and `gnomad_num_homalt` in this case) should be chosen carefully as those will be the names added to the INFO of any file to be annotated with the resulting `gnomad.zip` \n"
+      },
+      "source": "https://raw.githubusercontent.com/brentp/slivar/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9468428931966725,
+      "result": {
+        "original_header": "compound-het",
+        "type": "Text_excerpt",
+        "value": "This command is used to find compound heterozygous variants (with phasing-by-inheritance) in trios.\nIt is used after filtering to rare(-ish) heterozygotes. \nSee a full description of use [here](https://github.com/brentp/slivar/wiki/compound-heterozygotes) \n**NOTE** that by default, this command limits to a subset of impacts; this is\nadjustable with the `--skip` flag. See more on the\n[wiki](https://github.com/brentp/slivar/wiki/compound-heterozygotes)\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/brentp/slivar/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9668152920323845,
+      "result": {
+        "original_header": "tsv",
+        "type": "Text_excerpt",
+        "value": "This command is used to convert a filtered and annotated VCF to a TSV (tab-separated value file) for final \nexamination. An example use is:\n```\nslivar tsv -p $ped \\\n    -s denovo -s x_recessive \\\n    -c CSQ \\\n    -i gnomad_popmax_af -i gnomad_nhomalt \\\n    -g gene_desc.txt -g clinvar_gene_desc.txt \\\n    $vcf > final.tsv\n```\n \nwhere `denovo` and `x_recessive` indicate the INFO fields that contain lists of samples (as added by slivar) that should be extracted.\nand `gnomad_popmax_af` and `gnomad_nhomalt` are pulled from the INFO field. \nThe `-c` arugment (CSQ) tells `slivar` that it can get gene, transcript and impact information from the CSQ field in the INFO.\nAnd the `-g` arguments are tab-delimited files of gene -> description where the description is added to the text output for quick inspection.\nRun `slivar tsv` without any arguments for examples on how to create these for pLI and clinvar. \n"
+      },
+      "source": "https://raw.githubusercontent.com/brentp/slivar/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9875073201992542,
+      "result": {
+        "original_header": "duo-del",
+        "type": "Text_excerpt",
+        "value": "slivar duo-del finds structural deletions in parent-child duos using non-transmission of alleles. this \ncan work to find deletions in exome data using genotypes, thereby avoiding the problems associated with\ndepth-based CNV calling in exomes. \n"
+      },
+      "source": "https://raw.githubusercontent.com/brentp/slivar/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9772837558849917,
+      "result": {
+        "original_header": "Data Driven Cutoffs",
+        "type": "Text_excerpt",
+        "value": "`slivar ddc` is a tool to discover data-driven cutoffs from a VCF and pedigree information.\nIt generates an interative VCF so a user can see how **mendelian violation and transmissions**\nare effected by varying cutoffs for values in the INFO and FORMAT fields. \n"
+      },
+      "source": "https://raw.githubusercontent.com/brentp/slivar/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9646666877747612,
+      "result": {
+        "original_header": "Attributes",
+        "type": "Text_excerpt",
+        "value": " + anything in the INFO is available as e.g. INFO.DP\n + INFO.impactful which, if CSQ (VEP), BCSQ (bcftools), or ANN (snpEff) is present indicates if the highest impact is \"impactful\". see [wiki](https://github.com/brentp/slivar/wiki/impactful) and `INFO.genic` which includes other gene impacts like `synonymous`. Also `INFO.highest_impact_order` explained in the wiki\n + variant consequences such as in INFO.CSQ can be parsed and used as object as described [here](https://github.com/brentp/slivar/wiki/CSQ)\n + if FORMAT.AB is not present, it is added so one can filter with kid.AB > 0.25 && kid.AB < 0.75\n + variant attributes are: `CHROM`, `POS`, `start`, `end`, `ID`, `REF`, `ALT`, `QUAL`, `FILTER`,\n                           `is_multiallelic`\n + calculated variant attributes include: `aaf`, `hwe_score`, `call_rate`, `num_hom_ref`, `num_het`, `num_hom_alt`, `num_unknown` \n + numeric and flag sample attributes (via `kid`, `mom`, `dad`) included in the FORMAT. available as e.g. `kid.AD[1]`, `mom.DP`, etc.\n + if the environment variable `SLIVAR_FORMAT_STRINGS` is not empty, then string sample fields will be available. these are not populated\n   by default as they are used less often and impact performance.\n + sample attributes for `hom_ref`, `het`, `hom_alt`, `unknown` which are synonums for `sample.alts` of 0, 1, 2, -1 respectively.\n + sample attributes from the ped for `affected`, `phenotype`, `sex`, `id` are available as, e.g. kid.sex.\n   phenotype is a string taken directly from the pedigree file while affected is a boolean.\n + sample relations are available as `mom`, `dad`, `kids`. `mom` and `dad` will be undefined if not available and kids will be an empty array.\n + a `VCF` object contains `CSQ`, `BCSQ`, `ANN` if those are present in the header (from VEP, BCFTOOLS, SnpEFF). The content is a list indicating\n   the order of entries in the field e.g. `[\"CONSEQUENCE\", \"CODONS\",\"AMINO_ACIDS\", \"GENE\", ...]`\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/brentp/slivar/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9979254112197582,
+      "result": {
+        "original_header": "How it works",
+        "type": "Text_excerpt",
+        "value": " `slivar` embeds the [duktape javascript engine](https://duktape.org/) to allow the user to specify expressions.\n For each variant, each trio (and each sample), it fills the appropriate `attributes`. This can be intensive for\n VCFs with many samples, but this is done **as efficiently as possible** such that `slivar` can evaluate 10's of\n thousand of variants per second even with dozens of trios.\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/brentp/slivar/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9245483782932236,
+      "result": {
+        "original_header": "Gnotation Files",
+        "type": "Text_excerpt",
+        "value": "+ gnomad for hg37 with AF popmax, numhomalts (total and controls only) [here](https://s3.amazonaws.com/slivar/gnomad.hg37.zip)\n+ gnomad for hg38 (v3) genomes [here](https://slivar.s3.amazonaws.com/gnomad.hg38.genomes.v3.fix.zip) \n\n+ **lifted** gnomad exomes+genomes for hg38 with AF popmax, numhomalts (updated in release v0.1.2) [here](https://s3.amazonaws.com/slivar/gnomad.hg38.v2.zip) \n+ spliceai scores (maximum value of the 4 scores in spliceai) [here](https://s3.amazonaws.com/slivar/spliceai.hg37.zip) \n+ [topmed allele frequencies (via dbsnp)](https://slivar.s3.amazonaws.com/topmed.hg38.dbsnp.151.zip) these can be used with `INFO.topmed_af`. Useful when analyzing data in hg38 because [some variants in hg38 are not visible in GRCh37](https://twitter.com/brent_p/status/1139540523364917248) \n"
+      },
+      "source": "https://raw.githubusercontent.com/brentp/slivar/master/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "documentation": [
+    {
+      "confidence": 1,
+      "result": {
+        "format": "wiki",
+        "type": "Url",
+        "value": "https://github.com/brentp/slivar/wiki/gnotate"
+      },
+      "source": "https://raw.githubusercontent.com/brentp/slivar/master/README.md",
+      "technique": "regular_expression"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "format": "wiki",
+        "type": "Url",
+        "value": "https://github.com/brentp/slivar/wiki/make-gnotate"
+      },
+      "source": "https://raw.githubusercontent.com/brentp/slivar/master/README.md",
+      "technique": "regular_expression"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "format": "wiki",
+        "type": "Url",
+        "value": "https://github.com/brentp/slivar/wiki/compound-heterozygotes"
+      },
+      "source": "https://raw.githubusercontent.com/brentp/slivar/master/README.md",
+      "technique": "regular_expression"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "format": "wiki",
+        "type": "Url",
+        "value": "https://github.com/brentp/slivar/wiki/tsv:-creating-a-spreadsheet-from-a-filtered-VCF"
+      },
+      "source": "https://raw.githubusercontent.com/brentp/slivar/master/README.md",
+      "technique": "regular_expression"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "format": "wiki",
+        "type": "Url",
+        "value": "https://github.com/brentp/slivar/wiki/data-driven-cutoffs"
+      },
+      "source": "https://raw.githubusercontent.com/brentp/slivar/master/README.md",
+      "technique": "regular_expression"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "format": "wiki",
+        "type": "Url",
+        "value": "https://github.com/brentp/slivar/wiki/impactful"
+      },
+      "source": "https://raw.githubusercontent.com/brentp/slivar/master/README.md",
+      "technique": "regular_expression"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "format": "wiki",
+        "type": "Url",
+        "value": "https://github.com/brentp/slivar/wiki"
+      },
+      "source": "https://raw.githubusercontent.com/brentp/slivar/master/README.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "download_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/brentp/slivar/releases"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 23
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/brentp/slivar/forks"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "brentp/slivar"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_title": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "slivar: filter/annotate variants in VCF/BCF format with simple expressions "
+      },
+      "source": "https://raw.githubusercontent.com/brentp/slivar/master/README.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "has_build_file": [
+    {
+      "confidence": 1,
+      "result": {
+        "format": "dockerfile",
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/brentp/slivar/master/docker/Dockerfile"
+      },
+      "source": "https://raw.githubusercontent.com/brentp/slivar/master/docker/Dockerfile",
+      "technique": "file_exploration"
+    }
+  ],
+  "has_script_file": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/brentp/slivar/master/paper/exomes.sh"
+      },
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/brentp/slivar/master/paper/genomes.sh"
+      },
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/brentp/slivar/master/paper/swarmplots.sh"
+      },
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/brentp/slivar/master/paper/giab/get.sh"
+      },
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/brentp/slivar/master/scripts/ci-tests.sh"
+      },
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/brentp/slivar/master/scripts/make-topmed.sh"
+      },
+      "technique": "file_exploration"
+    }
+  ],
+  "images": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://user-images.githubusercontent.com/1739/85797163-55738480-b6f8-11ea-8486-389de3e492e6.png"
+      },
+      "source": "https://raw.githubusercontent.com/brentp/slivar/master/README.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "installation": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Installation",
+        "parent_header": [
+          "Table of Contents"
+        ],
+        "type": "Text_excerpt",
+        "value": "get the latest binary from: https://github.com/brentp/slivar/releases/latest\n\n`slivar_static` does not depend on any libraries and should work on any 64 bit linux system.        \n\n`slivar_shared` will require libhts.so (from [htslib](https://htslib.org)) to be in the usual places or in a directory indicated in `LD_LIBRARY_PATH`.\n\nor use via docker from: [brentp/slivar:latest](https://hub.docker.com/r/brentp/slivar)\n"
+      },
+      "source": "https://raw.githubusercontent.com/brentp/slivar/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 0.993028785151431,
+      "result": {
+        "original_header": "QuickStart",
+        "type": "Text_excerpt",
+        "value": "To get started quickly, grab a static binary [for the latest release](https://github.com/brentp/slivar/releases/latest) and\nthen follow [this example](https://github.com/brentp/slivar/wiki/rare-disease#full-analysis-for-trios-with-unaffected-parents) \nSo for hg38:\n```\nvcf=/path/to/your/vcf.vcf.gz\nped=/path/to/your/pedigree.ped\nwget https://github.com/brentp/slivar/releases/download/v0.2.8/slivar\nchmod +x ./slivar\nwget https://raw.githubusercontent.com/brentp/slivar/master/js/slivar-functions.js\nwget https://slivar.s3.amazonaws.com/gnomad.hg38.genomes.v3.fix.zip\n\n# example command\n./slivar expr --js slivar-functions.js -g gnomad.hg38.genomes.v3.fix.zip \\\n\t--vcf $vcf --ped $ped \\\n\t--info \"INFO.gnomad_popmax_af < 0.01 && variant.FILTER == 'PASS'\" \\\n\t--trio \"example_denovo:denovo(kid, dad, mom)\" \\\n\t--family-expr \"denovo:fam.every(segregating_denovo)\" \\\n\t--trio \"custom:kid.het && mom.het && dad.het && kid.GQ > 20 && mom.GQ > 20 && dad.GQ > 20\" \\\n\t--pass-only\n```\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/brentp/slivar/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.8352376561951153,
+      "result": {
+        "original_header": "trio",
+        "type": "Text_excerpt",
+        "value": "\n```bash\nslivar expr \\\n   --pass-only \\ # output only variants that pass one of the filters (default is to output all variants)\n   --vcf $vcf \\\n   --ped $ped \\\n   # compressed zip that allows fast annotation so that `gnomad_af` is available in the expressions below.\n   --gnotate $gnomad_af.zip \\ \n   # any valid javascript is allowed in a file here. provide functions to be used below.\n   --js js/slivar-functions.js \\ \n   --out-vcf annotated.bcf \\\n   # this filter is applied before the trio filters and can speed evaluation if it is stringent.\n   --info \"variant.call_rate > 0.9\" \\ \n   --trio \"denovo:kid.het && mom.hom_ref && dad.hom_ref \\\n                   && kid.AB > 0.25 && kid.AB < 0.75 \\\n                   && (mom.AD[1] + dad.AD[1]) == 0 \\\n                   && kid.GQ >= 20 && mom.GQ >= 20 && dad.GQ >= 20 \\\n                   && kid.DP >= 12 && mom.DP >= 12 && dad.DP >= 12\" \\\n   --trio \"informative:kid.GQ > 20 && dad.GQ > 20 && mom.GQ > 20 && kid.alts == 1 && \\\n           ((mom.alts == 1 && dad.alts == 0) || (mom.alts == 0 && dad.alts == 1))\" \\\n   --trio \"recessive:trio_autosomal_recessive(kid, mom, dad)\"\n\n``` \n"
+      },
+      "source": "https://raw.githubusercontent.com/brentp/slivar/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9397359587838379,
+      "result": {
+        "original_header": "Sample Expressions",
+        "type": "Text_excerpt",
+        "value": "Users can specify a boolean expression that is tested against each `sample` using e.g.:\n```\n--sample-expr \"hi_quality:sample.DP && sample.GQ > 10\"\n```\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/brentp/slivar/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9996897935733252,
+      "result": {
+        "original_header": "make-gnotate",
+        "type": "Text_excerpt",
+        "value": "Users can make their own `gnotate` files like:\n```bash\nslivar make-gnotate --prefix gnomad \\\n    --field AF_popmax:gnomad_popmax_af \\\n    --field nhomalt:gnomad_num_homalt \\\n    gnomad.exomes.r2.1.sites.vcf.gz gnomad.genomes.r2.1.sites.vcf.gz\n```\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/brentp/slivar/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.8940598962591867,
+      "result": {
+        "original_header": "compound-het",
+        "type": "Text_excerpt",
+        "value": "**NOTE** that by default, this command limits to a subset of impacts; this is\nadjustable with the `--skip` flag. See more on the\n[wiki](https://github.com/brentp/slivar/wiki/compound-heterozygotes)\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/brentp/slivar/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.8995777356589517,
+      "result": {
+        "original_header": "tsv",
+        "type": "Text_excerpt",
+        "value": "This command is used to convert a filtered and annotated VCF to a TSV (tab-separated value file) for final \nexamination. An example use is:\n```\nslivar tsv -p $ped \\\n    -s denovo -s x_recessive \\\n    -c CSQ \\\n    -i gnomad_popmax_af -i gnomad_nhomalt \\\n    -g gene_desc.txt -g clinvar_gene_desc.txt \\\n    $vcf > final.tsv\n```\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/brentp/slivar/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.999377570688561,
+      "result": {
+        "original_header": "duo-del",
+        "type": "Text_excerpt",
+        "value": "see: https://github.com/brentp/slivar/wiki/finding-deletions-in-parent-child-duos\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/brentp/slivar/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9347053787525186,
+      "result": {
+        "original_header": "Gnotation Files",
+        "type": "Text_excerpt",
+        "value": "\n+ **lifted** gnomad exomes+genomes for hg38 with AF popmax, numhomalts (updated in release v0.1.2) [here](https://s3.amazonaws.com/slivar/gnomad.hg38.v2.zip) \n"
+      },
+      "source": "https://raw.githubusercontent.com/brentp/slivar/master/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "invocation": [
+    {
+      "confidence": 0.8148932156242801,
+      "result": {
+        "original_header": "Gnotation Files",
+        "type": "Text_excerpt",
+        "value": "The available fields can be seen with, for example:\n```\n$ unzip -l gnomad.hg38.v2.zip | grep -oP \"gnotate-[^.]+\" | sort -u\ngnotate-gnomad_nhomalt\ngnotate-gnomad_nhomalt_controls\ngnotate-gnomad_popmax_af\ngnotate-gnomad_popmax_af_controls\ngnotate-variant\n```\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/brentp/slivar/master/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "issue_tracker": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/brentp/slivar/issues"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "keywords": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "genomics, rare-disease, rare-variant-analysis, variant-analysis, variant-interpretation"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "license": [
+    {
+      "confidence": 1,
+      "result": {
+        "name": "MIT License",
+        "spdx_id": "MIT",
+        "type": "License",
+        "url": "https://api.github.com/licenses/mit",
+        "value": "https://api.github.com/licenses/mit"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "File_dump",
+        "value": "MIT License\n\nCopyright (c) 2018 Brent Pedersen\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.\n"
+      },
+      "source": "https://raw.githubusercontent.com/brentp/slivar/master/LICENSE",
+      "technique": "file_exploration"
+    }
+  ],
+  "name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "slivar"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "owner": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "User",
+        "value": "brentp"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "programming_languages": [
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Nim",
+        "size": 168158,
+        "type": "Programming_language",
+        "value": "Nim"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "HTML",
+        "size": 48094,
+        "type": "Programming_language",
+        "value": "HTML"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "JavaScript",
+        "size": 40425,
+        "type": "Programming_language",
+        "value": "JavaScript"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Python",
+        "size": 30752,
+        "type": "Programming_language",
+        "value": "Python"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Shell",
+        "size": 27831,
+        "type": "Programming_language",
+        "value": "Shell"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Nextflow",
+        "size": 13774,
+        "type": "Programming_language",
+        "value": "Nextflow"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Go",
+        "size": 6954,
+        "type": "Programming_language",
+        "value": "Go"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Dockerfile",
+        "size": 3100,
+        "type": "Programming_language",
+        "value": "Dockerfile"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "readme_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/brentp/slivar/master/README.md"
+      },
+      "technique": "file_exploration"
+    }
+  ],
+  "releases": [
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "brentp",
+          "type": "User"
+        },
+        "date_created": "2023-12-05T11:37:13Z",
+        "date_published": "2024-05-28T03:59:47Z",
+        "description": "v0.3.1\r\n======\r\n+ add CSQ parsing js code: https://github.com/brentp/slivar/wiki/CSQ\r\n+ expose sample.GT\r\n+ update impact order to include new effects from VEP (#157, #168)\r\n\r\n\r\n\r\n# Installation\r\n\r\nGrab the [binary](https://github.com/brentp/slivar/releases/download/v0.3.1/slivar)\r\nYou can download it and use it without any other software. This is the recommended binary. \r\nwget, chmod +x and start analyzing. (but you'll likely want the javascript included in this repo and the gnotation files linked below)\r\nusers can also use slivar via docker at brentp/slivar:v0.3.1\r\nThe [pslivar binary](https://github.com/brentp/slivar/releases/download/v0.3.1/pslivar) allows running slivar expr commands in parallel\r\n\r\n##### gnotate annotation files\r\n\r\nthe gnotation files for fast annotation remain unchanged except for the addition of topmed.\r\nUsers can create their own gnotation files with `slivar make-gnotate`, but we provide:\r\n+ gnomad for hg37 with AF popmax, numhomalts (total and controls only) [here](https://s3.amazonaws.com/slivar/gnomad.hg37.zip)\r\n+ gnomad for hg38 with AF popmax, numhomalts (updated in release v0.1.2) [here](https://s3.amazonaws.com/slivar/gnomad.hg38.v2.zip)\r\n\r\n+ gnomad genomes (71,702 samples) for hg38 with AF popmax, numhomalts (updated in release v0.1.8) [here](https://slivar.s3.amazonaws.com/gnomad.hg38.genomes.v3.fix.zip)\r\n+ spliceai scores (maximum value of the 4 scores in spliceai) [here](https://s3.amazonaws.com/slivar/spliceai.hg37.zip)\r\n\r\n+ [topmed allele frequencies (via dbsnp)](https://slivar.s3.amazonaws.com/topmed.hg38.dbsnp.151.zip) these can be used with `INFO.topmed_af`. Useful when analyzing data in hg38 because [some variants in hg38 are not visible in GRCh37](https://twitter.com/brent_p/status/1139540523364917248)\r\n",
+        "html_url": "https://github.com/brentp/slivar/releases/tag/v0.3.1",
+        "release_id": 157715460,
+        "tag": "v0.3.1",
+        "tarball_url": "https://api.github.com/repos/brentp/slivar/tarball/v0.3.1",
+        "type": "Release",
+        "url": "https://api.github.com/repos/brentp/slivar/releases/157715460",
+        "value": "https://api.github.com/repos/brentp/slivar/releases/157715460",
+        "zipball_url": "https://api.github.com/repos/brentp/slivar/zipball/v0.3.1"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "brentp",
+          "type": "User"
+        },
+        "date_created": "2023-05-05T23:14:23Z",
+        "date_published": "2023-05-05T23:18:23Z",
+        "description": "v0.3.0\r\n======\r\n+ bugfix for 0.2.8 regression where SNPs present in gnotate file would be instead annotated as missing #149.\r\n  This happened when annotating a chromosome *after* a chromosome present in the query set that was not in the gnotate file\r\n  Thanks very much to Steve @seboyden for reporting and providing a test-case. \r\n\r\n\r\n# Installation\r\n\r\nGrab the [binary](https://github.com/brentp/slivar/releases/download/v0.3.0/slivar)\r\nYou can download it and use it without any other software. This is the recommended binary. \r\nwget, chmod +x and start analyzing. (but you'll likely want the javascript included in this repo and the gnotation files linked below)\r\nusers can also use slivar via docker at brentp/slivar:v0.3.0\r\nThe [pslivar binary](https://github.com/brentp/slivar/releases/download/v0.3.0/pslivar) allows running slivar expr commands in parallel\r\n\r\n##### gnotate annotation files\r\n\r\nthe gnotation files for fast annotation remain unchanged except for the addition of topmed.\r\nUsers can create their own gnotation files with `slivar make-gnotate`, but we provide:\r\n+ gnomad for hg37 with AF popmax, numhomalts (total and controls only) [here](https://s3.amazonaws.com/slivar/gnomad.hg37.zip)\r\n+ gnomad for hg38 with AF popmax, numhomalts (updated in release v0.1.2) [here](https://s3.amazonaws.com/slivar/gnomad.hg38.v2.zip)\r\n\r\n+ gnomad genomes (71,702 samples) for hg38 with AF popmax, numhomalts (updated in release v0.1.8) [here](https://slivar.s3.amazonaws.com/gnomad.hg38.genomes.v3.fix.zip)\r\n+ spliceai scores (maximum value of the 4 scores in spliceai) [here](https://s3.amazonaws.com/slivar/spliceai.hg37.zip)\r\n\r\n+ [topmed allele frequencies (via dbsnp)](https://slivar.s3.amazonaws.com/topmed.hg38.dbsnp.151.zip) these can be used with `INFO.topmed_af`. Useful when analyzing data in hg38 because [some variants in hg38 are not visible in GRCh37](https://twitter.com/brent_p/status/1139540523364917248)\r\n",
+        "html_url": "https://github.com/brentp/slivar/releases/tag/v0.3.0",
+        "name": "bugfix 0.2.8 regression for annotation",
+        "release_id": 102073479,
+        "tag": "v0.3.0",
+        "tarball_url": "https://api.github.com/repos/brentp/slivar/tarball/v0.3.0",
+        "type": "Release",
+        "url": "https://api.github.com/repos/brentp/slivar/releases/102073479",
+        "value": "https://api.github.com/repos/brentp/slivar/releases/102073479",
+        "zipball_url": "https://api.github.com/repos/brentp/slivar/zipball/v0.3.0"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "brentp",
+          "type": "User"
+        },
+        "date_created": "2023-05-01T17:13:51Z",
+        "date_published": "2023-05-01T17:54:56Z",
+        "description": "This release fixes #149 . Thanks very much to Steve @seboyden for reporting and providing a test-case. \r\nThis affected large indels. They would be reported as missing from the gnotate file when in fact they were present.\r\n\r\n# Installation\r\n\r\nGrab the [binary](https://github.com/brentp/slivar/releases/download/v0.2.9/slivar)\r\nYou can download it and use it without any other software. This is the recommended binary. \r\nwget, chmod +x and start analyzing. (but you'll likely want the javascript included in this repo and the gnotation files linked below)\r\nusers can also use slivar via docker at brentp/slivar:v0.2.9\r\nThe [pslivar binary](https://github.com/brentp/slivar/releases/download/v0.2.9/pslivar) allows running slivar expr commands in parallel\r\n\r\n##### gnotate annotation files\r\n\r\nthe gnotation files for fast annotation remain unchanged except for the addition of topmed.\r\nUsers can create their own gnotation files with `slivar make-gnotate`, but we provide:\r\n+ gnomad for hg37 with AF popmax, numhomalts (total and controls only) [here](https://s3.amazonaws.com/slivar/gnomad.hg37.zip)\r\n+ gnomad for hg38 with AF popmax, numhomalts (updated in release v0.1.2) [here](https://s3.amazonaws.com/slivar/gnomad.hg38.v2.zip)\r\n\r\n+ gnomad genomes (71,702 samples) for hg38 with AF popmax, numhomalts (updated in release v0.1.8) [here](https://slivar.s3.amazonaws.com/gnomad.hg38.genomes.v3.fix.zip)\r\n+ spliceai scores (maximum value of the 4 scores in spliceai) [here](https://s3.amazonaws.com/slivar/spliceai.hg37.zip)\r\n\r\n+ [topmed allele frequencies (via dbsnp)](https://slivar.s3.amazonaws.com/topmed.hg38.dbsnp.151.zip) these can be used with `INFO.topmed_af`. Useful when analyzing data in hg38 because [some variants in hg38 are not visible in GRCh37](https://twitter.com/brent_p/status/1139540523364917248)\r\n",
+        "html_url": "https://github.com/brentp/slivar/releases/tag/v0.2.9",
+        "name": "bugfix for indels (0.2.8 regression)",
+        "release_id": 101486985,
+        "tag": "v0.2.9",
+        "tarball_url": "https://api.github.com/repos/brentp/slivar/tarball/v0.2.9",
+        "type": "Release",
+        "url": "https://api.github.com/repos/brentp/slivar/releases/101486985",
+        "value": "https://api.github.com/repos/brentp/slivar/releases/101486985",
+        "zipball_url": "https://api.github.com/repos/brentp/slivar/zipball/v0.2.9"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "brentp",
+          "type": "User"
+        },
+        "date_created": "2022-11-16T09:48:27Z",
+        "date_published": "2022-11-18T19:13:04Z",
+        "description": "# Installation\r\n\r\nGrab the [binary](https://github.com/brentp/slivar/releases/download/v0.2.8/slivar)\r\nYou can download it and use it without any other software. This is the recommended binary. \r\nwget, chmod +x and start analyzing. (but you'll likely want the javascript included in this repo and the gnotation files linked below)\r\nusers can also use slivar via docker at brentp/slivar:v0.2.8\r\nThe [pslivar binary](https://github.com/brentp/slivar/releases/download/v0.2.8/pslivar) allows running slivar expr commands in parallel\r\n\r\n##### gnotate annotation files\r\n\r\nthe gnotation files for fast annotation remain unchanged except for the addition of topmed.\r\nUsers can create their own gnotation files with `slivar make-gnotate`, but we provide:\r\n+ gnomad for hg37 with AF popmax, numhomalts (total and controls only) [here](https://s3.amazonaws.com/slivar/gnomad.hg37.zip)\r\n+ gnomad for hg38 with AF popmax, numhomalts (updated in release v0.1.2) [here](https://s3.amazonaws.com/slivar/gnomad.hg38.v2.zip)\r\n\r\n+ gnomad genomes (71,702 samples) for hg38 with AF popmax, numhomalts (updated in release v0.1.8) [here](https://slivar.s3.amazonaws.com/gnomad.hg38.genomes.v3.fix.zip)\r\n+ spliceai scores (maximum value of the 4 scores in spliceai) [here](https://s3.amazonaws.com/slivar/spliceai.hg37.zip)\r\n\r\n+ [topmed allele frequencies (via dbsnp)](https://slivar.s3.amazonaws.com/topmed.hg38.dbsnp.151.zip) these can be used with `INFO.topmed_af`. Useful when analyzing data in hg38 because [some variants in hg38 are not visible in GRCh37](https://twitter.com/brent_p/status/1139540523364917248)\r\n",
+        "html_url": "https://github.com/brentp/slivar/releases/tag/v0.2.8",
+        "name": "segregating_dominant_x and CSQ fixes",
+        "release_id": 83598275,
+        "tag": "v0.2.8",
+        "tarball_url": "https://api.github.com/repos/brentp/slivar/tarball/v0.2.8",
+        "type": "Release",
+        "url": "https://api.github.com/repos/brentp/slivar/releases/83598275",
+        "value": "https://api.github.com/repos/brentp/slivar/releases/83598275",
+        "zipball_url": "https://api.github.com/repos/brentp/slivar/zipball/v0.2.8"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "brentp",
+          "type": "User"
+        },
+        "date_created": "2021-10-20T09:32:03Z",
+        "date_published": "2021-10-20T10:08:56Z",
+        "description": "# Installation\r\n\r\nJust grab the [binary](https://github.com/brentp/slivar/releases/download/v0.2.7/slivar)\r\nYou can download it and use it without any other software. This is the recommended binary. \r\nwget, chmod +x and start analyzing. (but you'll likely want the javascript included in this repo and the gnotation files linked below)\r\nusers can also use slivar via docker at brentp/slivar:v0.2.7\r\nThe [pslivar binary](https://github.com/brentp/slivar/releases/download/v0.2.7/pslivar) allows running slivar expr commands in parallel\r\n\r\n##### gnotate annotation files\r\n\r\nthe gnotation files for fast annotation remain unchanged except for the addition of topmed.\r\nUsers can create their own gnotation files with `slivar make-gnotate`, but we provide:\r\n+ gnomad for hg37 with AF popmax, numhomalts (total and controls only) [here](https://s3.amazonaws.com/slivar/gnomad.hg37.zip)\r\n+ gnomad for hg38 with AF popmax, numhomalts (updated in release v0.1.2) [here](https://s3.amazonaws.com/slivar/gnomad.hg38.v2.zip)\r\n\r\n+ gnomad genomes (71,702 samples) for hg38 with AF popmax, numhomalts (updated in release v0.1.8) [here](https://slivar.s3.amazonaws.com/gnomad.hg38.genomes.v3.fix.zip)\r\n+ spliceai scores (maximum value of the 4 scores in spliceai) [here](https://s3.amazonaws.com/slivar/spliceai.hg37.zip)\r\n\r\n+ [topmed allele frequencies (via dbsnp)](https://slivar.s3.amazonaws.com/topmed.hg38.dbsnp.151.zip) these can be used with `INFO.topmed_af`. Useful when analyzing data in hg38 because [some variants in hg38 are not visible in GRCh37](https://twitter.com/brent_p/status/1139540523364917248)\r\n",
+        "html_url": "https://github.com/brentp/slivar/releases/tag/v0.2.7",
+        "name": "minor",
+        "release_id": 51687910,
+        "tag": "v0.2.7",
+        "tarball_url": "https://api.github.com/repos/brentp/slivar/tarball/v0.2.7",
+        "type": "Release",
+        "url": "https://api.github.com/repos/brentp/slivar/releases/51687910",
+        "value": "https://api.github.com/repos/brentp/slivar/releases/51687910",
+        "zipball_url": "https://api.github.com/repos/brentp/slivar/zipball/v0.2.7"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "brentp",
+          "type": "User"
+        },
+        "date_created": "2021-10-18T07:26:41Z",
+        "date_published": "2021-10-18T09:59:19Z",
+        "description": "v0.2.6\r\n======\r\n+ allow specifying `QUAL` and `ID` to `-i` argument to `slivar tsv` (#104 #105)\r\n\r\n\r\n# Installation\r\n\r\nJust grab the [binary](https://github.com/brentp/slivar/releases/download/v0.2.6/slivar)\r\nYou can download it and use it without any other software. This is the recommended binary. \r\nwget, chmod +x and start analyzing. (but you'll likely want the javascript included in this repo and the gnotation files linked below)\r\nusers can also use slivar via docker at brentp/slivar:v0.2.6\r\nThe [pslivar binary](https://github.com/brentp/slivar/releases/download/v0.2.6/pslivar) allows running slivar expr commands in parallel\r\n\r\n##### gnotate annotation files\r\n\r\nthe gnotation files for fast annotation remain unchanged except for the addition of topmed.\r\nUsers can create their own gnotation files with `slivar make-gnotate`, but we provide:\r\n+ gnomad for hg37 with AF popmax, numhomalts (total and controls only) [here](https://s3.amazonaws.com/slivar/gnomad.hg37.zip)\r\n+ gnomad for hg38 with AF popmax, numhomalts (updated in release v0.1.2) [here](https://s3.amazonaws.com/slivar/gnomad.hg38.v2.zip)\r\n\r\n+ gnomad genomes (71,702 samples) for hg38 with AF popmax, numhomalts (updated in release v0.1.8) [here](https://slivar.s3.amazonaws.com/gnomad.hg38.genomes.v3.fix.zip)\r\n+ spliceai scores (maximum value of the 4 scores in spliceai) [here](https://s3.amazonaws.com/slivar/spliceai.hg37.zip)\r\n\r\n+ [topmed allele frequencies (via dbsnp)](https://slivar.s3.amazonaws.com/topmed.hg38.dbsnp.151.zip) these can be used with `INFO.topmed_af`. Useful when analyzing data in hg38 because [some variants in hg38 are not visible in GRCh37](https://twitter.com/brent_p/status/1139540523364917248)\r\n",
+        "html_url": "https://github.com/brentp/slivar/releases/tag/v0.2.6",
+        "release_id": 51517934,
+        "tag": "v0.2.6",
+        "tarball_url": "https://api.github.com/repos/brentp/slivar/tarball/v0.2.6",
+        "type": "Release",
+        "url": "https://api.github.com/repos/brentp/slivar/releases/51517934",
+        "value": "https://api.github.com/repos/brentp/slivar/releases/51517934",
+        "zipball_url": "https://api.github.com/repos/brentp/slivar/zipball/v0.2.6"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "brentp",
+          "type": "User"
+        },
+        "date_created": "2021-07-29T13:26:58Z",
+        "date_published": "2021-08-20T08:38:25Z",
+        "description": "v0.2.5\r\n======\r\n+ it was previously not possible to adjust the order of impacts with\r\n  `SLIVAR_IMPACTFUL_ORDER`. This is now fixed. (#97)\r\n\r\n\r\n# Installation\r\n\r\nJust grab the [binary](https://github.com/brentp/slivar/releases/download/v0.2.5/slivar)\r\nYou can download it and use it without any other software. This is the recommended binary. \r\nwget, chmod +x and start analyzing. (but you'll likely want the javascript included in this repo and the gnotation files linked below)\r\nusers can also use slivar via docker at brentp/slivar:v0.2.5\r\nThe [pslivar binary](https://github.com/brentp/slivar/releases/download/v0.2.5/pslivar) allows running slivar expr commands in parallel\r\n\r\n##### gnotate annotation files\r\n\r\nthe gnotation files for fast annotation remain unchanged except for the addition of topmed.\r\nUsers can create their own gnotation files with `slivar make-gnotate`, but we provide:\r\n+ gnomad for hg37 with AF popmax, numhomalts (total and controls only) [here](https://s3.amazonaws.com/slivar/gnomad.hg37.zip)\r\n+ gnomad for hg38 with AF popmax, numhomalts (updated in release v0.1.2) [here](https://s3.amazonaws.com/slivar/gnomad.hg38.v2.zip)\r\n\r\n+ gnomad genomes (71,702 samples) for hg38 with AF popmax, numhomalts (updated in release v0.1.8) [here](https://slivar.s3.amazonaws.com/gnomad.hg38.genomes.v3.fix.zip)\r\n+ spliceai scores (maximum value of the 4 scores in spliceai) [here](https://s3.amazonaws.com/slivar/spliceai.hg37.zip)\r\n\r\n+ [topmed allele frequencies (via dbsnp)](https://slivar.s3.amazonaws.com/topmed.hg38.dbsnp.151.zip) these can be used with `INFO.topmed_af`. Useful when analyzing data in hg38 because [some variants in hg38 are not visible in GRCh37](https://twitter.com/brent_p/status/1139540523364917248)\r\n",
+        "html_url": "https://github.com/brentp/slivar/releases/tag/v0.2.5",
+        "name": "impact order",
+        "release_id": 48166049,
+        "tag": "v0.2.5",
+        "tarball_url": "https://api.github.com/repos/brentp/slivar/tarball/v0.2.5",
+        "type": "Release",
+        "url": "https://api.github.com/repos/brentp/slivar/releases/48166049",
+        "value": "https://api.github.com/repos/brentp/slivar/releases/48166049",
+        "zipball_url": "https://api.github.com/repos/brentp/slivar/zipball/v0.2.5"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "brentp",
+          "type": "User"
+        },
+        "date_created": "2021-06-28T09:12:32Z",
+        "date_published": "2021-06-28T09:44:43Z",
+        "description": "v0.2.4\r\n======\r\n+ fix long-standing bug (#27) that would cause sigsegv in some cases\r\n\r\n# Installation\r\n\r\nJust grab the [binary](https://github.com/brentp/slivar/releases/download/v0.2.4/slivar)\r\nYou can download it and use it without any other software. This is the recommended binary. \r\nwget, chmod +x and start analyzing. (but you'll likely want the javascript included in this repo and the gnotation files linked below)\r\nusers can also use slivar via docker at brentp/slivar:v0.2.4\r\nThe [pslivar binary](https://github.com/brentp/slivar/releases/download/v0.2.4/pslivar) allows running slivar expr commands in parallel\r\n\r\n##### gnotate annotation files\r\n\r\nthe gnotation files for fast annotation remain unchanged except for the addition of topmed.\r\nUsers can create their own gnotation files with `slivar make-gnotate`, but we provide:\r\n+ gnomad for hg37 with AF popmax, numhomalts (total and controls only) [here](https://s3.amazonaws.com/slivar/gnomad.hg37.zip)\r\n+ gnomad for hg38 with AF popmax, numhomalts (updated in release v0.1.2) [here](https://s3.amazonaws.com/slivar/gnomad.hg38.v2.zip)\r\n\r\n+ gnomad genomes (71,702 samples) for hg38 with AF popmax, numhomalts (updated in release v0.1.8) [here](https://slivar.s3.amazonaws.com/gnomad.hg38.genomes.v3.fix.zip)\r\n+ spliceai scores (maximum value of the 4 scores in spliceai) [here](https://s3.amazonaws.com/slivar/spliceai.hg37.zip)\r\n\r\n+ [topmed allele frequencies (via dbsnp)](https://slivar.s3.amazonaws.com/topmed.hg38.dbsnp.151.zip) these can be used with `INFO.topmed_af`. Useful when analyzing data in hg38 because [some variants in hg38 are not visible in GRCh37](https://twitter.com/brent_p/status/1139540523364917248)\r\n",
+        "html_url": "https://github.com/brentp/slivar/releases/tag/v0.2.4",
+        "name": "bugfix",
+        "release_id": 45343147,
+        "tag": "v0.2.4",
+        "tarball_url": "https://api.github.com/repos/brentp/slivar/tarball/v0.2.4",
+        "type": "Release",
+        "url": "https://api.github.com/repos/brentp/slivar/releases/45343147",
+        "value": "https://api.github.com/repos/brentp/slivar/releases/45343147",
+        "zipball_url": "https://api.github.com/repos/brentp/slivar/zipball/v0.2.4"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "brentp",
+          "type": "User"
+        },
+        "date_created": "2021-06-04T07:24:07Z",
+        "date_published": "2021-06-04T07:33:16Z",
+        "description": "v0.2.3\r\n======\r\n+ add `feature_fusion` to impact order list (#92)\r\n+ [compound-hets] write summary even if no variants found\r\n\r\n\r\n# Installation\r\n\r\nJust grab the [binary](https://github.com/brentp/slivar/releases/download/v0.2.3/slivar)\r\nYou can download it and use it without any other software. This is the recommended binary. \r\nwget, chmod +x and start analyzing. (but you'll likely want the javascript included in this repo and the gnotation files linked below)\r\nusers can also use slivar via docker at brentp/slivar:v0.2.3\r\nThe [pslivar binary](https://github.com/brentp/slivar/releases/download/v0.2.3/pslivar) allows running slivar expr commands in parallel\r\n\r\n##### gnotate annotation files\r\n\r\nthe gnotation files for fast annotation remain unchanged except for the addition of topmed.\r\nUsers can create their own gnotation files with `slivar make-gnotate`, but we provide:\r\n+ gnomad for hg37 with AF popmax, numhomalts (total and controls only) [here](https://s3.amazonaws.com/slivar/gnomad.hg37.zip)\r\n+ gnomad for hg38 with AF popmax, numhomalts (updated in release v0.1.2) [here](https://s3.amazonaws.com/slivar/gnomad.hg38.v2.zip)\r\n\r\n+ gnomad genomes (71,702 samples) for hg38 with AF popmax, numhomalts (updated in release v0.1.8) [here](https://slivar.s3.amazonaws.com/gnomad.hg38.genomes.v3.fix.zip)\r\n+ spliceai scores (maximum value of the 4 scores in spliceai) [here](https://s3.amazonaws.com/slivar/spliceai.hg37.zip)\r\n\r\n+ [topmed allele frequencies (via dbsnp)](https://slivar.s3.amazonaws.com/topmed.hg38.dbsnp.151.zip) these can be used with `INFO.topmed_af`. Useful when analyzing data in hg38 because [some variants in hg38 are not visible in GRCh37](https://twitter.com/brent_p/status/1139540523364917248)\r\n",
+        "html_url": "https://github.com/brentp/slivar/releases/tag/v0.2.3",
+        "name": "small bugfixes",
+        "release_id": 44089298,
+        "tag": "v0.2.3",
+        "tarball_url": "https://api.github.com/repos/brentp/slivar/tarball/v0.2.3",
+        "type": "Release",
+        "url": "https://api.github.com/repos/brentp/slivar/releases/44089298",
+        "value": "https://api.github.com/repos/brentp/slivar/releases/44089298",
+        "zipball_url": "https://api.github.com/repos/brentp/slivar/zipball/v0.2.3"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "brentp",
+          "type": "User"
+        },
+        "date_created": "2021-05-05T12:48:42Z",
+        "date_published": "2021-05-12T17:42:57Z",
+        "description": "This release is mostly minor or obscure bug-fixes with several usability improvements and fixes in compound-hets..\r\n\r\nv0.2.2\r\n======\r\n+ fix bug with '.' in ALT field (caused message about incorrect number of alts in some cases. thanks Batsal for reporting)\r\n+ slivar compound-hets: fix bug with parents specified in ped file but absent from VCF (#79)\r\n+ slivar compound-hets: add \"intergenic_region\" to list of impacts that are skipped by default\r\n+ add SLIVAR_NO_REPORT_ALL to prevent reporting variants for familys with no affected samples\r\n+ fix bug when creating huge zip files with make-gnotate (#86)\r\n+ **NOTE**: change default min depth in slivar-functions.js to 6. (was 0)\r\n+ don't hard-code tmp directory to /tmp (use $TMPDIR)\r\n+ [compound-hets] dont fail if no usable variants were found, just issue warning.\r\n  this can happen for small chroms or regions when slivar was parallelized.\r\n\r\n\r\n# Installation\r\n\r\nJust grab the [binary](https://github.com/brentp/slivar/releases/download/v0.2.2/slivar)\r\nYou can download it and use it without any other software. This is the recommended binary. \r\nwget, chmod +x and start analyzing. (but you'll likely want the javascript included in this repo and the gnotation files linked below)\r\nusers can also use slivar via docker at brentp/slivar:v0.2.2\r\nThe [pslivar binary](https://github.com/brentp/slivar/releases/download/v0.2.2/pslivar) allows running slivar expr commands in parallel\r\n\r\n\r\n##### gnotate annotation files\r\n\r\nthe gnotation files for fast annotation remain unchanged except for the addition of topmed.\r\nUsers can create their own gnotation files with `slivar make-gnotate`, but we provide:\r\n+ gnomad for hg37 with AF popmax, numhomalts (total and controls only) [here](https://s3.amazonaws.com/slivar/gnomad.hg37.zip)\r\n+ gnomad for hg38 with AF popmax, numhomalts (updated in release v0.1.2) [here](https://s3.amazonaws.com/slivar/gnomad.hg38.v2.zip)\r\n\r\n+ gnomad genomes (71,702 samples) for hg38 with AF popmax, numhomalts (updated in release v0.1.8) [here](https://slivar.s3.amazonaws.com/gnomad.hg38.genomes.v3.fix.zip)\r\n+ spliceai scores (maximum value of the 4 scores in spliceai) [here](https://s3.amazonaws.com/slivar/spliceai.hg37.zip)\r\n\r\n+ [topmed allele frequencies (via dbsnp)](https://slivar.s3.amazonaws.com/topmed.hg38.dbsnp.151.zip) these can be used with `INFO.topmed_af`. Useful when analyzing data in hg38 because [some variants in hg38 are not visible in GRCh37](https://twitter.com/brent_p/status/1139540523364917248)",
+        "html_url": "https://github.com/brentp/slivar/releases/tag/v0.2.2",
+        "name": "v0.2.2",
+        "release_id": 42859126,
+        "tag": "v0.2.2",
+        "tarball_url": "https://api.github.com/repos/brentp/slivar/tarball/v0.2.2",
+        "type": "Release",
+        "url": "https://api.github.com/repos/brentp/slivar/releases/42859126",
+        "value": "https://api.github.com/repos/brentp/slivar/releases/42859126",
+        "zipball_url": "https://api.github.com/repos/brentp/slivar/zipball/v0.2.2"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "brentp",
+          "type": "User"
+        },
+        "date_created": "2020-12-22T21:05:47Z",
+        "date_published": "2020-12-22T21:10:09Z",
+        "description": "v0.2.1\r\n======\r\n+ add `INFO.highest_impact_order` so user can do things like:\r\n  ```\r\n  --info \"INFO.highest_impact_order == ImpactOrder.missense\"\r\n  ```\r\n  to get only missense mutations. or\r\n\r\n  ```\r\n  --info \"INFO.highest_impact_order <= ImpactOrder.missense\"\r\n  ```\r\n  to get variants with an impact of missense or higher. (note that lower values have higher impact)\r\n+ `tsv`: bugfix!! previously, `slivar tsv` used a `< 0` check where it should hvae used `<= 0` so\r\n   candidates with a parental sample at index 0 in the samples of the vcf would have missing information\r\n   for depth, GQ, and AB. (#78 . Thanks @amwenger for finding the problem and its source).\r\n+ `expr`: always annotate variant and INFO even if no sample (or trio,group,fam) expressions are given so one can use slivar just to get the 'impactful' annotation.\r\n+ remove duplicates from default-order.txt\r\n\r\n# Installation\r\n\r\nJust grab the [binary](https://github.com/brentp/slivar/releases/download/v0.2.1/slivar)\r\nYou can download it and use it without any other software. This is the recommended binary. \r\nwget, chmod +x and start analyzing. (but you'll likely want the javascript included in this repo and the gnotation files linked below)\r\nusers can also use slivar via docker at brentp/slivar:v0.2.1\r\nThe [pslivar binary](https://github.com/brentp/slivar/releases/download/v0.2.1/pslivar) allows running slivar expr commands in parallel\r\n\r\n\r\n##### gnotate annotation files\r\n\r\nthe gnotation files for fast annotation remain unchanged except for the addition of topmed.\r\nUsers can create their own gnotation files with `slivar make-gnotate`, but we provide:\r\n+ gnomad for hg37 with AF popmax, numhomalts (total and controls only) [here](https://s3.amazonaws.com/slivar/gnomad.hg37.zip)\r\n+ gnomad for hg38 with AF popmax, numhomalts (updated in release v0.1.2) [here](https://s3.amazonaws.com/slivar/gnomad.hg38.v2.zip)\r\n\r\n+ gnomad genomes (71,702 samples) for hg38 with AF popmax, numhomalts (updated in release v0.1.8) [here](https://slivar.s3.amazonaws.com/gnomad.hg38.genomes.v3.fix.zip)\r\n+ spliceai scores (maximum value of the 4 scores in spliceai) [here](https://s3.amazonaws.com/slivar/spliceai.hg37.zip)\r\n\r\n+ [topmed allele frequencies (via dbsnp)](https://slivar.s3.amazonaws.com/topmed.hg38.dbsnp.151.zip) these can be used with `INFO.topmed_af`. Useful when analyzing data in hg38 because [some variants in hg38 are not visible in GRCh37](https://twitter.com/brent_p/status/1139540523364917248)",
+        "html_url": "https://github.com/brentp/slivar/releases/tag/v0.2.1",
+        "name": "tsv fix",
+        "release_id": 35633645,
+        "tag": "v0.2.1",
+        "tarball_url": "https://api.github.com/repos/brentp/slivar/tarball/v0.2.1",
+        "type": "Release",
+        "url": "https://api.github.com/repos/brentp/slivar/releases/35633645",
+        "value": "https://api.github.com/repos/brentp/slivar/releases/35633645",
+        "zipball_url": "https://api.github.com/repos/brentp/slivar/zipball/v0.2.1"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "brentp",
+          "type": "User"
+        },
+        "date_created": "2020-11-05T17:18:53Z",
+        "date_published": "2020-11-05T17:28:54Z",
+        "description": "v0.2.0\r\n======\r\n+ clear values from expressions for family, group, and sample. was previously only done for\r\n  trios. so if you relied on something like:\r\n  ```\r\n  --group-expr \"expr1: ...\" \\\r\n  --group-expr \"expr2:('expr1' in INFO) && ...\"\\\r\n  ```\r\n  then the expr2 would still see expr1 in INFO even if the preceding expression did not pass but it\r\n  has passed for a previous variant. Thanks Amelia Wallace for finding and reporting a simple test-case.\r\n+ add /opt/slivar/slivar-functions.js to docker image (#75)\r\n\r\n# Installation\r\n\r\nJust grab the [binary](https://github.com/brentp/slivar/releases/download/v0.2.0/slivar)\r\nYou can download it and use it without any other software. This is the recommended binary. \r\nwget, chmod +x and start analyzing. (but you'll likely want the javascript included in this repo and the gnotation files linked below)\r\nusers can also use slivar via docker at brentp/slivar:v0.2.0\r\nThe [pslivar binary](https://github.com/brentp/slivar/releases/download/v0.2.0/pslivar) allows running slivar expr commands in parallel\r\n\r\n\r\n##### gnotate annotation files\r\n\r\nthe gnotation files for fast annotation remain unchanged except for the addition of topmed.\r\nUsers can create their own gnotation files with `slivar make-gnotate`, but we provide:\r\n+ gnomad for hg37 with AF popmax, numhomalts (total and controls only) [here](https://s3.amazonaws.com/slivar/gnomad.hg37.zip)\r\n+ gnomad for hg38 with AF popmax, numhomalts (updated in release v0.1.2) [here](https://s3.amazonaws.com/slivar/gnomad.hg38.v2.zip)\r\n\r\n+ gnomad genomes (71,702 samples) for hg38 with AF popmax, numhomalts (updated in release v0.1.8) [here](https://slivar.s3.amazonaws.com/gnomad.hg38.genomes.v3.fix.zip)\r\n+ spliceai scores (maximum value of the 4 scores in spliceai) [here](https://s3.amazonaws.com/slivar/spliceai.hg37.zip)\r\n\r\n+ [topmed allele frequencies (via dbsnp)](https://slivar.s3.amazonaws.com/topmed.hg38.dbsnp.151.zip) these can be used with `INFO.topmed_af`. Useful when analyzing data in hg38 because [some variants in hg38 are not visible in GRCh37](https://twitter.com/brent_p/status/1139540523364917248)",
+        "html_url": "https://github.com/brentp/slivar/releases/tag/v0.2.0",
+        "name": "minor bugfix",
+        "release_id": 33517188,
+        "tag": "v0.2.0",
+        "tarball_url": "https://api.github.com/repos/brentp/slivar/tarball/v0.2.0",
+        "type": "Release",
+        "url": "https://api.github.com/repos/brentp/slivar/releases/33517188",
+        "value": "https://api.github.com/repos/brentp/slivar/releases/33517188",
+        "zipball_url": "https://api.github.com/repos/brentp/slivar/zipball/v0.2.0"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "brentp",
+          "type": "User"
+        },
+        "date_created": "2020-10-14T16:14:33Z",
+        "date_published": "2020-10-14T19:10:39Z",
+        "description": "v0.1.13\r\n=======\r\n+ fix bug with VCFs with >256 info fields (#74). Thanks @liserjrqlxue for making a great test-case.\r\n\r\n# Installation\r\n\r\nJust grab the [binary](https://github.com/brentp/slivar/releases/download/v0.1.13/slivar)\r\nYou can download it and use it without any other software. This is the recommended binary. \r\nwget, chmod +x and start analyzing. (but you'll likely want the javascript included in this repo and the gnotation files linked below)\r\nusers can also use slivar via docker at brentp/slivar:v0.1.13\r\n\r\nThe [pslivar binary](https://github.com/brentp/slivar/releases/download/v0.1.13/pslivar) allows running slivar expr commands in parallel\r\n\r\n\r\n##### gnotate annotation files\r\n\r\nthe gnotation files for fast annotation remain unchanged except for the addition of topmed.\r\nUsers can create their own gnotation files with `slivar make-gnotate`, but we provide:\r\n+ gnomad for hg37 with AF popmax, numhomalts (total and controls only) [here](https://s3.amazonaws.com/slivar/gnomad.hg37.zip)\r\n+ gnomad for hg38 with AF popmax, numhomalts (updated in release v0.1.2) [here](https://s3.amazonaws.com/slivar/gnomad.hg38.v2.zip)\r\n\r\n+ gnomad genomes (71,702 samples) for hg38 with AF popmax, numhomalts (updated in release v0.1.8) [here](https://slivar.s3.amazonaws.com/gnomad.hg38.genomes.v3.fix.zip)\r\n+ spliceai scores (maximum value of the 4 scores in spliceai) [here](https://s3.amazonaws.com/slivar/spliceai.hg37.zip)\r\n\r\n+ [topmed allele frequencies (via dbsnp)](https://slivar.s3.amazonaws.com/topmed.hg38.dbsnp.151.zip) these can be used with `INFO.topmed_af`. Useful when analyzing data in hg38 because [some variants in hg38 are not visible in GRCh37](https://twitter.com/brent_p/status/1139540523364917248)",
+        "html_url": "https://github.com/brentp/slivar/releases/tag/v0.1.13",
+        "name": "bugfix for vcfs with >256 info fields",
+        "release_id": 32573545,
+        "tag": "v0.1.13",
+        "tarball_url": "https://api.github.com/repos/brentp/slivar/tarball/v0.1.13",
+        "type": "Release",
+        "url": "https://api.github.com/repos/brentp/slivar/releases/32573545",
+        "value": "https://api.github.com/repos/brentp/slivar/releases/32573545",
+        "zipball_url": "https://api.github.com/repos/brentp/slivar/zipball/v0.1.13"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "brentp",
+          "type": "User"
+        },
+        "date_created": "2020-08-17T22:03:57Z",
+        "date_published": "2020-08-21T16:21:35Z",
+        "description": "This adds small improvements except for large bug-fix for compound-hets for families with multiple affected kids. Previously, a shared compound-het would only be reported for one of the kids. This now fixed. See below for full changelog.\r\n\r\nv0.1.12\r\n=======\r\n+ slivar expr: handle ploidy > 2 (updated hts-nim) (#55 thanks to @markw3lsh for reporting and providing a test-case)\r\n+ slivar: optionally support strings in format (sample) fields. default is to ignore these for performance reasons, but users can set the environment variable `SLIVAR_FORMAT_STRINGS` to anything to force `slivar` to populate the javascript objects with any strings in the VCF. e.g. `SLIVAR_FORMAT_STRINGS=1 slivar expr ...` and use `unset SLIVAR_FORMAT_STRINGS` to remove. (#37)\r\n+ slivar compound-hets: **fix bug with 2 affect sibs sharing same compound-het previously only 1 sib would be reported**\r\n\r\n# Installation\r\n\r\nJust grab the [binary](https://github.com/brentp/slivar/releases/download/v0.1.12/slivar)\r\nYou can download it and use it without any other software. This is the recommended binary. \r\nwget, chmod +x and start analyzing. (but you'll likely want the javascript included in this repo and the gnotation files linked below)\r\nusers can also use slivar via docker at brentp/slivar:v0.1.12\r\n\r\nThe [pslivar binary](https://github.com/brentp/slivar/releases/download/v0.1.11/pslivar) allows running slivar expr commands in parallel\r\n\r\n\r\n##### gnotate annotation files\r\n\r\nthe gnotation files for fast annotation remain unchanged except for the addition of topmed.\r\nUsers can create their own gnotation files with `slivar make-gnotate`, but we provide:\r\n+ gnomad for hg37 with AF popmax, numhomalts (total and controls only) [here](https://s3.amazonaws.com/slivar/gnomad.hg37.zip)\r\n+ gnomad for hg38 with AF popmax, numhomalts (updated in release v0.1.2) [here](https://s3.amazonaws.com/slivar/gnomad.hg38.v2.zip)\r\n\r\n+ gnomad genomes (71,702 samples) for hg38 with AF popmax, numhomalts (updated in release v0.1.8) [here](https://slivar.s3.amazonaws.com/gnomad.hg38.genomes.v3.fix.zip)\r\n+ spliceai scores (maximum value of the 4 scores in spliceai) [here](https://s3.amazonaws.com/slivar/spliceai.hg37.zip)\r\n\r\n+ [topmed allele frequencies (via dbsnp)](https://slivar.s3.amazonaws.com/topmed.hg38.dbsnp.151.zip) these can be used with `INFO.topmed_af`. Useful when analyzing data in hg38 because [some variants in hg38 are not visible in GRCh37](https://twitter.com/brent_p/status/1139540523364917248)",
+        "html_url": "https://github.com/brentp/slivar/releases/tag/v0.1.12",
+        "name": "features, bugfixes, compound-het fixes",
+        "release_id": 29988590,
+        "tag": "v0.1.12",
+        "tarball_url": "https://api.github.com/repos/brentp/slivar/tarball/v0.1.12",
+        "type": "Release",
+        "url": "https://api.github.com/repos/brentp/slivar/releases/29988590",
+        "value": "https://api.github.com/repos/brentp/slivar/releases/29988590",
+        "zipball_url": "https://api.github.com/repos/brentp/slivar/zipball/v0.1.12"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "brentp",
+          "type": "User"
+        },
+        "date_created": "2020-03-03T22:18:36Z",
+        "date_published": "2020-03-03T22:32:24Z",
+        "description": "This release is the first where pslivar (parallel slivar) is well tested. It handles running slivar expr in parallel (by genomic region) see [wiki page](https://github.com/brentp/slivar/wiki/parallel-slivar) for more detail.\r\n\r\nThis also adds `INFO.genic` for VCFs that have been annotated with VEP, snpEff, or bcftools. This complements `INFO.impactful`, but mainly adds `synonymous` variants to consideration. See [the wiki](https://github.com/brentp/slivar/wiki/impactful) for more detail.\r\n\r\nFull changes below:\r\nv0.1.11\r\n=======\r\n+ gnotate: ~10-20% speed improvement by inlining cmp in binarysearch\r\n+ slivar expr: fix counts in summary table when some families in the cohort have no affected samples\r\n+ slivar tsv: improve readability when 1 or both parents are missing\r\n+ slivar tsv: fix comma separation with 1 or both parents missing (thanks @brwnj for reporting)\r\n+ slivar ddc: when looking at all chromosomes, skip X, Y\r\n+ slivar expr: add --exclude option which takes a bed file of exclude regions\r\n+ slivar compound-hets: default will now output compound-het pairs that include synonymous variants \r\n+ pslivar: fix tsv output from pslivar (which allows running slivar in parallel). more info [here](https://github.com/brentp/slivar/wiki/parallel-slivar)\r\n+ add `INFO.genic` boolean to complement `INFO.impactful`. By default this includes all impacts included by `impactful` along with\r\n  synonymous and other exonic, but non-protein-altering variants (but does not include `intronic`. (more info [here](https://github.com/brentp/slivar/wiki/impactful)\r\n\r\n\r\n# Installation\r\n\r\nJust grab the [binary](https://github.com/brentp/slivar/releases/download/v0.1.11/slivar)\r\nYou can download it and use it without any other software. This is the recommended binary. \r\nwget, chmod +x and start analyzing. (but you'll likely want the javascript included in this repo and the gnotation files linked below)\r\nusers can also use slivar via docker at brentp/slivar:v0.1.11\r\n\r\nThe [pslivar binary](https://github.com/brentp/slivar/releases/download/v0.1.11/pslivar) allows running slivar expr commands in parallel\r\n\r\n\r\n##### gnotate annotation files\r\n\r\nthe gnotation files for fast annotation remain unchanged except for the addition of topmed.\r\nUsers can create their own gnotation files with `slivar make-gnotate`, but we provide:\r\n+ gnomad for hg37 with AF popmax, numhomalts (total and controls only) [here](https://s3.amazonaws.com/slivar/gnomad.hg37.zip)\r\n+ gnomad for hg38 with AF popmax, numhomalts (updated in release v0.1.2) [here](https://s3.amazonaws.com/slivar/gnomad.hg38.v2.zip)\r\n\r\n+ gnomad genomes (71,702 samples) for hg38 with AF popmax, numhomalts (updated in release v0.1.8) [here](https://slivar.s3.amazonaws.com/gnomad.hg38.genomes.v3.fix.zip)\r\n+ spliceai scores (maximum value of the 4 scores in spliceai) [here](https://s3.amazonaws.com/slivar/spliceai.hg37.zip)\r\n\r\n+ [topmed allele frequencies (via dbsnp)](https://slivar.s3.amazonaws.com/topmed.hg38.dbsnp.151.zip) these can be used with `INFO.topmed_af`. Useful when analyzing data in hg38 because [some variants in hg38 are not visible in GRCh37](https://twitter.com/brent_p/status/1139540523364917248)",
+        "html_url": "https://github.com/brentp/slivar/releases/tag/v0.1.11",
+        "name": "parallel slivar and INFO.genic",
+        "release_id": 24189908,
+        "tag": "v0.1.11",
+        "tarball_url": "https://api.github.com/repos/brentp/slivar/tarball/v0.1.11",
+        "type": "Release",
+        "url": "https://api.github.com/repos/brentp/slivar/releases/24189908",
+        "value": "https://api.github.com/repos/brentp/slivar/releases/24189908",
+        "zipball_url": "https://api.github.com/repos/brentp/slivar/zipball/v0.1.11"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "brentp",
+          "type": "User"
+        },
+        "date_created": "2020-01-14T17:23:55Z",
+        "date_published": "2020-01-14T17:33:11Z",
+        "description": "v0.1.10\r\n=======\r\n+ [slivar ddc] fix bug when selecting sample filters.\r\n+ [slivar ddc] UI fix: remove button when [x] is clicked.\r\n\r\n# Installation\r\n\r\nJust grab the [binary](https://github.com/brentp/slivar/releases/download/v0.1.10/slivar)\r\nYou can download it and use it without any other software. This is the recommended binary. \r\nwget, chmod +x and start analyzing.\r\nusers can also use slivar via docker at brentp/slivar:v0.1.10\r\n\r\n##### gnotate annotation files\r\n\r\nthe gnotation files for fast annotation remain unchanged except for the addition of topmed.\r\nUsers can create their own gnotation files with `slivar make-gnotate`, but we provide:\r\n+ gnomad for hg37 with AF popmax, numhomalts (total and controls only) [here](https://s3.amazonaws.com/slivar/gnomad.hg37.zip)\r\n+ gnomad for hg38 with AF popmax, numhomalts (updated in release v0.1.2) [here](https://s3.amazonaws.com/slivar/gnomad.hg38.v2.zip)\r\n\r\n+ gnomad genomes (71,702 samples) for hg38 with AF popmax, numhomalts (updated in release v0.1.8) [here](https://slivar.s3.amazonaws.com/gnomad.hg38.genomes.v3.fix.zip)\r\n+ spliceai scores (maximum value of the 4 scores in spliceai) [here](https://s3.amazonaws.com/slivar/spliceai.hg37.zip)\r\n\r\n+ [topmed allele frequencies (via dbsnp)](https://slivar.s3.amazonaws.com/topmed.hg38.dbsnp.151.zip) these can be used with `INFO.topmed_af`. Useful when analyzing data in hg38 because [some variants in hg38 are not visible in GRCh37](https://twitter.com/brent_p/status/1139540523364917248)",
+        "html_url": "https://github.com/brentp/slivar/releases/tag/v0.1.10",
+        "name": "fixes for data-driven cutoffs.",
+        "release_id": 22833780,
+        "tag": "v0.1.10",
+        "tarball_url": "https://api.github.com/repos/brentp/slivar/tarball/v0.1.10",
+        "type": "Release",
+        "url": "https://api.github.com/repos/brentp/slivar/releases/22833780",
+        "value": "https://api.github.com/repos/brentp/slivar/releases/22833780",
+        "zipball_url": "https://api.github.com/repos/brentp/slivar/zipball/v0.1.10"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "brentp",
+          "type": "User"
+        },
+        "date_created": "2020-01-10T17:24:52Z",
+        "date_published": "2020-01-10T17:46:17Z",
+        "description": "v0.1.9\r\n======\r\n+ new command `slivar ddc`: https://github.com/brentp/slivar/wiki/data-driven-cutoffs\r\n+ fix for slivar compound-hets reporting orphaned variants in some cases (thanks Steve Boyden for reporting)\r\n+ update to htslib >= 1.10\r\n+ change recommended setup for rare disease to use family-based approach, rather than trios as it is more\r\n  flexible and now well-tested. (https://github.com/brentp/slivar/wiki/rare-disease#full-analysis-for-trios-with-unaffected-parents)\r\n+ add `VCF` object available in javascript which gets populated with `VCF.CSQ == [\"CONSEQUENCE\", \"CODONS\",\"AMINO_ACIDS\", \"GENE\", ...]` and VCF.ANN, VCF.BCSQ if any\r\n  or all of those annotations are available in the VCF (see #3)\r\n\r\n\r\n\r\n# Installation\r\n\r\nJust grab the [binary](https://github.com/brentp/slivar/releases/download/v0.1.9/slivar)\r\nYou can download it and use it without any other software. This is the recommended binary. \r\nwget, chmod +x and start analyzing.\r\nusers can also use slivar via docker at brentp/slivar:v0.1.9\r\n\r\n##### gnotate annotation files\r\n\r\nthe gnotation files for fast annotation remain unchanged except for the addition of topmed.\r\nUsers can create their own gnotation files with `slivar make-gnotate`, but we provide:\r\n+ gnomad for hg37 with AF popmax, numhomalts (total and controls only) [here](https://s3.amazonaws.com/slivar/gnomad.hg37.zip)\r\n+ gnomad for hg38 with AF popmax, numhomalts (updated in release v0.1.2) [here](https://s3.amazonaws.com/slivar/gnomad.hg38.v2.zip)\r\n\r\n+ gnomad genomes (71,702 samples) for hg38 with AF popmax, numhomalts (updated in release v0.1.8) [here](https://slivar.s3.amazonaws.com/gnomad.hg38.genomes.v3.fix.zip)\r\n+ spliceai scores (maximum value of the 4 scores in spliceai) [here](https://s3.amazonaws.com/slivar/spliceai.hg37.zip)\r\n\r\n+ [topmed allele frequencies (via dbsnp)](https://slivar.s3.amazonaws.com/topmed.hg38.dbsnp.151.zip) these can be used with `INFO.topmed_af`. Useful when analyzing data in hg38 because [some variants in hg38 are not visible in GRCh37](https://twitter.com/brent_p/status/1139540523364917248)",
+        "html_url": "https://github.com/brentp/slivar/releases/tag/v0.1.9",
+        "name": "data-driven-cutoffs and family expressions for rare disease",
+        "release_id": 22749978,
+        "tag": "v0.1.9",
+        "tarball_url": "https://api.github.com/repos/brentp/slivar/tarball/v0.1.9",
+        "type": "Release",
+        "url": "https://api.github.com/repos/brentp/slivar/releases/22749978",
+        "value": "https://api.github.com/repos/brentp/slivar/releases/22749978",
+        "zipball_url": "https://api.github.com/repos/brentp/slivar/zipball/v0.1.9"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "brentp",
+          "type": "User"
+        },
+        "date_created": "2019-11-20T21:38:47Z",
+        "date_published": "2019-11-20T21:53:31Z",
+        "description": "v0.1.8\r\n======\r\n+ fix bug when subsetting vcfs (ped file contained subset of samples in vcf). Thanks Matt for reporting.\r\n\r\n\r\n\r\n# Installation\r\n\r\nJust grab the [binary](https://github.com/brentp/slivar/releases/download/v0.1.8/slivar)\r\nYou can download it and use it without any other software. This is the recommended binary. \r\nwget, chmod +x and start analyzing.\r\nusers can also use slivar via docker at brentp/slivar:v0.1.8\r\n\r\n##### gnotate annotation files\r\n\r\nthe gnotation files for fast annotation remain unchanged except for the addition of topmed.\r\nUsers can create their own gnotation files with `slivar make-gnotate`, but we provide:\r\n+ gnomad for hg37 with AF popmax, numhomalts (total and controls only) [here](https://s3.amazonaws.com/slivar/gnomad.hg37.zip)\r\n+ gnomad for hg38 with AF popmax, numhomalts (updated in release v0.1.2) [here](https://s3.amazonaws.com/slivar/gnomad.hg38.v2.zip)\r\n\r\n+ gnomad genomes (71,702 samples) for hg38 with AF popmax, numhomalts (updated in release v0.1.8) [here](https://slivar.s3.amazonaws.com/gnomad.hg38.genomes.v3.fix.zip)\r\n+ spliceai scores (maximum value of the 4 scores in spliceai) [here](https://s3.amazonaws.com/slivar/spliceai.hg37.zip)\r\n\r\n+ [topmed allele frequencies (via dbsnp)](https://slivar.s3.amazonaws.com/topmed.hg38.dbsnp.151.zip) these can be used with `INFO.topmed_af`. Useful when analyzing data in hg38 because [some variants in hg38 are not visible in GRCh37](https://twitter.com/brent_p/status/1139540523364917248)",
+        "html_url": "https://github.com/brentp/slivar/releases/tag/v0.1.8",
+        "name": "bug-fix for subsetting vcfs",
+        "release_id": 21635400,
+        "tag": "v0.1.8",
+        "tarball_url": "https://api.github.com/repos/brentp/slivar/tarball/v0.1.8",
+        "type": "Release",
+        "url": "https://api.github.com/repos/brentp/slivar/releases/21635400",
+        "value": "https://api.github.com/repos/brentp/slivar/releases/21635400",
+        "zipball_url": "https://api.github.com/repos/brentp/slivar/zipball/v0.1.8"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "brentp",
+          "type": "User"
+        },
+        "date_created": "2019-11-04T18:27:51Z",
+        "date_published": "2019-11-05T16:32:33Z",
+        "description": "this release has small bugfixes and general usability experiments. see below for the list of changes and the links to the gnotate (zip) file for hg38 genomes from gnomad.\r\n\r\n# Installation\r\n\r\nJust grab the [binary](https://github.com/brentp/slivar/releases/download/v0.1.7/slivar)\r\nYou can download it and use it without any other software. This is the recommended binary. \r\nwget, chmod +x and start analyzing.\r\nusers can also use slivar via docker at brentp/slivar:v0.1.7\r\n\r\n# Full release notes:\r\n\r\n\r\nv0.1.7\r\n======\r\n+ slivar make-gnotate will error with warning if field is not a float or int\r\n+ compound-het provides a way to ignore some impacts (intron, non_coding, etc) and sets sane defaults. this removes\r\n  most candidates from WGS which were predominantly pairs of intronic or non-coding variants.\r\n+ compound-het: remove -f flag, this is now discovered by default\r\n+ only samples with parents in the vcf (not just ped) are counted as trios\r\n+ expose sample.phenotype attribute which is a string taken directly from the pedigree file\r\n+ given an error on an INFO expression, don't bail, just report and continue\r\n+ fix for VCFs without index AND without contigs in header (#44)\r\n+ support for file sizes > 4.2GB and support for gnotate files with chr prefix annotating query files without\r\n+ fix gnotate bug where some long alleles were not annotated\r\n\r\n\r\n##### gnotate annotation files\r\n\r\nthe gnotation files for fast annotation remain unchanged except for the addition of topmed.\r\nUsers can create their own gnotation files with `slivar make-gnotate`, but we provide:\r\n+ gnomad for hg37 with AF popmax, numhomalts (total and controls only) [here](https://s3.amazonaws.com/slivar/gnomad.hg37.zip)\r\n+ gnomad for hg38 with AF popmax, numhomalts (updated in release v0.1.2) [here](https://s3.amazonaws.com/slivar/gnomad.hg38.v2.zip)\r\n\r\n~~+ gnomad genomes (71,702 samples) for hg38 with AF popmax, numhomalts (updated in release v0.1.7) [here](https://slivar.s3.amazonaws.com/gnomad.hg38.genomes.v3.zip)~~\r\nThis zip file is broken. Will be updated soon.\r\n\r\n+ spliceai scores (maximum value of the 4 scores in spliceai) [here](https://s3.amazonaws.com/slivar/spliceai.hg37.zip)\r\n\r\n+ [topmed allele frequencies (via dbsnp)](https://slivar.s3.amazonaws.com/topmed.hg38.dbsnp.151.zip) these can be used with `INFO.topmed_af`. Useful when analyzing data in hg38 because [some variants in hg38 are not visible in GRCh37](https://twitter.com/brent_p/status/1139540523364917248)",
+        "html_url": "https://github.com/brentp/slivar/releases/tag/v0.1.7",
+        "name": "bug-fixes and gnomad genomes v3",
+        "release_id": 21199734,
+        "tag": "v0.1.7",
+        "tarball_url": "https://api.github.com/repos/brentp/slivar/tarball/v0.1.7",
+        "type": "Release",
+        "url": "https://api.github.com/repos/brentp/slivar/releases/21199734",
+        "value": "https://api.github.com/repos/brentp/slivar/releases/21199734",
+        "zipball_url": "https://api.github.com/repos/brentp/slivar/zipball/v0.1.7"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "brentp",
+          "type": "User"
+        },
+        "date_created": "2019-07-31T18:25:45Z",
+        "date_published": "2019-07-31T18:44:54Z",
+        "description": "until this release `slivar` was heavily focused on trio expressions. but this left quads and more ragged families as possible but more difficult. this release allows things like:\r\n```\r\n--family-expr 'aff_only:fam.every(function(s) { s.het == s.affected && s.hom_ref == !s.affected && s.GQ > 15 })'\r\n```\r\nto extract variants where all affecteds in a family are heterozygotes and all unaffecteds are homozygous reference (and all samples have genotype quality > 15).\r\n\r\nThis release also introduces `INFO.impactul`, which is extracted from the consequence field added by VEP, bcftools, or snpEff (or all of them if they are all present). This can be used to exclude, for example synonymous or non-coding or other variants as a way to quickly get candidate variants that are more likely functional. See [the wiki](https://github.com/brentp/slivar/wiki/impactful) for more details.\r\n\r\n\r\n# Installation\r\n\r\nJust grab the [binary](https://github.com/brentp/slivar/releases/download/v0.1.6/slivar)\r\nYou can download it and use it without any other software. This is the recommended binary. \r\nwget, chmod +x and start analyzing.\r\nusers can also use slivar via docker at brentp/slivar:v0.1.6\r\n\r\n# Full release notes:\r\n\r\nv0.1.6\r\n======\r\n+ add INFO.impactful (boolean) if CSQ/BCSQ/ANN is present. this value will be true of any of those annotation are high enough\r\n+ the `impactful` flag is automaticaly added to the output VCF for any variant passing through slivar and meeting the criteria (https://github.com/brentp/slivar/wiki/impactful)\r\n+ better checks for length of AD field\r\n+ fix for empty groups (#38)\r\n+ add --family-expr for family expressions like: \r\n    `fam.every(function(s) { s.het == s.affected && s.hom_ref == !s.affected && s.GQ > 5 })`\r\n+ slivar tsv now outputs a sortable column for highest-impact. it makes use of a default\r\n  list of impact orderings from: https://uswest.ensembl.org/info/genome/variation/prediction/predicted_data.html and\r\n  supplemented with any type seen in bcftools or snpEff.\r\n+ bug fix with gnotate (-g) when annotating a file with a empty chromsome followed by a non-empty (e.g. if `chr16_random` is mixed in with canonical chromosomes)\r\n\r\n",
+        "html_url": "https://github.com/brentp/slivar/releases/tag/v0.1.6",
+        "name": "family-based filtering and `impactful`",
+        "release_id": 18994548,
+        "tag": "v0.1.6",
+        "tarball_url": "https://api.github.com/repos/brentp/slivar/tarball/v0.1.6",
+        "type": "Release",
+        "url": "https://api.github.com/repos/brentp/slivar/releases/18994548",
+        "value": "https://api.github.com/repos/brentp/slivar/releases/18994548",
+        "zipball_url": "https://api.github.com/repos/brentp/slivar/zipball/v0.1.6"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "brentp",
+          "type": "User"
+        },
+        "date_created": "2019-07-02T16:23:37Z",
+        "date_published": "2019-07-02T18:02:40Z",
+        "description": "v0.1.5\r\n======\r\n+ !!MAJOR: fix bug with `hom_alt` alias for `alts == 2`. Since v0.1.3, `hom_alt` would not get set to false for samples, variants after being set once. coding using e.g.` kid.alts == 2` is not affected by this bug.\r\n+ update [wiki](https://github.com/brentp/slivar/wiki/rare-disease#full-analysis-for-trios-with-unaffected-parents) to simplify rare disease analysis.\r\n+ tune javascript in [my.js](https://raw.githubusercontent.com/brentp/slivar/master/js/my.js) and rare-disease expressions so that many analyses will run\r\n  better than twice as fast.\r\n+ [expr] add `--skip-non-variable` which further improves speed by not evaluating javascript for a trio if all members are hom-ref or unknown (but can the same variant will\r\n  still be evlauated for trios with at least 1 sample that has a variant at that site.\r\n+ [compound-het] major speed increase for large cohorts. \r\n+ [compound-het] remove -i/--index option as this is now discovered from the header for the CSQ/BCSQ field.\r\n\r\n\r\n##### binaries and docker\r\n\r\n+ [`slivar_static`](https://github.com/brentp/slivar/releases/download/v0.1.5/slivar_static) is a completely static binary. you can download it and use it without any other software. This is the recommended binary. You can wget, chmod +x and start analyzing.\r\n\r\nusers can also use slivar via docker at `brentp/slivar:v0.1.5`\r\n\r\n##### gnotate annotation files\r\n\r\nthe gnotation files for fast annotation remain unchanged except for the addition of topmed.\r\nUsers can create their own gnotation files with `slivar make-gnotate`, but we provide:\r\n+ gnomad for hg37 with AF popmax, numhomalts (total and controls only) [here](https://s3.amazonaws.com/slivar/gnomad.hg37.zip)\r\n+ gnomad for hg38 with AF popmax, numhomalts (updated in release v0.1.2) [here](https://s3.amazonaws.com/slivar/gnomad.hg38.v2.zip)\r\n+ spliceai scores (maximum value of the 4 scores in spliceai) [here](https://s3.amazonaws.com/slivar/spliceai.hg37.zip)\r\n\r\n+ [topmed allele frequencies (via dbsnp)](https://slivar.s3.amazonaws.com/topmed.hg38.dbsnp.151.zip) these can be used with `INFO.topmed_af`. Useful when analyzing data in hg38 because [some variants in hg38 are not visible in GRCh37](https://twitter.com/brent_p/status/1139540523364917248)",
+        "html_url": "https://github.com/brentp/slivar/releases/tag/v0.1.5",
+        "name": "compound-het optimization, speed improvements, bug-fixes",
+        "release_id": 18366918,
+        "tag": "v0.1.5",
+        "tarball_url": "https://api.github.com/repos/brentp/slivar/tarball/v0.1.5",
+        "type": "Release",
+        "url": "https://api.github.com/repos/brentp/slivar/releases/18366918",
+        "value": "https://api.github.com/repos/brentp/slivar/releases/18366918",
+        "zipball_url": "https://api.github.com/repos/brentp/slivar/zipball/v0.1.5"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "brentp",
+          "type": "User"
+        },
+        "date_created": "2019-06-24T16:00:20Z",
+        "date_published": "2019-06-24T16:14:10Z",
+        "description": "v0.1.4\r\n======\r\n+ better error messages on bad VCF\r\n+ [tsv] add --csq-column to `slivar tsv` to allow extracting extra CSQ fields\r\n+ general usability improvements\r\n+ [compound-het]: support singleton (kid only) or duo's (kid and 1 parent) to compound het. this will give many false positives because\r\n  the variants can't be phased, but the number can still be quite small given sufficient filtering on population allele frequency.\r\n  requires --allow-non-trios argument\r\n\r\n\r\n##### binaries and docker\r\n\r\n+ [`slivar_static`](https://github.com/brentp/slivar/releases/download/v0.1.4/slivar_static) is a completely static binary. you can download it and use it without any other software. This is the recommended binary. You can wget, chmod +x and start analyzing.\r\n\r\nusers can also use slivar via docker at `brentp/slivar:v0.1.4`\r\n\r\n##### gnotate annotation files\r\n\r\nthe gnotation files for fast annotation remain unchanged except for the addition of topmed.\r\nUsers can create their own gnotation files with `slivar make-gnotate`, but we provide:\r\n+ gnomad for hg37 with AF popmax, numhomalts (total and controls only) [here](https://s3.amazonaws.com/slivar/gnomad.hg37.zip)\r\n+ gnomad for hg38 with AF popmax, numhomalts (updated in release v0.1.2) [here](https://s3.amazonaws.com/slivar/gnomad.hg38.v2.zip)\r\n+ spliceai scores (maximum value of the 4 scores in spliceai) [here](https://s3.amazonaws.com/slivar/spliceai.hg37.zip)\r\n\r\n+ [topmed allele frequencies (via dbsnp)](https://slivar.s3.amazonaws.com/topmed.hg38.dbsnp.151.zip) these can be used with `INFO.topmed_af`. Useful when analyzing data in hg38 because [some variants in hg38 are not visible in GRCh37](https://twitter.com/brent_p/status/1139540523364917248)",
+        "html_url": "https://github.com/brentp/slivar/releases/tag/v0.1.4",
+        "name": "compound-hets on non trios and error messages",
+        "release_id": 18186469,
+        "tag": "v0.1.4",
+        "tarball_url": "https://api.github.com/repos/brentp/slivar/tarball/v0.1.4",
+        "type": "Release",
+        "url": "https://api.github.com/repos/brentp/slivar/releases/18186469",
+        "value": "https://api.github.com/repos/brentp/slivar/releases/18186469",
+        "zipball_url": "https://api.github.com/repos/brentp/slivar/zipball/v0.1.4"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "brentp",
+          "type": "User"
+        },
+        "date_created": "2019-05-30T14:48:54Z",
+        "date_published": "2019-05-30T15:03:23Z",
+        "description": "In previous versions, there was a `slivar gnotate` sub-command. This has now been enveloped into `slivar expr` so a user can specifiy, e.g. `slivar expr -g gnomad.hg37.zip -i \"INFO.gnomad_popmax_af < 0.001\" $vcf` (and of course slivar expr still supports `--sample-expr`, `--trio`, and --group exressions).\r\n\r\nv0.1.3\r\n======\r\n+ add new sample attributes `hom_ref`, `het`, `hom_alt`, `unknown` which are synonyms of `alts == 0`, `alts == 1`, `alts == 2`, `alts == -1` respectively.\r\n+ remove `slivar gnotate` sub-command. the same functionality can be had from `slivar expr` with `-g` and `--info`.\r\n\r\n##### binaries and annotation files\r\n\r\nThere are 2 binaries for this release. Both are 64bit linux binaries. \r\n+ [`slivar_static`](https://github.com/brentp/slivar/releases/download/v0.1.3/slivar_static) is a completely static binary. you can download it and use it without any other software. This is the recommended binary. You can wget, chmod +x and start analyzing.\r\n+ [`slivar_shared`](https://github.com/brentp/slivar/releases/download/v0.1.3/slivar_shared) depends on a libhts.so. it has the advantage of allowing access to files on s3 or https if that is needed.\r\n\r\nusers can also use slivar via docker at `brentp/slivar:v0.1.3`\r\n\r\nthe gnotation files for fast annotation remain unchanged.\r\nUsers can create their own gnotation files with `slivar make-gnotate`, but we provide:\r\n+ gnomad for hg37 with AF popmax, numhomalts (total and controls only) [here](https://s3.amazonaws.com/slivar/gnomad.hg37.zip)\r\n+ gnomad for hg38 with AF popmax, numhomalts (updated in release v0.1.2) [here](https://s3.amazonaws.com/slivar/gnomad.hg38.v2.zip)\r\n+ spliceai scores (maximum value of the 4 scores in spliceai) [here](https://s3.amazonaws.com/slivar/spliceai.hg37.zip)\r\n",
+        "html_url": "https://github.com/brentp/slivar/releases/tag/v0.1.3",
+        "name": "drop gnotate + add `hom_ref`/`het`/`hom_alt` boolean sample attributes",
+        "release_id": 17683138,
+        "tag": "v0.1.3",
+        "tarball_url": "https://api.github.com/repos/brentp/slivar/tarball/v0.1.3",
+        "type": "Release",
+        "url": "https://api.github.com/repos/brentp/slivar/releases/17683138",
+        "value": "https://api.github.com/repos/brentp/slivar/releases/17683138",
+        "zipball_url": "https://api.github.com/repos/brentp/slivar/zipball/v0.1.3"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "brentp",
+          "type": "User"
+        },
+        "date_created": "2019-05-16T20:53:14Z",
+        "date_published": "2019-05-16T22:22:03Z",
+        "description": "this release has a new command that allows a user to create a spreadsheet from a (slivar) filtered VCF.\r\nSee [the wiki](https://github.com/brentp/slivar/wiki/tsv:-creating-a-spreadsheet-from-a-filtered-VCF) for full details\r\n\r\nv0.1.2\r\n======\r\n+ new sub-command [`slivar tsv`](https://github.com/brentp/slivar/wiki/tsv:-creating-a-spreadsheet-from-a-filtered-VCF) to output a tab-separated value file from a filtered VCF for final processing\r\n  this command also allows adding columns based on the gene the variant is in, such as description of gene\r\n  function, pLI, etc.\r\n+ fix bug where slivar expr would segfault if labels were re-used (now quits with error message)\r\n+ better help in `slivar make-gnotate`\r\n+ improve and document output format for `duo-del` https://github.com/brentp/slivar/wiki/finding-deletions-in-parent-child-duos\r\n+ add a prelude function with hasSample(INFO, key, sample) to see if sample has been added to info field by previous filter.\r\n+ allow outputting summary table to file with `SLIVAR_SUMMARY_FILE` environment variable\r\n+ fix for make-gnotate with multiple files (still requires first file to contain all chromosomes)\r\n+ allow more kinds of pedigree files (#30)\r\n+ change format of slivar compound het field: adds an id that uniquely identifies the pair of variants.\r\n\r\n\r\n##### binaries and annotation files\r\n\r\nThere are 2 binaries for this release. Both are 64bit linux binaries. \r\n+ [`slivar_static`](https://github.com/brentp/slivar/releases/download/v0.1.2/slivar_static) is a completely static binary. you can download it and use it without any other software. This is the recommended binary. You can wget, chmod +x and start analyzing.\r\n+ [`slivar_shared`](https://github.com/brentp/slivar/releases/download/v0.1.2/slivar_shared) depends on a libhts.so. it has the advantage of allowing access to files on s3 or https if that is needed.\r\n\r\nusers can also use slivar via docker at `brentp/slivar:v0.1.2`\r\n\r\nthe gnotation files for fast annotation remain unchanged.\r\nUsers can create their own gnotation files with `slivar make-gnotate`, but we provide:\r\n+ gnomad for hg37 with AF popmax, numhomalts (total and controls only) [here](https://s3.amazonaws.com/slivar/gnomad.hg37.zip)\r\n+ gnomad for hg38 with AF popmax, numhomalts (updated in release v0.1.2) [here](https://s3.amazonaws.com/slivar/gnomad.hg38.v2.zip)\r\n+ spliceai scores (maximum value of the 4 scores in spliceai) [here](https://s3.amazonaws.com/slivar/spliceai.hg37.zip)\r\n",
+        "html_url": "https://github.com/brentp/slivar/releases/tag/v0.1.2",
+        "name": "general bugfixes and new tsv command",
+        "release_id": 17409390,
+        "tag": "v0.1.2",
+        "tarball_url": "https://api.github.com/repos/brentp/slivar/tarball/v0.1.2",
+        "type": "Release",
+        "url": "https://api.github.com/repos/brentp/slivar/releases/17409390",
+        "value": "https://api.github.com/repos/brentp/slivar/releases/17409390",
+        "zipball_url": "https://api.github.com/repos/brentp/slivar/zipball/v0.1.2"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "brentp",
+          "type": "User"
+        },
+        "date_created": "2019-04-18T16:02:59Z",
+        "date_published": "2019-04-18T16:16:02Z",
+        "description": "v0.1.1\r\n======\r\n+ better checks on missing parents/kids\r\n+ new sub-command `duo-del` that uses non-transmission in parent-child duos to find *de novo* structural deletions.\r\n  e.g. a cluster of sites where kid is 0/0 and parent is 1/1 would be a candidate.\r\n  see: https://github.com/brentp/slivar/wiki/finding-de-novo-deletions-in-parent-child-duos\r\n\r\nfor rare disease analysis: https://github.com/brentp/slivar/wiki/rare-disease#full-analysis-for-trios-with-unaffected-parents\r\n\r\n##### binaries and annotation files\r\n\r\nThere are 2 binaries for this release. Both are 64bit linux binaries. \r\n+ [`slivar_static`](https://github.com/brentp/slivar/releases/download/v0.1.1/slivar_static) is a completely static binary. you can download it and use it without any other software. This is the recommended binary. You can wget, chmod +x and start analyzing.\r\n+ [`slivar_shared`](https://github.com/brentp/slivar/releases/download/v0.1.1/slivar_shared) depends on a libhts.so. it has the advantage of allowing access to files on s3 or https if that is needed.\r\n\r\nusers can also use slivar via docker at `brentp/slivar:v0.1.1`\r\n\r\nthe gnotation files for fast annotation remain unchanged.\r\nUsers can create their own gnotation files with `slivar make-gnotate`, but we provide:\r\n+ gnomad for hg37 with AF popmax, numhomalts (total and controls only) [here](https://s3.amazonaws.com/slivar/gnomad.hg37.zip)\r\n+ gnomad for hg38 with AF popmax, numhomalts (total and controls only) [here](https://s3.amazonaws.com/slivar/gnomad.hg38.zip)\r\n+ spliceai scores (maximum value of the 4 scores in spliceai) [here](https://s3.amazonaws.com/slivar/spliceai.hg37.zip)",
+        "html_url": "https://github.com/brentp/slivar/releases/tag/v0.1.1",
+        "name": "find large de novo deletions in parent-child duos.",
+        "release_id": 16853634,
+        "tag": "v0.1.1",
+        "tarball_url": "https://api.github.com/repos/brentp/slivar/tarball/v0.1.1",
+        "type": "Release",
+        "url": "https://api.github.com/repos/brentp/slivar/releases/16853634",
+        "value": "https://api.github.com/repos/brentp/slivar/releases/16853634",
+        "zipball_url": "https://api.github.com/repos/brentp/slivar/zipball/v0.1.1"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "brentp",
+          "type": "User"
+        },
+        "date_created": "2019-04-10T01:31:57Z",
+        "date_published": "2019-04-10T01:46:50Z",
+        "description": "v0.1.0\r\n=====\r\n+ allow accessing INFO via `variant.INFO` as well as `INFO`\r\n+ better error message on missing gnotate file\r\n+ add --sample-expr to `slivar expr` sub-command to allow applying an expression to each sample:\r\n   `--sample-expr \"hi_quality:sample.DP > 10 && sample.GQ > 20\"`\r\n+ expose samples in javascript in `$S` object, e.g. `$S[\"sampleABC\"].DP > 10 && $S[\"sampleXYZ\"].DP > 10`\r\n\r\n##### binaries and annotation files\r\n\r\nThere are 2 binaries for this release. Both are 64bit linux binaries. \r\n+ [`slivar_static`](https://github.com/brentp/slivar/releases/download/v0.1.0/slivar_static) is a completely static binary. you can download it and use it without any other software. This is the recommended binary. You can wget, chmod +x and start analyzing.\r\n+ [`slivar_shared`](https://github.com/brentp/slivar/releases/download/v0.1.0/slivar_shared) depends on a libhts.so. it has the advantage of allowing access to files on s3 or https if that is needed.\r\n\r\nusers can also use slivar via docker at `brentp/slivar:v0.1.0`\r\n\r\nthe gnotation files for fast annotation remain unchanged.\r\nUsers can create their own gnotation files with `slivar make-gnotate`, but we provide:\r\n+ gnomad for hg37 with AF popmax, numhomalts (total and controls only) [here](https://s3.amazonaws.com/slivar/gnomad.hg37.zip)\r\n+ gnomad for hg38 with AF popmax, numhomalts (total and controls only) [here](https://s3.amazonaws.com/slivar/gnomad.hg38.zip)\r\n+ spliceai scores (maximum value of the 4 scores in spliceai) [here](https://s3.amazonaws.com/slivar/spliceai.hg37.zip)",
+        "html_url": "https://github.com/brentp/slivar/releases/tag/v0.1.0",
+        "name": "better error messages and --sample-exprs",
+        "release_id": 16660706,
+        "tag": "v0.1.0",
+        "tarball_url": "https://api.github.com/repos/brentp/slivar/tarball/v0.1.0",
+        "type": "Release",
+        "url": "https://api.github.com/repos/brentp/slivar/releases/16660706",
+        "value": "https://api.github.com/repos/brentp/slivar/releases/16660706",
+        "zipball_url": "https://api.github.com/repos/brentp/slivar/zipball/v0.1.0"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "brentp",
+          "type": "User"
+        },
+        "date_created": "2019-03-31T01:37:35Z",
+        "date_published": "2019-03-31T01:50:26Z",
+        "description": "this release provides a mechanism to use the previous filters (INFO fields with samples names) to tell comphets which samples pass for which variants.\r\n\r\nv0.0.9\r\n=====\r\n+ fix bug without --pass-only. slivar always behaved as if --pass-only was used.\r\n+ [compound-hets] fix for multi-sample VCFs with `--sample-field`\r\n\r\nThere are 2 binaries for this release. Both are 64bit linux binaries. \r\n+ [`slivar_static`](https://github.com/brentp/slivar/releases/download/v0.0.9/slivar_static) is a completely static binary. you can download it and use it without any other software.\r\n+ [`slivar_shared`](https://github.com/brentp/slivar/releases/download/v0.0.9/slivar_shared) depends on a libhts.so. it has the advantage of allowing access to files on s3 or https if that is needed.\r\n\r\nusers can also use slivar via docker at `brentp/slivar:v0.0.9`\r\n\r\nthe gnotation files for fast annotation remain unchanged.\r\nUsers can create their own gnotation files with `slivar make-gnotate`, but we provide:\r\n+ gnomad for hg37 with AF popmax, numhomalts (total and controls only) [here](https://s3.amazonaws.com/slivar/gnomad.hg37.zip)\r\n+ gnomad for hg38 with AF popmax, numhomalts (total and controls only) [here](https://s3.amazonaws.com/slivar/gnomad.hg38.zip)\r\n+ spliceai scores (maximum value of the 4 scores in spliceai) [here](https://s3.amazonaws.com/slivar/spliceai.hg37.zip)",
+        "html_url": "https://github.com/brentp/slivar/releases/tag/v0.0.9",
+        "name": "comphets fixes",
+        "release_id": 16456759,
+        "tag": "v0.0.9",
+        "tarball_url": "https://api.github.com/repos/brentp/slivar/tarball/v0.0.9",
+        "type": "Release",
+        "url": "https://api.github.com/repos/brentp/slivar/releases/16456759",
+        "value": "https://api.github.com/repos/brentp/slivar/releases/16456759",
+        "zipball_url": "https://api.github.com/repos/brentp/slivar/zipball/v0.0.9"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "brentp",
+          "type": "User"
+        },
+        "date_created": "2019-03-28T23:52:11Z",
+        "date_published": "2019-03-29T01:22:45Z",
+        "description": "this release is mostly bugfixes for edge-cases.\r\n\r\nv0.0.8\r\n======\r\n+ use random file names so concurrent slivar processes don't clobber files.\r\n+ more informative error on bad js expression\r\n+ fix for empty groups (#20)\r\n+ fix bug when later expressions depended on previous ones.\r\n\r\nThere are 2 binaries for this release. Both are 64bit linux binaries. \r\n+ [`slivar_static`](https://github.com/brentp/slivar/releases/download/v0.0.8/slivar_static) is a completely static binary. you can download it and use it without any other software.\r\n+ [`slivar_shared`](https://github.com/brentp/slivar/releases/download/v0.0.8/slivar_shared) depends on a libhts.so. it has the advantage of allowing access to files on s3 or https if that is needed.\r\n\r\nusers can also use slivar via docker at `brentp/slivar:v0.0.8`\r\n\r\nthe gnotation files for fast annotation remain unchanged.\r\nUsers can create their own gnotation files with `slivar make-gnotate`, but we provide:\r\n+ gnomad for hg37 with AF popmax, numhomalts (total and controls only) [here](https://s3.amazonaws.com/slivar/gnomad.hg37.zip)\r\n+ gnomad for hg38 with AF popmax, numhomalts (total and controls only) [here](https://s3.amazonaws.com/slivar/gnomad.hg38.zip)\r\n+ spliceai scores (maximum value of the 4 scores in spliceai) [here](https://s3.amazonaws.com/slivar/spliceai.hg37.zip)",
+        "html_url": "https://github.com/brentp/slivar/releases/tag/v0.0.8",
+        "name": "bugfix release",
+        "release_id": 16425351,
+        "tag": "v0.0.8",
+        "tarball_url": "https://api.github.com/repos/brentp/slivar/tarball/v0.0.8",
+        "type": "Release",
+        "url": "https://api.github.com/repos/brentp/slivar/releases/16425351",
+        "value": "https://api.github.com/repos/brentp/slivar/releases/16425351",
+        "zipball_url": "https://api.github.com/repos/brentp/slivar/zipball/v0.0.8"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "brentp",
+          "type": "User"
+        },
+        "date_created": "2019-03-18T15:02:11Z",
+        "date_published": "2019-03-18T15:29:00Z",
+        "description": "v0.0.7\r\n======\r\n+ [expr] allow --region to be a bed file\r\n+ [compound-hets] new command for finding compound-hets including where 1 side is a de novo (see: https://github.com/brentp/slivar/wiki/rare-disease#compound-heterozygotes)\r\n+ default to send output to stdout for streaming\r\n+ fix bug in some -g gnotate files\r\n\r\nThere are 2 binaries for this release. Both are 64bit linux binaries. \r\n+ [`slivar_static`](https://github.com/brentp/slivar/releases/download/v0.0.7/slivar_static) is a completely static binary. you can download it and use it without any other software.\r\n+ [`slivar_shared`](https://github.com/brentp/slivar/releases/download/v0.0.7/slivar_shared) depends on a libhts.so. it has the advantage of allowing access to files on s3 or https if that is needed.\r\n\r\nusers can also use slivar via docker at `brentp/slivar:v0.0.7`\r\n\r\nthe gnotation files for fast annotation remain unchanged.\r\nUsers can create their own gnotation files, but we provide:\r\n+ gnomad for hg37 with AF popmax, numhomalts (total and controls only [here](https://s3.amazonaws.com/slivar/gnomad.hg37.zip)\r\n+ gnomad for hg38 with AF popmax, numhomalts (total and controls only [here](https://s3.amazonaws.com/slivar/gnomad.hg38.zip)\r\n+ spliceai scores (maximum value of the 4 scores in spliceai) [here](https://s3.amazonaws.com/slivar/spliceai.hg37.zip)\r\n",
+        "html_url": "https://github.com/brentp/slivar/releases/tag/v0.0.7",
+        "name": "support for compound heterozygotes",
+        "release_id": 16181428,
+        "tag": "v0.0.7",
+        "tarball_url": "https://api.github.com/repos/brentp/slivar/tarball/v0.0.7",
+        "type": "Release",
+        "url": "https://api.github.com/repos/brentp/slivar/releases/16181428",
+        "value": "https://api.github.com/repos/brentp/slivar/releases/16181428",
+        "zipball_url": "https://api.github.com/repos/brentp/slivar/zipball/v0.0.7"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "brentp",
+          "type": "User"
+        },
+        "date_created": "2019-03-08T21:02:32Z",
+        "date_published": "2019-03-08T21:35:43Z",
+        "description": "this release is a huge set of changes that brings `slivar` to what will likely be it's full set of functionality.\r\n\r\nthere are substantial improvements to the docs, including several [wiki pages](https://github.com/brentp/slivar/wiki) describing components of slivar in detail.\r\n\r\none key feature of slivar is annotation (called gnotation). this release allows users to create their own gnotation\r\ndatabases that allow very fast annotation. For example [spliceai](https://www.sciencedirect.com/science/article/pii/S0092867418316295) provides a 2.2GB file of scores for variants in the exome. `slivar` can reduce this to 536MB and use it to annotate at ~120K variants/second.\r\n\r\nThe gnomad zip files reduce exome+genome from a total of ~500GB of data to ~2GB.\r\n\r\nUsers can create their own gnotation files, but we provide:\r\n+ gnomad for hg37 with AF popmax, numhomalts (total and controls only [here](https://s3.amazonaws.com/slivar/gnomad.hg37.zip)\r\n+ gnomad for hg38 with AF popmax, numhomalts (total and controls only [here](https://s3.amazonaws.com/slivar/gnomad.hg38.zip)\r\n+ spliceai scores (maximum value of the 4 scores in spliceai) [here](https://s3.amazonaws.com/slivar/spliceai.hg37.zip)\r\n\r\nThere are 2 binaries for this release. Both are 64bit linux binaries. \r\n+ [`slivar_static`](https://github.com/brentp/slivar/releases/download/v0.0.6/slivar_static) is a completely static binary.\r\n+ [`slivar_shared`](https://github.com/brentp/slivar/releases/download/v0.0.6/slivar_shared) depends on a libhts.so. it has the advantage of allowing access to files on s3 or https if that is needed.\r\n\r\nusers can also use slivar via docker at `brentp/slivar:v0.0.6`\r\n\r\nFeedback is appreciated.\r\n",
+        "html_url": "https://github.com/brentp/slivar/releases/tag/v0.0.6",
+        "name": "gnotation",
+        "release_id": 16005400,
+        "tag": "v0.0.6",
+        "tarball_url": "https://api.github.com/repos/brentp/slivar/tarball/v0.0.6",
+        "type": "Release",
+        "url": "https://api.github.com/repos/brentp/slivar/releases/16005400",
+        "value": "https://api.github.com/repos/brentp/slivar/releases/16005400",
+        "zipball_url": "https://api.github.com/repos/brentp/slivar/zipball/v0.0.6"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "somef_missing_categories": [
+    "citation",
+    "acknowledgement",
+    "run",
+    "download",
+    "requirements",
+    "contact",
+    "contributors",
+    "usage",
+    "faq",
+    "support",
+    "identifier",
+    "executable_example"
+  ],
+  "somef_provenance": {
+    "date": "2024-10-06 08:18:07",
+    "somef_schema_version": "1.0.0",
+    "somef_version": "0.9.5"
+  },
+  "stargazers_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 248
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "type": [
+    {
+      "confidence": 0.82,
+      "result": {
+        "type": "String",
+        "value": "commandline-application"
+      },
+      "technique": "software_type_heuristics"
+    }
+  ],
+  "workflows": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/brentp/slivar/master/paper/rev2q3.nf"
+      },
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/brentp/slivar/master/paper/slivar-anno.nf"
+      },
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/brentp/slivar/master/paper/slivar.nf"
+      },
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/brentp/slivar/master/paper/clinvar/clinvar.nf"
+      },
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/brentp/slivar/master/workflows/slivar-anno.nf"
+      },
+      "technique": "file_exploration"
+    }
+  ]
+}

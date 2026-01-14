@@ -1,0 +1,527 @@
+{
+  "code_repository": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/babelomics/impuSARS"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_created": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2021-03-09T14:38:10Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_updated": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2023-01-18T20:43:40Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "description": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "Software tool for the imputation of whole-genome SARS-CoV-2 sequences."
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 0.8782603580894233,
+      "result": {
+        "original_header": "impuSARS: SARS-CoV-2 whole-genome Imputation",
+        "type": "Text_excerpt",
+        "value": "This repository contains a novel tool called impuSARS to impute whole genome sequences from partially sequenced SARS-CoV-2 samples. Additionally, impuSARS provides the lineage associated to the imputed sequence.\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/babelomics/impuSARS/main/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.942376203537193,
+      "result": {
+        "original_header": "Docker mode",
+        "type": "Text_excerpt",
+        "value": "An all-in script is available for Unix users. The script will initialize the docker container. Imputation can be run by executing the following command:\n```\n./impuSARS --infile /path/to/<file_fasta_or_vcf> \\\n           --outprefix <output_prefix> \\\n           [--reference <reference_fasta>]\n           [--panel <panel_m3vcf>]\n           [--threads <num_threads>]           \n```\nwhere:\n * **<file_fasta_or_vcf>**: both FASTA format or VCF format input are accepted. For FASTA files, unknown regions in the genoma must be masked with Ns. For VCF files, genotypes from both known variants (1) and known reference (0) positions must be included.\n * **<output_prefix>**: Prefix given to output files. Output files are generated in the same directory as the input file.\n * **<reference_fasta>**: (Optional) FASTA file including reference sequence. If not included, SARS-CoV-2 reference will be considered (Default).\n * **<panel_m3vcf>**: (Optional) Trained reference panel in M3VCF format for imputation. By default, SARS-CoV-2 reference panel will be considered. Users can create their own reference panel by the [impuSARS_reference](#reference) command.\n * **<num_threads>**: (Optional) Number of CPUs used for imputation. Default: 1.\nExperienced (or other operating systems) users can also build this image by themselves (once the repository has been cloned) and run impuSARS directly from Docker as:\n```\n# Build image (only once)\ndocker build -t impusars .\n\n# Run docker\ndocker run -it --rm -v <input_path>:/data impusars impuSARS \\\n           --infile /data/<file_fasta_or_vcf>  \\\n           --outprefix <output_prefix> \\\n           [--reference <reference_fasta>]\n           [--panel <panel_m3vcf>]\n           [--threads <num_threads>]  \n```\nwhere arguments are detailed above and, additionally:\n * **<input_path>**: Directory where input file is located and output files will be generated. This directory will be mounted in the docker instance.\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/babelomics/impuSARS/main/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9333005857987561,
+      "result": {
+        "original_header": "<a name=\"output\">Example</a>",
+        "type": "Text_excerpt",
+        "value": "The [example SARS-CoV-2 sequence](example/sequence.fa) has been internally sequenced and is available under the ENA Accession [PRJEB43882](https://www.ebi.ac.uk/ena/browser/view/PRJEB43882) (see [Data](#data) for details). This sequence includes a high rate of missing regions (Ns). Therefore, impuSARS will return a completely imputed genome sequence (FASTA file) and its corresponding assigned lineage (CSV file).\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/babelomics/impuSARS/main/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9037037681725728,
+      "result": {
+        "original_header": "<a name=\"panel\">Panel creation</a>",
+        "type": "Text_excerpt",
+        "value": "impuSARS tool now includes another all-in script for users to create their own reference panel for SARS-CoV-2 or any other viral sequences to impute. Reference panels can be created as follows:\n```\n# Docker mode\n./impuSARS_reference --name <reference_prefix> \\\n                     --output_path <output_path> \\\n                     --input_fasta <input_fasta> \\\n                     --genome_fasta <reference_fasta> \\\n                     [--unknown_nn <unknown_nn>]\n                     [--threads <num_threads>] \n# Conda mode\nconda activate impusars\nimpuSARS_reference --name <reference_prefix> \\\n                     --output_path <output_path> \\\n                     --input_fasta <input_fasta> \\\n                     --genome_fasta <reference_fasta> \\\n                     [--unknown_nn <unknown_nn>]\n                     [--threads <num_threads>]\nconda deactivate\n```\nwhere:\n * **<output_path>**: Directory where the custom reference panel will be generated.\n * **<reference_prefix>**: prefix name given to the output reference panel without extension. Output will generate <reference_prefix>.m3vcf.gz reference panel file.\n * **<input_fasta>**: FASTA file including the alignment of all sequences used to train and generate the reference panel.\n * **<genome_fasta>**: FASTA file with the reference genome for the virus to impute. For example, [SARS-CoV-2 reference](docker_files/references/SARS_CoV_2_REFERENCE.v1.0.fasta).\n * **<unknown_nn>**: (Optional) Special character used in alignment for missing nucleotides, if any. Default: \"n\".\n * **<num_threads>**: (Optional) Number of CPUs used for imputation. Default: 1.\nAs before, experienced users can run the script directly using Docker as:\n```\ndocker run -it --rm -v <input_path>:/data -v <ref_path>:/ref -v <output_path>:/output impusars \\\n       impuSARS_reference --name <reference_prefix> \\\n                          --output_path /output/ \\\n                          --input_fasta /data/<input_fasta_basename> \\\n                          --genome_fasta /ref/<genome_fasta_basename> \\\n                          [--unknown_nn ${unknn}] \\\n                          [--threads ${threads}]\n```\nwhere **<input_path>, <ref_path>** refer to directories where <input_fasta> and <genome_fasta> are respectively located whereas **<input_fasta_basename>** and **<genome_fasta_basename>** are the basenames of those files (without path). \n \n"
+      },
+      "source": "https://raw.githubusercontent.com/babelomics/impuSARS/main/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9083351397672664,
+      "result": {
+        "original_header": "<a name=\"output\">Data</a>",
+        "type": "Text_excerpt",
+        "value": "* **Raw sequencing data and consensus sequences:**: [ENA Dataset Accession ID PRJEB43882](https://www.ebi.ac.uk/ena/browser/view/PRJEB43882).\n* **ImpuSARS imputed sequences and lineages:**: [Zenodo repository](https://doi.org/10.5281/zenodo.4616731). \nAlso, impuSARS uses the [hCoV-19/Wuhan/WIV04/2019](https://www.ncbi.nlm.nih.gov/nuccore/MN908947) sequence as the official reference sequence, which is available [here](docker_files/references/SARS_CoV_2_REFERENCE.v1.0.fasta). \nFinally, impuSARS was initially trained with a reference panel containing 239,301 sequences from [GISAID](https://www.gisaid.org/) (downloaded by January 7, 2021). Therefore, we would like to gratefully acknowledge all those laboratories and sequence contributors that made possible to create such a reference panel ([acknowledgment](acknowledgement/gisaid_hcov-19_acknowledgement_table_2021_04_27_10.pdf)). **Current reference version (v2.1) contains 899,447 sequences (updated by June 17th, 2021).**\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/babelomics/impuSARS/main/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.8806569457587993,
+      "result": {
+        "original_header": "<a name=\"dependencies\">Dependencies</a>",
+        "type": "Text_excerpt",
+        "value": "Since impuSARS is encapsulated in a Docker image to facilitate distribution, **only Docker installation is required**. Docker can be downloaded for any operating system at [Get Docker](https://docs.docker.com/get-docker/). In case **conda installation** is preferred, please note that two command packages are required: \n * [Conda](https://docs.conda.io/en/latest/) \n * **curl** or **wget** for downloading dependencies.\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/babelomics/impuSARS/main/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9438014807064399,
+      "result": {
+        "original_header": "<a name=\"versionhistory\">Version history</a>",
+        "type": "Text_excerpt",
+        "value": " * V1.0 (2021-03-13): First release\n * V2.0 (2021-06-17): Update reference panel (v2.1) and pangolin (v3.1.3).\n * V3.0 (2021-10-07): Update reference panel (v3.0) and pangolin (v3.1.14). Indels imputation is now included by the new reference.\n * V3.1 (2021-11-10): impuSARS is now supported from a conda environment.\n * V4.0 (2022-06-17): Update reference panel (v4.0) and pangolin (v4.0.6) \nFor additional version details, please go to [Releases](https://github.com/babelomics/impuSARS/releases).\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/babelomics/impuSARS/main/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "download_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/babelomics/impuSARS/releases"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 0
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/babelomics/impuSARS/forks"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "babelomics/impuSARS"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_title": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "impuSARS: SARS-CoV-2 whole-genome Imputation"
+      },
+      "source": "https://raw.githubusercontent.com/babelomics/impuSARS/main/README.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "has_build_file": [
+    {
+      "confidence": 1,
+      "result": {
+        "format": "dockerfile",
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/babelomics/impuSARS/main/Dockerfile"
+      },
+      "source": "https://raw.githubusercontent.com/babelomics/impuSARS/main/Dockerfile",
+      "technique": "file_exploration"
+    }
+  ],
+  "installation": [
+    {
+      "confidence": 1.0,
+      "result": {
+        "original_header": "<a name=\"installation\">Installation</a>",
+        "type": "Text_excerpt",
+        "value": "impuSARS has two installation modes: (i) Docker image or (ii) Conda environment. In the first case, all you need is having Docker installed. For conda environment, you will need having conda and curl/wget pre-installed (See [Dependencies](#dependencies) for details). In both cases, impuSARS can be easily installed by running the following command:\n```\ngit clone https://github.com/babelomics/impuSARS\ncd impuSARS\n./install_impuSARS --mode <docker/conda>\n```\nwhere `--mode` can take the values **docker** or **conda** depending on your preferences. Docker mode will automatically build the impuSARS docker image whereas Conda mode will create a impuSARS conda environment with all dependencies installed.\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/babelomics/impuSARS/main/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9999985010592675,
+      "result": {
+        "original_header": "Docker mode",
+        "type": "Text_excerpt",
+        "value": "An all-in script is available for Unix users. The script will initialize the docker container. Imputation can be run by executing the following command:\n```\n./impuSARS --infile /path/to/<file_fasta_or_vcf> \\\n           --outprefix <output_prefix> \\\n           [--reference <reference_fasta>]\n           [--panel <panel_m3vcf>]\n           [--threads <num_threads>]           \n```\nwhere:\n * **<file_fasta_or_vcf>**: both FASTA format or VCF format input are accepted. For FASTA files, unknown regions in the genoma must be masked with Ns. For VCF files, genotypes from both known variants (1) and known reference (0) positions must be included.\n * **<output_prefix>**: Prefix given to output files. Output files are generated in the same directory as the input file.\n * **<reference_fasta>**: (Optional) FASTA file including reference sequence. If not included, SARS-CoV-2 reference will be considered (Default).\n * **<panel_m3vcf>**: (Optional) Trained reference panel in M3VCF format for imputation. By default, SARS-CoV-2 reference panel will be considered. Users can create their own reference panel by the [impuSARS_reference](#reference) command.\n * **<num_threads>**: (Optional) Number of CPUs used for imputation. Default: 1.\nExperienced (or other operating systems) users can also build this image by themselves (once the repository has been cloned) and run impuSARS directly from Docker as:\n```\n# Build image (only once)\ndocker build -t impusars .\n\n# Run docker\ndocker run -it --rm -v <input_path>:/data impusars impuSARS \\\n           --infile /data/<file_fasta_or_vcf>  \\\n           --outprefix <output_prefix> \\\n           [--reference <reference_fasta>]\n           [--panel <panel_m3vcf>]\n           [--threads <num_threads>]  \n```\nwhere arguments are detailed above and, additionally:\n * **<input_path>**: Directory where input file is located and output files will be generated. This directory will be mounted in the docker instance.\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/babelomics/impuSARS/main/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.999999999878753,
+      "result": {
+        "original_header": "Conda mode",
+        "type": "Text_excerpt",
+        "value": "Similarly to docker, users prefering conda installation can run imputation from the conda environment as:\n```\nconda activate impusars\nimpuSARS --infile /path/to/<file_fasta_or_vcf> \\\n         --outprefix <output_prefix> \\\n         [--reference <reference_fasta>]\n         [--panel <panel_m3vcf>]\n         [--threads <num_threads>] \nconda deactivate          \n```\nwhere arguments are equivalent to those in Docker mode.\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/babelomics/impuSARS/main/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9999909451485223,
+      "result": {
+        "original_header": "<a name=\"output\">Example</a>",
+        "type": "Text_excerpt",
+        "value": "An easy example is provided for testing purposes. To test this example you can just run (after [Installation](#installation)):\n```\n# Docker mode\n./impuSARS --infile example/sequence.fa \\\n           --outprefix imputation \n# Conda mode\nconda activate impusars\nimpuSARS --infile example/sequence.fa \\\n         --outprefix imputation\nconda deactivate \n```\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/babelomics/impuSARS/main/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9983820308790341,
+      "result": {
+        "original_header": "<a name=\"panel\">Panel creation</a>",
+        "type": "Text_excerpt",
+        "value": "impuSARS tool now includes another all-in script for users to create their own reference panel for SARS-CoV-2 or any other viral sequences to impute. Reference panels can be created as follows:\n```\n# Docker mode\n./impuSARS_reference --name <reference_prefix> \\\n                     --output_path <output_path> \\\n                     --input_fasta <input_fasta> \\\n                     --genome_fasta <reference_fasta> \\\n                     [--unknown_nn <unknown_nn>]\n                     [--threads <num_threads>] \n# Conda mode\nconda activate impusars\nimpuSARS_reference --name <reference_prefix> \\\n                     --output_path <output_path> \\\n                     --input_fasta <input_fasta> \\\n                     --genome_fasta <reference_fasta> \\\n                     [--unknown_nn <unknown_nn>]\n                     [--threads <num_threads>]\nconda deactivate\n```\nwhere:\n * **<output_path>**: Directory where the custom reference panel will be generated.\n * **<reference_prefix>**: prefix name given to the output reference panel without extension. Output will generate <reference_prefix>.m3vcf.gz reference panel file.\n * **<input_fasta>**: FASTA file including the alignment of all sequences used to train and generate the reference panel.\n * **<genome_fasta>**: FASTA file with the reference genome for the virus to impute. For example, [SARS-CoV-2 reference](docker_files/references/SARS_CoV_2_REFERENCE.v1.0.fasta).\n * **<unknown_nn>**: (Optional) Special character used in alignment for missing nucleotides, if any. Default: \"n\".\n * **<num_threads>**: (Optional) Number of CPUs used for imputation. Default: 1.\nAs before, experienced users can run the script directly using Docker as:\n```\ndocker run -it --rm -v <input_path>:/data -v <ref_path>:/ref -v <output_path>:/output impusars \\\n       impuSARS_reference --name <reference_prefix> \\\n                          --output_path /output/ \\\n                          --input_fasta /data/<input_fasta_basename> \\\n                          --genome_fasta /ref/<genome_fasta_basename> \\\n                          [--unknown_nn ${unknn}] \\\n                          [--threads ${threads}]\n```\nwhere **<input_path>, <ref_path>** refer to directories where <input_fasta> and <genome_fasta> are respectively located whereas **<input_fasta_basename>** and **<genome_fasta_basename>** are the basenames of those files (without path). \n \n"
+      },
+      "source": "https://raw.githubusercontent.com/babelomics/impuSARS/main/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9494266253633766,
+      "result": {
+        "original_header": "<a name=\"dependencies\">Dependencies</a>",
+        "type": "Text_excerpt",
+        "value": " * [BCFTools](https://github.com/samtools/bcftools) (v1.11)\n * [Muscle](https://www.drive5.com/muscle/) (v3.8.31)\n * [Minimac4](https://github.com/statgen/Minimac4) (v1.0.2)\n * [Pangolin](https://github.com/cov-lineages/pangolin) (v3.1.3) \nSince impuSARS is encapsulated in a Docker image to facilitate distribution, **only Docker installation is required**. Docker can be downloaded for any operating system at [Get Docker](https://docs.docker.com/get-docker/). In case **conda installation** is preferred, please note that two command packages are required: \n * [Conda](https://docs.conda.io/en/latest/) \n * **curl** or **wget** for downloading dependencies.\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/babelomics/impuSARS/main/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9999653263637609,
+      "result": {
+        "original_header": "<a name=\"versionhistory\">Version history</a>",
+        "type": "Text_excerpt",
+        "value": " * V1.0 (2021-03-13): First release\n * V2.0 (2021-06-17): Update reference panel (v2.1) and pangolin (v3.1.3).\n * V3.0 (2021-10-07): Update reference panel (v3.0) and pangolin (v3.1.14). Indels imputation is now included by the new reference.\n * V3.1 (2021-11-10): impuSARS is now supported from a conda environment.\n * V4.0 (2022-06-17): Update reference panel (v4.0) and pangolin (v4.0.6) \n"
+      },
+      "source": "https://raw.githubusercontent.com/babelomics/impuSARS/main/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "invocation": [
+    {
+      "confidence": 0.8204044410107705,
+      "result": {
+        "original_header": "<a name=\"output\">Example</a>",
+        "type": "Text_excerpt",
+        "value": "An easy example is provided for testing purposes. To test this example you can just run (after [Installation](#installation)):\n```\n# Docker mode\n./impuSARS --infile example/sequence.fa \\\n           --outprefix imputation \n# Conda mode\nconda activate impusars\nimpuSARS --infile example/sequence.fa \\\n         --outprefix imputation\nconda deactivate \n```\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/babelomics/impuSARS/main/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "issue_tracker": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/babelomics/impuSARS/issues"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "keywords": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": ""
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "license": [
+    {
+      "confidence": 1,
+      "result": {
+        "name": "MIT License",
+        "spdx_id": "MIT",
+        "type": "License",
+        "url": "https://api.github.com/licenses/mit",
+        "value": "https://api.github.com/licenses/mit"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "File_dump",
+        "value": "MIT License\n\nCopyright (c) 2021 Francisco M Ortu\u00f1o Guzm\u00e1n\n\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.\n"
+      },
+      "source": "https://raw.githubusercontent.com/babelomics/impuSARS/main/LICENSE",
+      "technique": "file_exploration"
+    }
+  ],
+  "name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "impuSARS"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "owner": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Organization",
+        "value": "babelomics"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "programming_languages": [
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Shell",
+        "size": 16374,
+        "type": "Programming_language",
+        "value": "Shell"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Python",
+        "size": 6114,
+        "type": "Programming_language",
+        "value": "Python"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Dockerfile",
+        "size": 3187,
+        "type": "Programming_language",
+        "value": "Dockerfile"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "readme_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/babelomics/impuSARS/main/README.md"
+      },
+      "technique": "file_exploration"
+    }
+  ],
+  "releases": [
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "fortuno",
+          "type": "User"
+        },
+        "date_created": "2022-11-20T14:53:33Z",
+        "date_published": "2022-11-20T15:07:24Z",
+        "description": "New minor release to solve issues in #2 . The following updates have been included:\r\n\r\n- Updated base distribution to Ubuntu v20.04 in the Dockerfile.\r\n- Updated Pangolin to v4.1.3 (with pangolin-data v1.16)\r\n ",
+        "html_url": "https://github.com/babelomics/impuSARS/releases/tag/v4.1-ref.v4.0",
+        "name": "Update base distribution and pangolin",
+        "release_id": 83681499,
+        "tag": "v4.1-ref.v4.0",
+        "tarball_url": "https://api.github.com/repos/babelomics/impuSARS/tarball/v4.1-ref.v4.0",
+        "type": "Release",
+        "url": "https://api.github.com/repos/babelomics/impuSARS/releases/83681499",
+        "value": "https://api.github.com/repos/babelomics/impuSARS/releases/83681499",
+        "zipball_url": "https://api.github.com/repos/babelomics/impuSARS/zipball/v4.1-ref.v4.0"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "fortuno",
+          "type": "User"
+        },
+        "date_created": "2022-06-17T09:53:55Z",
+        "date_published": "2022-06-17T09:57:04Z",
+        "description": "New release containing latest pangolin and reference panel versions.\r\n\r\nimpuSARS:\r\n\r\n* Pangolin updated to v4.0.6 (takes UShER as principal method for lineage assignment)\r\n* Reference panel updated to ref-v4.0\r\n\r\nImputation Reference Panel (ref-v4.0):\r\n\r\n* Extended to 1,234,706 high coverage GISAID sequences (updated 25 May, 2022).\r\n* Includes main Omicron sublineage (BA.1, BA.2, BA.4, BA.5, etc)\r\n",
+        "html_url": "https://github.com/babelomics/impuSARS/releases/tag/v4.0-ref.v4.0",
+        "name": "impuSARS new pangolin version and reference panel v4.0",
+        "release_id": 69701937,
+        "tag": "v4.0-ref.v4.0",
+        "tarball_url": "https://api.github.com/repos/babelomics/impuSARS/tarball/v4.0-ref.v4.0",
+        "type": "Release",
+        "url": "https://api.github.com/repos/babelomics/impuSARS/releases/69701937",
+        "value": "https://api.github.com/repos/babelomics/impuSARS/releases/69701937",
+        "zipball_url": "https://api.github.com/repos/babelomics/impuSARS/zipball/v4.0-ref.v4.0"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "fortuno",
+          "type": "User"
+        },
+        "date_created": "2021-11-05T08:31:04Z",
+        "date_published": "2021-11-05T18:13:34Z",
+        "description": "Minor release\r\n\r\nimpuSARS:\r\n- Installation support with conda",
+        "html_url": "https://github.com/babelomics/impuSARS/releases/tag/v3.1-ref.v3.0",
+        "name": "impuSARS v3.1 with reference v3.0",
+        "release_id": 52806252,
+        "tag": "v3.1-ref.v3.0",
+        "tarball_url": "https://api.github.com/repos/babelomics/impuSARS/tarball/v3.1-ref.v3.0",
+        "type": "Release",
+        "url": "https://api.github.com/repos/babelomics/impuSARS/releases/52806252",
+        "value": "https://api.github.com/repos/babelomics/impuSARS/releases/52806252",
+        "zipball_url": "https://api.github.com/repos/babelomics/impuSARS/zipball/v3.1-ref.v3.0"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "fortuno",
+          "type": "User"
+        },
+        "date_created": "2021-10-24T12:05:18Z",
+        "date_published": "2021-10-24T12:08:24Z",
+        "description": "New release containing new pangolin and reference versions.\r\n\r\nimpuSARS:\r\n- Pangolin updated to v3.1.14\r\n- Reference updated to ref-v3.0\r\n\r\nImputation Reference:\r\n- Includes indels imputation in addition to SNPs.",
+        "html_url": "https://github.com/babelomics/impuSARS/releases/tag/v3.0-ref.v3.0",
+        "name": "impuSARS v3.0 with reference v3.0",
+        "release_id": 51929548,
+        "tag": "v3.0-ref.v3.0",
+        "tarball_url": "https://api.github.com/repos/babelomics/impuSARS/tarball/v3.0-ref.v3.0",
+        "type": "Release",
+        "url": "https://api.github.com/repos/babelomics/impuSARS/releases/51929548",
+        "value": "https://api.github.com/repos/babelomics/impuSARS/releases/51929548",
+        "zipball_url": "https://api.github.com/repos/babelomics/impuSARS/zipball/v3.0-ref.v3.0"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "fortuno",
+          "type": "User"
+        },
+        "date_created": "2021-09-23T11:33:47Z",
+        "date_published": "2021-10-07T08:01:20Z",
+        "description": "New release containing new pangolin and reference versions.\r\n\r\nimpuSARS:\r\n- Pangolin updated to v3.1.3\r\n- Reference updated to ref-v2.1\r\n\r\nimputation Reference:\r\n- Extended to 899,447 sequences (updated June 17, 2021).\r\n- Includes VOC like Delta and its corresponding sublineage (AY.4, AY.9, etc).\r\n",
+        "html_url": "https://github.com/babelomics/impuSARS/releases/tag/v2.0-ref.v2.1",
+        "name": "impuSARS v2.0 / reference v2.1",
+        "release_id": 50116314,
+        "tag": "v2.0-ref.v2.1",
+        "tarball_url": "https://api.github.com/repos/babelomics/impuSARS/tarball/v2.0-ref.v2.1",
+        "type": "Release",
+        "url": "https://api.github.com/repos/babelomics/impuSARS/releases/50116314",
+        "value": "https://api.github.com/repos/babelomics/impuSARS/releases/50116314",
+        "zipball_url": "https://api.github.com/repos/babelomics/impuSARS/zipball/v2.0-ref.v2.1"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "fortuno",
+          "type": "User"
+        },
+        "date_created": "2021-06-25T10:15:46Z",
+        "date_published": "2021-09-23T08:14:19Z",
+        "description": "Initial release.\r\n\r\nimpuSARS:\r\n- Initial functionality for imputing SARS-CoV-2 sequences.\r\n- FASTA and VCF files accepted as inputs.\r\n- Reference used for imputation: v1.0\r\n- Only SNPs imputation\r\n\r\nimputation reference:\r\n- Initial trained reference with 239,301 sequences extracted from GISAID (January 7th, 2021)\r\n- Only containing SNPs",
+        "html_url": "https://github.com/babelomics/impuSARS/releases/tag/v1.0-ref.v1.0",
+        "name": "impuSARS v1.0 with reference v1.0",
+        "release_id": 50112566,
+        "tag": "v1.0-ref.v1.0",
+        "tarball_url": "https://api.github.com/repos/babelomics/impuSARS/tarball/v1.0-ref.v1.0",
+        "type": "Release",
+        "url": "https://api.github.com/repos/babelomics/impuSARS/releases/50112566",
+        "value": "https://api.github.com/repos/babelomics/impuSARS/releases/50112566",
+        "zipball_url": "https://api.github.com/repos/babelomics/impuSARS/zipball/v1.0-ref.v1.0"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "somef_missing_categories": [
+    "citation",
+    "acknowledgement",
+    "run",
+    "download",
+    "requirements",
+    "contact",
+    "contributors",
+    "documentation",
+    "usage",
+    "faq",
+    "support",
+    "identifier",
+    "executable_example"
+  ],
+  "somef_provenance": {
+    "date": "2024-10-06 02:43:09",
+    "somef_schema_version": "1.0.0",
+    "somef_version": "0.9.5"
+  },
+  "stargazers_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 4
+      },
+      "technique": "GitHub_API"
+    }
+  ]
+}

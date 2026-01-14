@@ -1,0 +1,503 @@
+{
+  "citation": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "CLASSES",
+        "parent_header": [
+          "Use",
+          "API Reference",
+          "kmc_common.py"
+        ],
+        "type": "Text_excerpt",
+        "value": "__Event__(key, index, rate, bond)\n- key = str = name of the event that is taking place (e.g. '5o4', 'ox', etc.)\n- index = [int, int] = list of indices to the monomers that are affected by this event\n- rate = float = the rate of the event that is occurring (units consistent with time units in simulation)\n- bond = [int, int] = list of changes that need to be made to the adjacency matrix to perform the event\n\nThe class that is used to define events, which can be unpacked by the `run_kmc` function to execute the events \noccurring in the simulation.\n\n__Monomer__(type, index)\n- type = str, limited to S, G, or C = indicates the monomer type. This class can be extended to include more monomer \n  types.\n- index = int = a number that should be unique for all monomers in a simulation. This is returned as the hash value and \n  is used to track individual subunits in the adjacency matrix.\n\nThe class that contains information about each monomer in the simulation, most importantly tracking the index and the \nmonomer type.\n\n"
+      },
+      "source": "https://raw.githubusercontent.com/michaelorella/lignin-kmc/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "FUNCTIONS",
+        "parent_header": [
+          "Use",
+          "API Reference",
+          "kmc_functions.py"
+        ],
+        "type": "Text_excerpt",
+        "value": "__find_fragments__(adj)\n- adj = dok_matrix = NxN sparse matrix in the dictionary of keys format\n- return = [{}, {}, ..., {}], [int, int, ..., int] = list of sets of connected components within the adjacency matrix \nand a list of ints containing the number of number of branch points found in each fragment.\n\nIdentifies connected component subgraphs of the supergraph `adj`, which can be used to determine yields or identify \nwhether two monomers are connected.\n\n__fragment_size__(frags)\n- frags = [{},{},...,{}] = list of sets as returned from `find_fragments`\n- return = dict() = dictionary mapping all of the indices in frags to the length of the fragment they were contained in\n\nGets the sizes for all of the monomers in the simulation\n\n__quick_frag_size__(monomer)\n- monomer = Monomer = instance of monomer object that we want to check\n- return = str = 'monomer' or 'oligomer' \n\nUses the open positions attribute of the monomer object to determine whether there is anything connected to this monomer yet\n\n__break_bond_type__(adj, bond_type)\n- adj = scipy dok_matrix = adjacency matrix\n- bond_type = str = the bond that should be broken\n- return = dok_matrix = new adjacency matrix after bonds were broken\n\nModifies the adjacency matrix to reflect certain bonds specified by `bond_type` being broken. This is used primarily \nwhen we are evaluating the effect that reductive cleavage treatment would have on the simulated lignin. As of now, \nall bonds of a given type are removed without discrimination.\n\n__count_bonds__(adj)\n- adj = dok_matrix = adjacency matrix\n- return = OrderedDict = a dictionary containing all bond strings mapped to the number of times they occur within `adj`\n\nUsed for evaluating the frequency of different linkages within a simulated lignin\n\n__count_oligomer_yields__(adj)\n- adj = dok_matrix = adjacency matrix\n- return = OrderedDict, dict, dict, dict = maps the size of an oligomer to:\n     the number of occurrences within the adjacency matrix, \n     the total number of monomers involved in oligomers,\n     total number of branch points in oligomers of that length, and\n     the branching coefficient for the oligomers of that length\n\nUsed to count the yields of monomers, dimers, etc., when the simulation is complete.\n\n__analyze_adj_matrix__(adjacency)\n- adjacency = dok_matrix = adjacency matrix\n- break_co_bonds = boolean to specify whether C-O bonds should be removed to simulate reactive catalytic fractionation (RCF)\n- return = dict() = maps different measurable quantities to their values predicted from the simulation\n\nAggregates analysis of oligomer length and bond types, and these same properties post C-O bond cleavage.\n\n__update_events__(monomers, adj, last_event, events, rate_vec, rate_dict, max_mon=500)\n- state_dict = dict() = maps the index of the monomer to the object and the events that a change to this index would effect\n- adj = dok_matrix = adjacency matrix\n- last_event = Event = the previous event that occurred\n- event_dict = dict() = map the hash value of each event to the unique event - this is all of the possible events at the \n  current state after the method is run\n- rate_vec = dict() = map the hash value of each event to the rate of that event\n- rate_dict = dict() = the reaction rates for all possible reactions, in  monomer/second\n- max_mon = int = the maximum number of monomers in the simulation\n- return = None\n\nMutates the dictionary of events and rateVec that are passed to the function. These mutations are done so that the \nentire state doesn't need to be reconstructed on every iteration of the simulation. Once these changes are made, the \nevent choice is ready to be made and the chosen event can be performed.\n\n__do_event__(event, state, adj, sg_ratio=None, random_seed=None)\n- event = Event = the event that was chosen to be performed\n- state = dict() = the dictionary mapping monomer indices to the monomer object and events that would be changed by a \n  change to the monomer\n- adj = dok_matrix = adjacency matrix\n- sg_ratio = float needed if and only if: a) there are S and G and only S and G, and b) new monomers will be added\n- random_seed = int (positive val) needed if repeatable results are desired (for testing)\n\nUpdates the monomers and adjacency matrix to reflect the execution of the chosen event\n\n__run_kmc__(rate_dict, initial_state, initial_events, n_max=10, t_max=10, dynamics=False, random_seed=None)\n- rate_dict:  dict -- the rate of each of the possible events as a 3-d dictionary mapping bond type, monomers sizes,  \n                      and monomer types to a rate in units consistent with your final time definition\n- initial_state: dict  -- The dictionary mapping the index of each monomer to a dictionary with the monomer\n-      and the set of events that a change to this monomer would impact\n- initial_events: dictionary -- The dictionary mapping event hash values to those events\n- n_max: int   -- The maximum number of monomers in the simulation\n- t_max: float -- The final simulation time (units depend on units of rates; seconds if using the default rates)\n- dynamics: boolean -- if True, will keep values for every time step\n- random_seed: None or hashable value to aid testing\n- return: dict with the simulation times, adjacency matrix, and list of monomers at the end of the simulation\n\nRuns the Gillespie algorithm on the situation specified by the parameters. This is the workhorse of the code, where the \nmonomers are changed and linked to simulate the growth of lignin *in planta*.\n\n__generate_mol__(adj, node_list)\n- adj = dok_matrix = adjacency matrix\n- nodeList = [Monomer, Monomer, ..., Monomer] = list of monomers output from the simulation\n- return = str = molfile contents\n\nGenerates a file format as specified by [CTAN](https://ctan.org/) that represents the molecule that was just simulated \nby `run_kmc`. This file can then be used together with rdKit for further visualization or analysis, or any one of your \nfavorite chemical drawing software packages.\n"
+      },
+      "source": "https://raw.githubusercontent.com/michaelorella/lignin-kmc/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Credits",
+        "type": "Text_excerpt",
+        "value": "[Michael Orella](https://github.com/michaelorella) | [Terry Gani](https://github.com/terrygani) | \n[Heather Mayes](https://github.com/team-mayes)\n\n"
+      },
+      "source": "https://raw.githubusercontent.com/michaelorella/lignin-kmc/master/README.md",
+      "technique": "header_analysis"
+    }
+  ],
+  "code_repository": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/michaelorella/lignin-kmc"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "contributing_guidelines": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Contribute",
+        "type": "Text_excerpt",
+        "value": "Thank you for your interest in adding to our understanding of lignin polymerization!\n\nThe following guidelines can help you get started within this project. Use your best judgement and coding knowledge to \nhelp improve this project, and as always feel free to propose changes to the project or document in a pull request.\n"
+      },
+      "source": "https://raw.githubusercontent.com/michaelorella/lignin-kmc/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Issues",
+        "parent_header": [
+          "Contribute"
+        ],
+        "type": "Text_excerpt",
+        "value": "Before submitting your own issue, make sure the same one doesn't already exist by searching under \n[issues](https://github.com/michaelorella/lignin-kmc/issues). If you don't locate a similar issue already, feel free to \nopen a [new issue](https://github.com/michaelorella/lignin-kmc/issues/new). When writing your issue, consider the \nfollowing points and be as detailed as possible:\n\n1. Write step by step directions for replicating your issue\n2. Describe what you would expect to happen and what you actually get\n3. Provide screenshots of your dependency versions\n4. Include your operating system version and Python version\n"
+      },
+      "source": "https://raw.githubusercontent.com/michaelorella/lignin-kmc/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Pull Requests",
+        "parent_header": [
+          "Contribute"
+        ],
+        "type": "Text_excerpt",
+        "value": "Pull requests are always welcome for suggestions to improve either the code or usability. Before submitting the pull \nrequest, please ensure that your standalone code is working properly by both running the existing tests and adding \ntests of any new functionality (at least 90% coverage). To run the existing tests, from the main directory, run `pytest`. \nCurrently (2019-11-27), test coverage is 99% for create_lignin.py, 100% for kmc_common.py, and 94% for kmc_functions.py.\n"
+      },
+      "source": "https://raw.githubusercontent.com/michaelorella/lignin-kmc/master/README.md",
+      "technique": "header_analysis"
+    }
+  ],
+  "date_created": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2019-05-24T21:03:38Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_updated": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2023-11-05T04:02:01Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "description": [
+    {
+      "confidence": 0.9603760701983113,
+      "result": {
+        "original_header": "lignin-KMC",
+        "type": "Text_excerpt",
+        "value": "The official source for kinetic Monte Carlo polymerization packages developed to model lignin biosynthesis from first \nprinciple energetic calculations. Using this code, you can output either predicted properties (e.g. oligomer length \nand bond composition) from an ensemble of lignin structures, or the molfile for a single simulation. \nCurrently the package simulates lignin polymerization of guaiacyl (G) and syringyl (S) monolignols (in a specified \nratio), or from caffeoyl (C) monolignols (only). \nFurther details are available in the manuscript [\"Lignin-KMC: A Toolkit for Simulating Lignin \nBiosynthesis\"](https://pubs.acs.org/doi/abs/10.1021/acssuschemeng.9b03534). Please cite this paper if you use this \npackage. \n"
+      },
+      "source": "https://raw.githubusercontent.com/michaelorella/lignin-kmc/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9774453494926544,
+      "result": {
+        "original_header": "Motivation",
+        "type": "Text_excerpt",
+        "value": "Within the lignin community, there is a discrepancy in the understanding of how lignin polymerizes within the plant \ncell wall. This code was developed to help address some of these questions. In essence, the goal of this project was \nto use the first principles calculations of monomer/oligomer coupling kinetics to obtain quantitative lignin \nstructural predictions\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/michaelorella/lignin-kmc/master/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "download_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/michaelorella/lignin-kmc/releases"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "executable_example": [
+    {
+      "confidence": 1,
+      "result": {
+        "format": "jupyter_notebook",
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/michaelorella/lignin-kmc/master/LigninPolymerizationNotebook.ipynb"
+      },
+      "source": "https://raw.githubusercontent.com/michaelorella/lignin-kmc/master/LigninPolymerizationNotebook.ipynb",
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "format": "jupyter_notebook",
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/michaelorella/lignin-kmc/master/Example.ipynb"
+      },
+      "source": "https://raw.githubusercontent.com/michaelorella/lignin-kmc/master/Example.ipynb",
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "format": "jupyter_notebook",
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/michaelorella/lignin-kmc/master/Dynamics.ipynb"
+      },
+      "source": "https://raw.githubusercontent.com/michaelorella/lignin-kmc/master/Dynamics.ipynb",
+      "technique": "file_exploration"
+    }
+  ],
+  "forks_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 6
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/michaelorella/lignin-kmc/forks"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "michaelorella/lignin-kmc"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_title": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "lignin-KMC"
+      },
+      "source": "https://raw.githubusercontent.com/michaelorella/lignin-kmc/master/README.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "installation": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Installation",
+        "parent_header": [
+          "Use"
+        ],
+        "type": "Text_excerpt",
+        "value": "- For users with no Python experience, a helpful guide to installing Python via miniconda or anaconda can be found \n[here](https://conda.io/docs/user-guide/install/index.html). \n\n- Once Python has been installed, you will need install [RDKit](https://www.rdkit.org/docs/Install.html) using conda. \n  -  To install it in a new environment, run: `conda create -c rdkit -n lignin-kmc rdkit`, followed by \n     `conda activate lignin-kmc` \n  -  If you already have a conda environment created and want to add rdkit to that environment, instead run: \n     `conda install -c conda-forge rdkit`\n\n-  In either case, Conda will install any missing required dependencies when it does so, and thus this may take a few \n minutes.\n \n-  You can then install lignin-kmc using  pip (`pip install ligninkmc`). \nAdditional dependencies will again be installed as required.\n"
+      },
+      "source": "https://raw.githubusercontent.com/michaelorella/lignin-kmc/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 0.8432931356964156,
+      "result": {
+        "original_header": "lignin-KMC",
+        "type": "Text_excerpt",
+        "value": "Code Style: Python standard\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/michaelorella/lignin-kmc/master/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "issue_tracker": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/michaelorella/lignin-kmc/issues"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "keywords": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": ""
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "license": [
+    {
+      "confidence": 1,
+      "result": {
+        "name": "MIT License",
+        "spdx_id": "MIT",
+        "type": "License",
+        "url": "https://api.github.com/licenses/mit",
+        "value": "https://api.github.com/licenses/mit"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "File_dump",
+        "value": "MIT License\n\nCopyright (c) 2019 Michael Orella\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.\n"
+      },
+      "source": "https://raw.githubusercontent.com/michaelorella/lignin-kmc/master/LICENSE",
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "License",
+        "type": "Text_excerpt",
+        "value": "MIT \u00a9 Michael Orella, Heather Mayes\n"
+      },
+      "source": "https://raw.githubusercontent.com/michaelorella/lignin-kmc/master/README.md",
+      "technique": "header_analysis"
+    }
+  ],
+  "name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "lignin-kmc"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "owner": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "User",
+        "value": "michaelorella"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "programming_languages": [
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Jupyter Notebook",
+        "size": 679709,
+        "type": "Programming_language",
+        "value": "Jupyter Notebook"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Python",
+        "size": 296940,
+        "type": "Programming_language",
+        "value": "Python"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Tcl",
+        "size": 3097,
+        "type": "Programming_language",
+        "value": "Tcl"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "readme_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/michaelorella/lignin-kmc/master/README.md"
+      },
+      "technique": "file_exploration"
+    }
+  ],
+  "somef_missing_categories": [
+    "acknowledgement",
+    "run",
+    "download",
+    "requirements",
+    "contact",
+    "contributors",
+    "documentation",
+    "faq",
+    "support",
+    "identifier",
+    "has_build_file"
+  ],
+  "somef_provenance": {
+    "date": "2024-11-04 05:18:11",
+    "somef_schema_version": "1.0.0",
+    "somef_version": "0.9.5"
+  },
+  "stargazers_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 4
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "type": [
+    {
+      "confidence": 0.82,
+      "result": {
+        "type": "String",
+        "value": "commandline-application"
+      },
+      "technique": "software_type_heuristics"
+    }
+  ],
+  "usage": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Use",
+        "type": "Text_excerpt",
+        "value": "The following sections contain information on how to use lignin-KMC.\n"
+      },
+      "source": "https://raw.githubusercontent.com/michaelorella/lignin-kmc/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Framework",
+        "parent_header": [
+          "Use"
+        ],
+        "type": "Text_excerpt",
+        "value": "This project runs on Python \u22653.6 with the following packages installed:\n- rdKit (>= 2018.03.4.0; must be installed via conda; see below)\n- common-wrangler (common_wrangler >= 0.2.4)\n- SciPy\n- NumPy\n- MatPlotLib\n- JobLib\n"
+      },
+      "source": "https://raw.githubusercontent.com/michaelorella/lignin-kmc/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Command-Line Use",
+        "parent_header": [
+          "Use",
+          "Installation"
+        ],
+        "type": "Text_excerpt",
+        "value": "Lignin-KMC is populated with default variables that make it as easy to run as entering (on a terminal):\n\n`> create_lignin`\n\nThis will use all default values (see below) and output which will look something like:\n    \n    Running Lignin-KMC version 0.2.2. Please cite: https://pubs.acs.org/doi/abs/10.1021/acssuschemeng.9b03534\n    \n    Lignin KMC created 10 monomers, which formed:\n           1 oligomer(s) of chain length 10, with branching coefficient 0.2\n    composed of the following bond types and number:\n        BO4:    6     BB:    1     B5:    1     B1:    0    5O4:    0    AO4:    0     55:    1\n    \n    Breaking C-O bonds to simulate RCF results in:\n           4 monomer(s) (chain length 1)\n           3 dimer(s) (chain length 2)\n    with the following remaining bond types and number:\n        BO4:    0     BB:    1     B5:    1     B1:    0    5O4:    0    AO4:    0     55:    1\n    \n    SMILES representation: \n     COc1cc(C(O)C(CO)Oc2c(OC)cc(C3OCC4C(c5cc(OC)c(OC(CO)C(O)c6cc(OC)c(OC(CO)C(O)c7cc(OC)c([O])c(OC)c7)c(-c7cc(C(O)C(CO)Oc8c(OC)cc(C(O)C(CO)Oc9c(OC)cc(C%10Oc%11c(OC)cc(/C=C/CO)cc%11C%10CO)cc9OC)cc8OC)cc(OC)c7OC(CO)C(O)c7cc(OC)c([O])c(OC)c7)c6)c(OC)c5)OCC34)cc2OC)ccc1[O] \n\n\nYour output will differ as a pseudo-random number generator is used to model the stochastic nature of chemical reactions.\n\nThe default options (number of initial and final monomers, S:G ratio, etc.) can be changed either by the command line \noptions shown below, or by using a configuration file. These options can be viewed by entering the help command:\n\n `> create_lignin -h`\n \n    Running Lignin-KMC version 0.2.2. Please cite: https://pubs.acs.org/doi/abs/10.1021/acssuschemeng.9b03534\n     \n    usage: _jb_unittest_runner.py [-h] [-a ADD_RATES] [-b] [-c CONFIG]\n                                  [-d OUT_DIR] [-dy] [-f OUTPUT_FORMAT_LIST]\n                                  [-i INITIAL_NUM_MONOMERS] [-l LENGTH_SIMULATION]\n                                  [-m MAX_NUM_MONOMERS] [-n NUM_REPEATS]\n                                  [-o OUTPUT_BASENAME] [-p] [-r RANDOM_SEED]\n                                  [-s IMAGE_SIZE] [-sg SG_RATIOS]\n                                  [-t TEMPERATURE_IN_K] [-x] [--chain_id CHAIN_ID]\n                                  [--psf_fname PSF_FNAME]\n                                  [--toppar_dir TOPPAR_DIR]\n    \n    Create lignin chain(s) composed of 'S' (syringyl) and/or 'G' (guaiacol) monolignols, as described in:\n      Orella, M., Gani, T. Z. H., Vermaas, J. V., Stone, M. L., Anderson, E. M., Beckham, G. T., \n      Brushett, Fikile R., Roman-Leshkov, Y. (2019). Lignin-KMC: A Toolkit for Simulating Lignin Biosynthesis.\n      ACS Sustainable Chemistry & Engineering. https://doi.org/10.1021/acssuschemeng.9b03534. C-Lignin can be \n      modeled with the functions in this package, as shown in ipynb examples in our project package on github \n      (https://github.com/michaelorella/lignin-kmc/), but not currently from the command line. If this \n      functionality is desired, please start a new issue on the github.\n    \n      By default, the Gibbs free energy barriers from this reference will be used, as specified in Tables S1 and S2.\n      Alternately, the user may specify values, which should be specified as a dict of dict of dicts in a \n      specified configuration file (specified with '-c') using the 'e_barrier_in_kcal_mol' or 'e_barrier_in_j_particle'\n      parameters with corresponding units (kcal/mol or joules/particle, respectively), in a configuration file \n      (see '-c'). The format is (bond_type: monomer(s) involved: units involved: ea_vals), for example:\n          ea_dict = {oxidation: {'G': {monomer: 0.9, oligomer: 6.3}, 'S': {{{MONOMER}: 0.6, {OLIGOMER}: 2.2}}, ...}.\n      The default output is a SMILES string printed to standard out.\n    \n      All command-line options may alternatively be specified in a configuration file. Command-line (non-default) \n      selections will override configuration file specifications.\n    \n    optional arguments:\n      -h, --help            show this help message and exit\n      -a ADD_RATES, --add_rates ADD_RATES\n                            A comma-separated list of the rates of monomer addition to the system (in monomers/second), \n                            to be used when the 'max_num_monomers' ('-m' option) is larger than 'initial_num_monomers' \n                            ('-i' option), thus specifying monomer addition. The simulation will end when either there \n                            are no more possible reactions (including monomer addition) or when the 'length_simulation' \n                            ('-l' option) is reached, whichever comes first. Note: if there are spaces in the list of \n                            addition rates, the list must be enclosed in quotes to be read as a single string. The \n                            default list contains the single addition rate of 1.0 monomers/s.\n      -b, --break_co_bonds  Flag to output results from C-O bonds to simulate RCF results. The default is False.\n      -c CONFIG, --config CONFIG\n                            The location of the configuration file in the 'ini' format. This file can be used to \n                            overwrite default values such as for energies.\n      -d OUT_DIR, --out_dir OUT_DIR\n                            The directory where output files will be saved. The default is the current directory.\n      -dy, --dynamics_flag  Select this option if dynamics (results per timestep) are requested. If chosen, plots of \n                            monomers and oligomers vs timestep, and bond type percent vs timestep, will be saved. \n                            They will be named 'bond_dist_v_step_*_#.png' and 'mono_olig_v_step_*_#.png', where * \n                            represents the S:G ratio and # represents the addition rate. Note that this option \n                            significantly increases simulation time.\n      -f OUTPUT_FORMAT_LIST, --output_format_list OUTPUT_FORMAT_LIST\n                            The type(s) of output format to be saved. Provide as a space- or comma-separated list. \n                            Note: if the list has spaces, it must be enclosed in quotes, to be treated as a single \n                            string. The currently supported types are: 'json', 'png', 'smi', 'svg', 'tcl'. \n                            The 'json' option will save a json format of RDKit's 'mol' (molecule) object. The 'tcl' \n                            option will create a file for use with VMD to generate a psf file and 3D molecules, \n                            as described in LigninBuilder, https://github.com/jvermaas/LigninBuilder, \n                            https://pubs.acs.org/doi/abs/10.1021/acssuschemeng.8b05665. \n                            A base name for the saved files can be provided with the '-o' option. Otherwise, the \n                            base name will be 'lignin-kmc-out'.\n      -i INITIAL_NUM_MONOMERS, --initial_num_monomers INITIAL_NUM_MONOMERS\n                            The initial number of monomers to be included in the simulation. The default is 2.\n      -l LENGTH_SIMULATION, --length_simulation LENGTH_SIMULATION\n                            The length of simulation (simulation time) in seconds. The default is 3600 s.\n      -m MAX_NUM_MONOMERS, --max_num_monomers MAX_NUM_MONOMERS\n                            The maximum number of monomers to be studied. The default value is 10.\n      -n NUM_REPEATS, --num_repeats NUM_REPEATS\n                            The number of times each combination of sg_ratio and add_rate will be tested. The default is 1.\n      -o OUTPUT_BASENAME, --output_basename OUTPUT_BASENAME\n                            The base name for output file(s). If an extension is provided, it will determine \n                            the type of output. Currently supported output types are: \n                            'json', 'png', 'smi', 'svg', 'tcl'. Multiple output formats can be selected with the \n                            '-f' option. If the '-f' option is selected and no output base name provided, a default \n                            base name of 'lignin-kmc-out' will be used.\n      -p, --plot_bonds      Flag to produce plots of the percent of each bond type versus S:G ratio(s). One plot will \n                            be created per addition rate, named 'bond_dist_v_sg_#.png', where # represents \n                            the addition rate.\n      -r RANDOM_SEED, --random_seed RANDOM_SEED\n                            A positive integer to be used as a seed value for testing. The default is not to use a \n                            seed, to allow pseudorandom lignin creation.\n      -s IMAGE_SIZE, --image_size IMAGE_SIZE\n                            The output size of svg or png files in pixels. The default size is (1200, 300) pixels. \n                            To use a different size, provide two integers, separated by a space or a comma. \n                            Note: if the list of two numbers has any spaces in it, it must be enclosed in quotes.\n      -sg SG_RATIOS, --sg_ratios SG_RATIOS\n                            A comma-separated list of the S:G (guaiacol:syringyl) ratios to be tested. \n                            If there are spaces, the list must be enclosed in quotes to be read as a single string. \n                            The default list contains the single value 1.\n      -t TEMPERATURE_IN_K, --temperature_in_k TEMPERATURE_IN_K\n                            The temperature (in K) at which to model lignin biosynthesis. The default is 298.15 K.\n                            Note: this temperature must match the temperature at which the energy barriers were calculated. \n      -x, --no_smi          Flag to suppress determining the SMILES string for the output, which is created by default.\n      --chain_id CHAIN_ID   Option for use when generating a tcl script: the chainID to be used in generating a psf \n                            and/or pdb file from a tcl script (see LigninBuilder). This should be one character. If a \n                            longer ID is provided, it will be truncated to the first character. The default value is L.\n      --psf_fname PSF_FNAME\n                            Option for use when generating a tcl script: the file name for psf and pdb files that will \n                            be produced from running a tcl produced by this package (see LigninBuilder). The default \n                            value is lignin.\n      --toppar_dir TOPPAR_DIR\n                            Option for use when generating a tcl script: the directory name where VMD should look for \n                            the toppar file(s) when running the tcl file in VMD (see LigninBuilder). The default value \n                            is 'toppar/'.\n\n\nFor example, to use an S to G ratio of 2.5, 12 initial monomers, and up to 18 monomers, with the remaining variables \nleft as their default values, enter:\n\n `> create_lignin -sg 2.5 -i 12 -m 18`\n\n    Running Lignin-KMC version 0.2.2. Please cite: https://pubs.acs.org/doi/abs/10.1021/acssuschemeng.9b03534\n    \n    Lignin KMC created 18 monomers, which formed:\n           1 oligomer(s) of chain length 18, with branching coefficient 0.111\n    composed of the following bond types and number:\n        BO4:    8     BB:    4     B5:    2     B1:    0    5O4:    3    AO4:    0     55:    0\n    \n    Breaking C-O bonds to simulate RCF results in:\n           6 monomer(s) (chain length 1)\n           6 dimer(s) (chain length 2)\n    with the following remaining bond types and number:\n        BO4:    0     BB:    4     B5:    2     B1:    0    5O4:    0    AO4:    0     55:    0\n    \n    SMILES representation: \n     COc1cc(C(O)C(CO)Oc2c(OC)cc(C3OCC4C(c5cc(OC)c(Oc6cc(C7OCC8C(c9cc(OC)c(OC(CO)C(O)c%10cc(OC)c(OC(CO)C(O)c%11cc(OC)c%12c(c%11)C(CO)C(c%11cc(OC)c([O])c(OC)c%11)O%12)c(OC)c%10)c(Oc%10c(OC)cc(C%11OCC%12C(c%13cc(OC)c(OC(CO)C(O)c%14cc(OC)c%15c(c%14)C(CO)C(c%14cc(OC)c(OC(CO)C(O)c%16cc(OC)c(OC(CO)C(O)c%17cc(OC)c([O])c(Oc%18c(OC)cc(C(O)C(CO)Oc%19c(OC)cc(C%20OCC%21C(c%22cc(OC)c([O])c(OC)c%22)OCC%20%21)cc%19OC)cc%18OC)c%17)c(OC)c%16)c(OC)c%14)O%15)c(OC)c%13)OCC%11%12)cc%10OC)c9)OCC78)cc(OC)c6OC(CO)C(O)c6cc(OC)c([O])c(OC)c6)c(OC)c5)OCC34)cc2OC)cc(OC)c1[O] \n\nNote: a simulation may not reach the maximum number of monomers if there is insufficient simulation time. The \nsimulation stops when either the length_simulation is reached or there are no more possible reactions, whichever \nhappens first.\n"
+      },
+      "source": "https://raw.githubusercontent.com/michaelorella/lignin-kmc/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Developer Use",
+        "parent_header": [
+          "Use",
+          "Installation"
+        ],
+        "type": "Text_excerpt",
+        "value": "Navigate to the directory where you would like the local copy of the source code to exist, and then clone the \nrepository using:\n```\ngit clone https://github.com/michaelorella/lignin-kmc\n```\n\nIn the root, you will find a file titled `environment.yml`. This file contains all of the dependencies listed above \nplus two additional packages required for testing (pytest and joblib), with the versions tested. To create your own \nenvironment mirroring this one, run the following command in the terminal (or Anaconda Prompt on Windows):\n\n```\nconda env create -f environment.yml\n```\n\nOnce the environment has been created, activate it:\n\n```\nconda activate lignin_kmc\n```\n\nCongratulations! Lignin-KMC is now installed! With this basic installation, you will have access to the functions \ntherein (such as `run_kmc`, `generate_mol`, and `analyze_adj_matrix`) and the classes `Monomer` and `Event`.\n"
+      },
+      "source": "https://raw.githubusercontent.com/michaelorella/lignin-kmc/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Examples",
+        "parent_header": [
+          "Use"
+        ],
+        "type": "Text_excerpt",
+        "value": "For examples, see `LigninPolymerizationNotebook.ipynb`, `Example.ipynb`, and `Dynamics.ipynb`. \n"
+      },
+      "source": "https://raw.githubusercontent.com/michaelorella/lignin-kmc/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "CLASSES",
+        "parent_header": [
+          "Use",
+          "API Reference",
+          "kmc_common.py"
+        ],
+        "type": "Text_excerpt",
+        "value": "__Event__(key, index, rate, bond)\n- key = str = name of the event that is taking place (e.g. '5o4', 'ox', etc.)\n- index = [int, int] = list of indices to the monomers that are affected by this event\n- rate = float = the rate of the event that is occurring (units consistent with time units in simulation)\n- bond = [int, int] = list of changes that need to be made to the adjacency matrix to perform the event\n\nThe class that is used to define events, which can be unpacked by the `run_kmc` function to execute the events \noccurring in the simulation.\n\n__Monomer__(type, index)\n- type = str, limited to S, G, or C = indicates the monomer type. This class can be extended to include more monomer \n  types.\n- index = int = a number that should be unique for all monomers in a simulation. This is returned as the hash value and \n  is used to track individual subunits in the adjacency matrix.\n\nThe class that contains information about each monomer in the simulation, most importantly tracking the index and the \nmonomer type.\n\n"
+      },
+      "source": "https://raw.githubusercontent.com/michaelorella/lignin-kmc/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "FUNCTIONS",
+        "parent_header": [
+          "Use",
+          "API Reference",
+          "kmc_functions.py"
+        ],
+        "type": "Text_excerpt",
+        "value": "__find_fragments__(adj)\n- adj = dok_matrix = NxN sparse matrix in the dictionary of keys format\n- return = [{}, {}, ..., {}], [int, int, ..., int] = list of sets of connected components within the adjacency matrix \nand a list of ints containing the number of number of branch points found in each fragment.\n\nIdentifies connected component subgraphs of the supergraph `adj`, which can be used to determine yields or identify \nwhether two monomers are connected.\n\n__fragment_size__(frags)\n- frags = [{},{},...,{}] = list of sets as returned from `find_fragments`\n- return = dict() = dictionary mapping all of the indices in frags to the length of the fragment they were contained in\n\nGets the sizes for all of the monomers in the simulation\n\n__quick_frag_size__(monomer)\n- monomer = Monomer = instance of monomer object that we want to check\n- return = str = 'monomer' or 'oligomer' \n\nUses the open positions attribute of the monomer object to determine whether there is anything connected to this monomer yet\n\n__break_bond_type__(adj, bond_type)\n- adj = scipy dok_matrix = adjacency matrix\n- bond_type = str = the bond that should be broken\n- return = dok_matrix = new adjacency matrix after bonds were broken\n\nModifies the adjacency matrix to reflect certain bonds specified by `bond_type` being broken. This is used primarily \nwhen we are evaluating the effect that reductive cleavage treatment would have on the simulated lignin. As of now, \nall bonds of a given type are removed without discrimination.\n\n__count_bonds__(adj)\n- adj = dok_matrix = adjacency matrix\n- return = OrderedDict = a dictionary containing all bond strings mapped to the number of times they occur within `adj`\n\nUsed for evaluating the frequency of different linkages within a simulated lignin\n\n__count_oligomer_yields__(adj)\n- adj = dok_matrix = adjacency matrix\n- return = OrderedDict, dict, dict, dict = maps the size of an oligomer to:\n     the number of occurrences within the adjacency matrix, \n     the total number of monomers involved in oligomers,\n     total number of branch points in oligomers of that length, and\n     the branching coefficient for the oligomers of that length\n\nUsed to count the yields of monomers, dimers, etc., when the simulation is complete.\n\n__analyze_adj_matrix__(adjacency)\n- adjacency = dok_matrix = adjacency matrix\n- break_co_bonds = boolean to specify whether C-O bonds should be removed to simulate reactive catalytic fractionation (RCF)\n- return = dict() = maps different measurable quantities to their values predicted from the simulation\n\nAggregates analysis of oligomer length and bond types, and these same properties post C-O bond cleavage.\n\n__update_events__(monomers, adj, last_event, events, rate_vec, rate_dict, max_mon=500)\n- state_dict = dict() = maps the index of the monomer to the object and the events that a change to this index would effect\n- adj = dok_matrix = adjacency matrix\n- last_event = Event = the previous event that occurred\n- event_dict = dict() = map the hash value of each event to the unique event - this is all of the possible events at the \n  current state after the method is run\n- rate_vec = dict() = map the hash value of each event to the rate of that event\n- rate_dict = dict() = the reaction rates for all possible reactions, in  monomer/second\n- max_mon = int = the maximum number of monomers in the simulation\n- return = None\n\nMutates the dictionary of events and rateVec that are passed to the function. These mutations are done so that the \nentire state doesn't need to be reconstructed on every iteration of the simulation. Once these changes are made, the \nevent choice is ready to be made and the chosen event can be performed.\n\n__do_event__(event, state, adj, sg_ratio=None, random_seed=None)\n- event = Event = the event that was chosen to be performed\n- state = dict() = the dictionary mapping monomer indices to the monomer object and events that would be changed by a \n  change to the monomer\n- adj = dok_matrix = adjacency matrix\n- sg_ratio = float needed if and only if: a) there are S and G and only S and G, and b) new monomers will be added\n- random_seed = int (positive val) needed if repeatable results are desired (for testing)\n\nUpdates the monomers and adjacency matrix to reflect the execution of the chosen event\n\n__run_kmc__(rate_dict, initial_state, initial_events, n_max=10, t_max=10, dynamics=False, random_seed=None)\n- rate_dict:  dict -- the rate of each of the possible events as a 3-d dictionary mapping bond type, monomers sizes,  \n                      and monomer types to a rate in units consistent with your final time definition\n- initial_state: dict  -- The dictionary mapping the index of each monomer to a dictionary with the monomer\n-      and the set of events that a change to this monomer would impact\n- initial_events: dictionary -- The dictionary mapping event hash values to those events\n- n_max: int   -- The maximum number of monomers in the simulation\n- t_max: float -- The final simulation time (units depend on units of rates; seconds if using the default rates)\n- dynamics: boolean -- if True, will keep values for every time step\n- random_seed: None or hashable value to aid testing\n- return: dict with the simulation times, adjacency matrix, and list of monomers at the end of the simulation\n\nRuns the Gillespie algorithm on the situation specified by the parameters. This is the workhorse of the code, where the \nmonomers are changed and linked to simulate the growth of lignin *in planta*.\n\n__generate_mol__(adj, node_list)\n- adj = dok_matrix = adjacency matrix\n- nodeList = [Monomer, Monomer, ..., Monomer] = list of monomers output from the simulation\n- return = str = molfile contents\n\nGenerates a file format as specified by [CTAN](https://ctan.org/) that represents the molecule that was just simulated \nby `run_kmc`. This file can then be used together with rdKit for further visualization or analysis, or any one of your \nfavorite chemical drawing software packages.\n"
+      },
+      "source": "https://raw.githubusercontent.com/michaelorella/lignin-kmc/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Getting started",
+        "parent_header": [
+          "Contribute"
+        ],
+        "type": "Text_excerpt",
+        "value": "Lignin-KMC is built on Python 3. If you are new to Python, refer to the fantastic \n[documentation](https://docs.python.org/3.6/).\n"
+      },
+      "source": "https://raw.githubusercontent.com/michaelorella/lignin-kmc/master/README.md",
+      "technique": "header_analysis"
+    }
+  ]
+}

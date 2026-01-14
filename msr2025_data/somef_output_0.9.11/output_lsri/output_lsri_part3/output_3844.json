@@ -1,0 +1,487 @@
+{
+  "citation": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Citation",
+        "parent_header": [
+          "Additional information"
+        ],
+        "type": "Text_excerpt",
+        "value": "Matthew A Myers, Simone Zaccaria, Benjamin J Raphael, Identifying tumor clones in sparse single-cell mutation data, *Bioinformatics*, Volume 36, Issue Supplement_1, July 2020, Pages i186\u2013i193, [https://doi.org/10.1093/bioinformatics/btaa449](https://doi.org/10.1093/bioinformatics/btaa449)\n"
+      },
+      "source": "https://raw.githubusercontent.com/raphael-group/SBMClone/master/README.md",
+      "technique": "header_analysis"
+    }
+  ],
+  "code_repository": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/raphael-group/SBMClone"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_created": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2020-01-31T05:04:12Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_updated": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2023-04-07T01:46:34Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "description": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "SBMClone, a method for recovering tumor clonal composition from sparse single-cell mutation data"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 0.9695855085040122,
+      "result": {
+        "original_header": "SBMClone",
+        "type": "Text_excerpt",
+        "value": "SBMClone is a tool that uses stochastic block model (SBM) inference methods to identify clonal structure (groups of cells that share groups of mutations) in low-coverage single-cell DNA sequencing data.\nWhile SBMClone was originally designed for single-nucleotide variants, it can also be applied to other types of mutations such as structural variants.  \nSBMclone is described in detail here (open-access):\n[Myers, Zaccaria, and Raphael, *Bioinformatics* 2020](https://doi.org/10.1093/bioinformatics/btaa449)\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/raphael-group/SBMClone/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9890527133366213,
+      "result": {
+        "original_header": "Output",
+        "type": "Text_excerpt",
+        "value": "SBMClone produces 2 output files in the specified output directory (default directory `output`):\n* `cluster-assignments.txt`: comma-separated text file containing block assignments for each row and column in the matrix. The first line contains block labels for rows, and the second contains block assignments for columns. Note that empty rows and columns are not meaningful to the model (as they correspond to cells with no mutations or mutations that are found in no cells), so they are assigned to dummy blocks (last row/column block).\n* `blockmatrix.png`: PNG file showing the inferred block structure. Each row in this matrix corresponds to a clone (row block) and each column corresponds to a mutation cluster (column block). Each entry is labeled with the proportion of 1-entries in the corresponding rows and columns, and is shaded likewise. Note that each value is also the maximum-likelihood estimate of the block probability *p* for the corresponding block. This visualization can be disabled with the command-line option `no-visual`.\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/raphael-group/SBMClone/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9991275156370814,
+      "result": {
+        "original_header": "Programming interface",
+        "type": "Text_excerpt",
+        "value": "----------------\nThe repository also contains several utilities for simulating mutation matrices with various sizes and sets of parameters (in `src/simulation.py`), as well as benchmarking tools including implementations of other methods for partitioning cells such as spectral clustering and naive k-means approaches (in `src/benchmarking.py`). For assistance using these functions, please contact me ([details below](#additional-information)). \n"
+      },
+      "source": "https://raw.githubusercontent.com/raphael-group/SBMClone/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9968922318446367,
+      "result": {
+        "original_header": "Generating input to SBMClone",
+        "type": "Text_excerpt",
+        "value": "In this repository we have also included guidance and utility scripts for generating the input data to SBMClone from the following types of data:\n* [Single-nucleotide mutations](#single-nucleotide-mutations)\n* [Structural variants](#structural-variants)\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/raphael-group/SBMClone/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9132312264267524,
+      "result": {
+        "original_header": "Recommended workflow",
+        "type": "Text_excerpt",
+        "value": "1. (skip if all cells are in one file) Merge single-cell BAM files into one file with barcodes using the [chisel_prep command](https://github.com/raphael-group/chisel/blob/master/man/chisel-prep.md)\n2. (skip if reads are already aligned) Align reads to preferred reference genome (e.g., using [bowtie2](http://bowtie-bio.sourceforge.net/bowtie2/manual.shtml#command-line)).\n3. Call mutations using your favorite variant caller (e.g., [varscan](http://varscan.sourceforge.net/somatic-calling.html)).\n4. Convert variant caller output (VCF format) to Mutator input using `varscan2mutator.py`. Example usage to generate `mutator_input.tsv` from `my_variants.vcf`:\n```\npython3 varscan2mutator.py my_variants.vcf mutator_input.tsv\n```\n5. Run [CHISEL/Mutator.py](https://github.com/raphael-group/chisel/blob/master/src/chisel/Mutator.py) to extract cell-mutation pairs (see arguments at the top of the script). This script produces a TSV file  with columns CHR (chromosome), POS (position, CELL (cell barcode), MUT (variant allele), MUTCOV (number of reads from this cell containing the variant allele), COV (total number of reads from this cell that cover this position).\n6. Construct SBMClone input file [described above](#input) using a subset* of the mutations output by Mutator. \n\\*In principle, each row in the table could correspond to a 1-entry in the matrix provided to SBMClone. However, it may be useful to restrict the included mutations to those that are present in a sufficient number of cells, are supported by sufficiently many reads, and/or do not appear to be germline mutations (i.e., are absent from the matched normal or pseudonormal sample). For example, in our analysis of the DOP-PCR dataset in the paper, we restricted analysis to mutations with at least 10 total reads, present in <80% of tumor cells, and present in no more than 1 cell in the pseudo-normal sample (see Supplement section S11 for details)\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/raphael-group/SBMClone/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9495157416437284,
+      "result": {
+        "original_header": "Structural variants",
+        "type": "Text_excerpt",
+        "value": "The repository includes scripts for processing structural variants (SVs) called by LUMPY and producing the corresponding binary mutation matrix, for input into SBMClone. \n \n"
+      },
+      "source": "https://raw.githubusercontent.com/raphael-group/SBMClone/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9135284178800137,
+      "result": {
+        "original_header": "Command line options",
+        "type": "Text_excerpt",
+        "value": "For example, the command to process SVs in `sv.bedpe`, using `sv.gt.sorted.vcf` to filter out SVs with a quality score <100, is `python sv_process.py -f sv.gt.sorted.vcf -q 100 sv.bedpe`. \n"
+      },
+      "source": "https://raw.githubusercontent.com/raphael-group/SBMClone/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9469836381219485,
+      "result": {
+        "type": "Text_excerpt",
+        "value": "###\nFor assistance with running SBMClone, interpreting the results, or other related questions, please email me (Matt Myers) at this address: [matt.myers@cs.princeton.edu](mailto:matt.myers@cs.princeton.edu). Many thanks to Claire Du for contributing the structural variant processing scripts and documentation.\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/raphael-group/SBMClone/master/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "download": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Download",
+        "parent_header": [
+          "SBMClone",
+          "Setup"
+        ],
+        "type": "Text_excerpt",
+        "value": "The following command clones the current SBMClone repository from GitHub:\n\n    git clone https://github.com/raphael-group/sbmclone.git\n"
+      },
+      "source": "https://raw.githubusercontent.com/raphael-group/SBMClone/master/README.md",
+      "technique": "header_analysis"
+    }
+  ],
+  "download_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/raphael-group/SBMClone/releases"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 2
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/raphael-group/SBMClone/forks"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "raphael-group/SBMClone"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_title": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "SBMClone"
+      },
+      "source": "https://raw.githubusercontent.com/raphael-group/SBMClone/master/README.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "installation": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Setup",
+        "parent_header": [
+          "SBMClone"
+        ],
+        "type": "Text_excerpt",
+        "value": "------------------------\nThe setup process for SBMClone requires the following steps:\n"
+      },
+      "source": "https://raw.githubusercontent.com/raphael-group/SBMClone/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Testing",
+        "parent_header": [
+          "SBMClone",
+          "Setup"
+        ],
+        "type": "Text_excerpt",
+        "value": "With the dependencies set up correctly, the following command will run SBMClone on the provided test input and write the results to a subdirectory called \"output\":\n    \n    mkdir output\n    python sbmclone.py example-matrix.csv\n\nThis should take no more than a minute to run, and the output should match the contents of the `example-output` folder.\n"
+      },
+      "source": "https://raw.githubusercontent.com/raphael-group/SBMClone/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 0.9991088046555405,
+      "result": {
+        "original_header": "Recommended workflow",
+        "type": "Text_excerpt",
+        "value": "The recommended workflow uses several utilities from [CHISEL](https://github.com/raphael-group/chisel/), which can be installed via conda. \n"
+      },
+      "source": "https://raw.githubusercontent.com/raphael-group/SBMClone/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.802887566622244,
+      "result": {
+        "original_header": "Command line options",
+        "type": "Text_excerpt",
+        "value": "```\npositional arguments:\n  INFILE                SVs called by LUMPY, in BEDPE format\n\noptional arguments:\n  -h, --help            show this help message and exit\n  -o OUTPUT             Output prefix (default \"sv_out\").\n  -f SVTYPER_VCF, --filter SVTYPER_VCF\n                        Use specified SVTyper output VCF file to filter SVs.\n                        The VCF must be sorted by the ID field.\n  -q MIN_QUALITY, --quality MIN_QUALITY\n                        Filter SVs by minimum sample quality value (SQ)\n                        reported by SVTyper.\n``` \n"
+      },
+      "source": "https://raw.githubusercontent.com/raphael-group/SBMClone/master/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "invocation": [
+    {
+      "confidence": 0.8424188904749813,
+      "result": {
+        "original_header": "Recommended workflow",
+        "type": "Text_excerpt",
+        "value": "1. (skip if all cells are in one file) Merge single-cell BAM files into one file with barcodes using the [chisel_prep command](https://github.com/raphael-group/chisel/blob/master/man/chisel-prep.md)\n2. (skip if reads are already aligned) Align reads to preferred reference genome (e.g., using [bowtie2](http://bowtie-bio.sourceforge.net/bowtie2/manual.shtml#command-line)).\n3. Call mutations using your favorite variant caller (e.g., [varscan](http://varscan.sourceforge.net/somatic-calling.html)).\n4. Convert variant caller output (VCF format) to Mutator input using `varscan2mutator.py`. Example usage to generate `mutator_input.tsv` from `my_variants.vcf`:\n```\npython3 varscan2mutator.py my_variants.vcf mutator_input.tsv\n```\n5. Run [CHISEL/Mutator.py](https://github.com/raphael-group/chisel/blob/master/src/chisel/Mutator.py) to extract cell-mutation pairs (see arguments at the top of the script). This script produces a TSV file  with columns CHR (chromosome), POS (position, CELL (cell barcode), MUT (variant allele), MUTCOV (number of reads from this cell containing the variant allele), COV (total number of reads from this cell that cover this position).\n6. Construct SBMClone input file [described above](#input) using a subset* of the mutations output by Mutator. \n"
+      },
+      "source": "https://raw.githubusercontent.com/raphael-group/SBMClone/master/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "issue_tracker": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/raphael-group/SBMClone/issues"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "keywords": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "cancer, cancer-genomics, evolution, sequencing, single-cell"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "license": [
+    {
+      "confidence": 1,
+      "result": {
+        "name": "BSD 3-Clause \"New\" or \"Revised\" License",
+        "spdx_id": "BSD-3-Clause",
+        "type": "License",
+        "url": "https://api.github.com/licenses/bsd-3-clause",
+        "value": "https://api.github.com/licenses/bsd-3-clause"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "File_dump",
+        "value": "BSD 3-Clause License\n\nCopyright (c) 2020, raphael-group\nAll rights reserved.\n\nRedistribution and use in source and binary forms, with or without\nmodification, are permitted provided that the following conditions are met:\n\n1. Redistributions of source code must retain the above copyright notice, this\n   list of conditions and the following disclaimer.\n\n2. Redistributions in binary form must reproduce the above copyright notice,\n   this list of conditions and the following disclaimer in the documentation\n   and/or other materials provided with the distribution.\n\n3. Neither the name of the copyright holder nor the names of its\n   contributors may be used to endorse or promote products derived from\n   this software without specific prior written permission.\n\nTHIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS \"AS IS\"\nAND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE\nIMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE\nDISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE\nFOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL\nDAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR\nSERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER\nCAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,\nOR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE\nOF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.\n"
+      },
+      "source": "https://raw.githubusercontent.com/raphael-group/SBMClone/master/LICENSE",
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "License",
+        "parent_header": [
+          "Additional information"
+        ],
+        "type": "Text_excerpt",
+        "value": "See `LICENSE` for license information.\n"
+      },
+      "source": "https://raw.githubusercontent.com/raphael-group/SBMClone/master/README.md",
+      "technique": "header_analysis"
+    }
+  ],
+  "name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "SBMClone"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "owner": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Organization",
+        "value": "raphael-group"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "programming_languages": [
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Python",
+        "size": 78180,
+        "type": "Programming_language",
+        "value": "Python"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "readme_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/raphael-group/SBMClone/master/README.md"
+      },
+      "technique": "file_exploration"
+    }
+  ],
+  "requirements": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Requirements",
+        "parent_header": [
+          "SBMClone",
+          "Setup"
+        ],
+        "type": "Text_excerpt",
+        "value": "The following software is required for SBMClone:\n\n* Python 3\n* Python packages: [numpy](https://numpy.org/), [scipy](https://www.scipy.org/scipylib/index.html), [graph-tool](https://graph-tool.skewed.de/), [matplotlib](https://matplotlib.org/), [networkx](https://networkx.org/)\n\nLast tested with python=3.9.7, numpy=1.21.2, scipy=1.7.1, graph-tool=2.43, matplotlib=3.4.2, networkx=2.6.3\n\nI recommend using the `conda` environment manager to manage dependencies. With the Python 3 version of [Anaconda](https://www.anaconda.com/products/individual)  or [Miniconda](https://docs.conda.io/en/latest/miniconda.html) installed, the following commands will set up an environment to run SBMClone:\n```\nconda create -n sbmclone\nconda activate sbmclone\nconda install numpy scipy matplotlib networkx\nconda install -c conda-forge graph-tool \n```\n"
+      },
+      "source": "https://raw.githubusercontent.com/raphael-group/SBMClone/master/README.md",
+      "technique": "header_analysis"
+    }
+  ],
+  "run": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Running",
+        "parent_header": [
+          "SBMClone",
+          "Usage"
+        ],
+        "type": "Text_excerpt",
+        "value": "The command to run SBMClone on input file `matrix.csv` is simply `python sbmclone.py matrix.csv.` Additional command line options can be included between `sbmclone.py` and `matrix.csv`. The inference method is random, so by default SBMClone uses a random number generator seed of 0 to ensure that results are reproducible. This seed can be modified using the `-s` or `--seed` options.\n"
+      },
+      "source": "https://raw.githubusercontent.com/raphael-group/SBMClone/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Running LUMPY",
+        "parent_header": [
+          "Generating input to SBMClone",
+          "Structural variants"
+        ],
+        "type": "Text_excerpt",
+        "value": "In order to use the SV processing scripts, [LUMPY](https://github.com/arq5x/lumpy-sv) must be run with the following specifications:\n \n* LUMPY must be run with the `-b` option at runtime, which outputs SVs in BEDPE format instead of VCF. \n* LUMPY must also be run with the `-e` option at runtime, which includes evidence lines for each SV call in the output. This is necessary to retain the single-cell information. \n* The input BAM file for LUMPY should be preprocessed so that for every read, the read name is replaced with the corresponding cellular barcode (@CB field). This is to ensure that when LUMPY is run, the evidence lines for each SV will include the cellular barcode rather than the read name.\n\nThe SV processing scripts also include the option for filtering outputted SVs using genotyping stats determined by SVTyper. To use the filtering option, the genotyped VCF file outputted by SVTyper must first be sorted by the ID field. The command to sort the genotyped file `sv.gt.vcf` is:\n`grep '^#' sv.gt.vcf > sv.gt.sorted.vcf && grep -v '^#' sv.gt.vcf | sort -nk3 >> sv.gt.sorted.vcf`\n\n### Usage\nThe command to process a BEDPE file `sv.bedpe`, containing SVs called by LUMPY as specified above, is `python sv_process.py sv.bedpe`. Additional command line options can be included as described below.\n\n### Output\nThe command line script produces two output files, named with the default prefix \"sv_out\".\n* `sv_out.extracted.csv`: comma-separated text file that contains one line for each SV/cell combination, with information about each SV extracted from the BEDPE file. \n* `sv_out.sbm.csv`: binary mutation matrix in SBMClone format.\n"
+      },
+      "source": "https://raw.githubusercontent.com/raphael-group/SBMClone/master/README.md",
+      "technique": "header_analysis"
+    }
+  ],
+  "somef_missing_categories": [
+    "acknowledgement",
+    "contact",
+    "contributors",
+    "documentation",
+    "faq",
+    "support",
+    "identifier",
+    "has_build_file",
+    "executable_example"
+  ],
+  "somef_provenance": {
+    "date": "2024-10-06 14:16:00",
+    "somef_schema_version": "1.0.0",
+    "somef_version": "0.9.5"
+  },
+  "stargazers_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 8
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "type": [
+    {
+      "confidence": 0.82,
+      "result": {
+        "type": "String",
+        "value": "commandline-application"
+      },
+      "technique": "software_type_heuristics"
+    }
+  ],
+  "usage": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Usage",
+        "parent_header": [
+          "Generating input to SBMClone",
+          "Structural variants"
+        ],
+        "type": "Text_excerpt",
+        "value": "----------------"
+      },
+      "source": "https://raw.githubusercontent.com/raphael-group/SBMClone/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Input",
+        "parent_header": [
+          "SBMClone",
+          "Usage"
+        ],
+        "type": "Text_excerpt",
+        "value": "The input to SBMClone is a binary mutation matrix where rows correspond to cells, columns correspond to mutations, and each entry is a 1 if the corresponding cell has the corresponding mutation or 0 otherwise (equivalently, 0-entries could be represented as ?). The input format is a comma-separated text file in which each line encodes the row and column indices of a single 1-entry. For example, a file with the following lines:\n\n```\n0,1\n3,0\n1,1\n2,3\n3,2\n```\n\nspecifies a binary mutation matrix with the following form:\n```\n0 1 0 0\n0 1 0 0\n1 0 0 1\n0 0 1 0\n```\n\nThe SBMClone script infers the size of the matrix from the input data. **Additional guidance on generating input data to SBMClone can be [found below](#generating-input-to-sbmclone)**.\n\n\n"
+      },
+      "source": "https://raw.githubusercontent.com/raphael-group/SBMClone/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "SBMClone command line options",
+        "parent_header": [
+          "SBMClone",
+          "Usage"
+        ],
+        "type": "Text_excerpt",
+        "value": "```\npositional arguments:\n  INFILE                                Mutation matrix in CSV format\n\noptional arguments:\n  -o OUTDIR                             Output directory (default \"output\").\n  -l MINBLOCKS, --minblocks MINBLOCKS   Minimum number of total blocks to infer (default 4).\n  -u MAXBLOCKS, --maxblocks MAXBLOCKS   Maximum number of total blocks to infer (default 1000).\n  --hierarchical                        Use the hierarchical SBM for inference (default False)\n  --no-visual                           Disable block visualization.\n  --no-messages                         Disable the printing of progress and timing information to standard output.\n  --seed SEED                           Random seed for replication (default: 0)\n```\n"
+      },
+      "source": "https://raw.githubusercontent.com/raphael-group/SBMClone/master/README.md",
+      "technique": "header_analysis"
+    }
+  ]
+}

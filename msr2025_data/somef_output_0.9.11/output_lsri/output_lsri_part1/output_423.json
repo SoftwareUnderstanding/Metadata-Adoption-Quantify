@@ -1,0 +1,963 @@
+{
+  "citation": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Reference genomes analyzed using this pipeline",
+        "parent_header": [
+          "StandEnA: A customizable workflow to create a standardized presence - absence matrix of annotated proteins"
+        ],
+        "type": "Text_excerpt",
+        "value": "Please find the links of the referenced genomes analyzed using StandEnA:\n\n- [Escherichia coli str. K-12 substr. MG1655](https://www.ncbi.nlm.nih.gov/nuccore/556503834) - NCBI Reference Sequence: NC_000913.3\n- [Azoarcus sp. DN11 chromosome](https://www.ncbi.nlm.nih.gov/nuccore/CP021731.1) - GenBank: CP021731.1\n- [Malikia spinosa strain AB6](https://www.ncbi.nlm.nih.gov/nuccore/1801491030) - NCBI Reference Sequence: NZ_VYSB01000001.1\n- [Pseudomonas veronii 1YdBTEX2](https://www.ncbi.nlm.nih.gov/data-hub/genome/GCA_900092355.1/) - Submitted GenBank sequence: GCA_900092355.1\n\nOutput annotation files for these genomes will be available shortly.\n"
+      },
+      "source": "https://raw.githubusercontent.com/mdsufz/StandEnA/main/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Step 3 Generating the Reference File for enzymes used in the annotation and standardizing protein names in Prokka results",
+        "parent_header": [
+          "StandEnA: A customizable workflow to create a standardized presence - absence matrix of annotated proteins",
+          "Workflow steps"
+        ],
+        "type": "Text_excerpt",
+        "value": "If you have many different pathways, \nwe suggest doing this part separately for each pathway.\nThat way, you will end up having less number of proteins at a time\nwhich will make the process faster.\nAdditionally, since some steps are manual, handling too many proteins at once may be confusing for users and may lead to errors.\n"
+      },
+      "source": "https://raw.githubusercontent.com/mdsufz/StandEnA/main/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Step 3.1.1 Subsetting data to work with one pathway at a time",
+        "parent_header": [
+          "StandEnA: A customizable workflow to create a standardized presence - absence matrix of annotated proteins",
+          "Workflow steps",
+          "Step 3 Generating the Reference File for enzymes used in the annotation and standardizing protein names in Prokka results",
+          "Step 3.1 Generating reference files and query files for each enzyme standard name"
+        ],
+        "type": "Text_excerpt",
+        "value": "Creating directory for this part:\n```\nmkdir ../../03_standardization\ncd ../../03_standardization\n```\nNote that the working directory in [step 2.6](#step-26-compiling-all-prokka-annotation-results-into-a-single-file) is 02_annotation/short/. \n\n03_standardization/ directory should not be within the 02_annotation/ directory but in another parent directory beside 01_customdb/ and 02_annotation/. The directory organization is exemplified [here](examples). The same directory organization must be followed throughout the pipeline.\n\nWhen working with pathway of interest \"1\", start the names of the working directory and other files with \"pw_1\" as the naming convention. \n\nCreating directory for pathway 1:\n```bash\nmkdir pw_1\ncd pw_1\n```\nNote that for each pathway, a new directory should be created within 03_standardization/ to get a file structure of: 03_standardization/pw_N. Hence, steps after this point should be executed within the corresponding pw_N directory.\n\nSaving unique enzyme standard names and their synonyms for this pathway (which were already compiled into the [01_customdb/id_synonyms_per_line.tsv](examples/01_customdb/id_synonyms_per_line.tsv) in [step 1.2](#step-12-preparing-the-list-of-synonyms-for-ncbi-edirect)): \n```bash\ngrep -P \"\\t1\\.\\d+\\t\" ../../01_customdb/id_synonyms_per_line.tsv | cut -f4,5,6 | cut -f1,3 | sort | uniq > pw_1.txt\n```\nFor this example, enzymes within pathway 1 have an enzyme ID starting with \"1.\". Hence, to retrieve these, the [01_customdb/id_synonyms_per_line.tsv](examples/01_customdb/id_synonyms_per_line.tsv) file is searched for the text \"\\t1\\.\\d+\\t\" by this code. For example, if pathway 2 is to be retrieved, the above line should be updated to search for \"\\t2\\.\\d+\\t\" (i.e., instead of \"\\t1\\.\\d+\\t\" enter \"\\t2\\.\\d+\\t\") and the output file should be named accordingly (pw_2.txt). \n\nNote that the enzyme list for reference file and query file formation is derived from the [01_customdb/id_synonyms_per_line.tsv](examples/01_customdb/id_synonyms_per_line.tsv) file that was used to download protein sequences using Edirect API in [step 1.4](#step-14-using-a-custom-perl-script-to-download-proteins-from-ncbi-edirect-api). \n\nNote that query formation in later steps from pw_1.txt will give an error if the file contains names with \"/\". These must be replaced by another character (e.g., in place of \"/\" put \"_\"). Execute this code to replace all \"/\" with \"_\":\n\n```bash\n#Replace all \"/\" with \"_\"\nmv pw_1.txt temp_file.txt\nsed -r \"s/[/]+/_/g\" temp_file.txt > pw_1.txt\n\n#Remove intermediate files\nrm temp_file.txt\n```\n**IMPORTANT NOTE**\n\nSince the OrtSuite-mediated KEGG API download and manual download steps are performed after Edirect download and are optional, if manual download steps are used to retrieve sequences that are not included within [id_synonyms_per_line.tsv](examples/01_customdb/id_synonyms_per_line.tsv), additional steps should be performed to account for these protein names. In the steps below, there are additional codes to be executed to add OrtSuite-mediated KEGG API downloaded proteins (from EC numbers) to the required files and directories. These steps can be modified by the user if there are other download methods used (e.g., OrtSuite-mediated KEGG API downloaded proteins from KO identifiers). \n\nThese steps (lines/sections involving OrtSuite-retrieved files between steps [3.1.2](#step-312-dividing-pathways-into-separate-files-for-each-enzymeprotein-and-collecting-them-in-the-queries-directory) - [3.1.3](#step-313-collecting-standard-database-identifiers-about-the-enzyme-names-used-during-annotation-from-KEGG-to-generate-a-reference-file)) indicated can be skipped altogether if: \n\na) there are no OrtSuite-mediated KEGG API downloaded proteins (from EC numbers) or manually proteins downloaded from different databases \n\n*OR*\n\nb) all enzyme information (including the later manually downloaded ones) was inputted to the pipeline via the initial [uniq_ec.tsv](examples/01_customdb/uniq_ec.tsv) file in [step 1.1](#step-11-using-kegg-api-to-retrieve-enzyme-synonym-names) which is used to generate the [id_synonyms_per_line.tsv](examples/01_customdb/id_synonyms_per_line.tsv) file in [step 1.2](#step-12-preparing-the-list-of-synonyms-for-ncbi-edirect)\n\n"
+      },
+      "source": "https://raw.githubusercontent.com/mdsufz/StandEnA/main/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Step 3.1.2 Dividing pathways into separate files for each enzyme/protein and collecting them in the queries directory",
+        "parent_header": [
+          "StandEnA: A customizable workflow to create a standardized presence - absence matrix of annotated proteins",
+          "Workflow steps",
+          "Step 3 Generating the Reference File for enzymes used in the annotation and standardizing protein names in Prokka results",
+          "Step 3.1 Generating reference files and query files for each enzyme standard name"
+        ],
+        "type": "Text_excerpt",
+        "value": "Each pathway will have a \"queries\" directory of files containing the enzyme synonyms to be searched for in the Prokka annotation in [step 3.2](#step-32-performing-queries-and-standardizing-annotation-results).\n\nCreating directory for storing queries:\n```bash\nmkdir queries\n```\n\nPrinting each collection of synonyms (i.e., each standard name will have one query file with many synonyms describing the same standard name) to a different file:\n```bash \ncat pw_1.txt | while read -r l; do line=$l; col2=$(echo \"$l\" | cut -f2); name=$(echo \"$l\" | cut -f1 | tr ' ' '_'); echo $col2 | tr -d '[]()*'| tr '[:upper:]' '[:lower:]' >> queries/$name.txt ; done\n```\nNote that this step removes all brackets and changes the queries to lowercase letters for uniformity.\n\nRemoving duplicated synonyms:\n```bash\nfor i in queries/*; do sort $i | uniq > queries/tmp; mv queries/tmp $i; done\n```"
+      },
+      "source": "https://raw.githubusercontent.com/mdsufz/StandEnA/main/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Step 3.1.3 Collecting standard database identifiers about the enzyme names used during annotation from KEGG to generate a reference file",
+        "parent_header": [
+          "StandEnA: A customizable workflow to create a standardized presence - absence matrix of annotated proteins",
+          "Workflow steps",
+          "Step 3 Generating the Reference File for enzymes used in the annotation and standardizing protein names in Prokka results",
+          "Step 3.1 Generating reference files and query files for each enzyme standard name"
+        ],
+        "type": "Text_excerpt",
+        "value": "The goal of this step is to generate the file \"kegg_info.txt\" for the\ngiven pathway. This file can be used as a reference while manually curating the\nprotein names during the presence - absence matrix generation in [step 4.2](#step-42-manually-preparing-file-of-protein-enzyme-names-to-be-used-for-generating-the-presence-absence-matrix).\n\n\nGathering unique EC numbers for the pathway:\n```bash \ngrep -P \"\\t1\\.\\d+\\t\" ../../01_customdb/id_synonyms_per_line.tsv | cut -f4,5 | sort | uniq > unique_pw_ec.tsv\n```\nNote that if pathway 2 is to be retrieved, the above line should be updated to search for \"\\t2.\\d+\\t\".\n\nNote that for some enzyme names in [id_synonyms_per_line.tsv](examples/01_customdb/id_synonyms_per_line.tsv) there might be no EC number. In this case, the user should use the below line to remove any \"NA\" or \"-\" identifier:\n```bash\ngrep -v \"\\.-\" unique_pw_ec.tsv | grep -v \"NA$\" > temp.tsv\ncat temp.tsv > unique_pw_ec.tsv\n\n```\n\nCollecting their corresponding EC numbers and KO identifiers from KEGG API:\n```bash\ncat unique_pw_ec.tsv | cut -f2 | while read l; do curl -s https://rest.kegg.jp/link/ko/ec:$l; done | sort -k1,2 | uniq | grep -v \"^$\" > pw_ec_kos.txt\n```\n\nCollecting KO definitions (protein names):\n```bash \ncut -f2 pw_ec_kos.txt | while read l; do def=$(curl -s https://rest.kegg.jp/get/$l | grep NAME | cut -f3- -d \" \"); paste <(echo $l) <(echo $def); done > kos_def.txt\n```\n\nCollecting main EC name (enzyme name):\n```bash\ncut -f1 pw_ec_kos.txt | while read l; do def=$(curl -s https://rest.kegg.jp/list/$l | cut -f2 | cut -f1 -d \";\"); paste <(echo $l) <(echo $def); done > ec_name.txt\n```\n\nCombining all in a single file:\n```bash\npaste ec_name.txt kos_def.txt > pw_1_kegg_info.txt\n```\n\nCleaning intermediate files (optional):\n```bash\nrm pw_ec_kos.txt kos_def.txt ec_name.txt\n```"
+      },
+      "source": "https://raw.githubusercontent.com/mdsufz/StandEnA/main/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Example reference file formation for OrtSuite-mediated KEGG API downloaded proteins (from EC numbers)",
+        "parent_header": [
+          "StandEnA: A customizable workflow to create a standardized presence - absence matrix of annotated proteins",
+          "Workflow steps",
+          "Step 3 Generating the Reference File for enzymes used in the annotation and standardizing protein names in Prokka results",
+          "Step 3.1 Generating reference files and query files for each enzyme standard name",
+          "Step 3.1.3 Collecting standard database identifiers about the enzyme names used during annotation from KEGG to generate a reference file"
+        ],
+        "type": "Text_excerpt",
+        "value": "Collecting EC numbers and KO identifiers from KEGG API:\n```bash\ncat ecs.txt | while read l; do curl -s https://rest.kegg.jp/link/ko/ec:$l; done | sort -k1,2 | uniq | grep -v \"^$\" > ortsuite_pw1_ec_kos.txt\n```\nAfter this step, [ortsuite_ec_kos.txt](examples/03_standardization/pw_1/ortsuite_pw1_ec_kos.txt) file can be used in place of pw_ec_kos.txt in [step 3.1.3](#step-313-collecting-standard-database-identifiers-about-the-enzyme-names-used-during-annotation-from-kegg-to-generate-a-reference-file-to-generate-the-reference-file). Note that the output and input file names for each of the above steps must be changed to prevent overwriting the reference files generated for Edirect downloaded proteins listed in [id_synonyms_per_line.tsv](examples/01_customdb/id_synonyms_per_line.tsv). The suggested naming convention for these files is: ortsuite_kos_def.txt, ortsuite_ec_name.txt, [ortsuite_pw_1_kegg_info.txt](examples/03_standardization/pw_1/ortsuite_pw_1_kegg_info.txt).\n\n\n**Output files generated in step 3.1:** Reference files with standard database identifiers [03_standardization/ortsuite_pw_N_kegg_info.txt](examples/03_standardization/pw_1/ortsuite_pw_1_kegg_info.txt) and [03_standardization/pw_N_kegg_info.txt](examples/03_standardization/pw_1/pw_6_C_kegg_info.txt) along with [03_standardization/pw_N/queries/](examples/03_standardization/pw_1/queries/) directory files\n\n"
+      },
+      "source": "https://raw.githubusercontent.com/mdsufz/StandEnA/main/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Step 3.2.1 Performing queries of the Prokka annotation using files in queries directory and dumping results into files",
+        "parent_header": [
+          "StandEnA: A customizable workflow to create a standardized presence - absence matrix of annotated proteins",
+          "Workflow steps",
+          "Step 3 Generating the Reference File for enzymes used in the annotation and standardizing protein names in Prokka results",
+          "Step 3.2 Performing queries and standardizing annotation results"
+        ],
+        "type": "Text_excerpt",
+        "value": "Changing to queries directory:\n```bash\nmkdir results\ncd queries\n```\n\nNote: manually remove queries with brackets \"[]\" (if there are any). To test this:\n```bash\ngrep -lFe [ -lFe ] -lFe \"(\" -lFe \")\" *.txt\n```\nIf there are file contents with brackets, the user is advised to use this code to remove the brackets but **keep the original files for later reference**.\nNote that this step can be directly skipped if there are no brackets in the queries.\n```bash\n#This will put the files in a subdirectory called new and use these files for the rest of the steps\nmkdir new\nfor i in *.txt; do cat $i | tr -d '[]()' > new/$i; done\n#Change to new/ to execute below steps\ncd new/\n```\n\nFor each query file, query for terms in the complete results. This step connects the standard names generated from previous steps with the protein annotation files generated by Prokka in [step 2](#step-2-generating-a-custom-database-and-annotating-genomes-using-prokka-with-this-custom-database).\n```bash\nfor i in *.txt; do grep -i -f $i path/to/02_annotation/short/prokka_all.tsv > path/to/results/result_$i; done\n```\n\nMoving results to a folder with complete results:\n```bash\ncd path/to/results\nmkdir complete\nmv *.txt complete\n```\n\nSummarizing result files by removing duplicates (unique):\n```bash\nmkdir unique\ncd unique\nfor i in ../complete/*.txt; do cut -f8 $i | sort | uniq > $i.uniq; done; mv ../complete/*.uniq .\n```\n\nNow, the files for standardization should be ready.\n\nOpen each one of the \".uniq\" files and include a new first column. Note that .uniq files use tab as the delimiter. A tab-separated values file is a text format similar to comma-separated values files where, instead of a comma, a tab character is used to separate different fields. Please find more information on this file structure [here](https://en.wikipedia.org/wiki/Tab-separated_values).\n\nAdd a first column for each line and manually annotate the standard name to the protein name of the second column.\nIf the second column cell does not relate to your protein, add \"REMOVE\" (without brackets) to the first column.\n\nExample .uniq file:\n\n![Example image](img/example_standardization.png)\n\nNote that, depending on the specific protein headers present in the custom database generated in [step 2](#step-2-generating-a-custom-database-and-annotating-genomes-using-prokka-with-this-custom-database), Prokka annotation step can produce relatively \"clean\" outputs. This means that the first column that you add might contain the same information outputted by Prokka on the second column. An example \"clean\" .uniq file image is shown below:\n\n![Example image](img/example_clean_output.png)\n\n----------\n\n**Grouped Presence-Absence Matrix Option:**\nIf the intention is to produce a final presence-absence matrix that groups all subunits/components of the same enzyme together (as opposed to displaying them as separate entities), then the grouped standard name can be used instead of the standard name provided in KEGG. In this case, [step 3.2.1](#step-321-performing-queries-of-the-prokka-annotation-using-files-in-queries-directory-and-dumping-results-into-files) can be repeated partly by copying the initial unique files into a grouped_unique directory (within the 03_standardization/pw_N/results/ directory) and manually changing the standard name column as desired.\n```bash\n# Make and change to results directory\ncd ..\nmkdir grouped_unique\n# Copy all files in ../unique directory into this new directory\ncp unique/*.uniq grouped_unique\n```\nAccording to your preference, group the enzymes in grouped_unique by adding the same standard name for their first column as indicated above. For example, if there are multiple files formed for different nitrate reductase subunits and you want to group them (nitrate reductase alpha subunit, nitrate reductase beta subunit, nitrate reductase gamma subunit, nitrate reductase ambiguous) under the standard name \"nitrate reductase\":\n\n![Example grouped unique 1](img/example_grouped_unique_1.png)\n\n![Example grouped unique 2](img/example_grouped_unique_2.png)\n\n![Example grouped unique 3](img/example_grouped_unique_3.png)\n\n![Example grouped unique 4](img/example_grouped_unique_4.png)\n\nNote that these enzymes are listed with their proposed synonyms in **different .uniq files initially** and that this **grouping decision is made by the user** by inserting the same standard group name in the first column of these files.\n\n--------\nRegardless of the user's choice in forming a grouped or individual presence-absence matrix, for the flawless execution of later steps, all .uniq files should have 2 columns separated by a tab character. Since the above steps are manual, users should check the column number in their files. Below is an example line that can be used for this purpose.\n```bash\n#Changing to the unique directory\ncd unique\n# This line should give 2 as output, if there numbers different from 2 there is a problem\nfor i in *.uniq; do awk -F\"\\t\" \"{print NF}\" $i; done > ../columns.txt\n```\nIf the above code outputs numbers different from 2, then the .uniq files should be checked again to make sure that there are 2 columns which are tab separated.\n"
+      },
+      "source": "https://raw.githubusercontent.com/mdsufz/StandEnA/main/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Step 3.2.2 Combining standard names to Prokka annotation results (standardization of Prokka annotation)",
+        "parent_header": [
+          "StandEnA: A customizable workflow to create a standardized presence - absence matrix of annotated proteins",
+          "Workflow steps",
+          "Step 3 Generating the Reference File for enzymes used in the annotation and standardizing protein names in Prokka results",
+          "Step 3.2 Performing queries and standardizing annotation results"
+        ],
+        "type": "Text_excerpt",
+        "value": "Moving to results directory (going back to 03_standardization/pw_1/results/):\n```bash\ncd ../\n```\n\nCreating directory to store standardized results:\n```bash\nmkdir standardized\n```\n\nAdding standardized results to last column for each enzyme:\n```bash\ncd complete\nfor i in *; do python3 ../../../../../scripts/add_standard_names.py \"../unique/$i.uniq\" \"$i\" >> ../standardized/results_pw_1.txt; done\n```\n\nNote: The add_standard_names.py script is available [here](scripts/add_standard_names.py).\n\n\n**Output files generated in step 3.2:** [03_standardization/pw_N/results/standardized/results_pw_N.txt](examples/03_standardization/pw_1/results/standardized/results_pw1.txt) file which is the **standard enzyme name containing (i.e., standardized) version of the Prokka annotation file** from [step 2.6](#step-26-compiling-all-prokka-annotation-results-into-a-single-file)\n\n"
+      },
+      "source": "https://raw.githubusercontent.com/mdsufz/StandEnA/main/README.md",
+      "technique": "header_analysis"
+    }
+  ],
+  "code_repository": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/mdsufz/StandEnA"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_created": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2022-04-08T15:38:30Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_updated": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2024-08-14T11:36:45Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "description": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Introduction",
+        "parent_header": [
+          "StandEnA: A customizable workflow to create a standardized presence - absence matrix of annotated proteins"
+        ],
+        "type": "Text_excerpt",
+        "value": "This workflow was created to predict and annotate proteins \nfrom genomes and to build a standardized matrix of presence/absence from the annotated proteins.\nThe outcome of this workflow can be used for many purposes. For example, to infer the genetic potential \nof a given organism to perform a pathway of interest.\n\n<p align=\"center\">\n<img\n  src=\"img/StandEnA_schema.png\"\n  alt=\"Starting with enzyme identifiers for the pathways of interest, StandEnA has four steps\"\n  title=\"Workflow of StandEnA\"\n  style=\"display: inline-block; margin: 0 auto; max-width: 5000px\">\n</p>\n\n**Workflow of StandEnA:** Starting with enzyme identifiers for the pathways of interest, StandEnA has four steps: \nStep 1 compiles enzyme synonyms and identifiers for these pathways from various databases. Step 2 creates a custom database from these enzyme protein sequences and annotates genomes. Step 3.1 creates a reference file with cross-database identifiers for each enzyme synonym used in the annotation and step 3.2 lists all of the enzymes of interest within the annotated genomes. Step 4 generates a standardized presence absence matrix for each enzyme within the desired pathway.\n\n**Input and Output File Structure of StandEnA:** Refer to this figure for input and output files used at each step. The column structure of the figure is as follows: 1. input file name and description for specific step, 2. output file name and description for specific step, 3. description of the output's significance for the pipeline. Color-filled boxes indicate files generated by StandEnA whereas the white background boxes indicate the files manually inputted by the user. Each input - output file pair is ordered according to its sequence of appearance in the pipeline and is seen under the corresponding main step number in line with the above figure.\n\nThe different inputs and outputs for each step are summarized in the figure below:\n\n<p align=\"center\">\n<img\n  src=\"img/StandEnA_input_output_files.png\"\n  alt=\"Starting with enzyme identifiers for the pathways of interest, StandEnA has four steps\"\n  title=\"Workflow of StandEnA\"\n  style=\"display: inline-block; margin: 0 auto; max-width: 5000px\">\n</p>\n\nIn [step 1](#step-1-compiling-protein-sequences-for-the-custom-database-from-ncbi-kegg-and-other-databases), the user inputs the [uniq_ec.tsv](examples/01_customdb/uniq_ec.tsv) file containing enzyme information separated by tab characters in this order: unique enzyme ID, pathway name, pathway step ID, enzyme name, and its enzyme commission (EC) number. Unique enzyme ID* and pathway step ID** are dependent on the naming convention preferred by the user. These IDs must be given using a consistent alphanumeric naming convention with no whitespace characters within the names. Pathway step ID*** is named according to the pathway number and the step at which the enzyme is working (e.g., pathway 1 step 1 is 1.1). This file is used to generate [01_customdb/id_synonyms_per_line.tsv](examples/01_customdb/id_synonyms_per_line.tsv) file containing the same information as the [uniq_ec.tsv](examples/01_customdb/uniq_ec.tsv) with the addition of available synonyms for each enzyme standard name from the KEGG database and the unique synonym ID**** for each of the retrieved synonyms. Unique synonym ID is a variation of unique enzyme ID to differentiate synonyms of the same enzyme. Next, this information is used to retrieve protein sequences from the NCBI database via the Edirect application programming interface (API) and stored in the [01_customdb/edirect_fasta/](examples/01_customdb/edirect_fasta/) directory. Alternatively, the user can input EC numbers or KEGG Orthology (KO) identifiers within [ecs.txt](examples/01_customdb/ecs.txt) or [kos.txt](examples/01_customdb/kos.txt) files, respectively. This method retrieves protein sequences from KEGG database via OrtSuite. Furthermore, users are provided the option to use any means to download desired protein sequences from other databases which will be combined with the protein sequences downloaded by OrtSuite and stored within *01_customdb/manual_download_fasta/* directory.\n\nIn [step 2](#step-2-generating-a-custom-database-and-annotating-genomes-using-prokka-with-this-custom-database), all protein sequences compiled in step 1 (within *01_customdb/manual_download_fasta/* and [01_customdb/edirect_fasta/](examples/01_customdb/edirect_fasta/)) are used to generate the custom database (*02_annotation/customdb.faa*). This database is used for genome annotation by Prokka along with Prokka's default database to generate the output [02_annotation/prokka_all.tsv](examples/02_annotation/example_prokka_all_results.tsv). \n\nIn [step 3.1](#step-31-generating-reference-files-and-query-files-for-each-enzyme-standard-name), the files from step 1 ([01_customdb/id_synonyms_per_line.tsv](examples/01_customdb/id_synonyms_per_line.tsv), [ecs.txt](examples/01_customdb/ecs.txt), [kos.txt](examples/01_customdb/kos.txt)) are used to generate a reference file containing standard database identifiers for each enzyme including the EC number, standard enzyme name from KEGG, KO identifier, and enzyme synonyms used for the search with their EC numbers. Since some enzymes are defined by multiple EC numbers in KEGG, the last field sometimes contains additional EC numbers for the same enzyme. One reference file is generated for each pathway and separated into different text files according to their retrieval method as [03_standardization/pw_N/pw_N_kegg_info.txt](examples/03_standardization/pw_1/pw_6_C_kegg_info.txt), [03_standardization/pw_N/ortsuite_pw_N_kegg_info.txt](examples/03_standardization/pw_1/ortsuite_pw_1_kegg_info.txt), and/or *03_standardization/pw_N/manual_pw_N_kegg_info.txt* for Edirect retrieved, OrtSuite retrieved and manually downloaded files, respectively. Moreover, the same files from [step 1](#step-1-compiling-protein-sequences-for-the-custom-database-from-ncbi-kegg-and-other-databases) are used to generate query files within the [03_standardization/pw_N/queries/](examples/03_standardization/pw_1/queries/) directory which list the possible synonym names for each enzyme.  \nIn [step 3.2](#step-32-performing-queries-and-standardizing-annotation-results), [03_standardization/pw_N/queries/](examples/03_standardization/pw_1/queries/) files are used to select the matching annotations in [02_annotation/prokka_all.tsv](examples/02_annotation/example_prokka_all_results.tsv). The results are dumped to [03_standardization/standardized/results_pw_N.txt](examples/03_standardization/pw_1/results/standardized/) files. \n\nIn [step 4](#step-4-generating-matrix-of-standardized-presence-absence), [03_standardization/standardized/results_pw_N.txt](examples/03_standardization/pw_1/results/standardized/) is used to generate a standardized presence - absence matrix for all inputted genomes for pathway N. Alternatively, annotated enzymes from multiple pathways can be used to generate a single standardized presence - absence matrix. For this purpose, the [03_standardization/pw_N/standardized/](examples/03_standardization/pw_1/results/standardized/) results for all pathways are merged into *04_presabs/std_results_all.txt*. [02_annotation/prokka_all.tsv](examples/02_annotation/example_prokka_all_results.tsv) is processed to remove any problematic punctuation such as brackets and parentheses. This processed output file, *04_presabs/prokka_all_updated.tsv*, is used along with a user inputted file, [04_presabs/ids_to_names.tsv](examples/04_presabs/ids_to_names.tsv), containing user-defined unique protein IDs for each enzyme and corresponding standard protein names to be used in the standardized presence - absence matrix generation. The standardized presence - absence matrix output, [04_presabs/presence_absence.csv](examples/04_presabs/example_presence_absence.csv), is generated.\n\n**Summary of different databases incorporated into StandEnA workflow:** On the left side, the databases accessed by [step 1](#step-1-compiling-protein-sequences-for-the-custom-database-from-ncbi-kegg-and-other-databases) and [step 2](#step-2-generating-a-custom-database-and-annotating-genomes-using-prokka-with-this-custom-database) of the automated StandEnA pipeline is shown. The custom database is produced by automated custom search using the user-supplied enzyme information while the Prokka default database is used to encompass a general representative set of sequences. A manual custom search is added to expand the custom database by compiling specified sequences from other databases such as [UniProt](https://www.uniprot.org/). Finally, the expanded custom database and Prokka default database is used to annotate the genomes producing a presence-absence matrix in [step 4](#step-4-generating-matrix-of-standardized-presence-absence). \n\n<p align=\"center\">\n<img\n  src=\"img/StandEnA_databases_scheme.jpg\"\n  alt=\"Starting with enzyme identifiers for the pathways of interest, StandEnA has four steps\"\n  title=\"Summary of the databases used in the annotation of 6 MAGs by StandEnA using the example semi-automated approach\"\n  style=\"display: inline-block; margin: 0 auto; max-width: 5000px\">\n</p>\n"
+      },
+      "source": "https://raw.githubusercontent.com/mdsufz/StandEnA/main/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 0.9468071474693028,
+      "result": {
+        "original_header": "Workflow steps",
+        "type": "Text_excerpt",
+        "value": "StandEnA is divided into 4 steps: \n"
+      },
+      "source": "https://raw.githubusercontent.com/mdsufz/StandEnA/main/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9890942863674242,
+      "result": {
+        "original_header": "Step 1 Compiling Protein sequences for the custom database from NCBI, KEGG and other databases",
+        "type": "Text_excerpt",
+        "value": "This step is necessary to extend the scope of proteins that Prokka uses by default to annotate genomes. \nFor that, below steps will be used to prepare a list of synonyms for all enzymes of interest to be downloaded from NCBI.\nThis database will be called custom database (custom_db.faa) in later steps.\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/mdsufz/StandEnA/main/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9879436503505625,
+      "result": {
+        "original_header": "Step 1.1 Using KEGG API to retrieve enzyme synonym names",
+        "type": "Text_excerpt",
+        "value": "Make the new working directory and switch to this directory:\n```bash\nmkdir 01_customdb\ncd 01_customdb\n```\nNote that the directory structure in StandEnA is very important for the execution of later steps. As indicated in the [examples](examples) directory, each directory should be created within the parent StandEnA directory. For flawless execution of next steps, users should not create these directories elsewhere or in another daughter directory within StandEnA.\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/mdsufz/StandEnA/main/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.8911140346929858,
+      "result": {
+        "original_header": "Step 1.1.2 Retrieving the synonyms for each enzyme from KEGG API",
+        "type": "Text_excerpt",
+        "value": "Please note that any typo or extra character (e.g. space) in the EC number field of the [uniq_ec.tsv](examples/01_customdb/uniq_ec.tsv) file may cause no synonyms to be returned from KEGG API.\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/mdsufz/StandEnA/main/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.8444800364583496,
+      "result": {
+        "original_header": "Step 1.3 Manually curating the list",
+        "type": "Text_excerpt",
+        "value": "Look through the \"id_synonyms_per_line.tsv\" and check for potential problems (eg.: too short names that can cause ambiguity). \nThe following command removes synonyms with less than 6 characters to avoid ambiguity when querying NCBI.\n```bash\n# This perl code writes the changes in the same file\nperl -ne 'chomp; @fields=split(\"\\t\",$_); $fields[5] =~ tr/ //d; unless(scalar(split(\"\",$fields[5]))<=5){print \"$_\\n\"};' id_synonyms_per_line.tsv > tmp; mv tmp id_synonyms_per_line.tsv \n```\nNote that KEGG synonyms containing \";\" in their names will be separated as different synonyms. The user is advised to check for such instances and manually curate the [id_synonyms_per_line.tsv](examples/01_customdb/id_synonyms_per_line.tsv) file to remove \";\" characters.\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/mdsufz/StandEnA/main/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9703373812438021,
+      "result": {
+        "original_header": "Step 2 Generating a custom database and annotating genomes using Prokka with this custom database",
+        "type": "Text_excerpt",
+        "value": "In this part, we are going to annotate our genomes using Prokka\nwith the additional custom database to be created from the downloaded proteins in [step 1](#step-1-compiling-protein-sequences-for-the-custom-database-from-ncbi-kegg-and-other-databases). \n"
+      },
+      "source": "https://raw.githubusercontent.com/mdsufz/StandEnA/main/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.8737195728810652,
+      "result": {
+        "original_header": "Step 2.2 Creating the custom database",
+        "type": "Text_excerpt",
+        "value": "In the next step, we combine the additional [downloaded proteins](#step-15-adding-missing-proteins-to-custom-database-through-ortsuite-mediated-searching-in-kegg-or-manual-downloading-from-other-databases) into a custom database.\n```bash\n# Example (make sure to check the extensions of the files so you can use the wildcard)\ncat ../01_customdb/edirect_fasta/*.faa ../01_customdb/manual_download_fasta/*.faa > custom_db.faa\n```\nNote that if some files that have been manually downloaded in the previous step have different file extensions (e.g., download_kos function downloads files with .fa extension), they would not be added to the *custom_db.faa* with this code. Change the above code like this if there are files with .fa extensions:\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/mdsufz/StandEnA/main/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9232797619498463,
+      "result": {
+        "original_header": "Step 2.3 Testing the custom database",
+        "type": "Text_excerpt",
+        "value": "Please make sure that the std_enzymes conda environment is setup and activated before running this step. The std_enzymes conda environment must be activated during all steps of this workflow (i.e., Step 1 through Step 4). \nIf you get an error like \"BLAST Database creation error\", something might be wrong with your database.\nIn our case, we identified some problematic lines and manually removed those. \n"
+      },
+      "source": "https://raw.githubusercontent.com/mdsufz/StandEnA/main/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9101906397311512,
+      "result": {
+        "original_header": "Step 2.4 Shortening contig names",
+        "type": "Text_excerpt",
+        "value": "Prokka does not work when FASTA sequences have long headers (> 20 characters long). \nTherefore, it is necessary to rename the headers of \nthe FASTA files which will be used as input for annotation.\n```bash\n# Create a directory to store the renamed genomes\n# Here we call it \"short\"\nmkdir short\n\n# Move to the folder where your genomes are\ncd /path/to/genomes\n\n# This awk command does the trick of renaming the fasta headers\n# awk is taking each fasta as input and outputing to the directory short\nfor i in *; do awk '/^>/{print \">contig\" ++i; next}{print}' < $i > path/to/02_annotation/short/\"short_\"$i; done\n```\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/mdsufz/StandEnA/main/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.906511448916701,
+      "result": {
+        "original_header": "Step 2.6 Compiling all Prokka annotation results into a single file",
+        "type": "Text_excerpt",
+        "value": "The most important output for our further analysis is the \".tsv\" file \n(read about Prokka output files [here](https://github.com/tseemann/prokka#output-files)). A tab-separated values file is a text format similar to comma-separated values files where, instead of a comma, a tab character is used to separate different fields. Please find more information on this file structure [here](https://en.wikipedia.org/wiki/Tab-separated_values). \n**Output files generated in step 2:** *02_annotation/customdb.faa* custom protein database and [02_annotation/example_prokka_all_results.tsv](examples/02_annotation/example_prokka_all_results.tsv) annotated output file   \n"
+      },
+      "source": "https://raw.githubusercontent.com/mdsufz/StandEnA/main/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.8890855499053936,
+      "result": {
+        "original_header": "Step 4.1 Combining all standardized Prokka results",
+        "type": "Text_excerpt",
+        "value": "Creating directory for this part and changing working directory to this:\n```bash\nmkdir 04_presabs\ncd 04_presabs\n```\n04_presabs/ directory should not be within the 03_standardization/ directory but in another parent directory beside 01_customdb/, 02_annotation/, and 03_standardization/. The directory organization is exemplified [here](examples). The same directory organization must be followed throughout the pipeline. \nNote that for [step 3.2.2](#step-322-combining-standard-names-to-prokka-annotation-results-standardization-of-prokka-annotation) the working directory is at the subdirectory 03_standardization/pw_1/results/standardized/. The relative path from this point to the directory 04_presabs is:\n```bash\nmkdir ../../../../04_presabs\n``` \n"
+      },
+      "source": "https://raw.githubusercontent.com/mdsufz/StandEnA/main/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9802095721242194,
+      "result": {
+        "original_header": "Contributions",
+        "type": "Text_excerpt",
+        "value": "Authors of pipeline: Fatma Chafra, Felipe Borim Corr\u00eaa,and Ulisses Nunes da Rocha \nInstitution: [Microbial Data Sciences group](https://www.ufz.de/index.php?de=43659), Helmholtz Center for Environmental Research, Department of Environmental Microbiology, Leipzig, Germany \nAll feedback is welcome. For errors and bugs, please open a new Issue thread on this github page, and we will try to address them as soon as possible. For general feedback you can contact us at mds@ufz.de. \n \n"
+      },
+      "source": "https://raw.githubusercontent.com/mdsufz/StandEnA/main/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "download": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Step 1.4 Using a custom perl script to download proteins from NCBI Edirect API",
+        "parent_header": [
+          "StandEnA: A customizable workflow to create a standardized presence - absence matrix of annotated proteins",
+          "Workflow steps",
+          "Step 1 Compiling Protein sequences for the custom database from NCBI, KEGG and other databases"
+        ],
+        "type": "Text_excerpt",
+        "value": "This custom script is based on the following example application: [Sample Applications of the E-utilities - Entrez Programming Utilities Help - NCBI Bookshelf](https://www.ncbi.nlm.nih.gov/books/NBK25498/#chapter3.Application_3_Retrieving_large)\n\nThis following code will run the [bulk_edirect_custom.pl](scripts/bulk_edirect_custom.pl) script.\n\nIf you are on *high-performance computer cluster using SLURM as the workload manager*, do not forget to load the modules. If not, do not run the below code.\n```bash\n# Loading module\nmodule load foss/2019b Perl/5.30.0\n```\nTo run the script on your *high-performance computer cluster or local computer*, execute this code: \n\n```bash\n# Create a folder to store downloaded fasta files\nmkdir edirect_fasta\n\n# Running the script\necho \"START: $(date)\"; cat id_synonyms_per_line.tsv | while read line; do id=$(echo \"$line\" | cut -f1); reac=$(echo \"$line\" | cut -f6 ); perl ../scripts/bulk_edirect_custom.pl \"$reac\" protein $id edirect_fasta/ >> log.txt 2>> err.txt; done; echo \"  END  : $(date)\";\n```\nSince it can take hours or even days depending on the size of your list, we recommend running this with the help of another tool (e.g. \"screen\"). To get more information on the screen tool, visit [this website](https://www.gnu.org/software/screen/).\n\nThis code outputs the protein sequence files (compiled within [01_customdb/edirect_fasta](examples/01_customdb/edirect_fasta/) directory) along with [log.txt](examples/01_customdb/log.txt) and [err.txt](examples/01_customdb/err.txt) files for the process containing the log of the actions and any error encountered during the process, respectively.\n\nDo not try to run many instances in parallel (e.g., multiple [id_synonyms_per_line.tsv](examples/01_customdb/id_synonyms_per_line.tsv) files used to access the Edirect API at the same time). \nThis may cause NCBI to black list your IP in which case the [log.txt](examples/01_customdb/log.txt) file from this step may contain \"RESULTS: ERROR\" output for your queries. If this is the case, stop the execution and retry at a later time. If the error persists, you may need to contact NCBI Edirect services.  \n\nNote that in each .faa in the edirect_fasta/ directory, sequences are separated by a new line with no character (empty new line) as seen [here](examples/01_customdb/edirect_fasta/S001-E01-1.14.12.3.faa). Although this is not the usual fasta format, remaining code works with or without these spaces. Therefore, during manual_download_fasta/ formation the same convention of separating sequences with a new line (empty) may or may not be used depending on the preference of the user.\n"
+      },
+      "source": "https://raw.githubusercontent.com/mdsufz/StandEnA/main/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Step 1.5 Adding missing proteins to custom database through OrtSuite-mediated searching in KEGG or manual downloading from other databases",
+        "parent_header": [
+          "StandEnA: A customizable workflow to create a standardized presence - absence matrix of annotated proteins",
+          "Workflow steps",
+          "Step 1 Compiling Protein sequences for the custom database from NCBI, KEGG and other databases"
+        ],
+        "type": "Text_excerpt",
+        "value": "This step is necessary if there are enzymes that were not collected by Edirect in the previous step or additional proteins are desired to be downloaded from other databases. Otherwise, you can skip this step and continue with the Edirect downloaded proteins to perform the later steps.\n\nFor example, you can download some proteins that did not get downloaded by Edirect from the above-step and that you want to retrieve from KEGG Orthology directly using their EC numbers or KO identifiers. For this purpose, the workflow uses OrtSuite. \n\n\nCreate a folder to store manually downloaded fasta files\n```bash\nmkdir manual_download_fasta/\n```\n"
+      },
+      "source": "https://raw.githubusercontent.com/mdsufz/StandEnA/main/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Step 1.5.1 Downloading proteins using OrtSuite",
+        "parent_header": [
+          "StandEnA: A customizable workflow to create a standardized presence - absence matrix of annotated proteins",
+          "Workflow steps",
+          "Step 1 Compiling Protein sequences for the custom database from NCBI, KEGG and other databases",
+          "Step 1.5 Adding missing proteins to custom database through OrtSuite-mediated searching in KEGG or manual downloading from other databases"
+        ],
+        "type": "Text_excerpt",
+        "value": "For this step to be executed, OrtSuite must be installed as described [here](https://github.com/mdsufz/OrtSuite). For further information on how to use the download_kos command used in this step, we recommend checking the OrtSuite GitHub.\n\nNote that you must activate the OrtSuite environment in conda as shown in the OrtSuite GitHub if you followed the conda installation [here](https://github.com/mdsufz/OrtSuite#readme).\nExample files for ecs.txt and kos.txt can be found in [OrtSuite GitHub](https://github.com/mdsufz/OrtSuite/tree/master/examples) and in the [ecs.txt](examples/01_customdb/ecs.txt) and [kos.txt](examples/01_customdb/kos.txt) files for the example case used in this pipeline.\n\n```bash\n# Downloading protein sequences based on a list of EC numbers\ndownload_kos -o manual_download_fasta/ -e ecs.txt > log_ecs.txt 2> err_ecs.txt\n\n# Downloading protein sequences based on a list of KO numbers\ndownload_kos -o manual_download_fasta/ -k kos.txt > log_kos.txt 2> err_kos.txt\n```\nNote that if the same list of proteins are using both EC and KO numbers, the initially downloaded files will be overwritten because the file naming convention for this step uses the KO identifiers for both methods. It is very important to save the files to a new directory (e.g., manual_download_fasta_new/) to avoid the loss of the Edirect downloaded proteins from [step 1.4](#step-14-using-a-custom-perl-script-to-download-proteins-from-ncbi-edirect-api).\n"
+      },
+      "source": "https://raw.githubusercontent.com/mdsufz/StandEnA/main/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Step 1.5.2 Manually downloading proteins from other sources",
+        "parent_header": [
+          "StandEnA: A customizable workflow to create a standardized presence - absence matrix of annotated proteins",
+          "Workflow steps",
+          "Step 1 Compiling Protein sequences for the custom database from NCBI, KEGG and other databases",
+          "Step 1.5 Adding missing proteins to custom database through OrtSuite-mediated searching in KEGG or manual downloading from other databases"
+        ],
+        "type": "Text_excerpt",
+        "value": "Also, we demonstrate the user-customizability and flexibility of the custom database creation of StandEnA by manually downloading a couple of protein sequence files from various different databases. This step is important when the automated retrieval in the previous steps do not work for some of the desired proteins or there are other specific databases that you want to use to retrieve some protein sequences.\n\nManually search for proteins in various databases (eg.: Uniprot, NCBI and KEGG) and save them into FASTA files. Note that protein sequences are found within .faa extension files and this file type is recommended for this step. However, in some cases, databases may only provde the option of downloading protein sequence files in the generic .fasta or .fa format. In this case, make sure that the contents of these files are protein sequences rather than nucleic acid sequences. For more information on different FASTA formats and file extensions visit [this page](https://en.wikipedia.org/wiki/FASTA_format). \n\n```bash\n# Example\n 01_ana_benzene_carboxylase.faa\n 02_benzoyl-coa_bamD.faa\n 02_benzoyl-coa_bamE.faa\n 02_benzoyl-coa_bamF.faa\n 02_benzoyl-coa_bamG.faa\n 02_benzoyl-coa_bamH.faa\n 02_benzoyl-coa+reductase+bami.faa\n 04_uniprot-Nitric+oxide+dismutase+(putative).faa\n```\nNote that these sequences must be saved to the *manual_download_fasta/* directory to be used in later steps.\n\n\n**Output files generated in step 1:** [01_customdb/id_synonyms_per_line.tsv](examples/01_customdb/id_synonyms_per_line.tsv), [01_custombd/edirect_fasta/ directory](examples/01_customdb/edirect_fasta/) files, *01_customdb/manual_download_fasta/* directory files \n\n\n"
+      },
+      "source": "https://raw.githubusercontent.com/mdsufz/StandEnA/main/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Example query file formation for OrtSuite-mediated KEGG API downloaded proteins (from EC numbers)",
+        "parent_header": [
+          "StandEnA: A customizable workflow to create a standardized presence - absence matrix of annotated proteins",
+          "Workflow steps",
+          "Step 3 Generating the Reference File for enzymes used in the annotation and standardizing protein names in Prokka results",
+          "Step 3.1 Generating reference files and query files for each enzyme standard name",
+          "Step 3.1.2 Dividing pathways into separate files for each enzyme/protein and collecting them in the queries directory"
+        ],
+        "type": "Text_excerpt",
+        "value": "To be able to form query files, the EC numbers in [ecs.txt](examples/01_customdb/ecs.txt) must be used to retrieve enzyme names and synonyms. The below code is a variation of the [step 1.1](#step-11-using-kegg-api-to-retrieve-enzyme-synonym-names) demonstrating the customizability and flexibility of the pipeline depending on specific decisions made by the user about protein sequence downloading. Please refer back to [step 1](#step-1-compiling-protein-sequences-for-the-custom-database-from-ncbi-kegg-and-other-databases) for detailed explanations.  \n\nFrom this file, the enzyme synonyms and standard names can be added to files in the queries folder:\n```bash \ncat path/to/ecs.txt | while read line; do out=$(curl -s https://rest.kegg.jp/list/ec:$line); echo $line $out; done > ortsuite_ec_synonyms.txt\n```\nFor later steps to be executed smoothly, the user should manually curate the ortsuite_ec_synonyms.txt file to remove any irrelevant EC numbers or synonyms that might have been retrieved from KEGG but may be irrelevant to the analysis (this decision must be made by the user) to proceed with the relevant information. After relevant synonyms for each standard name have been collected into the *ortsuite_ec_synonyms.txt*, we advise you to manually create a file similar to [uniq_ec.tsv](examples/01_customdb/uniq_ec.tsv) containing the unique enzyme ID, pathway, pathway step ID, enzyme name, and EC numbers (refer to [step 1.1](#step-11-using-kegg-api-to-retrieve-enzyme-synonym-names)). Note that the enzyme name is the first name retrieved in each line in the *ortsuite_ec_synonyms.txt* file and the fields unique enzyme ID, pathway, pathway step ID should be entered following the same naming convention as the [uniq_ec.tsv](examples/01_customdb/uniq_ec.tsv) file. The example final file can be found here: [ortsuite_uniq_ec.tsv](examples/03_standardization/pw_1/ortsuite_uniq_ec.tsv). \n\nThen, the steps for the creation of [ortsuite_pw1_id_synonyms_per_line.tsv](examples/03_standardization/pw_1/ortsuite_pw1_id_synonyms_per_line.tsv) are followed from [step 1.2](#step-12-preparing-the-list-of-synonyms-for-ncbi-edirect):\n\n```bash\npaste ortsuite_uniq_ec.tsv <(cut -f3- -d' ' ortsuite_ec_synonyms.txt) > ortsuite_synonyms_table.tsv\nperl -ne 'chomp; @fields=split(\"\\t\",$_); @syn=split(\";\",$fields[4]); unless(scalar(@syn)==0){foreach(@syn){print join(\"\\t\",@fields[0..3]),\"\\t$_\\n\"}}else{print \"$_\\t$fields[2]\\n\"};' <(cut -f1,3- ortsuite_synonyms_table.tsv) | sed -e 's/\\t /\\t/g' | grep -v \"incorrect\\|gene name\\|misleading\" > ortsuite_synonyms_per_line.tsv\ncat ortsuite_synonyms_per_line.tsv | perl -ne '$line=sprintf(\"%03d\",$.); @fields=split(\"\\t\",$_); $synid=\"S$line-$fields[0]-$fields[3]\"; if($fields[3] eq \"NA\"){print \"$synid\\t\",join(\"\\t\",@fields[0..3]),\"\\t$fields[2]\\n\"}else{print \"$synid\\t$_\"}' > ortsuite_id_synonyms_per_line.tsv\nperl -ne 'chomp; @fields=split(\"\\t\",$_); $fields[5] =~ tr/ //d; unless(scalar(split(\"\",$fields[5]))<=5){print \"$_\\n\"};' ortsuite_id_synonyms_per_line.tsv > tmp; mv tmp ortsuite_id_synonyms_per_line.tsv\n```\nFrom this file, queries can be added to the queries directory following the same steps used for the [id_synonyms_per_line.tsv](examples/01_customdb/id_synonyms_per_line.tsv) file above (starting from [step 3.1.1](#step-311-subsetting-data-to-work-with-one-pathway-at-a-time)) by changing the input file to [ortsuite_pw1_id_synonyms_per_line.tsv](examples/03_standardization/pw_1/ortsuite_pw1_id_synonyms_per_line.tsv). \nNote that the file names for the OrtSuite-mediated KEGG API downloaded proteins are advised to be distinguished from Edirect downloaded proteins in the query directories by using a specific naming convention (e.g., queries/ortsuite_$name.txt for the file names to include \"ortsuite\"). The same naming convention is advised to be used for the intermediate files (e.g., ortsuite_pw_1.txt) to prevent overwriting the files created for Edirect downloaded proteins.\n\n"
+      },
+      "source": "https://raw.githubusercontent.com/mdsufz/StandEnA/main/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Example reference file formation for OrtSuite-mediated KEGG API downloaded proteins (from EC numbers)",
+        "parent_header": [
+          "StandEnA: A customizable workflow to create a standardized presence - absence matrix of annotated proteins",
+          "Workflow steps",
+          "Step 3 Generating the Reference File for enzymes used in the annotation and standardizing protein names in Prokka results",
+          "Step 3.1 Generating reference files and query files for each enzyme standard name",
+          "Step 3.1.3 Collecting standard database identifiers about the enzyme names used during annotation from KEGG to generate a reference file"
+        ],
+        "type": "Text_excerpt",
+        "value": "Collecting EC numbers and KO identifiers from KEGG API:\n```bash\ncat ecs.txt | while read l; do curl -s https://rest.kegg.jp/link/ko/ec:$l; done | sort -k1,2 | uniq | grep -v \"^$\" > ortsuite_pw1_ec_kos.txt\n```\nAfter this step, [ortsuite_ec_kos.txt](examples/03_standardization/pw_1/ortsuite_pw1_ec_kos.txt) file can be used in place of pw_ec_kos.txt in [step 3.1.3](#step-313-collecting-standard-database-identifiers-about-the-enzyme-names-used-during-annotation-from-kegg-to-generate-a-reference-file-to-generate-the-reference-file). Note that the output and input file names for each of the above steps must be changed to prevent overwriting the reference files generated for Edirect downloaded proteins listed in [id_synonyms_per_line.tsv](examples/01_customdb/id_synonyms_per_line.tsv). The suggested naming convention for these files is: ortsuite_kos_def.txt, ortsuite_ec_name.txt, [ortsuite_pw_1_kegg_info.txt](examples/03_standardization/pw_1/ortsuite_pw_1_kegg_info.txt).\n\n\n**Output files generated in step 3.1:** Reference files with standard database identifiers [03_standardization/ortsuite_pw_N_kegg_info.txt](examples/03_standardization/pw_1/ortsuite_pw_1_kegg_info.txt) and [03_standardization/pw_N_kegg_info.txt](examples/03_standardization/pw_1/pw_6_C_kegg_info.txt) along with [03_standardization/pw_N/queries/](examples/03_standardization/pw_1/queries/) directory files\n\n"
+      },
+      "source": "https://raw.githubusercontent.com/mdsufz/StandEnA/main/README.md",
+      "technique": "header_analysis"
+    }
+  ],
+  "download_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/mdsufz/StandEnA/releases"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 1
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/mdsufz/StandEnA/forks"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "mdsufz/StandEnA"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_title": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "StandEnA: A customizable workflow to create a standardized presence - absence matrix of annotated proteins"
+      },
+      "source": "https://raw.githubusercontent.com/mdsufz/StandEnA/main/README.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "has_script_file": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/mdsufz/StandEnA/main/scripts/prokka_sub_script.sh"
+      },
+      "technique": "file_exploration"
+    }
+  ],
+  "images": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/mdsufz/StandEnA/main/img/example_standardization.png"
+      },
+      "source": "https://raw.githubusercontent.com/mdsufz/StandEnA/main/README.md",
+      "technique": "regular_expression"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/mdsufz/StandEnA/main/img/example_clean_output.png"
+      },
+      "source": "https://raw.githubusercontent.com/mdsufz/StandEnA/main/README.md",
+      "technique": "regular_expression"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/mdsufz/StandEnA/main/img/example_grouped_unique_1.png"
+      },
+      "source": "https://raw.githubusercontent.com/mdsufz/StandEnA/main/README.md",
+      "technique": "regular_expression"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/mdsufz/StandEnA/main/img/example_grouped_unique_2.png"
+      },
+      "source": "https://raw.githubusercontent.com/mdsufz/StandEnA/main/README.md",
+      "technique": "regular_expression"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/mdsufz/StandEnA/main/img/example_grouped_unique_3.png"
+      },
+      "source": "https://raw.githubusercontent.com/mdsufz/StandEnA/main/README.md",
+      "technique": "regular_expression"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/mdsufz/StandEnA/main/img/example_grouped_unique_4.png"
+      },
+      "source": "https://raw.githubusercontent.com/mdsufz/StandEnA/main/README.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "installation": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Installation instructions",
+        "parent_header": [
+          "StandEnA: A customizable workflow to create a standardized presence - absence matrix of annotated proteins"
+        ],
+        "type": "Text_excerpt",
+        "value": "Clone this repository\n```bash\ngit clone https://github.com/mdsufz/StandEnA.git\n```\nInstall Miniconda3 and add channels\n```bash\nwget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh\nbash Miniconda3-latest-Linux-x86_64.sh\n\nconda config --add channels defaults\nconda config --add channels bioconda\nconda config --add channels conda-forge\n```\nCreate and activate conda environment\n```bash\nconda create -n std_enzymes python=3.6.13 perl-lwp-simple perl-lwp-protocol-https prokka blast==2.9.0\n```\n\nSet Perl 5.22.0 default path for libraries\n```bash\nconda env config vars set PERL5LIB=$CONDA_PREFIX/lib/perl5/site_perl/5.22.0/ -n std_enzymes\n```\n\nActivate environment\n```bash\nconda activate std_enzymes\n```\n\nInstall required packages inside the environment\n```bash\nconda install -c bioconda perl-lwp-simple prokka blast==2.9.0\n```"
+      },
+      "source": "https://raw.githubusercontent.com/mdsufz/StandEnA/main/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Compiling information from literature and KEGG database for the pathways/enzymes of interest to be used in uniq_ec.tsv file",
+        "parent_header": [
+          "StandEnA: A customizable workflow to create a standardized presence - absence matrix of annotated proteins",
+          "Workflow steps",
+          "Step 1 Compiling Protein sequences for the custom database from NCBI, KEGG and other databases",
+          "Step 1.1 Using KEGG API to retrieve enzyme synonym names",
+          "Step 1.1.1 Preparing a tab separated values file following the example file"
+        ],
+        "type": "Text_excerpt",
+        "value": "Users are suggested to identify their pathways of interest from literature and to use the KEGG database to obtain information about its component enzymes. \nFor example, the example pathway used in this GitHub is regarding benzene/toluene degradation (KEGG Module number [M00547](https://www.genome.jp/kegg-bin/show_module?M00547+R03543)). This module page was used to compile the enzyme EC numbers through clicking on each KO number (K identifier number) defined under the \"Definition\" such as [K03268](https://www.genome.jp/entry/K03268) and obtaining the EC numbers of the enzyme orthologs from the KO number webpage. For more information about EC numbers and KO identifiers, please refer to [this page](https://www.genome.jp/kegg/annotation/enzyme.html). The EC numbers are listed under the \"Name\" section of each KO number page. To check the exact identity of each EC number, refer to their separate KEGG information pages (accessed through clicking on the corresponding EC number on the KO number page) such as the page for [1.14.12.3](https://www.genome.jp/entry/1.14.12.3). Depending on the aim of your analysis, you can choose to include all or a particular subset of the EC numbers listed on a single KO number page in the [uniq_ec.tsv](examples/01_customdb/uniq_ec.tsv) file. In this case, depending on your starting compound, a different EC number should be used (for benzene [1.14.12.3](https://www.genome.jp/entry/1.14.12.3), for toluene [1.14.12.11](https://www.genome.jp/entry/1.14.12.11), for chlorobenzene [1.14.12.26](https://www.genome.jp/entry/1.14.12.26)). If all three starting compounds are to be analyzed, then all three of these EC numbers should be included in the [uniq_ec.tsv](examples/01_customdb/uniq_ec.tsv) file. Please note that each row of the [uniq_ec.tsv](examples/01_customdb/uniq_ec.tsv) file should include only one EC number, meaning there can be multiple rows for the same enzyme standard name but with different EC numbers.\n\nIn cases where a KEGG module is not found for your desired pathway, then the KEGG database can be used to compile each step of the reaction from separate enzyme information pages given that the names of these enzymes are known.\n\n----\n\n[uniq_ec.tsv](examples/01_customdb/uniq_ec.tsv) is the example file. A tab-separated values file is a text format similar to comma-separated values file where, instead of a comma, a tab character is used to separate different fields. Please find more information on this file structure [here](https://en.wikipedia.org/wiki/Tab-separated_values).\n\nColumns in the [uniq_ec.tsv](examples/01_customdb/uniq_ec.tsv) file should contain in order (i.e., from left to right): unique enzyme ID, pathway, pathway step ID, enzyme name, and EC number. This column arrangement is extremely important because some of those columns will be used to organize the download of protein sequence files in [step 1.2](#step-12-preparing-the-list-of-synonyms-for-ncbi-edirect). Although a single enzyme might be given multiple EC numbers by databases, each row of [uniq_ec.tsv](examples/01_customdb/uniq_ec.tsv) must contain only 1 EC number. Therefore, users should enter each EC number as a separate row with the corresponding unique enzyme ID, pathway, pathway step ID, enzyme name column information. Please read the above heading about compiling information to be used in [uniq_ec.tsv](examples/01_customdb/uniq_ec.tsv) file carefully before proceeding with the next steps.\n\nNote that the unique enzyme ID and pathway step ID are provided by the user for their pathway of interest. In the example file, unique enzyme ID is named using the convention E01, E02 etc. while the pathway step ID is named according to the pathway number and the step at which the enzyme is working at (e.g., pathway 1 step 1 is 1.1). Depending on the users' preferences, other naming conventions can be used in place of this provided that the column order does not change. However, each ID needs to be unique and must be named using a consistent alphanumeric naming convention with no whitespace characters within the names.\n\nPlease be aware that trailing spaces might exist depending on how you generated the file (e.g. Windows OS). Trailing spaces are space characters found at the end of a line. If trailing spaces are not removed, this causes a problem during synonym retrieval from the KEGG database in [step 1.4](#step-14-using-a-custom-perl-script-to-download-proteins-from-ncbi-edirect-api). \n\nTo check for trailing spaces run:\n\n```bash\ncat -v uniq_ec.tsv\n```\nIf there are any, the symbol ^M should appear at the end of the lines. To remove the trailing spaces:\n\n```bash\nmv uniq_ec.tsv temp_file.tsv\nsed -e \"s/\\r//g\" temp_file.tsv > uniq_ec.tsv\n```\n\nNow, the file is free of trailing whitespaces.\n\n"
+      },
+      "source": "https://raw.githubusercontent.com/mdsufz/StandEnA/main/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Step 1.2 Preparing the list of synonyms for NCBI Edirect",
+        "parent_header": [
+          "StandEnA: A customizable workflow to create a standardized presence - absence matrix of annotated proteins",
+          "Workflow steps",
+          "Step 1 Compiling Protein sequences for the custom database from NCBI, KEGG and other databases"
+        ],
+        "type": "Text_excerpt",
+        "value": "Parsing the enzyme synonyms to write down one synonym per line and removing \"gene name\", \"incorrect\" and \"misleading\" flags retrieved with the synonyms:\n```bash\n# Parsing the synonyms and removing output that can't be used \n\nperl -ne 'chomp; @fields=split(\"\\t\",$_); @syn=split(\";\",$fields[4]); unless(scalar(@syn)==0){foreach(@syn){print join(\"\\t\",@fields[0..3]),\"\\t$_\\n\"}}else{print \"$_\\t$fields[2]\\n\"};' <(cut -f1,3- synonyms_table.tsv) | sed -e 's/\\t /\\t/g' | grep -v \"incorrect\\|gene name\\|misleading\" > synonyms_per_line.tsv\n```\n\nFor some enzymes that did not return synonyms because of any reason, *manually insert the enzyme names that you know in column 5 of synonyms_per_line.tsv*. It is expected that the enzymes with ambiguous EC numbers will not return any synonyms (e.g., E-phenylitaconyl-CoA hydratase with EC number 4.2.1.- where hyphen indicates the absence of a single EC number). Users should manually insert the known enzyme names in this case.\n\nNow, the following command will create a new column and add new IDs for synonyms, which will become the first column, that will be used to name the fasta files when using Edirect:\n```bash\ncat synonyms_per_line.tsv | perl -ne '$line=sprintf(\"%03d\",$.); @fields=split(\"\\t\",$_); $synid=\"S$line-$fields[0]-$fields[3]\"; if($fields[3] eq \"NA\"){print \"$synid\\t\",join(\"\\t\",@fields[0..3]),\"\\t$fields[2]\\n\"}else{print \"$synid\\t$_\"}' > id_synonyms_per_line.tsv\n```\n"
+      },
+      "source": "https://raw.githubusercontent.com/mdsufz/StandEnA/main/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Step 1.5 Adding missing proteins to custom database through OrtSuite-mediated searching in KEGG or manual downloading from other databases",
+        "parent_header": [
+          "StandEnA: A customizable workflow to create a standardized presence - absence matrix of annotated proteins",
+          "Workflow steps",
+          "Step 1 Compiling Protein sequences for the custom database from NCBI, KEGG and other databases"
+        ],
+        "type": "Text_excerpt",
+        "value": "This step is necessary if there are enzymes that were not collected by Edirect in the previous step or additional proteins are desired to be downloaded from other databases. Otherwise, you can skip this step and continue with the Edirect downloaded proteins to perform the later steps.\n\nFor example, you can download some proteins that did not get downloaded by Edirect from the above-step and that you want to retrieve from KEGG Orthology directly using their EC numbers or KO identifiers. For this purpose, the workflow uses OrtSuite. \n\n\nCreate a folder to store manually downloaded fasta files\n```bash\nmkdir manual_download_fasta/\n```\n"
+      },
+      "source": "https://raw.githubusercontent.com/mdsufz/StandEnA/main/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Step 4.2 Manually preparing file of protein/enzyme names to be used for generating the presence - absence matrix",
+        "parent_header": [
+          "StandEnA: A customizable workflow to create a standardized presence - absence matrix of annotated proteins",
+          "Workflow steps",
+          "Step 4 Generating matrix of standardized presence absence"
+        ],
+        "type": "Text_excerpt",
+        "value": "Prepare a tab separated file with two columns which contains the protein ID and its corresponding protein standard name. These IDs will appear in the presence - absence matrix output at the end of this step and may be identical to or different from the enzyme ID convention used in [step 1.1](#step-11-using-kegg-api-to-retrieve-enzyme-synonym-names). \nA tab-separated values file is a text format similar to comma-separated values files where, instead of a comma, a tab character is used to separate different fields. Please find more information on this file structure [here](https://en.wikipedia.org/wiki/Tab-separated_values).\n\nBelow is the example file ([ids_to_names.tsv](examples/04_presabs/ids_to_names.tsv)):\n```\nCP1001\tbenzene dioxygenase, alpha subunit\nCP1002\tbenzene dioxygenase, beta subunit\nCP1003\tbenzene dioxygenase, ferredoxin component\nCP1004\tbenzene dioxygenase, ferredoxin reductase component\n```\nNote that the protein IDs are dependent on the preference of the user. Here we suggested the usage of an ID convention of CP1001, CP1002 etc. Protein names to be used for the presence absence matrix must match the names used in the standardization of Prokka annotations in [step 3.2.1](#step-321-performing-queries-of-the-prokka-annotation-using-files-in-queries-directory-and-dumping-results-into-files). As a guideline, the first column containing enzyme standard names of the results/unique/ directory files from [step 3.2.1](#step-321-performing-queries-of-the-prokka-annotation-using-files-in-queries-directory-and-dumping-results-into-files) can be copied to this file. For additional information, please check the your kegg_info.txt file for Edirect downloaded proteins (example file can be found under the name [pw_6_C_kegg_info.txt](examples/03_standardization/pw_1/pw_6_C_kegg_info.txt)) and [ortsuite_pw_1_kegg_info.txt](examples/03_standardization/pw_1/ortsuite_pw_1_kegg_info.txt) for proteins downloaded from KEGG using OrtSuite.generated in [step 3.1.3](#step-313-collecting-standard-database-identifiers-about-the-enzyme-names-used-during-annotation-from-kegg-to-generate-a-reference-file).\n\nPlease note that the **standard names listed in the [ids_to_names.tsv](examples/04_presabs/ids_to_names.tsv) file** should not use parentheses characters ( \"(\", \")\", \"[\", \"]\") and contain lowercase characters only.\n\n----\n\n**Grouped Presence-Absence Matrix Option:**\nIf the intention is to produce a final presence-absence matrix that groups all subunits/components of the same enzyme together (as opposed to displaying them as separate entities as seen in the example ([ids_to_names.tsv](examples/04_presabs/ids_to_names.tsv))), then the grouped standard name can be used instead of the standard name provided in KEGG during the standardization step of this pipeline. In this case, [step 3.2.1](#step-321-performing-queries-of-the-prokka-annotation-using-files-in-queries-directory-and-dumping-results-into-files) can be repeated partly by copying the initial unique files into a grouped_unique directory and manually changing the standard name column as desired. For the example ([ids_to_names.tsv](examples/04_presabs/ids_to_names.tsv)), CP1001 to CP1004 can be standardized as \"benzene dioxygenase\" so these will be grouped together in the final output.\n\nIf not done so already, please repeat all the steps starting from the manual curation of .uniq files in [step 3.2.1](#step-321-performing-queries-of-the-prokka-annotation-using-files-in-queries-directory-and-dumping-results-into-files) up until this step to produce the grouped presence-absence matrix. For this case grouped_ids_to_names.tsv file might contain:\n```\nCP1001\tbenzene dioxygenase\nCP1002\tcis-1,2-dihydrobenzene-1,2-diol dehydrogenase\nCP1003  Phenol 2-monooxygenase\nCP1004  2-hydroxymuconic semialdehyde hydrolase\n```\nNote that grouped_ids_to_names.tsv file must **exactly match** with the grouped standard names used in [step 3.2.1](#step-321-performing-queries-of-the-prokka-annotation-using-files-in-queries-directory-and-dumping-results-into-files) while forming the grouped_unique files.\n\n-------\n"
+      },
+      "source": "https://raw.githubusercontent.com/mdsufz/StandEnA/main/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 0.9216814831375567,
+      "result": {
+        "original_header": "Workflow steps",
+        "type": "Text_excerpt",
+        "value": "StandEnA is divided into 4 steps: \n**Step 3** - [Generating the Reference File for enzymes used in the annotation and standardizing protein names in Prokka results](#step-3-generating-the-reference-file-for-enzymes-used-in-the-annotation-and-standardizing-protein-names-in-prokka-results)\n  \n&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**Step 3.1** - [Generating reference files and query files for each enzyme standard name](#step-31-generating-reference-files-and-query-files-for-each-enzyme-standard-name)\n  \n&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**Step 3.2** - [Performing queries and standardizing annotation results](#step-32-performing-queries-and-standardizing-annotation-results) \n"
+      },
+      "source": "https://raw.githubusercontent.com/mdsufz/StandEnA/main/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9993109848458297,
+      "result": {
+        "original_header": "Step 1 Compiling Protein sequences for the custom database from NCBI, KEGG and other databases",
+        "type": "Text_excerpt",
+        "value": "This step is necessary to extend the scope of proteins that Prokka uses by default to annotate genomes. \nFor that, below steps will be used to prepare a list of synonyms for all enzymes of interest to be downloaded from NCBI.\nThis database will be called custom database (custom_db.faa) in later steps.\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/mdsufz/StandEnA/main/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9999992703952035,
+      "result": {
+        "original_header": "Step 1.1 Using KEGG API to retrieve enzyme synonym names",
+        "type": "Text_excerpt",
+        "value": "Make the new working directory and switch to this directory:\n```bash\nmkdir 01_customdb\ncd 01_customdb\n```\nNote that the directory structure in StandEnA is very important for the execution of later steps. As indicated in the [examples](examples) directory, each directory should be created within the parent StandEnA directory. For flawless execution of next steps, users should not create these directories elsewhere or in another daughter directory within StandEnA.\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/mdsufz/StandEnA/main/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9483748430170047,
+      "result": {
+        "original_header": "Step 1.1.2 Retrieving the synonyms for each enzyme from KEGG API",
+        "type": "Text_excerpt",
+        "value": "After preparing this file, retrieve the enzyme/protein synonyms for each name in the [uniq_ec.tsv](examples/01_customdb/uniq_ec.tsv) file from KEGG using their API using this code:\n```bash\n# Retrieve synonyms from KEGG API\ncut -f5 uniq_ec.tsv | while read line; do out=$(curl -s https://rest.kegg.jp/list/ec:$line); echo $line $out; done > ec_synonyms.txt\n\n# Combine tables\npaste uniq_ec.tsv <(cut -f3- -d' ' ec_synonyms.txt) > synonyms_table.tsv\n```\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/mdsufz/StandEnA/main/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9999970971790116,
+      "result": {
+        "original_header": "Step 2.1 Creating the work directory",
+        "type": "Text_excerpt",
+        "value": "Create the directory where Prokka annotation results will be saved to.\n```bash\ncd ..\nmkdir 02_annotation\ncd 02_annotation\n```\nNote that this directory should not be within the 01_customdb/ directory but in another parent directory beside 01_customdb/. The directory organization is exemplified [here](examples). The same directory organization must be followed throughout the pipeline.\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/mdsufz/StandEnA/main/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.998401058851034,
+      "result": {
+        "original_header": "Step 2.2 Creating the custom database",
+        "type": "Text_excerpt",
+        "value": "In the next step, we combine the additional [downloaded proteins](#step-15-adding-missing-proteins-to-custom-database-through-ortsuite-mediated-searching-in-kegg-or-manual-downloading-from-other-databases) into a custom database.\n```bash\n# Example (make sure to check the extensions of the files so you can use the wildcard)\ncat ../01_customdb/edirect_fasta/*.faa ../01_customdb/manual_download_fasta/*.faa > custom_db.faa\n```\nNote that if some files that have been manually downloaded in the previous step have different file extensions (e.g., download_kos function downloads files with .fa extension), they would not be added to the *custom_db.faa* with this code. Change the above code like this if there are files with .fa extensions:\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/mdsufz/StandEnA/main/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9999989022078776,
+      "result": {
+        "original_header": "Step 2.3 Testing the custom database",
+        "type": "Text_excerpt",
+        "value": "Please make sure that the std_enzymes conda environment is setup and activated before running this step. The std_enzymes conda environment must be activated during all steps of this workflow (i.e., Step 1 through Step 4). \nRun this command to check your conda environments:\n```\nconda env list\n```\nstd_enzymes must be listed in the output. If not, please refer back to the [Installation Instructions](#installation-instructions) steps. \nRun this code to activate the environment:\n```\nconda activate std_enzymes\n``` \n"
+      },
+      "source": "https://raw.githubusercontent.com/mdsufz/StandEnA/main/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9889520648778107,
+      "result": {
+        "original_header": "Step 2.6 Compiling all Prokka annotation results into a single file",
+        "type": "Text_excerpt",
+        "value": "Optional but recommended step: Formating genome names from results.\n```bash\nsed -ri -e 's/^out_short_//' -e 's/\\/PROKKA_[0-9]+\\.tsv//' prokka_all.tsv\nsed -ri '1 s/\\S+/bin_id/' prokka_all.tsv\n``` \n"
+      },
+      "source": "https://raw.githubusercontent.com/mdsufz/StandEnA/main/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9493411210718827,
+      "result": {
+        "original_header": "Step 4.1 Combining all standardized Prokka results",
+        "type": "Text_excerpt",
+        "value": "Creating directory for this part and changing working directory to this:\n```bash\nmkdir 04_presabs\ncd 04_presabs\n```\n04_presabs/ directory should not be within the 03_standardization/ directory but in another parent directory beside 01_customdb/, 02_annotation/, and 03_standardization/. The directory organization is exemplified [here](examples). The same directory organization must be followed throughout the pipeline. \nNote that for [step 3.2.2](#step-322-combining-standard-names-to-prokka-annotation-results-standardization-of-prokka-annotation) the working directory is at the subdirectory 03_standardization/pw_1/results/standardized/. The relative path from this point to the directory 04_presabs is:\n```bash\nmkdir ../../../../04_presabs\n``` \n"
+      },
+      "source": "https://raw.githubusercontent.com/mdsufz/StandEnA/main/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "issue_tracker": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/mdsufz/StandEnA/issues"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "keywords": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": ""
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "license": [
+    {
+      "confidence": 1,
+      "result": {
+        "name": "GNU General Public License v3.0",
+        "spdx_id": "GPL-3.0",
+        "type": "License",
+        "url": "https://api.github.com/licenses/gpl-3.0",
+        "value": "https://api.github.com/licenses/gpl-3.0"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "File_dump",
+        "value": "                    GNU GENERAL PUBLIC LICENSE\n                       Version 3, 29 June 2007\n\n Copyright (C) 2007 Free Software Foundation, Inc. <https://fsf.org/>\n Everyone is permitted to copy and distribute verbatim copies\n of this license document, but changing it is not allowed.\n\n                            Preamble\n\n  The GNU General Public License is a free, copyleft license for\nsoftware and other kinds of works.\n\n  The licenses for most software and other practical works are designed\nto take away your freedom to share and change the works.  By contrast,\nthe GNU General Public License is intended to guarantee your freedom to\nshare and change all versions of a program--to make sure it remains free\nsoftware for all its users.  We, the Free Software Foundation, use the\nGNU General Public License for most of our software; it applies also to\nany other work released this way by its authors.  You can apply it to\nyour programs, too.\n\n  When we speak of free software, we are referring to freedom, not\nprice.  Our General Public Licenses are designed to make sure that you\nhave the freedom to distribute copies of free software (and charge for\nthem if you wish), that you receive source code or can get it if you\nwant it, that you can change the software or use pieces of it in new\nfree programs, and that you know you can do these things.\n\n  To protect your rights, we need to prevent others from denying you\nthese rights or asking you to surrender the rights.  Therefore, you have\ncertain responsibilities if you distribute copies of the software, or if\nyou modify it: responsibilities to respect the freedom of others.\n\n  For example, if you distribute copies of such a program, whether\ngratis or for a fee, you must pass on to the recipients the same\nfreedoms that you received.  You must make sure that they, too, receive\nor can get the source code.  And you must show them these terms so they\nknow their rights.\n\n  Developers that use the GNU GPL protect your rights with two steps:\n(1) assert copyright on the software, and (2) offer you this License\ngiving you legal permission to copy, distribute and/or modify it.\n\n  For the developers' and authors' protection, the GPL clearly explains\nthat there is no warranty for this free software.  For both users' and\nauthors' sake, the GPL requires that modified versions be marked as\nchanged, so that their problems will not be attributed erroneously to\nauthors of previous versions.\n\n  Some devices are designed to deny users access to install or run\nmodified versions of the software inside them, although the manufacturer\ncan do so.  This is fundamentally incompatible with the aim of\nprotecting users' freedom to change the software.  The systematic\npattern of such abuse occurs in the area of products for individuals to\nuse, which is precisely where it is most unacceptable.  Therefore, we\nhave designed this version of the GPL to prohibit the practice for those\nproducts.  If such problems arise substantially in other domains, we\nstand ready to extend this provision to those domains in future versions\nof the GPL, as needed to protect the freedom of users.\n\n  Finally, every program is threatened constantly by software patents.\nStates should not allow patents to restrict development and use of\nsoftware on general-purpose computers, but in those that do, we wish to\navoid the special danger that patents applied to a free program could\nmake it effectively proprietary.  To prevent this, the GPL assures that\npatents cannot be used to render the program non-free.\n\n  The precise terms and conditions for copying, distribution and\nmodification follow.\n\n                       TERMS AND CONDITIONS\n\n  0. Definitions.\n\n  \"This License\" refers to version 3 of the GNU General Public License.\n\n  \"Copyright\" also means copyright-like laws that apply to other kinds of\nworks, such as semiconductor masks.\n\n  \"The Program\" refers to any copyrightable work licensed under this\nLicense.  Each licensee is addressed as \"you\".  \"Licensees\" and\n\"recipients\" may be individuals or organizations.\n\n  To \"modify\" a work means to copy from or adapt all or part of the work\nin a fashion requiring copyright permission, other than the making of an\nexact copy.  The resulting work is called a \"modified version\" of the\nearlier work or a work \"based on\" the earlier work.\n\n  A \"covered work\" means either the unmodified Program or a work based\non the Program.\n\n  To \"propagate\" a work means to do anything with it that, without\npermission, would make you directly or secondarily liable for\ninfringement under applicable copyright law, except executing it on a\ncomputer or modifying a private copy.  Propagation includes copying,\ndistribution (with or without modification), making available to the\npublic, and in some countries other activities as well.\n\n  To \"convey\" a work means any kind of propagation that enables other\nparties to make or receive copies.  Mere interaction with a user through\na computer network, with no transfer of a copy, is not conveying.\n\n  An interactive user interface displays \"Appropriate Legal Notices\"\nto the extent that it includes a convenient and prominently visible\nfeature that (1) displays an appropriate copyright notice, and (2)\ntells the user that there is no warranty for the work (except to the\nextent that warranties are provided), that licensees may convey the\nwork under this License, and how to view a copy of this License.  If\nthe interface presents a list of user commands or options, such as a\nmenu, a prominent item in the list meets this criterion.\n\n  1. Source Code.\n\n  The \"source code\" for a work means the preferred form of the work\nfor making modifications to it.  \"Object code\" means any non-source\nform of a work.\n\n  A \"Standard Interface\" means an interface that either is an official\nstandard defined by a recognized standards body, or, in the case of\ninterfaces specified for a particular programming language, one that\nis widely used among developers working in that language.\n\n  The \"System Libraries\" of an executable work include anything, other\nthan the work as a whole, that (a) is included in the normal form of\npackaging a Major Component, but which is not part of that Major\nComponent, and (b) serves only to enable use of the work with that\nMajor Component, or to implement a Standard Interface for which an\nimplementation is available to the public in source code form.  A\n\"Major Component\", in this context, means a major essential component\n(kernel, window system, and so on) of the specific operating system\n(if any) on which the executable work runs, or a compiler used to\nproduce the work, or an object code interpreter used to run it.\n\n  The \"Corresponding Source\" for a work in object code form means all\nthe source code needed to generate, install, and (for an executable\nwork) run the object code and to modify the work, including scripts to\ncontrol those activities.  However, it does not include the work's\nSystem Libraries, or general-purpose tools or generally available free\nprograms which are used unmodified in performing those activities but\nwhich are not part of the work.  For example, Corresponding Source\nincludes interface definition files associated with source files for\nthe work, and the source code for shared libraries and dynamically\nlinked subprograms that the work is specifically designed to require,\nsuch as by intimate data communication or control flow between those\nsubprograms and other parts of the work.\n\n  The Corresponding Source need not include anything that users\ncan regenerate automatically from other parts of the Corresponding\nSource.\n\n  The Corresponding Source for a work in source code form is that\nsame work.\n\n  2. Basic Permissions.\n\n  All rights granted under this License are granted for the term of\ncopyright on the Program, and are irrevocable provided the stated\nconditions are met.  This License explicitly affirms your unlimited\npermission to run the unmodified Program.  The output from running a\ncovered work is covered by this License only if the output, given its\ncontent, constitutes a covered work.  This License acknowledges your\nrights of fair use or other equivalent, as provided by copyright law.\n\n  You may make, run and propagate covered works that you do not\nconvey, without conditions so long as your license otherwise remains\nin force.  You may convey covered works to others for the sole purpose\nof having them make modifications exclusively for you, or provide you\nwith facilities for running those works, provided that you comply with\nthe terms of this License in conveying all material for which you do\nnot control copyright.  Those thus making or running the covered works\nfor you must do so exclusively on your behalf, under your direction\nand control, on terms that prohibit them from making any copies of\nyour copyrighted material outside their relationship with you.\n\n  Conveying under any other circumstances is permitted solely under\nthe conditions stated below.  Sublicensing is not allowed; section 10\nmakes it unnecessary.\n\n  3. Protecting Users' Legal Rights From Anti-Circumvention Law.\n\n  No covered work shall be deemed part of an effective technological\nmeasure under any applicable law fulfilling obligations under article\n11 of the WIPO copyright treaty adopted on 20 December 1996, or\nsimilar laws prohibiting or restricting circumvention of such\nmeasures.\n\n  When you convey a covered work, you waive any legal power to forbid\ncircumvention of technological measures to the extent such circumvention\nis effected by exercising rights under this License with respect to\nthe covered work, and you disclaim any intention to limit operation or\nmodification of the work as a means of enforcing, against the work's\nusers, your or third parties' legal rights to forbid circumvention of\ntechnological measures.\n\n  4. Conveying Verbatim Copies.\n\n  You may convey verbatim copies of the Program's source code as you\nreceive it, in any medium, provided that you conspicuously and\nappropriately publish on each copy an appropriate copyright notice;\nkeep intact all notices stating that this License and any\nnon-permissive terms added in accord with section 7 apply to the code;\nkeep intact all notices of the absence of any warranty; and give all\nrecipients a copy of this License along with the Program.\n\n  You may charge any price or no price for each copy that you convey,\nand you may offer support or warranty protection for a fee.\n\n  5. Conveying Modified Source Versions.\n\n  You may convey a work based on the Program, or the modifications to\nproduce it from the Program, in the form of source code under the\nterms of section 4, provided that you also meet all of these conditions:\n\n    a) The work must carry prominent notices stating that you modified\n    it, and giving a relevant date.\n\n    b) The work must carry prominent notices stating that it is\n    released under this License and any conditions added under section\n    7.  This requirement modifies the requirement in section 4 to\n    \"keep intact all notices\".\n\n    c) You must license the entire work, as a whole, under this\n    License to anyone who comes into possession of a copy.  This\n    License will therefore apply, along with any applicable section 7\n    additional terms, to the whole of the work, and all its parts,\n    regardless of how they are packaged.  This License gives no\n    permission to license the work in any other way, but it does not\n    invalidate such permission if you have separately received it.\n\n    d) If the work has interactive user interfaces, each must display\n    Appropriate Legal Notices; however, if the Program has interactive\n    interfaces that do not display Appropriate Legal Notices, your\n    work need not make them do so.\n\n  A compilation of a covered work with other separate and independent\nworks, which are not by their nature extensions of the covered work,\nand which are not combined with it such as to form a larger program,\nin or on a volume of a storage or distribution medium, is called an\n\"aggregate\" if the compilation and its resulting copyright are not\nused to limit the access or legal rights of the compilation's users\nbeyond what the individual works permit.  Inclusion of a covered work\nin an aggregate does not cause this License to apply to the other\nparts of the aggregate.\n\n  6. Conveying Non-Source Forms.\n\n  You may convey a covered work in object code form under the terms\nof sections 4 and 5, provided that you also convey the\nmachine-readable Corresponding Source under the terms of this License,\nin one of these ways:\n\n    a) Convey the object code in, or embodied in, a physical product\n    (including a physical distribution medium), accompanied by the\n    Corresponding Source fixed on a durable physical medium\n    customarily used for software interchange.\n\n    b) Convey the object code in, or embodied in, a physical product\n    (including a physical distribution medium), accompanied by a\n    written offer, valid for at least three years and valid for as\n    long as you offer spare parts or customer support for that product\n    model, to give anyone who possesses the object code either (1) a\n    copy of the Corresponding Source for all the software in the\n    product that is covered by this License, on a durable physical\n    medium customarily used for software interchange, for a price no\n    more than your reasonable cost of physically performing this\n    conveying of source, or (2) access to copy the\n    Corresponding Source from a network server at no charge.\n\n    c) Convey individual copies of the object code with a copy of the\n    written offer to provide the Corresponding Source.  This\n    alternative is allowed only occasionally and noncommercially, and\n    only if you received the object code with such an offer, in accord\n    with subsection 6b.\n\n    d) Convey the object code by offering access from a designated\n    place (gratis or for a charge), and offer equivalent access to the\n    Corresponding Source in the same way through the same place at no\n    further charge.  You need not require recipients to copy the\n    Corresponding Source along with the object code.  If the place to\n    copy the object code is a network server, the Corresponding Source\n    may be on a different server (operated by you or a third party)\n    that supports equivalent copying facilities, provided you maintain\n    clear directions next to the object code saying where to find the\n    Corresponding Source.  Regardless of what server hosts the\n    Corresponding Source, you remain obligated to ensure that it is\n    available for as long as needed to satisfy these requirements.\n\n    e) Convey the object code using peer-to-peer transmission, provided\n    you inform other peers where the object code and Corresponding\n    Source of the work are being offered to the general public at no\n    charge under subsection 6d.\n\n  A separable portion of the object code, whose source code is excluded\nfrom the Corresponding Source as a System Library, need not be\nincluded in conveying the object code work.\n\n  A \"User Product\" is either (1) a \"consumer product\", which means any\ntangible personal property which is normally used for personal, family,\nor household purposes, or (2) anything designed or sold for incorporation\ninto a dwelling.  In determining whether a product is a consumer product,\ndoubtful cases shall be resolved in favor of coverage.  For a particular\nproduct received by a particular user, \"normally used\" refers to a\ntypical or common use of that class of product, regardless of the status\nof the particular user or of the way in which the particular user\nactually uses, or expects or is expected to use, the product.  A product\nis a consumer product regardless of whether the product has substantial\ncommercial, industrial or non-consumer uses, unless such uses represent\nthe only significant mode of use of the product.\n\n  \"Installation Information\" for a User Product means any methods,\nprocedures, authorization keys, or other information required to install\nand execute modified versions of a covered work in that User Product from\na modified version of its Corresponding Source.  The information must\nsuffice to ensure that the continued functioning of the modified object\ncode is in no case prevented or interfered with solely because\nmodification has been made.\n\n  If you convey an object code work under this section in, or with, or\nspecifically for use in, a User Product, and the conveying occurs as\npart of a transaction in which the right of possession and use of the\nUser Product is transferred to the recipient in perpetuity or for a\nfixed term (regardless of how the transaction is characterized), the\nCorresponding Source conveyed under this section must be accompanied\nby the Installation Information.  But this requirement does not apply\nif neither you nor any third party retains the ability to install\nmodified object code on the User Product (for example, the work has\nbeen installed in ROM).\n\n  The requirement to provide Installation Information does not include a\nrequirement to continue to provide support service, warranty, or updates\nfor a work that has been modified or installed by the recipient, or for\nthe User Product in which it has been modified or installed.  Access to a\nnetwork may be denied when the modification itself materially and\nadversely affects the operation of the network or violates the rules and\nprotocols for communication across the network.\n\n  Corresponding Source conveyed, and Installation Information provided,\nin accord with this section must be in a format that is publicly\ndocumented (and with an implementation available to the public in\nsource code form), and must require no special password or key for\nunpacking, reading or copying.\n\n  7. Additional Terms.\n\n  \"Additional permissions\" are terms that supplement the terms of this\nLicense by making exceptions from one or more of its conditions.\nAdditional permissions that are applicable to the entire Program shall\nbe treated as though they were included in this License, to the extent\nthat they are valid under applicable law.  If additional permissions\napply only to part of the Program, that part may be used separately\nunder those permissions, but the entire Program remains governed by\nthis License without regard to the additional permissions.\n\n  When you convey a copy of a covered work, you may at your option\nremove any additional permissions from that copy, or from any part of\nit.  (Additional permissions may be written to require their own\nremoval in certain cases when you modify the work.)  You may place\nadditional permissions on material, added by you to a covered work,\nfor which you have or can give appropriate copyright permission.\n\n  Notwithstanding any other provision of this License, for material you\nadd to a covered work, you may (if authorized by the copyright holders of\nthat material) supplement the terms of this License with terms:\n\n    a) Disclaiming warranty or limiting liability differently from the\n    terms of sections 15 and 16 of this License; or\n\n    b) Requiring preservation of specified reasonable legal notices or\n    author attributions in that material or in the Appropriate Legal\n    Notices displayed by works containing it; or\n\n    c) Prohibiting misrepresentation of the origin of that material, or\n    requiring that modified versions of such material be marked in\n    reasonable ways as different from the original version; or\n\n    d) Limiting the use for publicity purposes of names of licensors or\n    authors of the material; or\n\n    e) Declining to grant rights under trademark law for use of some\n    trade names, trademarks, or service marks; or\n\n    f) Requiring indemnification of licensors and authors of that\n    material by anyone who conveys the material (or modified versions of\n    it) with contractual assumptions of liability to the recipient, for\n    any liability that these contractual assumptions directly impose on\n    those licensors and authors.\n\n  All other non-permissive additional terms are considered \"further\nrestrictions\" within the meaning of section 10.  If the Program as you\nreceived it, or any part of it, contains a notice stating that it is\ngoverned by this License along with a term that is a further\nrestriction, you may remove that term.  If a license document contains\na further restriction but permits relicensing or conveying under this\nLicense, you may add to a covered work material governed by the terms\nof that license document, provided that the further restriction does\nnot survive such relicensing or conveying.\n\n  If you add terms to a covered work in accord with this section, you\nmust place, in the relevant source files, a statement of the\nadditional terms that apply to those files, or a notice indicating\nwhere to find the applicable terms.\n\n  Additional terms, permissive or non-permissive, may be stated in the\nform of a separately written license, or stated as exceptions;\nthe above requirements apply either way.\n\n  8. Termination.\n\n  You may not propagate or modify a covered work except as expressly\nprovided under this License.  Any attempt otherwise to propagate or\nmodify it is void, and will automatically terminate your rights under\nthis License (including any patent licenses granted under the third\nparagraph of section 11).\n\n  However, if you cease all violation of this License, then your\nlicense from a particular copyright holder is reinstated (a)\nprovisionally, unless and until the copyright holder explicitly and\nfinally terminates your license, and (b) permanently, if the copyright\nholder fails to notify you of the violation by some reasonable means\nprior to 60 days after the cessation.\n\n  Moreover, your license from a particular copyright holder is\nreinstated permanently if the copyright holder notifies you of the\nviolation by some reasonable means, this is the first time you have\nreceived notice of violation of this License (for any work) from that\ncopyright holder, and you cure the violation prior to 30 days after\nyour receipt of the notice.\n\n  Termination of your rights under this section does not terminate the\nlicenses of parties who have received copies or rights from you under\nthis License.  If your rights have been terminated and not permanently\nreinstated, you do not qualify to receive new licenses for the same\nmaterial under section 10.\n\n  9. Acceptance Not Required for Having Copies.\n\n  You are not required to accept this License in order to receive or\nrun a copy of the Program.  Ancillary propagation of a covered work\noccurring solely as a consequence of using peer-to-peer transmission\nto receive a copy likewise does not require acceptance.  However,\nnothing other than this License grants you permission to propagate or\nmodify any covered work.  These actions infringe copyright if you do\nnot accept this License.  Therefore, by modifying or propagating a\ncovered work, you indicate your acceptance of this License to do so.\n\n  10. Automatic Licensing of Downstream Recipients.\n\n  Each time you convey a covered work, the recipient automatically\nreceives a license from the original licensors, to run, modify and\npropagate that work, subject to this License.  You are not responsible\nfor enforcing compliance by third parties with this License.\n\n  An \"entity transaction\" is a transaction transferring control of an\norganization, or substantially all assets of one, or subdividing an\norganization, or merging organizations.  If propagation of a covered\nwork results from an entity transaction, each party to that\ntransaction who receives a copy of the work also receives whatever\nlicenses to the work the party's predecessor in interest had or could\ngive under the previous paragraph, plus a right to possession of the\nCorresponding Source of the work from the predecessor in interest, if\nthe predecessor has it or can get it with reasonable efforts.\n\n  You may not impose any further restrictions on the exercise of the\nrights granted or affirmed under this License.  For example, you may\nnot impose a license fee, royalty, or other charge for exercise of\nrights granted under this License, and you may not initiate litigation\n(including a cross-claim or counterclaim in a lawsuit) alleging that\nany patent claim is infringed by making, using, selling, offering for\nsale, or importing the Program or any portion of it.\n\n  11. Patents.\n\n  A \"contributor\" is a copyright holder who authorizes use under this\nLicense of the Program or a work on which the Program is based.  The\nwork thus licensed is called the contributor's \"contributor version\".\n\n  A contributor's \"essential patent claims\" are all patent claims\nowned or controlled by the contributor, whether already acquired or\nhereafter acquired, that would be infringed by some manner, permitted\nby this License, of making, using, or selling its contributor version,\nbut do not include claims that would be infringed only as a\nconsequence of further modification of the contributor version.  For\npurposes of this definition, \"control\" includes the right to grant\npatent sublicenses in a manner consistent with the requirements of\nthis License.\n\n  Each contributor grants you a non-exclusive, worldwide, royalty-free\npatent license under the contributor's essential patent claims, to\nmake, use, sell, offer for sale, import and otherwise run, modify and\npropagate the contents of its contributor version.\n\n  In the following three paragraphs, a \"patent license\" is any express\nagreement or commitment, however denominated, not to enforce a patent\n(such as an express permission to practice a patent or covenant not to\nsue for patent infringement).  To \"grant\" such a patent license to a\nparty means to make such an agreement or commitment not to enforce a\npatent against the party.\n\n  If you convey a covered work, knowingly relying on a patent license,\nand the Corresponding Source of the work is not available for anyone\nto copy, free of charge and under the terms of this License, through a\npublicly available network server or other readily accessible means,\nthen you must either (1) cause the Corresponding Source to be so\navailable, or (2) arrange to deprive yourself of the benefit of the\npatent license for this particular work, or (3) arrange, in a manner\nconsistent with the requirements of this License, to extend the patent\nlicense to downstream recipients.  \"Knowingly relying\" means you have\nactual knowledge that, but for the patent license, your conveying the\ncovered work in a country, or your recipient's use of the covered work\nin a country, would infringe one or more identifiable patents in that\ncountry that you have reason to believe are valid.\n\n  If, pursuant to or in connection with a single transaction or\narrangement, you convey, or propagate by procuring conveyance of, a\ncovered work, and grant a patent license to some of the parties\nreceiving the covered work authorizing them to use, propagate, modify\nor convey a specific copy of the covered work, then the patent license\nyou grant is automatically extended to all recipients of the covered\nwork and works based on it.\n\n  A patent license is \"discriminatory\" if it does not include within\nthe scope of its coverage, prohibits the exercise of, or is\nconditioned on the non-exercise of one or more of the rights that are\nspecifically granted under this License.  You may not convey a covered\nwork if you are a party to an arrangement with a third party that is\nin the business of distributing software, under which you make payment\nto the third party based on the extent of your activity of conveying\nthe work, and under which the third party grants, to any of the\nparties who would receive the covered work from you, a discriminatory\npatent license (a) in connection with copies of the covered work\nconveyed by you (or copies made from those copies), or (b) primarily\nfor and in connection with specific products or compilations that\ncontain the covered work, unless you entered into that arrangement,\nor that patent license was granted, prior to 28 March 2007.\n\n  Nothing in this License shall be construed as excluding or limiting\nany implied license or other defenses to infringement that may\notherwise be available to you under applicable patent law.\n\n  12. No Surrender of Others' Freedom.\n\n  If conditions are imposed on you (whether by court order, agreement or\notherwise) that contradict the conditions of this License, they do not\nexcuse you from the conditions of this License.  If you cannot convey a\ncovered work so as to satisfy simultaneously your obligations under this\nLicense and any other pertinent obligations, then as a consequence you may\nnot convey it at all.  For example, if you agree to terms that obligate you\nto collect a royalty for further conveying from those to whom you convey\nthe Program, the only way you could satisfy both those terms and this\nLicense would be to refrain entirely from conveying the Program.\n\n  13. Use with the GNU Affero General Public License.\n\n  Notwithstanding any other provision of this License, you have\npermission to link or combine any covered work with a work licensed\nunder version 3 of the GNU Affero General Public License into a single\ncombined work, and to convey the resulting work.  The terms of this\nLicense will continue to apply to the part which is the covered work,\nbut the special requirements of the GNU Affero General Public License,\nsection 13, concerning interaction through a network will apply to the\ncombination as such.\n\n  14. Revised Versions of this License.\n\n  The Free Software Foundation may publish revised and/or new versions of\nthe GNU General Public License from time to time.  Such new versions will\nbe similar in spirit to the present version, but may differ in detail to\naddress new problems or concerns.\n\n  Each version is given a distinguishing version number.  If the\nProgram specifies that a certain numbered version of the GNU General\nPublic License \"or any later version\" applies to it, you have the\noption of following the terms and conditions either of that numbered\nversion or of any later version published by the Free Software\nFoundation.  If the Program does not specify a version number of the\nGNU General Public License, you may choose any version ever published\nby the Free Software Foundation.\n\n  If the Program specifies that a proxy can decide which future\nversions of the GNU General Public License can be used, that proxy's\npublic statement of acceptance of a version permanently authorizes you\nto choose that version for the Program.\n\n  Later license versions may give you additional or different\npermissions.  However, no additional obligations are imposed on any\nauthor or copyright holder as a result of your choosing to follow a\nlater version.\n\n  15. Disclaimer of Warranty.\n\n  THERE IS NO WARRANTY FOR THE PROGRAM, TO THE EXTENT PERMITTED BY\nAPPLICABLE LAW.  EXCEPT WHEN OTHERWISE STATED IN WRITING THE COPYRIGHT\nHOLDERS AND/OR OTHER PARTIES PROVIDE THE PROGRAM \"AS IS\" WITHOUT WARRANTY\nOF ANY KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING, BUT NOT LIMITED TO,\nTHE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR\nPURPOSE.  THE ENTIRE RISK AS TO THE QUALITY AND PERFORMANCE OF THE PROGRAM\nIS WITH YOU.  SHOULD THE PROGRAM PROVE DEFECTIVE, YOU ASSUME THE COST OF\nALL NECESSARY SERVICING, REPAIR OR CORRECTION.\n\n  16. Limitation of Liability.\n\n  IN NO EVENT UNLESS REQUIRED BY APPLICABLE LAW OR AGREED TO IN WRITING\nWILL ANY COPYRIGHT HOLDER, OR ANY OTHER PARTY WHO MODIFIES AND/OR CONVEYS\nTHE PROGRAM AS PERMITTED ABOVE, BE LIABLE TO YOU FOR DAMAGES, INCLUDING ANY\nGENERAL, SPECIAL, INCIDENTAL OR CONSEQUENTIAL DAMAGES ARISING OUT OF THE\nUSE OR INABILITY TO USE THE PROGRAM (INCLUDING BUT NOT LIMITED TO LOSS OF\nDATA OR DATA BEING RENDERED INACCURATE OR LOSSES SUSTAINED BY YOU OR THIRD\nPARTIES OR A FAILURE OF THE PROGRAM TO OPERATE WITH ANY OTHER PROGRAMS),\nEVEN IF SUCH HOLDER OR OTHER PARTY HAS BEEN ADVISED OF THE POSSIBILITY OF\nSUCH DAMAGES.\n\n  17. Interpretation of Sections 15 and 16.\n\n  If the disclaimer of warranty and limitation of liability provided\nabove cannot be given local legal effect according to their terms,\nreviewing courts shall apply local law that most closely approximates\nan absolute waiver of all civil liability in connection with the\nProgram, unless a warranty or assumption of liability accompanies a\ncopy of the Program in return for a fee.\n\n                     END OF TERMS AND CONDITIONS\n\n            How to Apply These Terms to Your New Programs\n\n  If you develop a new program, and you want it to be of the greatest\npossible use to the public, the best way to achieve this is to make it\nfree software which everyone can redistribute and change under these terms.\n\n  To do so, attach the following notices to the program.  It is safest\nto attach them to the start of each source file to most effectively\nstate the exclusion of warranty; and each file should have at least\nthe \"copyright\" line and a pointer to where the full notice is found.\n\n    <one line to give the program's name and a brief idea of what it does.>\n    Copyright (C) <year>  <name of author>\n\n    This program is free software: you can redistribute it and/or modify\n    it under the terms of the GNU General Public License as published by\n    the Free Software Foundation, either version 3 of the License, or\n    (at your option) any later version.\n\n    This program is distributed in the hope that it will be useful,\n    but WITHOUT ANY WARRANTY; without even the implied warranty of\n    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the\n    GNU General Public License for more details.\n\n    You should have received a copy of the GNU General Public License\n    along with this program.  If not, see <https://www.gnu.org/licenses/>.\n\nAlso add information on how to contact you by electronic and paper mail.\n\n  If the program does terminal interaction, make it output a short\nnotice like this when it starts in an interactive mode:\n\n    <program>  Copyright (C) <year>  <name of author>\n    This program comes with ABSOLUTELY NO WARRANTY; for details type `show w'.\n    This is free software, and you are welcome to redistribute it\n    under certain conditions; type `show c' for details.\n\nThe hypothetical commands `show w' and `show c' should show the appropriate\nparts of the General Public License.  Of course, your program's commands\nmight be different; for a GUI interface, you would use an \"about box\".\n\n  You should also get your employer (if you work as a programmer) or school,\nif any, to sign a \"copyright disclaimer\" for the program, if necessary.\nFor more information on this, and how to apply and follow the GNU GPL, see\n<https://www.gnu.org/licenses/>.\n\n  The GNU General Public License does not permit incorporating your program\ninto proprietary programs.  If your program is a subroutine library, you\nmay consider it more useful to permit linking proprietary applications with\nthe library.  If this is what you want to do, use the GNU Lesser General\nPublic License instead of this License.  But first, please read\n<https://www.gnu.org/licenses/why-not-lgpl.html>.\n"
+      },
+      "source": "https://raw.githubusercontent.com/mdsufz/StandEnA/main/LICENSE",
+      "technique": "file_exploration"
+    }
+  ],
+  "name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "StandEnA"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "owner": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "User",
+        "value": "mdsufz"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "programming_languages": [
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Python",
+        "size": 2556,
+        "type": "Programming_language",
+        "value": "Python"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Perl",
+        "size": 1724,
+        "type": "Programming_language",
+        "value": "Perl"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Shell",
+        "size": 878,
+        "type": "Programming_language",
+        "value": "Shell"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "readme_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/mdsufz/StandEnA/main/README.md"
+      },
+      "technique": "file_exploration"
+    }
+  ],
+  "requirements": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Dependencies",
+        "parent_header": [
+          "StandEnA: A customizable workflow to create a standardized presence - absence matrix of annotated proteins"
+        ],
+        "type": "Text_excerpt",
+        "value": "To manually download additional proteins using KEGG database identifiers, OrtSuite is required. \nFollow the installation steps for OrtSuite [here](https://github.com/mdsufz/OrtSuite/).\n"
+      },
+      "source": "https://raw.githubusercontent.com/mdsufz/StandEnA/main/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "System requirements and usage",
+        "parent_header": [
+          "StandEnA: A customizable workflow to create a standardized presence - absence matrix of annotated proteins"
+        ],
+        "type": "Text_excerpt",
+        "value": "A typical desktop (Linux) computer is capable of performing this workflow.\nDisk space can be the most limiting resource for the annotation step as each annotated genome produces ~2 G of data. Therefore, it is recommended to have a fair amount of free space depending on the number of genomes to be annotated.\n"
+      },
+      "source": "https://raw.githubusercontent.com/mdsufz/StandEnA/main/README.md",
+      "technique": "header_analysis"
+    }
+  ],
+  "run": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Step 2.5 Running Prokka on genomes using the custom database",
+        "parent_header": [
+          "StandEnA: A customizable workflow to create a standardized presence - absence matrix of annotated proteins",
+          "Workflow steps",
+          "Step 2 Generating a custom database and annotating genomes using Prokka with this custom database"
+        ],
+        "type": "Text_excerpt",
+        "value": "There are 2 alternative methods to run Prokka on genomes depending on your computational resources:\n"
+      },
+      "source": "https://raw.githubusercontent.com/mdsufz/StandEnA/main/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "2.5.1 Runing Prokka on your local machine",
+        "parent_header": [
+          "StandEnA: A customizable workflow to create a standardized presence - absence matrix of annotated proteins",
+          "Workflow steps",
+          "Step 2 Generating a custom database and annotating genomes using Prokka with this custom database",
+          "Step 2.5 Running Prokka on genomes using the custom database"
+        ],
+        "type": "Text_excerpt",
+        "value": "Changing working directory to the directory containing the shortened genomes (from previous step):\n```bash\ncd /path/to/short\n```\nNote that this step can only be done after Prokka is installed within the std_enzymes conda environment as described under the [Installation instructions](#installation-instructions). Please make sure that the std_enzymes conda environment is activated as stated in the instructions to proceed with this step.\n\nRunning Prokka for genomes:\n```bash\nfor k in *.fa; do prokka $k --outdir prokka_out/\"$k\".prokka.output --prefix PROKKA_${k##*/} --proteins \"custom_db.faa\" --norrna --notrna --cpus 4 ; echo $k; done\n```\nNote that depending on your machine resources you can increase the cpu number to be used by Prokka from by substituting another number in place of 4 next to the --cpus option (e.g., for 8 cpus to be used --cpus 8). See [Prokka](https://github.com/tseemann/prokka#readme) help page for detailed information on the flags used in the above code.\nThis step puts all genome annotation files to the location *02_annotation/prokka_out/short*.\n"
+      },
+      "source": "https://raw.githubusercontent.com/mdsufz/StandEnA/main/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "2.5.2 Running Prokka on a high-performance computing cluster",
+        "parent_header": [
+          "StandEnA: A customizable workflow to create a standardized presence - absence matrix of annotated proteins",
+          "Workflow steps",
+          "Step 2 Generating a custom database and annotating genomes using Prokka with this custom database",
+          "Step 2.5 Running Prokka on genomes using the custom database"
+        ],
+        "type": "Text_excerpt",
+        "value": "The following for loop will submit a job, for each genome to be annotated, on a high-performance computing cluster *using SLURM as a workload manager*.\n```bash\n# Define working directory\nworkdir=/path/to/02_annotation\n# Define prokka submission script\nsubscript_prokka=/path/to/prokka_on_bioindicators_v2.sh\n\nfor i in *.fa; do qsub -N $i $subscript_prokka $workdir/rep_set/short/$i prokka_out/\"out_$i\" $i; done\n```\nThe submission script (which has the commands used) is available [here](scripts/prokka_sub_script.sh).\n\nPlease note that this **submission script contains path/to/ fillers** in place of personal data and paths in the server. All of that **must be replaced by your own information before running the script**. \n\n"
+      },
+      "source": "https://raw.githubusercontent.com/mdsufz/StandEnA/main/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Step 4.3 Running script to generate standardized presence - absence matrix",
+        "parent_header": [
+          "StandEnA: A customizable workflow to create a standardized presence - absence matrix of annotated proteins",
+          "Workflow steps",
+          "Step 4 Generating matrix of standardized presence absence"
+        ],
+        "type": "Text_excerpt",
+        "value": "To prevent case-sensitivity as well as bracket differences in protein names while comparing the Prokka annotation with the standardized results, the Prokka annotation is recommended to be converted to lowercase and the brackets should be removed.\n```bash\ncat ../02_annotation/short/prokka_all.tsv |tr -d '[]()'| tr '[:upper:]' '[:lower:]' > prokka_all_updated.tsv\n```\n\nUsing the [ids_to_names.tsv](examples/04_presabs/ids_to_names.tsv) file, run the script to generate the presence - absence matrix:\n```bash\npython3 ../../scripts/make_pres_abs.py std_results_all.txt ids_to_names.tsv > presence_absence.csv\n```\nPlease note that, if there are bins/genomes/MAGs with no annotation for any of the standardized enzymes on the ids_to_names.tsv list, the presence-absence matrix will not show this as a column. Hence, if a bin/genome/MAG does not appear in the presence-absence matrix output, that name can be added as a row with zeros (as values).\n\nNote: The make_pres_abs.py script is available [here](scripts/make_pres_abs.py). \n\nThere may be a couple of errors due to problems with the user-inputted manual files at this step. \n\n1 - If there is a **split function error** stating \"expected 2 got 1\" or \"expected 2 got more\", this is likely due to the lack of the required tab character or an additional tab character within .uniq files manually curated in [step 3.2.1](#step-321-performing-queries-of-the-prokka-annotation-using-files-in-queries-directory-and-dumping-results-into-files) which is propagated to the std_results_all.txt file. In this case, go back to the 03_standardization/results/unique/ directory files and manually fix these mistakes. It is advised that the user runs this code to look at the number of columns in each file quickly:\n```bash\ncd ../03_standardization/pw_1/results/unique\nfor i in *.uniq; do awk -F'\\t' '{print NF}' $i; echo $i; done\n```\nThis code is checks the number of columns separated by tabs in the .uniq files for pathway 1. To check the rest of the pathway files, change working directory to 03_standardization/pw_N/. The output of the code will be the name of each file searched and the number of columns found in each line within that file. The output must be **exactly 2** for each line to avoid errors. Look for lines that are less than or more than 2 and go to the specific file name that this occurence was seen to fix the problem. Additionally, the line number within the output will correspond to the line number in the .uniq file (i.e., if the line output is 3 for line number 5 in a certain file, then you can go to the same file name and look at line 5 to see the problem).\n\nThen, re-do [step 4.1](#step-41-combining-all-standardized-prokka-results) and [step 4.3](#step-43-running-script-to-generate-standardized-presence---absence-matrix) (except for the directory creation step as the 04_presabs/ is already created).\n\n2 - Another possible error can be **\"KeyError\"** if the [ids_to_names.tsv](examples/04_presabs/ids_to_names.tsv) file generated in [step 4.2](#step-42-manually-preparing-file-of-protein-enzyme-names-to-be-used-for-generating-the-presence-absence-matrix) does not match the standard enzyme names used in the standardization ([step 3.2.1](#step-321-performing-queries-of-the-prokka-annotation-using-files-in-queries-directory-and-dumping-results-into-files)). In this case, change the names in the ids_to_names.tsv names file to match the standard names in the .uniq files. \n\nThen, re-do [step 4.1](#step-41-combining-all-standardized-prokka-results) and [step 4.3](#step-43-running-script-to-generate-standardized-presence---absence-matrix) (except for the directory creation step as the 04_presabs/ is already created).\n\n3- Please note that this pipeline is intended to be run on the same list of enzymes/protein names during the standardization and presence-absence matrix generation steps. If a subset of the list of standard enzyme names are inputted as the ids_to_names.tsv file, there may be problems (specifically KeyError) in this script. Hence, it is advised to use the same set of enzymes/protein names throughout the workflow.\n\n**Output files generated in step 4:** [04_presabs/presence_absence.csv](examples/04_presabs/example_presence_absence.csv) file which is the standardized presence absence matrix file\n\n"
+      },
+      "source": "https://raw.githubusercontent.com/mdsufz/StandEnA/main/README.md",
+      "technique": "header_analysis"
+    }
+  ],
+  "somef_missing_categories": [
+    "acknowledgement",
+    "contact",
+    "contributors",
+    "documentation",
+    "faq",
+    "support",
+    "identifier",
+    "has_build_file",
+    "executable_example"
+  ],
+  "somef_provenance": {
+    "date": "2024-10-04 00:41:06",
+    "somef_schema_version": "1.0.0",
+    "somef_version": "0.9.5"
+  },
+  "stargazers_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 3
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "usage": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "System requirements and usage",
+        "parent_header": [
+          "StandEnA: A customizable workflow to create a standardized presence - absence matrix of annotated proteins"
+        ],
+        "type": "Text_excerpt",
+        "value": "A typical desktop (Linux) computer is capable of performing this workflow.\nDisk space can be the most limiting resource for the annotation step as each annotated genome produces ~2 G of data. Therefore, it is recommended to have a fair amount of free space depending on the number of genomes to be annotated.\n"
+      },
+      "source": "https://raw.githubusercontent.com/mdsufz/StandEnA/main/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Compiling information from literature and KEGG database for the pathways/enzymes of interest to be used in uniq_ec.tsv file",
+        "parent_header": [
+          "StandEnA: A customizable workflow to create a standardized presence - absence matrix of annotated proteins",
+          "Workflow steps",
+          "Step 1 Compiling Protein sequences for the custom database from NCBI, KEGG and other databases",
+          "Step 1.1 Using KEGG API to retrieve enzyme synonym names",
+          "Step 1.1.1 Preparing a tab separated values file following the example file"
+        ],
+        "type": "Text_excerpt",
+        "value": "Users are suggested to identify their pathways of interest from literature and to use the KEGG database to obtain information about its component enzymes. \nFor example, the example pathway used in this GitHub is regarding benzene/toluene degradation (KEGG Module number [M00547](https://www.genome.jp/kegg-bin/show_module?M00547+R03543)). This module page was used to compile the enzyme EC numbers through clicking on each KO number (K identifier number) defined under the \"Definition\" such as [K03268](https://www.genome.jp/entry/K03268) and obtaining the EC numbers of the enzyme orthologs from the KO number webpage. For more information about EC numbers and KO identifiers, please refer to [this page](https://www.genome.jp/kegg/annotation/enzyme.html). The EC numbers are listed under the \"Name\" section of each KO number page. To check the exact identity of each EC number, refer to their separate KEGG information pages (accessed through clicking on the corresponding EC number on the KO number page) such as the page for [1.14.12.3](https://www.genome.jp/entry/1.14.12.3). Depending on the aim of your analysis, you can choose to include all or a particular subset of the EC numbers listed on a single KO number page in the [uniq_ec.tsv](examples/01_customdb/uniq_ec.tsv) file. In this case, depending on your starting compound, a different EC number should be used (for benzene [1.14.12.3](https://www.genome.jp/entry/1.14.12.3), for toluene [1.14.12.11](https://www.genome.jp/entry/1.14.12.11), for chlorobenzene [1.14.12.26](https://www.genome.jp/entry/1.14.12.26)). If all three starting compounds are to be analyzed, then all three of these EC numbers should be included in the [uniq_ec.tsv](examples/01_customdb/uniq_ec.tsv) file. Please note that each row of the [uniq_ec.tsv](examples/01_customdb/uniq_ec.tsv) file should include only one EC number, meaning there can be multiple rows for the same enzyme standard name but with different EC numbers.\n\nIn cases where a KEGG module is not found for your desired pathway, then the KEGG database can be used to compile each step of the reaction from separate enzyme information pages given that the names of these enzymes are known.\n\n----\n\n[uniq_ec.tsv](examples/01_customdb/uniq_ec.tsv) is the example file. A tab-separated values file is a text format similar to comma-separated values file where, instead of a comma, a tab character is used to separate different fields. Please find more information on this file structure [here](https://en.wikipedia.org/wiki/Tab-separated_values).\n\nColumns in the [uniq_ec.tsv](examples/01_customdb/uniq_ec.tsv) file should contain in order (i.e., from left to right): unique enzyme ID, pathway, pathway step ID, enzyme name, and EC number. This column arrangement is extremely important because some of those columns will be used to organize the download of protein sequence files in [step 1.2](#step-12-preparing-the-list-of-synonyms-for-ncbi-edirect). Although a single enzyme might be given multiple EC numbers by databases, each row of [uniq_ec.tsv](examples/01_customdb/uniq_ec.tsv) must contain only 1 EC number. Therefore, users should enter each EC number as a separate row with the corresponding unique enzyme ID, pathway, pathway step ID, enzyme name column information. Please read the above heading about compiling information to be used in [uniq_ec.tsv](examples/01_customdb/uniq_ec.tsv) file carefully before proceeding with the next steps.\n\nNote that the unique enzyme ID and pathway step ID are provided by the user for their pathway of interest. In the example file, unique enzyme ID is named using the convention E01, E02 etc. while the pathway step ID is named according to the pathway number and the step at which the enzyme is working at (e.g., pathway 1 step 1 is 1.1). Depending on the users' preferences, other naming conventions can be used in place of this provided that the column order does not change. However, each ID needs to be unique and must be named using a consistent alphanumeric naming convention with no whitespace characters within the names.\n\nPlease be aware that trailing spaces might exist depending on how you generated the file (e.g. Windows OS). Trailing spaces are space characters found at the end of a line. If trailing spaces are not removed, this causes a problem during synonym retrieval from the KEGG database in [step 1.4](#step-14-using-a-custom-perl-script-to-download-proteins-from-ncbi-edirect-api). \n\nTo check for trailing spaces run:\n\n```bash\ncat -v uniq_ec.tsv\n```\nIf there are any, the symbol ^M should appear at the end of the lines. To remove the trailing spaces:\n\n```bash\nmv uniq_ec.tsv temp_file.tsv\nsed -e \"s/\\r//g\" temp_file.tsv > uniq_ec.tsv\n```\n\nNow, the file is free of trailing whitespaces.\n\n"
+      },
+      "source": "https://raw.githubusercontent.com/mdsufz/StandEnA/main/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Example query file formation for OrtSuite-mediated KEGG API downloaded proteins (from EC numbers)",
+        "parent_header": [
+          "StandEnA: A customizable workflow to create a standardized presence - absence matrix of annotated proteins",
+          "Workflow steps",
+          "Step 3 Generating the Reference File for enzymes used in the annotation and standardizing protein names in Prokka results",
+          "Step 3.1 Generating reference files and query files for each enzyme standard name",
+          "Step 3.1.2 Dividing pathways into separate files for each enzyme/protein and collecting them in the queries directory"
+        ],
+        "type": "Text_excerpt",
+        "value": "To be able to form query files, the EC numbers in [ecs.txt](examples/01_customdb/ecs.txt) must be used to retrieve enzyme names and synonyms. The below code is a variation of the [step 1.1](#step-11-using-kegg-api-to-retrieve-enzyme-synonym-names) demonstrating the customizability and flexibility of the pipeline depending on specific decisions made by the user about protein sequence downloading. Please refer back to [step 1](#step-1-compiling-protein-sequences-for-the-custom-database-from-ncbi-kegg-and-other-databases) for detailed explanations.  \n\nFrom this file, the enzyme synonyms and standard names can be added to files in the queries folder:\n```bash \ncat path/to/ecs.txt | while read line; do out=$(curl -s https://rest.kegg.jp/list/ec:$line); echo $line $out; done > ortsuite_ec_synonyms.txt\n```\nFor later steps to be executed smoothly, the user should manually curate the ortsuite_ec_synonyms.txt file to remove any irrelevant EC numbers or synonyms that might have been retrieved from KEGG but may be irrelevant to the analysis (this decision must be made by the user) to proceed with the relevant information. After relevant synonyms for each standard name have been collected into the *ortsuite_ec_synonyms.txt*, we advise you to manually create a file similar to [uniq_ec.tsv](examples/01_customdb/uniq_ec.tsv) containing the unique enzyme ID, pathway, pathway step ID, enzyme name, and EC numbers (refer to [step 1.1](#step-11-using-kegg-api-to-retrieve-enzyme-synonym-names)). Note that the enzyme name is the first name retrieved in each line in the *ortsuite_ec_synonyms.txt* file and the fields unique enzyme ID, pathway, pathway step ID should be entered following the same naming convention as the [uniq_ec.tsv](examples/01_customdb/uniq_ec.tsv) file. The example final file can be found here: [ortsuite_uniq_ec.tsv](examples/03_standardization/pw_1/ortsuite_uniq_ec.tsv). \n\nThen, the steps for the creation of [ortsuite_pw1_id_synonyms_per_line.tsv](examples/03_standardization/pw_1/ortsuite_pw1_id_synonyms_per_line.tsv) are followed from [step 1.2](#step-12-preparing-the-list-of-synonyms-for-ncbi-edirect):\n\n```bash\npaste ortsuite_uniq_ec.tsv <(cut -f3- -d' ' ortsuite_ec_synonyms.txt) > ortsuite_synonyms_table.tsv\nperl -ne 'chomp; @fields=split(\"\\t\",$_); @syn=split(\";\",$fields[4]); unless(scalar(@syn)==0){foreach(@syn){print join(\"\\t\",@fields[0..3]),\"\\t$_\\n\"}}else{print \"$_\\t$fields[2]\\n\"};' <(cut -f1,3- ortsuite_synonyms_table.tsv) | sed -e 's/\\t /\\t/g' | grep -v \"incorrect\\|gene name\\|misleading\" > ortsuite_synonyms_per_line.tsv\ncat ortsuite_synonyms_per_line.tsv | perl -ne '$line=sprintf(\"%03d\",$.); @fields=split(\"\\t\",$_); $synid=\"S$line-$fields[0]-$fields[3]\"; if($fields[3] eq \"NA\"){print \"$synid\\t\",join(\"\\t\",@fields[0..3]),\"\\t$fields[2]\\n\"}else{print \"$synid\\t$_\"}' > ortsuite_id_synonyms_per_line.tsv\nperl -ne 'chomp; @fields=split(\"\\t\",$_); $fields[5] =~ tr/ //d; unless(scalar(split(\"\",$fields[5]))<=5){print \"$_\\n\"};' ortsuite_id_synonyms_per_line.tsv > tmp; mv tmp ortsuite_id_synonyms_per_line.tsv\n```\nFrom this file, queries can be added to the queries directory following the same steps used for the [id_synonyms_per_line.tsv](examples/01_customdb/id_synonyms_per_line.tsv) file above (starting from [step 3.1.1](#step-311-subsetting-data-to-work-with-one-pathway-at-a-time)) by changing the input file to [ortsuite_pw1_id_synonyms_per_line.tsv](examples/03_standardization/pw_1/ortsuite_pw1_id_synonyms_per_line.tsv). \nNote that the file names for the OrtSuite-mediated KEGG API downloaded proteins are advised to be distinguished from Edirect downloaded proteins in the query directories by using a specific naming convention (e.g., queries/ortsuite_$name.txt for the file names to include \"ortsuite\"). The same naming convention is advised to be used for the intermediate files (e.g., ortsuite_pw_1.txt) to prevent overwriting the files created for Edirect downloaded proteins.\n\n"
+      },
+      "source": "https://raw.githubusercontent.com/mdsufz/StandEnA/main/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Example reference file formation for OrtSuite-mediated KEGG API downloaded proteins (from EC numbers)",
+        "parent_header": [
+          "StandEnA: A customizable workflow to create a standardized presence - absence matrix of annotated proteins",
+          "Workflow steps",
+          "Step 3 Generating the Reference File for enzymes used in the annotation and standardizing protein names in Prokka results",
+          "Step 3.1 Generating reference files and query files for each enzyme standard name",
+          "Step 3.1.3 Collecting standard database identifiers about the enzyme names used during annotation from KEGG to generate a reference file"
+        ],
+        "type": "Text_excerpt",
+        "value": "Collecting EC numbers and KO identifiers from KEGG API:\n```bash\ncat ecs.txt | while read l; do curl -s https://rest.kegg.jp/link/ko/ec:$l; done | sort -k1,2 | uniq | grep -v \"^$\" > ortsuite_pw1_ec_kos.txt\n```\nAfter this step, [ortsuite_ec_kos.txt](examples/03_standardization/pw_1/ortsuite_pw1_ec_kos.txt) file can be used in place of pw_ec_kos.txt in [step 3.1.3](#step-313-collecting-standard-database-identifiers-about-the-enzyme-names-used-during-annotation-from-kegg-to-generate-a-reference-file-to-generate-the-reference-file). Note that the output and input file names for each of the above steps must be changed to prevent overwriting the reference files generated for Edirect downloaded proteins listed in [id_synonyms_per_line.tsv](examples/01_customdb/id_synonyms_per_line.tsv). The suggested naming convention for these files is: ortsuite_kos_def.txt, ortsuite_ec_name.txt, [ortsuite_pw_1_kegg_info.txt](examples/03_standardization/pw_1/ortsuite_pw_1_kegg_info.txt).\n\n\n**Output files generated in step 3.1:** Reference files with standard database identifiers [03_standardization/ortsuite_pw_N_kegg_info.txt](examples/03_standardization/pw_1/ortsuite_pw_1_kegg_info.txt) and [03_standardization/pw_N_kegg_info.txt](examples/03_standardization/pw_1/pw_6_C_kegg_info.txt) along with [03_standardization/pw_N/queries/](examples/03_standardization/pw_1/queries/) directory files\n\n"
+      },
+      "source": "https://raw.githubusercontent.com/mdsufz/StandEnA/main/README.md",
+      "technique": "header_analysis"
+    }
+  ]
+}

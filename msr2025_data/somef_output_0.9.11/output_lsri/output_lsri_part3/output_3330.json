@@ -1,0 +1,290 @@
+{
+  "application_domain": [
+    {
+      "confidence": 16.67,
+      "result": {
+        "type": "String",
+        "value": "Computer Vision"
+      },
+      "technique": "supervised_classification"
+    }
+  ],
+  "code_repository": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/ciceklab/DECoNT"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_created": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2020-05-09T22:55:53Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_updated": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2024-06-12T07:34:37Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "description": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "Exome Copy Number Variation Polisher via  Deep Learning"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 0.9196866076806218,
+      "result": {
+        "original_header": "Polishing Copy Number Variant Calls on Exome Sequencing Data via Deep Learning",
+        "type": "Text_excerpt",
+        "value": "> DECoNT is a deep learning based software that corrects CNV predictions on exome sequencing data using read depth sequences. \nTo reproduce results given in the manuscript, <a href=\"https://www.biorxiv.org/content/10.1101/2020.05.09.086082v1\" target=\"_blank\">**Polishing Copy Number Variant Calls on Exome Sequencing Data via Deep Learning**</a>, please refer to https://zenodo.org/record/3865380#.XtVRchMzZds. This repository also includes the toy example tutorial. \n\n## Table of Contents  \n> Warning: Please note that DECoNT software is completely free for academic usage. However it is licenced for commercial usage. Please first refer to the [License](#license) section for more info. \n## Features \n#### -m, --model\n- For version 0.1, DECoNT provides pretrained weights for polishing CNV calls from the following WES-based CNV callers: (i) XHMM; (ii) CoNIFER; (iii) CODEX2; (iv) Control-FREEC.\n- If you want to use pretrained DECoNT weights for polishing set this argument to <b>pretrained</b>.\n- If you want to use custom model weights for DECoNT obtained using DECoNT_train.py script, please provide path to model weights with <b>.h5</b> extension instead.  \n#### -cn, --callername\n- For version 0.1, DECoNT supports only XHMM, CoNIFER, CODEX2 and Control-FREEC. For future versions, DECoNT will be able to polish any CNV output format with a required CNV output template.\n- Set to one of the WES-based CNV caller names above for DECoNT to understand the required weights for the polishing process.  \n#### -g, --gpu\n- Set to PCI BUS ID of the gpu in your system.\n- You can check, PCI BUS IDs of the gpus in your system with various ways. Using gpustat tool check IDs of the gpus in your system like below:\n```shell\n$ gpustat\n``` \n<img src=\"./gpustatexample.png\"   class=\"center\">\n \n#### -v, --version\n-Check the version of DECoNT. \n> Usage of DECoNT is very simple, also it comes with ETA and progress bar features! \n### Step-1: Use your preferred WES-based CNV caller to call CNVs on your WES dataset. \n- For XHMM refer to: <a href=\"https://atgu.mgh.harvard.edu/xhmm/tutorial.shtml\" target=\"_blank\">**XHMM Manual Page**</a>\n- For CoNIFER refer to: <a href=\"http://conifer.sourceforge.net/tutorial.html\" target=\"_blank\">**CoNIFER Manual Page**</a>\n- For CODEX2 refer to: <a href=\"http://conifer.sourceforge.net/tutorial.html\" target=\"_blank\">**CODEX2 Manual Page**</a>\n- For Control-FREEC refer to: <a href=\"http://boevalab.inf.ethz.ch/FREEC/tutorial.html\">**Control-FREEC Manual Page**</a>\n- After obtaining output file from one of these tools, store it.\n- For purposes of this tutorial, lets call the output WES CNV file:  /home/user/analysis.txt \n### Step-2: Obtain read depth files for samples used in WES CNV calling. \n- Read depth counts obtained using <a href=\"https://lomereiter.github.io/sambamba/\" target=\"_blank\">**Sambamba**</a> tool are directly accepted by DECoNT. Note that you should use -w option of sambamba with parameter 1000. By doing so, sambamba sets base-pair resolution to 1000bp. You can run sambamba on your inputs as follows:\n```shell\n$ sambamba depth window -w 1000 HG00096.wes.bam > /home/user/sambamba_read_depths/HG00096.wes.bam_read_depths.txt\n``` \n- Note that, all read depth files must have SAMPLENAME. prefix in the file name.\n- You can use any read depth generator you like, however for DECoNT to have unified input format, we require the following format for read depth files:\n \n-Note that, DECoNT does not use mean coverage information column provided in the above file format figure. You can fill that column with all 0's.\n- For purposes of this tutorial, lets call the directory containing all described read depth files: /home/user/sambamba_read_depths/ \n### Step-3: Run DECoNT on data obtained in Step-1 and Step-2 \n- Requirements of DECoNT must be satisfied. For easy handling of requirements download DECoNT_mac.yml or DECoNT_linux.yml file and initialize environment of DECoNT as follows (optional).\n```shell\n$ conda env create -f DECoNT_mac.yml\n$ conda activate DECoNT_mac\n```\n- Note: for the scope of this tutorial, we assume that WES CNV calls are obtained using XHMM software. If you obtain WES CNV calls using any other software just change the -cn argument to that software.\n- After initializing the envorinment, run decont as follows:\n```shell\n$ python ./DECoNT_polish.py -m pretrained -cn XHMM -i /home/user/analysis.txt -o /home/user/ -s /home/user/sambamba_read_depths/\n```\n- Optionally, if you have available gpu's, you can set -g argument to PCI BUS ID of the GPU you want to use. Please refer to Optional Arguments section. By default, script will use CPU.\n \n### Output file of DECoNT\n- At the end of the polishing procedure, DECoNT will write its output file to the directory given with -o option. In this tutorial it is /home/user/\n- Output file of DECoNT is a tab-delimited .bed like format. \n- Columns in the output file of DECoNT are the following with order: 1. Sample Name, 2. Chromosome, 3. CNV Start Index, 4. CNV End Index, 5. XHMM Prediction (XHMM name changes according to the -cn argument), 6. DECoNT Polished Prediction\n- Following figure is an example of DECoNT output file. \nJust follow the steps above, instead of analysis.txt use DATA_chaisson_hg00733.xcnv file provided. Also instead of /sambamba_read_depths/ directory use the directory in this <a href=\"https://drive.google.com/open?id=1UqXs3rB3XcVRq5GB-zcJsyDW086igaS4\">**link**</a> and repeat the steps. \n"
+      },
+      "source": "https://raw.githubusercontent.com/ciceklab/DECoNT/master/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "download_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/ciceklab/DECoNT/releases"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 2
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/ciceklab/DECoNT/forks"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "ciceklab/DECoNT"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_title": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "Polishing Copy Number Variant Calls on Exome Sequencing Data via Deep Learning"
+      },
+      "source": "https://raw.githubusercontent.com/ciceklab/DECoNT/master/README.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "images": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/ciceklab/DECoNT/master/./gpustatexample.png"
+      },
+      "source": "https://raw.githubusercontent.com/ciceklab/DECoNT/master/README.md",
+      "technique": "regular_expression"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/ciceklab/DECoNT/master/./decont_example.png"
+      },
+      "source": "https://raw.githubusercontent.com/ciceklab/DECoNT/master/README.md",
+      "technique": "regular_expression"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/ciceklab/DECoNT/master/./readdepthformat.png"
+      },
+      "source": "https://raw.githubusercontent.com/ciceklab/DECoNT/master/README.md",
+      "technique": "regular_expression"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/ciceklab/DECoNT/master/./exampleoutput.png"
+      },
+      "source": "https://raw.githubusercontent.com/ciceklab/DECoNT/master/README.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "installation": [
+    {
+      "confidence": 0.9489431541908177,
+      "result": {
+        "original_header": "Polishing Copy Number Variant Calls on Exome Sequencing Data via Deep Learning",
+        "type": "Text_excerpt",
+        "value": "> <a href=\"https://en.wikipedia.org/wiki/Deep_learning\" target=\"_blank\">**Deep Learning**</a>, <a href=\"https://en.wikipedia.org/wiki/Copy-number_variation\" target=\"_blank\">**Copy Number Variation**</a>, <a href=\"https://en.wikipedia.org/wiki/Exome_sequencing\" target=\"_blank\">**Whole Exome Sequencing**</a> \n## Installation \n- DECoNT does not require installation in conventional manner. DECoNT is a python3 script ready to run with required packages installed.  \n### Requirements \n- Python 3.7.6\n- NumPy 1.16.2\n- Pandas 1.0.0\n- TensorFlow 1.14.0\n- Keras 2.2.4\n- Scikit-Learn 0.22.1\n- keras-metrics 1.1.0\n- cudnn 7.6.5 (optional, for gpu support only) (keras-gpu 2.2.4 requires it) \nFor easy requirement handling, you can use DECoNT_linux.yml or DECoNT_mac.yml files to initialize appropriate environment with conda using:\n```shell\n$ conda env create -f DECoNT_linux.yml\n$ conda activate DECoNT_linux\n``` \nor \n```shell\n$ conda env create -f DECoNT_mac.yml\n$ conda activate DECoNT_mac\n``` \n## Instructions Manual\nImportant notice: Please call the DECoNT_polish.py script from the scripts directory. \n### Required Arguments \n### Optional Arguments \n#### -v, --version\n-Check the version of DECoNT. \n#### -h, --help\n-See help page. \n### Step-1: Use your preferred WES-based CNV caller to call CNVs on your WES dataset. \n- Read depth counts obtained using <a href=\"https://lomereiter.github.io/sambamba/\" target=\"_blank\">**Sambamba**</a> tool are directly accepted by DECoNT. Note that you should use -w option of sambamba with parameter 1000. By doing so, sambamba sets base-pair resolution to 1000bp. You can run sambamba on your inputs as follows:\n```shell\n$ sambamba depth window -w 1000 HG00096.wes.bam > /home/user/sambamba_read_depths/HG00096.wes.bam_read_depths.txt\n``` \n- Note that, all read depth files must have SAMPLENAME. prefix in the file name.\n- You can use any read depth generator you like, however for DECoNT to have unified input format, we require the following format for read depth files:\n \n### Step-3: Run DECoNT on data obtained in Step-1 and Step-2 \n- Requirements of DECoNT must be satisfied. For easy handling of requirements download DECoNT_mac.yml or DECoNT_linux.yml file and initialize environment of DECoNT as follows (optional).\n```shell\n$ conda env create -f DECoNT_mac.yml\n$ conda activate DECoNT_mac\n```\n- Note: for the scope of this tutorial, we assume that WES CNV calls are obtained using XHMM software. If you obtain WES CNV calls using any other software just change the -cn argument to that software.\n- After initializing the envorinment, run decont as follows:\n```shell\n$ python ./DECoNT_polish.py -m pretrained -cn XHMM -i /home/user/analysis.txt -o /home/user/ -s /home/user/sambamba_read_depths/\n```\n- Optionally, if you have available gpu's, you can set -g argument to PCI BUS ID of the GPU you want to use. Please refer to Optional Arguments section. By default, script will use CPU.\n \n```shell\n$ python ./DECoNT_polish.py -g 5 -m pretrained -cn XHMM -i /home/user/analysis.txt -o /home/user/ -s /home/user/sambamba_read_depths/ \n``` \nJust follow the steps above, instead of analysis.txt use DATA_chaisson_hg00733.xcnv file provided. Also instead of /sambamba_read_depths/ directory use the directory in this <a href=\"https://drive.google.com/open?id=1UqXs3rB3XcVRq5GB-zcJsyDW086igaS4\">**link**</a> and repeat the steps. \n"
+      },
+      "source": "https://raw.githubusercontent.com/ciceklab/DECoNT/master/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "invocation": [
+    {
+      "confidence": 0.8475631473041201,
+      "result": {
+        "original_header": "Polishing Copy Number Variant Calls on Exome Sequencing Data via Deep Learning",
+        "type": "Text_excerpt",
+        "value": "#### -o, --output\n- Relative or direct output directory path to write DECoNT output file. \n- Relative or direct directory path to read depth files of samples in the analysis (i.e. samples used in WES CNV calling). Note that, all read depth files must be in the format specified below in the examples section. The provided directory must not include any other files. Read depth files generated by Sambamba tool are directly accepted with no formatting requirements.\n- Read depth file names must have the following format: SAMPLENAME.read_depths.txt (e.g. HG00096.read_depths.txt)\n- The sample names should be consistent between obtained WES-CNV outputs and read depth file names. \n## Usage Examples \n## Running quick experiment with DECoNT: \n"
+      },
+      "source": "https://raw.githubusercontent.com/ciceklab/DECoNT/master/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "issue_tracker": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/ciceklab/DECoNT/issues"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "keywords": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": ""
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "logo": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/ciceklab/DECoNT/master/./logo.png"
+      },
+      "source": "https://raw.githubusercontent.com/ciceklab/DECoNT/master/README.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "DECoNT"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "owner": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "User",
+        "value": "ciceklab"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "programming_languages": [
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Python",
+        "size": 55564,
+        "type": "Programming_language",
+        "value": "Python"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "readme_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/ciceklab/DECoNT/master/README.md"
+      },
+      "technique": "file_exploration"
+    }
+  ],
+  "somef_missing_categories": [
+    "citation",
+    "acknowledgement",
+    "run",
+    "download",
+    "requirements",
+    "contact",
+    "contributors",
+    "documentation",
+    "license",
+    "usage",
+    "faq",
+    "support",
+    "identifier",
+    "has_build_file",
+    "executable_example"
+  ],
+  "somef_provenance": {
+    "date": "2024-10-06 12:24:21",
+    "somef_schema_version": "1.0.0",
+    "somef_version": "0.9.5"
+  },
+  "stargazers_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 14
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "type": [
+    {
+      "confidence": 0.82,
+      "result": {
+        "type": "String",
+        "value": "commandline-application"
+      },
+      "technique": "software_type_heuristics"
+    }
+  ]
+}

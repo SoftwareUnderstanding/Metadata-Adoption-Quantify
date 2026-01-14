@@ -1,0 +1,392 @@
+{
+  "application_domain": [
+    {
+      "confidence": 0.9084097491470577,
+      "result": {
+        "type": "String",
+        "value": "Semantic web"
+      },
+      "technique": "supervised_classification"
+    }
+  ],
+  "code_repository": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/DEIB-GECO/VarSum"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_created": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2020-02-26T23:24:55Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_updated": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2022-05-27T21:34:05Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "description": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "Data summarization tool for 1000 Genomes Project data"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 0.9267815389464259,
+      "result": {
+        "original_header": "VarSum (http://gmql.eu/popstudy)",
+        "type": "Text_excerpt",
+        "value": "This API returns summary statistics on user-defined populations and their variants, \nusing the genomic data repository maintained by the [genomic computing group \n(GeCo) at Politecnico di Milano](http://www.bioinformatics.deib.polimi.it/geco/).  \nAvailable data include gene annotations, germline variants from the 1000 \nGenomes Project (~88 millions) and somatic mutations collected by \nThe Cancer Genomes Atlas Program (~4 millions). \nThrough this tool, it is possible to get summary statistics describing \na population, including:\n- Number of individuals grouped by sub-populations\n- Most frequent variants\n- Rarest variants\n- Average mutation frequency in multiple population subgroups. \nSubgroups are identified by distributing the population according to:\n- Continent of provenance\n- Country of provenance\n- Ethnicity\n- Gender\n- Health status  \n- Disease\n- Source of the DNA sample. \nEach of the above characteristics can be fixed in order to restrict the \nset of individuals of interest to the ones having certain characteristics.  \nThe user can also impose further constraints on the target population, like \nthe presence/absence of specific variants and their relative position (same or different \nchromosome copy), and also impose the presence of variants in a precise \ngenomic area or gene. \n"
+      },
+      "source": "https://raw.githubusercontent.com/DEIB-GECO/VarSum/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.8028666754439763,
+      "result": {
+        "original_header": "Overview of the interface",
+        "type": "Text_excerpt",
+        "value": "Requests and responses are exchanged  as JSON formatted messages. \n \n"
+      },
+      "source": "https://raw.githubusercontent.com/DEIB-GECO/VarSum/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9697467695322886,
+      "result": {
+        "original_header": "Response format",
+        "type": "Text_excerpt",
+        "value": "In general, this API returns a table-like data structure, represented as:\n   \n```yaml\n{\n  \"columns\": [\"COLUMN_NAME_1\", \"COLUMN_NAME_2\", ...],\n  \"rows\": [\n      [\"1st_value_of_ROW_1\", \"2nd_value_of_ROW_1\", ...],\n      [\"1st_value_of_ROW_2\", \"2nd_value_of_ROW_2\", ...],\n      ...\n    ],\n  \"notice\": \"optional message\", \"another optional message\", ...\n}\n```\nwhere `columns` and `rows` contain the table headers and rows respectively. \nA field `notice` may be optionally present to inform about the characteristics of the requested data that can lead to unexpected results, or to provide complementary details. This happens when one or more of the following conditions is verified: \n- A part of the population selected by the user cannot be used to produce the result because of unkown/unrecognized cathegorical values. \n\t\n\tFor example, when computing the frequency of a variant falling in sex chromosome, individuals with unknown gender will be automatically excluded from the population selected by the user. That is because the gender information is necessary to compute the total number of alleles in that locus of the considered population.  \n- The population identified by the request parameters is empty because no individual satisfies the requirements in the available data sources.\n- The popuation identified by the request parameters originates from multiple data sources and contains both germline variants and somatic mutations. \n- A request made to endpoints `/most_common_variants` or `/rarest_variants` includes the optional parameter: \n\t```yaml\n\tfilter_output: {\n\t\ttime_estimate_only: true\n\t}\n\t```\nOnly the endpoint `/values` breaks the above rule, as it returns the values of an attribute in the available data sources. \nFor example, a request asking the values of the attribute \"gender\" returns:\nBASH3* \n \n"
+      },
+      "source": "https://raw.githubusercontent.com/DEIB-GECO/VarSum/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9919315280840624,
+      "result": {
+        "original_header": "Request parameters for studying a population",
+        "type": "Text_excerpt",
+        "value": "This paragraph applies to endpoints `/donor_grouping`, `/variant_grouping`, `/most_common_variants`, `/rarest_variants` and `/download_donors`. \nTo select a population, the user can express any combination of metadata and region constraints, and also restrict the data sources to use. The skeleton of a request body making use of all the possible constraints, looks like the following:\n```yaml\n{\n  \"having_meta\": {\n    \"gender\": ...,\t\t# the required gender\n    \"dna_source\": ..., \t\t# the originating tissue type \n    \"assembly\": ...,\t\t# 'GRCh38' or 'hg19'\n    \"ethnicity\": ...,\t\t# a list of ethnicities\n    \"super_population\": ...,\t# a list of super populations\n    \"population\": ...,\t\t# a list of populations\n    \"healthy\": ...,\t\t# true or false\n    \"disease\": ... \t\t# a disease name\n  },\n  \"having_variants\": {\n    \"with\": ...,\t\t# a list of variants carried by every individual \n    \"without\": ...,\t\t# a list of variants not carried by any individual\n    \"on_same_chrom_copy\": ...,\t# a list of variants of a single chromosome and all carried by each individual on either the paternal or maternal chromosome \n    \"on_diff_chrom_copy\": ...,\t# two variants of a single chromosome and carried by each individual one on the paternal and the other on the maternal chromosome (order is irrelevant)\n    \"in\": ...,\t\t\t# a mutated genomic region \n    \"in_cell_type\": ...\t\t# 'somatic' or 'germline'\n  },\n  \"source\": ...\t\t\t# a list of sources from the ones available\n}\n```\n- To leave unconstrained a parameter, just remove it from the above example.\n- Some parameters accept multiple values grouped inside a list, instead others can use only one value.\n- For a list of the values accepted by parameters in `having_meta`, you can call the endpoint `/values` and pass the parameter name.\n- Each of the endpoints can require additional parameters to perform an action. If it is a \"grouping\" endpoint, it requires a `group_by` to specify one or more metadata categories; if it studies the frequency of a single variant, it requires a `target_variant`; lastly, endpoints `/most_common_variants` and  `/rarest_variants` offer the possibilty to partition the result table with `filter_output`.\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/DEIB-GECO/VarSum/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9638385295148115,
+      "result": {
+        "original_header": "Request parameters for exploring a genomic region",
+        "type": "Text_excerpt",
+        "value": "The endpoint `/variants_in_region`  lists the variants falling in a region of interest for a population. The request body is an extension of the previous, with small changes.\n```yaml\n{\n  # you can refer to any annotated region with the parameters\n  \"name\": ...,\n  \"type\": ...,\n  \"ensemble_id\": ...,\n  # or you can define your region of interest with\n  \"chrom\": ...,\n  \"start\": ...,\n  \"stop\": ...,\n  \"strand\": ...,\n  # then, you can limit the set of variants to those carried by the population defined as (only \"assembly\" is mandatory):\n  \"of\": {\t\t\t\t\t\t\t\n    \"gender\": ...,\t\t\t# the required gender\n    \"dna_source\": ..., \t\t\t# the originating tissue type \n    \"assembly\": ...,\t\t\t# 'GRCh38' or 'hg19'\n    \"ethnicity\": ...,\t\t\t# a list of ethnicities\n    \"super_population\": ...,\t\t# a list of super populations\n    \"population\": ...,\t\t\t# a list of populations\n    \"healthy\": ...,\t\t\t# true or false\n    \"disease\": ...,\t\t\t# a disease name\n    \"having_variants\": {\n      \"with\": ...,\t\t\t# a list of variants carried by every individual \n      \"without\": ...,\t\t\t# a list of variants not carried by any individual\n      \"on_same_chrom_copy\": ...,\t# a list of variants of a single chromosome and all carried by each individual on either the paternal or maternal chromosome \n      \"on_diff_chrom_copy\": ...,\t# two variants of a single chromosome and carried by each individual one on the paternal and the other on the maternal chromosome (order is irrelevant)\n      \"in\": ...,\t\t\t# a mutated genomic region \n      \"in_cell_type\": ...\t\t# 'somatic' or 'germline'\n    },\n  \"source\": ...\t\t\t\t# a list of sources from the ones available\n}\n``` \nFinally, the endpoint `/annotate` tells you the genes that overlap (even not completely) with a given variant or genomic interval.  A simplified request body is exemplified below. \n```yaml\n{\n  \"assembly\": ..., \n  # you can specify a variant by typing its:\n  # - dbSNP id\n  \"id\": ...,\n  # - or its genomic properties (in 0-based coordinates):\n  \"chrom\": ...,\n  \"start\": ...,\n  \"ref\": ...,\n  \"alt\": ...\n  # alternatively, you can instead type a genomic interval of interest:\n  \"chrom\": ...,\n  \"start\": ...,\n  \"stop\": ...,\n  \"strand\": ... \n}\n```\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/DEIB-GECO/VarSum/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.8808528031286491,
+      "result": {
+        "original_header": "Ethnicity - Country and Continent of provenance",
+        "type": "Text_excerpt",
+        "value": "| __population__  |  population description  |  __super_population__  | __ethnicity__\n|--- |--- |--- |--- |\n| CHB  |  Han Chinese in Beijing, China  |  EAS  |  asian  |\n| JPT  |  Japanese in Tokyo, Japan  |  EAS  |  asian  | \n| CHS  |  Southern Han Chinese  |  EAS  |  asian  | \n| CDX  |  Chinese Dai in Xishuangbanna, China  |  EAS  |  asian  | \n| KHV  |  Kinh in Ho Chi Minh City, Vietnam  |  EAS  |  asian  | \n| GIH  |  Gujarati Indian from Houston, Texas  |  SAS  |  asian  | \n| PJL  |  Punjabi from Lahore, Pakistan  |  SAS  |  asian  | \n| BEB  |  Bengali from Bangladesh  |  SAS  |  asian  | \n| STU  |  Sri Lankan Tamil from the UK  |  SAS  |  asian  | \n| ITU  |  Indian Telugu from the UK  |  SAS  |  asian  | \n| CEU  |  Utah Residents (CEPH) with Northern and Western European Ancestry  |  EUR  |  white  |\n| TSI  |  Toscani in Italia  |  EUR  |  white  |\n| FIN  |  Finnish in Finland  |  EUR  |  white  |\n| GBR  |  British in England and Scotland  |  EUR  |  white  |\n| IBS  |  Iberian Population in Spain  |  EUR  |  white  |\n| YRI  |  Yoruba in Ibadan, Nigeria  |  AFR  |  black or african american  |\n| LWK  |  Luhya in Webuye, Kenya  |  AFR  |  black or african american  |\n| GWD  |  Gambian in Western Divisions in the Gambia  |  AFR  |  black or african american  |\n| MSL  |  Mende in Sierra Leone  |  AFR  |  black or african american  |\n| ESN  |  Esan in Nigeria  |  AFR  |  black or african american  |\n| ASW  |  Americans of African Ancestry in SW USA  |  AFR  |  black or african american  |\n| ACB  |  African Caribbeans in Barbados  |  AFR  |  black or african american  |\n| MXL  |  Mexican Ancestry from Los Angeles USA  |  AMR  |  latin american  |\n| PUR  |  Puerto Ricans from Puerto Rico  |  AMR  |  latin american  |\n| CLM  |  Colombians from Medellin, Colombia  |  AMR  |  latin american  |\n| PEL  |  Peruvians from Lima, Peru  |  AMR  |  latin american  | \n"
+      },
+      "source": "https://raw.githubusercontent.com/DEIB-GECO/VarSum/master/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "download_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/DEIB-GECO/VarSum/releases"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "executable_example": [
+    {
+      "confidence": 1,
+      "result": {
+        "format": "jupyter_notebook",
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/DEIB-GECO/VarSum/master/demo/EX%202%20-%20Use%20of%20donor_grouping%20-%20part%202.ipynb"
+      },
+      "source": "https://raw.githubusercontent.com/DEIB-GECO/VarSum/master/demo/EX%202%20-%20Use%20of%20donor_grouping%20-%20part%202.ipynb",
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "format": "jupyter_notebook",
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/DEIB-GECO/VarSum/master/demo/EX%203%20-%20Use%20of%20variant_grouping.ipynb"
+      },
+      "source": "https://raw.githubusercontent.com/DEIB-GECO/VarSum/master/demo/EX%203%20-%20Use%20of%20variant_grouping.ipynb",
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "format": "jupyter_notebook",
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/DEIB-GECO/VarSum/master/demo/EX%204%20-%20Use%20of%20rarest_variants.ipynb"
+      },
+      "source": "https://raw.githubusercontent.com/DEIB-GECO/VarSum/master/demo/EX%204%20-%20Use%20of%20rarest_variants.ipynb",
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "format": "jupyter_notebook",
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/DEIB-GECO/VarSum/master/demo/UC%20A%20-%20Identification%20of%20mutations%20involved%20in%20the%20development%20of%20brain%20lower%20grade%20glioma.ipynb"
+      },
+      "source": "https://raw.githubusercontent.com/DEIB-GECO/VarSum/master/demo/UC%20A%20-%20Identification%20of%20mutations%20involved%20in%20the%20development%20of%20brain%20lower%20grade%20glioma.ipynb",
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "format": "jupyter_notebook",
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/DEIB-GECO/VarSum/master/demo/EX%201%20-%20Use%20of%20donor_grouping%20-%20part%201.ipynb"
+      },
+      "source": "https://raw.githubusercontent.com/DEIB-GECO/VarSum/master/demo/EX%201%20-%20Use%20of%20donor_grouping%20-%20part%201.ipynb",
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "format": "jupyter_notebook",
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/DEIB-GECO/VarSum/master/demo/UC%20B%20-%20Differential%20variant%20analysis%20to%20unveil%20cancer%20genes/UC%20B%20-%20Differential%20variant%20analysis%20to%20unveil%20cancer%20genes.ipynb"
+      },
+      "source": "https://raw.githubusercontent.com/DEIB-GECO/VarSum/master/demo/UC%20B%20-%20Differential%20variant%20analysis%20to%20unveil%20cancer%20genes/UC%20B%20-%20Differential%20variant%20analysis%20to%20unveil%20cancer%20genes.ipynb",
+      "technique": "file_exploration"
+    }
+  ],
+  "forks_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 1
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/DEIB-GECO/VarSum/forks"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "DEIB-GECO/VarSum"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_title": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "VarSum (http://gmql.eu/popstudy)"
+      },
+      "source": "https://raw.githubusercontent.com/DEIB-GECO/VarSum/master/README.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "has_script_file": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/DEIB-GECO/VarSum/master/start_server.sh"
+      },
+      "technique": "file_exploration"
+    }
+  ],
+  "installation": [
+    {
+      "confidence": 0.8888244853512131,
+      "result": {
+        "original_header": "Request parameters for exploring a genomic region",
+        "type": "Text_excerpt",
+        "value": "Finally, the endpoint `/annotate` tells you the genes that overlap (even not completely) with a given variant or genomic interval.  A simplified request body is exemplified below. \n```yaml\n{\n  \"assembly\": ..., \n  # you can specify a variant by typing its:\n  # - dbSNP id\n  \"id\": ...,\n  # - or its genomic properties (in 0-based coordinates):\n  \"chrom\": ...,\n  \"start\": ...,\n  \"ref\": ...,\n  \"alt\": ...\n  # alternatively, you can instead type a genomic interval of interest:\n  \"chrom\": ...,\n  \"start\": ...,\n  \"stop\": ...,\n  \"strand\": ... \n}\n```\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/DEIB-GECO/VarSum/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9027440273867188,
+      "result": {
+        "original_header": "Additional Resources",
+        "type": "Text_excerpt",
+        "value": "   \n   - [Populations, ethnicity and other abbreviations used in the data sources](https://github.com/DEIB-GECO/VarSum#abbreviations-and-terms)\n   - [Examples and Demonstrative applications (use cases)](https://github.com/DEIB-GECO/VarSum/tree/master/demo#varsum-httpgmqleupopstudy---examples--applications) as Python Notebooks on GitHub or Google Colab notebooks  \n   - [GitHub project repository](https://github.com/DEIB-GECO/VarSum)\n    \n"
+      },
+      "source": "https://raw.githubusercontent.com/DEIB-GECO/VarSum/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.8544133820864761,
+      "result": {
+        "original_header": "Abbreviations and terms",
+        "type": "Text_excerpt",
+        "value": "As a reference, some abbreviations in use are listed below.\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/DEIB-GECO/VarSum/master/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "issue_tracker": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/DEIB-GECO/VarSum/issues"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "keywords": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": ""
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "license": [
+    {
+      "confidence": 1,
+      "result": {
+        "name": "GNU General Public License v3.0",
+        "spdx_id": "GPL-3.0",
+        "type": "License",
+        "url": "https://api.github.com/licenses/gpl-3.0",
+        "value": "https://api.github.com/licenses/gpl-3.0"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "VarSum"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "owner": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Organization",
+        "value": "DEIB-GECO"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "programming_languages": [
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Python",
+        "size": 180990,
+        "type": "Programming_language",
+        "value": "Python"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "PLpgSQL",
+        "size": 2891,
+        "type": "Programming_language",
+        "value": "PLpgSQL"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Shell",
+        "size": 191,
+        "type": "Programming_language",
+        "value": "Shell"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "readme_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/DEIB-GECO/VarSum/master/README.md"
+      },
+      "technique": "file_exploration"
+    }
+  ],
+  "somef_missing_categories": [
+    "citation",
+    "acknowledgement",
+    "run",
+    "download",
+    "requirements",
+    "contact",
+    "contributors",
+    "documentation",
+    "usage",
+    "faq",
+    "support",
+    "identifier",
+    "has_build_file"
+  ],
+  "somef_provenance": {
+    "date": "2024-10-04 01:25:24",
+    "somef_schema_version": "1.0.0",
+    "somef_version": "0.9.5"
+  },
+  "stargazers_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 0
+      },
+      "technique": "GitHub_API"
+    }
+  ]
+}

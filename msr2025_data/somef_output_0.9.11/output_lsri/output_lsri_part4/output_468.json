@@ -1,0 +1,233 @@
+{
+  "citation": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "***References***",
+        "parent_header": [
+          "CAMI",
+          "Community Assembly Model Inference"
+        ],
+        "type": "Text_excerpt",
+        "value": "# CAMI\n### Community Assembly Model Inference\n\n  For full Installation instructions and initial uses, refer to vignette _**\u2018CAMI_Installation.Rmd\u2019.**_ Briefly, you can install the R package using _**devtools::install_github(\"ruffleymr/CAMI\")**_\n\n#### _**Overview**_\n\nCAMI employs a stochastic algorithm to simulate communities assembled under environmental filtering, competitive exclusion, and neutral species assembly processes. The algorithm was adapted from coevolutionary phenotypic matching and repulsion models. CAMI simultaneously considers the phylogenetic and phenotypic information from species in the local and regional communities and parameterizes the relative strength of the assembly processes to mimic strong to mild non-neutral assembly. CAMI implements a model-based inference procedure by using two approximate approaches, random forests (RF; Breiman 2001; Breiman & Cutler 2007) and approximate Bayesian computation (ABC; Csill\u00e9ry et al. 2010). Additionally, because the strength of non-neutral assembly models is parameterized, the strength can be estimated using ABC.\n\n#### _**Data Simulation**_\n\n  For a single simulation of community assembly, first, a regional community phylogeny is simulated under a constant birth-death process with speciation and extinction parameters, until the desired number of regional species, N, is reached (Stadler 2011). Traits are evolved on the regional phylogeny (Revell 2012) under either a Brownian Motion (BM) or Ornstein-Uhlenbeck (OU) model of trait evolution (Butler & King 2004) characterized by the rate of character change and for OU models, the \u201cstrength of pull\u201d to the trait optimum. Once the regional community exits with phylogenetic relationships and trait information, the assembly of the local community can begin.\n\n  The assembly process uses the probabilities of species persisting in local communities for environmental filtering and competitive exclusion, and a rejection algorithm to stochastically assemble the local community. When a species colonizes the community, the probability of persistence is calculated, and the species is included in the local community if that probability is greater than a uniform random number between 0 and 1. Otherwise, the species is rejected from being in the local community. When a species is rejected from entering the community, it remains in the regional pool and is still able to colonize the local community again. In this case, the probability of persistence is recalculated, and the species has another chance to pass the rejection algorithm. As in the neutral model, the assembly process ends when the local community has reached capacity.\n\n  All parameters mentioned are either fixed or drawn from a prior distribution. Information regarding the default prior distributions or fixed values for each parameter can be found in the help documentation for the R package \u2018CAMI\u2019 (github.com/ruffleymr/CAMI).\n\n#### _**Inference Procedure**_\n  For a single simulation of community assembly, a regional and local phylogeny and a regional and local distribution of trait values is returned. This information is summarized in 30 different summary statistics that capture information about the phylogeny, trait distributions, and phylogenetic signal within the traits of the local community (Komsta & Novomestky 2015, Janzen et al. 2015; Pennell et al. 2015; Deevi et al. 2016, Kendall et al. 2018, Paradis & Schliep 2018; see function CalcSummaryStats()). These summary statistics are then used for model selection and parameter estimation.\n\n  To predict model probabilities from empirical data, we used two model selection approaches. The first approach uses a machine learning classification algorithm, random forests (RF; Breiman 1999; Liaw & Wiener 2002) to build a \u2018forest\u2019 of classification trees using the simulated summary statistics as predictor variables and the community assembly models as response variables. As a classifier is being built, RF is simultaneously measuring the \u2018Out of Bag\u2019 (OoB) error rates of the classifier by cross-validating each classification tree with a subset of the original data that was not used to make the tree in question. The OoB error rates measure how often the data are incorrectly classified. Additionally, RF quantifies the effect of including each summary statistic on the accuracy of the classifier through two variable importance measures, Mean Decrease in Accuracy (MDA) and Mean decrease in Gini Index (GINI) (Breiman 2002).\n\n  RF is generally robust to noisy and/or overpowering predictor variables because each tree in the forest is constructed with only a subset of the data and multiple predictor variables are used at each node (Breiman & Cutler 2007). Our second approach, ABC, relies on the Euclidean distance between observed and simulated summary statistics to accept simulations into the posterior probability distribution of the models given the data (Csill\u00e9ry et al. 2010). The support for each model then comes from the proportion of simulations from each model accepted into the posterior probability distribution. If there are summary statistics included that add a lot of noise to the classification process, ABC will lose power in distinguishing support between models. RF is able to measure which summary statistics are the most influential in distinguishing between the models, through importance measures such as MDA and GINI, thus we used this information to select a subset of 10 summary statistics to use in ABC model selection. ABC then predicts model probabilities using those statistics, a rejection algorithm, and a tolerance of 0.001 (Csill\u00e9ry et al. 2012). The performance of ABC in classifying the data can be measured using a leave-one-out cross validation approach for model selection which results in model misclassification rates for each model.\n\n#### _**References**_\nBreiman, L. (2001). Random forests. Mach. Learn.45, 5-32\n\nBreiman, L. (2002). Manual on setting up, using, and understanding random forests v3. 1. Stat. Dep. Univ. Calif. Berkeley, CA, USA.\n\nBreiman, L. & Cutler, A. (2007). Random forests \u2014 Classification description: Random forests. http//stat-www.berkeley.edu/users/breiman/RandomForests/cc_home. htm.\n\nButler, M.A. & King, A.A. (2004). Phylogenetic Comparative Analysis: A Modeling Approach for Adaptive Evolution. Am. Nat.,164, 683-695.\n\nCsill\u00e9ry, K., Blum, M.G.B., Gaggiotti, O.E. & Fran\u00e7ois, O. (2010). Approximate Bayesian Computation (ABC) in practice. Trends Ecol. Evol., 25, 410-418.\n\nCsill\u00e9ry, K., Fran\u00e7ois, O. & Blum, M.G.B. (2012). Abc: An R package for approximate Bayesian computation (ABC). Methods Ecol. Evol., 3, 475\u2013479.\n\nJanzen, T., H\u00f6hna, S. & Etienne, R.S. (2015). Approximate Bayesian Computation of diversification rates from molecular phylogenies: Introducing a new efficient summary statistic, the nLTT. Methods Ecol. Evol., 6, 566\u2013575.\n\nLiaw, A. & Wiener, M. (2002). Classification and Regression by randomForest. R news., 2/3, 18-22.\nParadis, E. & Schliep, K. (2018). ape 5.0: an environment for modern phylogenetics and evolutionary analyses in R. Bioinformatics., 35, 526-528.\n\nPennell, M.W., FitzJohn, R.G., Cornwell, W.K. & Harmon, L.J. (2015). Model Adequacy and the Macroevolution of Angiosperm Functional Traits. Am. Nat., 186, E33\u2013E50.\nRevell, L.J. (2012). phytools: An R package for phylogenetic comparative biology (and other things). Methods Ecol. Evol., 3, 217\u2013223.\n\nStadler, T. (2011). Simulating trees with a fixed number of extant species. Syst. Biol., 60, 676\u2013684.\n"
+      },
+      "source": "https://raw.githubusercontent.com/ruffleymr/CAMI/master/README.md",
+      "technique": "header_analysis"
+    }
+  ],
+  "code_repository": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/ruffleymr/CAMI"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_created": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2018-07-12T21:58:27Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_updated": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2024-04-17T03:42:14Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "description": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "Community Assembly Model Inference"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 0.9333853781628412,
+      "result": {
+        "original_header": "Community Assembly Model Inference",
+        "type": "Text_excerpt",
+        "value": "CAMI employs a stochastic algorithm to simulate communities assembled under environmental filtering, competitive exclusion, and neutral species assembly processes. The algorithm was adapted from coevolutionary phenotypic matching and repulsion models. CAMI simultaneously considers the phylogenetic and phenotypic information from species in the local and regional communities and parameterizes the relative strength of the assembly processes to mimic strong to mild non-neutral assembly. CAMI implements a model-based inference procedure by using two approximate approaches, random forests (RF; Breiman 2001; Breiman & Cutler 2007) and approximate Bayesian computation (ABC; Csill\u00e9ry et al. 2010). Additionally, because the strength of non-neutral assembly models is parameterized, the strength can be estimated using ABC. \n#### _**Data Simulation**_ \n  For a single simulation of community assembly, first, a regional community phylogeny is simulated under a constant birth-death process with speciation and extinction parameters, until the desired number of regional species, N, is reached (Stadler 2011). Traits are evolved on the regional phylogeny (Revell 2012) under either a Brownian Motion (BM) or Ornstein-Uhlenbeck (OU) model of trait evolution (Butler & King 2004) characterized by the rate of character change and for OU models, the \u201cstrength of pull\u201d to the trait optimum. Once the regional community exits with phylogenetic relationships and trait information, the assembly of the local community can begin. \n  The assembly process uses the probabilities of species persisting in local communities for environmental filtering and competitive exclusion, and a rejection algorithm to stochastically assemble the local community. When a species colonizes the community, the probability of persistence is calculated, and the species is included in the local community if that probability is greater than a uniform random number between 0 and 1. Otherwise, the species is rejected from being in the local community. When a species is rejected from entering the community, it remains in the regional pool and is still able to colonize the local community again. In this case, the probability of persistence is recalculated, and the species has another chance to pass the rejection algorithm. As in the neutral model, the assembly process ends when the local community has reached capacity. \n#### _**Inference Procedure**_\n  For a single simulation of community assembly, a regional and local phylogeny and a regional and local distribution of trait values is returned. This information is summarized in 30 different summary statistics that capture information about the phylogeny, trait distributions, and phylogenetic signal within the traits of the local community (Komsta & Novomestky 2015, Janzen et al. 2015; Pennell et al. 2015; Deevi et al. 2016, Kendall et al. 2018, Paradis & Schliep 2018; see function CalcSummaryStats()). These summary statistics are then used for model selection and parameter estimation. \n  To predict model probabilities from empirical data, we used two model selection approaches. The first approach uses a machine learning classification algorithm, random forests (RF; Breiman 1999; Liaw & Wiener 2002) to build a \u2018forest\u2019 of classification trees using the simulated summary statistics as predictor variables and the community assembly models as response variables. As a classifier is being built, RF is simultaneously measuring the \u2018Out of Bag\u2019 (OoB) error rates of the classifier by cross-validating each classification tree with a subset of the original data that was not used to make the tree in question. The OoB error rates measure how often the data are incorrectly classified. Additionally, RF quantifies the effect of including each summary statistic on the accuracy of the classifier through two variable importance measures, Mean Decrease in Accuracy (MDA) and Mean decrease in Gini Index (GINI) (Breiman 2002). \n  RF is generally robust to noisy and/or overpowering predictor variables because each tree in the forest is constructed with only a subset of the data and multiple predictor variables are used at each node (Breiman & Cutler 2007). Our second approach, ABC, relies on the Euclidean distance between observed and simulated summary statistics to accept simulations into the posterior probability distribution of the models given the data (Csill\u00e9ry et al. 2010). The support for each model then comes from the proportion of simulations from each model accepted into the posterior probability distribution. If there are summary statistics included that add a lot of noise to the classification process, ABC will lose power in distinguishing support between models. RF is able to measure which summary statistics are the most influential in distinguishing between the models, through importance measures such as MDA and GINI, thus we used this information to select a subset of 10 summary statistics to use in ABC model selection. ABC then predicts model probabilities using those statistics, a rejection algorithm, and a tolerance of 0.001 (Csill\u00e9ry et al. 2012). The performance of ABC in classifying the data can be measured using a leave-one-out cross validation approach for model selection which results in model misclassification rates for each model. \nBreiman, L. (2002). Manual on setting up, using, and understanding random forests v3. 1. Stat. Dep. Univ. Calif. Berkeley, CA, USA. \nButler, M.A. & King, A.A. (2004). Phylogenetic Comparative Analysis: A Modeling Approach for Adaptive Evolution. Am. Nat.,164, 683-695. \nCsill\u00e9ry, K., Fran\u00e7ois, O. & Blum, M.G.B. (2012). Abc: An R package for approximate Bayesian computation (ABC). Methods Ecol. Evol., 3, 475\u2013479. \nJanzen, T., H\u00f6hna, S. & Etienne, R.S. (2015). Approximate Bayesian Computation of diversification rates from molecular phylogenies: Introducing a new efficient summary statistic, the nLTT. Methods Ecol. Evol., 6, 566\u2013575. \nLiaw, A. & Wiener, M. (2002). Classification and Regression by randomForest. R news., 2/3, 18-22.\nParadis, E. & Schliep, K. (2018). ape 5.0: an environment for modern phylogenetics and evolutionary analyses in R. Bioinformatics., 35, 526-528. \nPennell, M.W., FitzJohn, R.G., Cornwell, W.K. & Harmon, L.J. (2015). Model Adequacy and the Macroevolution of Angiosperm Functional Traits. Am. Nat., 186, E33\u2013E50.\nRevell, L.J. (2012). phytools: An R package for phylogenetic comparative biology (and other things). Methods Ecol. Evol., 3, 217\u2013223. \nStadler, T. (2011). Simulating trees with a fixed number of extant species. Syst. Biol., 60, 676\u2013684.\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/ruffleymr/CAMI/master/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "download_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/ruffleymr/CAMI/releases"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 2
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/ruffleymr/CAMI/forks"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "ruffleymr/CAMI"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_title": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "CAMI"
+      },
+      "source": "https://raw.githubusercontent.com/ruffleymr/CAMI/master/README.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "installation": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "File_dump",
+        "value": "---\ntitle: \"Community Assembly Model Inference\"\nauthor: \"M. Ruffley\"\ndate: \"17-August-2018\"\noutput:\n  html_document:\n    toc: yes\n    toc_float: yes\n---\n```{r setup, include=FALSE}\nlibrary(devtools)\nlibrary(CAMI)\n```\n### 1. Installation\nWe will begin by installing **devtools**. Devtools is an R package that enables the development of other R packages. You can use devtools to install a package that is managed in a github repository. We will install CAMI this way. \n\n```{r message=FALSE, eval=FALSE}\n## install devtools with the line below if you do not already have it\ninstall.packages(\"devtools\")\nlibrary(devtools)\n\n## install CAMI from github using devtools with the line below\ndevtools::install_github(\"ruffleymr/CAMI\")\nlibrary(\"CAMI\")\n```\n\n### 2. Simulation of Data\n\nTo simulate community assembly data we will be using the `SimCommunityAssembly()` function. This function simulates phylogenetic and phenotypic community assembly data in a species-based model. The function takes several parameters, which can be seen in the help documentation using `?SimCommunityAssembly`. This function can be used to simulate 1 to many community assembly datasets, set using the `sims` argument. \n\n#### Parameters \nBefore we simulate data, let's go through the parameters of the function. \n\nFor a single simulation, first, a regional community phylogeny is simulated under a constant birth-death process. `CAMI` uses the function `sim.bd.taxa` in the R package `TreeSim` (Stadler 2011).\n\n- `N` determines the size of the regional species pools\n- `lambda` is the speciation rate in species/million years\n- `eps` is the extinction fraction, which is used to calculate the extinction rate from the speciation rate\n\nTrait evolution is then modeled along this phylogeny under one of two models of trait evolution, Brownian Motion (BM; Felsenstein 1985) and Ornstein-Uhlenbeck (OU; Hansen 1997, Butler & King 2004), determined by the `traitsim` argument. \n\n- `traitsim` either \"BM\" or \"OU\"\n- `sig2` is the instantaneous rate of character change for either model\n- `alpha` controls the strength of pull to the trait optimum and is for OU models only\n\nOnce the regional community pool exists, the species are assembled into local communities under one of three assembly models, neutral, habitat filtering, and competitive exclusion, set using the `comsim` argument. The non-neutral assembly models use the phenotypic variation in the regional community and phenotypic matching and repulsion equations, for filtering and competition models respectively, to determine which species will survive in the local community. \n\n- `comsim` either \"neutral\", \"filtering\", \"competition\", or \"all\"\n- `tau` controls the strength of the non-neutral assembly processes\n\nFor filtering models, the lower `tau` is, the stronger the environmental filter. For competition models, the higher `tau`, the stronger the effects of competition. \n\nFor all of these parameters, a uniform prior distribution of parameter values or a fixed value can be designated. Many of the parameters have default uniform prior distributions, see the help page for details on each parameter.\n\nAgain, you can view this information in the help documentation using '?SimCommunityAssembly'\n\n#### SimCommunityAssembly() \nNow we can start simulating data. We will first simulate 10 communities, where each community is comprised of 100 species in the regional community, half the amount of species in the local community, a \"BM\" model of trait evolution, and a \"neutral\" model of community assembly. We will leave all other parameters as their default settings.\n\n```{r message=FALSE, results='hide'}\n#simulate neutral community assembly data\nNeutral.Sims <- SimCommunityAssembly(sims = 10, N = 100, local = 0.5,\n                                 traitsim = \"BM\",\n                                 comsim = \"neutral\")\n\n```\n\nWe can also simulate under alternative models of community assembly and trait evolution and add/change prior ranges.\n\n```{r message=FALSE, results='hide'}\nFiltering.Sims <- SimCommunityAssembly(sims = 10, N = c(100,200), local = 0.5,\n                                 traitsim = \"OU\",\n                                 comsim = \"filtering\",\n                                 sig2 = c(2.0, 5.0))\n\n```\n\n### 3. Output\n\nThe output of the function is a list of two data frames The first matrix is of all _parameters_ and the second matrix contains all _summary.stats_. In both cases, each row in the matrix is a unique simulation and the rows between matrices correspond.\n\n```{r}\n#two matrices, 'params' and 'summary.stats'\nhead(Neutral.Sims$params)\nhead(Neutral.Sims$summary.stats)\n\n```\n"
+      },
+      "source": "https://raw.githubusercontent.com/ruffleymr/CAMI/master/vignettes/CAMI_Installation.Rmd",
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 0.9971558760570151,
+      "result": {
+        "original_header": "Community Assembly Model Inference",
+        "type": "Text_excerpt",
+        "value": "  For full Installation instructions and initial uses, refer to vignette _**\u2018CAMI_Installation.Rmd\u2019.**_ Briefly, you can install the R package using _**devtools::install_github(\"ruffleymr/CAMI\")**_ \n  All parameters mentioned are either fixed or drawn from a prior distribution. Information regarding the default prior distributions or fixed values for each parameter can be found in the help documentation for the R package \u2018CAMI\u2019 (github.com/ruffleymr/CAMI). \nBreiman, L. & Cutler, A. (2007). Random forests \u2014 Classification description: Random forests. http//stat-www.berkeley.edu/users/breiman/RandomForests/cc_home. htm. \n"
+      },
+      "source": "https://raw.githubusercontent.com/ruffleymr/CAMI/master/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "issue_tracker": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/ruffleymr/CAMI/issues"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "keywords": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": ""
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "CAMI"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "owner": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "User",
+        "value": "ruffleymr"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "programming_languages": [
+    {
+      "confidence": 1,
+      "result": {
+        "name": "R",
+        "size": 22436,
+        "type": "Programming_language",
+        "value": "R"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "readme_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/ruffleymr/CAMI/master/README.md"
+      },
+      "technique": "file_exploration"
+    }
+  ],
+  "somef_missing_categories": [
+    "acknowledgement",
+    "run",
+    "download",
+    "requirements",
+    "contact",
+    "contributors",
+    "documentation",
+    "license",
+    "usage",
+    "faq",
+    "support",
+    "identifier",
+    "has_build_file",
+    "executable_example"
+  ],
+  "somef_provenance": {
+    "date": "2024-11-04 03:23:47",
+    "somef_schema_version": "1.0.0",
+    "somef_version": "0.9.5"
+  },
+  "stargazers_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 7
+      },
+      "technique": "GitHub_API"
+    }
+  ]
+}

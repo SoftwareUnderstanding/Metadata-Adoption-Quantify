@@ -1,0 +1,495 @@
+{
+  "code_repository": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/mlinderm/npsv"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_created": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2020-05-24T15:55:02Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_updated": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2024-08-23T17:26:45Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "description": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "Non-parametric structural variant genotyper"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 0.9686797400879688,
+      "result": {
+        "original_header": "NPSV: Non-parametric Structural Variant Genotyper",
+        "type": "Text_excerpt",
+        "value": "NPSV is a Python-based tool for stand-alone genotyping of previously detected/reported deletion and insertion structural variants (SVs) in short-read whole genome sequencing (WGS) data. NPSV implements a machine learning-based approach for SV genotyping that employs NGS simulation to model the combined effects of the genomic region, sequencer and alignment pipeline.  \nNPSV is described in the following publication: \n"
+      },
+      "source": "https://raw.githubusercontent.com/mlinderm/npsv/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.965301801113429,
+      "result": {
+        "original_header": "NPSV Genotyping",
+        "type": "Text_excerpt",
+        "value": "The NPSV package installs two key executables, `npsv`, the main entry point for the genotyper, and `npsvg`, which implements multiple sub-commands for preprocessing and individual steps in the different NPSV workflows.\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/mlinderm/npsv/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9319566611514026,
+      "result": {
+        "original_header": "Basic Workflow",
+        "type": "Text_excerpt",
+        "value": "The minimal NPSV workflow requires the aligned reads, the putative SV(s) as a VCF file and basic sequencing statistics (the sequencer model, read length, the mean and SD of the insert size, and depth). A minimal example follows. \nThis will produce a VCF file `tests/results/12_22129565_22130387_DEL.result.npsv.vcf` (determined by the output directory and prefix) with the genotypes, along with TSV files with the real and simulated features. The input variant is derived from the Genome-in-a-Bottle SV dataset; NPSV successfully genotypes this variant as homozygous alternate. \nBy default, NPSV uses \"hybrid\" mode for deletions (i.e., build per-variant classifiers trained on multiple simulated replicates of each zygosity for smaller variants and a single classifier for larger variants) and \"single\" mode for insertions (i.e., build just a single classifier using 1 replicate per variant per zygosity as the training data). Since this variant is a deletion < 1 kbp in length, NPSV will create a variant-specific classifier. The genotyping mode (single, variant, hybrid), classifier type, replicates, and threshold for choosing between per-variant and single classifiers in hybrid mode, are configurable for each variant type. To speed up this example we reduced the number of replicates to 50 (`--DEL-n 50`) from the default of 100. \nThe `--profile` argument specifies the sequencer model and thus the profile to use with the [ART NGS simulator](https://www.niehs.nih.gov/research/resources/software/biostatistics/art/index.cfm). Currently available profiles in ART are:\n```\nGA1 - GenomeAnalyzer I (36bp,44bp), GA2 - GenomeAnalyzer II (50bp, 75bp)\nHS10 - HiSeq 1000 (100bp),          HS20 - HiSeq 2000 (100bp),      HS25 - HiSeq 2500 (125bp, 150bp)\nHSXn - HiSeqX PCR free (150bp),     HSXt - HiSeqX TruSeq (150bp),   MinS - MiniSeq TruSeq (50bp)\nMSv1 - MiSeq v1 (250bp),            MSv3 - MiSeq v3 (250bp),        NS50 - NextSeq500 v2 (75bp)\n``` \nThe `--sim-ref` argument is used here because the test data (`-b`) only includes a small set of the data. By default `npsv` samples random size-matched SVs from the genome to serve as the \"null model\" with homozygous reference genotypes, but that requires sequencing data from the whole genome. `--sim-ref` will use simulation to generate homozygous reference data. \nThe `--genome` file is used to determine chromosome sizes for various operations and the `--gaps` file contains regions that should not be sampled when generating random variants to model homozygous reference genotypes. The relevant files are distributed with this package for the `human_g1k_v37.fasta` and `Homo_sapiens_assembly38.genome` reference genomes.\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/mlinderm/npsv/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9137716689051221,
+      "result": {
+        "original_header": "Preprocessing to create a \"stats\" file",
+        "type": "Text_excerpt",
+        "value": "NPSV can utilize more information about the aligned reads to improve simulation and feature extraction. The preprocessing step, run with the `preprocess` sub-command for `npsv`, will create a JSON file with the relevant stats. It can compute those stats directly, or extract many of them from the Picard metrics that may already have been generated as part of many pipelines. For example, the following command would construct the stats file from a combination of BAM file analysis with goleft and previously computed Picard metrics. Note that since this example BAM file only includes reads in a small region on chromosome 12, the results for this example command will not be meaningful.\n```\nnpsvg preprocess \\\n    -r /data/human_g1k_v37.fasta \\\n    -b tests/data/12_22125565_22134387.bam \\\n    --picard-gc tests/data/gc_bias.detail_metrics \\\n    --picard-insert tests/data/insert_size_metrics \\\n    --picard-wgs tests/data/wgs_metrics \\\n    -o tests/results/stats.json\n```\nThe stats file can then be used with `npsv` via the `--stats-path` option in lieu of directly specifying the sequencing statistics as shown below (here with a stats file previously generated from the entire HG002 genome).\n```\nnpsv \\\n    -r /data/human_g1k_v37.fasta \\\n    --genome etc/human_g1k_v37.genome \\\n    --gaps etc/human_g1k_v37.gaps.bed.gz \\\n    -i tests/data/12_22129565_22130387_DEL.vcf.gz \\\n    -b tests/data/12_22125565_22134387.bam \\\n    -o tests/results \\\n    --prefix 12_22129565_22130387_DEL.result \\\n    --stats-path tests/data/stats.json --profile HS25 \\\n    --sim-ref \\\n    --DEL-n 50\n```\nIf the Picard metrics are not available, the `preprocess` sub-command can compute the necessary metrics directly, as shown below. Note that since this example BAM file only includes reads in a small region on chromosome 12, the results for this example command will not be meaningful.\n```\nnpsvg preprocess \\\n    -r /data/human_g1k_v37.fasta \\\n    --genome etc/human_g1k_v37.genome \\\n    -b tests/data/12_22125565_22134387.bam \\\n    -o tests/results/stats.json\n```\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/mlinderm/npsv/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9816101121007533,
+      "result": {
+        "original_header": "Proposing alternate SV representations",
+        "type": "Text_excerpt",
+        "value": "NPSV includes experimental support for automatically identifying \"better\" SV representations during genotyping using the simulated data. This workflow is implemented with a pre-processing step that generates possible alternate SV representations and a post-processing step that updates the genotype for the original SV from the alternate SV whose simulated data is most similar to the real data. \nVariant proposal requires a BED file (`--simple-repeats-bed`) derived from the UCSC Genome Browser [simpleRepeats.txt.gz](http://hgdownload.soe.ucsc.edu/goldenPath/hg19/database/simpleRepeat.txt.gz) table dump that contains the standard BED columns plus the repeat period, number of copies and consensus repeat sequence. Alternative representations will only be generated for variants that overlap regions in this file. For convenience `simple_repeats.b37.bed.gz` and the index file (along with the hg38 version `simple_repeats.hg38.bed.gz`) are available at <http://skylight.middlebury.edu/~mlinderman/data/simple_repeats.b37.bed.gz>. To download these files in the Docker container:\n```\ncurl -k https://www.cs.middlebury.edu/~mlinderman/data/simple_repeats.b37.bed.gz -o /data/simple_repeats.b37.bed.gz\ncurl -k https://www.cs.middlebury.edu/~mlinderman/data/simple_repeats.b37.bed.gz.tbi -o /data/simple_repeats.b37.bed.gz.tbi \n```\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/mlinderm/npsv/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9354263370476498,
+      "result": {
+        "original_header": "Workflow",
+        "type": "Text_excerpt",
+        "value": "To generate possible alternate representations, use the `propose` sub-command for `npsvg`, e.g.\n```\nnpsvg \\\n    propose \\\n    -r /data/human_g1k_v37.fasta \\\n    --simple-repeats-bed /data/simple_repeats.b37.bed.gz \\\n    -i tests/data/1_1865644_1866241_DEL.vcf.gz \\\n    -o tests/results/1_1865644_1866241_DEL.propose.vcf\n```\n \nThen genotype the expanded set of putative variant. Note that the refinement workflow requires \"variant\" mode and the `--dm2` option to compute the Mahalanobis distance between the real and simulated data. Since this commands will genotype tens of putative variants, using multiple cores (if available) is recommended (see FAQ below).\n```\nnpsv \\\n    -r /data/human_g1k_v37.fasta \\\n    --genome etc/human_g1k_v37.genome \\\n    --gaps etc/human_g1k_v37.gaps.bed.gz \\\n    -i tests/results/1_1865644_1866241_DEL.propose.vcf \\\n    -b tests/data/1_1861644_1871561.bam \\\n    --stats-path tests/data/stats.json --profile HS25 \\\n    -o tests/results \\\n    --prefix 1_1865644_1866241_DEL.propose \\\n    --sim-ref \\\n    --DEL-gt-mode variant \\\n    --dm2 \\\n    --DEL-n 50\n```\nThen select the best of the proposed representations with the `refine` sub-command. Refinement will update the original VCF with genotypes for the best representation.\n```\nnpsvg \\\n    refine \\\n    --select dm2 \\\n    -i tests/results/1_1865644_1866241_DEL.propose.npsv.vcf \\\n    -o tests/results/1_1865644_1866241_DEL.propose.refined.vcf\n```\nWhen reviewing the pileup, the GIAB SV description appears to be \"left shifted\" from the true location as estimated from long-read sequencing data (approximately 1:1866429-1867023). NPSV (and other tools) incorrectly genotype the original SV description as homozygous reference. The NPSV proposal algorithm selects the alternative description where the actual data is most similar to simulated data for non-reference genotypes. The VCF calls produced by `refine` (shown below for this example) contain the alternate and original genotypes and PLs, the alternate and original Mahalanobis distance (smaller is better) and the alternate SV description. For this variant, `refine` selects 1:1866388-1867000 as the best SV description. The minimum non-reference distance for that SV description is 8.0, compared to 570.1 for the original description. The alternate SV description is correctly genotyped as heterozygous. \n```\nGT:PL:DM:AD:CL:OGT:OPL:ODM:OAD\t0/1:99,0,99:7348.1,8.0,21366.2:31,21:1_1866388_1867000_DEL:0/0:0,99,99:17.4,570.1,85419.0:67,0\n```\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/mlinderm/npsv/master/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "download_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/mlinderm/npsv/releases"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "faq": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Parallelization",
+        "parent_header": [
+          "NPSV: Non-parametric Structural Variant Genotyper",
+          "FAQ"
+        ],
+        "type": "Text_excerpt",
+        "value": "`npsv` can simulate and extract variant evidence in parallel (controlled via the `--threads` option), before performing the genotyping in serial.  In \"variant\" mode, each variant can be genotyped independently. When employing that genotyping mode, a typical approach is to partition the input VCF file into chunks that are analyzed concurrently.\n"
+      },
+      "source": "https://raw.githubusercontent.com/mlinderm/npsv/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Data Availability",
+        "parent_header": [
+          "NPSV: Non-parametric Structural Variant Genotyper",
+          "FAQ"
+        ],
+        "type": "Text_excerpt",
+        "value": "The `example.sh` script in `paper` directory includes an example of downloading and preparing both the HG002 short-read sequencing data and the GIAB SV calls for use with the NPSV genotyper. Similar NGS data is available for the parental [HG003](ftp://ftp-trace.ncbi.nlm.nih.gov/ReferenceSamples/giab/data/AshkenazimTrio/HG003_NA24149_father/NIST_HiSeq_HG003_Homogeneity-12389378/HG003_HiSeq300x_fastq/140721_D00360_0044_AHA66RADXX) and [HG004](ftp://ftp-trace.ncbi.nlm.nih.gov/ReferenceSamples/giab/data//AshkenazimTrio/HG004_NA24143_mother/NIST_HiSeq_HG004_Homogeneity-14572558/HG004_HiSeq300x_fastq/140818_D00360_0046_AHA5R5ADXX) samples. The NA12878 \"Platinum Genomes\" NGS data is available in the European Nucleotide Archive under project [PRJEB3381](https://www.ebi.ac.uk/ena/browser/view/PRJEB3381). The Polaris SV call set is available at <https://github.com/Illumina/Polaris> and the SV-plaudit call set is available via the [supplemental materials](http://gigadb.org/dataset/100450) for the describing [publication](https://doi.org/10.1093/gigascience/giy064).\n"
+      },
+      "source": "https://raw.githubusercontent.com/mlinderm/npsv/master/README.md",
+      "technique": "header_analysis"
+    }
+  ],
+  "forks_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 0
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/mlinderm/npsv/forks"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "mlinderm/npsv"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_title": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "NPSV: Non-parametric Structural Variant Genotyper"
+      },
+      "source": "https://raw.githubusercontent.com/mlinderm/npsv/master/README.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "has_build_file": [
+    {
+      "confidence": 1,
+      "result": {
+        "format": "dockerfile",
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/mlinderm/npsv/master/Dockerfile"
+      },
+      "source": "https://raw.githubusercontent.com/mlinderm/npsv/master/Dockerfile",
+      "technique": "file_exploration"
+    }
+  ],
+  "has_script_file": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/mlinderm/npsv/master/paper/benchmarking.sh"
+      },
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/mlinderm/npsv/master/paper/example.sh"
+      },
+      "technique": "file_exploration"
+    }
+  ],
+  "installation": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Installation",
+        "parent_header": [
+          "NPSV: Non-parametric Structural Variant Genotyper"
+        ],
+        "type": "Text_excerpt",
+        "value": "When cloning NPSV, make sure to recursively clone all of the submodules, i.e. `git clone --recursive git@github.com:mlinderm/npsv.git`.\n\nNPSV requires Python 3.6+ and a suite of command-line genomics tools. For convenience, a Docker file is provided that installs all of the dependencies. To build that image:\n```\ndocker build -t npsv .\n```\n"
+      },
+      "source": "https://raw.githubusercontent.com/mlinderm/npsv/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Manual installation",
+        "parent_header": [
+          "NPSV: Non-parametric Structural Variant Genotyper",
+          "Installation"
+        ],
+        "type": "Text_excerpt",
+        "value": "To manually install and run NPSV from the source, you will need the following dependencies:\n\n* ART (NGS simulator)\n* bwa\n* bedtools\n* bcftools\n* goleft\n* htslib (i.e., tabix and bgzip)\n* samblaster\n* sambamba\n* samtools\n\nalong with standard command-line utilities, such as bc, gawk, etc., CMake and a C++14 compiler. After installing the dependencies listed above, install the Python dependencies, and then NPSV itself via:\n```\npython3 -m pip install -r requirements.txt\npython3 setup.py install\n```\n"
+      },
+      "source": "https://raw.githubusercontent.com/mlinderm/npsv/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 0.9114421962137,
+      "result": {
+        "original_header": "Proposing alternate SV representations",
+        "type": "Text_excerpt",
+        "value": "### Prerequisites \nVariant proposal requires a BED file (`--simple-repeats-bed`) derived from the UCSC Genome Browser [simpleRepeats.txt.gz](http://hgdownload.soe.ucsc.edu/goldenPath/hg19/database/simpleRepeat.txt.gz) table dump that contains the standard BED columns plus the repeat period, number of copies and consensus repeat sequence. Alternative representations will only be generated for variants that overlap regions in this file. For convenience `simple_repeats.b37.bed.gz` and the index file (along with the hg38 version `simple_repeats.hg38.bed.gz`) are available at <http://skylight.middlebury.edu/~mlinderman/data/simple_repeats.b37.bed.gz>. To download these files in the Docker container:\n```\ncurl -k https://www.cs.middlebury.edu/~mlinderman/data/simple_repeats.b37.bed.gz -o /data/simple_repeats.b37.bed.gz\ncurl -k https://www.cs.middlebury.edu/~mlinderman/data/simple_repeats.b37.bed.gz.tbi -o /data/simple_repeats.b37.bed.gz.tbi \n```\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/mlinderm/npsv/master/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "invocation": [
+    {
+      "confidence": 0.9074065557415387,
+      "result": {
+        "original_header": "Basic Workflow",
+        "type": "Text_excerpt",
+        "value": "Run NPSV genotyping:\n```\nmkdir -p tests/results\nnpsv \\\n    -r /data/human_g1k_v37.fasta \\\n    --genome etc/human_g1k_v37.genome \\\n    --gaps etc/human_g1k_v37.gaps.bed.gz \\\n    -i tests/data/12_22129565_22130387_DEL.vcf.gz \\\n    -b tests/data/12_22125565_22134387.bam \\\n    -o tests/results \\\n    --prefix 12_22129565_22130387_DEL.result \\\n    --read-length 148 --fragment-mean 573 --fragment-sd 164 --depth 25 --profile HS25 \\\n    --sim-ref \\\n    --DEL-n 50\n``` \n"
+      },
+      "source": "https://raw.githubusercontent.com/mlinderm/npsv/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.8081729299012751,
+      "result": {
+        "original_header": "Preprocessing to create a \"stats\" file",
+        "type": "Text_excerpt",
+        "value": "NPSV can utilize more information about the aligned reads to improve simulation and feature extraction. The preprocessing step, run with the `preprocess` sub-command for `npsv`, will create a JSON file with the relevant stats. It can compute those stats directly, or extract many of them from the Picard metrics that may already have been generated as part of many pipelines. For example, the following command would construct the stats file from a combination of BAM file analysis with goleft and previously computed Picard metrics. Note that since this example BAM file only includes reads in a small region on chromosome 12, the results for this example command will not be meaningful.\n```\nnpsvg preprocess \\\n    -r /data/human_g1k_v37.fasta \\\n    -b tests/data/12_22125565_22134387.bam \\\n    --picard-gc tests/data/gc_bias.detail_metrics \\\n    --picard-insert tests/data/insert_size_metrics \\\n    --picard-wgs tests/data/wgs_metrics \\\n    -o tests/results/stats.json\n```\nThe stats file can then be used with `npsv` via the `--stats-path` option in lieu of directly specifying the sequencing statistics as shown below (here with a stats file previously generated from the entire HG002 genome).\n```\nnpsv \\\n    -r /data/human_g1k_v37.fasta \\\n    --genome etc/human_g1k_v37.genome \\\n    --gaps etc/human_g1k_v37.gaps.bed.gz \\\n    -i tests/data/12_22129565_22130387_DEL.vcf.gz \\\n    -b tests/data/12_22125565_22134387.bam \\\n    -o tests/results \\\n    --prefix 12_22129565_22130387_DEL.result \\\n    --stats-path tests/data/stats.json --profile HS25 \\\n    --sim-ref \\\n    --DEL-n 50\n```\nIf the Picard metrics are not available, the `preprocess` sub-command can compute the necessary metrics directly, as shown below. Note that since this example BAM file only includes reads in a small region on chromosome 12, the results for this example command will not be meaningful.\n```\nnpsvg preprocess \\\n    -r /data/human_g1k_v37.fasta \\\n    --genome etc/human_g1k_v37.genome \\\n    -b tests/data/12_22125565_22134387.bam \\\n    -o tests/results/stats.json\n```\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/mlinderm/npsv/master/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "issue_tracker": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/mlinderm/npsv/issues"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "keywords": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": ""
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "license": [
+    {
+      "confidence": 1,
+      "result": {
+        "name": "MIT License",
+        "spdx_id": "MIT",
+        "type": "License",
+        "url": "https://api.github.com/licenses/mit",
+        "value": "https://api.github.com/licenses/mit"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "File_dump",
+        "value": "Copyright 2020 Michael Linderman\n\nPermission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the \"Software\"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE."
+      },
+      "source": "https://raw.githubusercontent.com/mlinderm/npsv/master/LICENSE",
+      "technique": "file_exploration"
+    }
+  ],
+  "name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "npsv"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "owner": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "User",
+        "value": "mlinderm"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "programming_languages": [
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Python",
+        "size": 243841,
+        "type": "Programming_language",
+        "value": "Python"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "C++",
+        "size": 51092,
+        "type": "Programming_language",
+        "value": "C++"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Shell",
+        "size": 28721,
+        "type": "Programming_language",
+        "value": "Shell"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "CMake",
+        "size": 3345,
+        "type": "Programming_language",
+        "value": "CMake"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Dockerfile",
+        "size": 1257,
+        "type": "Programming_language",
+        "value": "Dockerfile"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "readme_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/mlinderm/npsv/master/README.md"
+      },
+      "technique": "file_exploration"
+    }
+  ],
+  "requirements": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Prerequisites",
+        "parent_header": [
+          "NPSV: Non-parametric Structural Variant Genotyper",
+          "Proposing alternate SV representations"
+        ],
+        "type": "Text_excerpt",
+        "value": "NPSV requires the reference genome and these examples, in particular, require the \"b37\" reference. To obtain and index those files from within the Docker container:\n```\ncd /data\ncurl ftp://ftp.ncbi.nlm.nih.gov/1000genomes/ftp/technical/reference/human_g1k_v37.fasta.gz -o human_g1k_v37.fasta.gz\ngunzip human_g1k_v37.fasta.gz\nbwa index human_g1k_v37.fasta\nsamtools faidx human_g1k_v37.fasta\n```\n"
+      },
+      "source": "https://raw.githubusercontent.com/mlinderm/npsv/master/README.md",
+      "technique": "header_analysis"
+    }
+  ],
+  "run": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Running NPSV",
+        "parent_header": [
+          "NPSV: Non-parametric Structural Variant Genotyper"
+        ],
+        "type": "Text_excerpt",
+        "value": "NPSV requires basic information about the aligned reads (i.e. sequencer model, coverage, insert size distribution). These data can be provided as a command line parameters enabling you to immediately start genotyping. An optional preprocessing step (the typical workflow) will collect that data and more from the BAM file (to inform both simulation and feature extraction) into a stats file that can be used with the genotyper.\n"
+      },
+      "source": "https://raw.githubusercontent.com/mlinderm/npsv/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Running the NPSV tools with Docker",
+        "parent_header": [
+          "NPSV: Non-parametric Structural Variant Genotyper",
+          "Running NPSV"
+        ],
+        "type": "Text_excerpt",
+        "value": "Given the multi-step workflow, the typical approach when using the Docker image is to run NPSV from a shell. The following command will start a Bash session in the Docker container (replace `/path/to/reference/directory` with the path to directory containing the reference genome and associated BWA indices). NPSV is most efficient when the BWA indices are loaded into shared memory. To load BWA indices into shared memory you will need to configure the Docker container with at least 10G of memory and set the shared memory size to 6G or more.\n\n```\ndocker run --entrypoint /bin/bash \\\n    --shm-size=6g \\\n    -v `pwd`:/opt/npsv \\\n    -v /path/to/reference/directory:/data \\\n    -w /opt/npsv \\\n    -it \\\n    npsv\n```\n"
+      },
+      "source": "https://raw.githubusercontent.com/mlinderm/npsv/master/README.md",
+      "technique": "header_analysis"
+    }
+  ],
+  "somef_missing_categories": [
+    "citation",
+    "acknowledgement",
+    "download",
+    "contact",
+    "contributors",
+    "documentation",
+    "support",
+    "identifier",
+    "executable_example"
+  ],
+  "somef_provenance": {
+    "date": "2024-10-04 12:31:21",
+    "somef_schema_version": "1.0.0",
+    "somef_version": "0.9.5"
+  },
+  "stargazers_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 14
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "type": [
+    {
+      "confidence": 0.82,
+      "result": {
+        "type": "String",
+        "value": "commandline-application"
+      },
+      "technique": "software_type_heuristics"
+    }
+  ],
+  "usage": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "\"End-to-end\" example",
+        "parent_header": [
+          "NPSV: Non-parametric Structural Variant Genotyper",
+          "NPSV Genotyping"
+        ],
+        "type": "Text_excerpt",
+        "value": "The `paper` directory includes an `example.sh` script that downloads the HG002 short-read sequencing data and the GIAB SV calls, aligns the reads with BWA and then genotypes those SVs with NPSV using a representative workflow. The `benchmark.sh` script genotypes the GIAB SVs in previously aligned HG002 NGS data with NPSV along with a set of other SV genotypers. \n\nAspects of both scripts are specific to the local computing infrastructure (e.g., directory paths, number of cores, executable paths) and so will need to be modified prior to use. Both scripts assume you have a customized version of [Truvari](https://github.com/mlinderm/truvari/tree/genotype_stats) installed.\n"
+      },
+      "source": "https://raw.githubusercontent.com/mlinderm/npsv/master/README.md",
+      "technique": "header_analysis"
+    }
+  ]
+}

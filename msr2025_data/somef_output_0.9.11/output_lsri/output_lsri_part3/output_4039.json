@@ -1,0 +1,949 @@
+{
+  "code_repository": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/precimed/mixer"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_created": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2016-10-07T01:50:48Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_updated": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2024-09-11T17:42:08Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "description": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "Causal Mixture Model for GWAS summary statistics"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Introduction",
+        "type": "Text_excerpt",
+        "value": "This folder contains a Python port of MiXeR, wrapping the same C/C++ core as we previously used from MATLAB.\nThis is work in progress, but eventually it should singificantly improve user experience,\nas Python allows much simpler  installation procedures,\nmakes it less error prone, allows to implement well-documented command-line interface (``python mixer.py --help``),\nand provide visualization.\n\nInput data for MiXeR consists of summary statistics from a GWAS, and a reference panel.\nMiXeR format for summary statistics is compatible with LD Score Regression\n(i.e. the ``sumstats.gz`` files), and for those users who are already familiar with ``munge_sumstats.py``\nscript we recommend to use LD Score Regression pipeline to prepare summary statistics.\nAt the same time, we encourage everyone to take a look [our own pipeline](https://github.com/precimed/python_convert/)\nfor processing summary statistics. For the reference panel we recommend to use 1000 Genomes Phase3 data,\npre-processed according to LD Score Regression pipeline, and available for download from LDSC website.\nFurther details are given in [Data downloads](#data-downloads) and [Data preparation](#data-preparation) sections.\n\nOnce you have all input data in MiXeR-compatible format you may proceed with running univariate (``fit1``, ``test1``)\nand cross-trait (``fit2``, ``test2``) analyses, as implemented in ``mixer.py`` command-line interface.\nThe results will be saved as ``.json`` files.\nTo visualize the results we provide a script in python, but we encourage users to write their own scripts\nthat understand the structure of ``.json`` files, process the results.\nFurther details are given in [Run MiXeR](#run-mixer),\n[MiXeR options](#mixer-options) and [Visualize MiXeR results](#visualize-mixer-results) sections.\n\nIf you encounter an issue, or have further questions, please create a\n[new issue ticket](https://github.com/precimed/mixer/issues/new).\n\nIf you use MiXeR software for your research publication, please cite the following paper(s):\n\n* for univariate analysis: D. Holland et al., Beyond SNP Heritability: Polygenicity and Discoverability Estimated for Multiple Phenotypes with a Univariate Gaussian Mixture Model, PLOS Genetics, 2020, https://doi.org/10.1371/journal.pgen.1008612\n* for cross-trait analysis: O.Frei et al., Bivariate causal mixture model quantifies polygenic overlap between complex traits beyond genetic correlation, Nature Communications, 2019, https://www.nature.com/articles/s41467-019-10310-0\n\nMiXeR versions:\n\n* ``v1.0`` - public release for Matlab\n* ``v1.1`` - internal release for Matlab and Python\n* ``v1.2`` - internal release for Python (Matlab support removed)\n* ``v1.3`` - internal release for Python (change HapMap3 to twenty random sets of ~600K SNPs each)\n"
+      },
+      "source": "https://raw.githubusercontent.com/precimed/mixer/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 0.9440716924049124,
+      "result": {
+        "original_header": "Visualize MiXeR results",
+        "type": "Text_excerpt",
+        "value": "First step is to average the results across 20 runs with ``mixer_figures.py combine``, which works for univariate (fit1, test1) and bivariate (fit2, test2) runs:\n```\npython precimed/mixer_figures.py combine --json <prefix>.fit.rep@.json --out <prefix>.fit\n``` \nFor the ``two`` command, instead of ``--json``, it is possible to specify ``--json-fit`` and ``--json-test`` separately.\nThis allows to combine negative log-likelihood plot (available in fit2 only) and QQ plots (available in test2 only).\nNote that all ``--json`` accept wildcards (``*``) or a list of multiple files. This allows to generate ``.csv`` tables\ncontaining results from multiple MiXeR runs. \n \n"
+      },
+      "source": "https://raw.githubusercontent.com/precimed/mixer/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9047071202774535,
+      "result": {
+        "original_header": "MiXeR results format",
+        "type": "Text_excerpt",
+        "value": "* Univariate ``.csv`` file, including model parameters and AIC/BIC values,\n* Univariate QQ plots\n* Univariate MAF- and LD-stratified QQ plots\n* Univariate Power curves\n* Bivariate ``.csv`` file, including model parameters, AIC/BIC values and Dice coefficient\n* Bivariate stratified QQ plots (cross-trait enrichment)\n* Bivariate density plots\n* Bivariate negative log-likelihood function \nThese output is described in the cross-trait MiXeR publication. \n \n"
+      },
+      "source": "https://raw.githubusercontent.com/precimed/mixer/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9575297284565492,
+      "result": {
+        "original_header": "AIC BIC interpretation",
+        "type": "Text_excerpt",
+        "value": "``.csv`` files generated by ``python precimed/mixer_figures.py`` commands contain AIC ([Akaike Information Criterion](https://en.wikipedia.org/wiki/Akaike_information_criterion)) and BIC ([Bayesian Information Criterion](https://en.wikipedia.org/wiki/Bayesian_information_criterion)) values. To generate AIC / BIC values you should point ``mixer_figures.py`` to json files produced by ``fit1`` or ``fit2`` steps (not those from ``test1`` or ``test2`` steps). \nThe idea of model selection criteia (both AIC and BIC) is to find whether the input data (in our case the GWAS summary statistics) have enough statistical power to warrant a more complex model - i.e. a model with additional free parameters that need to be optimized from the data. For example, the LDSR model has two free parameters - the slope and an intercept. The univariate MiXeR model has three parameters (``pi``, ``sig2_beta`` and ``sig2_zero``). Naturally, having an additional free parameters allows MiXeR to fit the GWAS data better compared to LDSR model, however it needs to be *substantially* better to justify an additional complexity. AIC and BIC formalize this trade-off between model's complexity and model's ability to describe input data.  \nThe difference between AIC and BIC is that BIC is a more conservative model selection criterion. Based on our internal use of MiXeR, it is OK discuss the resulsult if only AIC supports MiXeR model, but it's important point as a limitation that the input signal (GWAS) has borderline power to fit MiXeR model.  \nFor the univariate model, AIC / BIC values are described in the cross-trait MiXeR paper ([ref](https://www.nature.com/articles/s41467-019-10310-0)). A negative AIC value means that there is not enough power in the input data to justify MiXeR model as compared to LDSR model, and we do do not recommend applying MiXeR in this situation. \nFor the bivariate model the resulting table contains two AIC, and two BIC values, named as follows:\n``best_vs_min_AIC``, ``best_vs_min_BIC`` , ``best_vs_max_AIC``, and ``best_vs_max_BIC``. They are explained below - but you may need to develop some intuition to interpret these numbers. Consider taking a look at the figure shown below, containing negative log-likelihood plots. Similar plots were presented in [ref](https://www.nature.com/articles/s41467-019-10310-0), supplementary figure 19. We use such likelihood-cost plots to visualise the performance of the ``best`` model vs ``min`` and ``max``. \nFirst, let's interpret ``best_vs_max_AIC`` value. It uses AIC to compare two models: the ``best`` model with polygenic overlap that is shown in the venn diagram (i.e. fitted by MiXeR), versus the ``max`` model with maximum possible polygenic overlap given trait's genetic architecture (that is, in the ``max`` model the causal variants of the least  polygenic trait form a subset of the causal variants in the most polygenic trait). A positive value of ``best_vs_max_AIC`` means that ``best`` model explains the observed GWAS signal better than ``max`` model, despite its additional complexity (here additional complexity comes from the fact that MiXeR has to find an actual value of the polygenic overlap, i.e.  estimate the size of the grey area on the venn diagram). \nSimilarly, ``best_vs_min_AIC`` compares the ``best`` model versus model with minimal possible polygenic overlap. It is tempting to say that minimal possible polygenic overlap means the same as no shared causal variants, i.e. a case where circles on a venn diagram do not overlap. However, there is a subtle detail in our definition of the minimal possible polygenic overlap in cases where traits show some genetic correlation. Under the assumptions of cross-trait MiXeR model, the presence of genetic correlation imply non-empty polygenic overlap. In our AIC / BIC analysis, we constrain the ``best`` model to a specific value of the genetic correlation, obtained by the same procedure as in LDSR model (i.e. assuming an infinitesimal model, as described in [ref](https://www.nature.com/articles/s41467-019-10310-0). In this setting, minimal possible polygenic overlap corresponds to ``pi12 = rg * sqrt(pi1u * pi2u)``. ``best_vs_min_AIC`` is an important metric - a positive value indicates that the data shows support for existense of the polygenic overlap, beyond the minimal level need to explain observed genetic correlation between traits. \nThe last panel on the following figure shows negative log-likelihood plot as a function of polygenic overlap. For the general information about maximum likelihood optimization see [here](https://en.wikipedia.org/wiki/Maximum_likelihood_estimation). In our case we plot negative log-likelihood, that's we search for the minimum on the curve (this sometimes is refered to as a cost function, with objective to find parameters that yield the lowest cost).  \nOn the negative log-likelihood plot, the ``min`` model is represented by the point furthest to the left, ``max`` furthest to the right and ``best`` is the lowest point of the curve. (off note, in some other cases log-likelihood plot can be very noisy - then ``best`` is still the lowest point, but it doesn't make practical sence as it is just a very noisy estimate - and this is exactly what we want to clarify with AIC / BIC). \nThe minimum is obtained at ``n=1.3K`` shared causal variants - that's our ``best`` model, scores at about 25 points (lower is better). A model with least possible overlap has ``n=0`` shared causal variants - that our ``min`` model, scored at 33 points. Finally, a model with largest possible overlap has ``n=4K`` shared causal variants - that our ``max`` model, scores at `50` points. We use AIC (and BIC) to compare ``best`` model versus the other models. \n"
+      },
+      "source": "https://raw.githubusercontent.com/precimed/mixer/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9900826540689851,
+      "result": {
+        "original_header": "Upgrade nodes from MiXeR v1.2 to v1.3",
+        "type": "Text_excerpt",
+        "value": "* The source code is nearly identical, but I've changed the procedure to run MiXeR which is described in this README file. Still, you need to updated the code by ``git pull``. If you updated MiXeR in early summer 2020 there will be no changes in the native C++ code (hense no need to re-compile the ``libbgmg.so`` binary), but to be safe it's best to execute ``cd <MIXER_ROOT>/src/build && cmake .. && make`` command (after ``module load`` relevant modules, as described in [this](https://github.com/precimed/mixer/blob/master/README.md#build-from-source---linux) section.)\n* If you previously downloaded 1kG reference, you need to download 20 new files called ``1000G.EUR.QC.prune_maf0p05_rand2M_r2p8.repNN.snps``. Otherwise you need to generate them with ``mixer.py snps`` command as described above.\n* If you previously generated your input summary statistics constraining them to HapMap3 SNPs, you need to re-generated them without constraining to HapMap3.\n* Assuming you have a SLURM script for each MiXeR analysis, you need to turn this script into a job array (``#SBATCH --array=1-20``) which executes 20 times, and use ``--extract 1000G.EUR.QC.prune_maf0p05_rand2M_r2p8.rep${SLURM_ARRAY_TASK_ID}.snps`` flag in ``mixer.py fit1`` and ``mixer.py fit2``, also adjusting input/output file names accordingly. Example scripts are available in [scripts](https://github.com/precimed/mixer/tree/master/scripts) folder.\n* To process ``.json`` files produced by MiXeR, you now first need to run a ``mixer_figures.py combine`` step as shown above. This will combine 20 ``.json`` files by averaging individual parameter estimates, and calculating standard errors.\n* When you generate figures with ``mixer_figures.py one`` and ``mixer_figures.py two`` commands and use the \"combined\" ``.json`` files, you'll need to add ``--statistic mean std`` to your commands.\n* With MiXeR v1.3 you should expect a slightly lower polygenicity estimate, mainly because of ``--maf 0.05`` constraint on the frequency of genetic variants used in the fit procedure. The rationale for ``--maf 0.05`` filter is to still have a robust selection of SNPs in the fit procedure despite not having HapMap3 filter.\n* With MiXeR v1.3 you should expect a 10 fold increase in CPU resources needed per ran (20 times more runs, but each run is ~600K SNPs which is half the size of HapMap3).\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/precimed/mixer/master/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "documentation": [
+    {
+      "confidence": 1,
+      "result": {
+        "format": "wiki",
+        "type": "Url",
+        "value": "https://github.com/precimed/mixer/wiki"
+      },
+      "source": "https://raw.githubusercontent.com/precimed/mixer/master/README.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "download": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Data downloads",
+        "type": "Text_excerpt",
+        "value": "\n* Summary statistics, for example\n  * Schizophrenia GWAS by Ripke at al. (2014) (search for *Download 49 EUR samples* [here](https://www.med.unc.edu/pgc/results-and-downloads))\n  * Educational Attainment GWAS by Lee et al. (2018) (search for *GWAS_EA_excl23andMe.txt* [here](https://www.thessgac.org/data))\n\n* Download reference data from [this URL](https://data.broadinstitute.org/alkesgroup/LDSCORE/)\n  ```\n  wget https://data.broadinstitute.org/alkesgroup/LDSCORE/1000G_Phase3_plinkfiles.tgz\n  wget https://data.broadinstitute.org/alkesgroup/LDSCORE/w_hm3.snplist.bz2\n  tar -xzvf 1000G_Phase3_plinkfiles.tgz\n  bzip2 -d w_hm3.snplist.bz2\n  ```\n  "
+      },
+      "source": "https://raw.githubusercontent.com/precimed/mixer/master/README.md",
+      "technique": "header_analysis"
+    }
+  ],
+  "download_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/precimed/mixer/releases"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "executable_example": [
+    {
+      "confidence": 1,
+      "result": {
+        "format": "jupyter_notebook",
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/precimed/mixer/master/figures.ipynb"
+      },
+      "source": "https://raw.githubusercontent.com/precimed/mixer/master/figures.ipynb",
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "format": "jupyter_notebook",
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/precimed/mixer/master/annotations/notebooks/cmm_gadient_opt.ipynb"
+      },
+      "source": "https://raw.githubusercontent.com/precimed/mixer/master/annotations/notebooks/cmm_gadient_opt.ipynb",
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "format": "jupyter_notebook",
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/precimed/mixer/master/annotations/notebooks/figures_paper.ipynb"
+      },
+      "source": "https://raw.githubusercontent.com/precimed/mixer/master/annotations/notebooks/figures_paper.ipynb",
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "format": "jupyter_notebook",
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/precimed/mixer/master/annotations/notebooks/regional_cmma_concept.ipynb"
+      },
+      "source": "https://raw.githubusercontent.com/precimed/mixer/master/annotations/notebooks/regional_cmma_concept.ipynb",
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "format": "jupyter_notebook",
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/precimed/mixer/master/annotations/notebooks/e1.ipynb"
+      },
+      "source": "https://raw.githubusercontent.com/precimed/mixer/master/annotations/notebooks/e1.ipynb",
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "format": "jupyter_notebook",
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/precimed/mixer/master/annotations/notebooks/e1_june.ipynb"
+      },
+      "source": "https://raw.githubusercontent.com/precimed/mixer/master/annotations/notebooks/e1_june.ipynb",
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "format": "jupyter_notebook",
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/precimed/mixer/master/annotations/notebooks/figures.ipynb"
+      },
+      "source": "https://raw.githubusercontent.com/precimed/mixer/master/annotations/notebooks/figures.ipynb",
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "format": "jupyter_notebook",
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/precimed/mixer/master/annotations/notebooks/e1_real.ipynb"
+      },
+      "source": "https://raw.githubusercontent.com/precimed/mixer/master/annotations/notebooks/e1_real.ipynb",
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "format": "jupyter_notebook",
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/precimed/mixer/master/annotations/notebooks/qq_test.ipynb"
+      },
+      "source": "https://raw.githubusercontent.com/precimed/mixer/master/annotations/notebooks/qq_test.ipynb",
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "format": "jupyter_notebook",
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/precimed/mixer/master/annotations/notebooks/experiment_12.ipynb"
+      },
+      "source": "https://raw.githubusercontent.com/precimed/mixer/master/annotations/notebooks/experiment_12.ipynb",
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "format": "jupyter_notebook",
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/precimed/mixer/master/annotations/notebooks/bic.ipynb"
+      },
+      "source": "https://raw.githubusercontent.com/precimed/mixer/master/annotations/notebooks/bic.ipynb",
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "format": "jupyter_notebook",
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/precimed/mixer/master/annotations/notebooks/compare_opt_parameters.ipynb"
+      },
+      "source": "https://raw.githubusercontent.com/precimed/mixer/master/annotations/notebooks/compare_opt_parameters.ipynb",
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "format": "jupyter_notebook",
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/precimed/mixer/master/annotations/notebooks/sigma2_from_causal.ipynb"
+      },
+      "source": "https://raw.githubusercontent.com/precimed/mixer/master/annotations/notebooks/sigma2_from_causal.ipynb",
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "format": "jupyter_notebook",
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/precimed/mixer/master/annotations/notebooks/.ipynb_checkpoints/cmm_gadient_opt-checkpoint.ipynb"
+      },
+      "source": "https://raw.githubusercontent.com/precimed/mixer/master/annotations/notebooks/.ipynb_checkpoints/cmm_gadient_opt-checkpoint.ipynb",
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "format": "jupyter_notebook",
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/precimed/mixer/master/precimed/test_tiny_ld.ipynb"
+      },
+      "source": "https://raw.githubusercontent.com/precimed/mixer/master/precimed/test_tiny_ld.ipynb",
+      "technique": "file_exploration"
+    }
+  ],
+  "forks_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 17
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/precimed/mixer/forks"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "precimed/mixer"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_title": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": ""
+      },
+      "source": "https://raw.githubusercontent.com/precimed/mixer/master/README.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "has_script_file": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/precimed/mixer/master/src/semt/benchmark_semt.sh"
+      },
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/precimed/mixer/master/scripts/tsd_ugmg_script.sh"
+      },
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/precimed/mixer/master/scripts/saga_bgmg_script.sh"
+      },
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/precimed/mixer/master/scripts/saga_ugmg_script.sh"
+      },
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/precimed/mixer/master/scripts/xsede_snps_script.sh"
+      },
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/precimed/mixer/master/scripts/tsd_bgmg_script.sh"
+      },
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/precimed/mixer/master/annotations/src/run/run_bad_qual.sh"
+      },
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/precimed/mixer/master/annotations/src/run/run_hsq_i.sh"
+      },
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/precimed/mixer/master/annotations/src/run/run_optimize.e1.sh"
+      },
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/precimed/mixer/master/annotations/src/run/run_optimize.e1_real.sh"
+      },
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/precimed/mixer/master/annotations/src/run/run_makeinput.e1_real.sh"
+      },
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/precimed/mixer/master/annotations/src/cfg/e1/make_e1_cfg.sh"
+      },
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/precimed/mixer/master/annotations/data/maketest.sh"
+      },
+      "technique": "file_exploration"
+    }
+  ],
+  "images": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://user-images.githubusercontent.com/13171449/83339454-469edb00-a2ce-11ea-9e69-99270d94689f.png"
+      },
+      "source": "https://raw.githubusercontent.com/precimed/mixer/master/README.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "installation": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Singularity containers",
+        "parent_header": [
+          "Install MiXeR"
+        ],
+        "type": "Text_excerpt",
+        "value": "Update May 2021: MiXeR v1.3 is now available as a [singularity container](https://github.com/comorment/mixer).\nSee [mixer_simu.md](https://github.com/comorment/mixer/blob/main/usecases/mixer_simu.md) and [mixer_real.md](https://github.com/comorment/mixer/blob/main/usecases/mixer_real.md) for usage examples.\nIf you are new to singularity containers, please refer to [hello.md](https://github.com/comorment/containers/blob/main/docs/hello.md) to get started.\n\nThe steps below provide an alternative setup (without singularity containers).\n"
+      },
+      "source": "https://raw.githubusercontent.com/precimed/mixer/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Install on Linux using pre-built binaries",
+        "parent_header": [
+          "Install MiXeR"
+        ],
+        "type": "Text_excerpt",
+        "value": "Not available yet.\n"
+      },
+      "source": "https://raw.githubusercontent.com/precimed/mixer/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Build from source - Linux",
+        "parent_header": [
+          "Install MiXeR"
+        ],
+        "type": "Text_excerpt",
+        "value": "The exact steps depend  on your build environment. \n* If you work in HPC environment with modules system, you can load some existing combination of modules that include Boost libraries:\n  ```\n  module load CMake/3.15.3-GCCcore-8.3.0 Boost/1.73.0-GCCcore-8.3.0 Python/3.7.4-GCCcore-8.3.0 # TSD (gcc)\n  module load Boost/1.71.0-GCC-8.3.0 Python/3.7.4-GCCcore-8.3.0 CMake/3.12.1                   # SAGA (gcc)  \n  module load Boost/1.68.0-intel-2018b-Python-3.6.6 Python/3.6.6-intel-2018b CMake/3.12.1      # SAGA (intel)\n  ```\n* Alternatively, you may download and compile Boost libraries yourself:\n  ```\n  cd ~ && wget https://dl.bintray.com/boostorg/release/1.69.0/source/boost_1_69_0.tar.gz \n  tar -xzvf boost_1_69_0.tar.gz && cd boost_1_69_0\n  ./bootstrap.sh --with-libraries=program_options,filesystem,system,date_time\n  ./b2 --clean && ./b2 --j12 -a\n  ```\n* Clone and compile MiXeR repository\n  ```\n  cd ~ && git clone --recurse-submodules -j8 https://github.com/precimed/mixer.git\n  mkdir mixer/src/build && cd mixer/src/build\n  cmake .. && make bgmg -j16                                   # if you use GCC compiler\n  CC=icc CXX=icpc cmake .. && make bgmg -j16                   # if you use Intel compiler\n  cmake .. -DBOOST_ROOT=$HOME/boost_1_69_0 && make bgmg -j16   # if you use locally compiled boost\n  \n  ```\n"
+      },
+      "source": "https://raw.githubusercontent.com/precimed/mixer/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Data preparation",
+        "type": "Text_excerpt",
+        "value": "* Summary statistics (NIRD: ``/projects/NS9114K/MMIL/SUMSTAT/TMP/nomhc/``)\n  * We recommed to use our own scripts to pre-process summary statistcs (clone from [here](https://github.com/precimed/python_convert)):\n    ```\n    python sumstats.py csv --sumstats daner_PGC_SCZ49.sh2_mds10_1000G-frq_2.gz --out PGC_SCZ_2014_EUR.csv --force --auto --head 5 --ncase-val 33640 --ncontrol-val 43456 \n    python sumstats.py zscore --sumstats PGC_SCZ_2014_EUR.csv | \\\n    python sumstats.py qc --exclude-ranges 6:26000000-34000000 --max-or 1e37 | \\\n    python sumstats.py neff --drop --factor 4 --out PGC_SCZ_2014_EUR_qc_noMHC.csv --force \n    gzip PGC_SCZ_2014_EUR_qc_noMHC.csv\n\n    python sumstats.py csv --sumstats GWAS_EA_excl23andMe.txt.gz --out SSGAC_EDU_2018_no23andMe.csv --force --auto --head 5 --n-val 766345\n    python sumstats.py zscore --sumstats SSGAC_EDU_2018_no23andMe.csv | \\\n    python sumstats.py qc --exclude-ranges 6:26000000-34000000 --out SSGAC_EDU_2018_no23andMe_noMHC.csv --force\n    gzip SSGAC_EDU_2018_no23andMe_noMHC.csv  \n    ```\n  * [DEPRECATED] If you use MiXeR v1.1 and v1.2, it will recognize summary statistics in LDSC format as described [here](https://github.com/bulik/ldsc/wiki/Summary-Statistics-File-Format). In brief, each trait must be represented as a single table containing columns SNP, N, Z, A1, A2. Thus, it is possible to use ``munge_sumstats.py`` script as described [here](https://github.com/bulik/ldsc/wiki/Partitioned-Heritability#step-1-download-the-data). This might be convenient for users who are already familiar with LDSR functionality. In MiXeR v1.3 the format for GWAS summary statistics files is the same, but now I advice against using HapMap3 to constrain the set of SNPs for the fit procedure. Instead, MiXeR should receive a full set of summary statistics from a GWAS on imputed genotype data. Also, note that for case/control ``munge_sumstats.py`` from LD Score Regression generate sample size as a sum ``n = ncase + ncontrol``. We recommend to use ``neff = 4 / (1/ncase + 1/ncontrol)`` to account for imbalanced classes.\n  \n* Generate ``.ld`` and ``.snps`` files from the reference panel. Note that this step optional if you work with EUR-based summary statistics. To use EUR reference, simply download the files from  [here](https://github.com/comorment/containers/tree/main/reference/ldsc/1000G_EUR_Phase3_plink) or take it from NIRD (``/projects/NS9114K/MMIL/SUMSTAT/LDSR/1000G_EUR_Phase3_plink``) or TSD (`` ``) if you have access. NB! Download size is around ``24 GB``.\n   * Run ``python mixer.py ld`` to calculate linkage disequilibrium information in a genotype reference panel. The following command must be run once for each chromosome. \n    ```\n    python3 <MIXER_ROOT>/precimed/mixer.py ld \\\n       --lib <MIXER_ROOT>/src/build/lib/libbgmg.so \\\n       --bfile LDSR/1000G_EUR_Phase3_plink/1000G.EUR.QC.<chr_label> \\\n       --out LDSR/1000G_EUR_Phase3_plink/1000G.EUR.QC.<chr_label>.run4.ld \\\n       --r2min 0.05 --ldscore-r2min 0.05 --ld-window-kb 30000\n    ```\n    The output is written to ``LDSR/1000G_EUR_Phase3_plink/1000G.EUR.QC.<chr_label>.run4.ld`` file,\n    and log details into ``LDSR/1000G_EUR_Phase3_plink/1000G.EUR.QC.<chr_label>.run4.ld.log`` file.\n    The resulting files contain information about alleling LD r2 correlations,\n    LD scores, and allele frequencies of the variants in the reference panel passed as ``--bfile`` argument.\n    The files DO NOT contain any individual-level information.\n    When you store the resulting ``.ld`` file, it is important to keep it along side with corresponding ``.bim`` file,\n    as information about marker name (SNP rs#), chromosome,  position, and alleles (A1/A2) is NOT encoded in ``.ld`` file.\n  \n  * To generate ``1000G.EUR.QC.prune_maf0p05_rand2M_r2p8.repNN.snps`` files, repeat the following in a loop for\n    ```\n    export REP=1 # repeat for REP in 1..20\n    python3 <MIXER_ROOT>/precimed/mixer.py snps \\\n       --lib <MIXER_ROOT>/src/build/lib/libbgmg.so \\\n       --bim-file LDSR/1000G_EUR_Phase3_plink/1000G.EUR.QC.@.bim \\\n       --ld-file LDSR/1000G_EUR_Phase3_plink/1000G.EUR.QC.@.run4.ld \\\n       --out LDSR/1000G_EUR_Phase3_plink/1000G.EUR.QC.prune_maf0p05_rand2M_r2p8.rep${SLURM_ARRAY_TASK_ID}.snps \\\n       --maf 0.05 --subset 2000000 --r2 0.8 --seed ${SLURM_ARRAY_TASK_ID}\n    ```\n    This can be done as a job array, see [this script](https://github.com/precimed/mixer/blob/master/scripts/xsede_snps_script.sh) for an example.\n    Note that in the code above the ``@`` symbol does NOT need to be replace with an actual chromosome. It should stay as ``@`` in your command.\n    \n  "
+      },
+      "source": "https://raw.githubusercontent.com/precimed/mixer/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 0.9999998336444232,
+      "result": {
+        "original_header": "MiXeR options",
+        "type": "Text_excerpt",
+        "value": "Run ``--help`` commands to list available options and their description.\n```\npython3 mixer.py ld --help\npython3 mixer.py snps --help\npython3 mixer.py fit1 --help\npython3 mixer.py test1 --help\npython3 mixer.py fit2 --help\npython3 mixer.py test2 --help\npython3 mixer.py perf --help\n```\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/precimed/mixer/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.942533450903123,
+      "result": {
+        "original_header": "Visualize MiXeR results",
+        "type": "Text_excerpt",
+        "value": "The resulting ``.json`` files can be converted to figures and ``.csv`` tables via the following commands (``one`` for univariate, ``two`` for bivariate; each of these commands accept ``.json`` files from ``fit`` and ``test`` steps).\n```\npython precimed/mixer_figures.py one --json <out_file>.json --out <out_file>\npython precimed/mixer_figures.py two --json <out_file>.json --out <out_file>\npython precimed/mixer_figures.py two --json-fit <out_file_fit>.json --json-test <out_file_test>.json --out <out_file>\n```\n \nFor the ``two`` command, instead of ``--json``, it is possible to specify ``--json-fit`` and ``--json-test`` separately.\nThis allows to combine negative log-likelihood plot (available in fit2 only) and QQ plots (available in test2 only).\nNote that all ``--json`` accept wildcards (``*``) or a list of multiple files. This allows to generate ``.csv`` tables\ncontaining results from multiple MiXeR runs. \n \n"
+      },
+      "source": "https://raw.githubusercontent.com/precimed/mixer/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9879409170124746,
+      "result": {
+        "original_header": "AIC BIC interpretation",
+        "type": "Text_excerpt",
+        "value": "``.csv`` files generated by ``python precimed/mixer_figures.py`` commands contain AIC ([Akaike Information Criterion](https://en.wikipedia.org/wiki/Akaike_information_criterion)) and BIC ([Bayesian Information Criterion](https://en.wikipedia.org/wiki/Bayesian_information_criterion)) values. To generate AIC / BIC values you should point ``mixer_figures.py`` to json files produced by ``fit1`` or ``fit2`` steps (not those from ``test1`` or ``test2`` steps). \n"
+      },
+      "source": "https://raw.githubusercontent.com/precimed/mixer/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9999999999893134,
+      "result": {
+        "original_header": "Upgrade nodes from MiXeR v1.2 to v1.3",
+        "type": "Text_excerpt",
+        "value": "* The source code is nearly identical, but I've changed the procedure to run MiXeR which is described in this README file. Still, you need to updated the code by ``git pull``. If you updated MiXeR in early summer 2020 there will be no changes in the native C++ code (hense no need to re-compile the ``libbgmg.so`` binary), but to be safe it's best to execute ``cd <MIXER_ROOT>/src/build && cmake .. && make`` command (after ``module load`` relevant modules, as described in [this](https://github.com/precimed/mixer/blob/master/README.md#build-from-source---linux) section.)\n* If you previously downloaded 1kG reference, you need to download 20 new files called ``1000G.EUR.QC.prune_maf0p05_rand2M_r2p8.repNN.snps``. Otherwise you need to generate them with ``mixer.py snps`` command as described above.\n* If you previously generated your input summary statistics constraining them to HapMap3 SNPs, you need to re-generated them without constraining to HapMap3.\n* Assuming you have a SLURM script for each MiXeR analysis, you need to turn this script into a job array (``#SBATCH --array=1-20``) which executes 20 times, and use ``--extract 1000G.EUR.QC.prune_maf0p05_rand2M_r2p8.rep${SLURM_ARRAY_TASK_ID}.snps`` flag in ``mixer.py fit1`` and ``mixer.py fit2``, also adjusting input/output file names accordingly. Example scripts are available in [scripts](https://github.com/precimed/mixer/tree/master/scripts) folder.\n* To process ``.json`` files produced by MiXeR, you now first need to run a ``mixer_figures.py combine`` step as shown above. This will combine 20 ``.json`` files by averaging individual parameter estimates, and calculating standard errors.\n* When you generate figures with ``mixer_figures.py one`` and ``mixer_figures.py two`` commands and use the \"combined\" ``.json`` files, you'll need to add ``--statistic mean std`` to your commands.\n* With MiXeR v1.3 you should expect a slightly lower polygenicity estimate, mainly because of ``--maf 0.05`` constraint on the frequency of genetic variants used in the fit procedure. The rationale for ``--maf 0.05`` filter is to still have a robust selection of SNPs in the fit procedure despite not having HapMap3 filter.\n* With MiXeR v1.3 you should expect a 10 fold increase in CPU resources needed per ran (20 times more runs, but each run is ~600K SNPs which is half the size of HapMap3).\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/precimed/mixer/master/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "invocation": [
+    {
+      "confidence": 0.8740991872050019,
+      "result": {
+        "original_header": "MiXeR options",
+        "type": "Text_excerpt",
+        "value": "Run ``--help`` commands to list available options and their description.\n```\npython3 mixer.py ld --help\npython3 mixer.py snps --help\npython3 mixer.py fit1 --help\npython3 mixer.py test1 --help\npython3 mixer.py fit2 --help\npython3 mixer.py test2 --help\npython3 mixer.py perf --help\n```\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/precimed/mixer/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.8665543874589702,
+      "result": {
+        "original_header": "Visualize MiXeR results",
+        "type": "Text_excerpt",
+        "value": "The resulting ``.json`` files can be converted to figures and ``.csv`` tables via the following commands (``one`` for univariate, ``two`` for bivariate; each of these commands accept ``.json`` files from ``fit`` and ``test`` steps).\n```\npython precimed/mixer_figures.py one --json <out_file>.json --out <out_file>\npython precimed/mixer_figures.py two --json <out_file>.json --out <out_file>\npython precimed/mixer_figures.py two --json-fit <out_file_fit>.json --json-test <out_file_test>.json --out <out_file>\n```\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/precimed/mixer/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.8187005017906839,
+      "result": {
+        "original_header": "MiXeR results format",
+        "type": "Text_excerpt",
+        "value": "* Univariate ``.csv`` file, including model parameters and AIC/BIC values,\n* Univariate QQ plots\n* Univariate MAF- and LD-stratified QQ plots\n* Univariate Power curves\n* Bivariate ``.csv`` file, including model parameters, AIC/BIC values and Dice coefficient\n* Bivariate stratified QQ plots (cross-trait enrichment)\n* Bivariate density plots\n* Bivariate negative log-likelihood function \n"
+      },
+      "source": "https://raw.githubusercontent.com/precimed/mixer/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.8382271120294678,
+      "result": {
+        "original_header": "AIC BIC interpretation",
+        "type": "Text_excerpt",
+        "value": "``.csv`` files generated by ``python precimed/mixer_figures.py`` commands contain AIC ([Akaike Information Criterion](https://en.wikipedia.org/wiki/Akaike_information_criterion)) and BIC ([Bayesian Information Criterion](https://en.wikipedia.org/wiki/Bayesian_information_criterion)) values. To generate AIC / BIC values you should point ``mixer_figures.py`` to json files produced by ``fit1`` or ``fit2`` steps (not those from ``test1`` or ``test2`` steps). \n"
+      },
+      "source": "https://raw.githubusercontent.com/precimed/mixer/master/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "issue_tracker": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/precimed/mixer/issues"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "keywords": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "gwas, linkage-disequilibrium, population-genetics, summary-statistics"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "license": [
+    {
+      "confidence": 1,
+      "result": {
+        "name": "GNU General Public License v3.0",
+        "spdx_id": "GPL-3.0",
+        "type": "License",
+        "url": "https://api.github.com/licenses/gpl-3.0",
+        "value": "https://api.github.com/licenses/gpl-3.0"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "File_dump",
+        "value": "GNU GENERAL PUBLIC LICENSE\nVersion 3, 29 June 2007\n\nCopyright \u00a9 2007 Free Software Foundation, Inc. <https://fsf.org/>\n\nEveryone is permitted to copy and distribute verbatim copies of this license document, but changing it is not allowed.\n\nPreamble\nThe GNU General Public License is a free, copyleft license for software and other kinds of works.\n\nThe licenses for most software and other practical works are designed to take away your freedom to share and change the works. By contrast, the GNU General Public License is intended to guarantee your freedom to share and change all versions of a program--to make sure it remains free software for all its users. We, the Free Software Foundation, use the GNU General Public License for most of our software; it applies also to any other work released this way by its authors. You can apply it to your programs, too.\n\nWhen we speak of free software, we are referring to freedom, not price. Our General Public Licenses are designed to make sure that you have the freedom to distribute copies of free software (and charge for them if you wish), that you receive source code or can get it if you want it, that you can change the software or use pieces of it in new free programs, and that you know you can do these things.\n\nTo protect your rights, we need to prevent others from denying you these rights or asking you to surrender the rights. Therefore, you have certain responsibilities if you distribute copies of the software, or if you modify it: responsibilities to respect the freedom of others.\n\nFor example, if you distribute copies of such a program, whether gratis or for a fee, you must pass on to the recipients the same freedoms that you received. You must make sure that they, too, receive or can get the source code. And you must show them these terms so they know their rights.\n\nDevelopers that use the GNU GPL protect your rights with two steps: (1) assert copyright on the software, and (2) offer you this License giving you legal permission to copy, distribute and/or modify it.\n\nFor the developers' and authors' protection, the GPL clearly explains that there is no warranty for this free software. For both users' and authors' sake, the GPL requires that modified versions be marked as changed, so that their problems will not be attributed erroneously to authors of previous versions.\n\nSome devices are designed to deny users access to install or run modified versions of the software inside them, although the manufacturer can do so. This is fundamentally incompatible with the aim of protecting users' freedom to change the software. The systematic pattern of such abuse occurs in the area of products for individuals to use, which is precisely where it is most unacceptable. Therefore, we have designed this version of the GPL to prohibit the practice for those products. If such problems arise substantially in other domains, we stand ready to extend this provision to those domains in future versions of the GPL, as needed to protect the freedom of users.\n\nFinally, every program is threatened constantly by software patents. States should not allow patents to restrict development and use of software on general-purpose computers, but in those that do, we wish to avoid the special danger that patents applied to a free program could make it effectively proprietary. To prevent this, the GPL assures that patents cannot be used to render the program non-free.\n\nThe precise terms and conditions for copying, distribution and modification follow.\n\nTERMS AND CONDITIONS\n0. Definitions.\n\u201cThis License\u201d refers to version 3 of the GNU General Public License.\n\n\u201cCopyright\u201d also means copyright-like laws that apply to other kinds of works, such as semiconductor masks.\n\n\u201cThe Program\u201d refers to any copyrightable work licensed under this License. Each licensee is addressed as \u201cyou\u201d. \u201cLicensees\u201d and \u201crecipients\u201d may be individuals or organizations.\n\nTo \u201cmodify\u201d a work means to copy from or adapt all or part of the work in a fashion requiring copyright permission, other than the making of an exact copy. The resulting work is called a \u201cmodified version\u201d of the earlier work or a work \u201cbased on\u201d the earlier work.\n\nA \u201ccovered work\u201d means either the unmodified Program or a work based on the Program.\n\nTo \u201cpropagate\u201d a work means to do anything with it that, without permission, would make you directly or secondarily liable for infringement under applicable copyright law, except executing it on a computer or modifying a private copy. Propagation includes copying, distribution (with or without modification), making available to the public, and in some countries other activities as well.\n\nTo \u201cconvey\u201d a work means any kind of propagation that enables other parties to make or receive copies. Mere interaction with a user through a computer network, with no transfer of a copy, is not conveying.\n\nAn interactive user interface displays \u201cAppropriate Legal Notices\u201d to the extent that it includes a convenient and prominently visible feature that (1) displays an appropriate copyright notice, and (2) tells the user that there is no warranty for the work (except to the extent that warranties are provided), that licensees may convey the work under this License, and how to view a copy of this License. If the interface presents a list of user commands or options, such as a menu, a prominent item in the list meets this criterion.\n\n1. Source Code.\nThe \u201csource code\u201d for a work means the preferred form of the work for making modifications to it. \u201cObject code\u201d means any non-source form of a work.\n\nA \u201cStandard Interface\u201d means an interface that either is an official standard defined by a recognized standards body, or, in the case of interfaces specified for a particular programming language, one that is widely used among developers working in that language.\n\nThe \u201cSystem Libraries\u201d of an executable work include anything, other than the work as a whole, that (a) is included in the normal form of packaging a Major Component, but which is not part of that Major Component, and (b) serves only to enable use of the work with that Major Component, or to implement a Standard Interface for which an implementation is available to the public in source code form. A \u201cMajor Component\u201d, in this context, means a major essential component (kernel, window system, and so on) of the specific operating system (if any) on which the executable work runs, or a compiler used to produce the work, or an object code interpreter used to run it.\n\nThe \u201cCorresponding Source\u201d for a work in object code form means all the source code needed to generate, install, and (for an executable work) run the object code and to modify the work, including scripts to control those activities. However, it does not include the work's System Libraries, or general-purpose tools or generally available free programs which are used unmodified in performing those activities but which are not part of the work. For example, Corresponding Source includes interface definition files associated with source files for the work, and the source code for shared libraries and dynamically linked subprograms that the work is specifically designed to require, such as by intimate data communication or control flow between those subprograms and other parts of the work.\n\nThe Corresponding Source need not include anything that users can regenerate automatically from other parts of the Corresponding Source.\n\nThe Corresponding Source for a work in source code form is that same work.\n\n2. Basic Permissions.\nAll rights granted under this License are granted for the term of copyright on the Program, and are irrevocable provided the stated conditions are met. This License explicitly affirms your unlimited permission to run the unmodified Program. The output from running a covered work is covered by this License only if the output, given its content, constitutes a covered work. This License acknowledges your rights of fair use or other equivalent, as provided by copyright law.\n\nYou may make, run and propagate covered works that you do not convey, without conditions so long as your license otherwise remains in force. You may convey covered works to others for the sole purpose of having them make modifications exclusively for you, or provide you with facilities for running those works, provided that you comply with the terms of this License in conveying all material for which you do not control copyright. Those thus making or running the covered works for you must do so exclusively on your behalf, under your direction and control, on terms that prohibit them from making any copies of your copyrighted material outside their relationship with you.\n\nConveying under any other circumstances is permitted solely under the conditions stated below. Sublicensing is not allowed; section 10 makes it unnecessary.\n\n3. Protecting Users' Legal Rights From Anti-Circumvention Law.\nNo covered work shall be deemed part of an effective technological measure under any applicable law fulfilling obligations under article 11 of the WIPO copyright treaty adopted on 20 December 1996, or similar laws prohibiting or restricting circumvention of such measures.\n\nWhen you convey a covered work, you waive any legal power to forbid circumvention of technological measures to the extent such circumvention is effected by exercising rights under this License with respect to the covered work, and you disclaim any intention to limit operation or modification of the work as a means of enforcing, against the work's users, your or third parties' legal rights to forbid circumvention of technological measures.\n\n4. Conveying Verbatim Copies.\nYou may convey verbatim copies of the Program's source code as you receive it, in any medium, provided that you conspicuously and appropriately publish on each copy an appropriate copyright notice; keep intact all notices stating that this License and any non-permissive terms added in accord with section 7 apply to the code; keep intact all notices of the absence of any warranty; and give all recipients a copy of this License along with the Program.\n\nYou may charge any price or no price for each copy that you convey, and you may offer support or warranty protection for a fee.\n\n5. Conveying Modified Source Versions.\nYou may convey a work based on the Program, or the modifications to produce it from the Program, in the form of source code under the terms of section 4, provided that you also meet all of these conditions:\n\na) The work must carry prominent notices stating that you modified it, and giving a relevant date.\nb) The work must carry prominent notices stating that it is released under this License and any conditions added under section 7. This requirement modifies the requirement in section 4 to \u201ckeep intact all notices\u201d.\nc) You must license the entire work, as a whole, under this License to anyone who comes into possession of a copy. This License will therefore apply, along with any applicable section 7 additional terms, to the whole of the work, and all its parts, regardless of how they are packaged. This License gives no permission to license the work in any other way, but it does not invalidate such permission if you have separately received it.\nd) If the work has interactive user interfaces, each must display Appropriate Legal Notices; however, if the Program has interactive interfaces that do not display Appropriate Legal Notices, your work need not make them do so.\nA compilation of a covered work with other separate and independent works, which are not by their nature extensions of the covered work, and which are not combined with it such as to form a larger program, in or on a volume of a storage or distribution medium, is called an \u201caggregate\u201d if the compilation and its resulting copyright are not used to limit the access or legal rights of the compilation's users beyond what the individual works permit. Inclusion of a covered work in an aggregate does not cause this License to apply to the other parts of the aggregate.\n\n6. Conveying Non-Source Forms.\nYou may convey a covered work in object code form under the terms of sections 4 and 5, provided that you also convey the machine-readable Corresponding Source under the terms of this License, in one of these ways:\n\na) Convey the object code in, or embodied in, a physical product (including a physical distribution medium), accompanied by the Corresponding Source fixed on a durable physical medium customarily used for software interchange.\nb) Convey the object code in, or embodied in, a physical product (including a physical distribution medium), accompanied by a written offer, valid for at least three years and valid for as long as you offer spare parts or customer support for that product model, to give anyone who possesses the object code either (1) a copy of the Corresponding Source for all the software in the product that is covered by this License, on a durable physical medium customarily used for software interchange, for a price no more than your reasonable cost of physically performing this conveying of source, or (2) access to copy the Corresponding Source from a network server at no charge.\nc) Convey individual copies of the object code with a copy of the written offer to provide the Corresponding Source. This alternative is allowed only occasionally and noncommercially, and only if you received the object code with such an offer, in accord with subsection 6b.\nd) Convey the object code by offering access from a designated place (gratis or for a charge), and offer equivalent access to the Corresponding Source in the same way through the same place at no further charge. You need not require recipients to copy the Corresponding Source along with the object code. If the place to copy the object code is a network server, the Corresponding Source may be on a different server (operated by you or a third party) that supports equivalent copying facilities, provided you maintain clear directions next to the object code saying where to find the Corresponding Source. Regardless of what server hosts the Corresponding Source, you remain obligated to ensure that it is available for as long as needed to satisfy these requirements.\ne) Convey the object code using peer-to-peer transmission, provided you inform other peers where the object code and Corresponding Source of the work are being offered to the general public at no charge under subsection 6d.\nA separable portion of the object code, whose source code is excluded from the Corresponding Source as a System Library, need not be included in conveying the object code work.\n\nA \u201cUser Product\u201d is either (1) a \u201cconsumer product\u201d, which means any tangible personal property which is normally used for personal, family, or household purposes, or (2) anything designed or sold for incorporation into a dwelling. In determining whether a product is a consumer product, doubtful cases shall be resolved in favor of coverage. For a particular product received by a particular user, \u201cnormally used\u201d refers to a typical or common use of that class of product, regardless of the status of the particular user or of the way in which the particular user actually uses, or expects or is expected to use, the product. A product is a consumer product regardless of whether the product has substantial commercial, industrial or non-consumer uses, unless such uses represent the only significant mode of use of the product.\n\n\u201cInstallation Information\u201d for a User Product means any methods, procedures, authorization keys, or other information required to install and execute modified versions of a covered work in that User Product from a modified version of its Corresponding Source. The information must suffice to ensure that the continued functioning of the modified object code is in no case prevented or interfered with solely because modification has been made.\n\nIf you convey an object code work under this section in, or with, or specifically for use in, a User Product, and the conveying occurs as part of a transaction in which the right of possession and use of the User Product is transferred to the recipient in perpetuity or for a fixed term (regardless of how the transaction is characterized), the Corresponding Source conveyed under this section must be accompanied by the Installation Information. But this requirement does not apply if neither you nor any third party retains the ability to install modified object code on the User Product (for example, the work has been installed in ROM).\n\nThe requirement to provide Installation Information does not include a requirement to continue to provide support service, warranty, or updates for a work that has been modified or installed by the recipient, or for the User Product in which it has been modified or installed. Access to a network may be denied when the modification itself materially and adversely affects the operation of the network or violates the rules and protocols for communication across the network.\n\nCorresponding Source conveyed, and Installation Information provided, in accord with this section must be in a format that is publicly documented (and with an implementation available to the public in source code form), and must require no special password or key for unpacking, reading or copying.\n\n7. Additional Terms.\n\u201cAdditional permissions\u201d are terms that supplement the terms of this License by making exceptions from one or more of its conditions. Additional permissions that are applicable to the entire Program shall be treated as though they were included in this License, to the extent that they are valid under applicable law. If additional permissions apply only to part of the Program, that part may be used separately under those permissions, but the entire Program remains governed by this License without regard to the additional permissions.\n\nWhen you convey a copy of a covered work, you may at your option remove any additional permissions from that copy, or from any part of it. (Additional permissions may be written to require their own removal in certain cases when you modify the work.) You may place additional permissions on material, added by you to a covered work, for which you have or can give appropriate copyright permission.\n\nNotwithstanding any other provision of this License, for material you add to a covered work, you may (if authorized by the copyright holders of that material) supplement the terms of this License with terms:\n\na) Disclaiming warranty or limiting liability differently from the terms of sections 15 and 16 of this License; or\nb) Requiring preservation of specified reasonable legal notices or author attributions in that material or in the Appropriate Legal Notices displayed by works containing it; or\nc) Prohibiting misrepresentation of the origin of that material, or requiring that modified versions of such material be marked in reasonable ways as different from the original version; or\nd) Limiting the use for publicity purposes of names of licensors or authors of the material; or\ne) Declining to grant rights under trademark law for use of some trade names, trademarks, or service marks; or\nf) Requiring indemnification of licensors and authors of that material by anyone who conveys the material (or modified versions of it) with contractual assumptions of liability to the recipient, for any liability that these contractual assumptions directly impose on those licensors and authors.\nAll other non-permissive additional terms are considered \u201cfurther restrictions\u201d within the meaning of section 10. If the Program as you received it, or any part of it, contains a notice stating that it is governed by this License along with a term that is a further restriction, you may remove that term. If a license document contains a further restriction but permits relicensing or conveying under this License, you may add to a covered work material governed by the terms of that license document, provided that the further restriction does not survive such relicensing or conveying.\n\nIf you add terms to a covered work in accord with this section, you must place, in the relevant source files, a statement of the additional terms that apply to those files, or a notice indicating where to find the applicable terms.\n\nAdditional terms, permissive or non-permissive, may be stated in the form of a separately written license, or stated as exceptions; the above requirements apply either way.\n\n8. Termination.\nYou may not propagate or modify a covered work except as expressly provided under this License. Any attempt otherwise to propagate or modify it is void, and will automatically terminate your rights under this License (including any patent licenses granted under the third paragraph of section 11).\n\nHowever, if you cease all violation of this License, then your license from a particular copyright holder is reinstated (a) provisionally, unless and until the copyright holder explicitly and finally terminates your license, and (b) permanently, if the copyright holder fails to notify you of the violation by some reasonable means prior to 60 days after the cessation.\n\nMoreover, your license from a particular copyright holder is reinstated permanently if the copyright holder notifies you of the violation by some reasonable means, this is the first time you have received notice of violation of this License (for any work) from that copyright holder, and you cure the violation prior to 30 days after your receipt of the notice.\n\nTermination of your rights under this section does not terminate the licenses of parties who have received copies or rights from you under this License. If your rights have been terminated and not permanently reinstated, you do not qualify to receive new licenses for the same material under section 10.\n\n9. Acceptance Not Required for Having Copies.\nYou are not required to accept this License in order to receive or run a copy of the Program. Ancillary propagation of a covered work occurring solely as a consequence of using peer-to-peer transmission to receive a copy likewise does not require acceptance. However, nothing other than this License grants you permission to propagate or modify any covered work. These actions infringe copyright if you do not accept this License. Therefore, by modifying or propagating a covered work, you indicate your acceptance of this License to do so.\n\n10. Automatic Licensing of Downstream Recipients.\nEach time you convey a covered work, the recipient automatically receives a license from the original licensors, to run, modify and propagate that work, subject to this License. You are not responsible for enforcing compliance by third parties with this License.\n\nAn \u201centity transaction\u201d is a transaction transferring control of an organization, or substantially all assets of one, or subdividing an organization, or merging organizations. If propagation of a covered work results from an entity transaction, each party to that transaction who receives a copy of the work also receives whatever licenses to the work the party's predecessor in interest had or could give under the previous paragraph, plus a right to possession of the Corresponding Source of the work from the predecessor in interest, if the predecessor has it or can get it with reasonable efforts.\n\nYou may not impose any further restrictions on the exercise of the rights granted or affirmed under this License. For example, you may not impose a license fee, royalty, or other charge for exercise of rights granted under this License, and you may not initiate litigation (including a cross-claim or counterclaim in a lawsuit) alleging that any patent claim is infringed by making, using, selling, offering for sale, or importing the Program or any portion of it.\n\n11. Patents.\nA \u201ccontributor\u201d is a copyright holder who authorizes use under this License of the Program or a work on which the Program is based. The work thus licensed is called the contributor's \u201ccontributor version\u201d.\n\nA contributor's \u201cessential patent claims\u201d are all patent claims owned or controlled by the contributor, whether already acquired or hereafter acquired, that would be infringed by some manner, permitted by this License, of making, using, or selling its contributor version, but do not include claims that would be infringed only as a consequence of further modification of the contributor version. For purposes of this definition, \u201ccontrol\u201d includes the right to grant patent sublicenses in a manner consistent with the requirements of this License.\n\nEach contributor grants you a non-exclusive, worldwide, royalty-free patent license under the contributor's essential patent claims, to make, use, sell, offer for sale, import and otherwise run, modify and propagate the contents of its contributor version.\n\nIn the following three paragraphs, a \u201cpatent license\u201d is any express agreement or commitment, however denominated, not to enforce a patent (such as an express permission to practice a patent or covenant not to sue for patent infringement). To \u201cgrant\u201d such a patent license to a party means to make such an agreement or commitment not to enforce a patent against the party.\n\nIf you convey a covered work, knowingly relying on a patent license, and the Corresponding Source of the work is not available for anyone to copy, free of charge and under the terms of this License, through a publicly available network server or other readily accessible means, then you must either (1) cause the Corresponding Source to be so available, or (2) arrange to deprive yourself of the benefit of the patent license for this particular work, or (3) arrange, in a manner consistent with the requirements of this License, to extend the patent license to downstream recipients. \u201cKnowingly relying\u201d means you have actual knowledge that, but for the patent license, your conveying the covered work in a country, or your recipient's use of the covered work in a country, would infringe one or more identifiable patents in that country that you have reason to believe are valid.\n\nIf, pursuant to or in connection with a single transaction or arrangement, you convey, or propagate by procuring conveyance of, a covered work, and grant a patent license to some of the parties receiving the covered work authorizing them to use, propagate, modify or convey a specific copy of the covered work, then the patent license you grant is automatically extended to all recipients of the covered work and works based on it.\n\nA patent license is \u201cdiscriminatory\u201d if it does not include within the scope of its coverage, prohibits the exercise of, or is conditioned on the non-exercise of one or more of the rights that are specifically granted under this License. You may not convey a covered work if you are a party to an arrangement with a third party that is in the business of distributing software, under which you make payment to the third party based on the extent of your activity of conveying the work, and under which the third party grants, to any of the parties who would receive the covered work from you, a discriminatory patent license (a) in connection with copies of the covered work conveyed by you (or copies made from those copies), or (b) primarily for and in connection with specific products or compilations that contain the covered work, unless you entered into that arrangement, or that patent license was granted, prior to 28 March 2007.\n\nNothing in this License shall be construed as excluding or limiting any implied license or other defenses to infringement that may otherwise be available to you under applicable patent law.\n\n12. No Surrender of Others' Freedom.\nIf conditions are imposed on you (whether by court order, agreement or otherwise) that contradict the conditions of this License, they do not excuse you from the conditions of this License. If you cannot convey a covered work so as to satisfy simultaneously your obligations under this License and any other pertinent obligations, then as a consequence you may not convey it at all. For example, if you agree to terms that obligate you to collect a royalty for further conveying from those to whom you convey the Program, the only way you could satisfy both those terms and this License would be to refrain entirely from conveying the Program.\n\n13. Use with the GNU Affero General Public License.\nNotwithstanding any other provision of this License, you have permission to link or combine any covered work with a work licensed under version 3 of the GNU Affero General Public License into a single combined work, and to convey the resulting work. The terms of this License will continue to apply to the part which is the covered work, but the special requirements of the GNU Affero General Public License, section 13, concerning interaction through a network will apply to the combination as such.\n\n14. Revised Versions of this License.\nThe Free Software Foundation may publish revised and/or new versions of the GNU General Public License from time to time. Such new versions will be similar in spirit to the present version, but may differ in detail to address new problems or concerns.\n\nEach version is given a distinguishing version number. If the Program specifies that a certain numbered version of the GNU General Public License \u201cor any later version\u201d applies to it, you have the option of following the terms and conditions either of that numbered version or of any later version published by the Free Software Foundation. If the Program does not specify a version number of the GNU General Public License, you may choose any version ever published by the Free Software Foundation.\n\nIf the Program specifies that a proxy can decide which future versions of the GNU General Public License can be used, that proxy's public statement of acceptance of a version permanently authorizes you to choose that version for the Program.\n\nLater license versions may give you additional or different permissions. However, no additional obligations are imposed on any author or copyright holder as a result of your choosing to follow a later version.\n\n15. Disclaimer of Warranty.\nTHERE IS NO WARRANTY FOR THE PROGRAM, TO THE EXTENT PERMITTED BY APPLICABLE LAW. EXCEPT WHEN OTHERWISE STATED IN WRITING THE COPYRIGHT HOLDERS AND/OR OTHER PARTIES PROVIDE THE PROGRAM \u201cAS IS\u201d WITHOUT WARRANTY OF ANY KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE. THE ENTIRE RISK AS TO THE QUALITY AND PERFORMANCE OF THE PROGRAM IS WITH YOU. SHOULD THE PROGRAM PROVE DEFECTIVE, YOU ASSUME THE COST OF ALL NECESSARY SERVICING, REPAIR OR CORRECTION.\n\n16. Limitation of Liability.\nIN NO EVENT UNLESS REQUIRED BY APPLICABLE LAW OR AGREED TO IN WRITING WILL ANY COPYRIGHT HOLDER, OR ANY OTHER PARTY WHO MODIFIES AND/OR CONVEYS THE PROGRAM AS PERMITTED ABOVE, BE LIABLE TO YOU FOR DAMAGES, INCLUDING ANY GENERAL, SPECIAL, INCIDENTAL OR CONSEQUENTIAL DAMAGES ARISING OUT OF THE USE OR INABILITY TO USE THE PROGRAM (INCLUDING BUT NOT LIMITED TO LOSS OF DATA OR DATA BEING RENDERED INACCURATE OR LOSSES SUSTAINED BY YOU OR THIRD PARTIES OR A FAILURE OF THE PROGRAM TO OPERATE WITH ANY OTHER PROGRAMS), EVEN IF SUCH HOLDER OR OTHER PARTY HAS BEEN ADVISED OF THE POSSIBILITY OF SUCH DAMAGES.\n\n17. Interpretation of Sections 15 and 16.\nIf the disclaimer of warranty and limitation of liability provided above cannot be given local legal effect according to their terms, reviewing courts shall apply local law that most closely approximates an absolute waiver of all civil liability in connection with the Program, unless a warranty or assumption of liability accompanies a copy of the Program in return for a fee.\n\nEND OF TERMS AND CONDITIONS\n\nHow to Apply These Terms to Your New Programs\nIf you develop a new program, and you want it to be of the greatest possible use to the public, the best way to achieve this is to make it free software which everyone can redistribute and change under these terms.\n\nTo do so, attach the following notices to the program. It is safest to attach them to the start of each source file to most effectively state the exclusion of warranty; and each file should have at least the \u201ccopyright\u201d line and a pointer to where the full notice is found.\n\n    <one line to give the program's name and a brief idea of what it does.>\n    Copyright (C) <year>  <name of author>\n\n    This program is free software: you can redistribute it and/or modify\n    it under the terms of the GNU General Public License as published by\n    the Free Software Foundation, either version 3 of the License, or\n    (at your option) any later version.\n\n    This program is distributed in the hope that it will be useful,\n    but WITHOUT ANY WARRANTY; without even the implied warranty of\n    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the\n    GNU General Public License for more details.\n\n    You should have received a copy of the GNU General Public License\n    along with this program.  If not, see <https://www.gnu.org/licenses/>.\nAlso add information on how to contact you by electronic and paper mail.\n\nIf the program does terminal interaction, make it output a short notice like this when it starts in an interactive mode:\n\n    <program>  Copyright (C) <year>  <name of author>\n    This program comes with ABSOLUTELY NO WARRANTY; for details type `show w'.\n    This is free software, and you are welcome to redistribute it\n    under certain conditions; type `show c' for details.\nThe hypothetical commands `show w' and `show c' should show the appropriate parts of the General Public License. Of course, your program's commands might be different; for a GUI interface, you would use an \u201cabout box\u201d.\n\nYou should also get your employer (if you work as a programmer) or school, if any, to sign a \u201ccopyright disclaimer\u201d for the program, if necessary. For more information on this, and how to apply and follow the GNU GPL, see <https://www.gnu.org/licenses/>.\n\nThe GNU General Public License does not permit incorporating your program into proprietary programs. If your program is a subroutine library, you may consider it more useful to permit linking proprietary applications with the library. If this is what you want to do, use the GNU Lesser General Public License instead of this License. But first, please read <https://www.gnu.org/licenses/why-not-lgpl.html>.\n"
+      },
+      "source": "https://raw.githubusercontent.com/precimed/mixer/master/LICENSE",
+      "technique": "file_exploration"
+    }
+  ],
+  "name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "mixer"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "owner": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Organization",
+        "value": "precimed"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "programming_languages": [
+    {
+      "confidence": 1,
+      "result": {
+        "name": "C",
+        "size": 41906247,
+        "type": "Programming_language",
+        "value": "C"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Jupyter Notebook",
+        "size": 4563173,
+        "type": "Programming_language",
+        "value": "Jupyter Notebook"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "C++",
+        "size": 729342,
+        "type": "Programming_language",
+        "value": "C++"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Python",
+        "size": 263831,
+        "type": "Programming_language",
+        "value": "Python"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Shell",
+        "size": 16303,
+        "type": "Programming_language",
+        "value": "Shell"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Makefile",
+        "size": 5810,
+        "type": "Programming_language",
+        "value": "Makefile"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "CMake",
+        "size": 4867,
+        "type": "Programming_language",
+        "value": "CMake"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Cython",
+        "size": 4426,
+        "type": "Programming_language",
+        "value": "Cython"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "readme_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/precimed/mixer/master/README.md"
+      },
+      "technique": "file_exploration"
+    }
+  ],
+  "releases": [
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "ofrei",
+          "type": "User"
+        },
+        "date_created": "2020-06-24T09:02:39Z",
+        "date_published": "2020-08-31T12:27:58Z",
+        "description": "MATLAB support dropped.",
+        "html_url": "https://github.com/precimed/mixer/releases/tag/v1.2",
+        "name": "Internal release of MiXeR in python",
+        "release_id": 30434767,
+        "tag": "v1.2",
+        "tarball_url": "https://api.github.com/repos/precimed/mixer/tarball/v1.2",
+        "type": "Release",
+        "url": "https://api.github.com/repos/precimed/mixer/releases/30434767",
+        "value": "https://api.github.com/repos/precimed/mixer/releases/30434767",
+        "zipball_url": "https://api.github.com/repos/precimed/mixer/zipball/v1.2"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "ofrei",
+          "type": "User"
+        },
+        "date_created": "2020-03-27T19:12:34Z",
+        "date_published": "2020-04-20T07:25:36Z",
+        "description": "Internal release of MiXeR in python",
+        "html_url": "https://github.com/precimed/mixer/releases/tag/v1.1",
+        "name": "Internal release",
+        "release_id": 25668268,
+        "tag": "v1.1",
+        "tarball_url": "https://api.github.com/repos/precimed/mixer/tarball/v1.1",
+        "type": "Release",
+        "url": "https://api.github.com/repos/precimed/mixer/releases/25668268",
+        "value": "https://api.github.com/repos/precimed/mixer/releases/25668268",
+        "zipball_url": "https://api.github.com/repos/precimed/mixer/zipball/v1.1"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "ofrei",
+          "type": "User"
+        },
+        "date_created": "2019-05-23T07:28:45Z",
+        "date_published": "2019-05-23T07:33:55Z",
+        "description": "This is a public release. Only Linux binaries are provided at the moment.\r\nPlease see README.md file for further information.",
+        "html_url": "https://github.com/precimed/mixer/releases/tag/v1.0",
+        "name": "Public release",
+        "release_id": 17535101,
+        "tag": "v1.0",
+        "tarball_url": "https://api.github.com/repos/precimed/mixer/tarball/v1.0",
+        "type": "Release",
+        "url": "https://api.github.com/repos/precimed/mixer/releases/17535101",
+        "value": "https://api.github.com/repos/precimed/mixer/releases/17535101",
+        "zipball_url": "https://api.github.com/repos/precimed/mixer/zipball/v1.0"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "ofrei",
+          "type": "User"
+        },
+        "date_created": "2019-02-01T11:24:05Z",
+        "date_published": "2019-02-01T11:26:53Z",
+        "description": "Enable BIC and AIC calculations\r\nEnable preliminary calculations of posterior delta in univariate analysis\r\nLinux only. Please contact corresponding author (biorxiv) to request Windows or Mac binaries.",
+        "html_url": "https://github.com/precimed/mixer/releases/tag/v0.9.1",
+        "name": "Preliminary release of MiXeR",
+        "release_id": 15313581,
+        "tag": "v0.9.1",
+        "tarball_url": "https://api.github.com/repos/precimed/mixer/tarball/v0.9.1",
+        "type": "Release",
+        "url": "https://api.github.com/repos/precimed/mixer/releases/15313581",
+        "value": "https://api.github.com/repos/precimed/mixer/releases/15313581",
+        "zipball_url": "https://api.github.com/repos/precimed/mixer/zipball/v0.9.1"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "ofrei",
+          "type": "User"
+        },
+        "date_created": "2018-12-09T21:52:00Z",
+        "date_published": "2018-12-10T08:40:26Z",
+        "description": "This release corresponds to the version that went into the first round of reviews with *Nature Communications*. It contains new user tutorial and pre-built binaries for Linux and Windows. MiXeR source code had been cleaned from all unused legacy stuff.\r\n\r\nPlease note that the user tutorial has not yet been fully tested, thus some issues (particularly with installation procedures) are expected at this moment. This will be addressed ASAP in the upcoming v0.9.1 release.\r\n\r\nIf you encounter any issues or have other feedback you are welcome to create a [new issue ticket](https://github.com/precimed/mixer/issues/new).",
+        "html_url": "https://github.com/precimed/mixer/releases/tag/v0.9",
+        "name": "Preliminary release of MiXeR",
+        "release_id": 14435606,
+        "tag": "v0.9",
+        "tarball_url": "https://api.github.com/repos/precimed/mixer/tarball/v0.9",
+        "type": "Release",
+        "url": "https://api.github.com/repos/precimed/mixer/releases/14435606",
+        "value": "https://api.github.com/repos/precimed/mixer/releases/14435606",
+        "zipball_url": "https://api.github.com/repos/precimed/mixer/zipball/v0.9"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "ofrei",
+          "type": "User"
+        },
+        "date_created": "2018-11-12T14:02:19Z",
+        "date_published": "2018-12-05T08:20:45Z",
+        "description": "This is a version that went into [biorxiv](https://www.biorxiv.org/content/early/2018/11/27/240275) manuscript. In includes a lot of legacy rubbish code which is irrelevant.",
+        "html_url": "https://github.com/precimed/mixer/releases/tag/v0.5",
+        "name": "Preliminary release of MiXeR",
+        "release_id": 14356421,
+        "tag": "v0.5",
+        "tarball_url": "https://api.github.com/repos/precimed/mixer/tarball/v0.5",
+        "type": "Release",
+        "url": "https://api.github.com/repos/precimed/mixer/releases/14356421",
+        "value": "https://api.github.com/repos/precimed/mixer/releases/14356421",
+        "zipball_url": "https://api.github.com/repos/precimed/mixer/zipball/v0.5"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "requirements": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Prerequisites",
+        "parent_header": [
+          "Install MiXeR"
+        ],
+        "type": "Text_excerpt",
+        "value": "* Linux environment (tested on CentOS release 6.9, Ubuntu 18.04).\n* Python 3 (tested with Python 3.7), with numpy, scipy>=1.2.1, numdifftools, matplotlib_venn\n* Reasonably new GCC compiler (tested with gcc/6.1.0) or an Intel C++ compiler (tested with intel-2018b)\n* Boost libraries (https://www.boost.org/, tested with 1.68.0)\n\nIf you are an experienced C++ programmer it shouldn't be difficult to compile MiXeR core in MAC or Windows.\nIf you've made it work, please share your changes via pull request.\n"
+      },
+      "source": "https://raw.githubusercontent.com/precimed/mixer/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Hardware requirements",
+        "parent_header": [
+          "Install MiXeR"
+        ],
+        "type": "Text_excerpt",
+        "value": "MiXeR software is very CPU intensive. \nMinimal memory requirement is to have 32 GB of RAM available to MiXeR.\nMiXeR efficiently uses multiple CPUs.\nWe recommend to run MiXeR on a system with at least 16 physical cores.\n"
+      },
+      "source": "https://raw.githubusercontent.com/precimed/mixer/master/README.md",
+      "technique": "header_analysis"
+    }
+  ],
+  "run": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Univariate analysis",
+        "parent_header": [
+          "Run MiXeR"
+        ],
+        "type": "Text_excerpt",
+        "value": "Fit the model:\n```\npython3 <MIXER_ROOT>/precimed/mixer.py fit1 \\\n      --trait1-file SSGAC_EDU_2018_no23andMe_noMHC.csv.gz \\\n      --out SSGAC_EDU_2018_no23andMe_noMHC.fit.rep${SLURM_ARRAY_TASK_ID} \\\n      --extract LDSR/1000G_EUR_Phase3_plink/1000G.EUR.QC.prune_maf0p05_rand2M_r2p8.rep${SLURM_ARRAY_TASK_ID}.snps \\\n      --bim-file LDSR/1000G_EUR_Phase3_plink/1000G.EUR.QC.@.bim \\\n      --ld-file LDSR/1000G_EUR_Phase3_plink/1000G.EUR.QC.@.run4.ld \\\n      --lib  <MIXER_ROOT>/src/build/lib/libbgmg.so \\\n```\n\nApply the model to the entire set of SNPs, without constraining to ``LDSR/w_hm3.justrs``:\n```\npython3 <MIXER_ROOT>/precimed/mixer.py test1 \\\n      --trait1-file SSGAC_EDU_2018_no23andMe_noMHC.csv.gz \\\n      --load-params-file SSGAC_EDU_2018_no23andMe_noMHC.fit.rep${SLURM_ARRAY_TASK_ID}.json \\\n      --out SSGAC_EDU_2018_no23andMe_noMHC.test.rep${SLURM_ARRAY_TASK_ID} \\\n      --bim-file LDSR/1000G_EUR_Phase3_plink/1000G.EUR.QC.@.bim \\\n      --ld-file LDSR/1000G_EUR_Phase3_plink/1000G.EUR.QC.@.run4.ld \\\n      --lib  <MIXER_ROOT>/src/build/lib/libbgmg.so \\\n```\n\nThe results will be saved ``<out_file>.json`` file.\nRepeat the above analysis for the second trait (``PGC_SCZ_2014_EUR_qc_noMHC.csv.gz``).\n\nTo visualize the results:\n```\npython precimed/mixer_figures.py combine --json PGC_SCZ_2014_EUR_qc_noMHC.fit.rep@.json --out combined/PGC_SCZ_2014_EUR.fit\npython precimed/mixer_figures.py one --json PGC_SCZ_2014_EUR.json --out PGC_SCZ_2014_EUR --statistic mean std\n```\n\n"
+      },
+      "source": "https://raw.githubusercontent.com/precimed/mixer/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Bivariate (cross-trait) analysis",
+        "parent_header": [
+          "Run MiXeR"
+        ],
+        "type": "Text_excerpt",
+        "value": "Fit the model:\n```\npython3 <MIXER_ROOT>/python/mixer.py fit2 \\\n      --trait1-file PGC_SCZ_2014_EUR_qc_noMHC.csv.gz \\\n      --trait2-file SSGAC_EDU_2018_no23andMe_noMHC.csv.gz \\\n      --trait1-params-file PGC_SCZ_2014_EUR_qc_noMHC.fit.rep${SLURM_ARRAY_TASK_ID}.json \\\n      --trait2-params-file SSGAC_EDU_2018_no23andMe_noMHC.fit.rep${SLURM_ARRAY_TASK_ID}.json \\\n      --out PGC_SCZ_2014_EUR_qc_noMHC_vs_SSGAC_EDU_2018_no23andMe_noMHC.fit.rep${SLURM_ARRAY_TASK_ID} \\\n      --extract LDSR/1000G_EUR_Phase3_plink/1000G.EUR.QC.prune_maf0p05_rand2M_r2p8.rep${SLURM_ARRAY_TASK_ID}.snps \\\n      --bim-file LDSR/1000G_EUR_Phase3_plink/1000G.EUR.QC.@.bim \\\n      --ld-file LDSR/1000G_EUR_Phase3_plink/1000G.EUR.QC.@.run4.ld \\\n      --lib  <MIXER_ROOT>/src/build/lib/libbgmg.so \\\n```\n\nApply the model to the entire set of SNPs, without constraining to ``LDSR/w_hm3.justrs``:\n```\npython3 <MIXER_ROOT>/python/mixer.py test2 \\\n      --trait1-file PGC_SCZ_2014_EUR_qc_noMHC.csv.gz \\\n      --trait2-file SSGAC_EDU_2018_no23andMe_noMHC.csv.gz \\\n      --load-params-file PGC_SCZ_2014_EUR_qc_noMHC_vs_SSGAC_EDU_2018_no23andMe_noMHC.fit.rep${SLURM_ARRAY_TASK_ID}.json \\\n      --out PGC_SCZ_2014_EUR_qc_noMHC_vs_SSGAC_EDU_2018_no23andMe_noMHC.test.rep${SLURM_ARRAY_TASK_ID} \\\n      --bim-file LDSR/1000G_EUR_Phase3_plink/1000G.EUR.QC.@.bim \\\n      --ld-file LDSR/1000G_EUR_Phase3_plink/1000G.EUR.QC.@.run4.ld \\\n      --lib  <MIXER_ROOT>/src/build/lib/libbgmg.so \\\n```\n\nNote that these parameters point to the results of univariate analysis for both traits, so those must be generated first.\nThe results will be saved ``<out_file>.json`` file.\n\nTo visualize the results (where `<prefix>` is, for example, ``PGC_SCZ_2014_EUR_qc_noMHC_vs_SSGAC_EDU_2018_no23andMe_noMHC``):\n```\npython precimed/mixer_figures.py combine --json <prefix>.fit.rep@.json --out <prefix>.fit\npython precimed/mixer_figures.py combine --json <prefix>.test.rep@.json --out <prefix>.test\npython precimed/mixer_figures.py two --json-fit <prefix>.fit.json --json-test <prefix>.test.json --out <out_file> --statistic mean std\n```\n"
+      },
+      "source": "https://raw.githubusercontent.com/precimed/mixer/master/README.md",
+      "technique": "header_analysis"
+    }
+  ],
+  "somef_missing_categories": [
+    "citation",
+    "acknowledgement",
+    "contact",
+    "contributors",
+    "usage",
+    "faq",
+    "support",
+    "identifier",
+    "has_build_file"
+  ],
+  "somef_provenance": {
+    "date": "2024-10-06 14:57:32",
+    "somef_schema_version": "1.0.0",
+    "somef_version": "0.9.5"
+  },
+  "stargazers_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 59
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "type": [
+    {
+      "confidence": 0.82,
+      "result": {
+        "type": "String",
+        "value": "commandline-application"
+      },
+      "technique": "software_type_heuristics"
+    }
+  ]
+}

@@ -1,0 +1,291 @@
+{
+  "code_repository": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/Mikkey-the-turtle/DARTS_v0.1"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_created": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2021-10-07T05:36:29Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_updated": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2023-05-17T12:49:14Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "description": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "combination of script able to mine LTR retrotransposons"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 0.9250061617200147,
+      "result": {
+        "original_header": "DARTS v0.1 README file, November 2021",
+        "type": "Text_excerpt",
+        "value": "DARTS, Domain-Associated RetroTransposon Search, is a pipeline developed for searching, mining and annotation of LTR retrotransposons. DARTS pipeline is based on a standalone version of Reverse Position-Specific BLAST (RPS-BLAST), implemented online as CD-Search (Conserved Domain Search, https://www.ncbi.nlm.nih.gov/Structure/cdd/wrpsb.cgi).  \nThe pipeline starts with two rounds of RPS-BLAST domain search. First round is to find the central domain (here, it may be aRNH or RT of either Ty3/Gypsy LTR retrotransposons or including RT of Ty1/Copia, Bel/Pao, and Retroviruses). Then, all hits are extracted with their flanking regions (about +/-7500 bp) for the second RPS-BLAST run, which searches for 6 additional domains: reverse transcriptase, protease, gag polyprotein, integrase, ribonuclease H, and additional/archaeal ribonuclease H, annotated by DARTS as gRT, PRo, GAG, INT, gRH and aRH, respectively.  \nDARTS is aimed to help researchers in annotation of the genome assemblies for repetitive elements, to produce clusters with representative elements for phylogenetic analysis, generate amino acid sequences of each studied domain for alignments, and extract full-length nucleotide element sequences with annotated structure. \n! Warning: the pipeline outputs take a lot of space on disk (compared to genome assembly sizes); for its intermediate results DARTS needs at least 2-3 times more free space than the unpacked genome assembly takes. \nBefore starting working with DARTS, a few dependencies must be installed. First, it is necessary to upload and configure the rpstblastn and rpsbproc tools from the blast+ package. To do this, following the manual: https://ftp.ncbi.nih.gov/pub/mmdb/cdd/rpsbproc/README \nAlmost all DARTS scripts are based on Python programming language (developing version was python 3.6). The Biopython library is necessary too. Information about installation of the Python and Biopython packages is shown at https://www.python.org/downloads/ and https://biopython.org/wiki/Download respectively. \nFor the following analysis there is a small script (not a part of DARTS), that launches alignments by MAFFT and subsequent phylogenetic tree building by FastTree and IQTree tools. Information on installation of these tools is provided at the following links: https://mafft.cbrc.jp/alignment/software/, http://www.microbesonline.org/fasttree/, http://www.iqtree.org/doc/iqtree-doc.pdf \n\t\texport DARTS=\"/way/to/DARTS/scripts\" \n   \n\t\texport CDDATA=\"/way/to/cddblast/ncbi-blast-N.N.N+-src/c++/ReleaseMT/bin/data\" (N.N.N - the version of the cddblast)\n   \nThe cddblast data folder should have the following files: bitscore_specific.txt, cddannot_generic.dat, cdtrack.txt, cddannot.dat, cddid.tbl, family_superfamily_links\nNow DARTS is ready to use. \nThe main DARTS script launches a full analysis pipeline as described in (Biryukov and Ustyantsev 2021; submitted to the Genes MDPI journal).  The script initiates the test of genome assembly size, and splits it into several batches if necessary, then DARTS launches the core part of the pipeline, and, if the splitting took place, joins the output from each batch, and creates a directory with all the results. The script invocation is: \nThis script is used for final clustering of split batches in the folder \"(@project_name)_all\". \n\t\tsh DARTS/clustering80_DARTS.sh $1\n  \nThe only variable the script needs is the %project_name. ! This variable must be the same as in the parts of input file names. This script will be launched automatically during execution of the \"core_DARTS_RT_search.sh\" and \"core_DARTS_aRH_search.sh\" scripts. \nThis is a secondary script for alignment and phylogenetic tree building. It uses MAFFT for alignment of amino acid sequences of protein domains and uses FastTree and IQTree for phylogeny. To run type: \nThe script will produce: $3-step1.fa (aligned $1 file) and  $3-step2.fa (alignment of sequences from $1 and $2 (mafft uses '--add' function)). $3-step3.fasttree.treefile - treefile made by FastTree tool. $3-step2.fa.X - X IQTree output files, including $3-step2.fa.treefile \nHere is a list of file types a user may found in the DARTS outputs: \n1. \"(%genome_name).fa.step?.rpsbproc.result\" - result tables of rpsbproc steps. Output files of rpstblastn are removed after the rpsbproc tables are produced. \n2. \"(%genome_name).fa_elements\" (for example - Athal.fa_elements) - FASTA file with the nucleotide sequences of all found elements. \n4. \"(%domain_type)_(%genome_name).fa_elements.faa\" (for example GAG_Athal.fa_elements.faa) - FASTA file with amino acid sequences of %domain_type found in all elements from the    previous file (1.). Altogether, there will be 6 domains - GAG (gag polyprotein), PRo (Protease), RT (reverse transcriptase, annotated as gRT), RNH (ribonuclease H, annotated    as gRH), INT (integrase), and aRNH (additional/archaeal RNH, annotated as aRH). \n7. \"coordinates_table_of_(%genome_name).fa_elements\" - BED-like formated file, where for each element found the following information is presented: 1) contig from assembly, 2-3)    start and end coordinates for 4) LTR1/LTR2/internal (domain-containing part), 5) the element structure annotation and 6) strand (+/-). \n4. \"(%domain_type)(%genome_name).fa_elements.faa\" files - to work with all the domains of a given type that were found.  \n5. Folder \"mmseq2-80\" - for alignment and phylogeny.  \n7. \"coordinates_table_of(%genome_name).fa_elements\" - for genome annotation.\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/Mikkey-the-turtle/DARTS_v0.1/main/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "download_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/Mikkey-the-turtle/DARTS_v0.1/releases"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 0
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/Mikkey-the-turtle/DARTS_v0.1/forks"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "Mikkey-the-turtle/DARTS_v0.1"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_title": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "DARTS v0.1 README file, November 2021"
+      },
+      "source": "https://raw.githubusercontent.com/Mikkey-the-turtle/DARTS_v0.1/main/README.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "has_script_file": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/Mikkey-the-turtle/DARTS_v0.1/main/mafft_2_steps.sh"
+      },
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/Mikkey-the-turtle/DARTS_v0.1/main/main_DARTS.sh"
+      },
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/Mikkey-the-turtle/DARTS_v0.1/main/clustering80_DARTS.sh"
+      },
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/Mikkey-the-turtle/DARTS_v0.1/main/core_DARTS_RT_search.sh"
+      },
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/Mikkey-the-turtle/DARTS_v0.1/main/core_DARTS_aRH_search.sh"
+      },
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/Mikkey-the-turtle/DARTS_v0.1/main/clustering50_DARTS.sh"
+      },
+      "technique": "file_exploration"
+    }
+  ],
+  "installation": [
+    {
+      "confidence": 0.9457012333944778,
+      "result": {
+        "original_header": "DARTS v0.1 README file, November 2021",
+        "type": "Text_excerpt",
+        "value": "CONTENTS:\nSUMMARY\nDEPENDENCIES AND REQUIREMENTS\nINSTALLATION OF THE PIPELINE PACKAGES\nRUNNING THE SCRIPTS\nSAMPLE OUTPUT \nDARTS, Domain-Associated RetroTransposon Search, is a pipeline developed for searching, mining and annotation of LTR retrotransposons. DARTS pipeline is based on a standalone version of Reverse Position-Specific BLAST (RPS-BLAST), implemented online as CD-Search (Conserved Domain Search, https://www.ncbi.nlm.nih.gov/Structure/cdd/wrpsb.cgi).  \nDEPENDENCIES AND REQUIREMENTS \nThe pipeline was tested and worked on a 64-bit Linux machine with installed Ubuntu v18.0 and v20.0. The PC had 19Gb RAM, although DARTS can analyse small genomes on PCs with 4 Gb RAM. Processor - Intel(R) core(TM) i5-3470 CPU @ 3.20GHz.  \nBefore starting working with DARTS, a few dependencies must be installed. First, it is necessary to upload and configure the rpstblastn and rpsbproc tools from the blast+ package. To do this, following the manual: https://ftp.ncbi.nih.gov/pub/mmdb/cdd/rpsbproc/README \nAlmost all DARTS scripts are based on Python programming language (developing version was python 3.6). The Biopython library is necessary too. Information about installation of the Python and Biopython packages is shown at https://www.python.org/downloads/ and https://biopython.org/wiki/Download respectively. \nNext, for clustering, the MMseqs2 tool is required. The installation is described in the following manual: https://mmseqs.com/latest/userguide.pdf \nFor the following analysis there is a small script (not a part of DARTS), that launches alignments by MAFFT and subsequent phylogenetic tree building by FastTree and IQTree tools. Information on installation of these tools is provided at the following links: https://mafft.cbrc.jp/alignment/software/, http://www.microbesonline.org/fasttree/, http://www.iqtree.org/doc/iqtree-doc.pdf \nINSTALLATION OF THE PIPELINE PACKAGES \nTo use the DARTS pipeline, a user needs to perform the following steps: \n1. Install the dependencies (see DEPENDENCIES AND REQUIREMENTS). \n2. Download DARTS files in a separate folder. \n3. Unzip customCDD.zip in the same folder. This container carries local databases which are required by DARTS. \n\t\texport DARTS=\"/way/to/DARTS/scripts\" \n   \n\t\texport CDDATA=\"/way/to/cddblast/ncbi-blast-N.N.N+-src/c++/ReleaseMT/bin/data\" (N.N.N - the version of the cddblast)\n   \nThe cddblast data folder should have the following files: bitscore_specific.txt, cddannot_generic.dat, cdtrack.txt, cddannot.dat, cddid.tbl, family_superfamily_links\nNow DARTS is ready to use. \nAfter adding the DARTS scripts to the path, DARTS can be run in the command line by executin: \n\t\tsh DARTS/main_DARTS.sh\n  \nOther DARTS scripts can launched similarly:  \n\t\tsh DARTS/%script_name.sh\n  \nor, for untermediate scripts: \n\t\tpython DARTS/intermediate_scripts/%script_name.py  \n1. main_DARTS.sh \n\t\tsh DARTS/main_DARTS.sh $1 $2 $3 $4\n  \nWhere, $1 - name of the protein domain for the first step of RPS-BLAST search. For now, it may be either 'aRH' or 'RT'. RT will be run by default, if anything else written \n$2 - a genome assembly file. ! Warning ! The script must be launched from the same folder where the genome file is. Alternatively, you can make a symbolic link to the file and put it in a different folder: \"ln -s way/to/genome_assemby.fa\". \n2. core_DARTS_aRH_search.sh \n3. core_DARTS_RT_search.sh \n4. clustering50_DARTS.sh \nIf user has ready \"(%project_name).fa_elements\" and \"(%domain_type)_(%project_name).fa_elements.faa\" files, the script will run all the DARTS steps from clustering with MMseqs2 at 50% identity level. To run type: \n\t\tsh DARTS/clustering50_DARTS.sh $1\n  \nThe only variable the script needs is the %project_name. ! This variable must be the same as in the parts of input file names. \n\t\tsh DARTS/clustering80_DARTS.sh $1\n  \nThe only variable the script needs is the %project_name. ! This variable must be the same as in the parts of input file names. This script will be launched automatically during execution of the \"core_DARTS_RT_search.sh\" and \"core_DARTS_aRH_search.sh\" scripts. \n6. mafft_2_steps.sh \n\t\tsh DARTS/mafft_2_steps.sh $1 $2 $3 $4\n  \nThe arguments are: $1 - a basal (profile) alignment to which a user wants to add the results. $2 - a *.fasta file with sequences to add. $3 - %project_name. $4 - \"iqtree\" or nothing - to use or not use IQTree. \nFor most applications a user may need the following files:  \n"
+      },
+      "source": "https://raw.githubusercontent.com/Mikkey-the-turtle/DARTS_v0.1/main/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "invocation": [
+    {
+      "confidence": 0.8469860019479173,
+      "result": {
+        "original_header": "DARTS v0.1 README file, November 2021",
+        "type": "Text_excerpt",
+        "value": "2. Download DARTS files in a separate folder. \n\t\tpython DARTS/intermediate_scripts/%script_name.py  \n\t\tsh DARTS/core_DARTS_aRH_search.sh $1 $2\n  \nThe arguments are: $1 - genome assembly file or file from its split batch. $2 - %project_name. \nSAMPLE OUTPUT \n"
+      },
+      "source": "https://raw.githubusercontent.com/Mikkey-the-turtle/DARTS_v0.1/main/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "issue_tracker": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/Mikkey-the-turtle/DARTS_v0.1/issues"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "keywords": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": ""
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "DARTS_v0.1"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "owner": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "User",
+        "value": "Mikkey-the-turtle"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "programming_languages": [
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Python",
+        "size": 55291,
+        "type": "Programming_language",
+        "value": "Python"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Shell",
+        "size": 9949,
+        "type": "Programming_language",
+        "value": "Shell"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "readme_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/Mikkey-the-turtle/DARTS_v0.1/main/README.md"
+      },
+      "technique": "file_exploration"
+    }
+  ],
+  "somef_missing_categories": [
+    "citation",
+    "acknowledgement",
+    "run",
+    "download",
+    "requirements",
+    "contact",
+    "contributors",
+    "documentation",
+    "license",
+    "usage",
+    "faq",
+    "support",
+    "identifier",
+    "has_build_file",
+    "executable_example"
+  ],
+  "somef_provenance": {
+    "date": "2024-10-06 00:47:32",
+    "somef_schema_version": "1.0.0",
+    "somef_version": "0.9.5"
+  },
+  "stargazers_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 1
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "type": [
+    {
+      "confidence": 0.82,
+      "result": {
+        "type": "String",
+        "value": "commandline-application"
+      },
+      "technique": "software_type_heuristics"
+    }
+  ]
+}

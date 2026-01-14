@@ -1,0 +1,707 @@
+{
+  "citation": [
+    {
+      "confidence": 1,
+      "result": {
+        "format": "cff",
+        "type": "File_dump",
+        "value": "# YAML 1.2\n# Metadata for citation of this software according to the CFF format (https://citation-file-format.github.io/)\ncff-version: 1.0.3\nmessage: If you use this software, please cite it as below.\ntitle: Allelic Variation Explorer\ndoi: 10.5281/zenodo.1145887\nauthors:\n- given-names: Stefan\n  family-names: Verhoeven\n  affiliation: Nederlands eScience Center\n- given-names: Mateusz\n  family-names: Kuzak\n  affiliation: Nederlands eScience Center\nversion: 1.0.0\ndate-released: 2018-01-11\nrepository-code: https://github.com/nlesc-ave/ave-rest-service\nlicense: Apache-2.0\n"
+      },
+      "source": "https://raw.githubusercontent.com/nlesc-ave/ave-rest-service/master/CITATION.cff",
+      "technique": "file_exploration"
+    }
+  ],
+  "code_repository": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/nlesc-ave/ave-rest-service"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_created": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2015-10-24T17:58:52Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_updated": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2023-06-30T21:07:19Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "description": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "visualize (clustered) single-nucleotide variants across genomes"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 0.948339604261581,
+      "result": {
+        "original_header": "ave-rest-service",
+        "type": "Text_excerpt",
+        "value": "The Allelic Variation Explorer (AVE) is a web application to visualize (clustered) single-nucleotide variants across genomes.\nThe Allelic Variation Explorer rest service clusters genomic variants and lists the available datasets.\nCombined with [ave-app](https://github.com/nlesc-ave/ave-app) will visualize clustered genomic variants for a certain genomic range in a genome browser. \nThis service is the back end for the [ave-app](https://github.com/nlesc-ave/ave-app) front end.\nThe front end runs in the users web browser and communicates with the back end running on a web server somewhere.\nThe front end is the user interface and the back end is the service serving the variant, annotation and genomic data.\nThe front end and back end communicate with each other according to the [Swagger specification](https://swagger.io/) in [swagger.yml](avedata/swagger.yml). \n"
+      },
+      "source": "https://raw.githubusercontent.com/nlesc-ave/ave-rest-service/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9866811163257667,
+      "result": {
+        "original_header": "Architecture",
+        "type": "Text_excerpt",
+        "value": "The ave-rest-service and ave-app are wrapped up in a [Docker image](https://hub.docker.com/r/ave2/allelic-variation-explorer/).\nThe Docker image is used for deploying the Allelic Variation Explorer on a server. \nThe Allelic Variation Explorer consists of the following parts working together:\n* a running ave rest service\n* an extracted [ave-app](https://bintray.com/nlesc-ave/ave/ave-app/latest#files) build archive.\n* 2bit (genome sequence), bcf (variants) and bigbed (genes and feature annotations) data files, green in diagram\n* a directory with full text indices for genes and features in [Whoosh](https://whoosh.readthedocs.io) format, filled by [data registration commands](#data-registration), red in diagram\n* an meta database file, contains list of available datasets inside the application, filled by [data registration commands](#data-registration), yellow in diagram\n* a [NGINX web server](http://nginx.org/), for hosting app and data files and proxy-ing ave rest service behind a single port\n* a Docker image combining all above, see `./Dockerfile` for the instructions used to install all the parts\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/nlesc-ave/ave-rest-service/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9345751121213138,
+      "result": {
+        "original_header": "Deployment",
+        "type": "Text_excerpt",
+        "value": "A Docker image is available on [Docker Hub](https://hub.docker.com/r/ave2/allelic-variation-explorer/). \nAny change to the master branch of this repo or the [ave-app](https://github.com/nlesc-ave/ave-app) will trigger an automatic build of the [Docker image](https://hub.docker.com/r/ave2/allelic-variation-explorer/). \nThe Docker image contains no data and when data is added then the data will be lost when the Docker container is stopped/started.\nTo get a deployment which is persists it's data we will use directories on the server and mount these as volumes in the Docker container.\nIt expects the following volumes: \n* /data, location for 2bit, bcf and bigbed data files. Hosted as http://&lt;aveserver&gt;/data\n* /whoosh, full text indices for genes and features\n* /meta, directory in which ave meta database is stored \nRun the service with\n```bash\n# Use sub directories in the current working directory to persist data\nmkdir data\nmkdir whoosh\nmkdir meta\ndocker run -d \\\n  -v $PWD/data:/data -v $PWD/whoosh:/whoosh -v $PWD/meta:/meta \\\n  -p 80:80 \\\n  --name ave ave2/allelic-variation-explorer\n``` \nAfter deployment the server is running, but contains no data, see [Data pre processing](#data-pre-processing) chapter how to prepare data followed by the [Data registration](#data-registration) chapter how to add data.\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/nlesc-ave/ave-rest-service/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.8865080933242929,
+      "result": {
+        "original_header": "Secure connection",
+        "type": "Text_excerpt",
+        "value": "The Docker container uses http which is an unencryted connection.\nTo use a secure connection (https), a reverse proxy with Let's Encrypt certificate can be put in front of the Docker container. \nThe Docker container must be run a port which is not 443. \nConfigure a web server like NGINX to server https on port 443 and proxy all requests to the container.\nUse [Certbot](https://certbot.eff.org/) to generate the certificate pair and configure the web server. \n"
+      },
+      "source": "https://raw.githubusercontent.com/nlesc-ave/ave-rest-service/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.8790767666498056,
+      "result": {
+        "original_header": "Data pre processing",
+        "type": "Text_excerpt",
+        "value": "Before data can be registered it has to be converted in the right format. Below describes pre processing steps to convert common formats into the formats the application expects. \nThe tools used are available inside the [Docker container](#deployment) or can be installed in an [Anaconda environment](#setup).\nTo perform the pre processing inside the Docker container, copy the raw files to the `/data` Docker volume and login to the Docker container with `docker exec -ti ave bash`.\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/nlesc-ave/ave-rest-service/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9075483514922095,
+      "result": {
+        "original_header": "Genome sequence",
+        "type": "Text_excerpt",
+        "value": "Genome sequence in [2bit](https://genome.ucsc.edu/goldenpath/help/twoBit.html) format is used. \nWhen you have a genome sequence in [FASTA](https://en.wikipedia.org/wiki/FASTA_format) format, where each chromosome is a sequence in the file. \nThe sequence identifiers (chromosome/contig) should match the ones in corresponding variants (bcf) genes (bigbed) and genomic feature annotations (bigbed) files.\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/nlesc-ave/ave-rest-service/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9411650297392551,
+      "result": {
+        "original_header": "Variants",
+        "type": "Text_excerpt",
+        "value": "1. Merge VCF files with [SAMtools](http://www.htslib.org/doc/samtools.html) and [VCFtools](http://vcftools.sourceforge.net/perl_module.html)\n```sh\n# vcf-merge requires bgzipped and tabix indexed VCF files so do that first\nfor f in $(ls *.vcf)\ndo\nbgzip $f\ntabix -p vcf $f.gz\ndone\nvcf-merge *.vcf.gz > variants.vcf\n```\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/nlesc-ave/ave-rest-service/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9360892337721065,
+      "result": {
+        "original_header": "Genes",
+        "type": "Text_excerpt",
+        "value": "The gene bed file is expected to have the following columns:\n1. chrom, name of chromosome\n2. chromStart, start of gene, zero-indexed\n3. chromStart, end of gene, zero-indexed\n4. name, transcript identifier\n5. score\n6. strand\n7. thickStart, location of start codon\n8. thinkEnd, location of stop codon\n9. itemRgb\n10. blockCount, number of exons\n11. blockSizes\n12. blockStarts\n13. gene identifier\n14. description of gene \nTo convert a gene bed file to bigbed use:\n```bash\n# Fetch chrom sizes\ntwoBitInfo genome.2bit chrom.sizes\n# the version for mac os is available also available http://hgdownload.cse.ucsc.edu/admin/exe/macOSX.x86_64/bedToBigBed\nchmod +x bedToBigBed\n# description field is too long for bedToBigBed so it must be trimmed\ngunzip -c S_lycopersicum_May_2012.bed.gz | perl -n -e 'chomp;@F=split(/\\t/);$F[13] = substr($F[13],0,255); print join(\"\\t\", @F),\"\\n\";'  > S_lycopersicum_May_2012.bed.trimmed\nbedToBigBed -tab -type=bed12+2 S_lycopersicum_May_2012.bed.trimmed chrom.sizes S_lycopersicum_May_2012.bb\n``` \n"
+      },
+      "source": "https://raw.githubusercontent.com/nlesc-ave/ave-rest-service/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9212716072965667,
+      "result": {
+        "original_header": "Genomic features annotations",
+        "type": "Text_excerpt",
+        "value": "The [gff3.as](https://github.com/nlesc-ave/ave-rest-service/blob/master/gff3.as) (in Docker container available as `/app/gff3.as`) is used to describe the columns in the bed file. \n"
+      },
+      "source": "https://raw.githubusercontent.com/nlesc-ave/ave-rest-service/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9522495842853752,
+      "result": {
+        "original_header": "Data registration",
+        "type": "Text_excerpt",
+        "value": "After deployment the server is running, but contains no data.\nData files must be registered so they show up in the web browser. \n"
+      },
+      "source": "https://raw.githubusercontent.com/nlesc-ave/ave-rest-service/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9649631214842873,
+      "result": {
+        "original_header": "Register genome",
+        "type": "Text_excerpt",
+        "value": "The last argument is the location of the genome 2bit file (`/data/tomato/SL.2.40/genome.2bit` in this example), it must be an absolute path which starts with `/data/` must be readable by anyone inside the Docker container. \n"
+      },
+      "source": "https://raw.githubusercontent.com/nlesc-ave/ave-rest-service/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9819297897326816,
+      "result": {
+        "original_header": "Register genes",
+        "type": "Text_excerpt",
+        "value": "The last argument is the bigbed formatted file with genes (`/data/tomato/SL.2.40/gene_models.bb` in this example), it must be an absolute path which starts with `/data/` and must be readable by anyone inside the Docker container. \n"
+      },
+      "source": "https://raw.githubusercontent.com/nlesc-ave/ave-rest-service/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9773413593757017,
+      "result": {
+        "original_header": "Register feature annotations",
+        "type": "Text_excerpt",
+        "value": "The last argument is the bigbed formatted file with feature annotations (`/data/tomato/SL.2.40/A-AFFY-87.bb` in this example), it must be an absolute path which starts with `/data/` and must be readable by anyone inside the Docker container. \n"
+      },
+      "source": "https://raw.githubusercontent.com/nlesc-ave/ave-rest-service/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.8756410604807578,
+      "result": {
+        "original_header": "Deregister",
+        "type": "Text_excerpt",
+        "value": "For example to deregister the `/data/tomato/SL.2.40/A-AFFY-87.bb` file use:\n```bash\ndocker exec ave \\\n    avedata deregister \\\n    /data/tomato/SL.2.40/A-AFFY-87.bb\n```\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/nlesc-ave/ave-rest-service/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9334032923634542,
+      "result": {
+        "original_header": "Develop",
+        "type": "Text_excerpt",
+        "value": "Below are instructions how to get a development version of the service up and running. \n"
+      },
+      "source": "https://raw.githubusercontent.com/nlesc-ave/ave-rest-service/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9711042531006906,
+      "result": {
+        "original_header": "Build Docker image",
+        "type": "Text_excerpt",
+        "value": "Building the Docker image of the latest commit of the master branch is automatically build on Docker hub with the latest tag. \nThe Docker image contains the latest version of [ave-app](https://github.com/nlesc-ave/ave-app).\nIf you want to run a different version of the app you will need to replace curl/tar command in `./Dockerfile` with commands to put the app you want in `/var/www/html` directory and build a Docker image.\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/nlesc-ave/ave-rest-service/master/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "documentation": [
+    {
+      "confidence": 1,
+      "result": {
+        "format": "wiki",
+        "type": "Url",
+        "value": "https://github.com/nlesc-ave/ave-rest-service/wiki"
+      },
+      "source": "https://raw.githubusercontent.com/nlesc-ave/ave-rest-service/master/README.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "download_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/nlesc-ave/ave-rest-service/releases"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 0
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/nlesc-ave/ave-rest-service/forks"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "nlesc-ave/ave-rest-service"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_title": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "ave-rest-service"
+      },
+      "source": "https://raw.githubusercontent.com/nlesc-ave/ave-rest-service/master/README.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "has_build_file": [
+    {
+      "confidence": 1,
+      "result": {
+        "format": "dockerfile",
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/nlesc-ave/ave-rest-service/master/Dockerfile"
+      },
+      "source": "https://raw.githubusercontent.com/nlesc-ave/ave-rest-service/master/Dockerfile",
+      "technique": "file_exploration"
+    }
+  ],
+  "identifier": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://zenodo.org/badge/latestdoi/44877908"
+      },
+      "source": "https://raw.githubusercontent.com/nlesc-ave/ave-rest-service/master/README.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "images": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/nlesc-ave/ave-rest-service/raw/master/docs/screenshot.png"
+      },
+      "source": "https://raw.githubusercontent.com/nlesc-ave/ave-rest-service/master/README.md",
+      "technique": "regular_expression"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/nlesc-ave/ave-rest-service/raw/master/docs/architecture.png"
+      },
+      "source": "https://raw.githubusercontent.com/nlesc-ave/ave-rest-service/master/README.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "installation": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Setup",
+        "parent_header": [
+          "ave-rest-service",
+          "Develop"
+        ],
+        "type": "Text_excerpt",
+        "value": "First clone the repository\n```bash\ngit clone https://github.com/nlesc-ave/ave-rest-service.git\ncd ave-rest-service\n```\n\nTo create a new Anaconda environment with all the ave dependencies installed.\n```bash\nconda env create -f environment.yml\n```\nOn osx use `enviroment.osx.yml` instead of `environment.yml`.\n\nActivate the environment\n```bash\nsource activate ave2\n```\n\nInstall ave for development with\n```bash\npython setup.py develop\n```\n\nIf dependencies are changed in `environment.yml` then update conda env by runnning\n```\nconda env update -f environment.yml\n```\n"
+      },
+      "source": "https://raw.githubusercontent.com/nlesc-ave/ave-rest-service/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 0.9961451058539209,
+      "result": {
+        "original_header": "Deployment",
+        "type": "Text_excerpt",
+        "value": "Run the service with\n```bash\n# Use sub directories in the current working directory to persist data\nmkdir data\nmkdir whoosh\nmkdir meta\ndocker run -d \\\n  -v $PWD/data:/data -v $PWD/whoosh:/whoosh -v $PWD/meta:/meta \\\n  -p 80:80 \\\n  --name ave ave2/allelic-variation-explorer\n``` \nCommand above will run web server on port 80 of host machine. \n"
+      },
+      "source": "https://raw.githubusercontent.com/nlesc-ave/ave-rest-service/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9954802469787826,
+      "result": {
+        "original_header": "Secure connection",
+        "type": "Text_excerpt",
+        "value": "Configure a web server like NGINX to server https on port 443 and proxy all requests to the container.\nUse [Certbot](https://certbot.eff.org/) to generate the certificate pair and configure the web server. \n"
+      },
+      "source": "https://raw.githubusercontent.com/nlesc-ave/ave-rest-service/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9841544238133939,
+      "result": {
+        "original_header": "Genome sequence",
+        "type": "Text_excerpt",
+        "value": "The FASTA file can be converted to 2bit using:\n```sh\nfaToTwoBit genome.fa genome.2bit\n```\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/nlesc-ave/ave-rest-service/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9809857015234535,
+      "result": {
+        "original_header": "Variants",
+        "type": "Text_excerpt",
+        "value": "1. Merge VCF files with [SAMtools](http://www.htslib.org/doc/samtools.html) and [VCFtools](http://vcftools.sourceforge.net/perl_module.html)\n```sh\n# vcf-merge requires bgzipped and tabix indexed VCF files so do that first\nfor f in $(ls *.vcf)\ndo\nbgzip $f\ntabix -p vcf $f.gz\ndone\nvcf-merge *.vcf.gz > variants.vcf\n```\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/nlesc-ave/ave-rest-service/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9515009030570165,
+      "result": {
+        "original_header": "Genes",
+        "type": "Text_excerpt",
+        "value": "Genes must be provided as [bigBed](http://genome.ucsc.edu/goldenPath/help/bigBed.html) formatted.\nA bigBed file can be converted from a [BED formatted](https://genome.ucsc.edu/FAQ/FAQformat.html#format1) file \nSome gene bed files are available at http://bioviz.org/quickload/ \nTo convert a gene bed file to bigbed use:\n```bash\n# Fetch chrom sizes\ntwoBitInfo genome.2bit chrom.sizes\n# the version for mac os is available also available http://hgdownload.cse.ucsc.edu/admin/exe/macOSX.x86_64/bedToBigBed\nchmod +x bedToBigBed\n# description field is too long for bedToBigBed so it must be trimmed\ngunzip -c S_lycopersicum_May_2012.bed.gz | perl -n -e 'chomp;@F=split(/\\t/);$F[13] = substr($F[13],0,255); print join(\"\\t\", @F),\"\\n\";'  > S_lycopersicum_May_2012.bed.trimmed\nbedToBigBed -tab -type=bed12+2 S_lycopersicum_May_2012.bed.trimmed chrom.sizes S_lycopersicum_May_2012.bb\n``` \n"
+      },
+      "source": "https://raw.githubusercontent.com/nlesc-ave/ave-rest-service/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.928708939622364,
+      "result": {
+        "original_header": "Genomic features annotations",
+        "type": "Text_excerpt",
+        "value": "Feature annotations must be provided as [bigBed](http://genome.ucsc.edu/goldenPath/help/bigBed.html) formatted files. \nTo convert a gff feature file to bigbed use:\n```bash\n# Download a gff file\nwget ftp://ftp.solgenomics.net/tomato_genome/microarrays_mapping/A-AFFY-87_AffyGeneChipTomatoGenome.probes_ITAG2.3genome_mapping.gff\n# Sort gff\nbedtools sort -i A-AFFY-87_AffyGeneChipTomatoGenome.probes_ITAG2.3genome_mapping.gff > A-AFFY-87_AffyGeneChipTomatoGenome.probes_ITAG2.3genome_mapping.sorted.gff\n# Convert gff to bed\ngff2bed < A-AFFY-87_AffyGeneChipTomatoGenome.probes_ITAG2.3genome_mapping.sorted.gff > A-AFFY-87_AffyGeneChipTomatoGenome.probes_ITAG2.3genome_mapping.bed\n# Fetch chrom sizes\ntwoBitInfo genome.2bit chrom.sizes\n# Convert bed to bigbed\nbedToBigBed -tab -type=bed6+4 -as=gff3.as A-AFFY-87_AffyGeneChipTomatoGenome.probes_ITAG2.3genome_mapping.bed chrom.sizes A-AFFY-87_AffyGeneChipTomatoGenome.probes_ITAG2.3genome_mapping.bb\n```\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/nlesc-ave/ave-rest-service/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9445126330253236,
+      "result": {
+        "original_header": "Register genome",
+        "type": "Text_excerpt",
+        "value": "The [ave-app](https://github.com/nlesc-ave/ave-app) front end will use this path as the relative http(s) path to fetch reference genome sequence in the selected region\nand the AVE rest service will use it to determine the chromosome list and build haplotype sequence.\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/nlesc-ave/ave-rest-service/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9812242583797759,
+      "result": {
+        "original_header": "Develop",
+        "type": "Text_excerpt",
+        "value": "Below are instructions how to get a development version of the service up and running. \nRequirements: \n"
+      },
+      "source": "https://raw.githubusercontent.com/nlesc-ave/ave-rest-service/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.8781921415366086,
+      "result": {
+        "original_header": "Configuration",
+        "type": "Text_excerpt",
+        "value": "The service needs a configuration file called `setting.cfg`. \nThe repo contains an example config file called `settings.example.cfg`.\nCopy the example config file to `settings.cfg` and edit it. \nMake sure the `WHOOSH_BASE_DIR` directory exists.\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/nlesc-ave/ave-rest-service/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9795320418331919,
+      "result": {
+        "original_header": "Build Docker image",
+        "type": "Text_excerpt",
+        "value": "Building the Docker image of the latest commit of the master branch is automatically build on Docker hub with the latest tag. \nIf you have local changes and want to test the Docker container locally then you can build the Docker image with\n```bash\ndocker build -t ave2/allelic-variation-explorer .\n``` \nThe Docker image contains the latest version of [ave-app](https://github.com/nlesc-ave/ave-app).\nIf you want to run a different version of the app you will need to replace curl/tar command in `./Dockerfile` with commands to put the app you want in `/var/www/html` directory and build a Docker image.\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/nlesc-ave/ave-rest-service/master/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "invocation": [
+    {
+      "confidence": 0.8342595589026496,
+      "result": {
+        "original_header": "Genes",
+        "type": "Text_excerpt",
+        "value": "Genes must be provided as [bigBed](http://genome.ucsc.edu/goldenPath/help/bigBed.html) formatted.\nA bigBed file can be converted from a [BED formatted](https://genome.ucsc.edu/FAQ/FAQformat.html#format1) file \n"
+      },
+      "source": "https://raw.githubusercontent.com/nlesc-ave/ave-rest-service/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.8612365744000747,
+      "result": {
+        "original_header": "Genomic features annotations",
+        "type": "Text_excerpt",
+        "value": "To convert a gff feature file to bigbed use:\n```bash\n# Download a gff file\nwget ftp://ftp.solgenomics.net/tomato_genome/microarrays_mapping/A-AFFY-87_AffyGeneChipTomatoGenome.probes_ITAG2.3genome_mapping.gff\n# Sort gff\nbedtools sort -i A-AFFY-87_AffyGeneChipTomatoGenome.probes_ITAG2.3genome_mapping.gff > A-AFFY-87_AffyGeneChipTomatoGenome.probes_ITAG2.3genome_mapping.sorted.gff\n# Convert gff to bed\ngff2bed < A-AFFY-87_AffyGeneChipTomatoGenome.probes_ITAG2.3genome_mapping.sorted.gff > A-AFFY-87_AffyGeneChipTomatoGenome.probes_ITAG2.3genome_mapping.bed\n# Fetch chrom sizes\ntwoBitInfo genome.2bit chrom.sizes\n# Convert bed to bigbed\nbedToBigBed -tab -type=bed6+4 -as=gff3.as A-AFFY-87_AffyGeneChipTomatoGenome.probes_ITAG2.3genome_mapping.bed chrom.sizes A-AFFY-87_AffyGeneChipTomatoGenome.probes_ITAG2.3genome_mapping.bb\n```\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/nlesc-ave/ave-rest-service/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.8201478428365494,
+      "result": {
+        "original_header": "Register genome",
+        "type": "Text_excerpt",
+        "value": "```bash\ndocker exec ave \\\n    avedata register \\\n    --species 'Solanum Lycopersicum' \\\n    --genome SL.2.40 \\\n    --datatype 2bit \\\n    /data/tomato/SL.2.40/genome.2bit\n``` \n"
+      },
+      "source": "https://raw.githubusercontent.com/nlesc-ave/ave-rest-service/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.8201478428365494,
+      "result": {
+        "original_header": "Register variants",
+        "type": "Text_excerpt",
+        "value": "```bash\ndocker exec ave \\\n    avedata register \\\n    --species 'Solanum Lycopersicum' \\\n    --genome SL.2.40 \\\n    --datatype variants \\\n    /data/tomato/SL.2.40/tomato_snps.bcf\n``` \n"
+      },
+      "source": "https://raw.githubusercontent.com/nlesc-ave/ave-rest-service/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.8675674026384821,
+      "result": {
+        "original_header": "Deregister",
+        "type": "Text_excerpt",
+        "value": "For example to deregister the `/data/tomato/SL.2.40/A-AFFY-87.bb` file use:\n```bash\ndocker exec ave \\\n    avedata deregister \\\n    /data/tomato/SL.2.40/A-AFFY-87.bb\n```\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/nlesc-ave/ave-rest-service/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.8681012474577674,
+      "result": {
+        "original_header": "Configuration",
+        "type": "Text_excerpt",
+        "value": "The repo contains an example config file called `settings.example.cfg`.\nCopy the example config file to `settings.cfg` and edit it. \n"
+      },
+      "source": "https://raw.githubusercontent.com/nlesc-ave/ave-rest-service/master/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "issue_tracker": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/nlesc-ave/ave-rest-service/issues"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "keywords": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": ""
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "license": [
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Apache License 2.0",
+        "spdx_id": "Apache-2.0",
+        "type": "License",
+        "url": "https://api.github.com/licenses/apache-2.0",
+        "value": "https://api.github.com/licenses/apache-2.0"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "File_dump",
+        "value": "\n                                 Apache License\n                           Version 2.0, January 2004\n                        http://www.apache.org/licenses/\n\n   TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION\n\n   1. Definitions.\n\n      \"License\" shall mean the terms and conditions for use, reproduction,\n      and distribution as defined by Sections 1 through 9 of this document.\n\n      \"Licensor\" shall mean the copyright owner or entity authorized by\n      the copyright owner that is granting the License.\n\n      \"Legal Entity\" shall mean the union of the acting entity and all\n      other entities that control, are controlled by, or are under common\n      control with that entity. For the purposes of this definition,\n      \"control\" means (i) the power, direct or indirect, to cause the\n      direction or management of such entity, whether by contract or\n      otherwise, or (ii) ownership of fifty percent (50%) or more of the\n      outstanding shares, or (iii) beneficial ownership of such entity.\n\n      \"You\" (or \"Your\") shall mean an individual or Legal Entity\n      exercising permissions granted by this License.\n\n      \"Source\" form shall mean the preferred form for making modifications,\n      including but not limited to software source code, documentation\n      source, and configuration files.\n\n      \"Object\" form shall mean any form resulting from mechanical\n      transformation or translation of a Source form, including but\n      not limited to compiled object code, generated documentation,\n      and conversions to other media types.\n\n      \"Work\" shall mean the work of authorship, whether in Source or\n      Object form, made available under the License, as indicated by a\n      copyright notice that is included in or attached to the work\n      (an example is provided in the Appendix below).\n\n      \"Derivative Works\" shall mean any work, whether in Source or Object\n      form, that is based on (or derived from) the Work and for which the\n      editorial revisions, annotations, elaborations, or other modifications\n      represent, as a whole, an original work of authorship. For the purposes\n      of this License, Derivative Works shall not include works that remain\n      separable from, or merely link (or bind by name) to the interfaces of,\n      the Work and Derivative Works thereof.\n\n      \"Contribution\" shall mean any work of authorship, including\n      the original version of the Work and any modifications or additions\n      to that Work or Derivative Works thereof, that is intentionally\n      submitted to Licensor for inclusion in the Work by the copyright owner\n      or by an individual or Legal Entity authorized to submit on behalf of\n      the copyright owner. For the purposes of this definition, \"submitted\"\n      means any form of electronic, verbal, or written communication sent\n      to the Licensor or its representatives, including but not limited to\n      communication on electronic mailing lists, source code control systems,\n      and issue tracking systems that are managed by, or on behalf of, the\n      Licensor for the purpose of discussing and improving the Work, but\n      excluding communication that is conspicuously marked or otherwise\n      designated in writing by the copyright owner as \"Not a Contribution.\"\n\n      \"Contributor\" shall mean Licensor and any individual or Legal Entity\n      on behalf of whom a Contribution has been received by Licensor and\n      subsequently incorporated within the Work.\n\n   2. Grant of Copyright License. Subject to the terms and conditions of\n      this License, each Contributor hereby grants to You a perpetual,\n      worldwide, non-exclusive, no-charge, royalty-free, irrevocable\n      copyright license to reproduce, prepare Derivative Works of,\n      publicly display, publicly perform, sublicense, and distribute the\n      Work and such Derivative Works in Source or Object form.\n\n   3. Grant of Patent License. Subject to the terms and conditions of\n      this License, each Contributor hereby grants to You a perpetual,\n      worldwide, non-exclusive, no-charge, royalty-free, irrevocable\n      (except as stated in this section) patent license to make, have made,\n      use, offer to sell, sell, import, and otherwise transfer the Work,\n      where such license applies only to those patent claims licensable\n      by such Contributor that are necessarily infringed by their\n      Contribution(s) alone or by combination of their Contribution(s)\n      with the Work to which such Contribution(s) was submitted. If You\n      institute patent litigation against any entity (including a\n      cross-claim or counterclaim in a lawsuit) alleging that the Work\n      or a Contribution incorporated within the Work constitutes direct\n      or contributory patent infringement, then any patent licenses\n      granted to You under this License for that Work shall terminate\n      as of the date such litigation is filed.\n\n   4. Redistribution. You may reproduce and distribute copies of the\n      Work or Derivative Works thereof in any medium, with or without\n      modifications, and in Source or Object form, provided that You\n      meet the following conditions:\n\n      (a) You must give any other recipients of the Work or\n          Derivative Works a copy of this License; and\n\n      (b) You must cause any modified files to carry prominent notices\n          stating that You changed the files; and\n\n      (c) You must retain, in the Source form of any Derivative Works\n          that You distribute, all copyright, patent, trademark, and\n          attribution notices from the Source form of the Work,\n          excluding those notices that do not pertain to any part of\n          the Derivative Works; and\n\n      (d) If the Work includes a \"NOTICE\" text file as part of its\n          distribution, then any Derivative Works that You distribute must\n          include a readable copy of the attribution notices contained\n          within such NOTICE file, excluding those notices that do not\n          pertain to any part of the Derivative Works, in at least one\n          of the following places: within a NOTICE text file distributed\n          as part of the Derivative Works; within the Source form or\n          documentation, if provided along with the Derivative Works; or,\n          within a display generated by the Derivative Works, if and\n          wherever such third-party notices normally appear. The contents\n          of the NOTICE file are for informational purposes only and\n          do not modify the License. You may add Your own attribution\n          notices within Derivative Works that You distribute, alongside\n          or as an addendum to the NOTICE text from the Work, provided\n          that such additional attribution notices cannot be construed\n          as modifying the License.\n\n      You may add Your own copyright statement to Your modifications and\n      may provide additional or different license terms and conditions\n      for use, reproduction, or distribution of Your modifications, or\n      for any such Derivative Works as a whole, provided Your use,\n      reproduction, and distribution of the Work otherwise complies with\n      the conditions stated in this License.\n\n   5. Submission of Contributions. Unless You explicitly state otherwise,\n      any Contribution intentionally submitted for inclusion in the Work\n      by You to the Licensor shall be under the terms and conditions of\n      this License, without any additional terms or conditions.\n      Notwithstanding the above, nothing herein shall supersede or modify\n      the terms of any separate license agreement you may have executed\n      with Licensor regarding such Contributions.\n\n   6. Trademarks. This License does not grant permission to use the trade\n      names, trademarks, service marks, or product names of the Licensor,\n      except as required for reasonable and customary use in describing the\n      origin of the Work and reproducing the content of the NOTICE file.\n\n   7. Disclaimer of Warranty. Unless required by applicable law or\n      agreed to in writing, Licensor provides the Work (and each\n      Contributor provides its Contributions) on an \"AS IS\" BASIS,\n      WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or\n      implied, including, without limitation, any warranties or conditions\n      of TITLE, NON-INFRINGEMENT, MERCHANTABILITY, or FITNESS FOR A\n      PARTICULAR PURPOSE. You are solely responsible for determining the\n      appropriateness of using or redistributing the Work and assume any\n      risks associated with Your exercise of permissions under this License.\n\n   8. Limitation of Liability. In no event and under no legal theory,\n      whether in tort (including negligence), contract, or otherwise,\n      unless required by applicable law (such as deliberate and grossly\n      negligent acts) or agreed to in writing, shall any Contributor be\n      liable to You for damages, including any direct, indirect, special,\n      incidental, or consequential damages of any character arising as a\n      result of this License or out of the use or inability to use the\n      Work (including but not limited to damages for loss of goodwill,\n      work stoppage, computer failure or malfunction, or any and all\n      other commercial damages or losses), even if such Contributor\n      has been advised of the possibility of such damages.\n\n   9. Accepting Warranty or Additional Liability. While redistributing\n      the Work or Derivative Works thereof, You may choose to offer,\n      and charge a fee for, acceptance of support, warranty, indemnity,\n      or other liability obligations and/or rights consistent with this\n      License. However, in accepting such obligations, You may act only\n      on Your own behalf and on Your sole responsibility, not on behalf\n      of any other Contributor, and only if You agree to indemnify,\n      defend, and hold each Contributor harmless for any liability\n      incurred by, or claims asserted against, such Contributor by reason\n      of your accepting any such warranty or additional liability.\n\n   END OF TERMS AND CONDITIONS\n\n   APPENDIX: How to apply the Apache License to your work.\n\n      To apply the Apache License to your work, attach the following\n      boilerplate notice, with the fields enclosed by brackets \"[]\"\n      replaced with your own identifying information. (Don't include\n      the brackets!)  The text should be enclosed in the appropriate\n      comment syntax for the file format. We also recommend that a\n      file or class name and description of purpose be included on the\n      same \"printed page\" as the copyright notice for easier\n      identification within third-party archives.\n\n   Copyright 2017 Netherlands eScience Center\n\n   Licensed under the Apache License, Version 2.0 (the \"License\");\n   you may not use this file except in compliance with the License.\n   You may obtain a copy of the License at\n\n       http://www.apache.org/licenses/LICENSE-2.0\n\n   Unless required by applicable law or agreed to in writing, software\n   distributed under the License is distributed on an \"AS IS\" BASIS,\n   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n   See the License for the specific language governing permissions and\n   limitations under the License.\n"
+      },
+      "source": "https://raw.githubusercontent.com/nlesc-ave/ave-rest-service/master/LICENSE",
+      "technique": "file_exploration"
+    }
+  ],
+  "name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "ave-rest-service"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "owner": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Organization",
+        "value": "nlesc-ave"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "programming_languages": [
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Python",
+        "size": 90978,
+        "type": "Programming_language",
+        "value": "Python"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Dockerfile",
+        "size": 711,
+        "type": "Programming_language",
+        "value": "Dockerfile"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "AngelScript",
+        "size": 516,
+        "type": "Programming_language",
+        "value": "AngelScript"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "readme_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/nlesc-ave/ave-rest-service/master/README.md"
+      },
+      "technique": "file_exploration"
+    }
+  ],
+  "releases": [
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "sverhoeven",
+          "type": "User"
+        },
+        "date_created": "2018-01-11T15:08:55Z",
+        "date_published": "2018-01-11T15:10:55Z",
+        "description": "The Allelic Variation Explorer (AVE) is a web application to visualize (clustered) single-nucleotide variants across genomes.\r\n\r\nInitial release.",
+        "html_url": "https://github.com/nlesc-ave/ave-rest-service/releases/tag/v1.0.0",
+        "name": "v1.0.0",
+        "release_id": 9197816,
+        "tag": "v1.0.0",
+        "tarball_url": "https://api.github.com/repos/nlesc-ave/ave-rest-service/tarball/v1.0.0",
+        "type": "Release",
+        "url": "https://api.github.com/repos/nlesc-ave/ave-rest-service/releases/9197816",
+        "value": "https://api.github.com/repos/nlesc-ave/ave-rest-service/releases/9197816",
+        "zipball_url": "https://api.github.com/repos/nlesc-ave/ave-rest-service/zipball/v1.0.0"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "run": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Run service",
+        "parent_header": [
+          "ave-rest-service",
+          "Develop"
+        ],
+        "type": "Text_excerpt",
+        "value": "Change to directory with `settings.cfg` file.\n\n```bash\ngunicorn -w 4 --threads 2 -t 60 -b 127.0.0.1:8080 avedata.app:app\n```\n\nIt will run the service on http://127.0.0.1:8080/ .\nThe api endpoint is at `http://127.0.0.1:8080/api/`.\nThe Swagger UI is at `http://127.0.0.1:8080/api/ui`.\n\nThis will only run the Python web service, the hosting of the application and data files is explained in the [deployment](#deployment) chapter.\n"
+      },
+      "source": "https://raw.githubusercontent.com/nlesc-ave/ave-rest-service/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Run commands",
+        "parent_header": [
+          "ave-rest-service",
+          "Develop"
+        ],
+        "type": "Text_excerpt",
+        "value": "The `avedata` command line tool expects to be run from the directory containing the `settings.cfg` file.\n\nAvailable commands:\n* deregister  Remove a filename or url from the database\n* drop_db     Drops database\n* init_db     Initializes database\n* list        List of registered files/urls in the database\n* register    Add file metadata information to the database\n* run         Run as single threaded web service\n"
+      },
+      "source": "https://raw.githubusercontent.com/nlesc-ave/ave-rest-service/master/README.md",
+      "technique": "header_analysis"
+    }
+  ],
+  "somef_missing_categories": [
+    "acknowledgement",
+    "download",
+    "requirements",
+    "contact",
+    "contributors",
+    "faq",
+    "support",
+    "executable_example"
+  ],
+  "somef_provenance": {
+    "date": "2024-10-03 23:34:59",
+    "somef_schema_version": "1.0.0",
+    "somef_version": "0.9.5"
+  },
+  "stargazers_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 1
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "type": [
+    {
+      "confidence": 0.82,
+      "result": {
+        "type": "String",
+        "value": "commandline-application"
+      },
+      "technique": "software_type_heuristics"
+    }
+  ],
+  "usage": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Demo",
+        "parent_header": [
+          "ave-rest-service",
+          "Deployment"
+        ],
+        "type": "Text_excerpt",
+        "value": "A demo Docker image with a sample dataset is available at https://hub.docker.com/r/ave2/ave-demo/ .\n"
+      },
+      "source": "https://raw.githubusercontent.com/nlesc-ave/ave-rest-service/master/README.md",
+      "technique": "header_analysis"
+    }
+  ]
+}

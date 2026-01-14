@@ -1,0 +1,491 @@
+{
+  "code_repository": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/EvolEcolGroup/mtDNAcombine"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_created": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2019-12-03T12:18:33Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_updated": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2021-11-26T23:46:11Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "description": [
+    {
+      "confidence": 0.9864023655438586,
+      "result": {
+        "original_header": "Using `mtDNAcombine`",
+        "type": "Text_excerpt",
+        "value": "This vignette describes the `mtDNAcombine` package, an `R` library designed to support comparative analyses of Bayesian Skyline Plot (BSP) population histories based on mtDNA sequence data from multiple studies.  \n`mtDNAcombine` includes functions to retrieve, align, summarise, and maniplulate sequences downloaded from GenBank, as well as generating basic BEAST2 input files.  There are also accessory functions to analyse and plot the outputs of BEAST2 runs. \nBelow is a flow diagram of the processes and steps in the `mtDNAcombine` pipeline. \n"
+      },
+      "source": "https://raw.githubusercontent.com/EvolEcolGroup/mtDNAcombine/master/README.Rmd",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9186329903142816,
+      "result": {
+        "original_header": "Creating input accession number file",
+        "type": "Text_excerpt",
+        "value": "\nTo start a project comparing mitochondrial DNA from multiple individuals, species, and studies, we first need to have a list of unique GenBank accessions to explore.   \nThese accessions can be acquired in multiple ways. A simple method would be to undertake a broad search of GenBank, e.g. open the NCBI webpage with code such as below:\n```r\nbrowseURL( \"https://www.ncbi.nlm.nih.gov/nuccore\")\n```\n \n\nThe output produced by GenBank is likely to be a '.seq' file, or, if using a list of accessions gathered in a different way (e.g. compiled by hand), a list of accessions saved in a .csv format is okay as long as there are no headers or row names.  \n\nFor this vignette we will work with a fixed set of 525 accessions in the file \"vignette_accessions.csv\" from the package. This file can be accessed from the extdata directory through the 'system.file' command (see below for an example of its usage).\n```r\npath_to_file <- system.file(\"extdata\",\"vignette_accessions.csv\", \n                            package=\"mtDNAcombine\")\n\nknitr::kable(head(read.csv(path_to_file, header = F, stringsAsFactors = T)))\n```\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/EvolEcolGroup/mtDNAcombine/master/README.Rmd",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9388475101972842,
+      "result": {
+        "original_header": "An initial sweep of available information",
+        "type": "Text_excerpt",
+        "value": "\nFirstly, we build a dataframe that contains information on all the genes / sequences associated with each accession number to explore what information is available. \nHowever, it takes a little longer to collect all the information available for >500 accessions, so, for the sake of speed and efficency, we will load a pre-created output from the `build_genbank_df` function using `vignette_accessions.csv`. \n```r\nGB_data <- read.csv(system.file(\"extdata\",\"GB_data.csv\", package=\"mtDNAcombine\"), stringsAsFactors = T)\n```\n \nWithin GenBank, the same single sequence is often associated to multiple features (e.g. 'source', 'gene', and 'CDS'). This is visible on the website, where the same sequence is found under multiple 'Feature' tabs. This means that the same sequence will also be grabbed multiple times when scraping data from GenBank, hence GB_data has 1240 observations when it was given 525 accession numbers to search.   \nIt should also be noted at this stage that `GB_data` only has data for 523 unique accession numbers, two less that the number included in the `vignette_accessions.csv`.  A key feature of the `build_genbank_df` function is that it will silently remove any RefSeq accessions included in the list of accession numbers it is given, if they are identified as duplicates.  The RefSeq collection aims to provide a collated and stable set of standard reference sequences for studies from all disciplines to build on.  Drawn from genomes already available in GenBank and other community databases, they may duplicate existing accessions and, for our purposes, need to be removed.  The `load_accessions_list` function, called within `build_genbank_df` silently removes these accessions having first checked that the 'original' accessions they duplicate are already included in the dataset.  \n"
+      },
+      "source": "https://raw.githubusercontent.com/EvolEcolGroup/mtDNAcombine/master/README.Rmd",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9633540561533905,
+      "result": {
+        "original_header": "Tidying up raw information",
+        "type": "Text_excerpt",
+        "value": "\nTo clean the dataset for later analysis, we must remove duplicated entries caused by a single sequence being associated with multiple 'Feature' tabs.  \nWe must also control for the breadth of possible names used to describe a single gene as individual studies/groups/projects upload data to GenBank using a range of possible synonyms, abbreviations, and misspellings. The first step is to standardise nomenclature across the dataframe by converting gene names to a user defined set of 'standard' nomenclatures.  \nWe do not expect the number of accessions we're exploring and number of observations to match at this stage. Indeed, in this example we see that, from the original 525 accession numbers in \"vignette_accessions.csv\", the GB_data data frame now has 690 observations.  This is because the script captures ALL genes associated with each given accession.  Every submission to GenBank receives a unique accession number but these individual submissions can contain data for anything from a single gene through to whole genome data.   \n"
+      },
+      "source": "https://raw.githubusercontent.com/EvolEcolGroup/mtDNAcombine/master/README.Rmd",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9289812968346135,
+      "result": {
+        "original_header": "Check what information is available",
+        "type": "Text_excerpt",
+        "value": "\nFirstly, for what genes are there data?\n```r\nGB_genes <- droplevels(as.data.frame(unique(GB_data$gene_name)))\n```\n \nThese data are still messy. \nWe can tidy the data a little by removing some gene names that are unlikely to be useable or comparable with other sequences e.g. removing any names that are just numbers, removing names over a certain length, and/or dropping other common unwanted patterns.\n```r\nGB_genes <- as.data.frame(GB_genes[grep(\"[[:alpha:]]\", \n                                        GB_genes$`unique(GB_data$gene_name)`), ])\n\ncolnames(GB_genes) <- \"gene_name\"\n\nGB_genes <- as.data.frame(GB_genes[!nchar(as.character(GB_genes$gene_name)) >20, ])\n\npatt <- c(\"RNA|unknown|trn|ATP|similar|central|duplicated|tandem|repeated|other|myoglobin\")\n\ncolnames(GB_genes) <- \"gene_name\"\n\nGB_genes <- droplevels(as.data.frame(GB_genes[!grepl(patt, x = GB_genes$gene_name), ]))\n\ncolnames(GB_genes) <- \"gene_name\"\n```\n\nSecondly; For what species are there data? \n```r\nGB_species <- droplevels(as.data.frame(unique(GB_data$sci_nam)))\n```\nAt the moment:\n```\n## [1] \"GB_genes has 13 unique gene names while GB_species has 6 unique species names\"\n```\n\nHowever, looking at these data in more detail shows us that there are still some spurious entries being included. For example, GB_species includes both *Motacilla alba* and *Motacilla alba alboides*, a recognised subspecies but, in this instance, data that we want to group with *Motacilla alba* more broadly.\n```\n##             Unique Names\n##           Motacilla alba\n##     Picoides tridactylus\n##        Calidris maritima\n##      Pinicola enucleator\n##  Motacilla alba alboides\n##    Carpodacus erythrinus\n```\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/EvolEcolGroup/mtDNAcombine/master/README.Rmd",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9346323630785413,
+      "result": {
+        "original_header": "Clean up the species names",
+        "type": "Text_excerpt",
+        "value": "\nAs stated previously, the amount of freedom in the formatting of descriptive information associated with GenBank submissions means that individual submissions can vary the chosen species name, including using different levels of detail for taxonomic rank. For example, some studies may use subspecies names where others choose not to. Subspecies recognition is frequently debated and sometimes we may want to group together samples with names that aren't an exact match. A 3 word name, not a 2 word scientific name, is a simple pattern to recognise subspecies and we exploit that here.  \n\nThe `check_poss_synyms` function returns a list of scientific names that are longer than 2 words and these names will be outputted as a .csv file; \"poss_synyms.csv\"\n```r\nposs_synyms <- check_poss_synyms(data = GB_data)\n```\n \nFor this example, the edited file has been called \"poss_sysnyms_updated.csv\".\n```r\nGB_data <- standardise_spp_names(data = GB_data, \n              new_names_file = system.file(\"extdata\", \"poss_synyms_updated.csv\",\n                                           package=\"mtDNAcombine\"))\n```\nAfter updating the species names samples for *Motacilla alba alboides* are now labelled as *Motacilla alba* and, therefore, group together for downstream analysis. \n```\n##           Unique Names\n##         Motacilla alba\n##   Picoides tridactylus\n##      Calidris maritima\n##    Pinicola enucleator\n##  Carpodacus erythrinus\n```\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/EvolEcolGroup/mtDNAcombine/master/README.Rmd",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9197363896153705,
+      "result": {
+        "original_header": "Filter dataframe",
+        "type": "Text_excerpt",
+        "value": "\nDifferent ways of creating the original list of accession numbers result in different types of noise being introduced to the dataframe.  To retain only sequence data from relevant genes, the dataframe needs to be filtered using the `gene_of_interest` function. \nHere we want to look at the *ND2* gene so we subset the dataframe to include information on the gene of interest\n```r\nGB_by_gene <- gene_of_interest(gene = \"ND2\", data = GB_data)\n```\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/EvolEcolGroup/mtDNAcombine/master/README.Rmd",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9152923823515042,
+      "result": {
+        "original_header": "Extract the available raw sequence data",
+        "type": "Text_excerpt",
+        "value": "\nBy simply using the `get_GB_sequence_data` function and the curated accession list, we can download raw sequence data associated with the specific gene of interest.   \nBelow is an example of code for running a little subset of just three accessions assuming synonyms had been updated (e.g. poss_synyms_updated.csv in the packages extdata file) \n```r\nmin_examp <- GB_by_gene[1:3,]\n\nupdated_synyms <- system.file(\"extdata\", \"poss_synyms_updated.csv\", \n                         package=\"mtDNAcombine\")\n\nGB_with_SeqDat <- get_GB_sequence_data(accessions_of_interest = min_examp, \n                      gene = \"ND2\", new_names_file = updated_synyms)\n```\nN.B. For the sake of computational efficency in this vignette we will load a pre-created file for the full data-set rather than running through all the 523 accessions!\n```r\nGB_with_SeqDat <-  read.csv(system.file(\"extdata\",\"GB_with_SeqDat.csv\", \n                                        package = \"mtDNAcombine\"), stringsAsFactors = T)\n```\nGB_with_SeqDat file should now be 523 observations with 8 variables. \n```r\nnrow(GB_with_SeqDat)\n## [1] 523\nncol(GB_with_SeqDat)\n## [1] 8\n```\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/EvolEcolGroup/mtDNAcombine/master/README.Rmd",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9818586566005056,
+      "result": {
+        "original_header": "Store out key data files",
+        "type": "Text_excerpt",
+        "value": "\nAt this stage it might be helpful to store summary details on the data as well as keeping all the raw, unaligned, sequence data for each species / gene combination. The `export_details` function writes summary details to .csv files while the `export_sequences` function writes out individual .fasta files for each dataset.\n```r\nexport_details(data = GB_with_SeqDat)\n\nexport_sequences(data = GB_with_SeqDat)\n```\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/EvolEcolGroup/mtDNAcombine/master/README.Rmd",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.96156012008893,
+      "result": {
+        "original_header": "Aligning the sequence data",
+        "type": "Text_excerpt",
+        "value": "\nWe have now managed to generate a set of sequences from multiple species covering one gene. However, for each species, these sequences likely come from multiple independent studies and frequently differ in the gene region they analyse.   \nPreviously, the  `export_sequences` function wrote out a .fasta file of raw, unaligned, sequence data for each species / gene combination, starting the file name with the regular expression 'FOR_ALIGNMENT'. We exploit this pattern to capture the list of file names to explore. \n```r\nalignment_file_list <- list.files(pattern=\"FOR_ALIGNMENT\")\n```\n \n\nFor each species, the sequence data needs to be aligned so that we can capture comparable regions of the genome common to each sample.  This is done within the `align_and_summarise` function using the ClustalW algorithm, removing any columns with blanks or ambiguous calls. \n"
+      },
+      "source": "https://raw.githubusercontent.com/EvolEcolGroup/mtDNAcombine/master/README.Rmd",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9425118993829246,
+      "result": {
+        "original_header": "Histogram",
+        "type": "Text_excerpt",
+        "value": "Depending on the quality/consistency of the raw sequence data, this step can result in a dramatic reduction in the number of base pairs left in the DNA string.  For example, where one or two sequences are very short, or the section of the genome sequenced is different, the overlap between data from separate studies can be very small. In some instances, removal of one or two sequences before alignment could result in a more informative data set. \nThe impact of the alignment/trimming process is summarised in a diagnostic histogram plot, offering a visual way to identify cases where it would be advantageous to look at the raw data in more detail. The histogram bars show frequency and sequence length of raw, unaligned data and the red line shows the length of the aligned sequences after cropping to the longest section common to all samples.  \nHere we see that, in the *Pinicola enucleator* dataset, the majority of samples have been heavily cropped due to the inclusion of one, shorter, sequence. In this instance, it may be worth reviewing the decision to include the single, much shorter, 450 base pair sample.  \n"
+      },
+      "source": "https://raw.githubusercontent.com/EvolEcolGroup/mtDNAcombine/master/README.Rmd",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9163935471296192,
+      "result": {
+        "original_header": "Network diagram",
+        "type": "Text_excerpt",
+        "value": "The `align_and_summarise` function also produces a haplotype network diagram which helps visualise the level of structure in a population/sample set.   \n\n![plot of chunk unnamed-chunk-12](./inst/extdata/Net_Picoides_tridactylus.png)\nHere is an example of a network diagram for data from *Picoides tridactylus*. Plots like these help to quickly flag if there are any extreme outliers in the dataset or if the population is heavily structured.  \n"
+      },
+      "source": "https://raw.githubusercontent.com/EvolEcolGroup/mtDNAcombine/master/README.Rmd",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9682402024274166,
+      "result": {
+        "original_header": "Haplotype frequency",
+        "type": "Text_excerpt",
+        "value": "In datasets that include samples from studies which have uploaded a single representative haplotype, instead of creating a new accession for every sample, an aligned sequence output file is not generated.  Instead, the papers associated with the unique haplotypes are listed in a .csv file along with the species name; the file is is written out as \"More_info_df.csv\".  \nFor each of the populations recorded in \"More_info_df.csv\", the `align_and_summarise` function also creates a file containing each accession number and a frequency column.  These files all have the regular pattern \"MAGNIFY\"\" in the file name.  Original published papers must be tracked down to confirm details of sampling frequency, new values can then be recorded in the \"freq\" column.  Once updated the file needs to be saved in the same format. In cases where sampling frequency data is not available samples must be excluded. \n\nIn this vignette-dataset accessions for *Calidris maritima*, *Motacilla alba*, and *Carpodacus erythrinus* are flagged as needing further investigation. Exploration of the original published papers suggest that data for *Motacilla alba* and *Carpodacus erythrinus* have indeed been uploaded at sampled frequency and this was essentially a \"false alarm\". Therefore, we don't want to alter this data so the \"MAGNIFY_Motacilla_alba.csv\" file and \"MAGNIFY_Carpodacus_erythrinus.csv\" can be left as it is, with a default \"freq\" column value of \"1\". \nHowever, exploration of the paper *'A review of the subspecies status of the Icelandic Purple Sandpiper Calidris maritima littoralis'* shows that only unique haplotype sequences were uploaded, rather than a new accession being created for every sample.  Therefore, this dataset needs to be manipulated to get to the original sampled frequency.  \nFor the purposes of this vignette we have created an updated \"MAGNIFY_Calidris_maritima.csv\" file (found in ../extdata/) which already contains the values for the number of times each haplotype was sampled in the population. The below code simply copies this file to the temporary working directory currently in use.\n```r\ninvisible(file.copy(from = paste0(system.file(\"extdata\", package=\"mtDNAcombine\"),\n                        \"/MAGNIFY_Calidris_maritima.csv\"), \n          to = paste0(getwd(), \"/\")))\n```\nThis file is now ready to be used with the `magnify_to_sampled_freq` function, as below.\n```r\nmagnify_file_list <- list.files(pattern=\"MAGNIFY\")\n\nmag_df <- magnify_to_sampled_freq(magnify_file_list = magnify_file_list)\n```\n \nAfter updating the frequency information the sequences are processed as before - haplotype networks are drawn and .fasta files of the aligned sequence data written out. \n\nTo keep accurate summary information of the datasets available, we now need to combine the original `info_df` and the newly created `mag_df`.  This will give an updated .csv file that contains information on all the data sets we are working with.\n```r\ninfo_df <- updating_info_df(original_df = \"Info_df.csv\", new_df = mag_df)\n```\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/EvolEcolGroup/mtDNAcombine/master/README.Rmd",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9424962151054518,
+      "result": {
+        "original_header": "Filtering by rules",
+        "type": "Text_excerpt",
+        "value": "\nData inclusion criteria will vary between studies; there will never be a \"one-size-fits-all\" set up.  Factors such as species life history, species population history, data availability, data quality, and even broadly the project aims will influence what data are informative. \nFirstly, we want to drop populations with insufficient sequence data. This includes data with insufficient number of bases, low numbers of haplotypes, low sample size.\n```r\ninfo_df <- drop_low_sample_size(info_df = info_df, min_sample = 20)\n\ninfo_df <- drop_low_haplo_number(info_df = info_df, min_haps = 6 )\n\ninfo_df <- drop_low_sequence_length(info_df = info_df, min_length = 600)\n```\n\nAfter applying these filters we are left with curated datasets from three species.  We then want to remove any extreme outliers, considered here to be single samples separated from the nearest haplotype with >30 mutations on a branch.  The function `outliers_dropped` writes out an updated version of `info_df` but doesn't return it.  Therefore we need to read in the new version from the working directory.\n```r\nwhat_gets_dropped <- outliers_dropped(max_mutations = 30, info_df = info_df)\n\ninfo_df <- read.csv(\"Info_df.csv\", stringsAsFactors = T)\n```\n \nWe want to use these processed data to set up BEAST runs.  In order to speed up the process, and reduce the opportunity for human error, we limit the amount of manual set up required by creating basic BEAUti files with the following code. These files will still require some degree of editing in the BEAUti GUI. \n\nThe dataset files have been given the prefix \"ALIGNED_\", making them easy to find. After editing (e.g. dropping outliers), any new versions of aligned data have been given the tag \"new_ALIGNED\" and should be used in preference to the original files.\n```r\naligned_files <- list.files(pattern=\"ALIGNED\")\n\n\nsuperseeded <- NULL\nfor(n in 1:length(aligned_files)){\n  if (substr(aligned_files[n],1,3)==\"new\"){\n    superseeded <- rbind(gsub(\"new_\",'',aligned_files[n]), superseeded)\n  }\n}\naligned_files <- aligned_files[!aligned_files%in%superseeded]\n```\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/EvolEcolGroup/mtDNAcombine/master/README.Rmd",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9544554770339307,
+      "result": {
+        "original_header": "Build basic xml files",
+        "type": "Text_excerpt",
+        "value": "\nOnce created, the .xml files will need to be manually edited.  For example, setting up the use of bModelTest - at the time of writing not yet an available option in the `babette` package. \n"
+      },
+      "source": "https://raw.githubusercontent.com/EvolEcolGroup/mtDNAcombine/master/README.Rmd",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.8554034823291569,
+      "result": {
+        "original_header": "Exploring outputs",
+        "type": "Text_excerpt",
+        "value": "\nOnce BEAST runs are completed we need to explore convergence, ESS values, and other metrics.   \nHere we present a pipeline for handling outputs from the software package Tracer. \nAn example BEAST .xml input file can be found in ./extdata/ND2_Carpodacus_erythrinus_BEASTinput.xml . After running this file in BEAST v2 4.6 we used Tracer v1 to format output data for export.  The resulting file is stored as ./extdata/ND2_Carpodacus_erythrinus_TracerOut \n"
+      },
+      "source": "https://raw.githubusercontent.com/EvolEcolGroup/mtDNAcombine/master/README.Rmd",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9562596427490117,
+      "result": {
+        "original_header": "Plotting",
+        "type": "Text_excerpt",
+        "value": "\nA quick look at the structure of the output from Tracer taking only complete rows (NAs can occur at the end of the file but cause issues in later processing).\n```r\ndata <-read.table(system.file(\"extdata\",\"ND2_Carpodacus_erythrinus_TracerOut\", \n                                    package = \"mtDNAcombine\"), skip=1, \n                  header=T, stringsAsFactors = T)\ndata<-data[complete.cases(data),]\nhead(data)\n```\n \nUse the file name as the title\n```r\nfile_name <- \"ND2_Carpodacus_erythrinus_TracerOut\"\nplot_title <- \"Common rosefinch\"\n```\nWe want to plot the median (log scale) as well as plotting the HPD interval as a coloured polygon.  \nIf analysing data from multiple genes it can be helpful to differentiate the plots on the basis of gene type.  Here this is done by colouring the HPD according to the gene identified in the file name.\n \n```r\nplot(log10(data[,3])~data[,1],type=\"n\",ylim=c(4.5,8),xlim=c(0,70000), yaxt=\"n\", \n     yaxs=\"i\", ylab = expression(\"Pop. Size (Log\"[10]*\")\"), xaxs=\"i\", \n     xlab = \"Time since present day (yrs)\")\naxis(2, at=c(5,6,7,8), labels = c(\"1.E5\",\"1.E6\",\"1.E7\", \"1.E8\"), las=2, adj=1,\n     cex.axis=0.82)\n\n\ngene <- substr(file_name, start = 1, stop=4)\n\nfor(i in 1:length(data[,1])-1) {\n  x<-c(data[i,1],data[i+1,1],data[i+1,1],data[i,1])\n  y<-log10(c(data[i,4],data[i+1,4],data[i+1,5],data[i,5]))\n        \n      \n      if(gene==\"cytb\"){\n         polygon(x,y,col=\"plum3\", border=\"plum3\")\n       }else{\n        polygon(x,y,col=\"darkolivegreen3\", border=\"darkolivegreen3\")\n       }\n     }\n         \n#median value as a dashed line \npoints(log10(data[,3])~data[,1],type=\"l\", lty=2, lwd=2)\n#edge the HPD interval by plotting the upper and lower 95% HPD\npoints(log10(data[,4])~data[,1],type=\"l\")\npoints(log10(data[,5])~data[,1],type=\"l\")\n        \n\ntitle(main = plot_title)\n```\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/EvolEcolGroup/mtDNAcombine/master/README.Rmd",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9765640882466272,
+      "result": {
+        "type": "Text_excerpt",
+        "value": "`mtDNAcombine` has been published in BMC Bioinformatics  alongside a code and environment capsule .  We aim to regularly review and maintain the code in this Git repository, however, if you have any issues with installation/functionality we would recommend running `mtDNAcombine` in the published CodeOcean versioned environment. \n"
+      },
+      "source": "https://raw.githubusercontent.com/EvolEcolGroup/mtDNAcombine/master/README.Rmd",
+      "technique": "supervised_classification"
+    }
+  ],
+  "download_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/EvolEcolGroup/mtDNAcombine/releases"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 1
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/EvolEcolGroup/mtDNAcombine/forks"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "EvolEcolGroup/mtDNAcombine"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_title": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": ""
+      },
+      "source": "https://raw.githubusercontent.com/EvolEcolGroup/mtDNAcombine/master/README.Rmd",
+      "technique": "regular_expression"
+    }
+  ],
+  "images": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/EvolEcolGroup/mtDNAcombine/master/./inst/extdata/hist_Pinicola_enucleator.png"
+      },
+      "source": "https://raw.githubusercontent.com/EvolEcolGroup/mtDNAcombine/master/README.Rmd",
+      "technique": "regular_expression"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/EvolEcolGroup/mtDNAcombine/master/./inst/extdata/hist_Calidris_maritima.png"
+      },
+      "source": "https://raw.githubusercontent.com/EvolEcolGroup/mtDNAcombine/master/README.Rmd",
+      "technique": "regular_expression"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/EvolEcolGroup/mtDNAcombine/master/./inst/extdata/Net_Picoides_tridactylus.png"
+      },
+      "source": "https://raw.githubusercontent.com/EvolEcolGroup/mtDNAcombine/master/README.Rmd",
+      "technique": "regular_expression"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/EvolEcolGroup/mtDNAcombine/master/./inst/extdata/common_rosefinch_BSP.png"
+      },
+      "source": "https://raw.githubusercontent.com/EvolEcolGroup/mtDNAcombine/master/README.Rmd",
+      "technique": "regular_expression"
+    }
+  ],
+  "installation": [
+    {
+      "confidence": 1.0,
+      "result": {
+        "original_header": "Using `mtDNAcombine`",
+        "type": "Text_excerpt",
+        "value": "\nIf you are running a LINUX operating system you will need to have the following system dependencies installed before attempting to install `mtDNAcombine`. In Ubuntu 18.04, run the below code in your bash shell: \n```r\nsudo apt-get update \nsudo apt-get install libmagick++-dev libudunits2-dev libgdal-dev \n  build-essential libcurl4-gnutls-dev libxml2-dev libssl-dev\n```\nBoth in Linux and Windows, you will need to install the `devtools` 'R' package:\n```r\ninstall.packages(\"devtools\")\nlibrary(devtools)\n```\nThen you will need to install `mtDNAcombine`:\n```r\ndevtools::install_github(\"EvolEcolGroup/mtDNAcombine\")\n```\nAnd finally load it:\n```r\nlibrary(mtDNAcombine)\n```\nIf you are working in a version of R <v4.0 and have issues with the installation due to `Biostrings` or `mnormt` you may need to manually install these packages (either from their .tar.gz files or via `BiocManager`) first.  This is due to older versions of these packages being removed from CRAN after the R v4.0 release. Once installed using the code below, you should be able to install `mtDNAcombine` as normal.\n```r\ninstall.packages(c(\"https://cran.r-project.org/src/contrib/Archive/mnormt/mnormt_1.5-6.tar.gz\"), \n                 repos=NULL,type=\"source\")\n\nif (!requireNamespace(\"BiocManager\", quietly = TRUE))\n    install.packages(\"BiocManager\")\nBiocManager::install(\"Biostrings\")\n```\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/EvolEcolGroup/mtDNAcombine/master/README.Rmd",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.999682155859474,
+      "result": {
+        "original_header": "An initial sweep of available information",
+        "type": "Text_excerpt",
+        "value": "```\n##          sci_nam                    gene_name position_start position_end accession_version create_date download_date\n## 1 Motacilla alba NADH dehydrogenase subunit 2              1         1041        AY681627.1 09-JUL-2005    2020-12-03\n## 2 Motacilla alba                          ND2              1         1041        AY681627.1 09-JUL-2005    2020-12-03\n## 3 Motacilla alba NADH dehydrogenase subunit 2              1         1041        AY681608.1 09-JUL-2005    2020-12-03\n## 4 Motacilla alba                          ND2              1         1041        AY681608.1 09-JUL-2005    2020-12-03\n## 5 Motacilla alba NADH dehydrogenase subunit 2              1         1041        AY681620.1 09-JUL-2005    2020-12-03\n## 6 Motacilla alba                          ND2              1         1041        AY681620.1 09-JUL-2005    2020-12-03\n``` \n"
+      },
+      "source": "https://raw.githubusercontent.com/EvolEcolGroup/mtDNAcombine/master/README.Rmd",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9999686327986221,
+      "result": {
+        "type": "Text_excerpt",
+        "value": "`mtDNAcombine` has been published in BMC Bioinformatics  alongside a code and environment capsule .  We aim to regularly review and maintain the code in this Git repository, however, if you have any issues with installation/functionality we would recommend running `mtDNAcombine` in the published CodeOcean versioned environment. \n"
+      },
+      "source": "https://raw.githubusercontent.com/EvolEcolGroup/mtDNAcombine/master/README.Rmd",
+      "technique": "supervised_classification"
+    }
+  ],
+  "invocation": [
+    {
+      "confidence": 0.8209850607242195,
+      "result": {
+        "original_header": "An initial sweep of available information",
+        "type": "Text_excerpt",
+        "value": "A quick example using the first three accession numbers from `vignette_accessions.csv` would look like this.\n```r\npath_to_file <- system.file(\"extdata\",\"min_examp_accno.csv\", \n                            package=\"mtDNAcombine\")\n\nGB_data <- build_genbank_df(accession_file_name = path_to_file)\n\nGB_data\n```\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/EvolEcolGroup/mtDNAcombine/master/README.Rmd",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.8588646950817996,
+      "result": {
+        "original_header": "Exploring outputs",
+        "type": "Text_excerpt",
+        "value": "An example BEAST .xml input file can be found in ./extdata/ND2_Carpodacus_erythrinus_BEASTinput.xml . After running this file in BEAST v2 4.6 we used Tracer v1 to format output data for export.  The resulting file is stored as ./extdata/ND2_Carpodacus_erythrinus_TracerOut \n"
+      },
+      "source": "https://raw.githubusercontent.com/EvolEcolGroup/mtDNAcombine/master/README.Rmd",
+      "technique": "supervised_classification"
+    }
+  ],
+  "issue_tracker": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/EvolEcolGroup/mtDNAcombine/issues"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "keywords": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": ""
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "logo": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/EvolEcolGroup/mtDNAcombine/master/./inst/extdata/mtDNAcombine_flow.png"
+      },
+      "source": "https://raw.githubusercontent.com/EvolEcolGroup/mtDNAcombine/master/README.Rmd",
+      "technique": "regular_expression"
+    }
+  ],
+  "name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "mtDNAcombine"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "owner": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Organization",
+        "value": "EvolEcolGroup"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "programming_languages": [
+    {
+      "confidence": 1,
+      "result": {
+        "name": "R",
+        "size": 62085,
+        "type": "Programming_language",
+        "value": "R"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "readme_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/EvolEcolGroup/mtDNAcombine/master/README.Rmd"
+      },
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/EvolEcolGroup/mtDNAcombine/master/README.md"
+      },
+      "technique": "file_exploration"
+    }
+  ],
+  "releases": [
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "EleanorFMiller",
+          "type": "User"
+        },
+        "date_created": "2019-12-03T12:22:46Z",
+        "date_published": "2019-12-03T17:35:06Z",
+        "html_url": "https://github.com/EvolEcolGroup/mtDNAcombine/releases/tag/V1.0",
+        "name": "First release",
+        "release_id": 21937392,
+        "tag": "V1.0",
+        "tarball_url": "https://api.github.com/repos/EvolEcolGroup/mtDNAcombine/tarball/V1.0",
+        "type": "Release",
+        "url": "https://api.github.com/repos/EvolEcolGroup/mtDNAcombine/releases/21937392",
+        "value": "https://api.github.com/repos/EvolEcolGroup/mtDNAcombine/releases/21937392",
+        "zipball_url": "https://api.github.com/repos/EvolEcolGroup/mtDNAcombine/zipball/V1.0"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "somef_missing_categories": [
+    "citation",
+    "acknowledgement",
+    "run",
+    "download",
+    "requirements",
+    "contact",
+    "contributors",
+    "documentation",
+    "license",
+    "usage",
+    "faq",
+    "support",
+    "identifier",
+    "has_build_file",
+    "executable_example"
+  ],
+  "somef_provenance": {
+    "date": "2024-10-06 11:41:46",
+    "somef_schema_version": "1.0.0",
+    "somef_version": "0.9.5"
+  },
+  "stargazers_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 4
+      },
+      "technique": "GitHub_API"
+    }
+  ]
+}

@@ -1,0 +1,839 @@
+{
+  "code_repository": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/drbergman/PhysiPKPD"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_created": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2021-07-29T22:38:26Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_updated": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2024-09-21T14:43:38Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "description": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "a module template for drug treatment in PhysiCell"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 0.9410384363378362,
+      "result": {
+        "original_header": "PK models",
+        "type": "Text_excerpt",
+        "value": "An `enabled=\"true\"` attribute is required to turn on the PK model. \n### PK models\nThere are four available `model`'s: `Constant`, `1C`, `2C`, and `SBML`[^sbml].\nAn example template for each is provided [below](#pk_templates).\nFor each `model`, the `circulation_concentration` of the PK model is what interacts with the microenvironment.\nSpecifically, any Dirichlet node for `S` is set as `circulation_concentration x biot_number`.\nThe `biot_number` is thus just the factor dropoff in substrate concentration from the blood to the perivascular niche. \n| Parameter | Description | If Missing |\n| :-- | :-- | :-- |\n| `model` | Defines the PK model used for the substrate | Error\n| `biot_number` | Ratio of substrate concentration on boundary of microenvironment (Dirichlet condition) and concentration in systemic circulation | Set to `1.0` |\n<p align=\"center\">\n    <b>Table:</b> XML elements for all PK models\n</p>\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/drbergman/PhysiPKPD/main/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9489895740186026,
+      "result": {
+        "original_header": "`1C` model <a name=\"1C\"></a>",
+        "type": "Text_excerpt",
+        "value": "where $\\lambda$ is the elimination rate of the `circulation_concentration`, $C$.\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/drbergman/PhysiPKPD/main/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9552964028600365,
+      "result": {
+        "original_header": "`2C` model",
+        "type": "Text_excerpt",
+        "value": "where $\\lambda$ and $C$ are as [above](#1C), $P$ is the concentration in a peripheral compartment, though not the PhysiCell microenvironment.\nThe intercompartmental clearance rates, $k_{12}$ and $k_{21}$, define the exchange rate between these compartments while $R$ is the ratio of the compartmental volumes: $V_C/V_P$. \n| Parameter | Models | Description | If Missing |\n| :-- | :-: | :-- | :-- |\n| `elimination_rate` $(\\lambda)$ | `1C`,`2C` | Linear elimination rate in central compartment (in mintues<sup>-1</sup>) | Error |\n| `volume_ratio` $(R = V_1/V_2 = V_C/V_P)$ | `2C` | Ratio of central compartment to periphery compartment | Error for `2C` |\n| `k12` $(k_{12})$ | `2C` | Rate of change in concentration in central compartment due to distribution (in minutes<sup>-1</sup>) | Error for `2C` |\n| `k21` $(k_{21})$ | `double` | Rate of change in concentration in periphery compartment due to redistribution (in minutes<sup>-1</sup>) | Error for `2C` | \n\n<p align=\"center\">\n    <b>Table:</b> PK parameters for `1C` and `2C` models\n</p>\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/drbergman/PhysiPKPD/main/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.8926055713742913,
+      "result": {
+        "original_header": "`SBML` model",
+        "type": "Text_excerpt",
+        "value": "Any SBML-defined ODE with one state variable named `circulation_concentration` can be used for a PK model as well.\nPlace the file in the `./config/` folder.\nIf `sbml_filename` is not set, PhysiPKPD will look for `./config/PK_default.xml` to apply. \n"
+      },
+      "source": "https://raw.githubusercontent.com/drbergman/PhysiPKPD/main/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9813723503253123,
+      "result": {
+        "original_header": "Dosing schedules",
+        "type": "Text_excerpt",
+        "value": "Every PK model requires a dosing schedule to achieve nonzero `circulation_concentration`.\nFor `SBML` models, these must be set as events in the SBML file.\nFor `1C` and `2C` models, these can be set either with parameters of a CSV file.\nThis is set with the `schedule` element and its attribute `format`, set to either `parameters` or `csv`.\nSee the [`1C` template](#1c_template) for an example using `parameters`, and see the [`2C` template](#2c_template) for an example using `csv`. \nFor `Constant` models, use a CSV in the same format as the `1C` and `2C` models, i.e., times in column one and values in column two.\nIn this case, the values are what the circulation compartment concentration is set to rather than the amount added to that compartment.\nIt will remain at that value indefinitely, so to turn \"off\" the substrate, add a (time, value) pair of (t<sub>off</sub>, 0).\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/drbergman/PhysiPKPD/main/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9532318944011142,
+      "result": {
+        "original_header": "Dosing parameters",
+        "type": "Text_excerpt",
+        "value": "Two types of doses can be set this way, loading doses and regular doses.\nThe number of loading doses, `loading_doses`, determines how many loading doses are given before regular doses.\nThe total number of doses, loading *and* regular, is set by `total_doses`.\nLoading doses are given first, then regular doses.\nIf `loading_doses` $>$ `total_doses`, then `total_doses` of loading doses are given and no regular doses.\nThe time between any consecutive doses, loading or regular, is `dose_interval`.\nThe `units` attribute of `dose_interval` can be set to `min`, `hours`, or `days`.\nIf none is supplied, `min` is used.\nThe time of the first dose is given by `first_dose_time` which can also use the `units` attribute exactly like `dose_interval`.\nThe dose given on a loading dose is set by `loading_dose` and on a regular dose by `regular_dose`. \n| Parameter | Description | If Missing |\n| :-- | :-- | :-- |\n| `total_doses`| Total number of doses to give including loading doses | Error |\n| `loading_doses` | Number of loading doses to give before switching to regular doses | Set to `0` |\n| `regular_dose` | Increase in concentration in central compartment after a regular dose | If `total_doses`>`loading_doses`, throws an error |\n| `loading_dose` | Increase in concentration in central compartment after a loading dose | If `loading_doses`>0, throws an error |\n| `first_dose_time` | Time of first dose if given at fixed time (in `units=\"units\"`) | Set to `current_time` |\n| `dose_interval` | Time between successive doses, loading or regular (in `units=\"units\"`) | If `total_doses`>1, throws an error |\n<p align=\"center\">\n    <b>Table:</b> Dosing parameters\n</p>\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/drbergman/PhysiPKPD/main/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9670788399789595,
+      "result": {
+        "original_header": "Dosing by CSV <a name=\"csv_dosing\"></a>",
+        "type": "Text_excerpt",
+        "value": "If the `format` attribute in `schedule` is set to `\"csv\"`, PhysiPKPD will look for the file `./config/S_dose_schedule.csv` to define the dosing schedule.\nAlternatively, you can specify the path similar to the `cell_positions` and `cell_rules` files by supplying a `folder` and `filename` (see the [2C template](#2c_template)).\nThis file consists of two columns: time of dose (min), dose amount.\nNo header row is needed.\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/drbergman/PhysiPKPD/main/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9604923590224381,
+      "result": {
+        "original_header": "PhysiCell PK parameters",
+        "type": "Text_excerpt",
+        "value": "You can also set the following parameters in `microenvironment_setup` for each substrate:\n| Parameter | Description |\n| :--| --- |\n| `diffusion_coefficient` | Diffusion rate in the microenvironment |\n| `decay_rate` | Rate of decay in the microenvironment |\n<p align=\"center\">\n    <b>Table:</b> PK parameters in PhysiCell\n</p>\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/drbergman/PhysiPKPD/main/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9425410314526811,
+      "result": {
+        "original_header": "PD models",
+        "type": "Text_excerpt",
+        "value": "### PD models\nTwo similar models are supplied for PD, both using the principle of Area Under the Curve or AUC.\nOne uses the AUC of the internalized *concentration*, `AUC`, and the other uses the AUC of the internalized *amount*, `AUC_amount`.\nPhysiPKPD will turn on `track_internalized_substrates` for you if it detects a PD model.\nWhen using `AUC`, PhysiPKPD divides the internalized amount that PhysiCell tracks by the cell's current volume to determine the initial condition for $A$.\nBoth update according to the following differential equation: \nwhere $A$ is the internalized quantity, amount or concentration, and $D$ is the accumulated damage or AUC[^auc_no_par].\nThe internalized quantity, $A$, is metabolized at a rate $m$, damage is repaired with linear rate $r_1$ and constant rate $r_0$. \n[^auc_no_par]: Because $D$ is measuring the AUC, the coefficient for $A$ in $D'$ is fixed to $1$. That is, $D$ has units amount x min or concentration x min, depending on the model used. \n| Parameter | Description | If Missing |\n| :-- | :-- | :-- |\n| `model` | Defines the PD model used for the substrate | Set to `AUC` |\n| `metabolism_rate` $(m)$ | Rate of elimination of `S` from inside a cell (in minutes<sup>-1</sup>) | Error |\n| `linear_repair_rate` $(r_1)$ | First-order elimination rate of damage from `S` (in minutes<sup>-1</sup>) | Error |\n| `constant_repair_rate` $(r_0)$ | Zero-order elimination rate of damage from `S` (in damage per minute) | Error |\n<a name=\"tab:pd_pars\">\n<p align=\"center\">\n    <b>Table:</b> XML elements for all PD models\n</p>\n</a> \nLet us know if you would like to see a different PD model included.\nUnlike PK dynamics, integration with SBML solvers is not implemented.\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/drbergman/PhysiPKPD/main/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9854636674404659,
+      "result": {
+        "original_header": "The damage variable, `S_damage`",
+        "type": "Text_excerpt",
+        "value": "If a substrate, `S`, affects any cell type via a PD model, **every** cell type **must** include `custom_data//S_damage` in its `custom_data`.\nThis is where the damage, $D$, above is stored and accessed for affecting cell behavior.\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/drbergman/PhysiPKPD/main/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.926797458597473,
+      "result": {
+        "original_header": "Mechanisms of action",
+        "type": "Text_excerpt",
+        "value": "The effect of the PD model on the cell type is no longer defined by PhysiPKPD.\nInstead, you must supply rules that define how each cell type is affected by each PD substrate, if at all.\nThe intention of PhysiPKPD is that users will use the signal `custom:S_damage` to alter cell phenotype via the rules.\nWe recommend using PhysiCell-Studio to help generate a rules file.\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/drbergman/PhysiPKPD/main/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9810671457652635,
+      "result": {
+        "original_header": "Precomputation <a name=\"precomputation\"></a>",
+        "type": "Text_excerpt",
+        "value": "PhysiPKPD currently requires all PD models to use precomputation, which speeds up calculations.\nThis relies on two assumptions: homogeneity of response to `S` within a given cell type and that the same amount of simulation time passes between updates.\nThe latter is assured by having the time step be a multiple of `diffusion_dt`.\nThe former is currently imposed by how PhysiPKPD uses the [PD parameters](#tab:pd_pars) uniformly for all cells within a cell type.\nIf you want these parameters to vary by cells *within* a cell type, that is not currently supported. \n| Parameter | Description | If Missing |\n| :-- | :-- | :-- |\n| `dt` | Sets the time interval between PD updates (in minutes) | Set to `mechanics_dt` |\n| `precompute` | Boolean for precomputations | **Must be** `true` |\n<a name=\"tab:pd__optional_pars\">\n<p align=\"center\">\n    <b>Table:</b> Optional XML elements for all PD models\n</p>\n</a>\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/drbergman/PhysiPKPD/main/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "download": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "...by downloading PhysiPKPD and adding to a working PhysiCell directory <a name=\"DL\"></a>",
+        "parent_header": [
+          "PhysiPKPD",
+          "Getting started..."
+        ],
+        "type": "Text_excerpt",
+        "value": "1. Download the repository and unzip the file.\n2. Move the folder `PhysiPKPD/addons/PhysiPKPD` into `PhysiCell/addons/`\n3. Move the folder `PhysiPKPD/sample_projects_phsyipkpd` into `PhysiCell`\n4. Open `PhysiCell/sample_projects/Makefile-default` (the one that `make reset` will put it in the main PhysiCell directory)\n5. Add the text from `PhysiCell/addons/PhysiPKPD/Makefile-PhysiPKPD_Addendum` to `PhysiCell/sample_projects/Makefile-default` (anywhere should work, perhaps best around line 195 at the end of the other sample projects)\n"
+      },
+      "source": "https://raw.githubusercontent.com/drbergman/PhysiPKPD/main/README.md",
+      "technique": "header_analysis"
+    }
+  ],
+  "download_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/drbergman/PhysiPKPD/releases"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 5
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/drbergman/PhysiPKPD/forks"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "drbergman/PhysiPKPD"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_title": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "PhysiPKPD"
+      },
+      "source": "https://raw.githubusercontent.com/drbergman/PhysiPKPD/main/README.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "installation": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Setting PD timesteps",
+        "parent_header": [
+          "PhysiPKPD",
+          "Pharmacodynamics",
+          "Optional PD parameters"
+        ],
+        "type": "Text_excerpt",
+        "value": "By default, PhysiPKPD uses the `mechanics_dt` set in the configuration file to determine how often to update each PD model.\nYou can change this by adding a `PD//substrate//dt` element with the desired time in minutes.\nFor precomputation purposes, see [below](#precomputation), this time step *must* be a multiple of `diffusion_dt`.\n"
+      },
+      "source": "https://raw.githubusercontent.com/drbergman/PhysiPKPD/main/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 0.999746232695559,
+      "result": {
+        "original_header": "PK models",
+        "type": "Text_excerpt",
+        "value": "[^sbml]: To use an SBML-defined PK model, you must have libRoadRunner installed.\nIf you can run the `sample_projects_intracellular/ode` projects, you are ready to run these PhysiPKPD models. \n"
+      },
+      "source": "https://raw.githubusercontent.com/drbergman/PhysiPKPD/main/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9849158879326717,
+      "result": {
+        "original_header": "PK templates <a name=\"pk_templates\"></a>",
+        "type": "Text_excerpt",
+        "value": "Place any of the following within the `variable` element:\n```\n<microenvironment_setup>\n   <variable name=\"PKPD_D1\" units=\"dimensionless\" ID=\"0\">\n      ...\n      </Dirichlet_options>\n\n      <--! Place PK model here -->\n\n   </variable>\n   ...\n</microenvironment_setup>\n```\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/drbergman/PhysiPKPD/main/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "invocation": [
+    {
+      "confidence": 0.8150188706675273,
+      "result": {
+        "original_header": "`SBML` model",
+        "type": "Text_excerpt",
+        "value": "| Parameter | Description | If Missing |\n| :-- | :-- | :-- |\n| `sbml_folder` | Folder containing SBML file, e.g. `./config` | Set to `./config` |\n| `sbml_filename` | Filename of SBML file, e.g. `PK_default.xml` | Set to `PK_default.xml` |\n<p align=\"center\">\n    <b>Table:</b> PK parameters for `SBML` models\n</p>\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/drbergman/PhysiPKPD/main/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9397942584718607,
+      "result": {
+        "original_header": "`Constant` template <a name=\"constant_template\"></a>",
+        "type": "Text_excerpt",
+        "value": "```\n<PK enabled=\"true\">\n    <model>Constant</model>\n    <schedule format=\"csv\">\n        <folder>./config</folder>\n        <filename>S_dose_schedule.csv</filename>\n    </schedule>\n    <biot_number>1</biot_number>\n</PK>\n```\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/drbergman/PhysiPKPD/main/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9176585789038938,
+      "result": {
+        "original_header": "`2C` template <a name=\"2c_template\"></a>",
+        "type": "Text_excerpt",
+        "value": "```\n<PK enabled=\"true\">\n    <model>2C</model>\n    <schedule format=\"csv\">\n        <folder>./config</folder>\n        <filename>S_dose_schedule.csv</filename>\n    </schedule>\n    <elimination_rate units=\"1/min\">0.0027</elimination_rate>\n    <k12 units=\"1/min\">0.0048</k12>\n    <k21 units=\"1/min\">.0048</k21>\n    <volume_ratio>1</volume_ratio>\n    <biot_number>1</biot_number>\n</PK>\n```\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/drbergman/PhysiPKPD/main/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.8550027530324478,
+      "result": {
+        "original_header": "`SBML` template",
+        "type": "Text_excerpt",
+        "value": "```\n<PK enabled=\"true\">\n    <model>SBML</model>\n    <sbml_folder>./config</sbml_filename>\n    <sbml_filename>PK_default.xml</sbml_filename>\n    <biot_number>1</biot_number>\n</PK>\n```\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/drbergman/PhysiPKPD/main/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.8739744216374709,
+      "result": {
+        "original_header": "PD template <a name=\"pd_templates\"></a>",
+        "type": "Text_excerpt",
+        "value": "Place the following within the `cell_definition` element:\n```\n<cell_definitions>\n   <cell_definition name=\"PKPD_cell\" ID=\"0\">\n      ...\n      </phenotype>\n\n      <--! Place PD model(s) here -->\n\n      </cell_definition>\n   ...\n</cell_definitions>\n```\n```\n<PD>\n    <substrate name=\"PKPD_D1\">\n        <model>AUC</model>\n        <metabolism_rate>0.05</metabolism_rate>\n        <constant_repair_rate>5e3</constant_repair_rate>\n        <linear_repair_rate>2e-2</linear_repair_rate>\n        <precompute>true</precompute>\n        <dt>0.1</dt>\n    </substrate>\n    <substrate name=\"PKPD_D2\">\n        <model>AUC</model>\n        <metabolism_rate>0.05</metabolism_rate>\n        <constant_repair_rate>5e3</constant_repair_rate>\n        <linear_repair_rate>2e-2</linear_repair_rate>\n        <precompute>true</precompute>\n        <dt>0.1</dt>\n    </substrate>\n</PD>\n```\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/drbergman/PhysiPKPD/main/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "issue_tracker": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/drbergman/PhysiPKPD/issues"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "keywords": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": ""
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "license": [
+    {
+      "confidence": 1,
+      "result": {
+        "name": "MIT License",
+        "spdx_id": "MIT",
+        "type": "License",
+        "url": "https://api.github.com/licenses/mit",
+        "value": "https://api.github.com/licenses/mit"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "File_dump",
+        "value": "MIT License\n\nCopyright (c) 2022 Daniel Bergman\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.\n"
+      },
+      "source": "https://raw.githubusercontent.com/drbergman/PhysiPKPD/main/LICENSE",
+      "technique": "file_exploration"
+    }
+  ],
+  "name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "PhysiPKPD"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "owner": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "User",
+        "value": "drbergman"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "programming_languages": [
+    {
+      "confidence": 1,
+      "result": {
+        "name": "C++",
+        "size": 276816,
+        "type": "Programming_language",
+        "value": "C++"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Makefile",
+        "size": 70009,
+        "type": "Programming_language",
+        "value": "Makefile"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Component Pascal",
+        "size": 40462,
+        "type": "Programming_language",
+        "value": "Component Pascal"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Python",
+        "size": 20226,
+        "type": "Programming_language",
+        "value": "Python"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "C",
+        "size": 109,
+        "type": "Programming_language",
+        "value": "C"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "readme_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/drbergman/PhysiPKPD/main/README.md"
+      },
+      "technique": "file_exploration"
+    }
+  ],
+  "releases": [
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "drbergman",
+          "type": "User"
+        },
+        "date_created": "2024-08-21T12:44:21Z",
+        "date_published": "2024-08-21T12:45:52Z",
+        "description": "Fully handle all edge cases in PD precomputations to protect against divisions by 0.\r\n\r\n**Full Changelog**: https://github.com/drbergman/PhysiPKPD/compare/v1.1.0...v1.1.1",
+        "html_url": "https://github.com/drbergman/PhysiPKPD/releases/tag/v1.1.1",
+        "name": "Most robust PD precompuations",
+        "release_id": 171264168,
+        "tag": "v1.1.1",
+        "tarball_url": "https://api.github.com/repos/drbergman/PhysiPKPD/tarball/v1.1.1",
+        "type": "Release",
+        "url": "https://api.github.com/repos/drbergman/PhysiPKPD/releases/171264168",
+        "value": "https://api.github.com/repos/drbergman/PhysiPKPD/releases/171264168",
+        "zipball_url": "https://api.github.com/repos/drbergman/PhysiPKPD/zipball/v1.1.1"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "drbergman",
+          "type": "User"
+        },
+        "date_created": "2024-08-20T21:14:58Z",
+        "date_published": "2024-08-20T21:17:30Z",
+        "description": "Update to handle changes to PhysiCell v1.14.0\r\n\r\nAlso, handle 0 linear repair rate.\r\n\r\n**Full Changelog**: https://github.com/drbergman/PhysiPKPD/compare/v1.0.10...v1.1.0",
+        "html_url": "https://github.com/drbergman/PhysiPKPD/releases/tag/v1.1.0",
+        "name": "Prepare for PC v1.14.0",
+        "release_id": 171157373,
+        "tag": "v1.1.0",
+        "tarball_url": "https://api.github.com/repos/drbergman/PhysiPKPD/tarball/v1.1.0",
+        "type": "Release",
+        "url": "https://api.github.com/repos/drbergman/PhysiPKPD/releases/171157373",
+        "value": "https://api.github.com/repos/drbergman/PhysiPKPD/releases/171157373",
+        "zipball_url": "https://api.github.com/repos/drbergman/PhysiPKPD/zipball/v1.1.0"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "drbergman",
+          "type": "User"
+        },
+        "date_created": "2024-05-20T01:45:12Z",
+        "date_published": "2024-05-20T01:46:39Z",
+        "description": "See template for how to set the folder for SBML files now. They no longer need to be in the config folder.\r\n**Full Changelog**: https://github.com/drbergman/PhysiPKPD/compare/v1.0.9...v1.0.10",
+        "html_url": "https://github.com/drbergman/PhysiPKPD/releases/tag/v1.0.10",
+        "name": "Set path for SBML files",
+        "release_id": 156438826,
+        "tag": "v1.0.10",
+        "tarball_url": "https://api.github.com/repos/drbergman/PhysiPKPD/tarball/v1.0.10",
+        "type": "Release",
+        "url": "https://api.github.com/repos/drbergman/PhysiPKPD/releases/156438826",
+        "value": "https://api.github.com/repos/drbergman/PhysiPKPD/releases/156438826",
+        "zipball_url": "https://api.github.com/repos/drbergman/PhysiPKPD/zipball/v1.0.10"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "drbergman",
+          "type": "User"
+        },
+        "date_created": "2024-05-09T15:50:18Z",
+        "date_published": "2024-05-09T15:54:21Z",
+        "description": "Now can set the path to the PK dosing schedule in the schedule element as follows:\r\n```\r\n<schedule format=\"csv\">\r\n  <folder>./config</folder>\r\n  <filename>S_dose_schedule.csv</filename>\r\n</schedule>\r\n```\r\nReplace `./config` and `S_dose_schedule.csv` with your path info.\r\n**Full Changelog**: https://github.com/drbergman/PhysiPKPD/compare/v1.0.8...v1.0.9",
+        "html_url": "https://github.com/drbergman/PhysiPKPD/releases/tag/v1.0.9",
+        "name": "Set path to csv dose schedule for PK",
+        "release_id": 154969851,
+        "tag": "v1.0.9",
+        "tarball_url": "https://api.github.com/repos/drbergman/PhysiPKPD/tarball/v1.0.9",
+        "type": "Release",
+        "url": "https://api.github.com/repos/drbergman/PhysiPKPD/releases/154969851",
+        "value": "https://api.github.com/repos/drbergman/PhysiPKPD/releases/154969851",
+        "zipball_url": "https://api.github.com/repos/drbergman/PhysiPKPD/zipball/v1.0.9"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "drbergman",
+          "type": "User"
+        },
+        "date_created": "2024-05-06T13:01:19Z",
+        "date_published": "2024-05-06T13:57:55Z",
+        "description": "Now can set constant PKs. Using a CSV file as before for 1C and 2C models, specify the times at which the circulation concentration changes, i.e. the times at which the Dirichlet conditions change. The first column of the csv is the times the concentration changes. The second column is the value it changes to. The concentration will stay fixed at that value until the next time it is set.\r\n\r\n**Full Changelog**: https://github.com/drbergman/PhysiPKPD/compare/v1.0.7...v1.0.8",
+        "html_url": "https://github.com/drbergman/PhysiPKPD/releases/tag/v1.0.8",
+        "name": "Constant PKs",
+        "release_id": 154411833,
+        "tag": "v1.0.8",
+        "tarball_url": "https://api.github.com/repos/drbergman/PhysiPKPD/tarball/v1.0.8",
+        "type": "Release",
+        "url": "https://api.github.com/repos/drbergman/PhysiPKPD/releases/154411833",
+        "value": "https://api.github.com/repos/drbergman/PhysiPKPD/releases/154411833",
+        "zipball_url": "https://api.github.com/repos/drbergman/PhysiPKPD/zipball/v1.0.8"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "drbergman",
+          "type": "User"
+        },
+        "date_created": "2024-01-10T01:07:21Z",
+        "date_published": "2024-01-10T01:18:24Z",
+        "description": "- Fix bug in displaying studio commands for Windows\r\n- Fix bug in deleting temporary makefile\r\n\r\n**Full Changelog**: https://github.com/drbergman/PhysiPKPD/compare/v1.0.6...v1.0.7",
+        "html_url": "https://github.com/drbergman/PhysiPKPD/releases/tag/v1.0.7",
+        "name": "Minor bug fixes",
+        "release_id": 136417035,
+        "tag": "v1.0.7",
+        "tarball_url": "https://api.github.com/repos/drbergman/PhysiPKPD/tarball/v1.0.7",
+        "type": "Release",
+        "url": "https://api.github.com/repos/drbergman/PhysiPKPD/releases/136417035",
+        "value": "https://api.github.com/repos/drbergman/PhysiPKPD/releases/136417035",
+        "zipball_url": "https://api.github.com/repos/drbergman/PhysiPKPD/zipball/v1.0.7"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "drbergman",
+          "type": "User"
+        },
+        "date_created": "2024-01-08T15:31:01Z",
+        "date_published": "2024-01-08T15:34:56Z",
+        "description": "**Full Changelog**: https://github.com/drbergman/PhysiPKPD/compare/v1.0.5...v1.0.6\r\n\r\nFirst search for the lines to be added before committing to adding them.",
+        "html_url": "https://github.com/drbergman/PhysiPKPD/releases/tag/v1.0.6",
+        "name": "More protections in editing PhysiCell files",
+        "release_id": 136200357,
+        "tag": "v1.0.6",
+        "tarball_url": "https://api.github.com/repos/drbergman/PhysiPKPD/tarball/v1.0.6",
+        "type": "Release",
+        "url": "https://api.github.com/repos/drbergman/PhysiPKPD/releases/136200357",
+        "value": "https://api.github.com/repos/drbergman/PhysiPKPD/releases/136200357",
+        "zipball_url": "https://api.github.com/repos/drbergman/PhysiPKPD/zipball/v1.0.6"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "drbergman",
+          "type": "User"
+        },
+        "date_created": "2024-01-08T15:04:09Z",
+        "date_published": "2024-01-08T15:08:06Z",
+        "description": "- return meaningful messages if `add_physipkpd.py` is supplied with a missing directory\r\n- puts `addons` in if missing\r\n- handles if `main.cpp` is not found when `add_physipkpd.py`-ing with error message\r\n- better print statements for how to run studio afterwards",
+        "html_url": "https://github.com/drbergman/PhysiPKPD/releases/tag/v1.0.5",
+        "name": "Error handling in get_ and add_",
+        "release_id": 136195961,
+        "tag": "v1.0.5",
+        "tarball_url": "https://api.github.com/repos/drbergman/PhysiPKPD/tarball/v1.0.5",
+        "type": "Release",
+        "url": "https://api.github.com/repos/drbergman/PhysiPKPD/releases/136195961",
+        "value": "https://api.github.com/repos/drbergman/PhysiPKPD/releases/136195961",
+        "zipball_url": "https://api.github.com/repos/drbergman/PhysiPKPD/zipball/v1.0.5"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "drbergman",
+          "type": "User"
+        },
+        "date_created": "2024-01-06T20:38:35Z",
+        "date_published": "2024-01-06T20:45:43Z",
+        "description": "Better functioning of get_physipkpd.py and add_physipkpd.py scripts. They're also now easier to read and cleaner.\r\n\r\nUse the following to start a new PhysiPKPD project or add PhysiPKPD to an existing project:\r\n```\r\npython get_physipkpd.py --dir path/to/project/dir --studio\r\n```\r\n```\r\npython add_physipkpd.py path/to/project/dir --studio\r\n```",
+        "html_url": "https://github.com/drbergman/PhysiPKPD/releases/tag/1.0.4",
+        "name": "Improve get_ and add_ scripts",
+        "release_id": 136074600,
+        "tag": "1.0.4",
+        "tarball_url": "https://api.github.com/repos/drbergman/PhysiPKPD/tarball/1.0.4",
+        "type": "Release",
+        "url": "https://api.github.com/repos/drbergman/PhysiPKPD/releases/136074600",
+        "value": "https://api.github.com/repos/drbergman/PhysiPKPD/releases/136074600",
+        "zipball_url": "https://api.github.com/repos/drbergman/PhysiPKPD/zipball/1.0.4"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "drbergman",
+          "type": "User"
+        },
+        "date_created": "2024-01-06T03:55:57Z",
+        "date_published": "2024-01-06T04:02:19Z",
+        "description": "Using `add_physipkpd.py`, you can quickly add PhysiPKPD to an existing PhysiCell project. If you have a project in `path-to-project`, then run this script as\r\n```\r\npython add_physipkpd.py path-to-project --studio\r\n```\r\nThe output will guide you to editing it directly or with studio. Make sure you use the correct config file though!",
+        "html_url": "https://github.com/drbergman/PhysiPKPD/releases/tag/v1.0.2",
+        "name": "Add PhysiPKPD to an existing PhysiCell project",
+        "release_id": 136045167,
+        "tag": "v1.0.2",
+        "tarball_url": "https://api.github.com/repos/drbergman/PhysiPKPD/tarball/v1.0.2",
+        "type": "Release",
+        "url": "https://api.github.com/repos/drbergman/PhysiPKPD/releases/136045167",
+        "value": "https://api.github.com/repos/drbergman/PhysiPKPD/releases/136045167",
+        "zipball_url": "https://api.github.com/repos/drbergman/PhysiPKPD/zipball/v1.0.2"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "drbergman",
+          "type": "User"
+        },
+        "date_created": "2024-01-05T21:51:32Z",
+        "date_published": "2024-01-05T21:55:17Z",
+        "description": "A python script to set up your own PhysiPKPD project. Download the script to a directory you want to hold your PhysiPKPD project and run it from there with `python get_physipkpd.py`. It will not touch any of your current files or folders, but will download new PhysiCell and PhysiPKPD copies and combine into a single folder. Follow instructions in output to go about making a project.",
+        "html_url": "https://github.com/drbergman/PhysiPKPD/releases/tag/v1.0.1",
+        "name": "Script setup",
+        "release_id": 136029408,
+        "tag": "v1.0.1",
+        "tarball_url": "https://api.github.com/repos/drbergman/PhysiPKPD/tarball/v1.0.1",
+        "type": "Release",
+        "url": "https://api.github.com/repos/drbergman/PhysiPKPD/releases/136029408",
+        "value": "https://api.github.com/repos/drbergman/PhysiPKPD/releases/136029408",
+        "zipball_url": "https://api.github.com/repos/drbergman/PhysiPKPD/zipball/v1.0.1"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "drbergman",
+          "type": "User"
+        },
+        "date_created": "2024-01-05T15:53:37Z",
+        "date_published": "2024-01-05T20:58:22Z",
+        "description": "PhysiPKPD now integrates with PhysiCell's rules grammar and has PhysiCell-Studio [support](https://github.com/drbergman/PhysiCell-Studio/releases/tag/studio-pkpd-v1.0.0).\r\n\r\nTo get started with your own project do the following:\r\n* Download the attached python script\r\n* Rename to `get_physipkpd.py`\r\n* Run `python get_physipkpd.py` (will set up a folder called PhysiPKPD_Project that is ready to use with PhysiPKPD from its development-rules-integration-studio-version branch that integrates with this release)\r\n* Run `make pkpd-template` to load up the template project\r\n* Run python `[path-to-this-studio] -c ./config/pkpd_model.xml -e pkpd_model --pkpd`\r\n\r\n[get_physipkpd.txt](https://github.com/drbergman/PhysiPKPD/files/13846496/get_physipkpd.txt)",
+        "html_url": "https://github.com/drbergman/PhysiPKPD/releases/tag/v1.0.0",
+        "name": "PhysiPKPD: rules and studio integration",
+        "release_id": 136024046,
+        "tag": "v1.0.0",
+        "tarball_url": "https://api.github.com/repos/drbergman/PhysiPKPD/tarball/v1.0.0",
+        "type": "Release",
+        "url": "https://api.github.com/repos/drbergman/PhysiPKPD/releases/136024046",
+        "value": "https://api.github.com/repos/drbergman/PhysiPKPD/releases/136024046",
+        "zipball_url": "https://api.github.com/repos/drbergman/PhysiPKPD/zipball/v1.0.0"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "drbergman",
+          "type": "User"
+        },
+        "date_created": "2022-09-05T16:50:42Z",
+        "date_published": "2022-09-05T18:16:34Z",
+        "description": "PhysiPKPD samples and template projects now create legend in main.cpp. This removes issue causing PMB studio to stall while waiting for legend to be created.\r\n\r\n**Full Changelog**: https://github.com/drbergman/PhysiPKPD/compare/v0.1.0-beta...v0.1.1-beta",
+        "html_url": "https://github.com/drbergman/PhysiPKPD/releases/tag/v0.1.1-beta",
+        "name": "PhysiPKPD: Limited Beta Release v0.1.1",
+        "release_id": 76313879,
+        "tag": "v0.1.1-beta",
+        "tarball_url": "https://api.github.com/repos/drbergman/PhysiPKPD/tarball/v0.1.1-beta",
+        "type": "Release",
+        "url": "https://api.github.com/repos/drbergman/PhysiPKPD/releases/76313879",
+        "value": "https://api.github.com/repos/drbergman/PhysiPKPD/releases/76313879",
+        "zipball_url": "https://api.github.com/repos/drbergman/PhysiPKPD/zipball/v0.1.1-beta"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "drbergman",
+          "type": "User"
+        },
+        "date_created": "2022-08-29T13:40:19Z",
+        "date_published": "2022-08-29T13:43:59Z",
+        "description": "A beta release to allow for testing by PhysiCell team members.\r\n\r\n**Full Changelog**: https://github.com/drbergman/PhysiPKPD/commits/v0.1.0-beta",
+        "html_url": "https://github.com/drbergman/PhysiPKPD/releases/tag/v0.1.0-beta",
+        "name": "PhysiPKPD: Limited Beta Release",
+        "release_id": 75636570,
+        "tag": "v0.1.0-beta",
+        "tarball_url": "https://api.github.com/repos/drbergman/PhysiPKPD/tarball/v0.1.0-beta",
+        "type": "Release",
+        "url": "https://api.github.com/repos/drbergman/PhysiPKPD/releases/75636570",
+        "value": "https://api.github.com/repos/drbergman/PhysiPKPD/releases/75636570",
+        "zipball_url": "https://api.github.com/repos/drbergman/PhysiPKPD/zipball/v0.1.0-beta"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "run": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Running the sample projects",
+        "parent_header": [
+          "PhysiPKPD"
+        ],
+        "type": "Text_excerpt",
+        "value": "There are 5 sample projects currently distributed with PhysiPKPD.\nThey highlight some of the possible behaviors achievable with PhysiPKPD.\nTo run one of these samples, do the following:\n\n1. `make reset` to make sure you have the newly edited Makefile in your top directory\n2. Make your preferred sample project:\n    * `make pkpd-proliferation-sample` \n    * `make pkpd-apoptosis-sample` \n    * `make pkpd-necrosis-sample` \n    * `make pkpd-motility-sample` \n    * `make pkpd-combo-sample`\n    * `make pkpd-confluence-start-sample` (currently deprecated)\n3. Compile your model: `make`\n4. Run your model\n   * On Mac: `./pkpd_sample ./config/pkpd_model.xml`\n   * On Windows: `pkpd_sample.exe .\\config\\pkpd_model.xml`\n5. Look at the snapshots in `output/` and the living cell counts in `output/cell_counts.csv`\n"
+      },
+      "source": "https://raw.githubusercontent.com/drbergman/PhysiPKPD/main/README.md",
+      "technique": "header_analysis"
+    }
+  ],
+  "somef_missing_categories": [
+    "citation",
+    "acknowledgement",
+    "requirements",
+    "contact",
+    "contributors",
+    "documentation",
+    "faq",
+    "support",
+    "identifier",
+    "has_build_file",
+    "executable_example"
+  ],
+  "somef_provenance": {
+    "date": "2024-10-04 10:16:34",
+    "somef_schema_version": "1.0.0",
+    "somef_version": "0.9.5"
+  },
+  "stargazers_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 4
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "usage": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "...with a new project",
+        "parent_header": [
+          "PhysiPKPD",
+          "Getting started..."
+        ],
+        "type": "Text_excerpt",
+        "value": "1. Download (or copy contents of) `get_physipkpd.py` and `helpers_for_get_and_add.py` to local files in the same directory.\n2. Run \n```\npython get_physipkpd.py --dir path/to/project/dir --studio\n```\n   * The `--studio` flag downloads a PhysiPKPD-enabled version of PhysiCell-Studio to help build the model\n3. Follow output for next steps\n"
+      },
+      "source": "https://raw.githubusercontent.com/drbergman/PhysiPKPD/main/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "...adding PhysiPKPD to an existing project",
+        "parent_header": [
+          "PhysiPKPD",
+          "Getting started..."
+        ],
+        "type": "Text_excerpt",
+        "value": "1. Download (or copy contents of) `add_physipkpd.py` and `helpers_for_get_and_add.py` to local files in the same directory.\n2. Run\n```\npython add_physipkpd.py path/to/project/dir --studio\n```\n   * The `--studio` flag downloads a PhysiPKPD-enabled version of PhysiCell-Studio to help build the model\n3. Follow output for next steps\n\n**Note**: This script will perform the steps [below](#AddingManually), except updates to the configuration file. Specifically, it will...\n*  add lines to your project's `main.cpp`, `custom.h`, `custom.cpp`, and `Makefile`\n*  add PhysiPKPD to your project's `addons` if it does not exist already\n*  create a new copy of the PhysiPKPD-enabled studio at the same directory level as your project\n"
+      },
+      "source": "https://raw.githubusercontent.com/drbergman/PhysiPKPD/main/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "...by cloning the repository",
+        "parent_header": [
+          "PhysiPKPD",
+          "Getting started..."
+        ],
+        "type": "Text_excerpt",
+        "value": "1. Fork this repository to your own GitHub account.\n2. Clone the resulting forked repository onto your machine.\n3. Copy all the PhysiCell files in your PhysiCell directory **except addons**\n4. Copy the subfolders in `PhysiCell/addons` into your cloned directory's `addons` folder\n5. Continue from #4 [above](#DL).\n\nCongratulations! You're ready to try out PhysiPKPD!\n"
+      },
+      "source": "https://raw.githubusercontent.com/drbergman/PhysiPKPD/main/README.md",
+      "technique": "header_analysis"
+    }
+  ]
+}

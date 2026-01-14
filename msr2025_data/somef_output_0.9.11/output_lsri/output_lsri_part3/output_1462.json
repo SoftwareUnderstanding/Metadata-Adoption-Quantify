@@ -1,0 +1,700 @@
+{
+  "citation": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Downloading the datasets and the reference genomes",
+        "parent_header": [
+          "USAGE",
+          "Datasets information"
+        ],
+        "type": "Text_excerpt",
+        "value": "To download a dataset you have to run the *download_script.sh* of the specific dataset.\nFor example, to download *sor* run:\n```bash\ncd RENANO\ndataset/sor/download_script.sh\n```\n\nTo download the reference genome of a dataset (except for dataset *mic*) you have to run the *download_gene.sh* script of the specific dataset.\nFor example, to download *sor* reference genome run:\n```bash\ncd RENANO\ndataset/sor/download_gene.sh\n```\n\nThe scripts use the command *wget* to perform the download. \nTo install *wget* on macOS run:\n ```bash\nbrew install wget\n```\nTo install *wget* on Ubuntu or CentOS run:\n ```bash\nsudo apt-get install wget\n```\n\nSome datasets require the SRA toolkit (2.9.6-1 release) to be downloaded. To install the SRA toolkit you can follow the instructions here https://ncbi.github.io/sra-tools/install_config.html, and place the toolkit's root-folder under the RENANO directory, or you can run one of the scripts we provide. There is a different script for each OS, so you have to choose the one corresponding to your OS.\nFor example, to install the SRA toolkit on macOS you can run:\n ```bash\ncd RENANO\n./install_SRA_mac.sh\n```\n\nIn the case of the metagenomic dataset *mic* we do not have a reference genome sequence in advance. In this sense, in the next section we propose pipeline of operations to consruct a reference genome sequence that represents the most prevalent organisms in a dataset, which we utilized with dataset *mic*.\n"
+      },
+      "source": "https://raw.githubusercontent.com/guilledufort/RENANO/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Constructing a reference sequence for a metagenomic (or contaminated) dataset",
+        "parent_header": [
+          "USAGE",
+          "Datasets information"
+        ],
+        "type": "Text_excerpt",
+        "value": "To construct a referernce genome sequence for a metagenomic (or contaminated) dataset, such as *mic*, we propose a pipeline of operations and provide a series of scripts that facilitate its excecution. Let *[DS]* be the name of the dataset for which we want to construct the reference, a dataset folder with the name *[DS]*, containing the desired set FASTQ files, must be previously created in directory *RENANO/datasets/[DS]*.\n\nNote: Steps 1 to 3 are optional. If Kraken2 is already installed, the user can create its own Kraken2 report, and then use it as input in Step 4.\n\n- Step 1: Install Kraken2 into RENANO's root folder\n```bash\ncd RENANO\n./install_kraken2.sh\n```\n\n- Step 2: Download and install Kraken2 pre-compiled mini database (8GB):\n```bash\ncd RENANO\n./install_kraken2_stdDB.sh\n```\n\n- Step 3: Run Kraken2 on de desired dataset. The script receives two arguments: the dataset name *[DS]*, and the number of threads to be used. The script creates a Kraken2 report in folder *RENANO/datasets/[DS]* with name *[DS].report*. The report contains a statistical report of the species that were detected by Kraken2 in the dataset.\n```bash\ncd RENANO\n./run_kraken2.sh -d [DS] -t [NUM_THREADS] \n```\n\n- Step 4: Construct a representative reference sequence for dataset *[DS]* composed of the most prevalent species genomes reported in the Kraken2 report. The script receives one obligatory argument, and three optional. The obligatory argument is the dataset name *[DS]*. The script also receives the optional parameter *-r* with the name of a Kraken2 report file of the *[DS]* dataset; the default value is *RENANO/datasets/[DS].report*. The optional argument *-d* is a float number that represents the minimum percentage a species has to cover in the dataset, in terms of reads, to be included in the representative reference sequence; the default value is 0.3%. Lastly, argument *-m* is a positive integer that represents the maximum number of species that we want add to the representative reference sequence; the default value is 20. The script outputs a MULTI-FASTA file to *RENANO/datasets/[DS].fna*, which is constructed as the concatenation of the most prevalent species detected in the Kraken2 report.\n\n```bash\ncd RENANO\npython create_ref.py -d [DS] -r [report_file_name] -c [MIN_COVERAGE] -m [MAX_SPECIES] \n```\n"
+      },
+      "source": "https://raw.githubusercontent.com/guilledufort/RENANO/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Compress using RENANO with reference",
+        "parent_header": [
+          "USAGE",
+          "Examples"
+        ],
+        "type": "Text_excerpt",
+        "value": "To run the compressor with 8 threads on the example file:\n```bash\ncd RENANO\nrenano/renano -t 8 -r example/yst_genome.fna example/SAMPLE.paf example/SAMPLE.fastq example/SAMPLE.renano\n```"
+      },
+      "source": "https://raw.githubusercontent.com/guilledufort/RENANO/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Decompress using RENANO with reference",
+        "parent_header": [
+          "USAGE",
+          "Examples"
+        ],
+        "type": "Text_excerpt",
+        "value": "To decompress with 8 threads the example compressed file:\n```bash\ncd RENANO\nrenano/renano -t 8 -d -r example/yst_genome.fna example/SAMPLE.renano example/SAMPLE_dec.fastq\n```\n"
+      },
+      "source": "https://raw.githubusercontent.com/guilledufort/RENANO/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Credits",
+        "parent_header": [
+          "USAGE"
+        ],
+        "type": "Text_excerpt",
+        "value": "The methods used for encoding the reads identifiers, and to model frequency counters,\nare the ones proposed by James Bonfield in FQZComp, with some modifications.\nThe range coder is derived from Eugene Shelwien.\nThe kseq library used to parse FASTA files is authored by Heng Li.\n"
+      },
+      "source": "https://raw.githubusercontent.com/guilledufort/RENANO/master/README.md",
+      "technique": "header_analysis"
+    }
+  ],
+  "code_repository": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/guilledufort/RENANO"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_created": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2021-03-26T16:16:26Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_updated": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2023-08-07T08:39:13Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "description": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "RENANO is a FASTQ lossless reference-based compression algorithm especially designed for nanopore FASTQ files."
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Description",
+        "parent_header": [
+          "RENANO FASTQ"
+        ],
+        "type": "Text_excerpt",
+        "value": "RENANO is a reference-based lossless FASTQ data compressor, specifically tailored to compress FASTQ files generated with nanopore sequencing technologies.\nRENANO improves on its state of the art predecessor [ENANO](https://github.com/guilledufort/EnanoFASTQ/blob/master/README.md), by providing a more efficient base call sequence compression component.\nTwo compression algorithms are introduced, corresponding to the following scenarios: (1) a reference genome is available without cost to both the compressor and the decompressor;  (2) the reference genome is available only on the compressor side, and a compacted version of the reference is included in the compressed file.\n"
+      },
+      "source": "https://raw.githubusercontent.com/guilledufort/RENANO/master/README.md",
+      "technique": "header_analysis"
+    }
+  ],
+  "download": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Download repository",
+        "parent_header": [
+          "RENANO FASTQ",
+          "Install from source code"
+        ],
+        "type": "Text_excerpt",
+        "value": "```bash\ngit clone https://github.com/guilledufort/RENANO.git\n```\n"
+      },
+      "source": "https://raw.githubusercontent.com/guilledufort/RENANO/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Downloading the datasets and the reference genomes",
+        "parent_header": [
+          "USAGE",
+          "Datasets information"
+        ],
+        "type": "Text_excerpt",
+        "value": "To download a dataset you have to run the *download_script.sh* of the specific dataset.\nFor example, to download *sor* run:\n```bash\ncd RENANO\ndataset/sor/download_script.sh\n```\n\nTo download the reference genome of a dataset (except for dataset *mic*) you have to run the *download_gene.sh* script of the specific dataset.\nFor example, to download *sor* reference genome run:\n```bash\ncd RENANO\ndataset/sor/download_gene.sh\n```\n\nThe scripts use the command *wget* to perform the download. \nTo install *wget* on macOS run:\n ```bash\nbrew install wget\n```\nTo install *wget* on Ubuntu or CentOS run:\n ```bash\nsudo apt-get install wget\n```\n\nSome datasets require the SRA toolkit (2.9.6-1 release) to be downloaded. To install the SRA toolkit you can follow the instructions here https://ncbi.github.io/sra-tools/install_config.html, and place the toolkit's root-folder under the RENANO directory, or you can run one of the scripts we provide. There is a different script for each OS, so you have to choose the one corresponding to your OS.\nFor example, to install the SRA toolkit on macOS you can run:\n ```bash\ncd RENANO\n./install_SRA_mac.sh\n```\n\nIn the case of the metagenomic dataset *mic* we do not have a reference genome sequence in advance. In this sense, in the next section we propose pipeline of operations to consruct a reference genome sequence that represents the most prevalent organisms in a dataset, which we utilized with dataset *mic*.\n"
+      },
+      "source": "https://raw.githubusercontent.com/guilledufort/RENANO/master/README.md",
+      "technique": "header_analysis"
+    }
+  ],
+  "download_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/guilledufort/RENANO/releases"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 1
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/guilledufort/RENANO/forks"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "guilledufort/RENANO"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_title": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "RENANO FASTQ"
+      },
+      "source": "https://raw.githubusercontent.com/guilledufort/RENANO/master/README.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "has_script_file": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/guilledufort/RENANO/master/install_kraken2_stdDB.sh"
+      },
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/guilledufort/RENANO/master/install_kraken2.sh"
+      },
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/guilledufort/RENANO/master/install_SRA_centos.sh"
+      },
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/guilledufort/RENANO/master/run_minimap.sh"
+      },
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/guilledufort/RENANO/master/run_kraken2.sh"
+      },
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/guilledufort/RENANO/master/install_minimap2.sh"
+      },
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/guilledufort/RENANO/master/install_SRA_mac.sh"
+      },
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/guilledufort/RENANO/master/install_SRA_ubuntu.sh"
+      },
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/guilledufort/RENANO/master/datasets/bra/download_gen.sh"
+      },
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/guilledufort/RENANO/master/datasets/bra/download_script.sh"
+      },
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/guilledufort/RENANO/master/datasets/fly/download_gen.sh"
+      },
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/guilledufort/RENANO/master/datasets/fly/download_script.sh"
+      },
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/guilledufort/RENANO/master/datasets/sor/download_gene.sh"
+      },
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/guilledufort/RENANO/master/datasets/sor/download_script.sh"
+      },
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/guilledufort/RENANO/master/datasets/hss/download_gene.sh"
+      },
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/guilledufort/RENANO/master/datasets/hss/download_script.sh"
+      },
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/guilledufort/RENANO/master/datasets/yst/download_gene.sh"
+      },
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/guilledufort/RENANO/master/datasets/yst/download_script.sh"
+      },
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/guilledufort/RENANO/master/datasets/mic/download_script.sh"
+      },
+      "technique": "file_exploration"
+    }
+  ],
+  "installation": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Install with Conda",
+        "parent_header": [
+          "RENANO FASTQ"
+        ],
+        "type": "Text_excerpt",
+        "value": "To install directly from source, follow the instructions in the next section.\n\nRENANO is available on conda via the bioconda channel. See [this](https://bioconda.github.io/user/install.html) page for installation instructions for conda. Once conda is installed, do the following to install renano.\n```bash\nconda config --add channels defaults\nconda config --add channels bioconda\nconda config --add channels conda-forge\nconda install renano\n```\nNote that if renano is installed this way, it should be invoked with the command `renano` rather than `./renano`. The bioconda [help page](https://bioconda.github.io/user/install.html) shows the commands if you wish to install renano in an environment.\n"
+      },
+      "source": "https://raw.githubusercontent.com/guilledufort/RENANO/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Install",
+        "parent_header": [
+          "RENANO FASTQ",
+          "Install from source code"
+        ],
+        "type": "Text_excerpt",
+        "value": "The following instructions will create the renano executable in the directory *renano*.\nTo compile renano you need to have the g++ compiler and the OpenMP library for multithreading. \n\nOn Linux (Ubuntu or CentOS) g++ usually comes installed by default, but if not run the following:\n```bash\nsudo apt update\nsudo apt-get install g++\n```\n\nOn macOS, install GCC compiler since Clang has issues with OpenMP library:\n- Install HomeBrew (https://brew.sh/)\n- Install GCC (this step will be faster if Xcode command line tools are already installed using ```xcode-select --install```):\n```bash\nbrew update\nbrew install gcc@9\n```\n\nThe g++ installer also installs the OpenMP library, so no further steps are needed.\nTo check if the g++ compiler is properly installed in your system run:\n\nOn Linux\n```bash\ng++ --version\n```\nOn MacOS:\n```bash\ng++-9 --version\n```\nThe output should be the description of the installed software.\n\nTo compile renano run:\n```bash\ncd RENANO/renano\nmake\n```\n"
+      },
+      "source": "https://raw.githubusercontent.com/guilledufort/RENANO/master/README.md",
+      "technique": "header_analysis"
+    }
+  ],
+  "issue_tracker": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/guilledufort/RENANO/issues"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "keywords": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": ""
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "license": [
+    {
+      "confidence": 1,
+      "result": {
+        "name": "MIT License",
+        "spdx_id": "MIT",
+        "type": "License",
+        "url": "https://api.github.com/licenses/mit",
+        "value": "https://api.github.com/licenses/mit"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "File_dump",
+        "value": "MIT License\n\nCopyright (c) 2021 Guillermo Dufort y \u00c1lvarez\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.\n"
+      },
+      "source": "https://raw.githubusercontent.com/guilledufort/RENANO/master/LICENSE",
+      "technique": "file_exploration"
+    }
+  ],
+  "name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "RENANO"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "owner": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "User",
+        "value": "guilledufort"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "programming_languages": [
+    {
+      "confidence": 1,
+      "result": {
+        "name": "C++",
+        "size": 165363,
+        "type": "Programming_language",
+        "value": "C++"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "C",
+        "size": 28999,
+        "type": "Programming_language",
+        "value": "C"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Shell",
+        "size": 7876,
+        "type": "Programming_language",
+        "value": "Shell"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Python",
+        "size": 3026,
+        "type": "Programming_language",
+        "value": "Python"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Makefile",
+        "size": 556,
+        "type": "Programming_language",
+        "value": "Makefile"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "readme_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/guilledufort/RENANO/master/README.md"
+      },
+      "technique": "file_exploration"
+    }
+  ],
+  "releases": [
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "guilledufort",
+          "type": "User"
+        },
+        "date_created": "2021-06-01T03:30:38Z",
+        "date_published": "2021-06-01T03:33:44Z",
+        "description": "\r\n",
+        "html_url": "https://github.com/guilledufort/RENANO/releases/tag/v1.3",
+        "name": "Release with fixed default message",
+        "release_id": 43881983,
+        "tag": "v1.3",
+        "tarball_url": "https://api.github.com/repos/guilledufort/RENANO/tarball/v1.3",
+        "type": "Release",
+        "url": "https://api.github.com/repos/guilledufort/RENANO/releases/43881983",
+        "value": "https://api.github.com/repos/guilledufort/RENANO/releases/43881983",
+        "zipball_url": "https://api.github.com/repos/guilledufort/RENANO/zipball/v1.3"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "guilledufort",
+          "type": "User"
+        },
+        "date_created": "2021-04-28T02:53:59Z",
+        "date_published": "2021-04-28T03:25:50Z",
+        "description": "This release has a major bug fix in the compressor.",
+        "html_url": "https://github.com/guilledufort/RENANO/releases/tag/v1.1",
+        "name": "Renano v1.1",
+        "release_id": 42110829,
+        "tag": "v1.1",
+        "tarball_url": "https://api.github.com/repos/guilledufort/RENANO/tarball/v1.1",
+        "type": "Release",
+        "url": "https://api.github.com/repos/guilledufort/RENANO/releases/42110829",
+        "value": "https://api.github.com/repos/guilledufort/RENANO/releases/42110829",
+        "zipball_url": "https://api.github.com/repos/guilledufort/RENANO/zipball/v1.1"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "guilledufort",
+          "type": "User"
+        },
+        "date_created": "2021-04-03T19:18:56Z",
+        "date_published": "2021-04-03T19:23:46Z",
+        "description": "This is the first release of the RENANO FASTQ compressor",
+        "html_url": "https://github.com/guilledufort/RENANO/releases/tag/v1.0",
+        "name": "RENANO first release",
+        "release_id": 40903990,
+        "tag": "v1.0",
+        "tarball_url": "https://api.github.com/repos/guilledufort/RENANO/tarball/v1.0",
+        "type": "Release",
+        "url": "https://api.github.com/repos/guilledufort/RENANO/releases/40903990",
+        "value": "https://api.github.com/repos/guilledufort/RENANO/releases/40903990",
+        "zipball_url": "https://api.github.com/repos/guilledufort/RENANO/zipball/v1.0"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "requirements": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Requirements",
+        "parent_header": [
+          "RENANO FASTQ",
+          "Install from source code"
+        ],
+        "type": "Text_excerpt",
+        "value": "0. g++ ( >= 4.8.1)\n1. OpenMP library\n"
+      },
+      "source": "https://raw.githubusercontent.com/guilledufort/RENANO/master/README.md",
+      "technique": "header_analysis"
+    }
+  ],
+  "somef_missing_categories": [
+    "acknowledgement",
+    "run",
+    "contact",
+    "contributors",
+    "documentation",
+    "faq",
+    "support",
+    "identifier",
+    "has_build_file",
+    "executable_example"
+  ],
+  "somef_provenance": {
+    "date": "2024-10-06 05:05:56",
+    "somef_schema_version": "1.0.0",
+    "somef_version": "0.9.5"
+  },
+  "stargazers_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 5
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "type": [
+    {
+      "confidence": 0.82,
+      "result": {
+        "type": "String",
+        "value": "commandline-application"
+      },
+      "technique": "software_type_heuristics"
+    }
+  ],
+  "usage": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "USAGE",
+        "type": "Text_excerpt",
+        "value": "Run the renano executable ```/PATH/TO/renano``` with the options below:\n```console \nCOMPRESSION:\n> Without reference:\n\trenano [options] [input_file [output_file]]\n\n> With reference:\n\trenano [options] -r [ref_file [paf_file]] [input_file [output_file]]\n\n> With reference and making decompression independent of the reference:\n\trenano [options] -s [ref_file [paf_file]] [input_file [output_file]]\n\nCOMPRESSION OPTIONS:\n\n\t-k <length>    Base call sequence context length. Default is 7 (max 13).\n\n\t-l <lenght>    Length of the DNA neighborhood sequence. Default is 6.\n\n\t-t <num>       Maximum number of threads allowed to use by the compressor. Default is 8.\n\nDECOMPRESSION:\n> Without reference:\n\trenano -d [options] foo.renano foo.fastq\n\n> With reference:\n\trenano -d [options] -r [ref_file] foo.renano foo.fastq\n\nDECOMPRESSION OPTIONS:\n\t-t <num>       Maximum number of threads allowed to use by the decompressor. Default is 8.\n\n```\n"
+      },
+      "source": "https://raw.githubusercontent.com/guilledufort/RENANO/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Datasets information",
+        "parent_header": [
+          "USAGE"
+        ],
+        "type": "Text_excerpt",
+        "value": "To test our compressor we ran experiments on the following datasets. The full information of the datasets is in our publication.\n\n| Dataset | Num. of files | size (GB) | Description | Link |\n|------|------|------|------|------|\n*hss* | 1 | 268 | Human GM12878 Utah/Ceph cell line | https://github.com/nanopore-wgs-consortium/NA12878 |\n*bra\\** | 18 | 46 | Doubled haploid canola (Brassica napus L.) | https://www.nature.com/articles/s41598-019-45131-0#data-availability |\n*sor\\** | 4 | 133 | Sorghum bicolor Tx430 | https://www.nature.com/articles/s41467-018-07271-1#data-availability |\n*fly\\** | 1 | 17 | Drosophila ananassae | https://www.g3journal.org/content/8/10/3131#sec-1 |\n*yst\\** | 5 | 6 | Saccharomyces cerevisiae S288C | https://academic.oup.com/gigascience/article/6/2/giw018/2865217 |\n*mic\\** | 1 | 12 | Microbial community (metagenomic) | https://www.nature.com/articles/s41598-020-61989-x |\n\n\\*Datasets that require the SRA toolkit to be downloaded. \n"
+      },
+      "source": "https://raw.githubusercontent.com/guilledufort/RENANO/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Alignment information",
+        "parent_header": [
+          "USAGE"
+        ],
+        "type": "Text_excerpt",
+        "value": "To obtain alignment information in [PAF format](https://lh3.github.io/minimap2/minimap2.html) for each FASTQ file we recommend using the tool [Minimap2](https://github.com/lh3/minimap2).\n\nTo install Minimap2 in the ROOT folder run:\n ```bash\ncd RENANO\n./install_minimap2.sh\n```\n\nTo align a specific FASTQ file against a reference genome using Minimap2 run:\n ```bash\ncd RENANO\nminimap2/minimap2 -x map-ont --secondary=no --cs [ref_file] [fastq_file] > [paf_file]\n```\n\nTo align all the files of a dataset against the corresponding reference genome use *run_minimap.sh* script.\nFor this script to work, both the dataset and the corresponding reference genome have to be previously downloaded, following the instructions in the previous section.\nFor example, to align the files in *sor* run:\n ```bash\ncd RENANO\n./run_minimap.sh sor\n```\n"
+      },
+      "source": "https://raw.githubusercontent.com/guilledufort/RENANO/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Examples",
+        "parent_header": [
+          "USAGE"
+        ],
+        "type": "Text_excerpt",
+        "value": "We add an *example* folder with test files to run simple use examples the tool.\nIf installed using conda, use the command `renano` instead of `renano/renano`."
+      },
+      "source": "https://raw.githubusercontent.com/guilledufort/RENANO/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Check if decoding is successful",
+        "parent_header": [
+          "USAGE",
+          "Examples"
+        ],
+        "type": "Text_excerpt",
+        "value": "The output has to be empty.\n```bash\ncmp example/SAMPLE.fastq example/SAMPLE_dec.fastq\n```\n\n"
+      },
+      "source": "https://raw.githubusercontent.com/guilledufort/RENANO/master/README.md",
+      "technique": "header_analysis"
+    }
+  ]
+}

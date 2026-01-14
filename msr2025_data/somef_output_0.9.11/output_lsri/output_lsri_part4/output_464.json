@@ -1,0 +1,608 @@
+{
+  "code_repository": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/dfguan/purge_dups"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "contact": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Contact",
+        "parent_header": [
+          "Purge_Dups"
+        ],
+        "type": "Text_excerpt",
+        "value": "\r\nWellcome to use, you can use github webpage to report an issue or email me dfguan9@gmail.com with any advice. \r\n"
+      },
+      "source": "https://raw.githubusercontent.com/dfguan/purge_dups/master/README.md",
+      "technique": "header_analysis"
+    }
+  ],
+  "date_created": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2019-05-07T12:40:37Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_updated": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2024-11-02T22:02:47Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "description": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "haplotypic duplication identification tool"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 0.9793496888286005,
+      "result": {
+        "original_header": "Purge_Dups",
+        "type": "Text_excerpt",
+        "value": "\r\npurge haplotigs and overlaps in an assembly based on read depth\r\n\r \n"
+      },
+      "source": "https://raw.githubusercontent.com/dfguan/purge_dups/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9922428541706734,
+      "result": {
+        "original_header": "Overview",
+        "type": "Text_excerpt",
+        "value": "\r\npurge\\_dups is designed to remove haplotigs and contig overlaps in a *de novo* assembly based on read depth. \r\n\r\nYou can follow the [Usage](#usg) part and use our pipeline to purge your assembly or go to the [Pipeline Guide](#pplg) to build your own pipeline.\r\n\r\n![purge_dups pipeline](assets/purge_dupspipeline.png)\r\n\r\n\r\n\r \n"
+      },
+      "source": "https://raw.githubusercontent.com/dfguan/purge_dups/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9061089699853477,
+      "result": {
+        "original_header": "Limitation",
+        "type": "Text_excerpt",
+        "value": "\r\n- Read depth cutoffs calculation: the coverage cutoffs can be larger for a low heterozygosity species, which causes the purged assembly size smaller than expected. In such a case, please use script/hist_plot.py to make the histogram plot and set coverage cutoffs manually. \r\n- Repeats: purge_dups has a limited ability to process repeats. \r\n\r \n"
+      },
+      "source": "https://raw.githubusercontent.com/dfguan/purge_dups/master/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "download_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/dfguan/purge_dups/releases"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "faq": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "FAQ",
+        "parent_header": [
+          "Purge_Dups"
+        ],
+        "type": "Text_excerpt",
+        "value": "> **Q1** Can I use purge_dups with short reads? \r\n\r\nYes, purge_dups does have a program to process Illumina reads, it's called **ngscstat** under the bin directory. But I have not got time to test it. If you want to play with it, please follow this workflow:\r\n\r\n```\r\nbwa mem $pri_asm $sr_1.fq $sr_2.fq | samtools view -b -o - > $sr.bam \r\nngscstat $sr.bam... # The program will generate two/three outputs, TX.stat and TX.base.cov which functions the same way as PB.stat and PB.base.cov respectively.  \r\n``` \r\n\r\nAfter you get the TX.stat and TX.base.cov file, you can following the normal purge_dups routine to clean your assembly. \r\n\r\n> **Q2** Can I validate the cutoffs used by purge\\_dups? \r\n\r\nYes, we highly recommend this step. A script \"hist_plot.py\" is available, you can use it to produce a coverage histogram:\r\n\r\n```sh\r\npip install matplotlib\r\npython3 scripts/hist_plot.py -c cutoff_file PB.stat PB.cov.png\r\n```\r\n\r\n> **Q2'** How do I then set my own cutoffs?\r\n\r\nFrom the coverage histogram, you need to set low, mid and high coverages:\r\n- Contigs with average coverage below the *low* coverage threshold are set to 'JUNK' in `purge_dups`' BED output.\r\n- *mid* coverage represents the transition between haploid and diploid coverages. Contigs\r\nwith average coverage below *mid* coverage are tested for haplotypic duplications.\r\n- Contigs with average coverage above *high* coverage are used for classifying contigs as\r\n'REPEAT' in `purge_dups`' BED output.\r\n\r\nAs an example, from the coverage histogram below:\r\n\r\n![cov_histogram](assets/example_coverage_histogram.png)\r\n\r\nyou could use 5, 85 and 190 for low, mid and high respectively.\r\n\r\n```sh\r\ncalcuts -l 5 -m 85 -u 200 PB.stat > cutoffs_manual\r\nbin/purge_dups -2 -T cutoffs_manual -c PB.base.cov $pri_asm.split.self.paf.gz > dups.bed 2> purge_dups.log\r\n```\r\n\r\n> **Q3** How can I validate the purged assembly? Is it clean enough or overpurged? \r\n\r\nThere are many ways to validate the purged assembly. One way is to make a coverage plot for it which can also be hist_plot.py, the 2nd way is to run BUSCO and another way is to make a KAT plot with KAT (https://github.com/TGAC/KAT) or KMC (https://github.com/dfguan/KMC, use this if you only have a small memory machine) if short reads or some accurate reads are available. \r\n\r\n> **Q4** Why do I get much fewer haplotypic duplications than expected?\r\n\r\nFirst check the original contig names, they should not contain any colons. Then check the cutoffs, if purge_dups automatically use a fairly low read depth for haplotypic duplications, it may remove nothing. In this case, you need to set the cutoffs manually.  \r\n\r\n> **Q5** why does purge_dups remove middle sequence in a contig?\r\n\r\nSome of them are real, while others may not. We are currently investigating them. Please use `-e` for `get_seqs` command if you only want to remove the duplications at the ends of the contigs.\r\n \r\n \r"
+      },
+      "source": "https://raw.githubusercontent.com/dfguan/purge_dups/master/README.md",
+      "technique": "header_analysis"
+    }
+  ],
+  "forks_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 20
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/dfguan/purge_dups/forks"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "dfguan/purge_dups"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_title": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "Purge_Dups"
+      },
+      "source": "https://raw.githubusercontent.com/dfguan/purge_dups/master/README.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "has_script_file": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/dfguan/purge_dups/master/scripts/sub.sh"
+      },
+      "technique": "file_exploration"
+    }
+  ],
+  "images": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/dfguan/purge_dups/master/assets/example_coverage_histogram.png"
+      },
+      "source": "https://raw.githubusercontent.com/dfguan/purge_dups/master/README.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "installation": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Installation",
+        "parent_header": [
+          "Purge_Dups"
+        ],
+        "type": "Text_excerpt",
+        "value": "Run the following commands to intall purge_dups (required):\r\n\r\n```\r\ngit clone https://github.com/dfguan/purge_dups.git\r\ncd purge_dups/src && make\r\n\r\n```\r\nRun the following commands to install runner (optional), this is only needed when you want to run scripts/run_purge_dups.py:\r\n\r\n```\r\ngit clone https://github.com/dfguan/runner.git\r\ncd runner && python3 setup.py install --user\r\n```\r\nIf you also want to try k-mer comparision plot, run the following commands to install the tool (optional). \r\n\r\n```\r\ngit clone https://github.com/dfguan/KMC.git \r\ncd KMC && make -j 16\r\n```\r"
+      },
+      "source": "https://raw.githubusercontent.com/dfguan/purge_dups/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "<a name=\"pplg\"> </a> Pipeline Guide",
+        "parent_header": [
+          "Purge_Dups"
+        ],
+        "type": "Text_excerpt",
+        "value": "Given a primary assembly *pri_asm* and an alternative assembly *hap_asm* (optional, if you have one), follow the steps shown below to build your own purge_dups pipeline, steps with same number can be run simultaneously. Among all the steps, although step 4 is optional, we highly recommend our users to do so, because assemblers may produce overrepresented seqeuences. In such a case, The final step 4 can be applied to remove those seqeuences.\r\n\r"
+      },
+      "source": "https://raw.githubusercontent.com/dfguan/purge_dups/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Step 1. Split an assembly and do a self-self alignment. Commands are following:",
+        "parent_header": [
+          "Purge_Dups",
+          "<a name=\"pplg\"> </a> Pipeline Guide"
+        ],
+        "type": "Text_excerpt",
+        "value": "\r\n```\r\nbin/split_fa $pri_asm > $pri_asm.split\r\nminimap2 -xasm5 -DP $pri_asm.split $pri_asm.split | gzip -c - > $pri_asm.split.self.paf.gz\r\n```\r\n\r"
+      },
+      "source": "https://raw.githubusercontent.com/dfguan/purge_dups/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Step 2. Purge haplotigs and overlaps with the following command.",
+        "parent_header": [
+          "Purge_Dups",
+          "<a name=\"pplg\"> </a> Pipeline Guide"
+        ],
+        "type": "Text_excerpt",
+        "value": "\r\n```\r\nbin/purge_dups -2 -T cutoffs -c PB.base.cov $pri_asm.split.self.paf.gz > dups.bed 2> purge_dups.log\r\n```\r\n\r"
+      },
+      "source": "https://raw.githubusercontent.com/dfguan/purge_dups/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 0.8737883119643193,
+      "result": {
+        "original_header": "Directory Structure",
+        "type": "Text_excerpt",
+        "value": "\r\n- scripts/pd\\_config.py: script to generate a configuration file used by run\\_purge\\_dups.py.\r\n- scripts/run\\_purge\\_dups.py: script to run the purge\\_dups pipeline. \r\n- scripts/run\\_busco:  script to run busco, dependency: busco.\r\n- scripts/run\\_kcm:  script to make k-mer comparison plot. \r\n- scripts/sub.sh: shell script to submit a farm job.\r\n- src: purge_dups source files.\r\n- src/split_fa: split fasta file by 'N's.\r\n- src/pbcstat: create read depth histogram and base-level read depth for an assembly based on pacbio data.\r\n- src/ngstat: create read depth histogram and base-level read detph for an assembly based on illumina data.\r\n- src/calcuts: calculate coverage cutoffs.\r\n- src/purge_dups: purge haplotigs and overlaps for an assembly.\r\n- src/get_seqs: obtain seqeuences after purging. \r\n- bin/\\* : all purge_dups excutables.\r\n\r \n"
+      },
+      "source": "https://raw.githubusercontent.com/dfguan/purge_dups/master/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "invocation": [
+    {
+      "confidence": 0.9340012147943174,
+      "result": {
+        "original_header": "Directory Structure",
+        "type": "Text_excerpt",
+        "value": "\r\n- scripts/pd\\_config.py: script to generate a configuration file used by run\\_purge\\_dups.py.\r\n- scripts/run\\_purge\\_dups.py: script to run the purge\\_dups pipeline. \r\n- scripts/run\\_busco:  script to run busco, dependency: busco.\r\n- scripts/run\\_kcm:  script to make k-mer comparison plot. \r\n- scripts/sub.sh: shell script to submit a farm job.\r\n- src: purge_dups source files.\r\n- src/split_fa: split fasta file by 'N's.\r\n- src/pbcstat: create read depth histogram and base-level read depth for an assembly based on pacbio data.\r\n- src/ngstat: create read depth histogram and base-level read detph for an assembly based on illumina data.\r\n- src/calcuts: calculate coverage cutoffs.\r\n- src/purge_dups: purge haplotigs and overlaps for an assembly.\r\n- src/get_seqs: obtain seqeuences after purging. \r\n- bin/\\* : all purge_dups excutables.\r\n\r \n"
+      },
+      "source": "https://raw.githubusercontent.com/dfguan/purge_dups/master/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "issue_tracker": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/dfguan/purge_dups/issues"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "keywords": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": ""
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "license": [
+    {
+      "confidence": 1,
+      "result": {
+        "name": "MIT License",
+        "spdx_id": "MIT",
+        "type": "License",
+        "url": "https://api.github.com/licenses/mit",
+        "value": "https://api.github.com/licenses/mit"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "File_dump",
+        "value": "MIT License\n\nCopyright (c) 2019 Dengfeng Guan, except where otherwise stated in the source file.\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.\n"
+      },
+      "source": "https://raw.githubusercontent.com/dfguan/purge_dups/master/LICENSE",
+      "technique": "file_exploration"
+    }
+  ],
+  "logo": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/dfguan/purge_dups/master/assets/purge_dupspipeline.png"
+      },
+      "source": "https://raw.githubusercontent.com/dfguan/purge_dups/master/README.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "purge_dups"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "owner": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "User",
+        "value": "dfguan"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "programming_languages": [
+    {
+      "confidence": 1,
+      "result": {
+        "name": "C",
+        "size": 165813,
+        "type": "Programming_language",
+        "value": "C"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Python",
+        "size": 22058,
+        "type": "Programming_language",
+        "value": "Python"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Shell",
+        "size": 3746,
+        "type": "Programming_language",
+        "value": "Shell"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Makefile",
+        "size": 751,
+        "type": "Programming_language",
+        "value": "Makefile"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "readme_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/dfguan/purge_dups/master/README.md"
+      },
+      "technique": "file_exploration"
+    }
+  ],
+  "releases": [
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "dfguan",
+          "type": "User"
+        },
+        "date_created": "2022-06-02T23:50:39Z",
+        "date_published": "2022-06-03T00:00:08Z",
+        "description": "Merge C. ZH code to handle depth count > 4G  ",
+        "html_url": "https://github.com/dfguan/purge_dups/releases/tag/v1.2.6",
+        "name": "v1.2.6",
+        "release_id": 68496937,
+        "tag": "v1.2.6",
+        "tarball_url": "https://api.github.com/repos/dfguan/purge_dups/tarball/v1.2.6",
+        "type": "Release",
+        "url": "https://api.github.com/repos/dfguan/purge_dups/releases/68496937",
+        "value": "https://api.github.com/repos/dfguan/purge_dups/releases/68496937",
+        "zipball_url": "https://api.github.com/repos/dfguan/purge_dups/zipball/v1.2.6"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "dfguan",
+          "type": "User"
+        },
+        "date_created": "2020-10-29T12:51:19Z",
+        "date_published": "2021-02-02T14:32:26Z",
+        "description": "update pipeline script to remove haplotypic duplication at the ends of the contigs.",
+        "html_url": "https://github.com/dfguan/purge_dups/releases/tag/v1.2.5",
+        "name": "Chinese New Year release",
+        "release_id": 37239101,
+        "tag": "v1.2.5",
+        "tarball_url": "https://api.github.com/repos/dfguan/purge_dups/tarball/v1.2.5",
+        "type": "Release",
+        "url": "https://api.github.com/repos/dfguan/purge_dups/releases/37239101",
+        "value": "https://api.github.com/repos/dfguan/purge_dups/releases/37239101",
+        "zipball_url": "https://api.github.com/repos/dfguan/purge_dups/zipball/v1.2.5"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "dfguan",
+          "type": "User"
+        },
+        "date_created": "2020-02-26T11:09:57Z",
+        "date_published": "2020-02-26T11:10:53Z",
+        "html_url": "https://github.com/dfguan/purge_dups/releases/tag/v1.0.1",
+        "name": "v1.0.1",
+        "release_id": 23996487,
+        "tag": "v1.0.1",
+        "tarball_url": "https://api.github.com/repos/dfguan/purge_dups/tarball/v1.0.1",
+        "type": "Release",
+        "url": "https://api.github.com/repos/dfguan/purge_dups/releases/23996487",
+        "value": "https://api.github.com/repos/dfguan/purge_dups/releases/23996487",
+        "zipball_url": "https://api.github.com/repos/dfguan/purge_dups/zipball/v1.0.1"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "dfguan",
+          "type": "User"
+        },
+        "date_created": "2019-11-09T03:57:27Z",
+        "date_published": "2019-11-12T03:02:30Z",
+        "html_url": "https://github.com/dfguan/purge_dups/releases/tag/v1.0.0",
+        "name": "First release",
+        "release_id": 21386804,
+        "tag": "v1.0.0",
+        "tarball_url": "https://api.github.com/repos/dfguan/purge_dups/tarball/v1.0.0",
+        "type": "Release",
+        "url": "https://api.github.com/repos/dfguan/purge_dups/releases/21386804",
+        "value": "https://api.github.com/repos/dfguan/purge_dups/releases/21386804",
+        "zipball_url": "https://api.github.com/repos/dfguan/purge_dups/zipball/v1.0.0"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "requirements": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Dependencies",
+        "parent_header": [
+          "Purge_Dups"
+        ],
+        "type": "Text_excerpt",
+        "value": "\r\n1. zlib\r\n2. minimap2 \r\n3. runner (optional)\r\n4. python3 (optional)\r\n\r\n\r"
+      },
+      "source": "https://raw.githubusercontent.com/dfguan/purge_dups/master/README.md",
+      "technique": "header_analysis"
+    }
+  ],
+  "run": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Step 3. Use run_purge_dups.py to run the pipeline",
+        "parent_header": [
+          "Purge_Dups",
+          "<a name=\"usg\"> </a> Usage (Only tested on farm)"
+        ],
+        "type": "Text_excerpt",
+        "value": "\r\n```\r\nusage: run_purge_dups.py [-h] [-p PLTFM] [-w WAIT] [-r RETRIES] [--version]\r\n                         config bin_dir spid\r\n\r\npurge_dups wrapper\r\n\r\npositional arguments:\r\n  config                configuration file\r\n  bin_dir               directory of purge_dups executable files\r\n  spid                  species identifier\r\n\r\noptional arguments:\r\n  -h, --help            show this help message and exit\r\n  -p PLTFM, --platform PLTFM\r\n                        workload management platform, input bash if you want to run locally\r\n  -w WAIT, --wait WAIT  <int> seconds sleep intervals\r\n  -r RETRIES, --retries RETRIES\r\n                        maximum number of retries\r\n  --version             show program's version number and exit\r\n```\r\n\r\nExample: \r\n\r\n```\r\npython scripts/run_purge_dups.py config.iHelSar1.json src iHelSar1\r\n```\r\n\r\nAfter the pipeline is finished, there will be four new directories in the working directory (set in the configuration file).  \r\n\r\n- **coverage**: coverage cutoffs, coverage histogram and base-level coverage files\r\n- **split_aln**: segmented assembly file and a self-alignment paf file. \r\n- **purge_dups**: duplicate sequence list. \r\n- **seqs**: purged primary contigs ending with .purge.fa and haplotigs ending with .red.fa, also K-mer comparison plot and busco results are also in this directory.  \r\n\r"
+      },
+      "source": "https://raw.githubusercontent.com/dfguan/purge_dups/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Step 1. Run minimap2 to align pacbio data and generate paf files, then calculate read depth histogram and base-level read depth. Commands are as follows:",
+        "parent_header": [
+          "Purge_Dups",
+          "<a name=\"pplg\"> </a> Pipeline Guide"
+        ],
+        "type": "Text_excerpt",
+        "value": "\r\nFor `PacBio CLR` reads  \r\n```\r\nfor i in $pb_list\r\ndo\r\n\tminimap2 -xmap-pb $pri_asm $i | gzip -c - > $i.paf.gz\r\ndone\r\nbin/pbcstat *.paf.gz (produces PB.base.cov and PB.stat files)\r\nbin/calcuts PB.stat > cutoffs 2>calcults.log\r\n```\r\nFor `PacBio CCS` reads  \r\n```\r\nfor i in $pb_list\r\ndo\r\n\tminimap2 -xasm20 $pri_asm $i | gzip -c - > $i.paf.gz\r\ndone\r\nbin/pbcstat *.paf.gz (produces PB.base.cov and PB.stat files)\r\nbin/calcuts PB.stat > cutoffs 2>calcults.log\r\n```\r\n\r\n**Notice** If you have a large genome, please set minimap2 ``-I`` option to ensure the genome can be indexed once, otherwise read depth can be wrong. \r\n\r"
+      },
+      "source": "https://raw.githubusercontent.com/dfguan/purge_dups/master/README.md",
+      "technique": "header_analysis"
+    }
+  ],
+  "somef_missing_categories": [
+    "citation",
+    "acknowledgement",
+    "download",
+    "contributors",
+    "documentation",
+    "support",
+    "identifier",
+    "has_build_file",
+    "executable_example"
+  ],
+  "somef_provenance": {
+    "date": "2024-11-04 03:22:57",
+    "somef_schema_version": "1.0.0",
+    "somef_version": "0.9.5"
+  },
+  "stargazers_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 209
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "usage": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Step 1. Use pd_config.py to generate a configuration file.",
+        "parent_header": [
+          "Purge_Dups",
+          "<a name=\"usg\"> </a> Usage (Only tested on farm)"
+        ],
+        "type": "Text_excerpt",
+        "value": "\r\n```\r\nusage: pd_config.py [-h] [-s SRF] [-l LOCD] [-n FN] [--version] ref pbfofn\r\n\r\ngenerate a configuration file in json format\r\n\r\npositional arguments:\r\n  ref                   reference file in fasta/fasta.gz format\r\n  pbfofn                list of pacbio file in fastq/fasta/fastq.gz/fasta.gz format (one absolute file path per line)\r\n\r\noptional arguments:\r\n  -h, --help            show this help message and exit\r\n  -s SRF, --srfofn SRF  list of short reads files in fastq/fastq.gz format (one record per line, the\r\n                        record is a tab splitted line of abosulte file path\r\n                        plus trimmed bases, refer to\r\n                        https://github.com/dfguan/KMC) [NONE]\r\n  -l LOCD, --localdir LOCD\r\n                        local directory to keep the reference and lists of the\r\n                        pacbio, short reads files [.]\r\n  -n FN, --name FN      output config file name [config.json]\r\n  --version             show program's version number and exit\r\n\r\n```\r\n\r\nExample:\r\n\r\n```\r\n./scripts/pd_config.py -l iHelSar1.pri -s 10x.fofn -n config.iHelSar1.PB.asm1.json ~/vgp/release/insects/iHelSar1/iHlSar1.PB.asm1/iHelSar1.PB.asm1.fa.gz pb.fofn\r\n```\r\n\r"
+      },
+      "source": "https://raw.githubusercontent.com/dfguan/purge_dups/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Step 2. Modify the configuration file manually (optional).",
+        "parent_header": [
+          "Purge_Dups",
+          "<a name=\"usg\"> </a> Usage (Only tested on farm)"
+        ],
+        "type": "Text_excerpt",
+        "value": "\r\nconfiguration file is in json format, it has all the information required by run\\_purge\\_dups.py. Here is an example of a configuration file. \r\n\r\n```\r\n{\r\n  \"cc\": {\r\n    \"fofn\": \"iHelSar1.pri/pb.fofn\",\r\n    \"isdip\": 1,\r\n    \"core\": 12,\r\n    \"mem\": 20000,\r\n    \"queue\": \"normal\",\r\n\t\"bwa_opt\":\"\",\r\n\t\"mnmp_opt\":\"\",\r\n    \"ispb\": 1,\r\n    \"skip\": 0\r\n  },\r\n  \"sa\": {\r\n    \"core\": 12,\r\n    \"mem\": 10000,\r\n    \"queue\": \"normal\"\r\n  },\r\n  \"busco\": {\r\n    \"core\": 12,\r\n    \"mem\": 20000,\r\n    \"queue\": \"long\",\r\n    \"skip\": 0,\r\n    \"lineage\": \"insecta\",\r\n    \"prefix\": \"iHelSar1.PB.asm1_purged\",\r\n    \"tmpdir\": \"busco_tmp\"\r\n  },\r\n  \"pd\": {\r\n    \"mem\": 20000,\r\n    \"queue\": \"normal\"\r\n  },\r\n  \"gs\": {\r\n    \"mem\": 10000,\r\n    \"oe\": 1\r\n  },\r\n  \"kcp\": {\r\n    \"core\": 12,\r\n    \"mem\": 30000,\r\n    \"fofn\": \"iHelSar1.pri/10x.fofn\",\r\n    \"prefix\": \"iHelSar1.PB.asm1_purged_kcm\",\r\n    \"tmpdir\": \"kcp_tmp\",\r\n    \"skip\": 0\r\n  },\r\n  \"ref\": \"/lustre/scratch116/vr/projects/vgp/user/dg30/dg30/projects/vgp/purge_dups/190508.primary/purge_dups/iHelSar1.pri/iHelSar1.PB.asm1.fa\",\r\n  \"out_dir\": \"iHelSar1.PB.asm1\"\r\n}\r\n```\r\n\r\nThis file use several key words to define resource allocation, input files or output files, they are listed as follows.   \r\n\r\n- **core**: CPU number\r\n- **skip**: Bool value set to skip this job\r\n- **prefix**: Output file prefix\r\n- **fofn**: Sequencing files list\r\n- **mem**: Maximum amount of RAM in MB\r\n- **tmpdir**: Temporary directory\r\n- **lineage**: Busco database \r\n- **queue**: job queue\r\n- **ref**: Assembly file path\r\n- **out_dir**: Working directory\r\n- **ispb**: Bool value set for pacbio data, 0 for Illumina data\r\n- **oe**: only remove the haplotypic duplications occuring at the ends of the contigs\r\n\r\n**Notice**: **isdip** is deprecated. \r\n\r\nThe dictionary **\"kcp\"** keeps paramaters for run_kcm script.  \r\nThe dictionary **\"gs\"** sets parameters for get\\_seqs (purge\\_dups executable file), designed to produce primary contigs and haplotigs.  \r\nThe dictionary **\"pd\"** sets parameters for purge\\_dups (purge\\_dups executable file), designed to purge haplotigs and overlaps in an assembly.  \r\nThe dictionary **\"cc\"** sets parameters for **minimap2/bwa**.  \r\nThe dictionary **\"sa\"** sets parameters for minimap2.  \r\nThe dictionary \"busco\" sets parameters for run\\_busco. \r\n\r"
+      },
+      "source": "https://raw.githubusercontent.com/dfguan/purge_dups/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Step 3. Use run_purge_dups.py to run the pipeline",
+        "parent_header": [
+          "Purge_Dups",
+          "<a name=\"usg\"> </a> Usage (Only tested on farm)"
+        ],
+        "type": "Text_excerpt",
+        "value": "\r\n```\r\nusage: run_purge_dups.py [-h] [-p PLTFM] [-w WAIT] [-r RETRIES] [--version]\r\n                         config bin_dir spid\r\n\r\npurge_dups wrapper\r\n\r\npositional arguments:\r\n  config                configuration file\r\n  bin_dir               directory of purge_dups executable files\r\n  spid                  species identifier\r\n\r\noptional arguments:\r\n  -h, --help            show this help message and exit\r\n  -p PLTFM, --platform PLTFM\r\n                        workload management platform, input bash if you want to run locally\r\n  -w WAIT, --wait WAIT  <int> seconds sleep intervals\r\n  -r RETRIES, --retries RETRIES\r\n                        maximum number of retries\r\n  --version             show program's version number and exit\r\n```\r\n\r\nExample: \r\n\r\n```\r\npython scripts/run_purge_dups.py config.iHelSar1.json src iHelSar1\r\n```\r\n\r\nAfter the pipeline is finished, there will be four new directories in the working directory (set in the configuration file).  \r\n\r\n- **coverage**: coverage cutoffs, coverage histogram and base-level coverage files\r\n- **split_aln**: segmented assembly file and a self-alignment paf file. \r\n- **purge_dups**: duplicate sequence list. \r\n- **seqs**: purged primary contigs ending with .purge.fa and haplotigs ending with .red.fa, also K-mer comparison plot and busco results are also in this directory.  \r\n\r"
+      },
+      "source": "https://raw.githubusercontent.com/dfguan/purge_dups/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Other Modification",
+        "parent_header": [
+          "Purge_Dups",
+          "<a name=\"usg\"> </a> Usage (Only tested on farm)"
+        ],
+        "type": "Text_excerpt",
+        "value": "\r\nIf the busco and k-mer comparison plot scripts are working, please modify them with the following instructions. \r\n\r\n- run\\_busco: set the PATH variables in run_busco script to your own related path. \r\n- run\\_kcm: set kcm\\_dir variable in run\\_kcm script to your own KMC directory path.\r\n\r"
+      },
+      "source": "https://raw.githubusercontent.com/dfguan/purge_dups/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Step 3. Get purged primary and haplotig sequences from draft assembly.",
+        "parent_header": [
+          "Purge_Dups",
+          "<a name=\"pplg\"> </a> Pipeline Guide"
+        ],
+        "type": "Text_excerpt",
+        "value": "\r\n```\r\nbin/get_seqs -e dups.bed $pri_asm \r\n``` \r\n**Notice** this command will only remove haplotypic duplications at the ends of the contigs. If you also want to remove the duplications in the middle, please remove `-e` option at your own risk, it may delete false positive duplications. For more options, please refer to `get_seqs -h`.\r\n\r"
+      },
+      "source": "https://raw.githubusercontent.com/dfguan/purge_dups/master/README.md",
+      "technique": "header_analysis"
+    }
+  ]
+}

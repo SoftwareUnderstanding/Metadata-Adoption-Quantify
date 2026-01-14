@@ -1,0 +1,379 @@
+{
+  "code_repository": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/beebdev/HARU"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_created": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2021-07-09T02:54:32Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_updated": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2024-02-22T06:10:42Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "description": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "Hardware Accelerated Read Until"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 0.9977926853463559,
+      "result": {
+        "original_header": "Hardware Accelerated Read Until (HARU)",
+        "type": "Text_excerpt",
+        "value": "HARU is a heterogenous compute solution for Oxford Nanopore Technologies' adaptive sampling (also known as selective sequencing and [Read Until](https://nanoporetech.com/resource-centre/read-until-adaptive-sampling)). Read Until allows genomic reads to be analyzed in real-time and abandoned halfway, if not belonging to a genomic region of 'interest'. HARU takes advantage of heterogenous edge compute platforms and provide hardware acceleration using reconfigurable hardware on an Multiprocessor system on a chip  (MPSoC).  \nOur current proof-of-concept implementation of HARU utilises a custom subsequence DTW accelerator primarily targeted for a [Xilinx's Kria AI Starter Kit](https://www.xilinx.com/products/som/kria/kv260-vision-starter-kit.html) which uses an Zynq Ultrascale+ MPSoC. This repository contains the source code for this accelerator, including the [Verilog HDL core accelerator](https://github.com/beebdev/HARU/tree/main/hdl) and [user space device driver](https://github.com/beebdev/HARU/tree/main/driver). The use of our hardware accelerator is demonstrated through an example application called *sigfish-haru* for which the source code is available [here](https://github.com/beebdev/sigfish-haru). The instructions for setting up *sigfish-haru* are given below.  \n"
+      },
+      "source": "https://raw.githubusercontent.com/beebdev/HARU/main/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9957573556590937,
+      "result": {
+        "original_header": "Building",
+        "type": "Text_excerpt",
+        "value": "> Warnings:\n> - The building of the core acccelerator is not intuitive and require proprietary software from AMD Xilinx.\n> - The build steps tested and described below uses the 2021.1 version of Xilinx tools (Vivado and PetaLinux image). For developers with versions lower than 2020.2 you will need to update your tools to a platform supporting Kria. \n"
+      },
+      "source": "https://raw.githubusercontent.com/beebdev/HARU/main/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9258510449574229,
+      "result": {
+        "original_header": "Core Accelerator",
+        "type": "Text_excerpt",
+        "value": "1. Clone the repository if you have not done so.\n    ```sh\n    git clone https://github.com/beebdev/HARU\n    ```\n2. Start Vivado, click on create project and follow the prompt to setup project. When selecting parts, navigate to *Boards* and search \"kria\" in the search bar and select *Kria KV260 Vision AI Starter Kit*.\n3. Once the project is created, click on Settings -> General, select *Verilog* as the target language. Navigate to *Bitstream* and tick on *-bin_file* for headerless bitstream to be generated later.\n4. Click on *Create Block Design* and provide a name for your design.\n5. Under *Sources*, click on *Add Sources* -> select *Add or create design sources*, -> navigate to `<path-to>/HARU/hdl/src/` and select the Verilog files (not including the simulation subdirectory).\n6. Add the following IP with the corresponding configurations:\n    - **Zynq Ultrascale+ MPSoC**; Run *Block Automation* for board preset, double click to configure and navigate to *PS-PL Configuration* -> *PS-PL Interfaces* -> *Slave Interface* -> *AXI HP* -> enable *AXI HPC0 FPD*.\n    - **AXI DMA**; Double click to configure and make sure to *DESELECT* the option *Enable Scatter Gather Engine*.\n7. Right click on the block design diagram and select *Add Module*. Select *dtw_accel* and click OK.\n8. Click on *Run Connection Automation* and click OK. This should connect the AXI Lite slaves of the controller for the AXI DMA and dtw_accel modules to Zynq Ultrascale+ MPSoC's master AXI interface. Repeat again to connect the Zynq's other AXI master to the AXI interconnect.\n9. Connect the AXI Stream connections between AXI DMA and dtw_accel.\n    - Connect `SINK_AXIS` of *dtw_accel* to `S_AXIS_S2MM` of *AXI Direct Memory Access*.\n    - Connect `SRC_AXIS` of *dtw_accel* to `M_AXIS_MM2S` of *AXI Direct Memory Access*.\n    - Click on *Run Connection Automation* and tick *All Automation* to configure clock of `SRC_AXIS` and `SINK_AXIS`' clock.\n10. Under *Sources*, right click on *design_1*, click on *Create HDL Wrapper*, and select *Let Vivado manage wrapper and auto-update*. This will create a Verilog wrapper for the design block configured above. It may take some time to complete and update in the *Sources* window.\n11. Right click on the newly generated *design_1_wrapper* under *Sources* and click *Set as Top* .\n12. Run synthesis, implementation, and generate bitstream. The `design_1_wrapper.bin` generated under `<path-to-project>/<project-name>/<project-name>.runs/impl_1/` is the headerless bitstream for the accelerator. Rename it into `haru-dtw-firmware.bit.bin`.\n13. Click on *File* -> *Export Hardware* -> Select *Pre-synthesis* -> leave name as default (`design_1_wrapper.xsa`) and *Finish*. Note that if you intend to use the PetaLinux tool to generate an image with the accelerator, you need to select *include bitstream*, however, this is not within the scope of this README.\n14. Start the **Xilinx Command Line Tool** under start. Navigate to the location of your vivado project and run the following commands:\n    BASH2*\n15. Using the device tree compiler tool `dtc` (either in WSL or other terminals), build the device tree overlay `.dtsi` file into `.dtbo` binary. This will generated the needed device tree overlay for loading your accelerator to the PetaLinux OS during system runtime.\n    BASH3*\n16. Transfer the bitstream (`haru-dtw-firmware.bit.bin`) and device tree overlay blob (`haru-dtw-firmware.dtbo`) to your Kria device.\n17. On your Kria, create the `haru-dtw-firmware` directory under `/lib/firmware/xilinx/` and copy the bitstream and device tree overlay blob into it.\n    BASH4*\n18. In the `haru-dtw-firmware` directory, create a `shell.json` file with the following content:\n    BASH5*\n19. Check if `haru-dtw-firmware` is in the list of accelerators and load it.\n    BASH6*sh\n$ <path-to>/petalinux-sdk.sh\nPetaLinux SDK installer version 2021.1_SOM\n============================================\nEnter target directory for SDK (default: /opt/petalinux/2021.1_SOM): <desired-installation-dir>\nYou are about to install the SDK to \"<desired-installation-dir>\". Proceed [Y/n]? Y\nBASH7*sh\n. <sdk-installation-dir>/environment-setup-cortexa72-cortexa53-xilinx-linux\necho $CC # to double check the configuration \nBASH8*sh\n    git clone --recursive https://github.com/beebdev/sigfish-haru\n    cd sigfish-haru\n    BASH9*sh\n    # Building sigfish WITHOUT hardware acceleration\n    make PROCESSOR=aarch64 \n\n## For developers \nDevelopers can use our sDTW accelerator core in their own applications. To do so, refer to the driver API as explained [here](https://github.com/beebdev/HARU/tree/main/driver) or browse through the code for [sigfish-haru](https://github.com/beebdev/sigfish-haru). \n \n"
+      },
+      "source": "https://raw.githubusercontent.com/beebdev/HARU/main/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9801899477223253,
+      "result": {
+        "original_header": "Building sigfish WITH hardware acceleration",
+        "type": "Text_excerpt",
+        "value": "## Building\n> Warnings:\n> - The building of the core acccelerator is not intuitive and require proprietary software from AMD Xilinx.\n> - The build steps tested and described below uses the 2021.1 version of Xilinx tools (Vivado and PetaLinux image). For developers with versions lower than 2020.2 you will need to update your tools to a platform supporting Kria. \n### Prerequisites\n- Vitis 2021.1 - we install Vitis so that the Xilinx Command Line Tool (XSTC) is included in the installation\n    - Download [Vivado (hw developer) 2021.1 installer](https://www.xilinx.com/support/download/index.html/content/xilinx/en/downloadNav/vivado-design-tools/2021-1.html). We suggest downloading the Self Extracting Web Installer.\n    - Select Vitis during the installation wizard.\n- device-tree-xlnx - make sure to checkout the version to align with other tools.\n    ```sh\n    git clone https://github.com/Xilinx/device-tree-xlnx\n    cd device-tree-xlnx\n    git checkout xlnx_rel_v2021.1\n    ```\n- `dtc` - can use a Linux terminal such as BASH (WSL will also work). You may install detc using your package manager, but make sure it is version 1.5 or higher (e.g., `sudo apt install device-tree-compiler` on Ubuntu). If you want to build and install from source:\n    BASH6*\n### Core Accelerator\n1. Clone the repository if you have not done so.\n    BASH7*\n2. Start Vivado, click on create project and follow the prompt to setup project. When selecting parts, navigate to *Boards* and search \"kria\" in the search bar and select *Kria KV260 Vision AI Starter Kit*.\n3. Once the project is created, click on Settings -> General, select *Verilog* as the target language. Navigate to *Bitstream* and tick on *-bin_file* for headerless bitstream to be generated later.\n4. Click on *Create Block Design* and provide a name for your design.\n5. Under *Sources*, click on *Add Sources* -> select *Add or create design sources*, -> navigate to `<path-to>/HARU/hdl/src/` and select the Verilog files (not including the simulation subdirectory).\n6. Add the following IP with the corresponding configurations:\n    - **Zynq Ultrascale+ MPSoC**; Run *Block Automation* for board preset, double click to configure and navigate to *PS-PL Configuration* -> *PS-PL Interfaces* -> *Slave Interface* -> *AXI HP* -> enable *AXI HPC0 FPD*.\n    - **AXI DMA**; Double click to configure and make sure to *DESELECT* the option *Enable Scatter Gather Engine*.\n7. Right click on the block design diagram and select *Add Module*. Select *dtw_accel* and click OK.\n8. Click on *Run Connection Automation* and click OK. This should connect the AXI Lite slaves of the controller for the AXI DMA and dtw_accel modules to Zynq Ultrascale+ MPSoC's master AXI interface. Repeat again to connect the Zynq's other AXI master to the AXI interconnect.\n9. Connect the AXI Stream connections between AXI DMA and dtw_accel.\n    - Connect `SINK_AXIS` of *dtw_accel* to `S_AXIS_S2MM` of *AXI Direct Memory Access*.\n    - Connect `SRC_AXIS` of *dtw_accel* to `M_AXIS_MM2S` of *AXI Direct Memory Access*.\n    - Click on *Run Connection Automation* and tick *All Automation* to configure clock of `SRC_AXIS` and `SINK_AXIS`' clock.\n10. Under *Sources*, right click on *design_1*, click on *Create HDL Wrapper*, and select *Let Vivado manage wrapper and auto-update*. This will create a Verilog wrapper for the design block configured above. It may take some time to complete and update in the *Sources* window.\n11. Right click on the newly generated *design_1_wrapper* under *Sources* and click *Set as Top* .\n12. Run synthesis, implementation, and generate bitstream. The `design_1_wrapper.bin` generated under `<path-to-project>/<project-name>/<project-name>.runs/impl_1/` is the headerless bitstream for the accelerator. Rename it into `haru-dtw-firmware.bit.bin`.\n13. Click on *File* -> *Export Hardware* -> Select *Pre-synthesis* -> leave name as default (`design_1_wrapper.xsa`) and *Finish*. Note that if you intend to use the PetaLinux tool to generate an image with the accelerator, you need to select *include bitstream*, however, this is not within the scope of this README.\n14. Start the **Xilinx Command Line Tool** under start. Navigate to the location of your vivado project and run the following commands:\n    BASH8*\n15. Using the device tree compiler tool `dtc` (either in WSL or other terminals), build the device tree overlay `.dtsi` file into `.dtbo` binary. This will generated the needed device tree overlay for loading your accelerator to the PetaLinux OS during system runtime.\n    BASH9*\n16. Transfer the bitstream (`haru-dtw-firmware.bit.bin`) and device tree overlay blob (`haru-dtw-firmware.dtbo`) to your Kria device.\n17. On your Kria, create the `haru-dtw-firmware` directory under `/lib/firmware/xilinx/` and copy the bitstream and device tree overlay blob into it.\n    BASH10*\n18. In the `haru-dtw-firmware` directory, create a `shell.json` file with the following content:\n    BASH11*\n19. Check if `haru-dtw-firmware` is in the list of accelerators and load it.\n    BASH12*sh\n$ <path-to>/petalinux-sdk.sh\nPetaLinux SDK installer version 2021.1_SOM\n============================================\nEnter target directory for SDK (default: /opt/petalinux/2021.1_SOM): <desired-installation-dir>\nYou are about to install the SDK to \"<desired-installation-dir>\". Proceed [Y/n]? Y\nBASH13*sh\n. <sdk-installation-dir>/environment-setup-cortexa72-cortexa53-xilinx-linux\necho $CC # to double check the configuration \nBASH14*sh\n    git clone --recursive https://github.com/beebdev/sigfish-haru\n    cd sigfish-haru\n    BASH15*sh\n    # Building sigfish WITHOUT hardware acceleration\n    make PROCESSOR=aarch64 \n"
+      },
+      "source": "https://raw.githubusercontent.com/beebdev/HARU/main/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "download_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/beebdev/HARU/releases"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 2
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/beebdev/HARU/forks"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "beebdev/HARU"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_title": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "Hardware Accelerated Read Until (HARU)"
+      },
+      "source": "https://raw.githubusercontent.com/beebdev/HARU/main/README.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "installation": [
+    {
+      "confidence": 0.9258373245458581,
+      "result": {
+        "original_header": "Quickstart",
+        "type": "Text_excerpt",
+        "value": "To quickly test out HARU, you can download the pre-built binary package built for Kria from the [latest release](https://github.com/beebdev/HARU/releases).\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/beebdev/HARU/main/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.999955225835679,
+      "result": {
+        "original_header": "Building",
+        "type": "Text_excerpt",
+        "value": "> Warnings:\n> - The building of the core acccelerator is not intuitive and require proprietary software from AMD Xilinx.\n> - The build steps tested and described below uses the 2021.1 version of Xilinx tools (Vivado and PetaLinux image). For developers with versions lower than 2020.2 you will need to update your tools to a platform supporting Kria. \n"
+      },
+      "source": "https://raw.githubusercontent.com/beebdev/HARU/main/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9999913499998684,
+      "result": {
+        "original_header": "Building sigfish WITH hardware acceleration",
+        "type": "Text_excerpt",
+        "value": "To build HARU for Xilinx's Kria AI Starter Kit, you will need to build two components:\n- Core Accelerator (HDL, build with Vivado)\n- Sigfish-haru + driver (C, build with cross-compilation toolchain) \n"
+      },
+      "source": "https://raw.githubusercontent.com/beebdev/HARU/main/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9986600115522819,
+      "result": {
+        "original_header": "Core Accelerator",
+        "type": "Text_excerpt",
+        "value": "1. Clone the repository if you have not done so.\n    ```sh\n    git clone https://github.com/beebdev/HARU\n    ```\n2. Start Vivado, click on create project and follow the prompt to setup project. When selecting parts, navigate to *Boards* and search \"kria\" in the search bar and select *Kria KV260 Vision AI Starter Kit*.\n3. Once the project is created, click on Settings -> General, select *Verilog* as the target language. Navigate to *Bitstream* and tick on *-bin_file* for headerless bitstream to be generated later.\n4. Click on *Create Block Design* and provide a name for your design.\n5. Under *Sources*, click on *Add Sources* -> select *Add or create design sources*, -> navigate to `<path-to>/HARU/hdl/src/` and select the Verilog files (not including the simulation subdirectory).\n6. Add the following IP with the corresponding configurations:\n    - **Zynq Ultrascale+ MPSoC**; Run *Block Automation* for board preset, double click to configure and navigate to *PS-PL Configuration* -> *PS-PL Interfaces* -> *Slave Interface* -> *AXI HP* -> enable *AXI HPC0 FPD*.\n    - **AXI DMA**; Double click to configure and make sure to *DESELECT* the option *Enable Scatter Gather Engine*.\n7. Right click on the block design diagram and select *Add Module*. Select *dtw_accel* and click OK.\n8. Click on *Run Connection Automation* and click OK. This should connect the AXI Lite slaves of the controller for the AXI DMA and dtw_accel modules to Zynq Ultrascale+ MPSoC's master AXI interface. Repeat again to connect the Zynq's other AXI master to the AXI interconnect.\n9. Connect the AXI Stream connections between AXI DMA and dtw_accel.\n    - Connect `SINK_AXIS` of *dtw_accel* to `S_AXIS_S2MM` of *AXI Direct Memory Access*.\n    - Connect `SRC_AXIS` of *dtw_accel* to `M_AXIS_MM2S` of *AXI Direct Memory Access*.\n    - Click on *Run Connection Automation* and tick *All Automation* to configure clock of `SRC_AXIS` and `SINK_AXIS`' clock.\n10. Under *Sources*, right click on *design_1*, click on *Create HDL Wrapper*, and select *Let Vivado manage wrapper and auto-update*. This will create a Verilog wrapper for the design block configured above. It may take some time to complete and update in the *Sources* window.\n11. Right click on the newly generated *design_1_wrapper* under *Sources* and click *Set as Top* .\n12. Run synthesis, implementation, and generate bitstream. The `design_1_wrapper.bin` generated under `<path-to-project>/<project-name>/<project-name>.runs/impl_1/` is the headerless bitstream for the accelerator. Rename it into `haru-dtw-firmware.bit.bin`.\n13. Click on *File* -> *Export Hardware* -> Select *Pre-synthesis* -> leave name as default (`design_1_wrapper.xsa`) and *Finish*. Note that if you intend to use the PetaLinux tool to generate an image with the accelerator, you need to select *include bitstream*, however, this is not within the scope of this README.\n14. Start the **Xilinx Command Line Tool** under start. Navigate to the location of your vivado project and run the following commands:\n    BASH2*\n15. Using the device tree compiler tool `dtc` (either in WSL or other terminals), build the device tree overlay `.dtsi` file into `.dtbo` binary. This will generated the needed device tree overlay for loading your accelerator to the PetaLinux OS during system runtime.\n    BASH3*\n16. Transfer the bitstream (`haru-dtw-firmware.bit.bin`) and device tree overlay blob (`haru-dtw-firmware.dtbo`) to your Kria device.\n17. On your Kria, create the `haru-dtw-firmware` directory under `/lib/firmware/xilinx/` and copy the bitstream and device tree overlay blob into it.\n    BASH4*\n18. In the `haru-dtw-firmware` directory, create a `shell.json` file with the following content:\n    BASH5*\n19. Check if `haru-dtw-firmware` is in the list of accelerators and load it.\n    BASH6*sh\n$ <path-to>/petalinux-sdk.sh\nPetaLinux SDK installer version 2021.1_SOM\n============================================\nEnter target directory for SDK (default: /opt/petalinux/2021.1_SOM): <desired-installation-dir>\nYou are about to install the SDK to \"<desired-installation-dir>\". Proceed [Y/n]? Y\nBASH7*sh\n. <sdk-installation-dir>/environment-setup-cortexa72-cortexa53-xilinx-linux\necho $CC # to double check the configuration \nBASH8*sh\n    git clone --recursive https://github.com/beebdev/sigfish-haru\n    cd sigfish-haru\n    BASH9*sh\n    # Building sigfish WITHOUT hardware acceleration\n    make PROCESSOR=aarch64 \n    # Building sigfish WITH hardware acceleration\n    make fpga=1 PROCESSOR=aarch64\n    ```\n4. Run `sigfish` with accelerator loaded (see above for steps). \n"
+      },
+      "source": "https://raw.githubusercontent.com/beebdev/HARU/main/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9752754891568042,
+      "result": {
+        "original_header": "Building sigfish WITH hardware acceleration",
+        "type": "Text_excerpt",
+        "value": "# Quickstart\nTo quickly test out HARU, you can download the pre-built binary package built for Kria from the [latest release](https://github.com/beebdev/HARU/releases). \n## Building\n> Warnings:\n> - The building of the core acccelerator is not intuitive and require proprietary software from AMD Xilinx.\n> - The build steps tested and described below uses the 2021.1 version of Xilinx tools (Vivado and PetaLinux image). For developers with versions lower than 2020.2 you will need to update your tools to a platform supporting Kria. \n### Prerequisites\n- Vitis 2021.1 - we install Vitis so that the Xilinx Command Line Tool (XSTC) is included in the installation\n    - Download [Vivado (hw developer) 2021.1 installer](https://www.xilinx.com/support/download/index.html/content/xilinx/en/downloadNav/vivado-design-tools/2021-1.html). We suggest downloading the Self Extracting Web Installer.\n    - Select Vitis during the installation wizard.\n- device-tree-xlnx - make sure to checkout the version to align with other tools.\n    ```sh\n    git clone https://github.com/Xilinx/device-tree-xlnx\n    cd device-tree-xlnx\n    git checkout xlnx_rel_v2021.1\n    ```\n- `dtc` - can use a Linux terminal such as BASH (WSL will also work). You may install detc using your package manager, but make sure it is version 1.5 or higher (e.g., `sudo apt install device-tree-compiler` on Ubuntu). If you want to build and install from source:\n    BASH6*\n### Core Accelerator\n1. Clone the repository if you have not done so.\n    BASH7*\n2. Start Vivado, click on create project and follow the prompt to setup project. When selecting parts, navigate to *Boards* and search \"kria\" in the search bar and select *Kria KV260 Vision AI Starter Kit*.\n3. Once the project is created, click on Settings -> General, select *Verilog* as the target language. Navigate to *Bitstream* and tick on *-bin_file* for headerless bitstream to be generated later.\n4. Click on *Create Block Design* and provide a name for your design.\n5. Under *Sources*, click on *Add Sources* -> select *Add or create design sources*, -> navigate to `<path-to>/HARU/hdl/src/` and select the Verilog files (not including the simulation subdirectory).\n6. Add the following IP with the corresponding configurations:\n    - **Zynq Ultrascale+ MPSoC**; Run *Block Automation* for board preset, double click to configure and navigate to *PS-PL Configuration* -> *PS-PL Interfaces* -> *Slave Interface* -> *AXI HP* -> enable *AXI HPC0 FPD*.\n    - **AXI DMA**; Double click to configure and make sure to *DESELECT* the option *Enable Scatter Gather Engine*.\n7. Right click on the block design diagram and select *Add Module*. Select *dtw_accel* and click OK.\n8. Click on *Run Connection Automation* and click OK. This should connect the AXI Lite slaves of the controller for the AXI DMA and dtw_accel modules to Zynq Ultrascale+ MPSoC's master AXI interface. Repeat again to connect the Zynq's other AXI master to the AXI interconnect.\n9. Connect the AXI Stream connections between AXI DMA and dtw_accel.\n    - Connect `SINK_AXIS` of *dtw_accel* to `S_AXIS_S2MM` of *AXI Direct Memory Access*.\n    - Connect `SRC_AXIS` of *dtw_accel* to `M_AXIS_MM2S` of *AXI Direct Memory Access*.\n    - Click on *Run Connection Automation* and tick *All Automation* to configure clock of `SRC_AXIS` and `SINK_AXIS`' clock.\n10. Under *Sources*, right click on *design_1*, click on *Create HDL Wrapper*, and select *Let Vivado manage wrapper and auto-update*. This will create a Verilog wrapper for the design block configured above. It may take some time to complete and update in the *Sources* window.\n11. Right click on the newly generated *design_1_wrapper* under *Sources* and click *Set as Top* .\n12. Run synthesis, implementation, and generate bitstream. The `design_1_wrapper.bin` generated under `<path-to-project>/<project-name>/<project-name>.runs/impl_1/` is the headerless bitstream for the accelerator. Rename it into `haru-dtw-firmware.bit.bin`.\n13. Click on *File* -> *Export Hardware* -> Select *Pre-synthesis* -> leave name as default (`design_1_wrapper.xsa`) and *Finish*. Note that if you intend to use the PetaLinux tool to generate an image with the accelerator, you need to select *include bitstream*, however, this is not within the scope of this README.\n14. Start the **Xilinx Command Line Tool** under start. Navigate to the location of your vivado project and run the following commands:\n    BASH8*\n15. Using the device tree compiler tool `dtc` (either in WSL or other terminals), build the device tree overlay `.dtsi` file into `.dtbo` binary. This will generated the needed device tree overlay for loading your accelerator to the PetaLinux OS during system runtime.\n    BASH9*\n16. Transfer the bitstream (`haru-dtw-firmware.bit.bin`) and device tree overlay blob (`haru-dtw-firmware.dtbo`) to your Kria device.\n17. On your Kria, create the `haru-dtw-firmware` directory under `/lib/firmware/xilinx/` and copy the bitstream and device tree overlay blob into it.\n    BASH10*\n18. In the `haru-dtw-firmware` directory, create a `shell.json` file with the following content:\n    BASH11*\n19. Check if `haru-dtw-firmware` is in the list of accelerators and load it.\n    BASH12*sh\n$ <path-to>/petalinux-sdk.sh\nPetaLinux SDK installer version 2021.1_SOM\n============================================\nEnter target directory for SDK (default: /opt/petalinux/2021.1_SOM): <desired-installation-dir>\nYou are about to install the SDK to \"<desired-installation-dir>\". Proceed [Y/n]? Y\nBASH13*sh\n. <sdk-installation-dir>/environment-setup-cortexa72-cortexa53-xilinx-linux\necho $CC # to double check the configuration \nBASH14*sh\n    git clone --recursive https://github.com/beebdev/sigfish-haru\n    cd sigfish-haru\n    BASH15*sh\n    # Building sigfish WITHOUT hardware acceleration\n    make PROCESSOR=aarch64 \n"
+      },
+      "source": "https://raw.githubusercontent.com/beebdev/HARU/main/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "issue_tracker": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/beebdev/HARU/issues"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "keywords": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": ""
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "license": [
+    {
+      "confidence": 1,
+      "result": {
+        "name": "MIT License",
+        "spdx_id": "MIT",
+        "type": "License",
+        "url": "https://api.github.com/licenses/mit",
+        "value": "https://api.github.com/licenses/mit"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "File_dump",
+        "value": "MIT License\n\nCopyright (c) 2022 Po Jui Shih\nCopyright (c) 2022 Hassaan Saadat\nCopyright (c) 2022 Sri Parameswaran\nCopyright (c) 2022 Hasindu Gamaarachchi\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.\n"
+      },
+      "source": "https://raw.githubusercontent.com/beebdev/HARU/main/LICENSE",
+      "technique": "file_exploration"
+    }
+  ],
+  "name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "HARU"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "owner": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "User",
+        "value": "beebdev"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "programming_languages": [
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Verilog",
+        "size": 69115,
+        "type": "Programming_language",
+        "value": "Verilog"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "C",
+        "size": 49209,
+        "type": "Programming_language",
+        "value": "C"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Python",
+        "size": 36288,
+        "type": "Programming_language",
+        "value": "Python"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Makefile",
+        "size": 4571,
+        "type": "Programming_language",
+        "value": "Makefile"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "readme_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/beebdev/HARU/main/README.md"
+      },
+      "technique": "file_exploration"
+    }
+  ],
+  "releases": [
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "beebdev",
+          "type": "User"
+        },
+        "date_created": "2022-11-09T11:10:09Z",
+        "date_published": "2022-11-09T11:30:45Z",
+        "description": "Initial beta release.",
+        "html_url": "https://github.com/beebdev/HARU/releases/tag/v0.1.0-beta",
+        "name": "v0.1.0-beta",
+        "release_id": 82535560,
+        "tag": "v0.1.0-beta",
+        "tarball_url": "https://api.github.com/repos/beebdev/HARU/tarball/v0.1.0-beta",
+        "type": "Release",
+        "url": "https://api.github.com/repos/beebdev/HARU/releases/82535560",
+        "value": "https://api.github.com/repos/beebdev/HARU/releases/82535560",
+        "zipball_url": "https://api.github.com/repos/beebdev/HARU/zipball/v0.1.0-beta"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "requirements": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Prerequisites",
+        "parent_header": [
+          "Quickstart",
+          "Building"
+        ],
+        "type": "Text_excerpt",
+        "value": "- Vitis 2021.1 - we install Vitis so that the Xilinx Command Line Tool (XSTC) is included in the installation\n    - Download [Vivado (hw developer) 2021.1 installer](https://www.xilinx.com/support/download/index.html/content/xilinx/en/downloadNav/vivado-design-tools/2021-1.html). We suggest downloading the Self Extracting Web Installer.\n    - Select Vitis during the installation wizard.\n- device-tree-xlnx - make sure to checkout the version to align with other tools.\n    ```sh\n    git clone https://github.com/Xilinx/device-tree-xlnx\n    cd device-tree-xlnx\n    git checkout xlnx_rel_v2021.1\n    ```\n- `dtc` - can use a Linux terminal such as BASH (WSL will also work). You may install detc using your package manager, but make sure it is version 1.5 or higher (e.g., `sudo apt install device-tree-compiler` on Ubuntu). If you want to build and install from source:\n    ```sh\n    git clone https://git.kernel.org/pub/scm/utils/dtc/dtc.git\n    cd dtc\n    make\n    export PATH=$PATH:/<path-to-dtc>/ # optionally, add this to your .bashrc \n    ```"
+      },
+      "source": "https://raw.githubusercontent.com/beebdev/HARU/main/README.md",
+      "technique": "header_analysis"
+    }
+  ],
+  "somef_missing_categories": [
+    "citation",
+    "acknowledgement",
+    "run",
+    "download",
+    "contact",
+    "contributors",
+    "documentation",
+    "usage",
+    "faq",
+    "support",
+    "identifier",
+    "has_build_file",
+    "executable_example"
+  ],
+  "somef_provenance": {
+    "date": "2024-10-04 09:59:23",
+    "somef_schema_version": "1.0.0",
+    "somef_version": "0.9.5"
+  },
+  "stargazers_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 14
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "type": [
+    {
+      "confidence": 0.82,
+      "result": {
+        "type": "String",
+        "value": "commandline-application"
+      },
+      "technique": "software_type_heuristics"
+    }
+  ]
+}

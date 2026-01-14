@@ -1,0 +1,770 @@
+{
+  "citation": [
+    {
+      "confidence": 1,
+      "result": {
+        "format": "cff",
+        "type": "File_dump",
+        "value": "# YAML 1.2\n---\nauthors: \n  -\n    affiliation: \"Utrecht University\"\n    family-names: Schermer\n    given-names: Maarten\n    orcid: \"https://orcid.org/0000-0001-6770-3155\"\n  -\n    affiliation: \"SURF\"\n    family-names: \"Bood\"\n    given-names: \"Robert Jan\"\n    orcid: \n  -\n    affiliation: \"Utrech University\"\n    family-names: Kaandorp\n    given-names: Casper\n    orcid: \"https://orcid.org/0000-0001-6326-6680\"\n  -\n    affiliation: \"Utrecht University\"\n    family-names: \"de Vos\"\n    given-names: \"Martine G\"\n    orcid: \"https://orcid.org/0000-0001-5301-1713\"\n  -\n\ncff-version: \"1.0.3\"\ndoi: \"10.5281/zenodo.5211335\"\nkeywords: \n  - \"web-scraping\"\n  - \"internet-archive\"\n  - \"aws\"\n  - \"python\"\n  - \"terraform\"\nlicense: \"MIT\"\nmessage: \"If you use this software, please cite it using these metadata.\"\nrepository-code: \"https://github.com/UtrechtUniversity/ia-webscraping/releases/tag/v1.0.0\"\ntitle: \"Ia-webscraping: An AWS workflow for collecting webpages from the Internet Archive \"\nversion: \"1.0.0\"\ndate-released: \"2023-01-20\""
+      },
+      "source": "https://raw.githubusercontent.com/UtrechtUniversity/ia-webscraping/main/CITATION.cff",
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "License and citation",
+        "parent_header": [
+          "ia-webscraping",
+          "About the Project"
+        ],
+        "type": "Text_excerpt",
+        "value": "The code in this project is released under [MIT](LICENSE).\n\nPlease cite this repository as \n\nSchermer, M., Bood, R.J., Kaandorp, C., & de Vos, M.G. (2023). \"Ia-webscraping: An AWS workflow for collecting webpages from the Internet Archive \"  (Version 1.0.0) [Computer software]. https://doi.org/10.5281/zenodo.7554441\n\n[![DOI](https://zenodo.org/badge/329035317.svg)](https://zenodo.org/badge/latestdoi/329035317)\n\n"
+      },
+      "source": "https://raw.githubusercontent.com/UtrechtUniversity/ia-webscraping/main/README.md",
+      "technique": "header_analysis"
+    }
+  ],
+  "code_repository": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/UtrechtUniversity/ia-webscraping"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_created": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2021-01-12T15:49:39Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_updated": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2023-09-04T04:07:34Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "description": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "An AWS workflow for collecting webpages from the Internet Archive"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 0.9929973689418176,
+      "result": {
+        "original_header": "ia-webscraping",
+        "type": "Text_excerpt",
+        "value": "This repository provides code to set up an AWS workflow for collecting webpages from the Internet Archive.\nIt was developed for the Crunchbase project to assess the sustainability of European startup-companies by analyzing their websites. \nThe [workflow](#architecture) is set up to scrape large numbers (millions) of Web pages. With large numbers of http requests from a single location, \nthe Internet Archive's response becomes slow and less reliable. We use serverless computing to distribute the process as much as possible.\nIn addition, we use queueing services to manage the logistics and a data streaming service to process the large amounts of individual files. \nPlease note that this software is designed for users with prior knowledge of Python, AWS and infrastructure. \n"
+      },
+      "source": "https://raw.githubusercontent.com/UtrechtUniversity/ia-webscraping/main/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9927666598120817,
+      "result": {
+        "original_header": "Results",
+        "type": "Text_excerpt",
+        "value": "All scraped content is written to the S3 result bucket (the name of which you specified in the `RESULT_BUCKET` variable) as\nParquet-files, a type of data file ([Apache Parquet docs](https://parquet.apache.org/docs/)). The files are written by\nKinesis Firehose, which controls when results are written, and to which file. Firehose flushes records to file, and rolls\nover to a new Parquet-file, whenever it is deemed necessary, This make the number of Parquet-files, as well as the number\nof records within each file somewhat unpredictable (see below for downloading and processing of Parquet-files,\nincluding compiling them in less and larger files). The files are ordered in subfolders representing the year, month and day\nthey were created. For instance, a pipeline started on December 7th 2022 will generate a series of Parquet-files such as:\n```bash\ns3://my_result_bucket/2022/12/07/scrape-kinesis-firehose-9-2022-12-07-09-23-43-00efb47c-021f-475f-a119-1aecf2b15ed9.parquet\n```\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/UtrechtUniversity/ia-webscraping/main/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9080787783435277,
+      "result": {
+        "original_header": "Split files based on job_tag",
+        "type": "Text_excerpt",
+        "value": "If the Parquet-files contain data of multiple runs with different job tags, they can be split\naccordingly. Run the following command to recursively process all Parquet-files in the folder\n`/my_data/parquet_files/202211/` and write them to `/my_data/parquet_files/jobs/`.\n```bash\n$ python parquet_file_split.py \\\n    --input '/my_data/parquet_files/202211/' \\\n    --outdir '/my_data/parquet_files/jobs/' \n```\nThis will result in a subfolder per job tag in the output folder. Within each subfolder, there\nwill be a series of Parquet-files containing only the records for that job tag.\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/UtrechtUniversity/ia-webscraping/main/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.8762016448071455,
+      "result": {
+        "original_header": "Reading Parquet files",
+        "type": "Text_excerpt",
+        "value": "If you are using Python, you can read the Parquet files into a Pandas or Polars DataFrame, \nor use the [pyarrow](https://pypi.org/project/pyarrow/) package.\nFor R you can use the [arrow](https://arrow.apache.org/docs/r/reference/read_parquet.html) package. \nEach Parquet-file contains a number of rows, each one corresponding with one scraped URL, with the following columns:\n+ job_tag: id.\n+ domain: domain for which the CDX-function retrieved the URL.\n+ url: full URL that was scraped.\n+ page_text: full page text\n+ page_links: list of page links\n+ timestamp: timestamp of creation of the record \n"
+      },
+      "source": "https://raw.githubusercontent.com/UtrechtUniversity/ia-webscraping/main/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9895379628925397,
+      "result": {
+        "original_header": "Deleting the infrastructure",
+        "type": "Text_excerpt",
+        "value": "This leaves in tact the code and result buckets.\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/UtrechtUniversity/ia-webscraping/main/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.898254105376686,
+      "result": {
+        "original_header": "Deleting buckets",
+        "type": "Text_excerpt",
+        "value": "You can delete s3 buckets through the AWS management interface. When there\nare a lot of files in a bucket, the removal process in the management interface sometimes hangs before it finishes.\nIn that case it is advisable to use the AWS client. Example command:\n```bash\n$ aws s3 rb s3://my_result_bucket --force\n```\nThis will delete all files from the bucket, and subsequently the bucket itself.\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/UtrechtUniversity/ia-webscraping/main/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9471753085915963,
+      "result": {
+        "original_header": "Architecture",
+        "type": "Text_excerpt",
+        "value": "The ia-webpository utilizes the following AWS services:\n- **Simple Queueing System**: manage distribution of tasks among Lambda functions and give insight in results\n    - queue with initial urls\n    - queue with scraping tasks\n- **AWS Lambda**: run code without the need for provisioning or managing servers\n    - lambda to retrieve cdx records for initial urls, filter these and send tasks to scraping queue\n    - lambda to retrieve webpages for cdx records and send these to s3 bucket\n- **S3**: for storage of the HTML pages\n- **CloudWatch**: monitor and manage AWS services\n   - CloudWatch to monitor the metrics of the SQS queue and Lambda functions\n   - CloudWatch to trigger the Lambda function on a timely basis, the interval can be changed to throttle the process\n- **Kinesis Data Firehose**: delivery streams\n   - data from the scraping lambda is pushed to S3 using the Kinesis Data Firehose delviery system.\n   - stores data in Apache Parquet files. \nConfiguration of the necessary AWS infrastructure and deployment of the Lambda functions is done using the\n\u201cinfrastructure as code\u201d tool Terraform. \n(n.b. schema lacks Kinesis Data Firehose component)\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/UtrechtUniversity/ia-webscraping/main/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9962623970075994,
+      "result": {
+        "original_header": "Team",
+        "type": "Text_excerpt",
+        "value": "This project is part of the Public Cloud call of [SURF](https://www.surf.nl/en/) \n"
+      },
+      "source": "https://raw.githubusercontent.com/UtrechtUniversity/ia-webscraping/main/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "download": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Browsing, querying and downloading log lines",
+        "parent_header": [
+          "ia-webscraping",
+          "Running the pipeline",
+          "Monitor progress"
+        ],
+        "type": "Text_excerpt",
+        "value": "All log lines can be browsed through the Log Groups of the CloudWatch section of the AWS Console, and, up to a point, queried via the \nLog Insights function. To download them locally, install and run [saw](https://github.com/TylerBrock/saw). A typical command would be:\n\n```bash\n$ saw get /aws/lambda/my_lambda-cdx --start 2022-06-01 --stop 2022-06-05 | grep CDX_METRIC\n```\nThis tells `saw` to get all log lines from the `/aws/lambda/my_lambda-cdx` stream for the period `2022-06-01 <= date < 2022-06-05`.\nThe output is passed on to `grep` to filter out only lines containing 'CDX_METRIC'\n\n"
+      },
+      "source": "https://raw.githubusercontent.com/UtrechtUniversity/ia-webscraping/main/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Downloading Parquet files from S3",
+        "parent_header": [
+          "ia-webscraping",
+          "Results",
+          "Processing Parquet-files"
+        ],
+        "type": "Text_excerpt",
+        "value": "Download the generated Parquet-files from the appropriate S3 bucket using the `sync_s3.sh` bash file in the \n[scripts-folder](code/scripts/). The script's first parameter is the address of the appropriate bucket and,\noptionally, the path within it. The second parameter is path of the local folder to sync to.\n\nThe script uses the `sync` command of the AWS-client, which mirrors the remote contents to a\nlocal folder. This means that if run repeatedly, only new files will be downloaded each time.\nThe command works recursively so subfolder structure is maintained.\n\nThe example command below syncs all the files and subfolders in the folder `/2022/12/` in the\nbucket `my-result-bucket` to the local folder `/my_data/parquet_files/202211/`.\n\n```bash\n$ sync_s3.sh s3://my-result-bucket/2022/12/ /my_data/parquet_files/202211/\n```\n\nBe aware that there will be some time between completion of the final invocation of the\nscraping lambda, and the writing of its data by the Kinesis Firehose (usually no more than\n15 minutes).\n"
+      },
+      "source": "https://raw.githubusercontent.com/UtrechtUniversity/ia-webscraping/main/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Quick check of downloaded files",
+        "parent_header": [
+          "ia-webscraping",
+          "Results",
+          "Processing Parquet-files"
+        ],
+        "type": "Text_excerpt",
+        "value": "To make sure all files were downloaded, check the number of files you just downloaded with the\nnumber in the S3 bucket. The latter can be calculated by accessing the AWS Console. Navigate\ntowards the S3-module, and then the appropriate S3 bucket, and select the appropriate folders.\nNext, click the 'Actions'-button and select 'Calculate total size'; this will give you the\ntotal number of objects and their collective size.\n"
+      },
+      "source": "https://raw.githubusercontent.com/UtrechtUniversity/ia-webscraping/main/README.md",
+      "technique": "header_analysis"
+    }
+  ],
+  "download_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/UtrechtUniversity/ia-webscraping/releases"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 3
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/UtrechtUniversity/ia-webscraping/forks"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "UtrechtUniversity/ia-webscraping"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_title": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "ia-webscraping"
+      },
+      "source": "https://raw.githubusercontent.com/UtrechtUniversity/ia-webscraping/main/README.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "has_script_file": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/UtrechtUniversity/ia-webscraping/main/code/new_code_only.sh"
+      },
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/UtrechtUniversity/ia-webscraping/main/code/terraform.sh"
+      },
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/UtrechtUniversity/ia-webscraping/main/code/build.sh"
+      },
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/UtrechtUniversity/ia-webscraping/main/code/scripts/sync_s3.sh"
+      },
+      "technique": "file_exploration"
+    }
+  ],
+  "identifier": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://zenodo.org/badge/latestdoi/329035317"
+      },
+      "source": "https://raw.githubusercontent.com/UtrechtUniversity/ia-webscraping/main/README.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "images": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/UtrechtUniversity/ia-webscraping/main/docs/architecture_overview.png?raw=true"
+      },
+      "source": "https://raw.githubusercontent.com/UtrechtUniversity/ia-webscraping/main/README.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "installation": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Installation",
+        "parent_header": [
+          "ia-webscraping",
+          "Getting started"
+        ],
+        "type": "Text_excerpt",
+        "value": "Check out [this repository](https://github.com/UtrechtUniversity/ia-webscraping), and make sure you checkout the 'main' branch. Open a terminal window and navigate to the `code` directory.\n```bash\n# Go to code folder\n$ cd code\n```\n"
+      },
+      "source": "https://raw.githubusercontent.com/UtrechtUniversity/ia-webscraping/main/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Configuring Lambda functions and Terraform",
+        "parent_header": [
+          "ia-webscraping",
+          "Getting started",
+          "Installation"
+        ],
+        "type": "Text_excerpt",
+        "value": "The `build.sh` script in this folder will for each of the Lambda functions:\n- install all requirements from the 'requirements.txt' file in the function's folder\n- create a zip file\n- calculate a hash of this zipfile\n- upload all relevant files to the appropriate S3 bucket\n\nYou can run `build.sh` with the following parameters to configure your scrape job:\n\n- `-c <code bucket name>`: the name of the S3 bucket you've created for the code (see 'Prerequisites'). Use just the buckets name,\nomitting the scheme (for example: 'my-code-bucket', *not* 's3://my-code-bucket').\n- `-r <result bucket name>`: the name of the S3 bucket for your results. This will be created automatically. Again, specify just\nthe name (for example: 'my-result-bucket').\n- `-l <lambda prefix>`: will be prefixed the Lambda functions' name. Useful for keeping different functions apart, if you\nare running more Lambda's on the same account.\n- `-a <AWS profile>`: the name of you local AWS profile (see 'Prerequisites'; for example: 'crunch').\n- `-f <formats to save>`: the scraper can save all readable text from a html-page (for text analysis), as well as a list of\nlinks present in each page (useful for network analysis). The default is text and links (`-f \"txt,links\"`). Saving\nfull html-pages has been disabled.\n- `-s <start year>`: start year of the time window for which the scraper will retrieve stored pages. This value affects all domains.\nIt can be overridden with a specific value _per domain_ during the [URL upload process](#upload-urls-to-be-scraped). Same for `-e`.\n- `-e <end year>`: end year.\n- `-m`: switch for exact URL match. By default, the program will retrieve all available pages who's URL *starts with* the domain\nor URL you provide. By using the `-m` switch, the program will only retrieve exact matches of the provided domain or URL. Note that\nwhile matching, the presence of absence of a 'www'-subdomain prefix is ignored (so you can provide either).\n- `-x <maximum number of scraped pages per provided URL; 0 for unlimited>`: maximum number of pages to retrieve for each provided\ndomain (or URL). If a domain's number of URLs exceeds this value, all the URLs are first sorted by their length (shortest first)\nand subsequently truncated to `-x` URLs.\n- `-n`: Switch to skip re-install of third party packages.\n- `-h`: Show help.\n\n"
+      },
+      "source": "https://raw.githubusercontent.com/UtrechtUniversity/ia-webscraping/main/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Building Lambda functions and uploading to AWS",
+        "parent_header": [
+          "ia-webscraping",
+          "Getting started",
+          "Installation"
+        ],
+        "type": "Text_excerpt",
+        "value": "Save the file and close the text editor. Then run the build script with the correct parameters, for instance:\n```bash\n$ ./build.sh \\\n  -c my_code_bucket \\\n  -r my_result_bucket \\\n  -l my_lambda \\\n  -a crunch \\\n  -s 2020 \\\n  -e 2022 \\\n  -x 1000\n```\nThe script creates relevant Terraform-files, checks whether the code-bucket exists, installs all required Python-packages,\nzips the functions, and uploads them to the code bucket.\n\nIf you run the build-script repeatedly within a short time period (for instance when modifying the code), you\ncan execute subsequent builds with a tag to skip the re-installation of the Python dependencies and save time:\n```\n$ ./new_code_only.sh\n```\nThis will repackage your code, and upload it to the appropriate bucket. The lambda will eventually pick up the new code\nversion; to make sure that the new code is used, go the appropriate function in the Lambda-section of the AWS console,\nand in the section 'Source', click 'Upload from'. Choose 'Amazon S3 location', and enter the S3-path of the uploaded zip-file.\nYou can find the paths at the end of the output of the `new_code_only.sh` script (e.g. `s3://my_code_bucket/code/my_lambda-cdx.zip`)\n\n"
+      },
+      "source": "https://raw.githubusercontent.com/UtrechtUniversity/ia-webscraping/main/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Additional Terraform configuration (optional)",
+        "parent_header": [
+          "ia-webscraping",
+          "Getting started",
+          "Installation"
+        ],
+        "type": "Text_excerpt",
+        "value": "All relevant Terraform-settings are set by the build-script. There are, however, some defaults that can be changed.\nThese are in the file [terraform.tfvars](terraform/terraform.tfvars), below the line '--- Optional parameters ---':\n\n```php\n[...]\n\n# ------------- Optional parameters -------------\n# Uncomment if you would like to use these parameters.\n# When nothing is specified, defaults apply.\n\n# cdx_logging_level = [CDX_DEBUG_LEVEL; DEFAULT=error]\n\n# scraper_logging_level = [SCRAPER_DEBUG_LEVEL; DEFAULT=error]\n\n# sqs_fetch_limit = [MAX_MESSAGES_FETCH_QUEUE; DEFAULT=1000]\n\n# sqs_cdx_max_messages = [MAX_CDX_MESSAGES_RECEIVED_PER_ITERATION; DEFAULT=10]\n\n# cdx_lambda_n_iterations = [NUMBER_ITERATIONS_CDX_FUNCTION=2]\n\n# cdx_run_id = [CDX_RUN_METRICS_IDENTIFIER; DEFAULT=1]\n```\n\nSee the [variables file](/code/terraform/variables.tf) for more information on each of these variables.\n\nPlease note that [terraform.tfvars](terraform/terraform.tfvars) is automatically generated when you run the build-script,\noverwriting any manual changes you may have made. If you wish to modify any of the variables in the file, do so _after_\nyou've successfully run `build.sh`.\n\n"
+      },
+      "source": "https://raw.githubusercontent.com/UtrechtUniversity/ia-webscraping/main/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Initializing Terraform",
+        "parent_header": [
+          "ia-webscraping",
+          "Getting started",
+          "Installation"
+        ],
+        "type": "Text_excerpt",
+        "value": "_init_\n\nThe `terraform init` command is used to initialize a working directory containing Terraform configuration files.\nThis is the first command that should be executed after writing a new Terraform configuration or cloning an\nexisting one from version control. This command needs to be run only once, but is safe to run multiple times.\n```bash\n# Go to terraform folder\n$ cd terraform\n\n# Initialize terraform\n$ terraform init\n```\nOptionally, if you have made changes to the backend configuration:\n```bash\n$ terraform init -reconfigure\n```\n_plan_\n\nThe `terraform plan` command is used to create an execution plan. Terraform performs a refresh, unless explicitly\ndisabled, and then determines what actions are necessary to achieve the desired state specified in the configuration\nfiles. The optional -out argument is used to save the generated plan to a file for later execution with\n`terraform apply`.\n```bash\n$ terraform plan -out './plan'\n```\n_apply_\n\nThe `terraform apply` command is used to apply the changes required to reach the desired state of the configuration,\nor the pre-determined set of actions generated by a terraform plan execution plan. By using the \u201cplan\u201d command before\n\u201capply,\u201d you\u2019ll be aware of any unforeseen errors or unexpected resource creation/modification!\n```bash\n$ terraform apply \"./plan\"\n```\n\nFor convenience, all the Terraform-steps can also be run from a single bash-file:\n```bash\n$ ./terraform.sh\n```\n"
+      },
+      "source": "https://raw.githubusercontent.com/UtrechtUniversity/ia-webscraping/main/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 0.9998579418270642,
+      "result": {
+        "original_header": "Reading Parquet files",
+        "type": "Text_excerpt",
+        "value": "If you are using Python, you can read the Parquet files into a Pandas or Polars DataFrame, \nor use the [pyarrow](https://pypi.org/project/pyarrow/) package.\nFor R you can use the [arrow](https://arrow.apache.org/docs/r/reference/read_parquet.html) package. \n"
+      },
+      "source": "https://raw.githubusercontent.com/UtrechtUniversity/ia-webscraping/main/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9833423760767714,
+      "result": {
+        "original_header": "Deleting the infrastructure",
+        "type": "Text_excerpt",
+        "value": "After finishing scraping, run the following [command](https://www.terraform.io/docs/commands/destroy.html), to\nclean up the AWS resources that were deployed by Terraform:\n```bash\n# Go to terraform folder\n$ cd terraform\n\n# Clean up AWS resources\n$ terraform destroy\n``` \n"
+      },
+      "source": "https://raw.githubusercontent.com/UtrechtUniversity/ia-webscraping/main/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "issue_tracker": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/UtrechtUniversity/ia-webscraping/issues"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "keywords": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "aws, internet-archive, python, terraform, web-scraping"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "license": [
+    {
+      "confidence": 1,
+      "result": {
+        "name": "MIT License",
+        "spdx_id": "MIT",
+        "type": "License",
+        "url": "https://api.github.com/licenses/mit",
+        "value": "https://api.github.com/licenses/mit"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "File_dump",
+        "value": "MIT License\n\nCopyright (c) 2021 Utrecht University Research IT\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.\n"
+      },
+      "source": "https://raw.githubusercontent.com/UtrechtUniversity/ia-webscraping/main/LICENSE",
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "IAM Developer Permissions Crunchbase",
+        "parent_header": [
+          "ia-webscraping",
+          "Getting started"
+        ],
+        "type": "Text_excerpt",
+        "value": "If you are going to use an IAM account for the pipeline, make sure it has the proper permissions to create buckets, queues and policies, and to create, read and write to log goups and streams. The following [AWS managed policies](https://docs.aws.amazon.com/IAM/latest/UserGuide/access_policies_managed-vs-inline.html) were given to all developers of the original Crunchbase project:\n- AmazonEC2FullAccess\n- AmazonSQSFullAccess\n- IAMFullAccess\n- AmazonEC2ContainerRegistryFullAccess\n- AmazonS3FullAccess\n- CloudWatchFullAccess\n- AWSCloudFormationFullAccess\n- AWSBillingReadOnlyAccess\n- AWSLambda_FullAccess\n\nNote, these policies are broader than required for the deployment of Crunchbase. Giving more access than required does not follow the best practice for least-privelege, for more [information](https://docs.aws.amazon.com/IAM/latest/UserGuide/best-practices.html).\n\n"
+      },
+      "source": "https://raw.githubusercontent.com/UtrechtUniversity/ia-webscraping/main/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "License and citation",
+        "parent_header": [
+          "ia-webscraping",
+          "About the Project"
+        ],
+        "type": "Text_excerpt",
+        "value": "The code in this project is released under [MIT](LICENSE).\n\nPlease cite this repository as \n\nSchermer, M., Bood, R.J., Kaandorp, C., & de Vos, M.G. (2023). \"Ia-webscraping: An AWS workflow for collecting webpages from the Internet Archive \"  (Version 1.0.0) [Computer software]. https://doi.org/10.5281/zenodo.7554441\n\n[![DOI](https://zenodo.org/badge/329035317.svg)](https://zenodo.org/badge/latestdoi/329035317)\n\n"
+      },
+      "source": "https://raw.githubusercontent.com/UtrechtUniversity/ia-webscraping/main/README.md",
+      "technique": "header_analysis"
+    }
+  ],
+  "name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "ia-webscraping"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "owner": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Organization",
+        "value": "UtrechtUniversity"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "programming_languages": [
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Python",
+        "size": 43837,
+        "type": "Programming_language",
+        "value": "Python"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "HCL",
+        "size": 22367,
+        "type": "Programming_language",
+        "value": "HCL"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Shell",
+        "size": 10713,
+        "type": "Programming_language",
+        "value": "Shell"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "readme_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/UtrechtUniversity/ia-webscraping/main/README.md"
+      },
+      "technique": "file_exploration"
+    }
+  ],
+  "releases": [
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "MartineDeVos",
+          "type": "User"
+        },
+        "date_created": "2022-12-09T10:27:13Z",
+        "date_published": "2023-01-20T12:39:26Z",
+        "description": "Release for the Crunchbase project",
+        "html_url": "https://github.com/UtrechtUniversity/ia-webscraping/releases/tag/v1.0.0",
+        "name": "first release",
+        "release_id": 89692978,
+        "tag": "v1.0.0",
+        "tarball_url": "https://api.github.com/repos/UtrechtUniversity/ia-webscraping/tarball/v1.0.0",
+        "type": "Release",
+        "url": "https://api.github.com/repos/UtrechtUniversity/ia-webscraping/releases/89692978",
+        "value": "https://api.github.com/repos/UtrechtUniversity/ia-webscraping/releases/89692978",
+        "zipball_url": "https://api.github.com/repos/UtrechtUniversity/ia-webscraping/zipball/v1.0.0"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "requirements": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Prerequisites",
+        "parent_header": [
+          "ia-webscraping",
+          "Getting started"
+        ],
+        "type": "Text_excerpt",
+        "value": "The process includes multiple bash-files that only run on Linux or a Mac.\nTo run this project you need to take the following steps:\n- [Install AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/install-cliv2.html)\n- [Configure AWS CLI credentials](https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-configure.html); create a local profile with the name 'crunch'\n- Install [Python3](https://www.python.org/downloads/), [pip3](https://pypi.org/project/pip/), [pandas](https://pandas.pydata.org/), [boto3](https://boto3.amazonaws.com/v1/documentation/api/latest/guide/quickstart.html#installation)\n- Install [Terraform](https://www.terraform.io/downloads.html)\n- Create a personal S3 bucket in AWS (region: 'eu-central-1'; for other settings defaults suffice). This is the bucket the code for your Lambda-functions will be stored in. Another bucket for the sults will be created automatically.\n"
+      },
+      "source": "https://raw.githubusercontent.com/UtrechtUniversity/ia-webscraping/main/README.md",
+      "technique": "header_analysis"
+    }
+  ],
+  "run": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Upload URLs to be scraped",
+        "parent_header": [
+          "ia-webscraping",
+          "Running the pipeline"
+        ],
+        "type": "Text_excerpt",
+        "value": "Scraping is done in two steps:\n1. After uploading a list of domains to be scraped to a queue, the 'CDX' Lambda-function queries the API of the [Internet\nArchive](https://archive.org/web/) (IA) and retrieves all archived URLs for each domain. These include all available\ndifferent (historical) versions of each page for the specified time period. After filtering out irrelevant URLs (images,\nJavaScript-files, stylesheets etc.), the remaining links are sent to a second queue for scraping.\n2. The 'scrape' function reads links from the second queue, retrieves the corresponding pages from the Internet Archive,\nand saves the contents to the result bucket. The contents are saved as Parquet datafiles.\n\nThe `fill_sqs_queue.py` script adds domains to be scraped to the initial queue (script is located in the [code folder](code/)):\n```bash\n# Fill sqs queue\n$ python fill_sqs_queue.py [ARGUMENTS]\n```\n```\nArguments:\n  --infile, -f       CSV-file with domains. The appropriate column should have 'Website' as\n                     header. If you're using '--year-window' there should also be a column\n                     'Year'.\n  --job-tag, -t      Tag to label a batch of URLs to be scraped. This tag is repeated in all\n                     log files and in the result bucket, and is intended to keep track of all\n                     data and files of one run. Max. 32 characters.\n  --queue, -q        name of the appropriate queue; the correct value has been set by 'build.sh'\n                     (optional).\n  --profile, -p      name of your local AWS profile; the correct value has been set by 'build.sh'\n                     (optional).\n  --author, -a       author of queued messages; the correct value has been set by 'build.sh'\n                     (optional).\n  --first-stage-only switch to use only the first step of the scraping process (optional, default\n                     false). When used, the domains you queue are looked up in the IA, and the\n                     resulting URLs are filtered and, if appropriate, capped, and logged, but not\n                     passed on to the scrape-queue. \n  --year-window, -y  number of years to scrape from a domain's start year (optional). Requires\n                     the presence of a column with start years in the infile.\n\n\nExample:\n$ python fill_sqs_queue.py -f example.csv -t \"my first run (2022-07-11)\" -y 5\n```\nFor each domain, the script creates a message and loads it into the CDX-queue, after which processing automatically\nstarts.\n"
+      },
+      "source": "https://raw.githubusercontent.com/UtrechtUniversity/ia-webscraping/main/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Monitor progress",
+        "parent_header": [
+          "ia-webscraping",
+          "Running the pipeline"
+        ],
+        "type": "Text_excerpt",
+        "value": "Each AWS service in the workflow can be monitored in the AWS console. The CloudWatch logs provide additional information\non the Lambda functions. Set the logging level to 'info' to get verbose information on the progress.\n"
+      },
+      "source": "https://raw.githubusercontent.com/UtrechtUniversity/ia-webscraping/main/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "CDX-queue",
+        "parent_header": [
+          "ia-webscraping",
+          "Running the pipeline",
+          "Monitor progress"
+        ],
+        "type": "Text_excerpt",
+        "value": "For each domain a message is created in the CDX-queue, which can be monitored through the\n'Simple Queue Service' in the AWS Console. The CDX-queue is called `my-lambda-cdx-queue` (`my-lambda` being the value\nof `LAMBDA_NAME` you configured; see 'Configuring Lambda functions and Terraform'). The column 'Messages available'\ndisplays the number of remaining messages in the queue, while 'Messages in flights' shows the number of messages\ncurrently being processed. Please note that this process can be relatively slow; if you uploaded thousands of links,\nexpect the entire process to take several hours or longer.\n"
+      },
+      "source": "https://raw.githubusercontent.com/UtrechtUniversity/ia-webscraping/main/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Scrape-queue",
+        "parent_header": [
+          "ia-webscraping",
+          "Running the pipeline",
+          "Monitor progress"
+        ],
+        "type": "Text_excerpt",
+        "value": "The scrape-queue (`my-lambda-scrape-queue`) contains a message for each URL to be scraped. Depending on the size of the\ncorresponding website, this can be anything between a few and thousands of links per domain (and occasionally none).\nTherefore, the number of messages to be processed from the scrape-queue is usually many times larger than the number\nloaded into the CDX-queue. The is further increased by the availability of multiple versions of the same page.  \n"
+      },
+      "source": "https://raw.githubusercontent.com/UtrechtUniversity/ia-webscraping/main/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Stopping a run",
+        "parent_header": [
+          "ia-webscraping",
+          "Running the pipeline",
+          "Monitor progress"
+        ],
+        "type": "Text_excerpt",
+        "value": "If you need to stop a run, first go to the details of the CDX-queue (by clicking its name), and choose 'purge'. This\nwill delete all messages from the queue that are not in flight yet. Then do the same for the scrape-queue.\n\n"
+      },
+      "source": "https://raw.githubusercontent.com/UtrechtUniversity/ia-webscraping/main/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "CloudWatch (logfiles)",
+        "parent_header": [
+          "ia-webscraping",
+          "Running the pipeline",
+          "Monitor progress"
+        ],
+        "type": "Text_excerpt",
+        "value": "While running, both functions log metrics to their own log group. These can be accessed through the CloudWatch module \nof the AWS Console.\n\nEach function logs to its own log group, `/aws/lambda/my_lambda-cdx` and `/aws/lambda/my_lambda-scrape`. These logs\ncontain mostly technical feedback, and are useful for debugging errors.\nBesides standard process info, the lambda's write project specific log lines to their respective log streams. These\ncan be identified by their labels.\n\n_CDX metrics_  (Label: **[CDX_METRIC]**)\n\nMetrics per domain\n+ job tag\n+ domain\n+ start year of the retrieval window\n+ end year of the retrieval window\n+ number of URLs retrieved from the IA\n+ number that remains after filtering out filetypes that carry no content (such as JS-files, and style sheets)\n+ number sent to the scrape-queue, after filtering and possible capping.\nThe last two numbers are usually the same, unless you have specified a maximum number of scraped pages per provided domain, and a domain\nhas more pages than that maximum.\n\n_Scrape metrics_  (Label **[SCRAPE_METRIC]**)\n\nMetrics per scraped URL\n+ job tag\n+ domain for which the CDX-function retrieved the URL.\n+ full URL that was scraped.\n+ size saved txt (in bytes)\n+ size saved links (in bytes)\n"
+      },
+      "source": "https://raw.githubusercontent.com/UtrechtUniversity/ia-webscraping/main/README.md",
+      "technique": "header_analysis"
+    }
+  ],
+  "somef_missing_categories": [
+    "acknowledgement",
+    "contact",
+    "contributors",
+    "documentation",
+    "faq",
+    "support",
+    "has_build_file",
+    "executable_example"
+  ],
+  "somef_provenance": {
+    "date": "2024-10-03 23:54:02",
+    "somef_schema_version": "1.0.0",
+    "somef_version": "0.9.5"
+  },
+  "stargazers_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 3
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "type": [
+    {
+      "confidence": 0.82,
+      "result": {
+        "type": "String",
+        "value": "commandline-application"
+      },
+      "technique": "software_type_heuristics"
+    }
+  ],
+  "usage": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Getting started",
+        "parent_header": [
+          "ia-webscraping"
+        ],
+        "type": "Text_excerpt",
+        "value": "  - [Prerequisites](#prerequisites)\n  - [Installation](#installation)\n"
+      },
+      "source": "https://raw.githubusercontent.com/UtrechtUniversity/ia-webscraping/main/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Configuring Lambda functions and Terraform",
+        "parent_header": [
+          "ia-webscraping",
+          "Getting started",
+          "Installation"
+        ],
+        "type": "Text_excerpt",
+        "value": "The `build.sh` script in this folder will for each of the Lambda functions:\n- install all requirements from the 'requirements.txt' file in the function's folder\n- create a zip file\n- calculate a hash of this zipfile\n- upload all relevant files to the appropriate S3 bucket\n\nYou can run `build.sh` with the following parameters to configure your scrape job:\n\n- `-c <code bucket name>`: the name of the S3 bucket you've created for the code (see 'Prerequisites'). Use just the buckets name,\nomitting the scheme (for example: 'my-code-bucket', *not* 's3://my-code-bucket').\n- `-r <result bucket name>`: the name of the S3 bucket for your results. This will be created automatically. Again, specify just\nthe name (for example: 'my-result-bucket').\n- `-l <lambda prefix>`: will be prefixed the Lambda functions' name. Useful for keeping different functions apart, if you\nare running more Lambda's on the same account.\n- `-a <AWS profile>`: the name of you local AWS profile (see 'Prerequisites'; for example: 'crunch').\n- `-f <formats to save>`: the scraper can save all readable text from a html-page (for text analysis), as well as a list of\nlinks present in each page (useful for network analysis). The default is text and links (`-f \"txt,links\"`). Saving\nfull html-pages has been disabled.\n- `-s <start year>`: start year of the time window for which the scraper will retrieve stored pages. This value affects all domains.\nIt can be overridden with a specific value _per domain_ during the [URL upload process](#upload-urls-to-be-scraped). Same for `-e`.\n- `-e <end year>`: end year.\n- `-m`: switch for exact URL match. By default, the program will retrieve all available pages who's URL *starts with* the domain\nor URL you provide. By using the `-m` switch, the program will only retrieve exact matches of the provided domain or URL. Note that\nwhile matching, the presence of absence of a 'www'-subdomain prefix is ignored (so you can provide either).\n- `-x <maximum number of scraped pages per provided URL; 0 for unlimited>`: maximum number of pages to retrieve for each provided\ndomain (or URL). If a domain's number of URLs exceeds this value, all the URLs are first sorted by their length (shortest first)\nand subsequently truncated to `-x` URLs.\n- `-n`: Switch to skip re-install of third party packages.\n- `-h`: Show help.\n\n"
+      },
+      "source": "https://raw.githubusercontent.com/UtrechtUniversity/ia-webscraping/main/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Building Lambda functions and uploading to AWS",
+        "parent_header": [
+          "ia-webscraping",
+          "Getting started",
+          "Installation"
+        ],
+        "type": "Text_excerpt",
+        "value": "Save the file and close the text editor. Then run the build script with the correct parameters, for instance:\n```bash\n$ ./build.sh \\\n  -c my_code_bucket \\\n  -r my_result_bucket \\\n  -l my_lambda \\\n  -a crunch \\\n  -s 2020 \\\n  -e 2022 \\\n  -x 1000\n```\nThe script creates relevant Terraform-files, checks whether the code-bucket exists, installs all required Python-packages,\nzips the functions, and uploads them to the code bucket.\n\nIf you run the build-script repeatedly within a short time period (for instance when modifying the code), you\ncan execute subsequent builds with a tag to skip the re-installation of the Python dependencies and save time:\n```\n$ ./new_code_only.sh\n```\nThis will repackage your code, and upload it to the appropriate bucket. The lambda will eventually pick up the new code\nversion; to make sure that the new code is used, go the appropriate function in the Lambda-section of the AWS console,\nand in the section 'Source', click 'Upload from'. Choose 'Amazon S3 location', and enter the S3-path of the uploaded zip-file.\nYou can find the paths at the end of the output of the `new_code_only.sh` script (e.g. `s3://my_code_bucket/code/my_lambda-cdx.zip`)\n\n"
+      },
+      "source": "https://raw.githubusercontent.com/UtrechtUniversity/ia-webscraping/main/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Additional Terraform configuration (optional)",
+        "parent_header": [
+          "ia-webscraping",
+          "Getting started",
+          "Installation"
+        ],
+        "type": "Text_excerpt",
+        "value": "All relevant Terraform-settings are set by the build-script. There are, however, some defaults that can be changed.\nThese are in the file [terraform.tfvars](terraform/terraform.tfvars), below the line '--- Optional parameters ---':\n\n```php\n[...]\n\n# ------------- Optional parameters -------------\n# Uncomment if you would like to use these parameters.\n# When nothing is specified, defaults apply.\n\n# cdx_logging_level = [CDX_DEBUG_LEVEL; DEFAULT=error]\n\n# scraper_logging_level = [SCRAPER_DEBUG_LEVEL; DEFAULT=error]\n\n# sqs_fetch_limit = [MAX_MESSAGES_FETCH_QUEUE; DEFAULT=1000]\n\n# sqs_cdx_max_messages = [MAX_CDX_MESSAGES_RECEIVED_PER_ITERATION; DEFAULT=10]\n\n# cdx_lambda_n_iterations = [NUMBER_ITERATIONS_CDX_FUNCTION=2]\n\n# cdx_run_id = [CDX_RUN_METRICS_IDENTIFIER; DEFAULT=1]\n```\n\nSee the [variables file](/code/terraform/variables.tf) for more information on each of these variables.\n\nPlease note that [terraform.tfvars](terraform/terraform.tfvars) is automatically generated when you run the build-script,\noverwriting any manual changes you may have made. If you wish to modify any of the variables in the file, do so _after_\nyou've successfully run `build.sh`.\n\n"
+      },
+      "source": "https://raw.githubusercontent.com/UtrechtUniversity/ia-webscraping/main/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Initializing Terraform",
+        "parent_header": [
+          "ia-webscraping",
+          "Getting started",
+          "Installation"
+        ],
+        "type": "Text_excerpt",
+        "value": "_init_\n\nThe `terraform init` command is used to initialize a working directory containing Terraform configuration files.\nThis is the first command that should be executed after writing a new Terraform configuration or cloning an\nexisting one from version control. This command needs to be run only once, but is safe to run multiple times.\n```bash\n# Go to terraform folder\n$ cd terraform\n\n# Initialize terraform\n$ terraform init\n```\nOptionally, if you have made changes to the backend configuration:\n```bash\n$ terraform init -reconfigure\n```\n_plan_\n\nThe `terraform plan` command is used to create an execution plan. Terraform performs a refresh, unless explicitly\ndisabled, and then determines what actions are necessary to achieve the desired state specified in the configuration\nfiles. The optional -out argument is used to save the generated plan to a file for later execution with\n`terraform apply`.\n```bash\n$ terraform plan -out './plan'\n```\n_apply_\n\nThe `terraform apply` command is used to apply the changes required to reach the desired state of the configuration,\nor the pre-determined set of actions generated by a terraform plan execution plan. By using the \u201cplan\u201d command before\n\u201capply,\u201d you\u2019ll be aware of any unforeseen errors or unexpected resource creation/modification!\n```bash\n$ terraform apply \"./plan\"\n```\n\nFor convenience, all the Terraform-steps can also be run from a single bash-file:\n```bash\n$ ./terraform.sh\n```\n"
+      },
+      "source": "https://raw.githubusercontent.com/UtrechtUniversity/ia-webscraping/main/README.md",
+      "technique": "header_analysis"
+    }
+  ]
+}

@@ -1,0 +1,656 @@
+{
+  "acknowledgement": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Acknowledgments",
+        "parent_header": [
+          "FEELnc :"
+        ],
+        "type": "Text_excerpt",
+        "value": "To the users of FEELnc and to GenOuest Bioinformatics core facility.\n"
+      },
+      "source": "https://raw.githubusercontent.com/tderrien/FEELnc/master/README.md",
+      "technique": "header_analysis"
+    }
+  ],
+  "citation": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Citation",
+        "parent_header": [
+          "FEELnc :"
+        ],
+        "type": "Text_excerpt",
+        "value": "[Wucher, V. et al. FEELnc: a tool for long non-coding RNA annotation and its application to the dog transcriptome. Nucleic Acids Res (2017). doi:10.1093/nar/gkw1306](http://nar.oxfordjournals.org/content/early/2017/01/03/nar.gkw1306.full)\n\n"
+      },
+      "source": "https://raw.githubusercontent.com/tderrien/FEELnc/master/README.md",
+      "technique": "header_analysis"
+    }
+  ],
+  "code_repository": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/tderrien/FEELnc"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_created": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2015-01-30T14:23:01Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_updated": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2024-10-24T05:32:28Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "description": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "FEELnc : FlExible Extraction of LncRNA"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Introduction",
+        "parent_header": [
+          "FEELnc :"
+        ],
+        "type": "Text_excerpt",
+        "value": "Currently, FEELnc is composed of 3 modules.\n\n\t* FEELnc_filter.pl\t: Extract, filter candidate transcripts.\n\t* FEELnc_codpot.pl\t: Compute the coding potential of candidate transcripts.\n\t* FEELnc_classifier.pl: Classify lncRNAs based on their genomic localization wrt others transcripts.\n\nWhile the first and third modules require a reference genome, the  2nd module (which computes the coding potential) does not require any reference genome and could be run on de novo assembled transcripts in fasta format.\n\n\nTo get help on each module, you can type :\n\n\tFEELnc_filter.pl --help\n\t# Or\n\tFEELnc_filter.pl --man\n\n"
+      },
+      "source": "https://raw.githubusercontent.com/tderrien/FEELnc/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 0.9996684468844106,
+      "result": {
+        "original_header": "FlExible Extraction of Long non-coding RNAs",
+        "type": "Text_excerpt",
+        "value": "\nThis document is intended to give a technical description of the FEELnc pipeline in order to annotate long non-coding RNAs (lncRNAs)  based on reconstructed transcripts from RNA-seq data (either with or without a reference genome).\nFor a more general overview of lncRNAs annotation using RNASeq and FEELnc specific advantages, you could point to [the FEELnc paper](http://nar.oxfordjournals.org/content/early/2017/01/03/nar.gkw1306.full). \n"
+      },
+      "source": "https://raw.githubusercontent.com/tderrien/FEELnc/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.94055608933358,
+      "result": {
+        "original_header": "Input files",
+        "type": "Text_excerpt",
+        "value": "The formats used to describe genes, transcripts, exon is **.GTF** and **.FASTA** for genome file. \n\n\\* *Note: It is recommended to only extract protein_coding transcripts (mRNAs) from the reference annotation file (ref_annotation.GTF) when this information is available, either manually or better by using the option :*\n**--biotype transcript_biotype=protein_coding**. \n"
+      },
+      "source": "https://raw.githubusercontent.com/tderrien/FEELnc/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9841513573837037,
+      "result": {
+        "original_header": "1- FEELnc_filter.pl",
+        "type": "Text_excerpt",
+        "value": "The first step of the pipeline (FEELnc_filter) consists in filtering out unwanted/spurious transcripts and/or transcripts overlapping (in sense) exons of the reference annotation\nand especially protein_coding exons as they more probably correspond to new mRNA isoforms (see -b,--biotype option). \nThis option is highly recommended if you don't want to remove transcripts\noverlapping with other transcripts than mRNAs (e.g lincRNA, miRNA, pseudogene...).\nFor stranded RNASeq protocol, it is also possible  to include monoexonic lncRNAs that are antisense to mRNAs e.g \n"
+      },
+      "source": "https://raw.githubusercontent.com/tderrien/FEELnc/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9440667594622045,
+      "result": {
+        "original_header": "2- FEELnc_codpot.pl",
+        "type": "Text_excerpt",
+        "value": "It makes use of the intrinsic properties of input sequences (ORF coverage and mRNA sizes, k-mer frequencies...) based on 2 training files: \n\n\t- known_mRNA.gtf (or .fa)   : a set of known protein_coding transcripts\n\t- known_lncRNA.gtf  (or .fa): a set of known lncRNA transcripts \nIn the absence of species-specific lncRNAs set, machine-learning strategies require to\nsimulate non-coding RNA sequences to train the model. We developed 2 approaches: \n1/ A first approach involves that lncRNAs derived from \"debris\" of protein-coding\ngenes (Duret *et al.* 2006). For this strategy that we called **shuffle**, the set of mRNAs are taken and shuffled while preserving 7-mer frequencies using Ushuffle.\nIf you want to use the **shuffle** mode, please check that the **fasta_ushuffle** binary is in your PATH \n\n2/ Another more naive approach called **intergenic** consists in extracting random\nsequences from the genome of interest to model species-specific noncoding sequences.\nIn this case, the reference genome file is required (ref_genome.FA) and the mode of\nthe lncRNA sequences simulation have to been set to **intergenic**. \nFor more details and a comparaison between these two lncRNA simulations, please see the [FEELnc publication](http://nar.oxfordjournals.org/content/early/2017/01/03/nar.gkw1306.full). \nAs in the previous module, if your reference annotation file  (\"*ref_annotation.GTF*\") contains additionnal fields such **transcript_biotype** and/or **transcript_status** in the [GENCODE annotation](http://www.gencodegenes.org/gencodeformat.html) or [ENSEMBL](http://www.ensembl.org), you can extract them manually or by using the **-b option** (as  to get the best training set of known mRNAs. \nIf your input file is called **INPUT**, this second module will create these output files: \n\t - {INPUT}_RF_learningData.txt: FEELnc metrics scores (ORF coverage and mRNA sizes, k-mer frequencies and labels) for the training files.\n\t - {INPUT}_RF_statsLearn_CrossValidation.txt: statistics for n cross validation on the training files.\n\t - {INPUT}_RF_TGROC.png: TwoGraph ROC curve plot to select the best coding potential cutoff.\n\t - {INPUT}_RF.txt: FEELnc metrics scores (ORF coverage and mRNA sizes, k-mer frequencies and labels) for the testing file.\n\t - {INPUT}_RF_varImpPlot.png: Dotchart plot of variable importance as measured by a Random Forest. \n\t - {INPUT}.lncRNA.gtf || {INPUT}.lncRNA.fa: a .GTF/.FA file of the transcripts below the CPS (i.e the final set of lncRNAs).\n\t - {INPUT}.mRNA.gtf || {INPUT}.mRNA.fa: a .GTF/.FA file of the transcripts above the coding potential cutoff (i.e the final set of mRNAs).\n\t - [Possibly] {INPUT}.noORF.gtf || {INPUT}.noORF.fa: a .GTF/.FA file of the transcripts without any ORF found by FEELnc using the specified --testorftype option (see FEELnc_codpot.pl options description for more details). Transcripts contained in this file most probably correspond to lncRNAs. \n**- FULL OPTIONS (FEELnc_codpot.pl --help) :**\n```\n\nUsage:\n    FEELnc_codpot.pl -i transcripts.GTF -a known_mRNA.GTF -g genome.FA -l\n    known_lnc.GTF [options...]\n\nOptions:\n  General:\n      --help                Print this help\n      --man                 Open man page\n      --verbosity           Level of verbosity\n\n  Mandatory arguments:\n      -i,--infile=file.gtf/.fasta           Specify the .GTF or .FASTA file  (such as a cufflinks transcripts/merged .GTF or .FASTA file)\n      -a,--mRNAfile=file.gtf/.fasta         Specify the annotation .GTF or .FASTA file  (file of protein coding transcripts .GTF or .FASTA file)\n\n  Optional arguments:\n      -g,--genome=genome.fa                 Genome file or directory with chr files (mandatory if input is .GTF) [ default undef ]\n      -l,--lncRNAfile=file.gtf/.fasta       Specify a known set of lncRNA for training .GTF or .FASTA  [ default undef ]\n      -b,--biotype                          Only consider transcripts having this(these) biotype(s) from the reference annotation (e.g : -b transcript_biotype=protein_coding,pseudogene) [default undef i.e all transcripts]\n      -n,--numtx=undef                      Number of transcripts required for the training and for all transcripts in the annotation use undef [ default undef ]\n      -r,--rfcut=[0-1]                      Random forest voting cutoff [ default undef i.e will compute best cutoff ]\n      --spethres=undef                      Two specificity threshold based on the 10-fold cross-validation, first one for mRNA and the second for lncRNA, need to be in ]0,1[ on separated by a ','\n      -k,--kmer=\"1,2,3,6,9,12\"                     Kmer size list with sizes separated by ',' as string [ default \"3,6,9\" ], the maximum value for one size is '15'\n      -o,--outname=\"./\"                     Output filename [ default infile_name ]\n      --outdir=\"./\"                         Output directory [ default current directory ]\n      -m,--mode                             The mode of the lncRNA sequences simulation if no lncRNA sequences have been provided. The mode can be:\n                                                    'shuffle'   : make a permutation of mRNA sequences while preserving the 7mer count. Can be done on either FASTA and GTF input file;\n                                                    'intergenic': extract intergenic sequences. Can be done *only* on GTF input file.\n      -s,--sizeinter=0.75                   Ratio between mRNA sequence and non-coding intergenic extracted region sizes [default 0.75 ]\n      --learnorftype=3                      Integer [0,1,2,3,4] to specify the type of longest ORF computation [ default: 1 ] for learning data set. If the CDS is annotated in the .GTF, then the CDS is considered as the longest ORF, whatever the --orftype value.\n                                                    '0': ORF with start and stop codon;\n                                                    '1': same as '0' and ORF with only a start codon, take the longest;\n                                                    '2': same as '0' and ORF with only a stop codon,  take the longest;\n                                                    '3': same as '0' and ORF with a start or a stop,  take the longest (see '1' and '2');\n                                                    '4': same as '3' but if no ORF is found, take the input sequence as ORF.\n      --testorftype=3                       Integer [0,1,2,3,4] to specify the type of longest ORF calculate [ default: 1 ] for test data set. See --learnortype description for more informations.\n      --ntree                               Number of trees used in random forest [ default 500 ]\n\n  Debug arguments:\n      --keeptmp                           To keep the temporary files in a 'tmp' directory the outdir, by default don't keep it (0 value). Any other value than 0 will keep the temporary files\n      -v,--verbosity=0                         Which level of information that need to be print [ default 0 ]\n      --seed=1234                           Used to fixe the seed value for the randomisation of mRNA sequences by Ushuffle, the extraction of intergenic DNA region to get lncRNA like sequences and for the random forest [ default 1234 ]\n\n```\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/tderrien/FEELnc/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9230790939330438,
+      "result": {
+        "original_header": "3- FEELnc_classifier.pl",
+        "type": "Text_excerpt",
+        "value": "\nThe last step of the pipeline consists in classifying new lncRNAs w.r.t to the localisation and the direction of transcription of proximal RNA transcripts because classifying lncRNAs with mRNAs (or other ncRNAs) could help to predict functions for lncRNAs. \n**- Types of interactions:** \nFor all newly identified lncRNAs transcripts, a sliding window strategy is used to check for possible overlap with nearest transcripts from the reference annotation.\nA first level of classification disciminates 2 **TYPES** of interactions: \nThen, **subtypes** and **locations** are defined according the orientation of the interactions and the localisation of the interactions (See OUTPUT and last figure for more details): \n* `INTERGENIC` type :\n * `divergent` subtype\t: the lncRNA is transcribed in head to head orientation with RNA_partner\n   * then `upstream` or `downstream` locations.\n * `convergent` subtype\t: the lncRNA is oriented in tail to tail with orientation with RNA_partner\n   * then `upstream` or `downstream` locations.\n * `same_strand`subtype\t: the lncRNA is transcribed in the same orientation orientation with RNA_partner\n   * then `upstream` or `downstream` locations. \n\nForeach lncRNA interaction, a best lncRNA:RNA_partner interaction is identified in the output file with a value == 1 in the first column **isBest** (0 otherwise). This flag is defined according to the following rule: \n - for `INTERGNIC` : the best RNA partner is the **closest** to the lincRNA\n - for `GENIC`\t: the best RNA partner is by rule of priority **exonic** (then the fraction of exonic overlap) > **intronic** > **containing**. \nOutput examples:\n```\ncat {INPUT}_feelncclassifier.log\n#FEELnc Classification\n#lncRNA file :  lncrna : lncRNA_34.gtf\n#mRNA file : 34.gtf\n#Minimal window size : 1000\n#Maximal window size : 1000\n#Number of lncRNA : 462\n#Number of mRNA : 374\n#Number of interaction : 180\n#Number of lncRNA without interaction : 369\n#List of lncRNA without interaction : TCONS_00162422 TCONS_00163593 TCONS_00160948 TCONS_00162636 TCONS_00161917 TCONS_00161884 TCONS_00162654 TCONS_00164153 TCONS_00162630 TCONS_00161117 TCONS_00163030 TCONS_00162985 TCONS_00162306 TCONS_00162438\n```\n \nHere is showed 9 interactions concerning 6 lncRNAs where one lncRNA (TCONS_00231794) has 3 interactions with a window size of 1,000 nt.\n(The best interactions are labelled with a 1 in isBest column) \n**- Illustration of the classification :** \n\tlncRNA_ID and ENSXXXX are overlapping in the same strand\nDepending on your filtering options, this may correspond to a non-protein-coding transcript (pseudogene, miRNA) which overlaps the lncRNA \n\nConflicts cases are of two types: the cases in which there are more than 1 annotation relative to one unique PCG (as indicated by the \u201cn\u201d in the middle and \u201c1\u201d at the end of \u201cn.n.1\u201d), and the case in which there more than 1 or more annotation relative to more than 1 PCG (\u201cn.X.n\u201d in the feelLncPcgClassType column). In these cases, we prioritized the annotation in the column \u00ab feelLncPcgClassName\u00bb, which gives only 1 class per gene :\n- n.n.1 case: Genics have priority over intergenics (lncg > linc). Among the genic, exonics have priority over intronics. Among exonics and intronics, the subtypes nested / containing / overlapping have the same importance. They are kept if they do not produce conflicts and are removed if there are 2 or more subtypes.\n- n.X.n case: Same order of priority as previously (n.n.1 case). \nConcerning the intergenics, there can be annotation conflicts between the several PCGs: the lncRNA can be classified as lincDivg with one PCG and lincConv with another one PCG (see figure  for an example). We prioritize the classes as following: Divg > SS > Conv. Same- strand have priority over Conv because it could suggest an error in the modelization: the lncRNA could be a 5\u2019-part or 3\u2019-part of the PCG. Between the same strand up and down (lincSSup and lincSSdw), we choose the closest. The third part of the class name of these genes is either \u201c_n.n.n\u201d or \u201c_n.1.n\u201d. \n"
+      },
+      "source": "https://raw.githubusercontent.com/tderrien/FEELnc/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.847181711374661,
+      "result": {
+        "original_header": "Warnings",
+        "type": "Text_excerpt",
+        "value": " - In the installation (and/or) the classifier step, you may see a warning like\n```\nCan't call method \"close\" on an undefined value Bio/DB/SeqFeature/Store/berkeleydb.pm\n```\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/tderrien/FEELnc/master/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "documentation": [
+    {
+      "confidence": 1,
+      "result": {
+        "format": "wiki",
+        "type": "Url",
+        "value": "https://github.com/tderrien/FEELnc/wiki"
+      },
+      "source": "https://raw.githubusercontent.com/tderrien/FEELnc/master/README.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "download_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/tderrien/FEELnc/releases"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 28
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/tderrien/FEELnc/forks"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "tderrien/FEELnc"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_title": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "FEELnc :"
+      },
+      "source": "https://raw.githubusercontent.com/tderrien/FEELnc/master/README.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "has_script_file": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/tderrien/FEELnc/master/utils/FEELnc_pipeline.sh"
+      },
+      "technique": "file_exploration"
+    }
+  ],
+  "images": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/tderrien/FEELnc/master/./image/FEELnc_lncRNA_classification_intergenic.png"
+      },
+      "source": "https://raw.githubusercontent.com/tderrien/FEELnc/master/README.md",
+      "technique": "regular_expression"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/tderrien/FEELnc/master/./image/FEELnc_lncRNA_classification_genic.png"
+      },
+      "source": "https://raw.githubusercontent.com/tderrien/FEELnc/master/README.md",
+      "technique": "regular_expression"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/tderrien/FEELnc/master/./image/FEELnc_lncRNA_classification_geneLevel.png"
+      },
+      "source": "https://raw.githubusercontent.com/tderrien/FEELnc/master/README.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "installation": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Installation",
+        "parent_header": [
+          "FEELnc :",
+          "Installation and requirements"
+        ],
+        "type": "Text_excerpt",
+        "value": "Clone the FEELnc git:\n\n\tgit clone https://github.com/tderrien/FEELnc.git\n\nGo to FEELnc directory\n\n\tcd FEELnc\n\nExport PERL5LIB and FEELNCPATH variables\n\n\texport FEELNCPATH=${PWD}\n\texport PERL5LIB=$PERL5LIB:${FEELNCPATH}/lib/ #order is important to avoid &Bio::DB::IndexedBase::_strip_crnl error with bioperl >=v1.7\n\n\texport PATH=$PATH:${FEELNCPATH}/scripts/\n\texport PATH=$PATH:${FEELNCPATH}/utils/\n\n\t# for LINUX\n\t#----------\n\texport PATH=$PATH:${FEELNCPATH}/bin/LINUX/\n\t# or\n\tcp ${FEELNCPATH}/bin/LINUX/ ~/bin/\n\n\t# for MAC\n\t# --------\n\texport PATH=$PATH:${FEELNCPATH}/bin/MAC/\n\t# or\n\tcp ${FEELNCPATH}/bin/MAC/ ~/bin/\n\n\n\n"
+      },
+      "source": "https://raw.githubusercontent.com/tderrien/FEELnc/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Install via <a href=\"https://anaconda.org/bioconda/feelnc\">Conda</a>:",
+        "parent_header": [
+          "FEELnc :",
+          "Installation and requirements"
+        ],
+        "type": "Text_excerpt",
+        "value": "Create a new environment containing FEELnc (and its dependencies):\n\n\tconda create -p ~/feelnc_install_dir feelnc \n\nTo activate it:\n\n\tsource activate ~/feelnc_install_dir \n\nTo deactivate it:\n\n\tsource deactivate\n\n(thanks to [Genouest Bionformatics](https://www.genouest.org)\n"
+      },
+      "source": "https://raw.githubusercontent.com/tderrien/FEELnc/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Results on the toy exemple:",
+        "parent_header": [
+          "FEELnc :",
+          "Installation and requirements"
+        ],
+        "type": "Text_excerpt",
+        "value": "The *results* directory in *test* contains the results files on the toy exemple. For more details, see the specific parts on [each modules](https://github.com/tderrien/FEELnc#launch-the-3-step-pipeline).\n\n"
+      },
+      "source": "https://raw.githubusercontent.com/tderrien/FEELnc/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Note:",
+        "parent_header": [
+          "FEELnc :",
+          "Installation and requirements"
+        ],
+        "type": "Text_excerpt",
+        "value": "A bash script *utils/FEELnc_pipeline.sh* is provided to run the three steps in one command line. As an example, this script is made to be used on a .GTF file without lncRNA file. It filters candidates only on mRNA annotation, keeps antisense monoexonic transcripts and uses the shuffle mode. Feel free to modify it at your convenience. To run on the toy example:\n\n\tcd test/\n\n\tFEELnc_pipeline.sh --candidate=transcript_chr38.gtf --reference=annotation_chr38.gtf \\\n\t                   --genome=genome_chr38.fa --outname=testOnToyExample --outdir=test_on_toy_example\n\n\n-------------------------"
+      },
+      "source": "https://raw.githubusercontent.com/tderrien/FEELnc/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 0.9685663521355656,
+      "result": {
+        "original_header": "Input files",
+        "type": "Text_excerpt",
+        "value": "Basically, FEELnc users should have the following minimal input files: \n\n\\* *Note: It is recommended to only extract protein_coding transcripts (mRNAs) from the reference annotation file (ref_annotation.GTF) when this information is available, either manually or better by using the option :*\n**--biotype transcript_biotype=protein_coding**. \n"
+      },
+      "source": "https://raw.githubusercontent.com/tderrien/FEELnc/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9984537283519035,
+      "result": {
+        "original_header": "1- FEELnc_filter.pl",
+        "type": "Text_excerpt",
+        "value": "This option is highly recommended if you don't want to remove transcripts\noverlapping with other transcripts than mRNAs (e.g lincRNA, miRNA, pseudogene...).\nFor stranded RNASeq protocol, it is also possible  to include monoexonic lncRNAs that are antisense to mRNAs e.g \n"
+      },
+      "source": "https://raw.githubusercontent.com/tderrien/FEELnc/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.8909209375613448,
+      "result": {
+        "original_header": "2- FEELnc_codpot.pl",
+        "type": "Text_excerpt",
+        "value": "If you have a set of known lncRNAs, you could run the module like: \n"
+      },
+      "source": "https://raw.githubusercontent.com/tderrien/FEELnc/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9296341916218509,
+      "result": {
+        "original_header": "3- FEELnc_classifier.pl",
+        "type": "Text_excerpt",
+        "value": "\n**- USAGE :**\n```\n\tFEELnc_classifier.pl -i lncRNA.gtf -a  ref_annotation.GTF > lncRNA_classes.txt\n```\n \n```\ncat {INPUT}_classes.txt\nisBest  lncRNA_gene  lncRNA_transcript  partnerRNA_gene     partnerRNA_transcript  direction  type        distance  subtype      location\n1       XLOC_090743  TCONS_00232056     ENSCAFG00000013346  ENSCAFT00000021186     antisense  intergenic  377       divergent    upstream\n1       XLOC_090720  TCONS_00231943     ENSCAFG00000026373  ENSCAFT00000040656     sense      intergenic  66670     same_strand  upstream\n1       XLOC_090678  TCONS_00231794     ENSCAFG00000010781  ENSCAFT00000017151     antisense  genic       0         nested       intronic\n0       XLOC_090678  TCONS_00231794     ENSCAFG00000010794  ENSCAFT00000017171     sense      intergenic  8293      same_strand  upstream\n0       XLOC_090678  TCONS_00231794     ENSCAFG00000010781  ENSCAFT00000017154     antisense  genic       0         overlapping  intronic\n1       XLOC_090878  TCONS_00232599     ENSCAFG00000009675  ENSCAFT00000015370     sense      intergenic  19181     same_strand  upstream\n1       XLOC_090974  TCONS_00232971     ENSCAFG00000010842  ENSCAFT00000017240     sense      intergenic  85066     same_strand  downstream\n1       XLOC_090620  TCONS_00231531     ENSCAFG00000009999  ENSCAFT00000015918     antisense  genic       0         overlapping  exonic\n0       XLOC_090620  TCONS_00231531     ENSCAFG00000009970  ENSCAFT00000015870     antisense  intergenic  516       divergent    upstream\n\n``` \n\\* **Note2**:  you may see a warning message like this: \nTo launch it  use :  \n```\n  Rscript FEELnc_tpLevel2gnLevelClassification.R \"PATH/TO/GTF\" \"PATH/TO/{INPUT}_classes_feelncclassifier.txt\"  \"PATH/TO/{INPUT}_feelncclassifier.log\"\n``` \n"
+      },
+      "source": "https://raw.githubusercontent.com/tderrien/FEELnc/master/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "invocation": [
+    {
+      "confidence": 0.8738241429591141,
+      "result": {
+        "original_header": "Input files",
+        "type": "Text_excerpt",
+        "value": "\t- Infile.GTF          (-i,--infile)   : input GTF file (e.g cufflinks/stringtie transcripts.GTF) or FASTA (Tritnity, KisSplice)\n\t- ref_annotation.GTF  (-a,--mRNAfile) : GTF annotation file or FASTA file * \n\t- ref_genome.FASTA    (-g,--genome)   : genome FASTA file or directory with individual chrom FASTA files \n"
+      },
+      "source": "https://raw.githubusercontent.com/tderrien/FEELnc/master/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "issue_tracker": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/tderrien/FEELnc/issues"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "keywords": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "annotation, lncrna, rna-seq"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "license": [
+    {
+      "confidence": 1,
+      "result": {
+        "name": "GNU General Public License v3.0",
+        "spdx_id": "GPL-3.0",
+        "type": "License",
+        "url": "https://api.github.com/licenses/gpl-3.0",
+        "value": "https://api.github.com/licenses/gpl-3.0"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "File_dump",
+        "value": " GNU GENERAL PUBLIC LICENSE\nVersion 3, 29 June 2007\nCopyright (C) 2007 Free Software Foundation, Inc. <http://fsf.org/>\nEveryone is permitted to copy and distribute verbatim copies\nof this license document, but changing it is not allowed.\nPreamble\nThe GNU General Public License is a free, copyleft license for\nsoftware and other kinds of works.\nThe licenses for most software and other practical works are designed\nto take away your freedom to share and change the works. By contrast,\nthe GNU General Public License is intended to guarantee your freedom to\nshare and change all versions of a program--to make sure it remains free\nsoftware for all its users. We, the Free Software Foundation, use the\nGNU General Public License for most of our software; it applies also to\nany other work released this way by its authors. You can apply it to\nyour programs, too.\nWhen we speak of free software, we are referring to freedom, not\nprice. Our General Public Licenses are designed to make sure that you\nhave the freedom to distribute copies of free software (and charge for\nthem if you wish), that you receive source code or can get it if you\nwant it, that you can change the software or use pieces of it in new\nfree programs, and that you know you can do these things.\nTo protect your rights, we need to prevent others from denying you\nthese rights or asking you to surrender the rights. Therefore, you have\ncertain responsibilities if you distribute copies of the software, or if\nyou modify it: responsibilities to respect the freedom of others.\nFor example, if you distribute copies of such a program, whether\ngratis or for a fee, you must pass on to the recipients the same\nfreedoms that you received. You must make sure that they, too, receive\nor can get the source code. And you must show them these terms so they\nknow their rights.\nDevelopers that use the GNU GPL protect your rights with two steps:\n(1) assert copyright on the software, and (2) offer you this License\ngiving you legal permission to copy, distribute and/or modify it.\nFor the developers' and authors' protection, the GPL clearly explains\nthat there is no warranty for this free software. For both users' and\nauthors' sake, the GPL requires that modified versions be marked as\nchanged, so that their problems will not be attributed erroneously to\nauthors of previous versions.\nSome devices are designed to deny users access to install or run\nmodified versions of the software inside them, although the manufacturer\ncan do so. This is fundamentally incompatible with the aim of\nprotecting users' freedom to change the software. The systematic\npattern of such abuse occurs in the area of products for individuals to\nuse, which is precisely where it is most unacceptable. Therefore, we\nhave designed this version of the GPL to prohibit the practice for those\nproducts. If such problems arise substantially in other domains, we\nstand ready to extend this provision to those domains in future versions\nof the GPL, as needed to protect the freedom of users.\nFinally, every program is threatened constantly by software patents.\nStates should not allow patents to restrict development and use of\nsoftware on general-purpose computers, but in those that do, we wish to\navoid the special danger that patents applied to a free program could\nmake it effectively proprietary. To prevent this, the GPL assures that\npatents cannot be used to render the program non-free.\nThe precise terms and conditions for copying, distribution and\nmodification follow.\nTERMS AND CONDITIONS\n0. Definitions.\n\"This License\" refers to version 3 of the GNU General Public License.\n\"Copyright\" also means copyright-like laws that apply to other kinds of\nworks, such as semiconductor masks.\n\"The Program\" refers to any copyrightable work licensed under this\nLicense. Each licensee is addressed as \"you\". \"Licensees\" and\n\"recipients\" may be individuals or organizations.\nTo \"modify\" a work means to copy from or adapt all or part of the work\nin a fashion requiring copyright permission, other than the making of an\nexact copy. The resulting work is called a \"modified version\" of the\nearlier work or a work \"based on\" the earlier work.\nA \"covered work\" means either the unmodified Program or a work based\non the Program.\nTo \"propagate\" a work means to do anything with it that, without\npermission, would make you directly or secondarily liable for\ninfringement under applicable copyright law, except executing it on a\ncomputer or modifying a private copy. Propagation includes copying,\ndistribution (with or without modification), making available to the\npublic, and in some countries other activities as well.\nTo \"convey\" a work means any kind of propagation that enables other\nparties to make or receive copies. Mere interaction with a user through\na computer network, with no transfer of a copy, is not conveying.\nAn interactive user interface displays \"Appropriate Legal Notices\"\nto the extent that it includes a convenient and prominently visible\nfeature that (1) displays an appropriate copyright notice, and (2)\ntells the user that there is no warranty for the work (except to the\nextent that warranties are provided), that licensees may convey the\nwork under this License, and how to view a copy of this License. If\nthe interface presents a list of user commands or options, such as a\nmenu, a prominent item in the list meets this criterion.\n1. Source Code.\nThe \"source code\" for a work means the preferred form of the work\nfor making modifications to it. \"Object code\" means any non-source\nform of a work.\nA \"Standard Interface\" means an interface that either is an official\nstandard defined by a recognized standards body, or, in the case of\ninterfaces specified for a particular programming language, one that\nis widely used among developers working in that language.\nThe \"System Libraries\" of an executable work include anything, other\nthan the work as a whole, that (a) is included in the normal form of\npackaging a Major Component, but which is not part of that Major\nComponent, and (b) serves only to enable use of the work with that\nMajor Component, or to implement a Standard Interface for which an\nimplementation is available to the public in source code form. A\n\"Major Component\", in this context, means a major essential component\n(kernel, window system, and so on) of the specific operating system\n(if any) on which the executable work runs, or a compiler used to\nproduce the work, or an object code interpreter used to run it.\nThe \"Corresponding Source\" for a work in object code form means all\nthe source code needed to generate, install, and (for an executable\nwork) run the object code and to modify the work, including scripts to\ncontrol those activities. However, it does not include the work's\nSystem Libraries, or general-purpose tools or generally available free\nprograms which are used unmodified in performing those activities but\nwhich are not part of the work. For example, Corresponding Source\nincludes interface definition files associated with source files for\nthe work, and the source code for shared libraries and dynamically\nlinked subprograms that the work is specifically designed to require,\nsuch as by intimate data communication or control flow between those\nsubprograms and other parts of the work.\nThe Corresponding Source need not include anything that users\ncan regenerate automatically from other parts of the Corresponding\nSource.\nThe Corresponding Source for a work in source code form is that\nsame work.\n2. Basic Permissions.\nAll rights granted under this License are granted for the term of\ncopyright on the Program, and are irrevocable provided the stated\nconditions are met. This License explicitly affirms your unlimited\npermission to run the unmodified Program. The output from running a\ncovered work is covered by this License only if the output, given its\ncontent, constitutes a covered work. This License acknowledges your\nrights of fair use or other equivalent, as provided by copyright law.\nYou may make, run and propagate covered works that you do not\nconvey, without conditions so long as your license otherwise remains\nin force. You may convey covered works to others for the sole purpose\nof having them make modifications exclusively for you, or provide you\nwith facilities for running those works, provided that you comply with\nthe terms of this License in conveying all material for which you do\nnot control copyright. Those thus making or running the covered works\nfor you must do so exclusively on your behalf, under your direction\nand control, on terms that prohibit them from making any copies of\nyour copyrighted material outside their relationship with you.\nConveying under any other circumstances is permitted solely under\nthe conditions stated below. Sublicensing is not allowed; section 10\nmakes it unnecessary.\n3. Protecting Users' Legal Rights From Anti-Circumvention Law.\nNo covered work shall be deemed part of an effective technological\nmeasure under any applicable law fulfilling obligations under article\n11 of the WIPO copyright treaty adopted on 20 December 1996, or\nsimilar laws prohibiting or restricting circumvention of such\nmeasures.\nWhen you convey a covered work, you waive any legal power to forbid\ncircumvention of technological measures to the extent such circumvention\nis effected by exercising rights under this License with respect to\nthe covered work, and you disclaim any intention to limit operation or\nmodification of the work as a means of enforcing, against the work's\nusers, your or third parties' legal rights to forbid circumvention of\ntechnological measures.\n4. Conveying Verbatim Copies.\nYou may convey verbatim copies of the Program's source code as you\nreceive it, in any medium, provided that you conspicuously and\nappropriately publish on each copy an appropriate copyright notice;\nkeep intact all notices stating that this License and any\nnon-permissive terms added in accord with section 7 apply to the code;\nkeep intact all notices of the absence of any warranty; and give all\nrecipients a copy of this License along with the Program.\nYou may charge any price or no price for each copy that you convey,\nand you may offer support or warranty protection for a fee.\n5. Conveying Modified Source Versions.\nYou may convey a work based on the Program, or the modifications to\nproduce it from the Program, in the form of source code under the\nterms of section 4, provided that you also meet all of these conditions:\na) The work must carry prominent notices stating that you modified\nit, and giving a relevant date.\nb) The work must carry prominent notices stating that it is\nreleased under this License and any conditions added under section\n7. This requirement modifies the requirement in section 4 to\n\"keep intact all notices\".\nc) You must license the entire work, as a whole, under this\nLicense to anyone who comes into possession of a copy. This\nLicense will therefore apply, along with any applicable section 7\nadditional terms, to the whole of the work, and all its parts,\nregardless of how they are packaged. This License gives no\npermission to license the work in any other way, but it does not\ninvalidate such permission if you have separately received it.\nd) If the work has interactive user interfaces, each must display\nAppropriate Legal Notices; however, if the Program has interactive\ninterfaces that do not display Appropriate Legal Notices, your\nwork need not make them do so.\nA compilation of a covered work with other separate and independent\nworks, which are not by their nature extensions of the covered work,\nand which are not combined with it such as to form a larger program,\nin or on a volume of a storage or distribution medium, is called an\n\"aggregate\" if the compilation and its resulting copyright are not\nused to limit the access or legal rights of the compilation's users\nbeyond what the individual works permit. Inclusion of a covered work\nin an aggregate does not cause this License to apply to the other\nparts of the aggregate.\n6. Conveying Non-Source Forms.\nYou may convey a covered work in object code form under the terms\nof sections 4 and 5, provided that you also convey the\nmachine-readable Corresponding Source under the terms of this License,\nin one of these ways:\na) Convey the object code in, or embodied in, a physical product\n(including a physical distribution medium), accompanied by the\nCorresponding Source fixed on a durable physical medium\ncustomarily used for software interchange.\nb) Convey the object code in, or embodied in, a physical product\n(including a physical distribution medium), accompanied by a\nwritten offer, valid for at least three years and valid for as\nlong as you offer spare parts or customer support for that product\nmodel, to give anyone who possesses the object code either (1) a\ncopy of the Corresponding Source for all the software in the\nproduct that is covered by this License, on a durable physical\nmedium customarily used for software interchange, for a price no\nmore than your reasonable cost of physically performing this\nconveying of source, or (2) access to copy the\nCorresponding Source from a network server at no charge.\nc) Convey individual copies of the object code with a copy of the\nwritten offer to provide the Corresponding Source. This\nalternative is allowed only occasionally and noncommercially, and\nonly if you received the object code with such an offer, in accord\nwith subsection 6b.\nd) Convey the object code by offering access from a designated\nplace (gratis or for a charge), and offer equivalent access to the\nCorresponding Source in the same way through the same place at no\nfurther charge. You need not require recipients to copy the\nCorresponding Source along with the object code. If the place to\ncopy the object code is a network server, the Corresponding Source\nmay be on a different server (operated by you or a third party)\nthat supports equivalent copying facilities, provided you maintain\nclear directions next to the object code saying where to find the\nCorresponding Source. Regardless of what server hosts the\nCorresponding Source, you remain obligated to ensure that it is\navailable for as long as needed to satisfy these requirements.\ne) Convey the object code using peer-to-peer transmission, provided\nyou inform other peers where the object code and Corresponding\nSource of the work are being offered to the general public at no\ncharge under subsection 6d.\nA separable portion of the object code, whose source code is excluded\nfrom the Corresponding Source as a System Library, need not be\nincluded in conveying the object code work.\nA \"User Product\" is either (1) a \"consumer product\", which means any\ntangible personal property which is normally used for personal, family,\nor household purposes, or (2) anything designed or sold for incorporation\ninto a dwelling. In determining whether a product is a consumer product,\ndoubtful cases shall be resolved in favor of coverage. For a particular\nproduct received by a particular user, \"normally used\" refers to a\ntypical or common use of that class of product, regardless of the status\nof the particular user or of the way in which the particular user\nactually uses, or expects or is expected to use, the product. A product\nis a consumer product regardless of whether the product has substantial\ncommercial, industrial or non-consumer uses, unless such uses represent\nthe only significant mode of use of the product.\n\"Installation Information\" for a User Product means any methods,\nprocedures, authorization keys, or other information required to install\nand execute modified versions of a covered work in that User Product from\na modified version of its Corresponding Source. The information must\nsuffice to ensure that the continued functioning of the modified object\ncode is in no case prevented or interfered with solely because\nmodification has been made.\nIf you convey an object code work under this section in, or with, or\nspecifically for use in, a User Product, and the conveying occurs as\npart of a transaction in which the right of possession and use of the\nUser Product is transferred to the recipient in perpetuity or for a\nfixed term (regardless of how the transaction is characterized), the\nCorresponding Source conveyed under this section must be accompanied\nby the Installation Information. But this requirement does not apply\nif neither you nor any third party retains the ability to install\nmodified object code on the User Product (for example, the work has\nbeen installed in ROM).\nThe requirement to provide Installation Information does not include a\nrequirement to continue to provide support service, warranty, or updates\nfor a work that has been modified or installed by the recipient, or for\nthe User Product in which it has been modified or installed. Access to a\nnetwork may be denied when the modification itself materially and\nadversely affects the operation of the network or violates the rules and\nprotocols for communication across the network.\nCorresponding Source conveyed, and Installation Information provided,\nin accord with this section must be in a format that is publicly\ndocumented (and with an implementation available to the public in\nsource code form), and must require no special password or key for\nunpacking, reading or copying.\n7. Additional Terms.\n\"Additional permissions\" are terms that supplement the terms of this\nLicense by making exceptions from one or more of its conditions.\nAdditional permissions that are applicable to the entire Program shall\nbe treated as though they were included in this License, to the extent\nthat they are valid under applicable law. If additional permissions\napply only to part of the Program, that part may be used separately\nunder those permissions, but the entire Program remains governed by\nthis License without regard to the additional permissions.\nWhen you convey a copy of a covered work, you may at your option\nremove any additional permissions from that copy, or from any part of\nit. (Additional permissions may be written to require their own\nremoval in certain cases when you modify the work.) You may place\nadditional permissions on material, added by you to a covered work,\nfor which you have or can give appropriate copyright permission.\nNotwithstanding any other provision of this License, for material you\nadd to a covered work, you may (if authorized by the copyright holders of\nthat material) supplement the terms of this License with terms:\na) Disclaiming warranty or limiting liability differently from the\nterms of sections 15 and 16 of this License; or\nb) Requiring preservation of specified reasonable legal notices or\nauthor attributions in that material or in the Appropriate Legal\nNotices displayed by works containing it; or\nc) Prohibiting misrepresentation of the origin of that material, or\nrequiring that modified versions of such material be marked in\nreasonable ways as different from the original version; or\nd) Limiting the use for publicity purposes of names of licensors or\nauthors of the material; or\ne) Declining to grant rights under trademark law for use of some\ntrade names, trademarks, or service marks; or\nf) Requiring indemnification of licensors and authors of that\nmaterial by anyone who conveys the material (or modified versions of\nit) with contractual assumptions of liability to the recipient, for\nany liability that these contractual assumptions directly impose on\nthose licensors and authors.\nAll other non-permissive additional terms are considered \"further\nrestrictions\" within the meaning of section 10. If the Program as you\nreceived it, or any part of it, contains a notice stating that it is\ngoverned by this License along with a term that is a further\nrestriction, you may remove that term. If a license document contains\na further restriction but permits relicensing or conveying under this\nLicense, you may add to a covered work material governed by the terms\nof that license document, provided that the further restriction does\nnot survive such relicensing or conveying.\nIf you add terms to a covered work in accord with this section, you\nmust place, in the relevant source files, a statement of the\nadditional terms that apply to those files, or a notice indicating\nwhere to find the applicable terms.\nAdditional terms, permissive or non-permissive, may be stated in the\nform of a separately written license, or stated as exceptions;\nthe above requirements apply either way.\n8. Termination.\nYou may not propagate or modify a covered work except as expressly\nprovided under this License. Any attempt otherwise to propagate or\nmodify it is void, and will automatically terminate your rights under\nthis License (including any patent licenses granted under the third\nparagraph of section 11).\nHowever, if you cease all violation of this License, then your\nlicense from a particular copyright holder is reinstated (a)\nprovisionally, unless and until the copyright holder explicitly and\nfinally terminates your license, and (b) permanently, if the copyright\nholder fails to notify you of the violation by some reasonable means\nprior to 60 days after the cessation.\nMoreover, your license from a particular copyright holder is\nreinstated permanently if the copyright holder notifies you of the\nviolation by some reasonable means, this is the first time you have\nreceived notice of violation of this License (for any work) from that\ncopyright holder, and you cure the violation prior to 30 days after\nyour receipt of the notice.\nTermination of your rights under this section does not terminate the\nlicenses of parties who have received copies or rights from you under\nthis License. If your rights have been terminated and not permanently\nreinstated, you do not qualify to receive new licenses for the same\nmaterial under section 10.\n9. Acceptance Not Required for Having Copies.\nYou are not required to accept this License in order to receive or\nrun a copy of the Program. Ancillary propagation of a covered work\noccurring solely as a consequence of using peer-to-peer transmission\nto receive a copy likewise does not require acceptance. However,\nnothing other than this License grants you permission to propagate or\nmodify any covered work. These actions infringe copyright if you do\nnot accept this License. Therefore, by modifying or propagating a\ncovered work, you indicate your acceptance of this License to do so.\n10. Automatic Licensing of Downstream Recipients.\nEach time you convey a covered work, the recipient automatically\nreceives a license from the original licensors, to run, modify and\npropagate that work, subject to this License. You are not responsible\nfor enforcing compliance by third parties with this License.\nAn \"entity transaction\" is a transaction transferring control of an\norganization, or substantially all assets of one, or subdividing an\norganization, or merging organizations. If propagation of a covered\nwork results from an entity transaction, each party to that\ntransaction who receives a copy of the work also receives whatever\nlicenses to the work the party's predecessor in interest had or could\ngive under the previous paragraph, plus a right to possession of the\nCorresponding Source of the work from the predecessor in interest, if\nthe predecessor has it or can get it with reasonable efforts.\nYou may not impose any further restrictions on the exercise of the\nrights granted or affirmed under this License. For example, you may\nnot impose a license fee, royalty, or other charge for exercise of\nrights granted under this License, and you may not initiate litigation\n(including a cross-claim or counterclaim in a lawsuit) alleging that\nany patent claim is infringed by making, using, selling, offering for\nsale, or importing the Program or any portion of it.\n11. Patents.\nA \"contributor\" is a copyright holder who authorizes use under this\nLicense of the Program or a work on which the Program is based. The\nwork thus licensed is called the contributor's \"contributor version\".\nA contributor's \"essential patent claims\" are all patent claims\nowned or controlled by the contributor, whether already acquired or\nhereafter acquired, that would be infringed by some manner, permitted\nby this License, of making, using, or selling its contributor version,\nbut do not include claims that would be infringed only as a\nconsequence of further modification of the contributor version. For\npurposes of this definition, \"control\" includes the right to grant\npatent sublicenses in a manner consistent with the requirements of\nthis License.\nEach contributor grants you a non-exclusive, worldwide, royalty-free\npatent license under the contributor's essential patent claims, to\nmake, use, sell, offer for sale, import and otherwise run, modify and\npropagate the contents of its contributor version.\nIn the following three paragraphs, a \"patent license\" is any express\nagreement or commitment, however denominated, not to enforce a patent\n(such as an express permission to practice a patent or covenant not to\nsue for patent infringement). To \"grant\" such a patent license to a\nparty means to make such an agreement or commitment not to enforce a\npatent against the party.\nIf you convey a covered work, knowingly relying on a patent license,\nand the Corresponding Source of the work is not available for anyone\nto copy, free of charge and under the terms of this License, through a\npublicly available network server or other readily accessible means,\nthen you must either (1) cause the Corresponding Source to be so\navailable, or (2) arrange to deprive yourself of the benefit of the\npatent license for this particular work, or (3) arrange, in a manner\nconsistent with the requirements of this License, to extend the patent\nlicense to downstream recipients. \"Knowingly relying\" means you have\nactual knowledge that, but for the patent license, your conveying the\ncovered work in a country, or your recipient's use of the covered work\nin a country, would infringe one or more identifiable patents in that\ncountry that you have reason to believe are valid.\nIf, pursuant to or in connection with a single transaction or\narrangement, you convey, or propagate by procuring conveyance of, a\ncovered work, and grant a patent license to some of the parties\nreceiving the covered work authorizing them to use, propagate, modify\nor convey a specific copy of the covered work, then the patent license\nyou grant is automatically extended to all recipients of the covered\nwork and works based on it.\nA patent license is \"discriminatory\" if it does not include within\nthe scope of its coverage, prohibits the exercise of, or is\nconditioned on the non-exercise of one or more of the rights that are\nspecifically granted under this License. You may not convey a covered\nwork if you are a party to an arrangement with a third party that is\nin the business of distributing software, under which you make payment\nto the third party based on the extent of your activity of conveying\nthe work, and under which the third party grants, to any of the\nparties who would receive the covered work from you, a discriminatory\npatent license (a) in connection with copies of the covered work\nconveyed by you (or copies made from those copies), or (b) primarily\nfor and in connection with specific products or compilations that\ncontain the covered work, unless you entered into that arrangement,\nor that patent license was granted, prior to 28 March 2007.\nNothing in this License shall be construed as excluding or limiting\nany implied license or other defenses to infringement that may\notherwise be available to you under applicable patent law.\n12. No Surrender of Others' Freedom.\nIf conditions are imposed on you (whether by court order, agreement or\notherwise) that contradict the conditions of this License, they do not\nexcuse you from the conditions of this License. If you cannot convey a\ncovered work so as to satisfy simultaneously your obligations under this\nLicense and any other pertinent obligations, then as a consequence you may\nnot convey it at all. For example, if you agree to terms that obligate you\nto collect a royalty for further conveying from those to whom you convey\nthe Program, the only way you could satisfy both those terms and this\nLicense would be to refrain entirely from conveying the Program.\n13. Use with the GNU Affero General Public License.\nNotwithstanding any other provision of this License, you have\npermission to link or combine any covered work with a work licensed\nunder version 3 of the GNU Affero General Public License into a single\ncombined work, and to convey the resulting work. The terms of this\nLicense will continue to apply to the part which is the covered work,\nbut the special requirements of the GNU Affero General Public License,\nsection 13, concerning interaction through a network will apply to the\ncombination as such.\n14. Revised Versions of this License.\nThe Free Software Foundation may publish revised and/or new versions of\nthe GNU General Public License from time to time. Such new versions will\nbe similar in spirit to the present version, but may differ in detail to\naddress new problems or concerns.\nEach version is given a distinguishing version number. If the\nProgram specifies that a certain numbered version of the GNU General\nPublic License \"or any later version\" applies to it, you have the\noption of following the terms and conditions either of that numbered\nversion or of any later version published by the Free Software\nFoundation. If the Program does not specify a version number of the\nGNU General Public License, you may choose any version ever published\nby the Free Software Foundation.\nIf the Program specifies that a proxy can decide which future\nversions of the GNU General Public License can be used, that proxy's\npublic statement of acceptance of a version permanently authorizes you\nto choose that version for the Program.\nLater license versions may give you additional or different\npermissions. However, no additional obligations are imposed on any\nauthor or copyright holder as a result of your choosing to follow a\nlater version.\n15. Disclaimer of Warranty.\nTHERE IS NO WARRANTY FOR THE PROGRAM, TO THE EXTENT PERMITTED BY\nAPPLICABLE LAW. EXCEPT WHEN OTHERWISE STATED IN WRITING THE COPYRIGHT\nHOLDERS AND/OR OTHER PARTIES PROVIDE THE PROGRAM \"AS IS\" WITHOUT WARRANTY\nOF ANY KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING, BUT NOT LIMITED TO,\nTHE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR\nPURPOSE. THE ENTIRE RISK AS TO THE QUALITY AND PERFORMANCE OF THE PROGRAM\nIS WITH YOU. SHOULD THE PROGRAM PROVE DEFECTIVE, YOU ASSUME THE COST OF\nALL NECESSARY SERVICING, REPAIR OR CORRECTION.\n16. Limitation of Liability.\nIN NO EVENT UNLESS REQUIRED BY APPLICABLE LAW OR AGREED TO IN WRITING\nWILL ANY COPYRIGHT HOLDER, OR ANY OTHER PARTY WHO MODIFIES AND/OR CONVEYS\nTHE PROGRAM AS PERMITTED ABOVE, BE LIABLE TO YOU FOR DAMAGES, INCLUDING ANY\nGENERAL, SPECIAL, INCIDENTAL OR CONSEQUENTIAL DAMAGES ARISING OUT OF THE\nUSE OR INABILITY TO USE THE PROGRAM (INCLUDING BUT NOT LIMITED TO LOSS OF\nDATA OR DATA BEING RENDERED INACCURATE OR LOSSES SUSTAINED BY YOU OR THIRD\nPARTIES OR A FAILURE OF THE PROGRAM TO OPERATE WITH ANY OTHER PROGRAMS),\nEVEN IF SUCH HOLDER OR OTHER PARTY HAS BEEN ADVISED OF THE POSSIBILITY OF\nSUCH DAMAGES.\n17. Interpretation of Sections 15 and 16.\nIf the disclaimer of warranty and limitation of liability provided\nabove cannot be given local legal effect according to their terms,\nreviewing courts shall apply local law that most closely approximates\nan absolute waiver of all civil liability in connection with the\nProgram, unless a warranty or assumption of liability accompanies a\ncopy of the Program in return for a fee.\nEND OF TERMS AND CONDITIONS\nHow to Apply These Terms to Your New Programs\nIf you develop a new program, and you want it to be of the greatest\npossible use to the public, the best way to achieve this is to make it\nfree software which everyone can redistribute and change under these terms.\nTo do so, attach the following notices to the program. It is safest\nto attach them to the start of each source file to most effectively\nstate the exclusion of warranty; and each file should have at least\nthe \"copyright\" line and a pointer to where the full notice is found.\n<one line to give the program's name and a brief idea of what it does.>\nCopyright (C) <year> <name of author>\nThis program is free software: you can redistribute it and/or modify\nit under the terms of the GNU General Public License as published by\nthe Free Software Foundation, either version 3 of the License, or\n(at your option) any later version.\nThis program is distributed in the hope that it will be useful,\nbut WITHOUT ANY WARRANTY; without even the implied warranty of\nMERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the\nGNU General Public License for more details.\nYou should have received a copy of the GNU General Public License\nalong with this program. If not, see <http://www.gnu.org/licenses/>.\nAlso add information on how to contact you by electronic and paper mail.\nIf the program does terminal interaction, make it output a short\nnotice like this when it starts in an interactive mode:\n<program> Copyright (C) <year> <name of author>\nThis program comes with ABSOLUTELY NO WARRANTY; for details type `show w'.\nThis is free software, and you are welcome to redistribute it\nunder certain conditions; type `show c' for details.\nThe hypothetical commands `show w' and `show c' should show the appropriate\nparts of the General Public License. Of course, your program's commands\nmight be different; for a GUI interface, you would use an \"about box\".\nYou should also get your employer (if you work as a programmer) or school,\nif any, to sign a \"copyright disclaimer\" for the program, if necessary.\nFor more information on this, and how to apply and follow the GNU GPL, see\n<http://www.gnu.org/licenses/>.\nThe GNU General Public License does not permit incorporating your program\ninto proprietary programs. If your program is a subroutine library, you\nmay consider it more useful to permit linking proprietary applications with\nthe library. If this is what you want to do, use the GNU Lesser General\nPublic License instead of this License. But first, please read\n<http://www.gnu.org/philosophy/why-not-lgpl.html>.\n"
+      },
+      "source": "https://raw.githubusercontent.com/tderrien/FEELnc/master/LICENSE",
+      "technique": "file_exploration"
+    }
+  ],
+  "logo": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/tderrien/FEELnc/master/./image/FEELnc_codpot_performance.png"
+      },
+      "source": "https://raw.githubusercontent.com/tderrien/FEELnc/master/README.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "FEELnc"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "owner": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "User",
+        "value": "tderrien"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "programming_languages": [
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Perl",
+        "size": 375712,
+        "type": "Programming_language",
+        "value": "Perl"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "R",
+        "size": 37765,
+        "type": "Programming_language",
+        "value": "R"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Shell",
+        "size": 4676,
+        "type": "Programming_language",
+        "value": "Shell"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "readme_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/tderrien/FEELnc/master/README.md"
+      },
+      "technique": "file_exploration"
+    }
+  ],
+  "releases": [
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "tderrien",
+          "type": "User"
+        },
+        "date_created": "2022-07-13T16:21:09Z",
+        "date_published": "2022-07-20T09:48:11Z",
+        "description": "- Correct typos in README\r\n- Add minnumtx for test_file in both .fa and .gtf input test",
+        "html_url": "https://github.com/tderrien/FEELnc/releases/tag/v.0.2.1",
+        "release_id": 72408707,
+        "tag": "v.0.2.1",
+        "tarball_url": "https://api.github.com/repos/tderrien/FEELnc/tarball/v.0.2.1",
+        "type": "Release",
+        "url": "https://api.github.com/repos/tderrien/FEELnc/releases/72408707",
+        "value": "https://api.github.com/repos/tderrien/FEELnc/releases/72408707",
+        "zipball_url": "https://api.github.com/repos/tderrien/FEELnc/zipball/v.0.2.1"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "tderrien",
+          "type": "User"
+        },
+        "date_created": "2020-10-12T14:49:51Z",
+        "date_published": "2020-11-12T16:28:37Z",
+        "description": " - Add lncRNA gene classification R script\r\n - Update Classifier default window size\r\n - Fix multiple typos in README",
+        "html_url": "https://github.com/tderrien/FEELnc/releases/tag/v.0.2",
+        "name": "FEELnc v.0.2 release ",
+        "release_id": 33866092,
+        "tag": "v.0.2",
+        "tarball_url": "https://api.github.com/repos/tderrien/FEELnc/tarball/v.0.2",
+        "type": "Release",
+        "url": "https://api.github.com/repos/tderrien/FEELnc/releases/33866092",
+        "value": "https://api.github.com/repos/tderrien/FEELnc/releases/33866092",
+        "zipball_url": "https://api.github.com/repos/tderrien/FEELnc/zipball/v.0.2"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "tderrien",
+          "type": "User"
+        },
+        "date_created": "2018-02-06T15:43:44Z",
+        "date_published": "2018-03-13T17:29:04Z",
+        "description": "Mainly update of the README (install, DBFile conflict...)",
+        "html_url": "https://github.com/tderrien/FEELnc/releases/tag/v.0.1.1",
+        "release_id": 10069039,
+        "tag": "v.0.1.1",
+        "tarball_url": "https://api.github.com/repos/tderrien/FEELnc/tarball/v.0.1.1",
+        "type": "Release",
+        "url": "https://api.github.com/repos/tderrien/FEELnc/releases/10069039",
+        "value": "https://api.github.com/repos/tderrien/FEELnc/releases/10069039",
+        "zipball_url": "https://api.github.com/repos/tderrien/FEELnc/zipball/v.0.1.1"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "vwucher",
+          "type": "User"
+        },
+        "date_created": "2016-09-20T15:02:33Z",
+        "date_published": "2016-09-20T15:36:27Z",
+        "description": "FEELnc pre-release: stable and could be used in production.\n",
+        "html_url": "https://github.com/tderrien/FEELnc/releases/tag/v0.1.0",
+        "name": "FEELnc pre-release",
+        "release_id": 4182841,
+        "tag": "v0.1.0",
+        "tarball_url": "https://api.github.com/repos/tderrien/FEELnc/tarball/v0.1.0",
+        "type": "Release",
+        "url": "https://api.github.com/repos/tderrien/FEELnc/releases/4182841",
+        "value": "https://api.github.com/repos/tderrien/FEELnc/releases/4182841",
+        "zipball_url": "https://api.github.com/repos/tderrien/FEELnc/zipball/v0.1.0"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "requirements": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Requirements",
+        "parent_header": [
+          "FEELnc :",
+          "Installation and requirements"
+        ],
+        "type": "Text_excerpt",
+        "value": "The following software and libraries must be installed on your machine:\n\n- [Perl5+](https://www.perl.org/) : tested with version 5.18.2\n * [Bioperl](http://www.bioperl.org/wiki/Main_Page)  : tested with version BioPerl-1.6.924 (partial tests with BioPerl >=1.7);\n * [Parallel::ForkManager](http://search.cpan.org/perldoc/Parallel::ForkManager) : tested with version 1.07.\n\n- R [Rscript](http://cran.r-project.org): tested with version 3.1.0.\n * [ROCR](https://rocr.bioinf.mpi-sb.mpg.de/) test with version 1.0-5;\n * [randomForest](http://cran.r-project.org/web/packages/randomForest/index.html) tested with version 4.6-10.\n * These R librairies should be installed automatically when running FEELnc. In case it does not work, please type in a R session:\n\tinstall.packages('ROCR')\n\tinstall.packages('randomForest')\n\n- [KmerInShort](https://github.com/rizkg/KmerInShort) developped by Guillaume Rizk:\n * Linux and MAC executables in FEELnc bin directory;\n * If any trouble using supplied executables, please download and compile from sources.\n \n- [fasta_ushuffle](https://github.com/agordon/fasta_ushuffle) software:\n * uShuffle: A useful tool for shuffling biological sequences while preserving the k-let counts;\n   M. Jiang, J. Anderson, J. Gillespie and M. Mayne; BMC Bioinformatics 2008, [9:192 doi:10.1186/1471-2105-9-192](http://bmcbioinformatics.biomedcentral.com/articles/10.1186/1471-2105-9-192).\n * required only if  you want to use the **shuffle** mode\n * Linux and MAC executables in FEELnc bin directory;\n * If any trouble using supplied executables, please download and compile from sources.\n \n "
+      },
+      "source": "https://raw.githubusercontent.com/tderrien/FEELnc/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Results on the toy exemple:",
+        "parent_header": [
+          "FEELnc :",
+          "Installation and requirements"
+        ],
+        "type": "Text_excerpt",
+        "value": "The *results* directory in *test* contains the results files on the toy exemple. For more details, see the specific parts on [each modules](https://github.com/tderrien/FEELnc#launch-the-3-step-pipeline).\n\n"
+      },
+      "source": "https://raw.githubusercontent.com/tderrien/FEELnc/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Note:",
+        "parent_header": [
+          "FEELnc :",
+          "Installation and requirements"
+        ],
+        "type": "Text_excerpt",
+        "value": "A bash script *utils/FEELnc_pipeline.sh* is provided to run the three steps in one command line. As an example, this script is made to be used on a .GTF file without lncRNA file. It filters candidates only on mRNA annotation, keeps antisense monoexonic transcripts and uses the shuffle mode. Feel free to modify it at your convenience. To run on the toy example:\n\n\tcd test/\n\n\tFEELnc_pipeline.sh --candidate=transcript_chr38.gtf --reference=annotation_chr38.gtf \\\n\t                   --genome=genome_chr38.fa --outname=testOnToyExample --outdir=test_on_toy_example\n\n\n-------------------------"
+      },
+      "source": "https://raw.githubusercontent.com/tderrien/FEELnc/master/README.md",
+      "technique": "header_analysis"
+    }
+  ],
+  "somef_missing_categories": [
+    "run",
+    "download",
+    "contact",
+    "contributors",
+    "faq",
+    "support",
+    "identifier",
+    "has_build_file",
+    "executable_example"
+  ],
+  "somef_provenance": {
+    "date": "2024-11-04 08:47:29",
+    "somef_schema_version": "1.0.0",
+    "somef_version": "0.9.5"
+  },
+  "stargazers_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 82
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "type": [
+    {
+      "confidence": 0.82,
+      "result": {
+        "type": "String",
+        "value": "commandline-application"
+      },
+      "technique": "software_type_heuristics"
+    }
+  ],
+  "usage": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Test with toy example:",
+        "parent_header": [
+          "FEELnc :",
+          "Installation and requirements"
+        ],
+        "type": "Text_excerpt",
+        "value": "\tcd test/\n\n\t# Filter\n\tFEELnc_filter.pl -i transcript_chr38.gtf -a annotation_chr38.gtf \\\n    -b transcript_biotype=protein_coding > candidate_lncRNA.gtf\n\n\t# Coding_Potential\n\tFEELnc_codpot.pl -i candidate_lncRNA.gtf -a annotation_chr38.gtf -b transcript_biotype=protein_coding -g genome_chr38.fa --mode=shuffle\n\n\t# Classifier\n\tFEELnc_classifier.pl -i feelnc_codpot_out/candidate_lncRNA.gtf.lncRNA.gtf -a annotation_chr38.gtf > candidate_lncRNA_classes.txt\n\n"
+      },
+      "source": "https://raw.githubusercontent.com/tderrien/FEELnc/master/README.md",
+      "technique": "header_analysis"
+    }
+  ]
+}

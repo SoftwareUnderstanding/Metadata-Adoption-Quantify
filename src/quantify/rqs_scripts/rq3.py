@@ -5,11 +5,6 @@ import re
 """
 This script is for answering RQ3
 """
-result = {
-    "releases": {"count": 0, "versions": []},
-    "None": {"count": 0}
-}
-
 SEMANTIC_PATTERN = r"^v?\d+\.\d+\.\d+(-\w+)?$"
 CALENDAR_PATTERN = re.compile(
     r"""
@@ -42,6 +37,10 @@ def classify_version(version):
         return "Other"
 
 def rq3(directory, missing_key):
+    result = {
+        "releases": {"count": 0, "versions": []},
+        "None": {"count": 0}
+    }
     for file_name in os.listdir(directory):
         if file_name.startswith("output_") and file_name.endswith(".json"):
             file_path = os.path.join(directory, file_name)

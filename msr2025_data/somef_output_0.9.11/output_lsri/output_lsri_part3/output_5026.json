@@ -1,0 +1,354 @@
+{
+  "code_repository": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/skandlab/MutSpot"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_created": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2017-07-07T11:50:06Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_updated": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2023-12-18T03:47:34Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "description": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Hotspot summary file",
+        "parent_header": [
+          "MutSpot",
+          "Output files"
+        ],
+        "type": "Text_excerpt",
+        "value": "1. Chromosome\n2. Start position (1-based)\n3. End position (1-based)\n4. *P*-value\n5. Length of hotspot (bp)\n6. Mean background mutation probability\n7. Number of mutated samples\n8. FDR\n9. Transcripts overlapping hotspot in their promoters\n10. Transcripts overlapping hotspot in their 3'UTRs\n11. Transcripts overlapping hotspot in their 5'UTRs\n\n"
+      },
+      "source": "https://raw.githubusercontent.com/skandlab/MutSpot/master/Readme.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 0.9210003576937031,
+      "result": {
+        "original_header": "MutSpot analysis workflow",
+        "type": "Text_excerpt",
+        "value": "1. Sample mutated and non-mutated sites for LASSO feature selection. \n5. Compute feature matrix based on selected features for background mutation model fitting. \n"
+      },
+      "source": "https://raw.githubusercontent.com/skandlab/MutSpot/master/Readme.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9968750342479888,
+      "result": {
+        "original_header": "Main arguments",
+        "type": "Text_excerpt",
+        "value": " Parameter                                    | Description\n--------------------------------------------- | -----------------------------------------\n snv.mutations                                | List of SNVs in MAF format\n indel.mutations                              | List of indels in MAF format\n genomic.features                             | File paths of all potential genomic features for LASSO selection for background mutation model. E.g. Replication timing profile, histone modification profiles\n sample.snv.features/sample.indel.features    | Tab delimited file of sample specific features. E.g. clinical subtype\n min.count                                    | Minimum number of mutated samples in each hotspot (default = 2)\n region.of.interest                           | Restrict hotspot analysis to regions in the given BED file\n cores                                        | Number of cores (default = 1) [The maximum number of cores for Windows users is 1.]\n genome.build                                 | Genome assembly (default = Ch37) \n"
+      },
+      "source": "https://raw.githubusercontent.com/skandlab/MutSpot/master/Readme.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.8987422141774875,
+      "result": {
+        "original_header": "2. Genomic features",
+        "type": "Text_excerpt",
+        "value": "The genomic features are input as a tab delimited file with 4 columns: \n  1. Feature name\n  2. File path of genomic feature (either BigWig or BED format).\n  3. Binary value indicating if the feature is continuous or binary (1 for continuous, 0 for binary)\n  4. Number of bins to discretize continuous feature into (max = 10, NA for binary features). \n feature_name  | file_path                                               | feature_type | nbins\n-------------- | ------------------------------------------------------- | ------------ | -----\n mean_rep_time | ./features/wgEncodeUwRepliSeqHepg2WaveSignalRep1.bigWig | 1            | 10\n E094-DNase    | ./features/E094-DNase.bed                               | 0            | NA\n E094-H3K27ac  | ./features/E094-H3K27ac.bed                             | 0            | NA\n ...           | ...                                                     | ...          | ... \n*For binary features, genomic regions that are found in the feature BED file are assigned value of 1, else value of 0* \nA list of genomic feature files (Transcription factors, DNA secondary structure, Replication timing) can be downloaded from https://github.com/skandlab/MutSpot/tree/master/features/Ch37 or https://github.com/skandlab/MutSpot/tree/master/features/Ch38 into the *features* folder in your working directory. The user may choose to run the analysis using these features by specifying *genomic.features = \"./features/genomic_features_genome_default.txt\"* in the *MutSpot()* function, else he/she may create a similar text file containing the desired features. \n"
+      },
+      "source": "https://raw.githubusercontent.com/skandlab/MutSpot/master/Readme.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9737789841446174,
+      "result": {
+        "original_header": "Adjusting threshold of LASSO feature selection",
+        "type": "Text_excerpt",
+        "value": "For a more/less stringent nucleotide selection, users may choose to re-define frequency threshold by re-running step 3.2. This can be done by specifying *run.to = 3.2* and the new selection threshold as the *cutoff.nucleotide.new* parameter. Users may also choose to select the top *n* features based on the mean coefficients by specifying the number of contexts to select as the *top.nucleotide* parameter.\n```{r}\nMutSpot(run.to = 3.2, snv.mutations = \"subset_snv_mutations_sid.MAF\", region.of.interest = \"gastric_ctcf_motif.bed\", cutoff.nucleotide.new = 0.98, top.nucleotide = 3, cores = 2, genomic.features = \"genomic_features_ctcf.txt\", sample.snv.features = \"sample_features_table_snv.txt\")\n```\n\nSimilarly, for a more/less stringent epigenetic features selection, users may choose to re-define frequency threshold by running step 4.2. This can be done by specifying *run.to = 4.2* and the new selection thresholds for SNVs and indels as the *cutoff.nucleotide.new.snv* and *cutoff.features.new.indel* parameters respectively. Users may also choose to select the top *n* features based on the mean coefficients by specifying the number of features to select as the *top.features* parameter.\n```{r}\nMutSpot(run.to = 4.2, snv.mutations = \"subset_snv_mutations_sid.MAF\", region.of.interest = \"gastric_ctcf_motif.bed\", cores = 2, genomic.features = \"genomic_features_ctcf.txt\",\nsample.snv.features = \"sample_features_table_snv.txt\", cutoff.features.new.snv = 0.8, top.features = 11)\n```\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/skandlab/MutSpot/master/Readme.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.953962814140233,
+      "result": {
+        "original_header": "Figures",
+        "type": "Text_excerpt",
+        "value": "- Bar plot of feature importance of the background mutation model\n- Manhattan plot of hotspots across the genome\n- Distribution of mutations in the top *n* hotspots (default *n* = 3) \n"
+      },
+      "source": "https://raw.githubusercontent.com/skandlab/MutSpot/master/Readme.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9838083108927714,
+      "result": {
+        "original_header": "Power of size of sampled sites",
+        "type": "Text_excerpt",
+        "value": "To test the power of different sizes of sampled sites, users may choose to run an additional analysis which runs feature selection and model fitting on samples of size 20%, 40%, 60%, 80% and 100% of sampled sites. It can be run by specifying *run.to = NULL* and *dilution.analysis = TRUE*.\n```{r}\nMutSpot(run.to = NULL, snv.mutations = \"subset_snv_mutations_sid.MAF\", genomic.features = \"genomic_features_ctcf.txt\", cores = 2, dilution.analysis = TRUE)\n```\nAt the end of this analysis, 3 figures will be generated:\n \n- Line plot of McFadden's R2 for each subsample's model\n- Line plot of the number of nucleotide/epigenomic features selected by LASSO for each subsample\n- Heatmap of LASSO stability frequency of the nucleotide/epigenomic features selected for each subsample\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/skandlab/MutSpot/master/Readme.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "download_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/skandlab/MutSpot/releases"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 10
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/skandlab/MutSpot/forks"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "skandlab/MutSpot"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_title": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "MutSpot"
+      },
+      "source": "https://raw.githubusercontent.com/skandlab/MutSpot/master/Readme.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "installation": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Installation",
+        "parent_header": [
+          "MutSpot"
+        ],
+        "type": "Text_excerpt",
+        "value": "MutSpot runs on R (tested on R versions 3.2.0 to 3.6.0). Install the package from Github using the following R commands.\n\n```{r}\ninstall.packages(\"devtools\")\nlibrary(devtools)\ninstall_github(\"skandlab/MutSpot\", subdir=\"MutSpot_Rpackage\")\n```\n\nAlternatively, the package may downloaded from Github and installed in R:\n```{r}\n# Clone/download MutSpot into the current working dirctory with the following command: git clone https://github.com/skandlab/MutSpot.git\nlibrary(devtools)\ninstall(\"my/current/directory/MutSpot/MutSpot_Rpackage\")\n```\n\n*The alternative method takes a longer time as it downloads all test data sets at the same time*\n\n----------------------------------------------------------------------------------\n\n<a name=\"workflow\"></a>\n"
+      },
+      "source": "https://raw.githubusercontent.com/skandlab/MutSpot/master/Readme.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 0.9583209124662105,
+      "result": {
+        "original_header": "Contents",
+        "type": "Text_excerpt",
+        "value": "<a name=\"installation\"></a>\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/skandlab/MutSpot/master/Readme.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9695825978265928,
+      "result": {
+        "original_header": "2. Genomic features",
+        "type": "Text_excerpt",
+        "value": "A binary feature BED file should include the following columns: \nA list of genomic feature files (Transcription factors, DNA secondary structure, Replication timing) can be downloaded from https://github.com/skandlab/MutSpot/tree/master/features/Ch37 or https://github.com/skandlab/MutSpot/tree/master/features/Ch38 into the *features* folder in your working directory. The user may choose to run the analysis using these features by specifying *genomic.features = \"./features/genomic_features_genome_default.txt\"* in the *MutSpot()* function, else he/she may create a similar text file containing the desired features. \n"
+      },
+      "source": "https://raw.githubusercontent.com/skandlab/MutSpot/master/Readme.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "invocation": [
+    {
+      "confidence": 0.9305178626400554,
+      "result": {
+        "original_header": "1. Mutations",
+        "type": "Text_excerpt",
+        "value": "Example MAF file: \n"
+      },
+      "source": "https://raw.githubusercontent.com/skandlab/MutSpot/master/Readme.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.8731918369894536,
+      "result": {
+        "original_header": "2. Genomic features",
+        "type": "Text_excerpt",
+        "value": "Example format: \n"
+      },
+      "source": "https://raw.githubusercontent.com/skandlab/MutSpot/master/Readme.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9305178626400554,
+      "result": {
+        "original_header": "4. Region of interest (optional)",
+        "type": "Text_excerpt",
+        "value": "  Example BED file: \n"
+      },
+      "source": "https://raw.githubusercontent.com/skandlab/MutSpot/master/Readme.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.8184879422485319,
+      "result": {
+        "original_header": "Adjusting threshold of LASSO feature selection",
+        "type": "Text_excerpt",
+        "value": "<a name=\"output\"></a>\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/skandlab/MutSpot/master/Readme.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "issue_tracker": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/skandlab/MutSpot/issues"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "keywords": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": ""
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "MutSpot"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "owner": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "User",
+        "value": "skandlab"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "programming_languages": [
+    {
+      "confidence": 1,
+      "result": {
+        "name": "HTML",
+        "size": 7672077,
+        "type": "Programming_language",
+        "value": "HTML"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "R",
+        "size": 361726,
+        "type": "Programming_language",
+        "value": "R"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "readme_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/skandlab/MutSpot/master/Readme.md"
+      },
+      "technique": "file_exploration"
+    }
+  ],
+  "somef_missing_categories": [
+    "citation",
+    "acknowledgement",
+    "run",
+    "download",
+    "requirements",
+    "contact",
+    "contributors",
+    "documentation",
+    "license",
+    "faq",
+    "support",
+    "identifier",
+    "has_build_file",
+    "executable_example"
+  ],
+  "somef_provenance": {
+    "date": "2024-10-06 18:29:10",
+    "somef_schema_version": "1.0.0",
+    "somef_version": "0.9.5"
+  },
+  "stargazers_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 11
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "usage": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Usage example",
+        "parent_header": [
+          "MutSpot"
+        ],
+        "type": "Text_excerpt",
+        "value": "```r\nlibrary(\"MutSpot\")\n```\n\nDownload the test data sets from https://github.com/skandlab/MutSpot/tree/master/test-data into your working directory.\n\nRun the analysis using the following commands:\n\n\nIdentify SNV hotspots genome-wide.\n(*Whole genome analysis will take less than 1 day using 2 cores*)\n```r\nMutSpot(snv.mutations = \"subset_snv_mutations_sid.MAF\", cores = 2, cutoff.nucleotide.new = 1, genomic.features = \"genomic_features_genome.txt\")\n```\n\nIdentify SNV hotspots in CTCF binding sites only, including clinical subtype and cosmic signatures as sample specific features.\n(*CTCF analysis will take about 30 minutes using 2 cores*)\n```r\nMutSpot(snv.mutations = \"subset_snv_mutations_sid.MAF\", region.of.interest = \"gastric_ctcf_motif.bed\", cores = 2, genomic.features = \"genomic_features_ctcf.txt\",\nsample.snv.features = \"sample_features_table_snv.txt\")\n```\n\nTo run MutSpot on genome assembly Ch38 instead of Ch37, please specify *genome.build = \"Ch38\"* in the *MutSpot()* function.\n\n----------------------------------------------------------------------------------\n\n<a name=\"arguments\"></a>\n"
+      },
+      "source": "https://raw.githubusercontent.com/skandlab/MutSpot/master/Readme.md",
+      "technique": "header_analysis"
+    }
+  ]
+}

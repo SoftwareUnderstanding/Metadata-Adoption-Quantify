@@ -1,0 +1,1505 @@
+{
+  "acknowledgement": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Acknowledgment",
+        "type": "Text_excerpt",
+        "value": "==============\n- Funding: Hai Nguyen is supported by NIH Grant GM103297, \"The Center for HIV RNA Studies\" (2015 to 02-2017).\n- Many thanks to `nglview` [contributors](https://github.com/arose/nglview/graphs/contributors)\n- [dunovank/jupyter-themes](https://github.com/dunovank/jupyter-themes): for `oceans16` theme\n- [base64-arraybuffer](https://github.com/niklasvh/base64-arraybuffer)\n- [ipywidgets](https://github.com/jupyter-widgets/ipywidgets)\n"
+      },
+      "source": "https://raw.githubusercontent.com/arose/nglview/master/README.md",
+      "technique": "header_analysis"
+    }
+  ],
+  "citation": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Cite",
+        "type": "Text_excerpt",
+        "value": "====\nIf you would like to acknowledge our work, feel free to cite:\n\nHai Nguyen, David A Case, Alexander S Rose; NGLview - Interactive molecular graphics for Jupyter notebooks, Bioinformatics, , btx789, https://doi.org/10.1093/bioinformatics/btx789\n"
+      },
+      "source": "https://raw.githubusercontent.com/arose/nglview/master/README.md",
+      "technique": "header_analysis"
+    }
+  ],
+  "code_repository": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/nglviewer/nglview"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "contributing_guidelines": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "File_dump",
+        "value": "# General\n\n* Please follow [pep8](https://www.python.org/dev/peps/pep-0008/) to format Python code.\n\n## Install all required packages for testing\n\n```bash\npip install -r pip-requirements-test.txt\nsh conda-requirements-test.sh\n```\n\n## Making a Release\n\nWe use [Versioneer](https://github.com/warner/python-versioneer) to automatically update the version string (of a release but also in development). This means for a release a new git tag should be created. The tag should be of the form vX.Y or vX.Y.Z and generally follow [pep440](https://www.python.org/dev/peps/pep-0440/) with a prefixed \"v\".\n\n```bash\ngit tag  -a vX.Y -m \"version X.Y\"\ngit push\ngit push origin --tags\n\npython setup.py sdist\n# Upload with twine:\ntwine upload dist/nglview*gz\n```\n\n## Install\n\nInstall developer mode so you don't need to  re-install after chaning your code.\n\n```python\npip install -e .\n```\n\n## Test\n\n```bash\npytest -vs nglview/tests/\n```\n\n## Sync versions\n\nThere is not yet an elegant way to sync version in nglview/widget.py; js/package.json and jslab/package.json\nSo make sure to update those\n\n```python\nnglview/wiget.py: __frontend_version__ = '0.5.4-dev.13'\njs/package.json:              \"version\": \"0.5.4-dev.13\",\njslab/package.json: \"@jupyter-widgets/jupyterlab-manager\": \"^0.25.11\", # make sure this compat with ipywidgets\njslab/package.json: \"nglview-js-widgets\": \"0.5.4-dev.13\"\n```\n\n## Update Javascript build\n\n```bash\n# install nodejs\n# conda install -c javascript nodejs\n\ncd js\nnpm install\n\n# known working versions:\n# node: v6.6.0\n# npm: 4.4.4\n\n# then python setup.py install or pip install -e . # development, you can edit the source code without re-installing\n\n# Tips\n# - After changing js code:\n#     - Kernel --> Restart and Clear Output\n#     - Refresh webpage (F5)\n\n# run quick test in terminal\nnglview demo\n```\n\n## My (Hai) workflow\n\n```bash\ncd /nglview/root/folder\n\n# install development version for Python code\n# so we can update Python source code without reinstall\npip install -e .\n# Now you can start changing Python source code.\n\n# make symlink the js code (nglview/static/*js)\n# to $PREFIX/share/jupyter/nbextensions\n# Example of $PREFIX: $HOME/miniconda3/\n# Double-check\n# $ ll $HOME/miniconda3/share/jupyter/nbextensions/\n# Will see something like\n# nglview-js-widgets@ -> $HOME/3d/nglview/nglview/static\n\nnglview install --symlink\nnglview enable\n\n# Now, you can update JS code in js/src folder\ncd js\nnpm install\n\n# If your notebook is openning and you did above step, you need to clear the web cache via two steps\n- Restart your notebook (Kernel -> Restart and Clear Output)\n- Refresh browser (F5)\n```\n\n## Using `NGL` locally\n\n1. Change\n`var NGL = require('ngl');` to `var NGL = require('./ngl');`\nhttps://github.com/arose/nglview/blob/master/js/src/widget_ngl.js#L2\n\n2. Then, [build NGL](https://github.com/arose/ngl/blob/master/DEVELOPMENT.md#building), then copy `ngl.js` (or `ngl.dev.js`) to `nglview/js/src/`\n\n3. Rebuild js code\n\n```bash\ncd js\nnpm install\nnglview install # install updated js code\nnglview enable # enable again, (not sure if needed)\n```\n\nYou need to install `nodejs` (which includes `npm`).\nTips: `conda install nodejs -c conda-forge` (and so on)\n\n## Test notebook\n\n* [edit to add more notebooks] and update notebook files\n\n```bash\npython ./devtools/make_test_js.py --api\n```\n\n* Install chromedriver: https://chromedriver.storage.googleapis.com/index.html?path=2.30/\n* Download, unzip and copy chromedriver to /use/local/bin or anywhere in your PATH\n  (tested on MacOS 10.12.5)\n* Install nightwatch\n\n```bash\nnpm install -g nightwatch\n```\n\n* install notebook runner\n\n```\nsource devtools/travis-ci/clone_nbtest.sh # only once\n```\n\n* (may be): To avoid entering notebook token or password, you might want to update\n\n```python\n# in $HOME/.jupyter/jupyter_notebook_config.py\nc.NotebookApp.token = ''\n```\n\n* Run notebook server\n\n```bash\njupyter notebook --port=8889 &\n```\n\n* Run all tests\n\n```bash\nnightwatch\n```\n\n* Run a single test\n\n```bash\n# nightwatch /path/to/your/file.js\nnightwatch nglview/tests/js/render_image.js\n```\n\n## More stuff\n\n[wiki](https://github.com/arose/nglview/wiki)\n"
+      },
+      "source": "https://raw.githubusercontent.com/arose/nglview/master/CONTRIBUTING.md",
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Contributing",
+        "type": "Text_excerpt",
+        "value": "============\n\n[Join us here](./CONTRIBUTING.md)\n"
+      },
+      "source": "https://raw.githubusercontent.com/arose/nglview/master/README.md",
+      "technique": "header_analysis"
+    }
+  ],
+  "date_created": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2015-11-09T16:48:57Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_updated": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2024-11-02T05:59:32Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "description": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "Jupyter widget to interactively view molecular structures and trajectories"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 0.9918218466488494,
+      "result": {
+        "original_header": "Try nglview online: <a href=\"https://mybinder.org/v2/gh/hainm/nglview-binder/master?urlpath=lab/tree/nglview/notebooks\"><img alt=\"Binder\" src=\"https://mybinder.org/badge_logo.svg\" /></a>",
+        "type": "Text_excerpt",
+        "value": "\nAn [IPython/Jupyter](http://jupyter.org/) widget to interactively view molecular structures and trajectories. Utilizes the embeddable [NGL Viewer](https://github.com/nglviewer/ngl) for rendering. Support for showing data from the file-system, [RCSB PDB](http:www.rcsb.org), [simpletraj](https://github.com/arose/simpletraj) and from objects of analysis libraries [mdtraj](http://mdtraj.org/), [pytraj](http://amber-md.github.io/pytraj/latest/index.html), [mdanalysis](http://www.mdanalysis.org/), [ParmEd](http://parmed.github.io/ParmEd/), [rdkit](https://github.com/rdkit/rdkit), [ase](https://wiki.fysik.dtu.dk/ase/), [HTMD](https://www.htmd.org), [biopython](https://github.com/biopython/biopython.github.io/), [cctbx](https://cci.lbl.gov/cctbx_docs/iotbx/), [pyrosetta](http://pyrosetta.org), [schrodinger's Structure](http://content.schrodinger.com/Docs/r2015-4/python_api/api/schrodinger.structure.Structure-class.html) \n"
+      },
+      "source": "https://raw.githubusercontent.com/arose/nglview/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9154766643284241,
+      "result": {
+        "original_header": "Properties",
+        "type": "Text_excerpt",
+        "value": "```Python\n# parameters for the NGL stage object\nview.stage.set_parameters(**{\n    # \"percentages, \"dist\" is distance to camera in Angstrom\n    \"clipNear\": 0, \"clipFar\": 100, \"clipDist\": 10,\n    # percentages, start of fog and where on full effect\n    \"fogNear\": 0, \"fogFar\": 100,\n    # background color\n    \"backgroundColor\": \"black\",\n})\n\n# note: NGLView accepts both origin camel NGL keywords (e.g. \"clipNear\")\n# and snake keywords (e.g \"clip_near\")\n```\n```python\n# parameters to control the `delay` between snapshots\n# change `step` to play forward (positive value) or backward (negative value)\n# note: experimental code\nview.player.parameters = dict(delay=0.04, step=-1)\n```\n```python\n# update camera type\nview.camera = 'orthographic'\n```\n```python\n# change background color\nview.background = 'black'\n```\nTrajectory\n----------\n```python\n# adding new trajectory\nview.add_trajectory(traj)\n# traj could be a `pytraj.Trajectory`, `mdtraj.Trajectory`, `MDAnalysis.Universe`,\n# `parmed.Structure`, `htmd.Molecule` or derived class of `nglview.Trajectory`\n\n# change representation\nview[0].add_cartoon(...) # equal to view.add_cartoon(component=0)\nview[1].add_licorice(...) # equal to view.add_licorice(component=1)\n```\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/arose/nglview/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9283429217040295,
+      "result": {
+        "original_header": "Add extra component",
+        "type": "Text_excerpt",
+        "value": "-------------------\n```python\n# Density volumes (MRC/MAP/CCP4, DX/DXBIN, CUBE)\n# Or adding derived class of `nglview.Structure`\nview.add_component('my.ccp4')\n\n# add component from url\nview.add_component('rcsb://1tsu.pdb')\n# NOTE: Trajectory is a special case of component.\n```\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/arose/nglview/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9989880898777297,
+      "result": {
+        "original_header": "Projects integrating NGLView",
+        "type": "Text_excerpt",
+        "value": "- [AMBER](http://ambermd.org/) -  A package of programs for molecular dynamics simulations of proteins and nucleic acids\n- [mbuild](https://github.com/iModels/mbuild) - A hierarchical, component based molecule builder\n- [deepchem](https://github.com/deepchem/deepchem) - Deep-learning models for Drug Discovery and Quantum Chemistry\n- [htmd](https://github.com/Acellera/htmd) - High throughput molecular dynamics simulations\n- [Moleidoscope](https://github.com/kbsezginel/Moleidoscope) - Molecular kaleidoscope\n- [ssbio](https://github.com/nmih/ssbio) - Tools for enabling structural systems biology\n- [hublib](https://github.com/martin-hunt/hublib) - hublib is a Python library for the [HUBzero](https://hubzero.org/) science gateway platform.\n- [molPX](https://github.com/markovmodel/molPX): ipython API to visualize MD-trajectories along projected trajectories\n- [nanoribbon](https://github.com/oschuett/nanoribbon)\n- [ase](https://github.com/rosswhitfield/ase): Atomic Simulation Environment\n- [pida](https://github.com/jharman25/pida): Software for analyzing multiple protein-protein interaction docking solutions,\n- [pytim](https://github.com/Marcello-Sega/pytim)\n- [MobleyLab/drug-computing](https://github.com/MobleyLab/drug-computing) Educational materials for, and related to, UC Irvine's Drug Discovery Computing Techniques course.\n- [pyiron](https://pyiron.github.io/): an integrated development environment for implementing, testing, and running simulations in computational materials science.\n- [BioSimSpace](https://biosimspace.org/): An interoperable framework for biomolecular simulation\n- [pyrod](https://github.com/schallerdavid/pyrod): PyRod - Tracing water molecules in molecular dynamics simulations\n- [kugupu](https://github.com/kugupu/kugupu): kugupu - a molecular network generator to study charge transport pathways in amorphous materials\n- [pnab](https://github.com/alenaizan/pnab): proto-Nucleic Acid Builder\n- [opencadd](https://github.com/volkamerlab/opencadd): A Python library for structural cheminformatics\n- [teachopencadd](https://github.com/volkamerlab/teachopencadd): TeachOpenCADD: a teaching platform for computer-aided drug design (CADD) using open source packages and data\n- [query.libretexts.org](https://query.libretexts.org/Sandboxes/jupyterteam@ucdavis.edu): query.libretexts.org\n- [datamol](https://github.com/datamol-org/datamol):  A python library to work with molecules.\n- [dynophores](https://github.com/dominiquesydow/dynophores): Dynamic pharmacophore modeling of molecular interactions\n- [pychemcurv](https://github.com/gVallverdu/pychemcurv): Discrete and local curvature applied to chemistry and chemical reactivity\n- [AutoSolvate](https://github.com/Liu-group/AutoSolvate): Automated workflow for generating quantum chemistry calculation of explicitly solvated molecules\n- [plipify](https://github.com/volkamerlab/plipify): PLIPify: Protein-Ligand Interaction Frequencies across Multiple Structures\n- [Melodia](https://github.com/rwmontalvao/Melodia): Differential Geometry of Proteins Backbones\n- [pyrosetta_viewer3d](https://github.com/RosettaCommons/pyrosetta_viewer3d): Display PackedPose objects, Pose objects, or PDB files within a Jupyter notebook and Google Colab\n- [py4vasp](https://vasp.at/py4vasp): Python interface for VASP\n- [eminus](https://github.com/wangenau/eminus): A plane wave density functional theory code.\n- [MolSysMT](https://github.com/uibcdf/MolSysMT): Molecular Systems Multi-Tool\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/arose/nglview/master/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "documentation": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/arose/nglview/tree/master/docs"
+      },
+      "technique": "file_exploration"
+    }
+  ],
+  "download_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/arose/nglview/releases"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "executable_example": [
+    {
+      "confidence": 1,
+      "result": {
+        "format": "jupyter_notebook",
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/arose/nglview/master/notebooks/rdkit_smiles_3d.ipynb"
+      },
+      "source": "https://raw.githubusercontent.com/arose/nglview/master/notebooks/rdkit_smiles_3d.ipynb",
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "format": "jupyter_notebook",
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/arose/nglview/master/notebooks/custom_color.ipynb"
+      },
+      "source": "https://raw.githubusercontent.com/arose/nglview/master/notebooks/custom_color.ipynb",
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "format": "jupyter_notebook",
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/arose/nglview/master/notebooks/render_image.ipynb"
+      },
+      "source": "https://raw.githubusercontent.com/arose/nglview/master/notebooks/render_image.ipynb",
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "format": "jupyter_notebook",
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/arose/nglview/master/notebooks/movie_making.ipynb"
+      },
+      "source": "https://raw.githubusercontent.com/arose/nglview/master/notebooks/movie_making.ipynb",
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "format": "jupyter_notebook",
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/arose/nglview/master/notebooks/gui.ipynb"
+      },
+      "source": "https://raw.githubusercontent.com/arose/nglview/master/notebooks/gui.ipynb",
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "format": "jupyter_notebook",
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/arose/nglview/master/notebooks/trajectory_player.ipynb"
+      },
+      "source": "https://raw.githubusercontent.com/arose/nglview/master/notebooks/trajectory_player.ipynb",
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "format": "jupyter_notebook",
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/arose/nglview/master/examples/notebooks/xray.ipynb"
+      },
+      "source": "https://raw.githubusercontent.com/arose/nglview/master/examples/notebooks/xray.ipynb",
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "format": "jupyter_notebook",
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/arose/nglview/master/examples/notebooks/using_two_screens.ipynb"
+      },
+      "source": "https://raw.githubusercontent.com/arose/nglview/master/examples/notebooks/using_two_screens.ipynb",
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "format": "jupyter_notebook",
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/arose/nglview/master/examples/notebooks/trajectory_2.ipynb"
+      },
+      "source": "https://raw.githubusercontent.com/arose/nglview/master/examples/notebooks/trajectory_2.ipynb",
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "format": "jupyter_notebook",
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/arose/nglview/master/examples/notebooks/show_rosetta.ipynb"
+      },
+      "source": "https://raw.githubusercontent.com/arose/nglview/master/examples/notebooks/show_rosetta.ipynb",
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "format": "jupyter_notebook",
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/arose/nglview/master/examples/notebooks/mdtraj.ipynb"
+      },
+      "source": "https://raw.githubusercontent.com/arose/nglview/master/examples/notebooks/mdtraj.ipynb",
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "format": "jupyter_notebook",
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/arose/nglview/master/examples/notebooks/export_image.ipynb"
+      },
+      "source": "https://raw.githubusercontent.com/arose/nglview/master/examples/notebooks/export_image.ipynb",
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "format": "jupyter_notebook",
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/arose/nglview/master/examples/notebooks/multiple_ligand_view.ipynb"
+      },
+      "source": "https://raw.githubusercontent.com/arose/nglview/master/examples/notebooks/multiple_ligand_view.ipynb",
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "format": "jupyter_notebook",
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/arose/nglview/master/examples/notebooks/protein_mutation_pdb4amber.ipynb"
+      },
+      "source": "https://raw.githubusercontent.com/arose/nglview/master/examples/notebooks/protein_mutation_pdb4amber.ipynb",
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "format": "jupyter_notebook",
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/arose/nglview/master/examples/notebooks/representations_and_selection_language.ipynb"
+      },
+      "source": "https://raw.githubusercontent.com/arose/nglview/master/examples/notebooks/representations_and_selection_language.ipynb",
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "format": "jupyter_notebook",
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/arose/nglview/master/examples/notebooks/view_trajectory.ipynb"
+      },
+      "source": "https://raw.githubusercontent.com/arose/nglview/master/examples/notebooks/view_trajectory.ipynb",
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "format": "jupyter_notebook",
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/arose/nglview/master/examples/extra/example_bokeh_residue_distance.ipynb"
+      },
+      "source": "https://raw.githubusercontent.com/arose/nglview/master/examples/extra/example_bokeh_residue_distance.ipynb",
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "format": "jupyter_notebook",
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/arose/nglview/master/examples/extra/bionano.ipynb"
+      },
+      "source": "https://raw.githubusercontent.com/arose/nglview/master/examples/extra/bionano.ipynb",
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "format": "jupyter_notebook",
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/arose/nglview/master/examples/sandbox/ambermd/ambermd_view.ipynb"
+      },
+      "source": "https://raw.githubusercontent.com/arose/nglview/master/examples/sandbox/ambermd/ambermd_view.ipynb",
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://mybinder.org/v2/gh/hainm/nglview-binder/master?urlpath=lab/tree/nglview/notebooks"
+      },
+      "source": "https://raw.githubusercontent.com/arose/nglview/master/README.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "faq": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "FAQ",
+        "type": "Text_excerpt",
+        "value": "===\n\n[Q&A](docs/FAQ.md)\n"
+      },
+      "source": "https://raw.githubusercontent.com/arose/nglview/master/README.md",
+      "technique": "header_analysis"
+    }
+  ],
+  "forks_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 134
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/nglviewer/nglview/forks"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "nglviewer/nglview"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_title": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": ""
+      },
+      "source": "https://raw.githubusercontent.com/arose/nglview/master/README.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "has_build_file": [
+    {
+      "confidence": 1,
+      "result": {
+        "format": "dockerfile",
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/arose/nglview/master/Dockerfile"
+      },
+      "source": "https://raw.githubusercontent.com/arose/nglview/master/Dockerfile",
+      "technique": "file_exploration"
+    }
+  ],
+  "has_script_file": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/arose/nglview/master/conda-requirements-test.sh"
+      },
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/arose/nglview/master/run_tests.sh"
+      },
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/arose/nglview/master/js/update_ngl.sh"
+      },
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/arose/nglview/master/devtools/nglview-jupyterlab.sh"
+      },
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/arose/nglview/master/devtools/build_docker.sh"
+      },
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/arose/nglview/master/devtools/nb_runner/start_server.sh"
+      },
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/arose/nglview/master/devtools/nb_runner/stop_server.sh"
+      },
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/arose/nglview/master/devtools/circleci/install_miniconda.sh"
+      },
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/arose/nglview/master/devtools/recipe/post-link.sh"
+      },
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/arose/nglview/master/devtools/recipe/build.sh"
+      },
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/arose/nglview/master/devtools/outdated/nglview-jupyterlab.sh"
+      },
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/arose/nglview/master/devtools/conda-recipe/build.sh"
+      },
+      "technique": "file_exploration"
+    }
+  ],
+  "images": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/arose/nglview/master/examples/images/membrane.gif"
+      },
+      "source": "https://raw.githubusercontent.com/arose/nglview/master/README.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "installation": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Released version",
+        "parent_header": [
+          "Installation"
+        ],
+        "type": "Text_excerpt",
+        "value": "----------------\n\n- Available on `conda-forge` channel\n\n    ```bash\n    conda install nglview -c conda-forge\n    ```\n\n- Available on [PyPI](https://pypi.python.org/pypi/nglview/)\n\n```bash\n   pip install nglview\n```\n\nJupyterlab: `nglview` works best with jupyterlab >= 3.0 and no further steps needed.\nKnown to work versions\n\n|nglview|lab|notebook|ipywidgets|Known issue(s)|VSCode\n|--|--|--|--|--|--|\n|3.1.0|4.0.10|7.0.6|8.1.1|[HTML embed doesn't work](https://github.com/jupyter-widgets/ipywidgets/issues/3878)|No|\n|3.0.8|4.0.10|7.0.6|8.1.1|[show_pdbid doesn't work](https://github.com/nglviewer/nglview/issues/1082)|Yes|\n"
+      },
+      "source": "https://raw.githubusercontent.com/arose/nglview/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Notes",
+        "parent_header": [
+          "Installation"
+        ],
+        "type": "Text_excerpt",
+        "value": "If you are using `notebook` v5.0, you need to increase the `iopub_data_rate_limit`\nto [visualize big structure (e.g: solvated system)](https://github.com/arose/nglview/issues/633)\n\n```\njupyter notebook --NotebookApp.iopub_data_rate_limit=10000000\n```\n"
+      },
+      "source": "https://raw.githubusercontent.com/arose/nglview/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Development version",
+        "parent_header": [
+          "Installation"
+        ],
+        "type": "Text_excerpt",
+        "value": "-------------------\n\nRequirement: `ipywidgets >= 7.0`, `notebook >= 4.2`\n\nThe development version can be installed directly from github:\n"
+      },
+      "source": "https://raw.githubusercontent.com/arose/nglview/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "notebook user",
+        "parent_header": [
+          "Installation",
+          "Development version"
+        ],
+        "type": "Text_excerpt",
+        "value": "```bash\n    git clone https://github.com/arose/nglview\n    cd nglview\n    python setup.py install\n\n    # if you edit files in ./js folder, make sure to rebuild the code\n    cd js\n    npm install\n\n    # probably need to activate widgetsnbextension\n    # python -m ipykernel install --sys-prefix\n    # jupyter nbextension enable --py --sys-prefix widgetsnbextension\n    # jupyter nbextension enable --py --sys-prefix nglview\n\n    # tested with ipywidgets 5.2.2, notebook 4.2.1\n```\n"
+      },
+      "source": "https://raw.githubusercontent.com/arose/nglview/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 0.9810441712022097,
+      "result": {
+        "original_header": "Mouse",
+        "type": "Text_excerpt",
+        "value": "-----\n```python\n# coot mouse style (https://en.wikipedia.org/wiki/Coot_(software))\nview.stage.set_parameters(mouse_preset='coot')\n```\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/arose/nglview/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9999978818548507,
+      "result": {
+        "original_header": "Movie making",
+        "type": "Text_excerpt",
+        "value": "Require: moviepy (`pip install moviepy`)\n```python\nfrom nglview.contrib.movie import MovieMaker\nmovie = MovieMaker(view, output='my.gif', in_memory=True)\nmovie.make()\n```\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/arose/nglview/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9999865319414042,
+      "result": {
+        "original_header": "Command line",
+        "type": "Text_excerpt",
+        "value": "============\n```bash\n\n# open a notebook and import nglview\nnglview\n\n# Require installing pytraj (PR for other backends is welcome)\n# open notebook, load `my.pdb` to pytraj's trajectory then display `view`\nnglview my.pdb\n\n# load density data\nnglview my.ccp4\n\n# open notebook, create trajectory with given topology `my.parm7` and trajecotry file `traj.nc`,\n# then display `view`\nnglview my.parm7 -c traj.nc\n\n# load all trajectories with filename ending with 'nc'\n# make sure to use quote \" \"\nnglview my.parm7 -c \"*.nc\"\n\n# open notebook, copy content from `myscript.py`\nnglview myscript.py\n\n# create a remote notebook\n# just follow its instruction\nnglview my.pdb --remote\nnglview my.parm7 -c traj.nc --remote\nnglview mynotebook.ipynb --remote\n\n# demo (don't need pytraj)\nnglview demo\n\n# specify web browser\nnglview my.pdb --browser=google-chrome\n```\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/arose/nglview/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9999978260343495,
+      "result": {
+        "original_header": "Website",
+        "type": "Text_excerpt",
+        "value": "- http://nglviewer.github.io/nglview/latest\n- http://nglviewer.github.io/nglview/dev\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/arose/nglview/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.8086981310618967,
+      "result": {
+        "original_header": "Projects integrating NGLView",
+        "type": "Text_excerpt",
+        "value": "(Feel free to make a PR to add/remove your project here. Thanks.) \n"
+      },
+      "source": "https://raw.githubusercontent.com/arose/nglview/master/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "invocation": [
+    {
+      "confidence": 0.8776326964541402,
+      "result": {
+        "original_header": "Command line",
+        "type": "Text_excerpt",
+        "value": "============\n```bash\n\n# open a notebook and import nglview\nnglview\n\n# Require installing pytraj (PR for other backends is welcome)\n# open notebook, load `my.pdb` to pytraj's trajectory then display `view`\nnglview my.pdb\n\n# load density data\nnglview my.ccp4\n\n# open notebook, create trajectory with given topology `my.parm7` and trajecotry file `traj.nc`,\n# then display `view`\nnglview my.parm7 -c traj.nc\n\n# load all trajectories with filename ending with 'nc'\n# make sure to use quote \" \"\nnglview my.parm7 -c \"*.nc\"\n\n# open notebook, copy content from `myscript.py`\nnglview myscript.py\n\n# create a remote notebook\n# just follow its instruction\nnglview my.pdb --remote\nnglview my.parm7 -c traj.nc --remote\nnglview mynotebook.ipynb --remote\n\n# demo (don't need pytraj)\nnglview demo\n\n# specify web browser\nnglview my.pdb --browser=google-chrome\n```\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/arose/nglview/master/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "issue_tracker": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/nglviewer/nglview/issues"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "keywords": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": ""
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "license": [
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Other",
+        "spdx_id": "NOASSERTION",
+        "type": "License",
+        "url": null,
+        "value": null
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "File_dump",
+        "value": "\n///////////////\n// NGL Widget\n\n\tThe MIT License, Copyright &copy; 2015 Alexander S. Rose\n\n\tapplies to all files unless otherwise noted\n\n\nThe MIT License\n\nCopyright (c) <year>, <copyright holder>\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in\nall copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN\nTHE SOFTWARE.\n"
+      },
+      "source": "https://raw.githubusercontent.com/arose/nglview/master/LICENSE",
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "License",
+        "type": "Text_excerpt",
+        "value": "=======\n\nGenerally MIT, see the LICENSE file for details.\n"
+      },
+      "source": "https://raw.githubusercontent.com/arose/nglview/master/README.md",
+      "technique": "header_analysis"
+    }
+  ],
+  "name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "nglview"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "owner": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Organization",
+        "value": "nglviewer"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "programming_languages": [
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Jupyter Notebook",
+        "size": 14075471,
+        "type": "Programming_language",
+        "value": "Jupyter Notebook"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "JavaScript",
+        "size": 3370364,
+        "type": "Programming_language",
+        "value": "JavaScript"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Python",
+        "size": 266528,
+        "type": "Programming_language",
+        "value": "Python"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "TypeScript",
+        "size": 50183,
+        "type": "Programming_language",
+        "value": "TypeScript"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "CSS",
+        "size": 37663,
+        "type": "Programming_language",
+        "value": "CSS"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Shell",
+        "size": 3771,
+        "type": "Programming_language",
+        "value": "Shell"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Dockerfile",
+        "size": 853,
+        "type": "Programming_language",
+        "value": "Dockerfile"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "readme_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/arose/nglview/master/README.md"
+      },
+      "technique": "file_exploration"
+    }
+  ],
+  "releases": [
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "hainm",
+          "type": "User"
+        },
+        "date_created": "2024-06-20T04:18:56Z",
+        "date_published": "2024-07-22T15:45:59Z",
+        "html_url": "https://github.com/nglviewer/nglview/releases/tag/v3.1.3",
+        "release_id": 166545100,
+        "tag": "v3.1.3",
+        "tarball_url": "https://api.github.com/repos/nglviewer/nglview/tarball/v3.1.3",
+        "type": "Release",
+        "url": "https://api.github.com/repos/nglviewer/nglview/releases/166545100",
+        "value": "https://api.github.com/repos/nglviewer/nglview/releases/166545100",
+        "zipball_url": "https://api.github.com/repos/nglviewer/nglview/zipball/v3.1.3"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "hainm",
+          "type": "User"
+        },
+        "date_created": "2024-03-03T15:27:38Z",
+        "date_published": "2024-03-03T15:28:32Z",
+        "description": "v3.1.2\r\n\r\nFIX movie rendering #1103 #1102 ",
+        "html_url": "https://github.com/nglviewer/nglview/releases/tag/v3.1.2",
+        "name": "v3.1.2",
+        "release_id": 144543619,
+        "tag": "v3.1.2",
+        "tarball_url": "https://api.github.com/repos/nglviewer/nglview/tarball/v3.1.2",
+        "type": "Release",
+        "url": "https://api.github.com/repos/nglviewer/nglview/releases/144543619",
+        "value": "https://api.github.com/repos/nglviewer/nglview/releases/144543619",
+        "zipball_url": "https://api.github.com/repos/nglviewer/nglview/zipball/v3.1.2"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "hainm",
+          "type": "User"
+        },
+        "date_created": "2024-01-12T02:33:33Z",
+        "date_published": "2024-01-12T02:34:35Z",
+        "description": "v3.1.1",
+        "html_url": "https://github.com/nglviewer/nglview/releases/tag/v3.1.1",
+        "name": "v3.1.1",
+        "release_id": 136762470,
+        "tag": "v3.1.1",
+        "tarball_url": "https://api.github.com/repos/nglviewer/nglview/tarball/v3.1.1",
+        "type": "Release",
+        "url": "https://api.github.com/repos/nglviewer/nglview/releases/136762470",
+        "value": "https://api.github.com/repos/nglviewer/nglview/releases/136762470",
+        "zipball_url": "https://api.github.com/repos/nglviewer/nglview/zipball/v3.1.1"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "hainm",
+          "type": "User"
+        },
+        "date_created": "2024-01-10T20:29:25Z",
+        "date_published": "2024-01-10T20:29:49Z",
+        "description": "v3.1.0",
+        "html_url": "https://github.com/nglviewer/nglview/releases/tag/v3.1.0",
+        "name": "v3.1.0",
+        "release_id": 136552886,
+        "tag": "v3.1.0",
+        "tarball_url": "https://api.github.com/repos/nglviewer/nglview/tarball/v3.1.0",
+        "type": "Release",
+        "url": "https://api.github.com/repos/nglviewer/nglview/releases/136552886",
+        "value": "https://api.github.com/repos/nglviewer/nglview/releases/136552886",
+        "zipball_url": "https://api.github.com/repos/nglviewer/nglview/zipball/v3.1.0"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "hainm",
+          "type": "User"
+        },
+        "date_created": "2024-01-09T05:54:35Z",
+        "date_published": "2024-01-09T19:27:17Z",
+        "description": "v3.0.9",
+        "html_url": "https://github.com/nglviewer/nglview/releases/tag/v3.0.9",
+        "name": "v3.0.9",
+        "release_id": 136384431,
+        "tag": "v3.0.9",
+        "tarball_url": "https://api.github.com/repos/nglviewer/nglview/tarball/v3.0.9",
+        "type": "Release",
+        "url": "https://api.github.com/repos/nglviewer/nglview/releases/136384431",
+        "value": "https://api.github.com/repos/nglviewer/nglview/releases/136384431",
+        "zipball_url": "https://api.github.com/repos/nglviewer/nglview/zipball/v3.0.9"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "hainm",
+          "type": "User"
+        },
+        "date_created": "2023-09-11T15:52:48Z",
+        "date_published": "2023-09-11T15:53:18Z",
+        "description": "v3.0.8",
+        "html_url": "https://github.com/nglviewer/nglview/releases/tag/v3.0.8",
+        "name": "v3.0.8",
+        "release_id": 120666880,
+        "tag": "v3.0.8",
+        "tarball_url": "https://api.github.com/repos/nglviewer/nglview/tarball/v3.0.8",
+        "type": "Release",
+        "url": "https://api.github.com/repos/nglviewer/nglview/releases/120666880",
+        "value": "https://api.github.com/repos/nglviewer/nglview/releases/120666880",
+        "zipball_url": "https://api.github.com/repos/nglviewer/nglview/zipball/v3.0.8"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "hainm",
+          "type": "User"
+        },
+        "date_created": "2023-08-31T02:01:56Z",
+        "date_published": "2023-08-31T02:02:35Z",
+        "description": "v3.0.7",
+        "html_url": "https://github.com/nglviewer/nglview/releases/tag/v3.0.7",
+        "name": "v3.0.7",
+        "release_id": 119363983,
+        "tag": "v3.0.7",
+        "tarball_url": "https://api.github.com/repos/nglviewer/nglview/tarball/v3.0.7",
+        "type": "Release",
+        "url": "https://api.github.com/repos/nglviewer/nglview/releases/119363983",
+        "value": "https://api.github.com/repos/nglviewer/nglview/releases/119363983",
+        "zipball_url": "https://api.github.com/repos/nglviewer/nglview/zipball/v3.0.7"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "hainm",
+          "type": "User"
+        },
+        "date_created": "2023-06-20T20:41:31Z",
+        "date_published": "2023-06-20T20:42:37Z",
+        "description": "https://github.com/nglviewer/nglview/pull/1064",
+        "html_url": "https://github.com/nglviewer/nglview/releases/tag/v3.0.6",
+        "name": "v3.0.6",
+        "release_id": 109288389,
+        "tag": "v3.0.6",
+        "tarball_url": "https://api.github.com/repos/nglviewer/nglview/tarball/v3.0.6",
+        "type": "Release",
+        "url": "https://api.github.com/repos/nglviewer/nglview/releases/109288389",
+        "value": "https://api.github.com/repos/nglviewer/nglview/releases/109288389",
+        "zipball_url": "https://api.github.com/repos/nglviewer/nglview/zipball/v3.0.6"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "hainm",
+          "type": "User"
+        },
+        "date_created": "2023-06-01T08:52:42Z",
+        "date_published": "2023-06-01T09:12:32Z",
+        "description": "Support jupyterlab",
+        "html_url": "https://github.com/nglviewer/nglview/releases/tag/v3.0.5",
+        "name": "v3.0.5",
+        "release_id": 105648343,
+        "tag": "v3.0.5",
+        "tarball_url": "https://api.github.com/repos/nglviewer/nglview/tarball/v3.0.5",
+        "type": "Release",
+        "url": "https://api.github.com/repos/nglviewer/nglview/releases/105648343",
+        "value": "https://api.github.com/repos/nglviewer/nglview/releases/105648343",
+        "zipball_url": "https://api.github.com/repos/nglviewer/nglview/zipball/v3.0.5"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "hainm",
+          "type": "User"
+        },
+        "date_created": "2023-04-29T04:04:58Z",
+        "date_published": "2023-04-29T04:16:15Z",
+        "description": "- works for both ipywigets 7 and 8 in traditional notebook\r\n- does not work with jupyterlab yet (need volunteers please :) )",
+        "html_url": "https://github.com/nglviewer/nglview/releases/tag/v3.0.4",
+        "name": "v3.0.4",
+        "release_id": 101358897,
+        "tag": "v3.0.4",
+        "tarball_url": "https://api.github.com/repos/nglviewer/nglview/tarball/v3.0.4",
+        "type": "Release",
+        "url": "https://api.github.com/repos/nglviewer/nglview/releases/101358897",
+        "value": "https://api.github.com/repos/nglviewer/nglview/releases/101358897",
+        "zipball_url": "https://api.github.com/repos/nglviewer/nglview/zipball/v3.0.4"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "hainm",
+          "type": "User"
+        },
+        "date_created": "2021-06-11T00:28:00Z",
+        "date_published": "2021-06-11T00:29:07Z",
+        "description": "v3.0.3",
+        "html_url": "https://github.com/nglviewer/nglview/releases/tag/v3.0.3",
+        "name": "v3.0.3",
+        "release_id": 44449660,
+        "tag": "v3.0.3",
+        "tarball_url": "https://api.github.com/repos/nglviewer/nglview/tarball/v3.0.3",
+        "type": "Release",
+        "url": "https://api.github.com/repos/nglviewer/nglview/releases/44449660",
+        "value": "https://api.github.com/repos/nglviewer/nglview/releases/44449660",
+        "zipball_url": "https://api.github.com/repos/nglviewer/nglview/zipball/v3.0.3"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "hainm",
+          "type": "User"
+        },
+        "date_created": "2021-06-08T17:17:44Z",
+        "date_published": "2021-06-11T00:21:53Z",
+        "description": "v3.0.2",
+        "html_url": "https://github.com/nglviewer/nglview/releases/tag/v3.0.2",
+        "name": "v3.0.2",
+        "release_id": 44449422,
+        "tag": "v3.0.2",
+        "tarball_url": "https://api.github.com/repos/nglviewer/nglview/tarball/v3.0.2",
+        "type": "Release",
+        "url": "https://api.github.com/repos/nglviewer/nglview/releases/44449422",
+        "value": "https://api.github.com/repos/nglviewer/nglview/releases/44449422",
+        "zipball_url": "https://api.github.com/repos/nglviewer/nglview/zipball/v3.0.2"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "hainm",
+          "type": "User"
+        },
+        "date_created": "2021-04-10T20:42:18Z",
+        "date_published": "2021-04-10T20:42:59Z",
+        "description": "https://github.com/nglviewer/nglview/pull/969",
+        "html_url": "https://github.com/nglviewer/nglview/releases/tag/v3.0.1",
+        "name": "v3.0.1",
+        "release_id": 41228573,
+        "tag": "v3.0.1",
+        "tarball_url": "https://api.github.com/repos/nglviewer/nglview/tarball/v3.0.1",
+        "type": "Release",
+        "url": "https://api.github.com/repos/nglviewer/nglview/releases/41228573",
+        "value": "https://api.github.com/repos/nglviewer/nglview/releases/41228573",
+        "zipball_url": "https://api.github.com/repos/nglviewer/nglview/zipball/v3.0.1"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "hainm",
+          "type": "User"
+        },
+        "date_created": "2021-04-08T18:48:47Z",
+        "date_published": "2021-04-08T18:56:06Z",
+        "description": "v3.0.0",
+        "html_url": "https://github.com/nglviewer/nglview/releases/tag/v3.0.0",
+        "name": "v3.0.0",
+        "release_id": 41143183,
+        "tag": "v3.0.0",
+        "tarball_url": "https://api.github.com/repos/nglviewer/nglview/tarball/v3.0.0",
+        "type": "Release",
+        "url": "https://api.github.com/repos/nglviewer/nglview/releases/41143183",
+        "value": "https://api.github.com/repos/nglviewer/nglview/releases/41143183",
+        "zipball_url": "https://api.github.com/repos/nglviewer/nglview/zipball/v3.0.0"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "hainm",
+          "type": "User"
+        },
+        "date_created": "2021-04-01T02:58:14Z",
+        "date_published": "2021-04-07T14:04:07Z",
+        "description": "Support Jupyter lab 3.0\r\n\r\nhttps://github.com/nglviewer/nglview/releases/download/v2.7.7/nglview-js-widgets-2.7.7.tar.gz",
+        "html_url": "https://github.com/nglviewer/nglview/releases/tag/v2.7.8",
+        "name": "v2.7.8",
+        "release_id": 41061660,
+        "tag": "v2.7.8",
+        "tarball_url": "https://api.github.com/repos/nglviewer/nglview/tarball/v2.7.8",
+        "type": "Release",
+        "url": "https://api.github.com/repos/nglviewer/nglview/releases/41061660",
+        "value": "https://api.github.com/repos/nglviewer/nglview/releases/41061660",
+        "zipball_url": "https://api.github.com/repos/nglviewer/nglview/zipball/v2.7.8"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "hainm",
+          "type": "User"
+        },
+        "date_created": "2020-06-20T19:15:54Z",
+        "date_published": "2020-06-20T19:24:04Z",
+        "description": "v2.7.7",
+        "html_url": "https://github.com/nglviewer/nglview/releases/tag/v2.7.7",
+        "name": "v2.7.7",
+        "release_id": 27753498,
+        "tag": "v2.7.7",
+        "tarball_url": "https://api.github.com/repos/nglviewer/nglview/tarball/v2.7.7",
+        "type": "Release",
+        "url": "https://api.github.com/repos/nglviewer/nglview/releases/27753498",
+        "value": "https://api.github.com/repos/nglviewer/nglview/releases/27753498",
+        "zipball_url": "https://api.github.com/repos/nglviewer/nglview/zipball/v2.7.7"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "hainm",
+          "type": "User"
+        },
+        "date_created": "2020-06-20T19:05:30Z",
+        "date_published": "2020-06-20T19:06:29Z",
+        "description": "v2.7.6",
+        "html_url": "https://github.com/nglviewer/nglview/releases/tag/v2.7.6",
+        "name": "v2.7.6",
+        "release_id": 27753332,
+        "tag": "v2.7.6",
+        "tarball_url": "https://api.github.com/repos/nglviewer/nglview/tarball/v2.7.6",
+        "type": "Release",
+        "url": "https://api.github.com/repos/nglviewer/nglview/releases/27753332",
+        "value": "https://api.github.com/repos/nglviewer/nglview/releases/27753332",
+        "zipball_url": "https://api.github.com/repos/nglviewer/nglview/zipball/v2.7.6"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "hainm",
+          "type": "User"
+        },
+        "date_created": "2020-03-08T20:50:41Z",
+        "date_published": "2020-03-08T20:51:15Z",
+        "description": "- ENH: Works with jupyterlab >= 2.0 #877 \r\n- Disable context menu from jupyterlab when right clicking. #877 \r\n- CHANGES from v2.7.1:\r\n    - FIX for mdanalysis: avoid lots of warnings \r\n    - FIX contrib.movie.MovieMaker.make() should call perframe_hook if specified https://github.com/arose/nglview/commit/92d7d36583e4772e38dc2ca9e95a83fa474e68e6 \r\n    - ENH: support writing additional movie formats (e.g: mp4)\r\n    - ENH: Added two optional keyword arguments to show_rdkit\r\n    - ENH: QCElemental: Better nglview integration through SDF files\r\n    - ENH: Add `principal_axes` as an alias of `axes` \u2026\r\n\r\n\r\n     ",
+        "html_url": "https://github.com/nglviewer/nglview/releases/tag/v2.7.5",
+        "name": "v2.7.5",
+        "release_id": 24329520,
+        "tag": "v2.7.5",
+        "tarball_url": "https://api.github.com/repos/nglviewer/nglview/tarball/v2.7.5",
+        "type": "Release",
+        "url": "https://api.github.com/repos/nglviewer/nglview/releases/24329520",
+        "value": "https://api.github.com/repos/nglviewer/nglview/releases/24329520",
+        "zipball_url": "https://api.github.com/repos/nglviewer/nglview/zipball/v2.7.5"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "hainm",
+          "type": "User"
+        },
+        "date_created": "2020-03-06T21:46:50Z",
+        "date_published": "2020-03-06T21:47:19Z",
+        "description": "v2.7.4",
+        "html_url": "https://github.com/nglviewer/nglview/releases/tag/v2.7.4",
+        "name": "v2.7.4",
+        "release_id": 24306447,
+        "tag": "v2.7.4",
+        "tarball_url": "https://api.github.com/repos/nglviewer/nglview/tarball/v2.7.4",
+        "type": "Release",
+        "url": "https://api.github.com/repos/nglviewer/nglview/releases/24306447",
+        "value": "https://api.github.com/repos/nglviewer/nglview/releases/24306447",
+        "zipball_url": "https://api.github.com/repos/nglviewer/nglview/zipball/v2.7.4"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "hainm",
+          "type": "User"
+        },
+        "date_created": "2020-03-06T21:19:05Z",
+        "date_published": "2020-03-06T21:20:09Z",
+        "description": "v2.7.3",
+        "html_url": "https://github.com/nglviewer/nglview/releases/tag/v2.7.3",
+        "name": "v2.7.3",
+        "release_id": 24305759,
+        "tag": "v2.7.3",
+        "tarball_url": "https://api.github.com/repos/nglviewer/nglview/tarball/v2.7.3",
+        "type": "Release",
+        "url": "https://api.github.com/repos/nglviewer/nglview/releases/24305759",
+        "value": "https://api.github.com/repos/nglviewer/nglview/releases/24305759",
+        "zipball_url": "https://api.github.com/repos/nglviewer/nglview/zipball/v2.7.3"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "hainm",
+          "type": "User"
+        },
+        "date_created": "2019-08-24T06:33:39Z",
+        "date_published": "2019-08-24T06:36:08Z",
+        "description": "- FIX: work with jupyterlab https://github.com/arose/nglview/commit/9ce60e16a9177058c15e85c9509cdfd9cc004011",
+        "html_url": "https://github.com/nglviewer/nglview/releases/tag/v2.7.1",
+        "name": "v2.7.1",
+        "release_id": 19509719,
+        "tag": "v2.7.1",
+        "tarball_url": "https://api.github.com/repos/nglviewer/nglview/tarball/v2.7.1",
+        "type": "Release",
+        "url": "https://api.github.com/repos/nglviewer/nglview/releases/19509719",
+        "value": "https://api.github.com/repos/nglviewer/nglview/releases/19509719",
+        "zipball_url": "https://api.github.com/repos/nglviewer/nglview/zipball/v2.7.1"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "hainm",
+          "type": "User"
+        },
+        "date_created": "2019-08-14T04:19:37Z",
+        "date_published": "2019-08-14T04:20:59Z",
+        "description": "- ENH: Movie making without setting timeout (#842)\r\n- Cosmetic changes:\r\n    - Typescript + theme css (#841)\r\n    - Use async syntax (https://github.com/arose/nglview/commit/395e7712f95f37be4614e1accfd14d0a916bb4c0)",
+        "html_url": "https://github.com/nglviewer/nglview/releases/tag/v2.7.0",
+        "name": "v2.7.0",
+        "release_id": 19274365,
+        "tag": "v2.7.0",
+        "tarball_url": "https://api.github.com/repos/nglviewer/nglview/tarball/v2.7.0",
+        "type": "Release",
+        "url": "https://api.github.com/repos/nglviewer/nglview/releases/19274365",
+        "value": "https://api.github.com/repos/nglviewer/nglview/releases/19274365",
+        "zipball_url": "https://api.github.com/repos/nglviewer/nglview/zipball/v2.7.0"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "hainm",
+          "type": "User"
+        },
+        "date_created": "2019-08-03T21:36:11Z",
+        "date_published": "2019-08-03T21:37:35Z",
+        "description": "FIX: correctly display player in embed mode.",
+        "html_url": "https://github.com/nglviewer/nglview/releases/tag/v2.6.9",
+        "name": "v2.6.9",
+        "release_id": 19060058,
+        "tag": "v2.6.9",
+        "tarball_url": "https://api.github.com/repos/nglviewer/nglview/tarball/v2.6.9",
+        "type": "Release",
+        "url": "https://api.github.com/repos/nglviewer/nglview/releases/19060058",
+        "value": "https://api.github.com/repos/nglviewer/nglview/releases/19060058",
+        "zipball_url": "https://api.github.com/repos/nglviewer/nglview/zipball/v2.6.9"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "hainm",
+          "type": "User"
+        },
+        "date_created": "2019-08-03T05:12:40Z",
+        "date_published": "2019-08-03T05:13:16Z",
+        "html_url": "https://github.com/nglviewer/nglview/releases/tag/v2.6.8",
+        "name": "v2.6.8",
+        "release_id": 19055128,
+        "tag": "v2.6.8",
+        "tarball_url": "https://api.github.com/repos/nglviewer/nglview/tarball/v2.6.8",
+        "type": "Release",
+        "url": "https://api.github.com/repos/nglviewer/nglview/releases/19055128",
+        "value": "https://api.github.com/repos/nglviewer/nglview/releases/19055128",
+        "zipball_url": "https://api.github.com/repos/nglviewer/nglview/zipball/v2.6.8"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "hainm",
+          "type": "User"
+        },
+        "date_created": "2019-08-02T03:52:24Z",
+        "date_published": "2019-08-02T03:53:15Z",
+        "html_url": "https://github.com/nglviewer/nglview/releases/tag/v2.6.7",
+        "name": "v2.6.7",
+        "release_id": 19031826,
+        "tag": "v2.6.7",
+        "tarball_url": "https://api.github.com/repos/nglviewer/nglview/tarball/v2.6.7",
+        "type": "Release",
+        "url": "https://api.github.com/repos/nglviewer/nglview/releases/19031826",
+        "value": "https://api.github.com/repos/nglviewer/nglview/releases/19031826",
+        "zipball_url": "https://api.github.com/repos/nglviewer/nglview/zipball/v2.6.7"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "hainm",
+          "type": "User"
+        },
+        "date_created": "2019-08-02T03:16:45Z",
+        "date_published": "2019-08-02T03:18:14Z",
+        "html_url": "https://github.com/nglviewer/nglview/releases/tag/v2.6.5",
+        "name": "v2.6.5",
+        "release_id": 19031525,
+        "tag": "v2.6.5",
+        "tarball_url": "https://api.github.com/repos/nglviewer/nglview/tarball/v2.6.5",
+        "type": "Release",
+        "url": "https://api.github.com/repos/nglviewer/nglview/releases/19031525",
+        "value": "https://api.github.com/repos/nglviewer/nglview/releases/19031525",
+        "zipball_url": "https://api.github.com/repos/nglviewer/nglview/zipball/v2.6.5"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "hainm",
+          "type": "User"
+        },
+        "date_created": "2019-07-17T03:21:44Z",
+        "date_published": "2019-07-17T03:22:19Z",
+        "html_url": "https://github.com/nglviewer/nglview/releases/tag/v2.6.1",
+        "name": "v2.6.1",
+        "release_id": 18661702,
+        "tag": "v2.6.1",
+        "tarball_url": "https://api.github.com/repos/nglviewer/nglview/tarball/v2.6.1",
+        "type": "Release",
+        "url": "https://api.github.com/repos/nglviewer/nglview/releases/18661702",
+        "value": "https://api.github.com/repos/nglviewer/nglview/releases/18661702",
+        "zipball_url": "https://api.github.com/repos/nglviewer/nglview/zipball/v2.6.1"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "hainm",
+          "type": "User"
+        },
+        "date_created": "2019-07-14T19:51:34Z",
+        "date_published": "2019-07-14T19:53:58Z",
+        "description": "- Support dark theme (view._gui_theme = 'dark'), mainly used for jupyterlab environment.\r\n- Embed enhancement (work without using `nglview.write_html`) ",
+        "html_url": "https://github.com/nglviewer/nglview/releases/tag/v2.6.0",
+        "name": "v2.6.0",
+        "release_id": 18603714,
+        "tag": "v2.6.0",
+        "tarball_url": "https://api.github.com/repos/nglviewer/nglview/tarball/v2.6.0",
+        "type": "Release",
+        "url": "https://api.github.com/repos/nglviewer/nglview/releases/18603714",
+        "value": "https://api.github.com/repos/nglviewer/nglview/releases/18603714",
+        "zipball_url": "https://api.github.com/repos/nglviewer/nglview/zipball/v2.6.0"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "hainm",
+          "type": "User"
+        },
+        "date_created": "2019-07-05T06:23:56Z",
+        "date_published": "2019-07-05T06:25:14Z",
+        "description": "Work with jupyterlab 1.0",
+        "html_url": "https://github.com/nglviewer/nglview/releases/tag/v2.5.2",
+        "name": "v2.5.2",
+        "release_id": 18427959,
+        "tag": "v2.5.2",
+        "tarball_url": "https://api.github.com/repos/nglviewer/nglview/tarball/v2.5.2",
+        "type": "Release",
+        "url": "https://api.github.com/repos/nglviewer/nglview/releases/18427959",
+        "value": "https://api.github.com/repos/nglviewer/nglview/releases/18427959",
+        "zipball_url": "https://api.github.com/repos/nglviewer/nglview/zipball/v2.5.2"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "hainm",
+          "type": "User"
+        },
+        "date_created": "2019-07-05T01:18:21Z",
+        "date_published": "2019-07-05T01:21:16Z",
+        "description": "FIX embedding in v2.5.0\r\n\r\nWhat's new (vs 2.2.0)\r\n- Support NGL's GUI\r\n- Use ipywidgets' player instead of jquerry's one.",
+        "html_url": "https://github.com/nglviewer/nglview/releases/tag/v2.5.1",
+        "name": "v2.5.1",
+        "release_id": 18425655,
+        "tag": "v2.5.1",
+        "tarball_url": "https://api.github.com/repos/nglviewer/nglview/tarball/v2.5.1",
+        "type": "Release",
+        "url": "https://api.github.com/repos/nglviewer/nglview/releases/18425655",
+        "value": "https://api.github.com/repos/nglviewer/nglview/releases/18425655",
+        "zipball_url": "https://api.github.com/repos/nglviewer/nglview/zipball/v2.5.1"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "somef_missing_categories": [
+    "run",
+    "download",
+    "requirements",
+    "contact",
+    "contributors",
+    "support",
+    "identifier"
+  ],
+  "somef_provenance": {
+    "date": "2024-11-04 08:29:06",
+    "somef_schema_version": "1.0.0",
+    "somef_version": "0.9.5"
+  },
+  "stargazers_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 820
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "type": [
+    {
+      "confidence": 0.82,
+      "result": {
+        "type": "String",
+        "value": "commandline-application"
+      },
+      "technique": "software_type_heuristics"
+    }
+  ],
+  "usage": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Example",
+        "type": "Text_excerpt",
+        "value": "=======\n\n- Notebooks: please see our [Jupyter notebook examples](examples/README.md)\n- Simple demo for trajectory (take time to load): [biomembrane](http://amber-md.github.io/pytraj/latest/ngl_player.html)\n"
+      },
+      "source": "https://raw.githubusercontent.com/arose/nglview/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Usage",
+        "type": "Text_excerpt",
+        "value": "=====\n\nOpen a notebook\n\n    jupyter notebook\n\nand issue\n\n```Python\nimport nglview\nview = nglview.show_pdbid(\"3pqr\")  # load \"3pqr\" from RCSB PDB and display viewer widget\nview\n```\n\nA number of convenience functions are available to quickly display data from\nthe file-system, [RCSB PDB](http:www.rcsb.org), [simpletraj](https://github.com/arose/simpletraj) and from objects of analysis libraries [mdtraj](http://mdtraj.org/), [pytraj](http://amber-md.github.io/pytraj/latest/index.html), [mdanalysis](http://www.mdanalysis.org/), [ParmEd](http://parmed.github.io/ParmEd/), [rdkit](https://github.com/rdkit/rdkit), [HTMD](https://github.com/Acellera/htmd), [biopython](https://github.com/biopython/biopython.github.io/).\n\n| Function                                 | Description                                           |\n|------------------------------------------|-------------------------------------------------------|\n| `show_file(path)`                        | Shows any NGL supported file formats (pdb, gro, mol2, sdf, dx, ..) in `path`       |\n| `show_pdbid(pdbid)`                      | Shows `pdbid` fetched from RCSB PDB                   |\n| `show_simpletraj(struc_path, traj_path)` | Shows structure & trajectory loaded with `simpletraj` |\n| `show_mdtraj(traj)`                      | Shows `MDTraj` trajectory `traj`                      |\n| `show_pytraj(traj)`                      | Shows `PyTraj` trajectory `traj`                      |\n| `show_parmed(structure)`                 | Shows `ParmEd` structure                              |\n| `show_mdanalysis(univ)`                  | Shows `MDAnalysis` Universe or AtomGroup `univ`       |\n| `show_rdkit(mol)`                        | Shows `rdkit` rdkit.Chem.rdchem.Mol                   |\n| `show_ase(atoms)`                        | Shows `ase` Atoms                                     |\n| `show_asetraj(traj)`                     | Shows `ase` trajectory `traj`                         |\n| `show_pymatgen(struct)`                  | Shows `pymatgen` Structure                            |\n| `show_htmd(mol)`                         | Shows `HTMD` Molecules                                |\n| `show_biopython(mol)`                    | Shows `Biopython` structural entities                 |\n| `show_iotbx(mol)`                        | Shows `cctbx's iotbx` structure                       |\n| `show_rosetta(pose)`                     | Shows `pyrosetta's Pose`                              |\n| `show_iodata(obj)`                       | Shows `iodata's IOData`                               |\n| `show_psi4(obj)`                         | Shows `psi4's Molecule`                               |\n| `show_qcelemental`                       | Shows `QCelementary's Molecule`                       |\n| `show_openbabel`                         | Shows `openbabel's OMol`                              |\n| `show_prody`                             | Shows `prody's Ensemble or AtomGroup`                 |\n\n"
+      },
+      "source": "https://raw.githubusercontent.com/arose/nglview/master/README.md",
+      "technique": "header_analysis"
+    }
+  ]
+}

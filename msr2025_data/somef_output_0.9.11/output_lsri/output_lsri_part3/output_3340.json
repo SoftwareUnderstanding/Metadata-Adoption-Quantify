@@ -1,0 +1,419 @@
+{
+  "code_repository": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/gersteinlab/SVFX"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_created": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2019-08-08T17:27:26Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_updated": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2023-08-22T20:48:44Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "description": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "Machine learning framework to quantify pathogenicity of structural variants"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 0.9711060831256114,
+      "result": {
+        "original_header": "SVFX: Using Random Forests to Prioritize Structural Variants",
+        "type": "Text_excerpt",
+        "value": "SVFX is a machine learning based tool to assign pathogenic scores to large deletions and duplications.\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/gersteinlab/SVFX/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9141044583500292,
+      "result": {
+        "original_header": "Configurable elements",
+        "type": "Text_excerpt",
+        "value": "**`coordinates`**: `control` and `disease` should have the file paths for the `control` and `disease` coordinates, respectively. \n**`bigwig_files`**: A hyphenated list of paths to BigWig files to be used in\nfeature computation. \n**`overlap_coordinate_files`**: A hyphenated list of paths to coordinate files for computing overlap as a feature (e.g. coordinates of certain genes) \n**`variant_type`**: What kind of variants are in the input files (either `DEL` or `DUP`) \n**`randomized_num`**: If `normalized` is `True`, the number of pseudo-matrices of variants to normalize with. \n**`output_matrix`**: `control` and `disease` should have the root output names for the control feature matrix and the disease feature matrix, respectively (these will be combined into a file with the root name `combined_matrix`). \n**`columns_to_remove`**: File with indices for the columns in the feature matrix that should not be considered in the model (e.g. the indices of the\nfeature coordinates). The default file should be fine for the matrices generated from the scripts we provide. \n**`class_label_index`**: Column with the class label. Again, the default value should be fine for matrices generated from our scripts. \n**`num_trees`**: Number of trees in the random forest \n**`max_depth`**: The maximum depth of a tree in the random forest \n**`min_samples_split`**: The minimum number of samples to split an internal node in a tree in the random forest \n"
+      },
+      "source": "https://raw.githubusercontent.com/gersteinlab/SVFX/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.941572797029732,
+      "result": {
+        "original_header": "Using procedures outside of the pipeline",
+        "type": "Text_excerpt",
+        "value": "Usage of the individual programs in the pipeline is explained below.\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/gersteinlab/SVFX/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9478246369649369,
+      "result": {
+        "original_header": "`generate_feature_matrix.py`",
+        "type": "Text_excerpt",
+        "value": "Usage: `python3 src/generate_feature_matrix.py -c [SV files in tab-separated coordinate format (each line should start with chr)] -b [Feature files in BigWig format] -g [Coordinates for interval overlap-based features] -o [File root for output] -f [Present if class label 1, False otherwise] -t [SV type (e.g. DEL, DUP, INV)] -z [Present if matrix should be Z-Score normalized (length feature will not be normalized)] -r [Number of shuffled coordinates to generate for the randomization process] -rg [Reference genome index file - necessary for the -r flag] -l [If present, length will be included as a feature (and will be ignored during normalization)]` \nSample command (run from the root directory): `python3 src/generate_feature_matrix.py -c data/sample_input_SV.txt -b data/gcPercentage.bw -g data/gc19_pc.prom.nr.bed  data/gc19_pc.3utr.nr.bed data/gc19_pc.5utr.nr.bed data/gc19_pc.cds.nr.bed data/gc19_pc.ss.nr.bed data/sensitive.nc.bed data/ultra.conserved.hg19.bed data/wgEncodeBroadHmmGm12878HMM.Heterochrom.bed data/H1-ESC_Dixon2015-raw_TADs.bed -o sample_output_matrix -t DEL -z -r 1 -rg data/hg19.fa.fai` \nGiven an input list of structural variants, generates a matrix of feature values calculated from the given BigWig and coordinate-overlap files for input to a model.\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/gersteinlab/SVFX/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9493638449583138,
+      "result": {
+        "original_header": "`rf_model.py`",
+        "type": "Text_excerpt",
+        "value": "Usage: `python3 src/rf_model.py -i [input feature matrix] -d [File of indices of features to ignore (one per line)] -t [Index of the class label in the feature matrix] -n [Number of trees in the forest] -m [Maximum depth of a tree in the forest] -s [Minimum number of samples required to split an internal node] -c [Number of pathogenic SV's in the matrix] -l [Total number of SV's in the matrix] -o [Output root filename]` \nGiven an input feature matrix, trains a set of 10 random forest classifiers on disjoint tenths of the dataset, then predicts class labels for each member of the dataset with the models that did not train on them. Saves the created models, as a Python list of trained sklearn models, to `[file root]_ten_models.pkl`. Saves the indices used to split the diseased data into tenths in `[file root]_disease_indices.pkl`, and those used to split the control data in `[file root]_kg_indices.pkl`. \n Predictions on the training data (from the models that did not train on each specific SV) are outputted in dictionary format to `[file root]_predictions.pkl`. Finally, AU(ROC/PRC) on this data are calculated\n and outputted to `[file root]_ROC_PRC.txt`. \nNote: The input matrix must be formatted in such a way that all control group rows follow all non-control rows (in other words, all rows with label 0 follow all rows with label 1). The easiest way to do this is to use `generate_feature_matrix.py` to generate the 0-label and 1-label matrices, then append the 0-label matrix (without title row) to the 1-label matrix.\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/gersteinlab/SVFX/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9144921512618177,
+      "result": {
+        "original_header": "`src/load_model.py`",
+        "type": "Text_excerpt",
+        "value": "Usage: `python3 src/load_model.py -i [input matrix] -d [File of columns to ignore for model training; the same as columns_to_remove in the config file. remove_inds.txt should be find for matrices generated from our scripts.] -m [the .pkl file with all 10 models. This is output by the Snakemake pipeline] -t [Index of the class label in the matrix - use 0 if the matrix was generated using our code] -o [filename to write the predictions to]`\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/gersteinlab/SVFX/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9485402794695961,
+      "result": {
+        "original_header": "`roc_prc_gen.py`",
+        "type": "Text_excerpt",
+        "value": "Given a tab-separated two-column input file of predicted scores and true labels (with a header, as with the following example): \n"
+      },
+      "source": "https://raw.githubusercontent.com/gersteinlab/SVFX/master/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "download_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/gersteinlab/SVFX/releases"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 4
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/gersteinlab/SVFX/forks"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "gersteinlab/SVFX"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_title": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "SVFX: Using Random Forests to Prioritize Structural Variants"
+      },
+      "source": "https://raw.githubusercontent.com/gersteinlab/SVFX/master/README.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "installation": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Setup",
+        "parent_header": [
+          "SVFX: Using Random Forests to Prioritize Structural Variants"
+        ],
+        "type": "Text_excerpt",
+        "value": "Install `conda` using these [directions](https://docs.conda.io/projects/conda/en/latest/user-guide/install/).\n\nOn MacOS, you can activate the provided environment with\n`conda env create -f SVFXenv.yml && conda activate SVFXenv`\n\notherwise, run\n`conda env create -f SVFXenv_all_platforms.yml && conda activate SVFXenv`\n\nThe SVFX pipeline requires Python3.6+.\n"
+      },
+      "source": "https://raw.githubusercontent.com/gersteinlab/SVFX/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "necessary python package installations:",
+        "parent_header": [
+          "SVFX: Using Random Forests to Prioritize Structural Variants",
+          "Using procedures outside of the pipeline"
+        ],
+        "type": "Text_excerpt",
+        "value": "`pip3 install scikit-allel`\n`pip3 install pyBigWig`\n`pip3 install argparse`\n`pip3 install sklearn`\n"
+      },
+      "source": "https://raw.githubusercontent.com/gersteinlab/SVFX/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 0.8819300546270612,
+      "result": {
+        "original_header": "Configuring the pipeline",
+        "type": "Text_excerpt",
+        "value": "The pipeline is built using [Snakemake](https://snakemake.readthedocs.io/); to configure\nelements of the pipeline, modify the `config.yaml` file from the root directory.\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/gersteinlab/SVFX/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.8130298401628154,
+      "result": {
+        "original_header": "Configurable elements",
+        "type": "Text_excerpt",
+        "value": "**`run_id`**: A string to identify this run; this string will be prepended to the files generated by this run\nso that multiple runs can be executed without cleanup. \n"
+      },
+      "source": "https://raw.githubusercontent.com/gersteinlab/SVFX/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9940253032999478,
+      "result": {
+        "original_header": "`rf_model.py`",
+        "type": "Text_excerpt",
+        "value": "Sample command: `python3 src/rf_model.py -i input_del_matrix.ZscoreNormalized.training.tsv -d remove_indices.txt -t 0 -n 150 -c 3613 -l 7225 -o output_model_` \n"
+      },
+      "source": "https://raw.githubusercontent.com/gersteinlab/SVFX/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9999999937518425,
+      "result": {
+        "original_header": "`src/load_model.py`",
+        "type": "Text_excerpt",
+        "value": "You will need to `pip3 install joblib` before this can be run. If any dependencies are still missing, install them with pip3. \n"
+      },
+      "source": "https://raw.githubusercontent.com/gersteinlab/SVFX/master/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "invocation": [
+    {
+      "confidence": 0.8452452694282365,
+      "result": {
+        "original_header": "`generate_feature_matrix.py`",
+        "type": "Text_excerpt",
+        "value": "Sample command (run from the root directory): `python3 src/generate_feature_matrix.py -c data/sample_input_SV.txt -b data/gcPercentage.bw -g data/gc19_pc.prom.nr.bed  data/gc19_pc.3utr.nr.bed data/gc19_pc.5utr.nr.bed data/gc19_pc.cds.nr.bed data/gc19_pc.ss.nr.bed data/sensitive.nc.bed data/ultra.conserved.hg19.bed data/wgEncodeBroadHmmGm12878HMM.Heterochrom.bed data/H1-ESC_Dixon2015-raw_TADs.bed -o sample_output_matrix -t DEL -z -r 1 -rg data/hg19.fa.fai` \n"
+      },
+      "source": "https://raw.githubusercontent.com/gersteinlab/SVFX/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9595469174237876,
+      "result": {
+        "original_header": "`rf_model.py`",
+        "type": "Text_excerpt",
+        "value": "Sample command: `python3 src/rf_model.py -i input_del_matrix.ZscoreNormalized.training.tsv -d remove_indices.txt -t 0 -n 150 -c 3613 -l 7225 -o output_model_` \n"
+      },
+      "source": "https://raw.githubusercontent.com/gersteinlab/SVFX/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9470964609358209,
+      "result": {
+        "original_header": "`roc_prc_gen.py`",
+        "type": "Text_excerpt",
+        "value": "Usage: `python3 roc_prc_gen.py [input file] [output file]` \n"
+      },
+      "source": "https://raw.githubusercontent.com/gersteinlab/SVFX/master/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "issue_tracker": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/gersteinlab/SVFX/issues"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "keywords": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": ""
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "license": [
+    {
+      "confidence": 1,
+      "result": {
+        "name": "MIT License",
+        "spdx_id": "MIT",
+        "type": "License",
+        "url": "https://api.github.com/licenses/mit",
+        "value": "https://api.github.com/licenses/mit"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "File_dump",
+        "value": "The MIT License\n\nCopyright (c) 2019 Gerstein Lab, Mark B. Gerstein\n\nPermission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the \u201cSoftware\ufffd?), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions: The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \u201cAS IS\ufffd?, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.\n"
+      },
+      "source": "https://raw.githubusercontent.com/gersteinlab/SVFX/master/LICENSE.md",
+      "technique": "file_exploration"
+    }
+  ],
+  "name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "SVFX"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "owner": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Organization",
+        "value": "gersteinlab"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "programming_languages": [
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Python",
+        "size": 36167,
+        "type": "Programming_language",
+        "value": "Python"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "readme_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/gersteinlab/SVFX/master/README.md"
+      },
+      "technique": "file_exploration"
+    }
+  ],
+  "related_documentation": [
+    {
+      "confidence": 1,
+      "result": {
+        "format": "readthedocs",
+        "type": "Url",
+        "value": "https://snakemake.readthedocs.io/"
+      },
+      "source": "https://raw.githubusercontent.com/gersteinlab/SVFX/master/README.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "run": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Running the entire pipeline",
+        "parent_header": [
+          "SVFX: Using Random Forests to Prioritize Structural Variants"
+        ],
+        "type": "Text_excerpt",
+        "value": "Simply run `snakemake --cores=8` from the root directory.\n\n"
+      },
+      "source": "https://raw.githubusercontent.com/gersteinlab/SVFX/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Running parts of the pipeline",
+        "parent_header": [
+          "SVFX: Using Random Forests to Prioritize Structural Variants",
+          "Running the entire pipeline"
+        ],
+        "type": "Text_excerpt",
+        "value": "To just run a part of the pipeline, modify `config.yaml` and `Snakefile` with the configuration and input/output you want, then run `snakemake --cores=8 -R --until (rule name)`.\n\nFor example, if you have a list of coordinates and just want to generate the feature matrix for it (which is useful if you want to use a preexisting model to score additional variants), you can modify `Snakefile` to set the control or disease input to your file (for the other input, you can just put an arbitrary coordinates file, then delete the output matrix corresponding to that input). You can then run `snakemake --cores=8 -R --until generate_feature_matrix`, and the matrix will be generated.\n"
+      },
+      "source": "https://raw.githubusercontent.com/gersteinlab/SVFX/master/README.md",
+      "technique": "header_analysis"
+    }
+  ],
+  "somef_missing_categories": [
+    "citation",
+    "acknowledgement",
+    "download",
+    "requirements",
+    "contact",
+    "contributors",
+    "documentation",
+    "usage",
+    "faq",
+    "support",
+    "identifier",
+    "has_build_file",
+    "executable_example"
+  ],
+  "somef_provenance": {
+    "date": "2024-10-06 12:26:06",
+    "somef_schema_version": "1.0.0",
+    "somef_version": "0.9.5"
+  },
+  "stargazers_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 12
+      },
+      "technique": "GitHub_API"
+    }
+  ]
+}

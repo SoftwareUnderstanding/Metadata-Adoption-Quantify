@@ -1,0 +1,519 @@
+{
+  "citation": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Cite BitEpi",
+        "type": "Text_excerpt",
+        "value": "BitEpi is published in bioRxiv and is submitted to Bioinformatics (under review).\nFor citation see [cite.bib](Publication/BitEpi/bioRxiv/cite.bib) in Publication folder.\n"
+      },
+      "source": "https://raw.githubusercontent.com/aehrc/BitEpi/master/README.md",
+      "technique": "header_analysis"
+    }
+  ],
+  "code_repository": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/aehrc/BitEpi"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_created": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2019-09-26T23:43:50Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_updated": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2024-10-02T08:58:25Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "description": [
+    {
+      "confidence": 0.9372942717170277,
+      "result": {
+        "original_header": "BitEpi: An exhaustive search of higher-order epistatic interactions",
+        "type": "Text_excerpt",
+        "value": "**Pvalue.py** is new and compute Pvalue for the Alpha and Beta (See below) \nBitEpi is software for an exhaustive search of higher-order epistatic interactions between genomic variants (SNPs) given a binary phenotype (Case/Control). \nIt can search for 2-SNP (pairwise) interactions as well as 3-SNP and 4-SNP (**Higher-Order**) interactions. It also processes SNPs individually (1-SNP test) \nBitEpi performs an **exhaustive** search that means it tests all possible combinations of SNPs. For example, the 4-SNP search of 50 SNPs ([data.csv](sampleData/data.csv)) requires to test all \"4 out of 50\" 4-SNP combinations (230300 4-SNP combinations). \n**BitEpi could perform 2 different association analysis: Beta and Alpha** \n**Beta** analysis measures the association power of an SNP (1-SNP), a pair of SNPs (2-SNP), a combination of three SNPs (3-SNP) and a combination of four SNPs (4-SNP). Beta represents the combined association power. Beta is computed as the weighted average purity (Gini-Index) of each row of the contingency table where the weight is the fraction of samples in that row. The below example shows how we compute Beta for an individual SNPs (1-SNP Beta). \n2-SNP, 3-SNP, and 4-SNP Beta are computed in the same way. the only difference is that there are more rows in the contingency table (9, 27 and 81 rows respectively). \n**Alpha** analysis measure the interactions effect size between SNPs. In other words, Alpha is the gain in the association power due to interaction between SNPs. Alpha computed as below where B\\_ indicates Beta value. \nB_0 is the purity (Gini-Index) of the samples in the dataset (CONSTANT). Given r case and q controls, B_0 is computed as (r^2 + q^2) / (r+q)^2. 1-SNP Alpha is similar to 1-SNP Beta with an offset (B_0). While the minimum value for Beta depends on the dataset characteristics (B_0), the minimum value for Alpha is always 0. \n**High value for Beta does not necessarily indicate strong interactions.** \n- Beta A = 0.90 (association power of SNP A)\n- Beta B = 0.03 (association power of SNP B)\n- Beta AB = 0.92 (association power of pair of A and B) \nIn this example, the Beta AB is high. However, it is driven mainly by Beta A but not the interaction between A and B. Another example is \nIn this example, Beta XY is not as high as Beta AB. However, it is not driven by individual SNPs but by the strong interaction between X and Y. \nThe Alpha analysis reveals this: \nIf you run BitEpi in the best mode, BitEpi finds the best 2-SNP, 3-SNP and 4-SNP interactions for each SNP (maximize Alpha) and then report Beta and Alpha for each SNPs and its best 2-SNP, 3-SNP and 4-SNP interactions. \n- To computer (N)-SNP Alpha the program needs (N-1)-SNP Beta. To avoid computational redundancy, BitEpi computes all (N-1)-SNP Beta and store them (n-1) dimension array. For 4-SNP search, the size of this array is (v^3)\\*8 bytes where v is the number of SNPs in the dataset (i.e for 4000 SNPs 256 GB of Memory). This is a bottleneck of the program. Using 3 dimension array to store 3-SNP combination results in memory redundancy. However, these data are accessed so frequently and the array leads to the fastest access.\n- You can combine different analyses, for example, you can do 3-SNP Beta and 2-SNP alpha in the same run.\n- You can choose to report all SNP combinations that exceed specific Alpha and Beta threshold. However, there are no guidelines on how to choose such a threshold. It would be easier if you ask for the top N SNP combinations (with the highest Alpha or Beta) to be reported. This option is implemented in BitEpi with minor computational cost (see command line parameter Notes)\n- If you parallelize the program on so many threads such that each thread process a very small number of combinations to test (less than MIN_COMB_IN_JOB in the code). The program exit without performing the job. In this case, you should use a smaller number of threads. \n**BitEpi is Fast** \nBitEpi uses fast bitwise operations to count samples with a different genotype. That is why we call it BitEpi.\nBOOST (pairwise search only) and MPI3SNP (3-SNP search only) also use bitwise operations for this purpose. However, the bitwise method used in BitEpi is different and better suits 3-SNP and 4-SNP (higher-order) analysis. As a consequence, BitEpi is slower than BOOST for 2-SNP search but faster than anything else for 3-SNP and 4-SNP search (to the best of our knowledge).\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/aehrc/BitEpi/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9316429222748839,
+      "result": {
+        "original_header": "BitEpi has two interfaces: Command-Line and Python",
+        "type": "Text_excerpt",
+        "value": "BitEpi Python Interface is implemented in a separate GitHub page ([bitepi-python](https://github.com/bhosking/bitepi-python)). You can find examples and descriptions there. It may take time for changes on this repository to be reflected on the bitepi-python repository. \n| Argument  | Description                               |\n| --------- | ----------------------------------------- |\n| -i [str]  | Path to input file (CSV or plink bfile).  |\n|           | Default is CSV (see -bfile)               |\n| -bfile    | If present, -i argument is considered as  |\n|           | plink bfile prefix (_.bed, _.bim, \\*.fam) |\n| -o [str]  | Output prefix                             |\n| -bfile    | Read input file as PLINK 1.9 .bed format  |\n| -sort     | Sort the output                           |\n| -best     | Find the best interactions for each SNP   |\n| -t [int]  | Number of threads                         |\n| -b1 [thr] | Perform 1-SNP Beta analysis               |\n| -b2 [thr] | Perform 2-SNP Beta analysis               |\n| -b3 [thr] | Perform 3-SNP Beta analysis               |\n| -b4 [thr] | Perform 4-SNP Beta analysis               |\n| -a1 [thr] | Perform 1-SNP Alpha analysis              |\n| -a2 [thr] | Perform 2-SNP Alpha analysis              |\n| -a3 [thr] | Perform 3-SNP Alpha analysis              |\n| -a4 [thr] | Perform 4-SNP Alpha analysis              | \n- If thr<1 then thr is the minimum threshold on alpha and beta to be reported in the output.\n- If thr>=1 then thr is the number of top hits in alpha and beta to be reported in the output.\n- If thr>=1 and more than 1 thread are used, then each thread reports thr top hits and the output files are merged. So (t\\*thr) top hits will be reported. You can use -sort option and only consider the top thr record.\n- thr is optional. If you don't pass a thr the program computes the metric but it does not report anything (performance testing).\n- If all interactions should be reported set thr to 0. \n- The first row includes labels: 1 and 0 for cases and controls respectively\n- The first column includes SNP unique ids. BitEpi does not check the uniqueness.\n- The first entry (first col and first row) is ignored.\n- All other entry represents genotype and can be 0, 1 or 2 for 0/0, 0/1 and 1/1 genotype (phased genotype are not supported). \n"
+      },
+      "source": "https://raw.githubusercontent.com/aehrc/BitEpi/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.986749045815587,
+      "result": {
+        "original_header": "Convert GAMETES output to BitEpi input and tplink file",
+        "type": "Text_excerpt",
+        "value": "[GAMETES](http://sourceforge.net/projects/gametes/files/) is an epistasis simulator ([Paper](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3605108)) used in several publications to measure the accuracy of different methods. [GAMETES_2_EPI.sh](GAMETES_2_EPI.sh) converts the GAMETES output to the BitEpi input format and the plink transposed format (tplink). You can process tplink file with MIP3SNP and BOOST (implemented in plink) for performance testing. Note that MDR could process GAMETES output directly. An example GAMETES output is provided: [GAMETES_Example_Output.txt](sampleData/GAMETES_Example_Output.txt) \n"
+      },
+      "source": "https://raw.githubusercontent.com/aehrc/BitEpi/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9557034697125193,
+      "result": {
+        "original_header": "Covert VCF file to BitEpi input file",
+        "type": "Text_excerpt",
+        "value": "[VCF_2_EPI.sh](VCF_2_EPI.sh) is a script that uses bcftools and Linux commands to convert a VCF file into BitEpi format. Since VCF file does not include phenotype, the binary phenotype is read from a tab-separated (tsv)sample annotation file (1 line per sample with a header line). You should specify which column holds the binary phenotype (\"True\" or \"False\"). The script prints important points about the input argument you should consider. We include an example VCF file (based on 1000-Genome project) and a sample annotation file (with a synthetic phenotype) to try the script. Four important SNPs used to simulate phenotype are listed in [Hipster.known.txt](sampleData/Hipster.known.txt). \n"
+      },
+      "source": "https://raw.githubusercontent.com/aehrc/BitEpi/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9703545673796033,
+      "result": {
+        "original_header": "Synthetic dataset used for performance and accuracy testing in the paper.",
+        "type": "Text_excerpt",
+        "value": "2-SNP (pairwise) and 3-SNP (triplet) \n2-SNP data simulated in [MACOED](https://www.ncbi.nlm.nih.gov/pubmed/25338719) including ME (Marginal Effect) and NME (None Marginal Effect) \n- [Data](https://variant-spark.s3-ap-southeast-2.amazonaws.com/BitEpiDataSet/Data/PerformanceTesting.tar.gz)\n- Available in GAMETES, BitEpi and transposed plink formats.\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/aehrc/BitEpi/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9187240924581924,
+      "result": {
+        "original_header": "Visualization",
+        "type": "Text_excerpt",
+        "value": "You can Visualize the best interactions (see best mode described above) using a [Cytoscape](https://cytoscape.org/) Graph.\n[BitEpiVis.R](Visualization/BitEpiVis.R) provides a function that reads the output of BitEpi \"-best\" analysis and turn it to an interactive Cytoscape graph. It also generates a static igraph plot in Rstudio. (See the example screenshot below). In the graph, you can select and move nodes around. **Node color** represents if the node is an SNP node or an interaction node (see below). **Node size** represents the combined association power (**Beta**). \nTo get a nice plot in Cytoscope you should first import our style file [BitEpiCytoscapeStyle.xml](Visualization/BitEpiCytoscapeStyle.xml). Open Cytoscape and from _File_ menu select _Import_ and then select _Style from File..._ and choose [BitEpiCytoscapeStyle.xml](Visualization/BitEpiCytoscapeStyle.xml).\nIn the _Style_ tab of the _Control Panel_, select _BitEpi_ in the style dropdown menu. In the _Style_ tab click on the menu button (three horizontal lines) and select _Make Current Style Default_ \nAs you can see in the example screenshot, at the end of the [BitEpiVis.R](Visualization/BitEpiVis.R) the **thr** variable is defined. It is the number of most significant SNPs (1-SNP) and interactions (2-SNP, 3-SNP, and 4-SNP) you want to include in the graph (based on Alpha). \nYou can drag and drop nodes to create your custom layout. **When you click on a node and select it, it turns to yellow and you can see its details in the table below the graph**. See the example screenshot. \nInteractions are shown with Blue, Orange, and Green for 2-SNP, 3-SNP and 4-SNP significant interactions you choose to see.\nSignificant SNPs are shown in Red. Other SNPs are shown in grey (they are there because they are part of one of the significant interaction). You can change the colors using the **Color** variable defined at the top of the R code. \n**_You cannot compare the node size of two different plot_** as node sizes are scaled to make all nodes in each plot visible.\nYou can change the node size scale using _minNodeSize_ and _maxNodeSize_ in the R code (see example screenshots).\nNote that grey nodes represent the minimum node size.\n```{r}\nColor=list(SNP='red',PAIR='blue',TRIPLET='orange',QUADLET='green', OTHER='gray')\n\nthr=list(SNP=3,PAIR=3,TRIPLET=3,QUADLET=3)\n\nminNodeSize = 10\nmaxNodeSize = 35\n\nDoItAll('sampleData/out.best.csv', thr, minNodeSize, maxNodeSize)\n```\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/aehrc/BitEpi/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9629571180759433,
+      "result": {
+        "original_header": "Pvalue.py",
+        "type": "Text_excerpt",
+        "value": "Given genotype dataset in plink bfile format and list of interactions identified by BitEpi, [Pvalue.py](Pvalue.py) computes the Alpha and Beta Pvalue for each interaction (combination of SNPs) in the list of interactions. \nFor every SNPs combination, we randomize the phenotype (response variable) many times.\nWe compute alpha and beta for each permutation.\nThen we find the best distribution that fit the data.\nwe test the following four scipy distributions: gamma, norm, lognorm, expon.\nGiven the best distribution we computed one-tailed Pvalue (1-cdf) for alpha and beta.\nNote that different distribution is fitted for alpha and beta. \nNote that this python code is slow and is not optimized for performance. \nIt also implements a special mode where it randomly combines SNPs (assume they interact) and then it computes the Alpha and Beta and well as the corresponding Pvalue for them. \n- \"rnd\" means to combine SNPs randomly and not from list of interactions\n- \"sampleData/bfile\" is the path+prefix for plink bfile\n- \"5\" is the number of SNP-combinations to process\n- \"1000\" is the number of time random phenotype generated for each SNP-combination.\n- \"sampleData/pval-rnd.tsv\" is the output file\n- \"2\" is the number of SNPs in each SNP-combination \n- \"epi\" means to read the list of interaction (Alpha or Beta output file from BitEpi)\n- \"5\" means to process only the top 5 interactions in the list\n- \"sampleData/bfile.Alpha.2.csv\" is the list of interactions (BitEpi output file) \n- FirstCol: The Alpha or Beta value computed by BitEpi (0 in rnd mode)\n- SNPs: List of SNPs in the SNP-Combination\n- beta: beta value computed by Pvalue.py\n- alpha: alpha value computed by Pvalue.py\n- alpha-dist: name of distribution fited to the alpha values\n- alpha-distPval: Pvalue for alpha distribution fitness\n- alpha-pval: Pvalue for the alpha based on the distribution\n- beta-dist: name of distribution fited to the beta values\n- beta-distPval: Pvalue for beta distribution fitness\n- beta-pval: Pvalue for the beta based on the distribution\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/aehrc/BitEpi/master/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "download_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/aehrc/BitEpi/releases"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 3
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/aehrc/BitEpi/forks"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "aehrc/BitEpi"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_title": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "BitEpi: An exhaustive search of higher-order epistatic interactions"
+      },
+      "source": "https://raw.githubusercontent.com/aehrc/BitEpi/master/README.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "has_script_file": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/aehrc/BitEpi/master/GAMETES_2_EPI.sh"
+      },
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/aehrc/BitEpi/master/VCF_2_EPI.sh"
+      },
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/aehrc/BitEpi/master/runme.sh"
+      },
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/aehrc/BitEpi/master/compile.sh"
+      },
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/aehrc/BitEpi/master/sampleData/example123/runme.sh"
+      },
+      "technique": "file_exploration"
+    }
+  ],
+  "installation": [
+    {
+      "confidence": 0.9168437963565468,
+      "result": {
+        "original_header": "BitEpi: An exhaustive search of higher-order epistatic interactions",
+        "type": "Text_excerpt",
+        "value": "- Beta X = 0.51\n- Beta Y = 0.53\n- Beta XY = 0.75 \n- Alpha AB = Beta AB - Max( Beta A, Beta B) = 0.92 - Max(0.90, 0.03) = **0.02** (Low Alpha -> no interaction)\n- Alpha XY = Beta XY - Max( Beta X, Beta Y) = 0.75 - Max(0.51, 0.53) = **0.22** (High Alpha -> strong interaction) \n"
+      },
+      "source": "https://raw.githubusercontent.com/aehrc/BitEpi/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.8824074330062699,
+      "result": {
+        "original_header": "BitEpi has two interfaces: Command-Line and Python",
+        "type": "Text_excerpt",
+        "value": "BitEpi Python Interface is implemented in a separate GitHub page ([bitepi-python](https://github.com/bhosking/bitepi-python)). You can find examples and descriptions there. It may take time for changes on this repository to be reflected on the bitepi-python repository. \n"
+      },
+      "source": "https://raw.githubusercontent.com/aehrc/BitEpi/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9999998996368668,
+      "result": {
+        "original_header": "To Compile:",
+        "type": "Text_excerpt",
+        "value": "Use the g++ commands in compile.sh or just run it\n```sh\n$ cd BitEpi\n$ bash compile.sh\n```\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/aehrc/BitEpi/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9994758044550425,
+      "result": {
+        "original_header": "Convert GAMETES output to BitEpi input and tplink file",
+        "type": "Text_excerpt",
+        "value": "See below example\n```sh\n$ bash GAMETES_2_EPI.sh sampleData/GAMETES_Example_Output\n$ ls sampleData/GAMETES_Example_Output*\n```\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/aehrc/BitEpi/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9973755413205239,
+      "result": {
+        "original_header": "Covert VCF file to BitEpi input file",
+        "type": "Text_excerpt",
+        "value": "See below example\n```sh\n$ bash VCF_2_EPI.sh sampleData/Hipster.vcf.bgz sampleData/Hipster.tsv 2\n$ less -S sampleData/Hipster.vcf.bgz.epi.csv\n```\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/aehrc/BitEpi/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.8437302188144045,
+      "result": {
+        "original_header": "Visualization",
+        "type": "Text_excerpt",
+        "value": "**Run the R code** \n"
+      },
+      "source": "https://raw.githubusercontent.com/aehrc/BitEpi/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9853987540888495,
+      "result": {
+        "original_header": "Pvalue.py",
+        "type": "Text_excerpt",
+        "value": "For every SNPs combination, we randomize the phenotype (response variable) many times.\nWe compute alpha and beta for each permutation.\nThen we find the best distribution that fit the data.\nwe test the following four scipy distributions: gamma, norm, lognorm, expon.\nGiven the best distribution we computed one-tailed Pvalue (1-cdf) for alpha and beta.\nNote that different distribution is fitted for alpha and beta. \nThe command line usage examples are as follow:\n```\npython3 Pvalue.py rnd sampleData/bfile 5 1000 sampleData/pval-rnd.tsv 2\npython3 Pvalue.py epi sampleData/bfile 5 1000 sampleData/pval-epi.tsv sampleData/bfile.Alpha.2.csv\n```\n \n- FirstCol: The Alpha or Beta value computed by BitEpi (0 in rnd mode)\n- SNPs: List of SNPs in the SNP-Combination\n- beta: beta value computed by Pvalue.py\n- alpha: alpha value computed by Pvalue.py\n- alpha-dist: name of distribution fited to the alpha values\n- alpha-distPval: Pvalue for alpha distribution fitness\n- alpha-pval: Pvalue for the alpha based on the distribution\n- beta-dist: name of distribution fited to the beta values\n- beta-distPval: Pvalue for beta distribution fitness\n- beta-pval: Pvalue for the beta based on the distribution\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/aehrc/BitEpi/master/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "invocation": [
+    {
+      "confidence": 0.8381760863861665,
+      "result": {
+        "original_header": "BitEpi has two interfaces: Command-Line and Python",
+        "type": "Text_excerpt",
+        "value": "**Command-Line Interface (CLI) Arguments** \n**CSV Input Format** \n**Output File Naming** \n- output_prefix.best.csv\n- output_prefix.Alpha.Order.csv\n- output_prefix.Beta.Order.csv\n- output_prefix.Alpha.Order.FirstJobIndex.LastJobIndex.csv\n- output_prefix.Beta.Order.FirstJobIndex.LastJobIndex.csv\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/aehrc/BitEpi/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.8604827238462293,
+      "result": {
+        "original_header": "Convert GAMETES output to BitEpi input and tplink file",
+        "type": "Text_excerpt",
+        "value": "See below example\n```sh\n$ bash GAMETES_2_EPI.sh sampleData/GAMETES_Example_Output\n$ ls sampleData/GAMETES_Example_Output*\n```\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/aehrc/BitEpi/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.880374717189306,
+      "result": {
+        "original_header": "Covert VCF file to BitEpi input file",
+        "type": "Text_excerpt",
+        "value": "See below example\n```sh\n$ bash VCF_2_EPI.sh sampleData/Hipster.vcf.bgz sampleData/Hipster.tsv 2\n$ less -S sampleData/Hipster.vcf.bgz.epi.csv\n```\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/aehrc/BitEpi/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9351672776536831,
+      "result": {
+        "original_header": "Pvalue.py",
+        "type": "Text_excerpt",
+        "value": "The command line usage examples are as follow:\n```\npython3 Pvalue.py rnd sampleData/bfile 5 1000 sampleData/pval-rnd.tsv 2\npython3 Pvalue.py epi sampleData/bfile 5 1000 sampleData/pval-epi.tsv sampleData/bfile.Alpha.2.csv\n```\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/aehrc/BitEpi/master/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "issue_tracker": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/aehrc/BitEpi/issues"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "keywords": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": ""
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "license": [
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Other",
+        "spdx_id": "NOASSERTION",
+        "type": "License",
+        "url": null,
+        "value": null
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "File_dump",
+        "value": "Supplementary CSIRO Open Source Software Licence v1.0\n===============================================================\n\nThis document is the Supplementary Licence described in the CSIRO Open Source Software Licence, a copy of which can be found below.  \nThe Software being licensed is 'BitEpi'\n\nThird Party Components\n----------------------\nThe third party components listed below are distributed with the Software. You agree to comply with the license terms for these components as part of accessing the Software. Other third party software may also be identified in separate files distributed with the Software.\n\nC/C++ CSV file parser:\n\nhttps://sourceforge.net/projects/cccsvparser/\n\n\nCSIRO Open Source Software Licence v1.0\n=======================================\n\n(Based on MIT/BSD Open Source Licence)\n\nIMPORTANT \u2013 PLEASE READ CAREFULLY\nThis document contains the terms under which CSIRO agrees to licence its Software to you.  This is a template and further information relevant to the licence is set out in the Supplementary Licence specific to the Software you are licensing from CSIRO.  Both documents together form this agreement.  \nThe Software is copyright (c) Commonwealth Scientific and Industrial Research Organisation (CSIRO) ABN 41 687 119 230.\nRedistribution and use of this Software in source and binary forms, with or without modification, are permitted provided that the following conditions are met:\n\t\u2022\tRedistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.\n\t\u2022\tRedistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution.\n\t\u2022\tNeither the name of CSIRO nor the names of its contributors may be used to endorse or promote products derived from this software without specific prior written permission of CSIRO.\nEXCEPT AS EXPRESSLY STATED IN THIS AGREEMENT AND TO THE FULL EXTENT PERMITTED BY APPLICABLE LAW, THE SOFTWARE IS PROVIDED \"AS-IS\". CSIRO MAKES NO REPRESENTATIONS, WARRANTIES OR CONDITIONS OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO ANY REPRESENTATIONS, WARRANTIES OR CONDITIONS REGARDING THE CONTENTS OR ACCURACY OF THE SOFTWARE, OR OF TITLE, MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, NON-INFRINGEMENT, THE ABSENCE OF LATENT OR OTHER DEFECTS, OR THE PRESENCE OR ABSENCE OF ERRORS, WHETHER OR NOT DISCOVERABLE.\nTO THE FULL EXTENT PERMITTED BY APPLICABLE LAW, IN NO EVENT SHALL CSIRO BE LIABLE ON ANY LEGAL THEORY (INCLUDING, WITHOUT LIMITATION, IN AN ACTION FOR BREACH OF CONTRACT, NEGLIGENCE OR OTHERWISE) FOR ANY CLAIM, LOSS, DAMAGES OR OTHER LIABILITY HOWSOEVER INCURRED.  WITHOUT LIMITING THE SCOPE OF THE PREVIOUS SENTENCE THE EXCLUSION OF LIABILITY SHALL INCLUDE: LOSS OF PRODUCTION OR OPERATION TIME, LOSS, DAMAGE OR CORRUPTION OF DATA OR RECORDS; OR LOSS OF ANTICIPATED SAVINGS, OPPORTUNITY, REVENUE, PROFIT OR GOODWILL, OR OTHER ECONOMIC LOSS; OR ANY SPECIAL, INCIDENTAL, INDIRECT, CONSEQUENTIAL, PUNITIVE OR EXEMPLARY DAMAGES, ARISING OUT OF OR IN CONNECTION WITH THIS AGREEMENT, ACCESS OF THE SOFTWARE OR ANY OTHER DEALINGS WITH THE SOFTWARE, EVEN IF CSIRO HAS BEEN ADVISED OF THE POSSIBILITY OF SUCH CLAIM, LOSS, DAMAGES OR OTHER LIABILITY.\nAPPLICABLE LEGISLATION SUCH AS THE AUSTRALIAN CONSUMER LAW MAY APPLY REPRESENTATIONS, WARRANTIES, OR CONDITIONS, OR IMPOSES OBLIGATIONS OR LIABILITY ON CSIRO THAT CANNOT BE EXCLUDED, RESTRICTED OR MODIFIED TO THE FULL EXTENT SET OUT IN THE EXPRESS TERMS OF THIS CLAUSE ABOVE \"CONSUMER GUARANTEES\".  TO THE EXTENT THAT SUCH CONSUMER GUARANTEES CONTINUE TO APPLY, THEN TO THE FULL EXTENT PERMITTED BY THE APPLICABLE LEGISLATION, THE LIABILITY OF CSIRO UNDER THE RELEVANT CONSUMER GUARANTEE IS LIMITED (WHERE PERMITTED AT CSIRO\u2019S OPTION) TO ONE OF FOLLOWING REMEDIES OR SUBSTANTIALLY EQUIVALENT REMEDIES:\n(a)               THE REPLACEMENT OF THE SOFTWARE, THE SUPPLY OF EQUIVALENT SOFTWARE, OR SUPPLYING RELEVANT SERVICES AGAIN;\n(b)               THE REPAIR OF THE SOFTWARE;\n(c)               THE PAYMENT OF THE COST OF REPLACING THE SOFTWARE, OF ACQUIRING EQUIVALENT SOFTWARE, HAVING THE RELEVANT SERVICES SUPPLIED AGAIN, OR HAVING THE SOFTWARE REPAIRED.\nIN THIS CLAUSE, CSIRO INCLUDES ANY THIRD PARTY AUTHOR OR OWNER OF ANY PART OF THE SOFTWARE OR MATERIAL DISTRIBUTED WITH IT.  CSIRO MAY ENFORCE ANY RIGHTS ON BEHALF OF THE RELEVANT THIRD PARTY.\nIf you intend to access the Software in connection with your employment or as an agent for a principal, you should only accept this agreement if you have been authorised to do so by your employer or principal (as applicable). By accepting this agreement, you are warranting to CSIRO that you are authorised to do so on behalf of your employer or principal (as applicable).\nThe Software may contain third party material obtained by CSIRO under licence.  Your rights to such material as part of the Software under this agreement is subject to any separate licence terms identified by CSIRO as part of the Software release - including as part of the Supplementary Licence, or as a separate file.  Those third party licence terms may require you to download the relevant software from a third party site, or may mean that the third party licensor (and not CSIRO) grants you a licence directly for those components of the Software. It is your responsibility to ensure that you have the necessary rights to such third party material.\n"
+      },
+      "source": "https://raw.githubusercontent.com/aehrc/BitEpi/master/LICENSE",
+      "technique": "file_exploration"
+    }
+  ],
+  "logo": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/aehrc/BitEpi/master/Visualization/BitEpiVisScreenshot.png?raw=true"
+      },
+      "source": "https://raw.githubusercontent.com/aehrc/BitEpi/master/README.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "BitEpi"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "owner": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Organization",
+        "value": "aehrc"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "programming_languages": [
+    {
+      "confidence": 1,
+      "result": {
+        "name": "C++",
+        "size": 82842,
+        "type": "Programming_language",
+        "value": "C++"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Python",
+        "size": 75963,
+        "type": "Programming_language",
+        "value": "Python"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "R",
+        "size": 12642,
+        "type": "Programming_language",
+        "value": "R"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "C",
+        "size": 9649,
+        "type": "Programming_language",
+        "value": "C"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Shell",
+        "size": 6079,
+        "type": "Programming_language",
+        "value": "Shell"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "TeX",
+        "size": 1480,
+        "type": "Programming_language",
+        "value": "TeX"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "readme_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/aehrc/BitEpi/master/README.md"
+      },
+      "technique": "file_exploration"
+    }
+  ],
+  "run": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "To Run Test:",
+        "type": "Text_excerpt",
+        "value": "See examples in runme.sh or just run it\n\n```sh\n$ cd BitEpi\n$ bash runme.sh\n```\n"
+      },
+      "source": "https://raw.githubusercontent.com/aehrc/BitEpi/master/README.md",
+      "technique": "header_analysis"
+    }
+  ],
+  "somef_missing_categories": [
+    "acknowledgement",
+    "download",
+    "requirements",
+    "contact",
+    "contributors",
+    "documentation",
+    "usage",
+    "faq",
+    "support",
+    "identifier",
+    "has_build_file",
+    "executable_example"
+  ],
+  "somef_provenance": {
+    "date": "2024-11-04 03:43:12",
+    "somef_schema_version": "1.0.0",
+    "somef_version": "0.9.5"
+  },
+  "stargazers_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 7
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "type": [
+    {
+      "confidence": 0.82,
+      "result": {
+        "type": "String",
+        "value": "commandline-application"
+      },
+      "technique": "software_type_heuristics"
+    }
+  ]
+}

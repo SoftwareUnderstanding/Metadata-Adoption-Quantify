@@ -1,0 +1,381 @@
+{
+  "code_repository": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/FofanovLab/VaST"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_created": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2017-10-24T19:40:07Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_updated": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2023-04-04T19:15:45Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "description": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "Variant Site Strain Typer: Identifies the minimum number of variable genomic site that are required to resolve a group of related bacterial strains"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Description",
+        "parent_header": [
+          "VaST: **Va**riant Site **S**train **T**yper"
+        ],
+        "type": "Text_excerpt",
+        "value": "VaST finds the minimum number of variant site targets that are required to differentiate a collection of strains. VaST is specifically designed to assist with generating panels for amplicon sequencing (AmpSeq).\n"
+      },
+      "source": "https://raw.githubusercontent.com/FofanovLab/VaST/master/readme.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 0.9197438977988508,
+      "result": {
+        "original_header": "Preprocessing Module",
+        "type": "Text_excerpt",
+        "value": "The preprocessing module includes the Amplicon Filter and the Pattern Discovery steps and outputs a JSON file which can be passed to the Pattern Selection Module. The Amplicon Filter treates each variant site as a potential amplicon, combining adjacent sites as necessary and filters out any amplicons that may be difficult to amplify in all strains. During Pattern Discovery, amplicons are divided into groups based on their resolution patterns which describes how the strains vary at the amplicon.\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/FofanovLab/VaST/master/readme.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9686054063462608,
+      "result": {
+        "original_header": "Inputs",
+        "type": "Text_excerpt",
+        "value": "VaST must be provided a variant site matrix (`VAR_MATRIX_PATH`) where each row represents a genomic site that varies across the columns of strains; the values in the marix characterize the state of each strain at the variable sites. Many different types of genomic variation can be included in this matrix (SNPs, indels, VNTRs) provided that the variable region is short enough to be captured in an AmpSeq reaction. The first column of the variant site matrix should contain a genome identifier, a start position, and an end position separated by two colons, (e.g genome123::115::115). The start and end position should be the same for SNPs and for VNTRs, the stopping position should be based on the longest repeat. \nTo run the Amplicon Filter Module, VaST requires information about the regions upstream and downstream of each of the variable sites. Therefore, either a full genome matrix (`FULL_MATRIX_PATH`) must be provided which should include a call for each position in the genome for all of the strains or a previously generated flag file (`FLAG_FILE_PATH`) must be provided. The full genome matrix can be generated through the alignment of genome assemblies to a reference genome (same reference that was used to identify variant sites) or from VCF files that contain calls for each position in the genome. The first column of the full genome matrix should have a genome ID and the position separated by two colons, (e.g genome123::115). See `./example` for examples. \n"
+      },
+      "source": "https://raw.githubusercontent.com/FofanovLab/VaST/master/readme.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9008160430743892,
+      "result": {
+        "original_header": "Parameters",
+        "type": "Text_excerpt",
+        "value": "| Parameter  | Description  | Notes  |\n|---|---|---|\n| Strict mode  | VaST ignores missing or ambiguous data in input matrix  |  Speeds up preprocessing but some sites are lost |\n|  Window Size | Maximum distance between adjacent sites that can be combined into a single amplicon  |The desired amplicon length should be considered when setting the window size. A larger window may increase the number of variant sites that are included in the amplicons making them more efficient   |\n| Primer Zone Size  | Size of the region upstream and downstream of the target to evaluate in the amplicon filter  | The primer zones begin immediately before the first and immediately after the last target site in the window, so the maximum amplicon size is 2 x primer zone size + window size. A smaller primer zone may limit the number of primer options.  |\n|Strain Cutoff |The number of strains at a primer zone site that can have a non-conserved call before the site is flagged | A strain cutoff greater than one will not guarantee that the primer zone sequences are conserved across all of the strains but it may be appropriate in cases where one or a few strains have low sequence coverage|\n|Primer Zone Filter Percent|The percent of primer zone positions that must be present in un-flagged segments of the primer zone that are longer than the primer zone filter length| A higher primer zone filter percent will increase the total number of primer options in amplicons that pass the filter|\n|Primer Zone Filter Length | The length of un-flagged primer zone segments that count toward the primer zone filter percent |The primer zone filter length should be at least as long as the minimum acceptable primer length to ensure that conserved primers can be found within the primer zone.|\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/FofanovLab/VaST/master/readme.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.8852705495857401,
+      "result": {
+        "original_header": "Pattern Selection Module",
+        "type": "Text_excerpt",
+        "value": "The Pattern Selection Module uses the patterns from Pattern Discovery and finds the minimum number of patterns that maximize strain resolution. \n### Usage\n```\n$ python ./VaST/pattern_selection.py --help\nusage: PATTERN_SELECTION [-h] [--res RES] [--stop_at_res]\n                         [--log {DEBUG,INFO,WARNING}] [-t THREADS]\n                         [--reps REPS]\n                         [--max_loci MAX_LOCI | --max_res MAX_RES]\n                         [--required_loci [REQUIRED_LOCI [REQUIRED_LOCI ...]]\n                         | --req_loci_file REQ_LOCI_FILE]\n                         [--exclude_loci [EXCLUDE_LOCI [EXCLUDE_LOCI ...]] |\n                         --excl_loci_file EXCL_LOCI_FILE]\n                         [--exclude_strains [EXCLUDE_STRAINS [EXCLUDE_STRAINS ...]]\n                         | --excl_strains_file EXCL_STRAINS_FILE]\n                         PROJECT_NAME PROJECT_DIR\n\nFind the minimum set of patterns that uniquely identify all strains\n\npositional arguments:\n  PROJECT_NAME          Project name and output file prefix\n  PROJECT_DIR           Path to preprocessing directory\n\noptional arguments:\n  -h, --help            show this help message and exit\n  --res RES             Path to file which defines the desired level of\n                        resolution for each of the strains (the default if\n                        full strain resolution) The resolution file should be\n                        a csv table with each row starting with a strain name\n                        (exactly as it appears in the variant site matrix)\n                        followed by a group ID. Strains with the same group ID\n                        will not be resolved. Multiple columns of group IDs\n                        may be present but must start with the lowest\n                        resolution grouping and increase to higher resolution\n                        groupings and must be consistent. (default: None)\n  --stop_at_res         Force solution to stop once the maximum level\n                        specified in resolution file has been reached.\n                        Otherwise, the solution will continue towards full\n                        strain resolution once it has achieved the level of\n                        resolution defined in the file. It will only terminate\n                        early when MAX_LOCI is reached or no more resolution\n                        is achievable. (default: False)\n  --log {DEBUG,INFO,WARNING}\n                        Set logging level (default: INFO)\n  -t THREADS, --threads THREADS\n                        Set number of threads (default: 1)\n  --reps REPS           Run N sets at a time and pick the best (default: 1)\n\nEarly Termination:\n  Options for creating early stopping points\n\n  --max_loci MAX_LOCI   Stop after MAX_LOCI is reached. If required loci are\n                        added, MAX_LOCI must be greater than or equal to the\n                        number of required loci. (default: inf)\n  --max_res MAX_RES     Stop when the resolution has reached MAX_RES percent\n                        of total resolution. (default: 100)\n\nAdd required loci to solution:\n  Add loci that must be included in the solution either from command line or\n  from file. Names should match the locus ID given in the variant site\n  matrix.\n\n  --required_loci [REQUIRED_LOCI [REQUIRED_LOCI ...]]\n                        List of locus IDs that must be included in solution.\n                        (default: [])\n  --req_loci_file REQ_LOCI_FILE\n                        Path to file containing list of locus IDs (in a single\n                        column) that must be included in solution. (default:\n                        None)\n\nExclude loci from consideration:\n  Add loci either from command line or from file. These loci will removed\n  from consideration when building the solution. Names should match the\n  locus ID given in the variant site matrix.\n\n  --exclude_loci [EXCLUDE_LOCI [EXCLUDE_LOCI ...]]\n                        List of loci that must be excluded from solution\n                        (default: [])\n  --excl_loci_file EXCL_LOCI_FILE\n                        Path to file containing list of locus IDs (in a single\n                        column) that must be excluded from solution. (default:\n                        None)\n\nExclude strains from consideration:\n  Add strains either from command line or from file. Names should match the\n  variant site matrix.\n\n  --exclude_strains [EXCLUDE_STRAINS [EXCLUDE_STRAINS ...]]\n                        List of strains to be excluded (default: [])\n  --excl_strains_file EXCL_STRAINS_FILE\n                        Path to file containing list of strains (in a single\n                        column) that should be excluded (default: None)\n```\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/FofanovLab/VaST/master/readme.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.8037911938462287,
+      "result": {
+        "original_header": "Haplotypes",
+        "type": "Text_excerpt",
+        "value": "- **First Column:** The site ids\n- **Amplicon_Order:** The order in which each amplicon was added to the set\n- **Amplicon_ID:** A unique identifier for the amplicon which corresponds to information in amplicons_{TIMESTAMP}.csv. Multiple sites may belong to the same amplicon id.\n- **Remaining Columns:** Each remaining column represents the haplotype of the given genome at each site.\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/FofanovLab/VaST/master/readme.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.926836257704641,
+      "result": {
+        "original_header": "Amplicons",
+        "type": "Text_excerpt",
+        "value": "\n- **Amplicon_ID:** A unique identifier for each amplicon\n- **Sequence_ID:** The name of the sequence where the amplicon was discovered.\n- **Start_Position:** The start position of the amplicon target in the sequence.\n- **End_Position:** The last position of the amplicon target in the sequence.\n- **Target_Size:** The total length of the target region.\n- **Resolution_Score:** The cumulative resolution score for each additional amplicon.\n- **Num_of_sites:** The total number of variant sites that are included in the target.\n- **Sites:** The site ids for each variant site. This corresponds to the first column in haplotypes_{TIMESTAMP}.csv.\n- **Upstream_Primerzone:** A list where each value represents a position in the upstream primer region. The counts provide how many genomes have non-conserved calls at each position. These regions may be avoided for subsequent primer design efforts.\n- **Downstream_Primerzone:** A list where each value represents a position in the downstream primer region. The counts provide how many genomes have non-conserved calls at each position. These regions may be avoided for subsequent primer design efforts.\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/FofanovLab/VaST/master/readme.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.8801931004897168,
+      "result": {
+        "original_header": "Patterns",
+        "type": "Text_excerpt",
+        "value": "-**First Column:** Genome ids\n-**Remaining Columns:** Each column represents the pattern of differentiation provided by each amplicon. The column header is the amplicon id that corresponds to the other output files. The differentiation pattern is within the context of all the previous amplicons (i.e. it is not their independent differentiation pattern). Genomes that share the same group number have not been resolved. Some genomes may be members of multiple groups due to ambiguous base calls and will therefore have multiple numbers in the tuple. \n \n"
+      },
+      "source": "https://raw.githubusercontent.com/FofanovLab/VaST/master/readme.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "download_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/FofanovLab/VaST/releases"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 0
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/FofanovLab/VaST/forks"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "FofanovLab/VaST"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_title": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "VaST: Variant Site Strain Typer"
+      },
+      "source": "https://raw.githubusercontent.com/FofanovLab/VaST/master/readme.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "installation": [
+    {
+      "confidence": 0.9999999394797658,
+      "result": {
+        "original_header": "Clone VaST",
+        "type": "Text_excerpt",
+        "value": "```\ngit clone https://TaraFurstenau@bitbucket.org/fofanovlab/vast.git\ncd vast\n```\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/FofanovLab/VaST/master/readme.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9998309044756454,
+      "result": {
+        "original_header": "Create Conda Environment",
+        "type": "Text_excerpt",
+        "value": "```\nconda env create -f vast_env.yml\nsource activate vast_env\n```\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/FofanovLab/VaST/master/readme.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.8272936962189362,
+      "result": {
+        "original_header": "Haplotypes",
+        "type": "Text_excerpt",
+        "value": "|                         | Amplicon_Order | Amplicon_ID | Reference | example_1 | example_1_L001::BWA-mem |\n|-------------------------|----------------|-------------|-----------|-----------|-------------------------|\n| 500WT1_test::1373::1373 | 1              | 0           | X         | G         | G                       |\n| 500WT1_test::1374::1374 | 1              | 0           | C         | T         | T                       | \n"
+      },
+      "source": "https://raw.githubusercontent.com/FofanovLab/VaST/master/readme.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.8272936962189362,
+      "result": {
+        "original_header": "Patterns",
+        "type": "Text_excerpt",
+        "value": "|                         | 0    |\n|-------------------------|------|\n| Reference               | (0,) |\n| example_1               | (1,) |\n| example_1_L001::BWA-mem | (1,) | \n"
+      },
+      "source": "https://raw.githubusercontent.com/FofanovLab/VaST/master/readme.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "issue_tracker": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/FofanovLab/VaST/issues"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "keywords": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": ""
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "license": [
+    {
+      "confidence": 1,
+      "result": {
+        "name": "MIT License",
+        "spdx_id": "MIT",
+        "type": "License",
+        "url": "https://api.github.com/licenses/mit",
+        "value": "https://api.github.com/licenses/mit"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "File_dump",
+        "value": "MIT License\n\nCopyright (c) 2017 FofanovLab\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.\n"
+      },
+      "source": "https://raw.githubusercontent.com/FofanovLab/VaST/master/LICENSE",
+      "technique": "file_exploration"
+    }
+  ],
+  "name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "VaST"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "owner": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Organization",
+        "value": "FofanovLab"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "programming_languages": [
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Python",
+        "size": 100395,
+        "type": "Programming_language",
+        "value": "Python"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "readme_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/FofanovLab/VaST/master/readme.md"
+      },
+      "technique": "file_exploration"
+    }
+  ],
+  "releases": [
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "tfursten",
+          "type": "User"
+        },
+        "date_created": "2017-10-25T06:10:16Z",
+        "date_published": "2017-10-25T06:20:52Z",
+        "html_url": "https://github.com/FofanovLab/VaST/releases/tag/v1.0",
+        "name": "Publication Version",
+        "release_id": 8248880,
+        "tag": "v1.0",
+        "tarball_url": "https://api.github.com/repos/FofanovLab/VaST/tarball/v1.0",
+        "type": "Release",
+        "url": "https://api.github.com/repos/FofanovLab/VaST/releases/8248880",
+        "value": "https://api.github.com/repos/FofanovLab/VaST/releases/8248880",
+        "zipball_url": "https://api.github.com/repos/FofanovLab/VaST/zipball/v1.0"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "somef_missing_categories": [
+    "citation",
+    "acknowledgement",
+    "run",
+    "download",
+    "requirements",
+    "contact",
+    "contributors",
+    "documentation",
+    "faq",
+    "support",
+    "identifier",
+    "has_build_file",
+    "executable_example"
+  ],
+  "somef_provenance": {
+    "date": "2024-11-04 07:45:31",
+    "somef_schema_version": "1.0.0",
+    "somef_version": "0.9.5"
+  },
+  "stargazers_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 6
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "type": [
+    {
+      "confidence": 0.82,
+      "result": {
+        "type": "String",
+        "value": "commandline-application"
+      },
+      "technique": "software_type_heuristics"
+    }
+  ],
+  "usage": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Usage",
+        "parent_header": [
+          "VaST: **Va**riant Site **S**train **T**yper",
+          "Pattern Selection Module"
+        ],
+        "type": "Text_excerpt",
+        "value": "```\n$ python ./VaST/preprocessing.py --help\nusage: AMPLICON_FILTER [-h]\n                       (--full_matrix_path FULL_MATRIX_PATH | --flag_file_path FLAG_FILE_PATH)\n                       [-d {tab,comma,space}] [-w WINDOW] [-s]\n                       [-c STRAIN_CUTOFF] [-z PZ_SIZE] [-l PZ_FILTER_LENGTH]\n                       [-p PZ_FILTER_PERCENT] [--log {DEBUG,INFO,WARNING}]\n                       [-x EXCLUDE_STRAINS] [-t THREADS]\n                       PROJECT_NAME PROJECT_DIR VAR_MATRIX_PATH\n\nParses a variant site matrix to find candidate amplicons\n\npositional arguments:\n  PROJECT_NAME          Project name and output file prefix\n  PROJECT_DIR           Project directory\n  VAR_MATRIX_PATH       Path to variant site matrices\n\noptional arguments:\n  -h, --help            show this help message and exit\n  -d {tab,comma,space}, --sep {tab,comma,space}\n                        Specify the file delimiter of variant site matrix\n                        (default: tab)\n  -w WINDOW, --window WINDOW\n                        Size of window for variable region. (HINT: Should be\n                        small enough to fit in desired amplicon with room for\n                        upstream and downstream primer zone) (default: 50)\n  -s, --strict          Strict mode ignores sites with missing or ambiguous\n                        data (default: False)\n  -c STRAIN_CUTOFF, --strain_cutoff STRAIN_CUTOFF\n                        The number of strains at a primer zone site that can\n                        have a non-conserved call before the site is flagged\n                        (default: 1)\n  -z PZ_SIZE, --pz_size PZ_SIZE\n                        Size of the primer zone (default: 200)\n  -l PZ_FILTER_LENGTH, --pz_filter_length PZ_FILTER_LENGTH\n                        The length of un-flagged primer zone segments that\n                        count toward the primer zone filter percent (default:\n                        25)\n  -p PZ_FILTER_PERCENT, --pz_filter_percent PZ_FILTER_PERCENT\n                        The percent of primer zone positions that must be\n                        present in un-flagged segments of the primer zone that\n                        are longer than the primer zone filter length\n                        (default: 25)\n  --log {DEBUG,INFO,WARNING}\n                        Set logging level (default: INFO)\n  -x EXCLUDE_STRAINS, --exclude_strains EXCLUDE_STRAINS\n                        Path to file containing a list of strains to exclude\n                        from analysis in a single column (default: None)\n  -t THREADS, --threads THREADS\n                        Number of threads for multiprocessing (default: 1)\n\nFilter file type:\n  Provide full genome matrix or an already calculated flag file\n\n  --full_matrix_path FULL_MATRIX_PATH\n                        Path to full genome matrix (includes calls at every\n                        site in the genome) (default: None)\n  --flag_file_path FLAG_FILE_PATH\n                        Path to precomputed flag file (default: None)\n```\n"
+      },
+      "source": "https://raw.githubusercontent.com/FofanovLab/VaST/master/readme.md",
+      "technique": "header_analysis"
+    }
+  ]
+}

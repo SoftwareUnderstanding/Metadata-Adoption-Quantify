@@ -1,0 +1,630 @@
+{
+  "citation": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Prepare reference genome",
+        "parent_header": [
+          "isChIP",
+          "Installation"
+        ],
+        "type": "Text_excerpt",
+        "value": "Download the required reference genome from UCSC: *ftp://hgdownload.soe.ucsc.edu/goldenPath/*<br>\nFor example, to download human genome library **hg19**:<br>\n**in Linux**:<br>\n```\nmkdir hg19\ncd hg19\nrsync -a -P rsync://hgdownload.soe.ucsc.edu/goldenPath/hg19/chromosomes/ ./\n```\nAlternative:<br>\n```\nwget -r ftp://hgdownload.soe.ucsc.edu/goldenPath/hg19/chromosomes/\nmv hgdownload.soe.ucsc.edu/goldenPath/hg19/chromosomes hg19\nrm -r hgdownload.soe.ucsc.edu\n```\nUnplaced (chr\\*\\_random) and unlocalized (chrUn_\\*\\) sequences are not involved in modelling, \nso you can delete them by typing `rm hg19/*_*`<br><br>\n**in Windows**<br>\ncopy and paste the string *ftp://hgdownload.soe.ucsc.edu/goldenPath/hg19/chromosomes/* into Windows browser address bar, \nthen copy *.fa.gz files to your local directory.<br>\nAlternatively use FTP client, e.g. [FileZilla](https://filezilla-project.org/).\n\nTo download **mm9** library, in the above example replace '**hg19**' with '**mm9**'.\n"
+      },
+      "source": "https://raw.githubusercontent.com/fnaumenko/isChIP/develop/README.md",
+      "technique": "header_analysis"
+    }
+  ],
+  "code_repository": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/fnaumenko/isChIP"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_created": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2017-08-05T14:41:43Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_updated": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2024-10-01T08:32:50Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "description": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "Fast realistic ChIP-seq simulator"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Options description",
+        "parent_header": [
+          "isChIP",
+          "Details"
+        ],
+        "type": "Text_excerpt",
+        "value": "*Notes:*<br>\nFor options that take a pair of values, one or both of them can be omitted. \nIn this case, it retains the default value. \nFor example, `-G :0.5` means foreground default level of 50% and background level of 0.5%; \n`-S` means applying size selection with default distribution parameters.<br>\nEnumerable option values are case insensitive.<br>\nSingle letter options with missing values can be merged.<br>\nCompressed input files in gzip format are acceptable.\n\n`-g|--gen <name>`<br>\nReference genome library. It is a directory contained nucleotide sequences for each chromosome in [FASTA](https://en.wikipedia.org/wiki/FASTA_format) format.<br>\nFirst **isChIP** searches .fa files in it. If there are not such files, \nor the file corresponded to chromosome specified by option `\u2013c|--chr` is absent, **isChIP** searches .fa.gz files.<br>\nIn *test* mode the target references are determined by *template*. \nSee [Template](#template) and `--bg-all` and `\u2013c|--chr` options.<br>\n**isChIP** omits  'random' contigs and haplotype sequences.\nOne can obtain a genome library in UCSC: ftp://hgdownload.soe.ucsc.edu/goldenPath/ or in Ensemble: ftp://ftp.ensembl.org/pub/release-73/fasta storage. \nIn the second case please copy genomic sequences with the same masked type only, \ne.g. unmasked (\u2018dna'), since program does not recognise mask\u2019s types.<br>\nThe program also generates and saves chromosome sizes files in this directory on first launch (see `--serv <name>`).<br>\nThis option is required.\n\n`-n|--cells <int>`<br>\nspecifies the number of nominal cells. \nEach nominal cell corresponds to one passage through the reference chromosome (dual for the autosomes).<br>\nThe convention is that this number assigns a greatest possible practical output by default \n(50% value of the foreground stated by `-G|--ground` option means 50% loss, which is unrealistic). \nTo deal with a real number of cells, a real level of overall loss should be assigned. \nThe issue is that this proportionally increases the runtime. \nFor example, assigning 100 nominal cells with zero losses leads to the generation of data equivalent to 100,000 \u2018real\u2019 cells with a \u2018real\u2019 total loss of 99.9%, \nbut in a runtime about 1000 times less (e.g. 10 seconds instead of hours per chromosome).\n\nBesides the number of cells, the program\u2019s run time heavily depends on the parameters of fragment size distribution and size selection \n(see [Fragment distribution and size selection](#fragment-distribution-and-size-selection)). \nIn general, with the default fragment size distribution, a number of nominal cells from 1 to 5 \nprovides an output read\u2019s mean density comparable with real \u2018inputs\u2019, \nand a value from 50 to 300 leads to generated simulated data, which is comparable with real tests in terms of density.<br>\nRange: 1-30000<br>\nDefault: 1\n\n`-G|--ground <[float]:[float]>`<br>\nspecifies foreground and background levels.<br>\n**In *test* mode:**<br>\nforeground is defined as the number of selected fragments, which are intersected with the *template* binding sites, \nas a percentage of the total number of generated fragments intersecting with the *template* binding sites. \nBackground is defined as the number of selected fragments, which are not intersected \nwith the *template* binding sites, as a percentage of the foreground.<br>\nIn practice a background level of 1-3% corresponds with a good experimental data set. \nA level of more than 6% leads to output with a rather low signal-to-noise ratio.<br>\n**In *control* mode:**<br>\nforeground is defined as the number of selected fragments, as a percentage of the total number of generated fragments. \nIt should be considered as the level of overall loss.<br>\nBackground value is ignored In this mode.<br>\nRange: 0-100 for both values<br>\nDefault: 50:1\n\n`-E|--exo [<int>]`<br>\napplies ChIP-exo protocol modification with specified *exonuclease 'headroom'*. \nThis is the distance between the exonuclease cleavage site and the edge of the template binding site, \nat which exonucleases end their digestion with a probability exponentially decreasing from 1 to 0 \nin the direction away from the binding site.<br>\nThis term is borrowed from the article \n[Comprehensive Genome-wide Protein-DNA Interactions Detected at Single-Nucleotide Resolution](https://www.cell.com/fulltext/S0092-8674(11)01351-1), \nas well as the default value for this parameter.<br>\nComparison of the model data with the data from the article is shown in the ![figure](https://github.com/fnaumenko/isChIP/tree/master/pict/Exo-real-sim.png).<br>\nThe peaks detection should be done with specialized ChIP-exo peak-callers (see, for example, \n[Comparative analysis of ChIP-exo peak-callers: impact of data quality, read duplication and binding subtypes]( https://bmcbioinformatics.biomedcentral.com/articles/10.1186/s12859-020-3403-3).<br>\nDefault (if applied): 6\n\n`-D|--mda`<br>\napplies [MDA](https://en.wikipedia.org/wiki/Multiple_displacement_amplification) technique.<br>\nSee [Model: brief description](#model-brief-description) for more details.<br>\nThe process applies to all fragments (fore- and background) and is somewhat time consuming.<br>\nNote that when size selection is applied, the number of amplified fragments strongly depends on the mean value \nof size selection distribution - the lower it is, the greater is the yield. \nBecause a specific feature of MDA is a significant predominance of short fragments over long ones.\n\n`-a|--pcr <int>`<br>\nspecifies the number of [PCR](https://en.wikipedia.org/wiki/Polymerase_chain_reaction) amplification cycles.<br>\nSee [Model: brief description](#model-brief-description) for more details.<br>\nIf MDA is applied, PCR performs after it. The process applies to all fragments.<br>\nValue 0 means the absence of amplification.<br>\nRange: 0-10<br>\nDefault: 0\n\n`-c|--chr <name>`<br>\ngenerate output for the specified chromosome only.<br>\n`name` identifies chromosome by number or character, e.g. `10` or `X`. Character is case-insensitive.<br>\nThis option forces to ignore all other chromosomes from reference genome and *template*, \nand abolishes the impact of option `--bg-all`. \nIf the specified chromosome is absent in *template*, the program has nothing to simulate.\n\n`--bg-all <OFF|ON>`<br>\nturns off/on generation of background for all chromosomes in *test* mode, whether or not they are presented in *template*.<br>\nMapping one chromosome to the whole reference genome leads to the appearance of short local discontinuities of alignment, \n\u2018gaps\u2019, corresponding to low mappability regions. This observation holds true for all aligner. \nTypically, generation of background for all chromosomes eliminates this issue.<br>\nNotably, this process is unnecessarily time consuming and is justified in the case of subsequent use of the alignment, \nfor example, for comparison with experimental FastQ or to validate aligners.<br>\nThe established option `-c|--chr` makes this option negligible.<br>\nIn *control* mode is ignored.<br>\nDefault: `ON`\n\n`-m|--smode <SE|PE>`<br>\ngenerates reads according to stated sequencing mode: `SE` \u2013 single end, `PE` \u2013 paired end .<br>\nDefault: `SE`\n\n`-o|--overl <OFF|ON>`<br>\nrejects or accept overlapping *template* features.<br>\nIn the first case, 'overlapping chains' break. \nThis means, for example, that if feature #2 overlaps feature #1 and feature #3 overlaps feature #2 but not #1, \nthen feature #3 will be accepted.<br>\nIn the second case, overlapping features are joined and take on the score of the first one.<br>\nAdjacent features are also considered to be overlapping.<br>\nDefault: `OFF`\n\n`-s|--bscore <int>`<br>\nspecifies the 1-based index of the field in *template* which is used to score each binding event \n(in terms of binding efficiency, see [Template](#template)).<br>\nSetting index to 0 leads to ignoring the specified scores: all binding events will be simulated with maximum efficiency.<br>\n*Note:* specifying a field containing a string (name) or a missing field will result in zero efficiency without any warning.<br>\nIn *control* mode is ignored.<br>\nRange: 4-12 (except for the zero value)<br>\nDefault: 5\n\n`--edge-len <int>`<br>\nspecifies unstable binding length (binding site edge effect. \nBy default fragment is considered linked to the binding site in the presence of at least one intersecting nucleotide. \nFor various reasons, this connection may be unstable. \nThis option specifies the length of the intersection of the fragment with the site, \nat which the probability of binding increases from 0 to 1 in direct proportion to the number of intersected nucleotides.<br>\nWhen the option value is more than half the length of the minimum site, it decreases to this half.<br>\nIn *control* mode is ignored.<br>\nRange: 0-10<br>\nDefault: 0\n\n`-N|--full-size`<br>\nforces to scan the entire reference chromosome, including gaps at each end (\u2018undefined telomeres\u2019).<br>\nBy default these gaps are excluded from processing.<br>\nThis permission makes no difference in data after alignment, but slightly increases the output volume and the runtime. \nFor instance, when simulation on the basis of mm9 genome, this option increases both values by about 2.4%. \nFor the hg19 genome the difference is about 0.7%.\n\n`-P|--threads <int>`<br>\nspecifies the number of threads. The workflow is separated between chromosomes, so the actual number of threads \ncan be reduced (if the number of actual treated chromosomes is less then assigned value). \nThe actual threads number is displayed in `PAR` and `DBG` verbose mode.<br>\nRange: 1-20<br>\nDefault: 0\n\n`--serv <name>`<br>\nspecifies the service directory \u2013 a place for keeping service files *chr\\<x\\>.region* and chromosome sizes file. \nThe program generates these files once. \nBy default, they are stored in the reference genome folder. \nBut if this folder is closed for writing, or you want to store these files separately for your own reasons, that is the place.<br>\nDefault: reference genome directory\n\n`--seed <int>`<br>\nfixes random numbers emission to get repetitive results. \nThe actual seed equals the option value increased by a certain factor to provides a noticeable difference in the of random number generation option values that differ by 1.<br>\nValue 0 means non-recurring random generation.<br>\nRange: 0-1000<br>\nDefault: 0\n\n`-L|--ln <[float]:[float]>`<br>\nspecifies the mean and standard deviation of fragments sizes lognormal distribution.<br>\nDefault parameters give a lognormal mode (expected value) of 176 and a mean (average) of 200.<br>\nWhen `-R|--rd-dist` option is enabled, a wide distribution is set by default with mean of 5.92 and a sigma of 0.4, \nwhich gives a lognormal mode of 317 and an average of 403.<br>\nSee [Fragment distribution and size selection](#fragment-distribution-and-size-selection).<br>\nRange: 3:0.3-9:1<br>\nDefault: 5.26:0.3\n\n`-S|--ss [<[int]:[int]>]`<br>\nspecifies the mean and standard deviation of fragment size selection normal distribution.<br>\nBy default size selection is not performed. \nSpecifying an option without value(s) leads to activation of size selection with default parameters. \nIn this case mean value is calculated as the mean of the fragment\u2019s lognormal distribution (200 by default).<br>\nSee [Fragment distribution and size selection](#fragment-distribution-and-size-selection).<br>\nRange: 50:2-2000:500 (except for the zero values)<br>\nDefault (if applied): auto:30\n\n`-r|--rd-len <int>`<br>\nspecifies the fixed length of output read.<br>\nAlso see `-R|--rd-dist` option.<br>\n**isChIP** does not perform a preliminary check of the read length relative to the parameters of fragments distribution or size selection. \nIf the reads are too long, their number at the output can be reduced up to 0 without any warnings.<br>\nRange: 20-500<br>\nDefault: 50\n\n`-R|--rd-dist [<[int]:[int]>]`<br>\nspecifies mean and standard deviation of variable read normal distribution, according to Ion Torrent/Roche454 protocol.<br>\nAs can be seen in the ![Read distributions](https://github.com/fnaumenko/bioStat/tree/master/pict/Read_distrs.png), \nthe real read distributions do not always follow the normal pattern. \nNevertheless, it should be admitted as the best approximation.<br>\nIf this option is applied, `-r|--rd-len` option specifies the minimum limit of read length (20 bp by default).<br>\nDefault (if applied): 200:30\n\n`-l|--rd-pos`<br>\nAdds read\u2019s actual start position (location) to its name in the output files. It is useful for verifying aligners.<br>\nSee [Output read name format](#output-read-name-format).\n\n`--rd-Nlim <int>`<br>\nMaximum permitted number of ambiguous code N in read. Reads exceeding this limit are ignored. \nThe corresponding source fragments are also ignored for output formats accumulating fragments (`BG`, `FDENS`, `FDIST`; see `-f|--format`).<br>\nThis option is designed primarily for aligners validation.<br>\nIn the real read sequences ambiguous code could cause a failure in sequencing as well as undefined regions in the cut fragments, \nwhile simulated reads are fully defined by reference library. \nConsequently the ambiguous bases in the library are translated into reads. \nDifferent aligners considered these codes differently: some of them as invalid, some of them as case of overlapping.<br>\nRange: 0 - <`-r|--rd-len` value><br>\nDefault: `-r|--rd-len` value (which means no checkup)\n\n`--rd-lim <long>`<br>\nspecifies the maximum number of total written reads. The value emulates sequencer\u2019s limit. \nIt restricts the number of recorded reads for each chromosome proportionally \n(and the number of their source fragments for `BG`, `FDENS`, `FDIST` output formats as well).<br>\nRange: 1e5-1e19<br>\nDefault: 2e8.\n\n`--rd-ql <char>`<br>\nprovides a uniform read quality score in FQ and SAM output.<br>\nRange: '!'-'\\~'<br>\nDefault: '\\~' (decimal 126)\n\n`--rd-ql-patt <name>`<br>\nspecifies a pattern of the read quality values in FQ and SAM output. \nParameter `name` is a name of a plain text file containing at least one line encoding the quality values \nfor the sequence as described in [FastQ](https://en.wikipedia.org/wiki/FASTQ_format) specification.<br>\nIf the length of line is less then read\u2019s actual (fixed or variable) length, \nthen the rest of pattern is filed by value defined by `--rd-ql` option.<br>\nOnly the first uncomment line is taken into account.<br>\n\u0421omment lines are lines starting with the character '#'.<br>\n\n`-rd-ql-map <int>`<br>\nprovides a read mapping quality in SAM and BED output (in the last case it is also called 'score').<br>\nRange: 0-255<br>\nDefault: 255\n\n`-f|--format <FQ,BED,SAM,BG,FDENS,RDENS,FDIST,RDIST>`<br>\nspecifies output file formats.<br>\nValue `FQ` forces to output the sequence. \nIn paired-end mode two [FQ](https://en.wikipedia.org/wiki/FASTQ_format) files are generated, with suffixes \u2018_1\u2019 and \u2018_2\u2019.<br>\nUnsorted [BED](https://genome.ucsc.edu/FAQ/FAQformat.html#format1) and [SAM](https://en.wikipedia.org/wiki/SAM_(file_format)) files represent the immediate (direct) precise alignment. \nThey are useful for the peak-callers benchmarking because make mapping stage unnecessary. \n`SAM` format is indispensable for aligner validation as a control test.<br>\n`BG` file represents the sorted coverage in [BedGraph](https://genome.ucsc.edu/goldenPath/help/bedgraph.html) format with the WIG extension. \nIn contrast to the utilities that restore the coverage by extending the read to the average fragment length \n(such as [bedtools genomecov](https://bedtools.readthedocs.io/en/latest/content/tools/genomecov.html), \n[deepTools bamCoverage](https://deeptools.readthedocs.io/en/develop/content/tools/bamCoverage.html), \n[peakranger wigpe](http://ranger.sourceforge.net/manual1.18.html)), **isChIP** produces an actual coverage. \nThe difference can be observed in the ![figure](https://github.com/fnaumenko/isChIP/tree/master/pict/formal-actual_coverage_legend.png).<br>\nIt is also possible to generate one BedGraph file per strand (`-x|--strand` option).<br>\n`FDENS,RDENS` represent the densities of fragments and reads, respectively, in sorted WIG format with span = 1. \nUnlike coverage, each fragment/read is represented by one point. \nFor fragments this point is the center, for reads it is the 5\u2019 position. This view can be useful in some cases, such as ChIP-exo. \nFiles have the *fdens.wig*/*rdens.wig* extension.<br>\n`FDIST/RDIST` is a conditional format to control the output fragment/read frequency distribution de facto. \nThis is a plain text file with an extension *fdens*/*rdens* (*fdens.txt*/*fdens.txt* in Windows), \nrepresenting the obtained distribution as a list of pairs \\<fragment length\\>\\<number of repetitions\\>. \nSuch a presentation can be visualized as a graph, for example, in Excel.<br>\nIn addition, the header of the file displays the initial distribution parameters, and parameters restored by points de facto.<br>\nAny formats can be set in any order.<br>\nDefault: `FQ`\n\n`-C|--control`<br>\nforces to generate control sequence (\u2018input\u2019) simultaneously with test within the test mode. \nThe resulting control is fully complied with the test in terms of the average specific background density.<br>\nThe control\u2019s number of 'cells' and sample are adjusted to minimize run-time and are printed on screen in `PAR` and `DBG` verbose level.<br>\nThe control file has the same name as the test, with the suffix '_input'.<br>\nIn *control* mode is ignored.\n\n`-x|--strand`<br>\nforces to generate two additional WIG files, one per each strand.<br> \nIt only matters in `SE` sequencing mode and activated WIG output format.\n\n`-O|--out <file>`<br>\nspecifies output files location. `file` is treated as a common file name (the possible extension is ignored). \nIf `file` is a directory, the default file name is used.<br>\nDefault: *test* mode: **mTest.\\***, *control* mode: **mInput.\\***\n\n`-z|--gzip`<br>\nforces to compress output data files (except fragment/read size distribution)\n\n`-V|--verbose <SL|RES|RT|PAR|DBG>`<br>\nsets verbose level:<br>\n`SL`&nbsp;&nbsp;silent mode: no output except critical messages<br>\n`RES`&nbsp;print processing total info<br>\n`RT`&nbsp;&nbsp;print processing info for each chromosome and total<br>\n`PAR`&nbsp;print actual parameters value (including number of features in template) and `RT` level<br>\n`DBG`&nbsp;print `PAR` level with additional info, including *template* features statistics \nand info about possible omitted features.<br>\nSee [Output info](#output-info).<br>\nDefault: `PAR`\n\n"
+      },
+      "source": "https://raw.githubusercontent.com/fnaumenko/isChIP/develop/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Model: brief description",
+        "parent_header": [
+          "isChIP"
+        ],
+        "type": "Text_excerpt",
+        "value": "The real protocol of ChIP-seq is simulated by repeating the basic cycle, performed for each treated chromosome (twice for autosomes). \nThe basic cycle corresponds to one nominal cell and consists of the next stages:\n* **'shearing of DNA'**: cutting the reference genome in fragments with size distribution fitted to lognormal distribution with given *mean* and *sigma*. \nSee [Fragment distribution and size selection](#fragment-distribution-and-size-selection);\n* **'ChIP'** (in *test* mode): extraction of the fragments overlapping with the *template* binding events;\n* **'loss fragments in \u2018Library construction'**: sampling of selected fragments according to user-defined sample (`-G|--ground` option), \n*template* sample (defined as *template* features score) and automatically adjusted scaling sample (`--bg-all` and `--rd-lim` options);\n* **'amplification'** the selected fragments if required:<br>\n**MDA**:<br>\nA. splitting of each fragment into two random amplicons, copying of the fragment and both amplicons to the output;<br>\nB. applying step A to each amplicon until it is longer than the length of read.<br>\nThe amplification model is simplified due to non-essential details: \nthe absence of primer annealing and the fragment debranching into 2 amplicons.<br>\n**PCR**:<br>\ncopying each fragment 2^N times, where N denotes a given number of PCR cycles.<br>\nIn reality the multiplication coefficient is below 2 in each cycle, it also can be lower for some particular amplicons, e.g. CG-reach. \nThese details are excluded from the model as insignificant to assess the effect of amplification on the final generalized result.<br>\n* **'size selection'**: selection of fragments fitted to desirable size. See [Fragment distribution and size selection](#fragment-distribution-and-size-selection);\n* **'sequencing'**: cutting the 5\u2019end of the fragment of desirable length, or the 3\u2019end (by random choice) in SE mode, \nor both ends in PE mode, and complementary reversing the 3\u2019end read;\n* recording reads in an appropriate formats.\n\nThe input parameters of simulation process (except number of nominal cells) \nare adjusted correspondingly to those in real ChIP-Seq experiment.\n\nThe model in its basic features was developed by [Dr T. Subkhankulova](https://www.linkedin.com/in/tatiana-subkhankulova-0876a240), ICL.\n"
+      },
+      "source": "https://raw.githubusercontent.com/fnaumenko/isChIP/develop/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 0.9416563972097455,
+      "result": {
+        "original_header": "isChIP",
+        "type": "Text_excerpt",
+        "value": "***I**n **S**ilico* **ChIP**-seq is a cross-platform fast realistic ChIP-seq simulator. \nThe modelling of the chromatin immunoprecipitaion followed by next generation sequencing process is based primarily on Illumina protocol. \nIn addition, extra flexibility is implemented for the isChIP\u2019s options to be straightforwardly re-formulated in other formats, \nsuch as Ion Torrent, Roche454, etc. \nSupports:\n* generation of peaks with specified location, width and efficiency (score)\n* adjastable fragment length and size selection distribution parameters\n* SE/PE sequencing\n* PCR, MDA amplification\n* issuance reads with fixed/variable length\n* ChIP-exo\n* output formats: FastQ, SAM, BED, BedGraph, wiggle\n* generation a control (input) dataset along with a test one \n"
+      },
+      "source": "https://raw.githubusercontent.com/fnaumenko/isChIP/develop/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9433801456901989,
+      "result": {
+        "original_header": "Performance",
+        "type": "Text_excerpt",
+        "value": "On 2.5 GHz RAID HPC by default values of ground samples, in one-thread mode, within 1 minute **isChIP** records:<br>\nin *test* mode up to 2 million reads (33 Kread/sec) with size selection, \nup to 10 million reads (167 Kread/sec) without size selection (both values by default background level);<br>\nin *control* mode up to 66 million reads (1.1 Mread/sec).<br>\nApplied amplification increases these values from 1.5 to 3 times.<br>\nThe first run is a bit slower because of creating service files.<br>\nThe required memory is linearly proportional to the number of threads. For one thread, it does not exceed 300 Mb.\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/fnaumenko/isChIP/develop/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9568131425344519,
+      "result": {
+        "original_header": "Mode",
+        "type": "Text_excerpt",
+        "value": "**isChIP** generates output in one of the two modes:<br>\n*test* \u2013 simulation of site of interest sequencing; the output is test sequences/alignment<br>\n*control* \u2013 simulation of control production; the output is 'input' sequences/alignment.<br>\nThese modes are distinguished by the presence or absence of a parameter \u2013 a file containing site of interest, called *template*.\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/fnaumenko/isChIP/develop/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9451471923050249,
+      "result": {
+        "original_header": "Template",
+        "type": "Text_excerpt",
+        "value": "*Template* is a file in [BED](https://genome.ucsc.edu/FAQ/FAQformat.html#format1) format whose features correspond to binding events. \nEach data line contains 3 (minimum required) or more fields. First 3 fields define the binding site. \nIf there are additional fields, isChIP interprets the field indicated by the option `-s|--bscore` as the relative binding efficiency, \notherwise the efficiency is uniform across all binding sites.<br>\nWithin the framework of the model, binding efficiency is defined as the probability of associating a fragment with a binding site. \nJust for simplicity, the term 'binding score' is used as a synonym for this concept. \n'Relative' means that only score ratios matter, the score units become meaningless.<br>\nBED format recommends using the 4th field as a 'name' and 5th field as a 'score' in the common sense. \nThe output of many of peak callers follow these guidelines and save in the the 5th field the peak p-value or local FDR. \nBoth of the values are directly proportional to the peak amplitude, which allows to treat them as binding efficiency. \nIf the corresponding value is placed in a non-standard location, it can be set up with the `-s|--bscore` option.<br>\nThat allows the use of peak caller output as a **isChIP** *template*, \nwith the corresponding correction of coordinates (narrowing of the 'peaks' to the 'binding sites').<br>\nAlternatively, the scores can be entered manually.<br> \nAll features within each chromosome must be sorted.<br>\nOptional track definition line is ignored.\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/fnaumenko/isChIP/develop/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.8982007305143134,
+      "result": {
+        "original_header": "Output read name format",
+        "type": "Text_excerpt",
+        "value": "Read name makes sense for [FQ](https://en.wikipedia.org/wiki/FASTQ_format), \n[BED](https://genome.ucsc.edu/FAQ/FAQformat.html#format1) and [SAM](https://en.wikipedia.org/wiki/SAM_(file_format)) outputs. \nThe \\<chr\\> field denotes the 'true' chromosome from which the read was isolated.<br>\nIt has constant width for any chromosome. Possible alignment is filled by '=' symbol.<br>\n\\<position\\> fields also indicate 'true' positions. \nFor BED, mate ('/1' or '/2') is added to the number in case of PE reads. \nAdding a position is regulated by `-l|--rd-pos` option.\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/fnaumenko/isChIP/develop/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9797079517185139,
+      "result": {
+        "original_header": "Output info",
+        "type": "Text_excerpt",
+        "value": "* `t, c` \u2013 test, control (displayed only with `-C|--control` option)\n* `FG, BG` \u2013 foreground (peak), background data (in test mode, in control mode just one background)\n* `reads` \u2013 number of recorded reads\n* `sample` \u2013 actual sample: the number of recorded reads relative to the number of selected ones, in percent. \nBeing \u2018selected\u2019 means the reads derived from fragments have passed through the size selection filter. \nNote that 'BG: sample' shows the absolute background level, not the relative one as specified by `-G|--ground` option. \nThe actual sample may be reduced because of the next reasons: user-defined and/or scalable sample, different template feature\u2019s score (for the foreground reads), exceeding the maximum number of ambiguous code N in read. \nAmplified reads are not included in the sample statistics;\n* `ampl` \u2013 actual amplification coefficient, calculated as \\<amplicons number\\>/\\<fragments number\\>. \nThe coefficient takes into account both amplification techniques; displayed only if amplification is set.\n* `r/kbp` \u2013 actual read density, in read per 1000 base pair;\n* `gaps` \u2013 total fraction of reference undefined regions (gaps); displayed only in `PAR` and `DBG` verbose mode;\n* `g_excl` \u2013 fraction of at each end excluded from treatment; displayed only in the `PAR` and `DBG` verbose modes;\n* `mm:ss` \u2013 wall time (only if `\u2013t|--time` option is set) \nIn the \u2018total\u2019 line, the total number of reads is indicated, as well as the average values of the density and the relative number of gaps and excluded from the treatment gaps for the entire genome.\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/fnaumenko/isChIP/develop/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.99256667133175,
+      "result": {
+        "original_header": "Limitation",
+        "type": "Text_excerpt",
+        "value": "The total number of chromosomes is restricted by 255.<br>\nWith the maximal permitted parameter values of lognormal distribution, mean = 9 and sd = 1.0, \nthe maximal generated fragment length is about 1200 kbp, the average fragment length is about 13 kbp.\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/fnaumenko/isChIP/develop/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9883062773289506,
+      "result": {
+        "original_header": "Fragment distribution and size selection",
+        "type": "Text_excerpt",
+        "value": "The lognormal distribution of fragments by shearing chromatin based on sonication is confirmed by many researches. \nThe typical result is presented here:<br> \n![Frag Distrib Paper](https://github.com/fnaumenko/isChIP/blob/master/pict/Size_distr_analysis_lbl1.png)<br>\nIn practice, the distribution parameters can vary widely. \nExamples of original and recovered distributions of experimental datasets from NCBI database are shown \nin the ![Frag Distributions](https://github.com/fnaumenko/bioStat/tree/master/pict/FragPE_distrs.png). \nFragment size selection can be performed in different techniques, e.g. by using magnetic beads or by manual cutting of the gel strip. \nNevertheless, it is safe to assume the general normal character of size selection:<br>\n![Size Selection](https://github.com/fnaumenko/isChIP/blob/master/pict/Mag-Bind_label.png)<br>\nThis is also confirmed by the real fragment frequency distributions in the \n![ Frag Distributions](https://github.com/fnaumenko/bioStat/tree/master/pict/FragPE_distrs.png). \nIn particular, experiments experiments in cases 9-13  were clearly carried out using some size selection technique.<br>\nOn this basis, the default values of the lognormal *sigma* and *mean* are selected in **isChIP** so \nas to provide the most frequently observed distribution with Mean of 200.<br>\nThe size selection in **isChIP** is carried out according to the normal distribution. \nBy default, its *mean* is automatically adjusted so that it coincides with the Mean of an initial lognormal distribution. \nThis provides the least computational loss: \n![Model Distribution](https://github.com/fnaumenko/isChIP/blob/master/pict/isChIP_fragDistr2_lbl.png)<br>\nWhen the user sets its own size selection parameters, one should bear in mind a decrease in output, \nwhich is the greater, the further the size selection mean is from the lognormal Mean.<br> \nTo facilitate the adjustment of distribution parameters use of a specialized Windows utility \n[**RandomTest**](https://github.com/fnaumenko/RandomTest-Win) is recommended. \nIt visualizes the initial lognormal as well as the final distribution of fragments after size selection, \nand allows you to quickly fit the parameters for the desired distribution.\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/fnaumenko/isChIP/develop/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "download_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/fnaumenko/isChIP/releases"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 2
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/fnaumenko/isChIP/forks"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "fnaumenko/isChIP"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_title": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "isChIP"
+      },
+      "source": "https://raw.githubusercontent.com/fnaumenko/isChIP/develop/README.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "images": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/fnaumenko/isChIP/tree/master/pict/Exo-real-sim.png"
+      },
+      "source": "https://raw.githubusercontent.com/fnaumenko/isChIP/develop/README.md",
+      "technique": "regular_expression"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/fnaumenko/bioStat/tree/master/pict/Read_distrs.png"
+      },
+      "source": "https://raw.githubusercontent.com/fnaumenko/isChIP/develop/README.md",
+      "technique": "regular_expression"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/fnaumenko/isChIP/tree/master/pict/formal-actual_coverage_legend.png"
+      },
+      "source": "https://raw.githubusercontent.com/fnaumenko/isChIP/develop/README.md",
+      "technique": "regular_expression"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/fnaumenko/isChIP/master/pict/Size_distr_analysis_lbl1.png"
+      },
+      "source": "https://raw.githubusercontent.com/fnaumenko/isChIP/develop/README.md",
+      "technique": "regular_expression"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/fnaumenko/bioStat/tree/master/pict/FragPE_distrs.png"
+      },
+      "source": "https://raw.githubusercontent.com/fnaumenko/isChIP/develop/README.md",
+      "technique": "regular_expression"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/fnaumenko/isChIP/master/pict/Mag-Bind_label.png"
+      },
+      "source": "https://raw.githubusercontent.com/fnaumenko/isChIP/develop/README.md",
+      "technique": "regular_expression"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/fnaumenko/bioStat/tree/master/pict/FragPE_distrs.png"
+      },
+      "source": "https://raw.githubusercontent.com/fnaumenko/isChIP/develop/README.md",
+      "technique": "regular_expression"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/fnaumenko/isChIP/master/pict/test_ampl_col.png"
+      },
+      "source": "https://raw.githubusercontent.com/fnaumenko/isChIP/develop/README.md",
+      "technique": "regular_expression"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/fnaumenko/isChIP/master/pict/test_ampl_strand_col.png"
+      },
+      "source": "https://raw.githubusercontent.com/fnaumenko/isChIP/develop/README.md",
+      "technique": "regular_expression"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/fnaumenko/isChIP/master/pict/distr_small.png"
+      },
+      "source": "https://raw.githubusercontent.com/fnaumenko/isChIP/develop/README.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "installation": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Executable file",
+        "parent_header": [
+          "isChIP",
+          "Installation"
+        ],
+        "type": "Text_excerpt",
+        "value": "[Download Linux version](https://github.com/fnaumenko/isChIP/releases/download/v2.1/isChIP-Linux-x64.gz)<br>\n[Download Windows version](https://github.com/fnaumenko/isChIP/releases/download/v2.1/isChIP-Windows-x64.zip)\n\nDownload in Linux:<br>\n`wget -O isChIP.gz https://github.com/fnaumenko/isChIP/releases/download/v2.1/isChIP-Linux-x64.gz`\n\nThen type<br>\n```\ngzip -d isChIP.gz\nchmod +x isChIP\n```\n"
+      },
+      "source": "https://raw.githubusercontent.com/fnaumenko/isChIP/develop/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Compiling",
+        "parent_header": [
+          "isChIP",
+          "Installation"
+        ],
+        "type": "Text_excerpt",
+        "value": "Required components:<br>\ng++ (Linux)<br>\ncmake<br>\nzlib (optionally)\n\nTo compile from Git, type:\n```\ngit clone https://github.com/fnaumenko/isChIP\ncd isChIP\ncmake src\ngit submodule init\ngit submodule update\ncmake --build . --target ALL_BUILD --config Release\n```\nAlternative in Linux:\n```\nwget -O isChIP.zip https://github.com/fnaumenko/isChIP/archive/v2.0.zip\nunzip isChIP.zip\ncd isChIP-2.1\ncmake src\ngit submodule init\ngit submodule update\ncmake --build . --target ALL_BUILD --config Release\n```\nFast check the build:\n```\nbuild/release/ischip -v\n```\n\nIf **zlib** is not installed on your system, the program will be compiled without the ability to read/write compressed files.\n"
+      },
+      "source": "https://raw.githubusercontent.com/fnaumenko/isChIP/develop/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Prepare reference genome",
+        "parent_header": [
+          "isChIP",
+          "Installation"
+        ],
+        "type": "Text_excerpt",
+        "value": "Download the required reference genome from UCSC: *ftp://hgdownload.soe.ucsc.edu/goldenPath/*<br>\nFor example, to download human genome library **hg19**:<br>\n**in Linux**:<br>\n```\nmkdir hg19\ncd hg19\nrsync -a -P rsync://hgdownload.soe.ucsc.edu/goldenPath/hg19/chromosomes/ ./\n```\nAlternative:<br>\n```\nwget -r ftp://hgdownload.soe.ucsc.edu/goldenPath/hg19/chromosomes/\nmv hgdownload.soe.ucsc.edu/goldenPath/hg19/chromosomes hg19\nrm -r hgdownload.soe.ucsc.edu\n```\nUnplaced (chr\\*\\_random) and unlocalized (chrUn_\\*\\) sequences are not involved in modelling, \nso you can delete them by typing `rm hg19/*_*`<br><br>\n**in Windows**<br>\ncopy and paste the string *ftp://hgdownload.soe.ucsc.edu/goldenPath/hg19/chromosomes/* into Windows browser address bar, \nthen copy *.fa.gz files to your local directory.<br>\nAlternatively use FTP client, e.g. [FileZilla](https://filezilla-project.org/).\n\nTo download **mm9** library, in the above example replace '**hg19**' with '**mm9**'.\n"
+      },
+      "source": "https://raw.githubusercontent.com/fnaumenko/isChIP/develop/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 0.9560335032092567,
+      "result": {
+        "original_header": "isChIP",
+        "type": "Text_excerpt",
+        "value": "version 3.0 in progress \n"
+      },
+      "source": "https://raw.githubusercontent.com/fnaumenko/isChIP/develop/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "issue_tracker": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/fnaumenko/isChIP/issues"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "keywords": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": ""
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "license": [
+    {
+      "confidence": 1,
+      "result": {
+        "name": "GNU General Public License v3.0",
+        "spdx_id": "GPL-3.0",
+        "type": "License",
+        "url": "https://api.github.com/licenses/gpl-3.0",
+        "value": "https://api.github.com/licenses/gpl-3.0"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "File_dump",
+        "value": "                    GNU GENERAL PUBLIC LICENSE\n                       Version 3, 29 June 2007\n\n Copyright (C) 2007 Free Software Foundation, Inc. <http://fsf.org/>\n Everyone is permitted to copy and distribute verbatim copies\n of this license document, but changing it is not allowed.\n\n                            Preamble\n\n  The GNU General Public License is a free, copyleft license for\nsoftware and other kinds of works.\n\n  The licenses for most software and other practical works are designed\nto take away your freedom to share and change the works.  By contrast,\nthe GNU General Public License is intended to guarantee your freedom to\nshare and change all versions of a program--to make sure it remains free\nsoftware for all its users.  We, the Free Software Foundation, use the\nGNU General Public License for most of our software; it applies also to\nany other work released this way by its authors.  You can apply it to\nyour programs, too.\n\n  When we speak of free software, we are referring to freedom, not\nprice.  Our General Public Licenses are designed to make sure that you\nhave the freedom to distribute copies of free software (and charge for\nthem if you wish), that you receive source code or can get it if you\nwant it, that you can change the software or use pieces of it in new\nfree programs, and that you know you can do these things.\n\n  To protect your rights, we need to prevent others from denying you\nthese rights or asking you to surrender the rights.  Therefore, you have\ncertain responsibilities if you distribute copies of the software, or if\nyou modify it: responsibilities to respect the freedom of others.\n\n  For example, if you distribute copies of such a program, whether\ngratis or for a fee, you must pass on to the recipients the same\nfreedoms that you received.  You must make sure that they, too, receive\nor can get the source code.  And you must show them these terms so they\nknow their rights.\n\n  Developers that use the GNU GPL protect your rights with two steps:\n(1) assert copyright on the software, and (2) offer you this License\ngiving you legal permission to copy, distribute and/or modify it.\n\n  For the developers' and authors' protection, the GPL clearly explains\nthat there is no warranty for this free software.  For both users' and\nauthors' sake, the GPL requires that modified versions be marked as\nchanged, so that their problems will not be attributed erroneously to\nauthors of previous versions.\n\n  Some devices are designed to deny users access to install or run\nmodified versions of the software inside them, although the manufacturer\ncan do so.  This is fundamentally incompatible with the aim of\nprotecting users' freedom to change the software.  The systematic\npattern of such abuse occurs in the area of products for individuals to\nuse, which is precisely where it is most unacceptable.  Therefore, we\nhave designed this version of the GPL to prohibit the practice for those\nproducts.  If such problems arise substantially in other domains, we\nstand ready to extend this provision to those domains in future versions\nof the GPL, as needed to protect the freedom of users.\n\n  Finally, every program is threatened constantly by software patents.\nStates should not allow patents to restrict development and use of\nsoftware on general-purpose computers, but in those that do, we wish to\navoid the special danger that patents applied to a free program could\nmake it effectively proprietary.  To prevent this, the GPL assures that\npatents cannot be used to render the program non-free.\n\n  The precise terms and conditions for copying, distribution and\nmodification follow.\n\n                       TERMS AND CONDITIONS\n\n  0. Definitions.\n\n  \"This License\" refers to version 3 of the GNU General Public License.\n\n  \"Copyright\" also means copyright-like laws that apply to other kinds of\nworks, such as semiconductor masks.\n\n  \"The Program\" refers to any copyrightable work licensed under this\nLicense.  Each licensee is addressed as \"you\".  \"Licensees\" and\n\"recipients\" may be individuals or organizations.\n\n  To \"modify\" a work means to copy from or adapt all or part of the work\nin a fashion requiring copyright permission, other than the making of an\nexact copy.  The resulting work is called a \"modified version\" of the\nearlier work or a work \"based on\" the earlier work.\n\n  A \"covered work\" means either the unmodified Program or a work based\non the Program.\n\n  To \"propagate\" a work means to do anything with it that, without\npermission, would make you directly or secondarily liable for\ninfringement under applicable copyright law, except executing it on a\ncomputer or modifying a private copy.  Propagation includes copying,\ndistribution (with or without modification), making available to the\npublic, and in some countries other activities as well.\n\n  To \"convey\" a work means any kind of propagation that enables other\nparties to make or receive copies.  Mere interaction with a user through\na computer network, with no transfer of a copy, is not conveying.\n\n  An interactive user interface displays \"Appropriate Legal Notices\"\nto the extent that it includes a convenient and prominently visible\nfeature that (1) displays an appropriate copyright notice, and (2)\ntells the user that there is no warranty for the work (except to the\nextent that warranties are provided), that licensees may convey the\nwork under this License, and how to view a copy of this License.  If\nthe interface presents a list of user commands or options, such as a\nmenu, a prominent item in the list meets this criterion.\n\n  1. Source Code.\n\n  The \"source code\" for a work means the preferred form of the work\nfor making modifications to it.  \"Object code\" means any non-source\nform of a work.\n\n  A \"Standard Interface\" means an interface that either is an official\nstandard defined by a recognized standards body, or, in the case of\ninterfaces specified for a particular programming language, one that\nis widely used among developers working in that language.\n\n  The \"System Libraries\" of an executable work include anything, other\nthan the work as a whole, that (a) is included in the normal form of\npackaging a Major Component, but which is not part of that Major\nComponent, and (b) serves only to enable use of the work with that\nMajor Component, or to implement a Standard Interface for which an\nimplementation is available to the public in source code form.  A\n\"Major Component\", in this context, means a major essential component\n(kernel, window system, and so on) of the specific operating system\n(if any) on which the executable work runs, or a compiler used to\nproduce the work, or an object code interpreter used to run it.\n\n  The \"Corresponding Source\" for a work in object code form means all\nthe source code needed to generate, install, and (for an executable\nwork) run the object code and to modify the work, including scripts to\ncontrol those activities.  However, it does not include the work's\nSystem Libraries, or general-purpose tools or generally available free\nprograms which are used unmodified in performing those activities but\nwhich are not part of the work.  For example, Corresponding Source\nincludes interface definition files associated with source files for\nthe work, and the source code for shared libraries and dynamically\nlinked subprograms that the work is specifically designed to require,\nsuch as by intimate data communication or control flow between those\nsubprograms and other parts of the work.\n\n  The Corresponding Source need not include anything that users\ncan regenerate automatically from other parts of the Corresponding\nSource.\n\n  The Corresponding Source for a work in source code form is that\nsame work.\n\n  2. Basic Permissions.\n\n  All rights granted under this License are granted for the term of\ncopyright on the Program, and are irrevocable provided the stated\nconditions are met.  This License explicitly affirms your unlimited\npermission to run the unmodified Program.  The output from running a\ncovered work is covered by this License only if the output, given its\ncontent, constitutes a covered work.  This License acknowledges your\nrights of fair use or other equivalent, as provided by copyright law.\n\n  You may make, run and propagate covered works that you do not\nconvey, without conditions so long as your license otherwise remains\nin force.  You may convey covered works to others for the sole purpose\nof having them make modifications exclusively for you, or provide you\nwith facilities for running those works, provided that you comply with\nthe terms of this License in conveying all material for which you do\nnot control copyright.  Those thus making or running the covered works\nfor you must do so exclusively on your behalf, under your direction\nand control, on terms that prohibit them from making any copies of\nyour copyrighted material outside their relationship with you.\n\n  Conveying under any other circumstances is permitted solely under\nthe conditions stated below.  Sublicensing is not allowed; section 10\nmakes it unnecessary.\n\n  3. Protecting Users' Legal Rights From Anti-Circumvention Law.\n\n  No covered work shall be deemed part of an effective technological\nmeasure under any applicable law fulfilling obligations under article\n11 of the WIPO copyright treaty adopted on 20 December 1996, or\nsimilar laws prohibiting or restricting circumvention of such\nmeasures.\n\n  When you convey a covered work, you waive any legal power to forbid\ncircumvention of technological measures to the extent such circumvention\nis effected by exercising rights under this License with respect to\nthe covered work, and you disclaim any intention to limit operation or\nmodification of the work as a means of enforcing, against the work's\nusers, your or third parties' legal rights to forbid circumvention of\ntechnological measures.\n\n  4. Conveying Verbatim Copies.\n\n  You may convey verbatim copies of the Program's source code as you\nreceive it, in any medium, provided that you conspicuously and\nappropriately publish on each copy an appropriate copyright notice;\nkeep intact all notices stating that this License and any\nnon-permissive terms added in accord with section 7 apply to the code;\nkeep intact all notices of the absence of any warranty; and give all\nrecipients a copy of this License along with the Program.\n\n  You may charge any price or no price for each copy that you convey,\nand you may offer support or warranty protection for a fee.\n\n  5. Conveying Modified Source Versions.\n\n  You may convey a work based on the Program, or the modifications to\nproduce it from the Program, in the form of source code under the\nterms of section 4, provided that you also meet all of these conditions:\n\n    a) The work must carry prominent notices stating that you modified\n    it, and giving a relevant date.\n\n    b) The work must carry prominent notices stating that it is\n    released under this License and any conditions added under section\n    7.  This requirement modifies the requirement in section 4 to\n    \"keep intact all notices\".\n\n    c) You must license the entire work, as a whole, under this\n    License to anyone who comes into possession of a copy.  This\n    License will therefore apply, along with any applicable section 7\n    additional terms, to the whole of the work, and all its parts,\n    regardless of how they are packaged.  This License gives no\n    permission to license the work in any other way, but it does not\n    invalidate such permission if you have separately received it.\n\n    d) If the work has interactive user interfaces, each must display\n    Appropriate Legal Notices; however, if the Program has interactive\n    interfaces that do not display Appropriate Legal Notices, your\n    work need not make them do so.\n\n  A compilation of a covered work with other separate and independent\nworks, which are not by their nature extensions of the covered work,\nand which are not combined with it such as to form a larger program,\nin or on a volume of a storage or distribution medium, is called an\n\"aggregate\" if the compilation and its resulting copyright are not\nused to limit the access or legal rights of the compilation's users\nbeyond what the individual works permit.  Inclusion of a covered work\nin an aggregate does not cause this License to apply to the other\nparts of the aggregate.\n\n  6. Conveying Non-Source Forms.\n\n  You may convey a covered work in object code form under the terms\nof sections 4 and 5, provided that you also convey the\nmachine-readable Corresponding Source under the terms of this License,\nin one of these ways:\n\n    a) Convey the object code in, or embodied in, a physical product\n    (including a physical distribution medium), accompanied by the\n    Corresponding Source fixed on a durable physical medium\n    customarily used for software interchange.\n\n    b) Convey the object code in, or embodied in, a physical product\n    (including a physical distribution medium), accompanied by a\n    written offer, valid for at least three years and valid for as\n    long as you offer spare parts or customer support for that product\n    model, to give anyone who possesses the object code either (1) a\n    copy of the Corresponding Source for all the software in the\n    product that is covered by this License, on a durable physical\n    medium customarily used for software interchange, for a price no\n    more than your reasonable cost of physically performing this\n    conveying of source, or (2) access to copy the\n    Corresponding Source from a network server at no charge.\n\n    c) Convey individual copies of the object code with a copy of the\n    written offer to provide the Corresponding Source.  This\n    alternative is allowed only occasionally and noncommercially, and\n    only if you received the object code with such an offer, in accord\n    with subsection 6b.\n\n    d) Convey the object code by offering access from a designated\n    place (gratis or for a charge), and offer equivalent access to the\n    Corresponding Source in the same way through the same place at no\n    further charge.  You need not require recipients to copy the\n    Corresponding Source along with the object code.  If the place to\n    copy the object code is a network server, the Corresponding Source\n    may be on a different server (operated by you or a third party)\n    that supports equivalent copying facilities, provided you maintain\n    clear directions next to the object code saying where to find the\n    Corresponding Source.  Regardless of what server hosts the\n    Corresponding Source, you remain obligated to ensure that it is\n    available for as long as needed to satisfy these requirements.\n\n    e) Convey the object code using peer-to-peer transmission, provided\n    you inform other peers where the object code and Corresponding\n    Source of the work are being offered to the general public at no\n    charge under subsection 6d.\n\n  A separable portion of the object code, whose source code is excluded\nfrom the Corresponding Source as a System Library, need not be\nincluded in conveying the object code work.\n\n  A \"User Product\" is either (1) a \"consumer product\", which means any\ntangible personal property which is normally used for personal, family,\nor household purposes, or (2) anything designed or sold for incorporation\ninto a dwelling.  In determining whether a product is a consumer product,\ndoubtful cases shall be resolved in favor of coverage.  For a particular\nproduct received by a particular user, \"normally used\" refers to a\ntypical or common use of that class of product, regardless of the status\nof the particular user or of the way in which the particular user\nactually uses, or expects or is expected to use, the product.  A product\nis a consumer product regardless of whether the product has substantial\ncommercial, industrial or non-consumer uses, unless such uses represent\nthe only significant mode of use of the product.\n\n  \"Installation Information\" for a User Product means any methods,\nprocedures, authorization keys, or other information required to install\nand execute modified versions of a covered work in that User Product from\na modified version of its Corresponding Source.  The information must\nsuffice to ensure that the continued functioning of the modified object\ncode is in no case prevented or interfered with solely because\nmodification has been made.\n\n  If you convey an object code work under this section in, or with, or\nspecifically for use in, a User Product, and the conveying occurs as\npart of a transaction in which the right of possession and use of the\nUser Product is transferred to the recipient in perpetuity or for a\nfixed term (regardless of how the transaction is characterized), the\nCorresponding Source conveyed under this section must be accompanied\nby the Installation Information.  But this requirement does not apply\nif neither you nor any third party retains the ability to install\nmodified object code on the User Product (for example, the work has\nbeen installed in ROM).\n\n  The requirement to provide Installation Information does not include a\nrequirement to continue to provide support service, warranty, or updates\nfor a work that has been modified or installed by the recipient, or for\nthe User Product in which it has been modified or installed.  Access to a\nnetwork may be denied when the modification itself materially and\nadversely affects the operation of the network or violates the rules and\nprotocols for communication across the network.\n\n  Corresponding Source conveyed, and Installation Information provided,\nin accord with this section must be in a format that is publicly\ndocumented (and with an implementation available to the public in\nsource code form), and must require no special password or key for\nunpacking, reading or copying.\n\n  7. Additional Terms.\n\n  \"Additional permissions\" are terms that supplement the terms of this\nLicense by making exceptions from one or more of its conditions.\nAdditional permissions that are applicable to the entire Program shall\nbe treated as though they were included in this License, to the extent\nthat they are valid under applicable law.  If additional permissions\napply only to part of the Program, that part may be used separately\nunder those permissions, but the entire Program remains governed by\nthis License without regard to the additional permissions.\n\n  When you convey a copy of a covered work, you may at your option\nremove any additional permissions from that copy, or from any part of\nit.  (Additional permissions may be written to require their own\nremoval in certain cases when you modify the work.)  You may place\nadditional permissions on material, added by you to a covered work,\nfor which you have or can give appropriate copyright permission.\n\n  Notwithstanding any other provision of this License, for material you\nadd to a covered work, you may (if authorized by the copyright holders of\nthat material) supplement the terms of this License with terms:\n\n    a) Disclaiming warranty or limiting liability differently from the\n    terms of sections 15 and 16 of this License; or\n\n    b) Requiring preservation of specified reasonable legal notices or\n    author attributions in that material or in the Appropriate Legal\n    Notices displayed by works containing it; or\n\n    c) Prohibiting misrepresentation of the origin of that material, or\n    requiring that modified versions of such material be marked in\n    reasonable ways as different from the original version; or\n\n    d) Limiting the use for publicity purposes of names of licensors or\n    authors of the material; or\n\n    e) Declining to grant rights under trademark law for use of some\n    trade names, trademarks, or service marks; or\n\n    f) Requiring indemnification of licensors and authors of that\n    material by anyone who conveys the material (or modified versions of\n    it) with contractual assumptions of liability to the recipient, for\n    any liability that these contractual assumptions directly impose on\n    those licensors and authors.\n\n  All other non-permissive additional terms are considered \"further\nrestrictions\" within the meaning of section 10.  If the Program as you\nreceived it, or any part of it, contains a notice stating that it is\ngoverned by this License along with a term that is a further\nrestriction, you may remove that term.  If a license document contains\na further restriction but permits relicensing or conveying under this\nLicense, you may add to a covered work material governed by the terms\nof that license document, provided that the further restriction does\nnot survive such relicensing or conveying.\n\n  If you add terms to a covered work in accord with this section, you\nmust place, in the relevant source files, a statement of the\nadditional terms that apply to those files, or a notice indicating\nwhere to find the applicable terms.\n\n  Additional terms, permissive or non-permissive, may be stated in the\nform of a separately written license, or stated as exceptions;\nthe above requirements apply either way.\n\n  8. Termination.\n\n  You may not propagate or modify a covered work except as expressly\nprovided under this License.  Any attempt otherwise to propagate or\nmodify it is void, and will automatically terminate your rights under\nthis License (including any patent licenses granted under the third\nparagraph of section 11).\n\n  However, if you cease all violation of this License, then your\nlicense from a particular copyright holder is reinstated (a)\nprovisionally, unless and until the copyright holder explicitly and\nfinally terminates your license, and (b) permanently, if the copyright\nholder fails to notify you of the violation by some reasonable means\nprior to 60 days after the cessation.\n\n  Moreover, your license from a particular copyright holder is\nreinstated permanently if the copyright holder notifies you of the\nviolation by some reasonable means, this is the first time you have\nreceived notice of violation of this License (for any work) from that\ncopyright holder, and you cure the violation prior to 30 days after\nyour receipt of the notice.\n\n  Termination of your rights under this section does not terminate the\nlicenses of parties who have received copies or rights from you under\nthis License.  If your rights have been terminated and not permanently\nreinstated, you do not qualify to receive new licenses for the same\nmaterial under section 10.\n\n  9. Acceptance Not Required for Having Copies.\n\n  You are not required to accept this License in order to receive or\nrun a copy of the Program.  Ancillary propagation of a covered work\noccurring solely as a consequence of using peer-to-peer transmission\nto receive a copy likewise does not require acceptance.  However,\nnothing other than this License grants you permission to propagate or\nmodify any covered work.  These actions infringe copyright if you do\nnot accept this License.  Therefore, by modifying or propagating a\ncovered work, you indicate your acceptance of this License to do so.\n\n  10. Automatic Licensing of Downstream Recipients.\n\n  Each time you convey a covered work, the recipient automatically\nreceives a license from the original licensors, to run, modify and\npropagate that work, subject to this License.  You are not responsible\nfor enforcing compliance by third parties with this License.\n\n  An \"entity transaction\" is a transaction transferring control of an\norganization, or substantially all assets of one, or subdividing an\norganization, or merging organizations.  If propagation of a covered\nwork results from an entity transaction, each party to that\ntransaction who receives a copy of the work also receives whatever\nlicenses to the work the party's predecessor in interest had or could\ngive under the previous paragraph, plus a right to possession of the\nCorresponding Source of the work from the predecessor in interest, if\nthe predecessor has it or can get it with reasonable efforts.\n\n  You may not impose any further restrictions on the exercise of the\nrights granted or affirmed under this License.  For example, you may\nnot impose a license fee, royalty, or other charge for exercise of\nrights granted under this License, and you may not initiate litigation\n(including a cross-claim or counterclaim in a lawsuit) alleging that\nany patent claim is infringed by making, using, selling, offering for\nsale, or importing the Program or any portion of it.\n\n  11. Patents.\n\n  A \"contributor\" is a copyright holder who authorizes use under this\nLicense of the Program or a work on which the Program is based.  The\nwork thus licensed is called the contributor's \"contributor version\".\n\n  A contributor's \"essential patent claims\" are all patent claims\nowned or controlled by the contributor, whether already acquired or\nhereafter acquired, that would be infringed by some manner, permitted\nby this License, of making, using, or selling its contributor version,\nbut do not include claims that would be infringed only as a\nconsequence of further modification of the contributor version.  For\npurposes of this definition, \"control\" includes the right to grant\npatent sublicenses in a manner consistent with the requirements of\nthis License.\n\n  Each contributor grants you a non-exclusive, worldwide, royalty-free\npatent license under the contributor's essential patent claims, to\nmake, use, sell, offer for sale, import and otherwise run, modify and\npropagate the contents of its contributor version.\n\n  In the following three paragraphs, a \"patent license\" is any express\nagreement or commitment, however denominated, not to enforce a patent\n(such as an express permission to practice a patent or covenant not to\nsue for patent infringement).  To \"grant\" such a patent license to a\nparty means to make such an agreement or commitment not to enforce a\npatent against the party.\n\n  If you convey a covered work, knowingly relying on a patent license,\nand the Corresponding Source of the work is not available for anyone\nto copy, free of charge and under the terms of this License, through a\npublicly available network server or other readily accessible means,\nthen you must either (1) cause the Corresponding Source to be so\navailable, or (2) arrange to deprive yourself of the benefit of the\npatent license for this particular work, or (3) arrange, in a manner\nconsistent with the requirements of this License, to extend the patent\nlicense to downstream recipients.  \"Knowingly relying\" means you have\nactual knowledge that, but for the patent license, your conveying the\ncovered work in a country, or your recipient's use of the covered work\nin a country, would infringe one or more identifiable patents in that\ncountry that you have reason to believe are valid.\n\n  If, pursuant to or in connection with a single transaction or\narrangement, you convey, or propagate by procuring conveyance of, a\ncovered work, and grant a patent license to some of the parties\nreceiving the covered work authorizing them to use, propagate, modify\nor convey a specific copy of the covered work, then the patent license\nyou grant is automatically extended to all recipients of the covered\nwork and works based on it.\n\n  A patent license is \"discriminatory\" if it does not include within\nthe scope of its coverage, prohibits the exercise of, or is\nconditioned on the non-exercise of one or more of the rights that are\nspecifically granted under this License.  You may not convey a covered\nwork if you are a party to an arrangement with a third party that is\nin the business of distributing software, under which you make payment\nto the third party based on the extent of your activity of conveying\nthe work, and under which the third party grants, to any of the\nparties who would receive the covered work from you, a discriminatory\npatent license (a) in connection with copies of the covered work\nconveyed by you (or copies made from those copies), or (b) primarily\nfor and in connection with specific products or compilations that\ncontain the covered work, unless you entered into that arrangement,\nor that patent license was granted, prior to 28 March 2007.\n\n  Nothing in this License shall be construed as excluding or limiting\nany implied license or other defenses to infringement that may\notherwise be available to you under applicable patent law.\n\n  12. No Surrender of Others' Freedom.\n\n  If conditions are imposed on you (whether by court order, agreement or\notherwise) that contradict the conditions of this License, they do not\nexcuse you from the conditions of this License.  If you cannot convey a\ncovered work so as to satisfy simultaneously your obligations under this\nLicense and any other pertinent obligations, then as a consequence you may\nnot convey it at all.  For example, if you agree to terms that obligate you\nto collect a royalty for further conveying from those to whom you convey\nthe Program, the only way you could satisfy both those terms and this\nLicense would be to refrain entirely from conveying the Program.\n\n  13. Use with the GNU Affero General Public License.\n\n  Notwithstanding any other provision of this License, you have\npermission to link or combine any covered work with a work licensed\nunder version 3 of the GNU Affero General Public License into a single\ncombined work, and to convey the resulting work.  The terms of this\nLicense will continue to apply to the part which is the covered work,\nbut the special requirements of the GNU Affero General Public License,\nsection 13, concerning interaction through a network will apply to the\ncombination as such.\n\n  14. Revised Versions of this License.\n\n  The Free Software Foundation may publish revised and/or new versions of\nthe GNU General Public License from time to time.  Such new versions will\nbe similar in spirit to the present version, but may differ in detail to\naddress new problems or concerns.\n\n  Each version is given a distinguishing version number.  If the\nProgram specifies that a certain numbered version of the GNU General\nPublic License \"or any later version\" applies to it, you have the\noption of following the terms and conditions either of that numbered\nversion or of any later version published by the Free Software\nFoundation.  If the Program does not specify a version number of the\nGNU General Public License, you may choose any version ever published\nby the Free Software Foundation.\n\n  If the Program specifies that a proxy can decide which future\nversions of the GNU General Public License can be used, that proxy's\npublic statement of acceptance of a version permanently authorizes you\nto choose that version for the Program.\n\n  Later license versions may give you additional or different\npermissions.  However, no additional obligations are imposed on any\nauthor or copyright holder as a result of your choosing to follow a\nlater version.\n\n  15. Disclaimer of Warranty.\n\n  THERE IS NO WARRANTY FOR THE PROGRAM, TO THE EXTENT PERMITTED BY\nAPPLICABLE LAW.  EXCEPT WHEN OTHERWISE STATED IN WRITING THE COPYRIGHT\nHOLDERS AND/OR OTHER PARTIES PROVIDE THE PROGRAM \"AS IS\" WITHOUT WARRANTY\nOF ANY KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING, BUT NOT LIMITED TO,\nTHE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR\nPURPOSE.  THE ENTIRE RISK AS TO THE QUALITY AND PERFORMANCE OF THE PROGRAM\nIS WITH YOU.  SHOULD THE PROGRAM PROVE DEFECTIVE, YOU ASSUME THE COST OF\nALL NECESSARY SERVICING, REPAIR OR CORRECTION.\n\n  16. Limitation of Liability.\n\n  IN NO EVENT UNLESS REQUIRED BY APPLICABLE LAW OR AGREED TO IN WRITING\nWILL ANY COPYRIGHT HOLDER, OR ANY OTHER PARTY WHO MODIFIES AND/OR CONVEYS\nTHE PROGRAM AS PERMITTED ABOVE, BE LIABLE TO YOU FOR DAMAGES, INCLUDING ANY\nGENERAL, SPECIAL, INCIDENTAL OR CONSEQUENTIAL DAMAGES ARISING OUT OF THE\nUSE OR INABILITY TO USE THE PROGRAM (INCLUDING BUT NOT LIMITED TO LOSS OF\nDATA OR DATA BEING RENDERED INACCURATE OR LOSSES SUSTAINED BY YOU OR THIRD\nPARTIES OR A FAILURE OF THE PROGRAM TO OPERATE WITH ANY OTHER PROGRAMS),\nEVEN IF SUCH HOLDER OR OTHER PARTY HAS BEEN ADVISED OF THE POSSIBILITY OF\nSUCH DAMAGES.\n\n  17. Interpretation of Sections 15 and 16.\n\n  If the disclaimer of warranty and limitation of liability provided\nabove cannot be given local legal effect according to their terms,\nreviewing courts shall apply local law that most closely approximates\nan absolute waiver of all civil liability in connection with the\nProgram, unless a warranty or assumption of liability accompanies a\ncopy of the Program in return for a fee.\n\n                     END OF TERMS AND CONDITIONS\n\n            How to Apply These Terms to Your New Programs\n\n  If you develop a new program, and you want it to be of the greatest\npossible use to the public, the best way to achieve this is to make it\nfree software which everyone can redistribute and change under these terms.\n\n  To do so, attach the following notices to the program.  It is safest\nto attach them to the start of each source file to most effectively\nstate the exclusion of warranty; and each file should have at least\nthe \"copyright\" line and a pointer to where the full notice is found.\n\n    {one line to give the program's name and a brief idea of what it does.}\n    Copyright (C) {year}  {name of author}\n\n    This program is free software: you can redistribute it and/or modify\n    it under the terms of the GNU General Public License as published by\n    the Free Software Foundation, either version 3 of the License, or\n    (at your option) any later version.\n\n    This program is distributed in the hope that it will be useful,\n    but WITHOUT ANY WARRANTY; without even the implied warranty of\n    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the\n    GNU General Public License for more details.\n\n    You should have received a copy of the GNU General Public License\n    along with this program.  If not, see <http://www.gnu.org/licenses/>.\n\nAlso add information on how to contact you by electronic and paper mail.\n\n  If the program does terminal interaction, make it output a short\nnotice like this when it starts in an interactive mode:\n\n    {project}  Copyright (C) {year}  {fullname}\n    This program comes with ABSOLUTELY NO WARRANTY; for details type `show w'.\n    This is free software, and you are welcome to redistribute it\n    under certain conditions; type `show c' for details.\n\nThe hypothetical commands `show w' and `show c' should show the appropriate\nparts of the General Public License.  Of course, your program's commands\nmight be different; for a GUI interface, you would use an \"about box\".\n\n  You should also get your employer (if you work as a programmer) or school,\nif any, to sign a \"copyright disclaimer\" for the program, if necessary.\nFor more information on this, and how to apply and follow the GNU GPL, see\n<http://www.gnu.org/licenses/>.\n\n  The GNU General Public License does not permit incorporating your program\ninto proprietary programs.  If your program is a subroutine library, you\nmay consider it more useful to permit linking proprietary applications with\nthe library.  If this is what you want to do, use the GNU Lesser General\nPublic License instead of this License.  But first, please read\n<http://www.gnu.org/philosophy/why-not-lgpl.html>.\n"
+      },
+      "source": "https://raw.githubusercontent.com/fnaumenko/isChIP/develop/LICENSE",
+      "technique": "file_exploration"
+    }
+  ],
+  "logo": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/fnaumenko/isChIP/master/pict/isChIP_fragDistr2_lbl.png"
+      },
+      "source": "https://raw.githubusercontent.com/fnaumenko/isChIP/develop/README.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "isChIP"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "owner": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "User",
+        "value": "fnaumenko"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "programming_languages": [
+    {
+      "confidence": 1,
+      "result": {
+        "name": "C++",
+        "size": 168058,
+        "type": "Programming_language",
+        "value": "C++"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "CMake",
+        "size": 3865,
+        "type": "Programming_language",
+        "value": "CMake"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "C",
+        "size": 952,
+        "type": "Programming_language",
+        "value": "C"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "readme_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/fnaumenko/isChIP/develop/README.md"
+      },
+      "technique": "file_exploration"
+    }
+  ],
+  "related_documentation": [
+    {
+      "confidence": 1,
+      "result": {
+        "format": "readthedocs",
+        "type": "Url",
+        "value": "https://bedtools.readthedocs.io/"
+      },
+      "source": "https://raw.githubusercontent.com/fnaumenko/isChIP/develop/README.md",
+      "technique": "regular_expression"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "format": "readthedocs",
+        "type": "Url",
+        "value": "https://deeptools.readthedocs.io/"
+      },
+      "source": "https://raw.githubusercontent.com/fnaumenko/isChIP/develop/README.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "releases": [
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "fnaumenko",
+          "type": "User"
+        },
+        "date_created": "2022-01-09T02:34:59Z",
+        "date_published": "2022-01-09T02:40:49Z",
+        "description": "Code was reformatted in general towards \u0421++11.\t\r\nNew bioinfo data reading engine.\r\nTemplate with track definition line and overlapping features is now accepted.\r\n\r\nFixed:\r\n- Some failure on the display information when number of threads = 2\r\n- Lost read name in FQ file in multithreaded mode",
+        "html_url": "https://github.com/fnaumenko/isChIP/releases/tag/v2.0",
+        "name": "isChIP 2.0",
+        "release_id": 56676979,
+        "tag": "v2.0",
+        "tarball_url": "https://api.github.com/repos/fnaumenko/isChIP/tarball/v2.0",
+        "type": "Release",
+        "url": "https://api.github.com/repos/fnaumenko/isChIP/releases/56676979",
+        "value": "https://api.github.com/repos/fnaumenko/isChIP/releases/56676979",
+        "zipball_url": "https://api.github.com/repos/fnaumenko/isChIP/zipball/v2.0"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "fnaumenko",
+          "type": "User"
+        },
+        "date_created": "2020-12-04T07:59:46Z",
+        "date_published": "2020-12-04T08:01:07Z",
+        "html_url": "https://github.com/fnaumenko/isChIP/releases/tag/v1.0",
+        "name": "First public release",
+        "release_id": 34810643,
+        "tag": "v1.0",
+        "tarball_url": "https://api.github.com/repos/fnaumenko/isChIP/tarball/v1.0",
+        "type": "Release",
+        "url": "https://api.github.com/repos/fnaumenko/isChIP/releases/34810643",
+        "value": "https://api.github.com/repos/fnaumenko/isChIP/releases/34810643",
+        "zipball_url": "https://api.github.com/repos/fnaumenko/isChIP/zipball/v1.0"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "somef_missing_categories": [
+    "acknowledgement",
+    "run",
+    "download",
+    "requirements",
+    "contact",
+    "contributors",
+    "documentation",
+    "faq",
+    "identifier",
+    "has_build_file",
+    "executable_example"
+  ],
+  "somef_provenance": {
+    "date": "2024-10-06 14:25:23",
+    "somef_schema_version": "1.0.0",
+    "somef_version": "0.9.5"
+  },
+  "stargazers_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 8
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "support": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Help",
+        "parent_header": [
+          "isChIP",
+          "Usage"
+        ],
+        "type": "Text_excerpt",
+        "value": "```\nProcessing:\n  -g|--gen <name>       reference genome library. Required\n  -n|--cells <int>      number of nominal cells [1]\n  -G|--ground <[float]:[float]>\n                        fore- and background levels:\n                        number of selected fragments inside/outside binding sites,\n                        in percent of all/foreground.\n                        In control mode background is ignored  [50:1]\n  -E|--exo [<int>]      apply ChIP-exo protocol with specified exonuclease 'headroom' length.\n                        If the option is not specified, ChIP-exo is not applied [6]\n  -D|--mda              apply MDA technique\n  -a|--pcr <int>        number of PCR cycles [0]\n  -c|--chr <name>       generate output for the specified chromosome only\n  --bg-all <OFF|ON>     turn on/off generation background for all chromosomes.\n                        For the test mode only [ON]\n  -m|--smode <SE|PE>    sequencing mode: SE - single end, PE - paired end [SE]\n  --edge-len <int>      unstable binding length (BS edge effect). For the test mode only [0]\n  -N|--full-gen         process the entire reference chromosomes (including marginal gaps)\n  -P|--threads <int>    number of threads [1]\n  --serv <name>         folder to store service files [-g|--gen]\n  --seed <int>          fix random emission with given seed, or 0 if don't fix [0]\nTemplate:\n  -o|--overl <OFF|ON>   allow (and merge) overlapping template features [OFF]\n  -s|--bscore <int>     index of the template field used to score each binding event.\n                        Value '0' means ignore template scores. For the test mode only [5]\nFragment size distribution:\n  -L|--ln <[float]:[float]>\n                        mean and stand dev of fragment lognormal distribution [5.26:0.3]\n  -S|--ss [<[int]:[int]>]\n                        apply size selection normal distribution with specified mean and stand dev.\n                        If the option is not specified, size selection is disabled [auto:30]\nReads:\n  -r|--rd-len <int>     fixed length of output read, or minimum length of variable reads [50]\n  -R|--rd-dist [<[int]:[int]>]\n                        mean and stand dev of variable read normal distribution,\n                        according to Ion Torrent/Roche454 protocol.\n                        If the option is not specified, the read length is fixed [200:20]\n  -l|--rd-pos           add read position (location) to its name\n  --rd-Nlim <int>       maximum permitted number of ambiguous code N in read [OFF]\n  --rd-lim <long>       maximum permitted number of total recorded reads [2e+08]\n  --rd-ql <char>        uniform read quality score [~]\n  --rd-ql-patt <name>   read quality scores pattern\n  --rd-ql-map <int>     read mapping quality in SAM and BED output [255]\nOutput:\n  -f|--format <FQ,BED,SAM,BG,FDENS,RDENS,FDIST,RDIST>\n                        format of output data, in any order [FQ]\n  -C|--control          generate control simultaneously with test\n  -x|--strand           generate two additional wig files, each one per strand\n  -O|--out <name>       location of output files or existing folder\n                        [TEST mode: mTest.*, CONTROL mode: mInput.*]\n  -T|--sep              use 1000 separator in output\n  -z|--gzip             compress the output\nOther:\n  -t|--time             print run time\n  -V|--verbose <SL|RES|RT|PAR|DBG>\n                        set verbose level:\n                        SL -    silent mode (show critical messages only)\n                        RES -   show result summary\n                        RT  -   show run-time information\n                        PAR -   show actual parameters\n                        DBG -   show debug messages [PAR]\n  -v|--version          print program's version and exit\n  -h|--help             print usage information and exit\n```\n"
+      },
+      "source": "https://raw.githubusercontent.com/fnaumenko/isChIP/develop/README.md",
+      "technique": "header_analysis"
+    }
+  ],
+  "usage": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Usage",
+        "parent_header": [
+          "isChIP"
+        ],
+        "type": "Text_excerpt",
+        "value": "```\nisChIP [options] -g|--gen <name> [<template>]\n\t<template> - bed file whose features specify binding sites\n```\n"
+      },
+      "source": "https://raw.githubusercontent.com/fnaumenko/isChIP/develop/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Synopsis",
+        "parent_header": [
+          "isChIP",
+          "Usage"
+        ],
+        "type": "Text_excerpt",
+        "value": "`isChIP -g ref_genome \u2013n 5`<br>\ngenerates 'input' sequences in FastQ with read length of 50 and average read density of about 9 read/kbs, \ncomparable with what is experimentally observed.\n\n`isChIP -g ref_genome \u2013tz \u2013n 200 \u2013r 36 \u2013f fq,sam templ.bed`<br>\ngenerates test sequences in zipped FastQ and SAM, with read length of 36 and typical real average foreground/background read density.\n"
+      },
+      "source": "https://raw.githubusercontent.com/fnaumenko/isChIP/develop/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Example of single cell simulation",
+        "parent_header": [
+          "isChIP"
+        ],
+        "type": "Text_excerpt",
+        "value": "There are no reasons to prohibit the attempt to apply the formal ChIP-seq protocol to the single cell simulation.<br>\nHere are the *in silico* experiments on sequencing of formal TFBS using MDA, PCR, and both techniques sequentially, as compared to conventional sequencing.\n\n*Template* consisted of 1000 conditional TFBS with a length of 10.<br>\nThe first two tests are sequencing 100 nominal cells, which corresponds to 100,000 real cells with a total loss of 99%. \nAt a given background level of 1%, such experimental data can be considered satisfactory (test 1 with size selection) \nand good (test 2 without size selection). These tests are given for comparison, as a reference.\n\nAt the moment, MDA is usually applied to superlong fragments, tens of kilobase pairs. \nThey indeed provide a fairly massive output, however, the specific density remains low, and the accuracy of narrow binding site locating is far from desired. \nTest 4 is generated on the basis of a distribution with a mean fragment length of only 1300 bp, \nwhich is quite moderate, but it already demonstrates unsatisfactory positioning.<br>\nTo maintain this issue, contrary to common practice tests were performed on short fragments.<br>\n\nSize selection drastically reduces MDA output, therefore, all tests, except for 1, \nwere performed in the absence of size selection.<br>\nFor successful MDA output, not only the initial fragment length is critical, but also the length of read, which limits further displacement reaction. \nIt seems obvious that short amplicons should make the greatest contribution. \nTo check this assumption, tests 7-8 were performed on short reads.<br>\nIndeed, test 8 can be considered quite successful.\n\n| test | cells | frag distr | read len | MDA | PCR cycles | rel peak dens |\n|:---:|:---:|:---:|:---:|:---:|:---:|---:|\n| **1** | 100 | A | 50 | | | **33** |\n| **2** | 100 | B | 50 | | | **100** |\n| **3** | 1 | B | 50 | | 5 | **32** |\n| **4** | 1 | C | 50 | yes | | **10** |\n| **5** | 1 | B | 50 | yes | | **11** |\n| **6** | 1 | B | 50 | yes | 3 | **85** |\n| **7** | 1 | B | 25 | yes | | **21** |\n| **8** | 1 | B | 25 | yes | 3 | **168** |\n\n**fragment distributions** are marked according to the figure at the bottom of the page.<br>\n**rel peak dens** means **relative in-peak density**. \nThe peak density was calculated as the average at a distance of +/- the average fragment length from the TFBS boundaries. \nThe peak density of test 2 is taken as 100.\n\nActual coverages in the figure are obtained directly by **isChIP** with the option `\u2013F|--format WIG`.<br>\nPeak amplitudes are displayed proportional:\n\n![Coverages](https://github.com/fnaumenko/isChIP/blob/master/pict/test_ampl_col.png) \n\nCoverages in strands (read - forward, blue - reverse):\n\n![Coverages](https://github.com/fnaumenko/isChIP/blob/master/pict/test_ampl_strand_col.png) \n\n\nFragments distributions:\n\n![Distributions](https://github.com/fnaumenko/isChIP/blob/master/pict/distr_small.png \"distributions\")\n\nSynopsis:\n```\ntest1:  isChIP \u2013g $G \u2013c 19 -f wig \u2013o test1 \u2013tx \u2013n 100 \u2013S :30 tc19_10x1000-1e4.bed\ntest2:  isChIP \u2013g $G \u2013c 19 -f wig \u2013o test2 \u2013tx \u2013n 100 tc19_10x1000-1e4.bed\ntest3:  isChIP \u2013g $G \u2013c 19 -f wig \u2013o test3 \u2013txD -a 5 tc19_10x1000-1e4.bed\ntest4:  isChIP \u2013g $G \u2013c 19 -f wig \u2013o test4 \u2013txD --ln 7.06: tc19_10x1000-1e4.bed\ntest5:  isChIP \u2013g $G \u2013c 19 -f wig \u2013o test5 \u2013txD tc19_10x1000-1e4.bed\ntest6:  isChIP \u2013g $G \u2013c 19 -f wig \u2013o test6 \u2013txD -a 3 tc19_10x1000-1e4.bed\ntest7:  isChIP \u2013g $G \u2013c 19 -f wig \u2013o test7 \u2013txD -r 25 tc19_10x1000-1e4.bed\ntest8:  isChIP \u2013g $G \u2013c 19 -f wig \u2013o test8 \u2013txD -r 25 -a 3 tc19_10x1000-1e4.bed\n```\nwhere `$G` is initialized by reference genome path,<br>\n`tc19_10x1000-1e4.bed` contains 1000 TFBS for chromosome 19 with a length of 10, evenly distributed in the range of 10,000,000 - 20,000,000\n<br>\n\n---\n<br>\nIf you face to bugs, or have questions/suggestions, please do not hesitate to write on fedor.naumenko@gmail.com\n"
+      },
+      "source": "https://raw.githubusercontent.com/fnaumenko/isChIP/develop/README.md",
+      "technique": "header_analysis"
+    }
+  ]
+}

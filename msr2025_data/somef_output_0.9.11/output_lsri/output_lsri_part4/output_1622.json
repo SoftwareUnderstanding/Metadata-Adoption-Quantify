@@ -1,0 +1,265 @@
+{
+  "code_repository": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/gstricker/fastGenoGAM"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_created": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2017-02-03T16:47:53Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_updated": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2023-07-21T21:54:47Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "description": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "development of a fast version of GenoGAM"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 0.8636652368053689,
+      "result": {
+        "type": "Text_excerpt",
+        "value": "**Note: This version is now depricated. Please use the new version of GenoGAM here: https://bioconductor.org/packages/release/bioc/html/GenoGAM.html or here: https://github.com/gstricker/GenoGAM** \n"
+      },
+      "source": "https://raw.githubusercontent.com/gstricker/fastGenoGAM/master/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "download_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/gstricker/fastGenoGAM/releases"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "faq": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "FAQ",
+        "type": "Text_excerpt",
+        "value": "**Problem:** An error occurs during model fitting along those lines:\n\n> error: matrix multiplication: incompatible matrix dimensions: 22333830147200x5360120267008000 and 4294972496x1\n\n**Solution:** First, make sure you have all Armadillo dependencies installed correctly. See [here](http://arma.sourceforge.net/download.html)\n\nSecond, the error is most likely related to the fact, that Armadillo is using 32bit matrices, thus causing problems for large matrices fastGenoGAM is using. The solution is to enable `ARMA_64BIT_WORD`, which is not enabled in RcppArmadillo by default. This should have been done during compilation, but if it fails for some reason you can do it manually with `#define ARMA_64BIT_WORD 1` in `my_R_Directory/lib/R/library/RcppArmadillo/include/RcppArmadilloConfig.h`.\nSee [here](https://stackoverflow.com/questions/40592054/large-matrices-in-rcpparmadillo-via-the-arma-64bit-word-define)\n"
+      },
+      "source": "https://raw.githubusercontent.com/gstricker/fastGenoGAM/master/README.md",
+      "technique": "header_analysis"
+    }
+  ],
+  "forks_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 1
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/gstricker/fastGenoGAM/forks"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "gstricker/fastGenoGAM"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_title": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "Quick guide (with HDF5)"
+      },
+      "source": "https://raw.githubusercontent.com/gstricker/fastGenoGAM/master/README.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "installation": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Quick guide (with HDF5)",
+        "type": "Text_excerpt",
+        "value": "This is the brief version of the usual workflow of fastGenoGAM. It involves:\n\n- Reading in data through `GenoGAMDataSet()` to get a `GenoGAMDataSet` object. This is done with the HDF5 backend.\n  \n- Computing size factors with `computeSizeFactors()`\n  \n- Compute the model with `genogam()` to get the final `GenoGAM` object\n\n- compute position-wise log p-values with `computeSignificance()`\n"
+      },
+      "source": "https://raw.githubusercontent.com/gstricker/fastGenoGAM/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Fitting the model",
+        "parent_header": [
+          "Quick guide (with HDF5)"
+        ],
+        "type": "Text_excerpt",
+        "value": "1. Compute model with fixed hyperparameters\n\n```r\n## compute model without parameter estimation to save time in vignette\nresult <- genogam(ggd, lambda = 4601, theta = 4.51)\n\n## Check the fit and standard error\nfits(result)\nse(result)\n```\n\n2. Compute log p-values\n```r\ncomputeSignificance(result)\n\n## check p-values\npval(result)\n````\n\nPlot results of the center 10kb, where both tiles are joined together. A proper plotting functions is in development.\n```r\nidx <- 45000:55000\nupper_input <- fits(result)$chrI[,\"s(x)\"][idx] + 2*se(result)$chrI[,\"s(x)\"][idx]\nlower_input <- fits(result)$chrI[,\"s(x)\"][idx] - 2*se(result)$chrI[,\"s(x)\"][idx]\n\nupper_ip <- fits(result)$chrI[,\"s(x):genotype\"][idx] + 2*se(result)$chrI[,\"s(x):genotype\"][idx]\nlower_ip <- fits(result)$chrI[,\"s(x):genotype\"][idx] - 2*se(result)$chrI[,\"s(x):genotype\"][idx]\n\npar(mfrow = c(2,1))\nplot(fits(result)$chrI[,\"s(x)\"][idx], type = \"l\")\nlines(upper_input, lty = 2)\nlines(lower_input, lty = 2)\n\nplot(fits(result)$chrI[,\"s(x):genotype\"][idx], type = \"l\")\nlines(upper_ip, lty = 2)\nlines(lower_ip, lty = 2)\n```\n"
+      },
+      "source": "https://raw.githubusercontent.com/gstricker/fastGenoGAM/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 0.999999968996605,
+      "result": {
+        "type": "Text_excerpt",
+        "value": "**Note: This version is now depricated. Please use the new version of GenoGAM here: https://bioconductor.org/packages/release/bioc/html/GenoGAM.html or here: https://github.com/gstricker/GenoGAM** \n"
+      },
+      "source": "https://raw.githubusercontent.com/gstricker/fastGenoGAM/master/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "issue_tracker": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/gstricker/fastGenoGAM/issues"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "keywords": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": ""
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "fastGenoGAM"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "owner": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "User",
+        "value": "gstricker"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "programming_languages": [
+    {
+      "confidence": 1,
+      "result": {
+        "name": "R",
+        "size": 379301,
+        "type": "Programming_language",
+        "value": "R"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "C++",
+        "size": 10237,
+        "type": "Programming_language",
+        "value": "C++"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "readme_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/gstricker/fastGenoGAM/master/README.md"
+      },
+      "technique": "file_exploration"
+    }
+  ],
+  "somef_missing_categories": [
+    "citation",
+    "acknowledgement",
+    "run",
+    "download",
+    "requirements",
+    "contact",
+    "contributors",
+    "documentation",
+    "license",
+    "support",
+    "identifier",
+    "has_build_file",
+    "executable_example"
+  ],
+  "somef_provenance": {
+    "date": "2024-11-04 07:44:04",
+    "somef_schema_version": "1.0.0",
+    "somef_version": "0.9.5"
+  },
+  "stargazers_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 0
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "usage": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Getting started",
+        "parent_header": [
+          "Quick guide (with HDF5)"
+        ],
+        "type": "Text_excerpt",
+        "value": "The example dataset that is part of the package is restricted to the first 100kb of the first yeast chromosome. \n\n1. We set some meta variables\n\n```r\nlibrary(fastGenoGAM)\n\n## A.\n## specify folder and experiment design path\nwd <- system.file(\"extdata/Set1\", package='fastGenoGAM')\nfolder <- file.path(wd, \"bam\")\nexpDesign <- file.path(wd, \"experimentDesign.txt\")\n\n## B.\n## set HDF5 folder where the data will be stored\n## Note, don't usually use /tmp because otherwise all your data and results get deleted later\nhdf5_folder <- tempdir()\nsettings <- GenoGAMSettings(hdf5Control = list(dir = hdf5_folder))\n\n## C. \n## register parallel backend (default is \"the number of cores\" - 2)\n## Here we also use the SnowParam backend which is advised for larger data\n## For yeast MulticoreParam should also do fine\nBiocParallel::register(BiocParallel::SnowParam(worker = 2))\n\n## D.\n## specify chunk and overhang size. It is possible to skip this,\n## but the automatic specification would prevent us from using\n## multiple tiles in such a small example.\nchunkSize <- 50000\noverhangSize <- 1000\n\n## E.\n## the experiment design reflecting the underlying GAM\n## x = position\ndesign <- ~ s(x) + s(x, by = genotype)\n```\n\n2. Read in the data to obtain a `GenoGAMDataSet` object.\nWarnings about out-of-bound ranges can be ignored, as they occur during the \nshifting process when the genome gets tiled. It is trimmed accordingly. I have not yet figured out how to silent those warnings.\nThe usual `suppressWarnings` does not seem to work in the parallel Snow environment.\n\n```r\n## build the GenoGAMDataSet with HDF5 backend\nggd <- GenoGAMDataSet(\n  expDesign, directory = folder,\n  chunkSize = chunkSize, overhangSize = overhangSize,\n  design = design,\n  settings = settings, hdf5 = TRUE\n)\n```\n\n3. Compute Size factors\n\n```r\n## compute size factors\nggd <- computeSizeFactors(ggd)\n```\n"
+      },
+      "source": "https://raw.githubusercontent.com/gstricker/fastGenoGAM/master/README.md",
+      "technique": "header_analysis"
+    }
+  ]
+}

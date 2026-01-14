@@ -1,0 +1,338 @@
+{
+  "code_repository": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/reconhub/trendbreaker"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_created": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2020-05-28T20:39:44Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_updated": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2024-04-01T00:24:41Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "description": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "Analysing epidemic trends using AutoML approaches."
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 0.9765549348435302,
+      "result": {
+        "original_header": "trendbreaker",
+        "type": "Text_excerpt",
+        "value": "\nThe *trendbreaker* package implements tools for detecting changes in\ntemporal trends of a single response variable. It implements the\n**A**utomatic **S**election of **M**odels and **O**utlier **De**tection\nfor **E**pidemmics (ASMODEE), an algorithm originally designed for\ndetecting changes in COVID-19 case incidence. \n1.  defining a training set excluding the last *k* data points\n2.  identifying the temporal trend in the training set by fitting a\n    range of (user-specified) models to the data and retaining the best\n    predicting / fitting model\n3.  calculating the prediction interval (PI) of the temporal trend\n4.  classifying any data point outside the PI as outlier \nThe algorithm can be applied with fixed, user-specified value of *k*, so\nas to monitor potential changes in this recent time period.\nAlternatively, the optimal value of *k* can be determined automatically. \n**Disclaimer:** this is work in progress. Please reach out to the\nauthors before using this package. Also note this package may soon be\nrenamed to avoid clashes with other projects and reflect a more general\nscope.\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/reconhub/trendbreaker/master/README.Rmd",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9611428483114335,
+      "result": {
+        "original_header": "ASMODEE",
+        "type": "Text_excerpt",
+        "value": "We illustrate ASMODEE using publicly available NHS pathways data\nrecording self-reporting of potential COVID-19 cases in England (see\n`?nhs_pathways_covid19` for more information).\n``` r\nlibrary(trendbreaker) # for ASMODEE\nlibrary(dplyr)        # for data manipulation\n#> \n#> Attaching package: 'dplyr'\n#> The following objects are masked from 'package:stats':\n#> \n#>     filter, lag\n#> The following objects are masked from 'package:base':\n#> \n#>     intersect, setdiff, setequal, union\nlibrary(future)\nplan(\"multisession\")\n\n# load data\ndata(nhs_pathways_covid19)\n\n# select last 6 weeks of data\nfirst_date <- max(nhs_pathways_covid19$date, na.rm = TRUE) - 6*7\npathways_recent <- nhs_pathways_covid19 %>%\n  filter(date >= first_date)\n\n# define candidate models\nmodels <- list(\n  regression = lm_model(count ~ day),\n  poisson_constant = glm_model(count ~ 1, family = \"poisson\"),\n  negbin_time = glm_nb_model(count ~ day),\n  negbin_time_weekday = glm_nb_model(count ~ day + weekday)\n)\n\n# analyses on all data\ncounts_overall <- pathways_recent %>%\n  group_by(date, day, weekday) %>%\n  summarise(count = sum(count))\n#> `summarise()` has grouped output by 'date', 'day'. You can override using the `.groups` argument.\n\n# results with fixed 'k' = 7\nres <- asmodee(\n  counts_overall,\n  models,\n  k = 7,\n  date_index = \"date\",\n  method = evaluate_aic,\n  simulate_pi = TRUE\n)\nres\n#> $k\n#> [1] 7\n#> \n#> $model_name\n#> [1] \"negbin_time_weekday\"\n#> \n#> $trending_model_fit\n#> $fitted_model\n#> \n#> Call:  MASS::glm.nb(formula = count ~ day + weekday, data = data, init.theta = 76.80468966, \n#>     link = log)\n#> \n#> Coefficients:\n#>    (Intercept)             day   weekdaymonday  weekdayweekend  \n#>       10.81062        -0.02057         0.24398        -0.11588  \n#> \n#> Degrees of Freedom: 35 Total (i.e. Null);  32 Residual\n#> Null Deviance:       186.5 \n#> Residual Deviance: 36.09     AIC: 665.4\n#> \n#> $predict\n#> function (newdata, alpha = 0.05, add_pi = TRUE, simulate_pi = TRUE, \n#>     uncertain = TRUE) \n#> {\n#>     if (missing(newdata)) {\n#>         newdata <- data[all.vars(formula(model))]\n#>     }\n#>     result <- add_confidence_interval(model, newdata, alpha)\n#>     if (add_pi) {\n#>         if (simulate_pi) {\n#>             result <- add_prediction_interval(model, result, \n#>                 alpha, simulate_pi, uncertain)\n#>         }\n#>         else {\n#>             result <- add_prediction_interval(model, result, \n#>                 alpha, simulate_pi, uncertain)\n#>         }\n#>     }\n#>     result\n#> }\n#> <bytecode: 0x55b9ff02fac0>\n#> <environment: 0x55b9fe1ae7c0>\n#> \n#> attr(,\"class\")\n#> [1] \"trending_model_fit\" \"list\"              \n#> \n#> $alpha\n#> [1] 0.05\n#> \n#> $results\n#> # A tibble: 43 x 12\n#>    date         day weekday  count .training estimate lower_ci upper_ci lower_pi\n#>    <date>     <int> <fct>    <int> <lgl>        <dbl>    <dbl>    <dbl>    <dbl>\n#>  1 2020-04-16    29 rest_of\u2026 29497 TRUE        27288.   25091.   29678.    21369\n#>  2 2020-04-17    30 rest_of\u2026 27007 TRUE        26733.   24653.   28988.    20738\n#>  3 2020-04-18    31 weekend  25453 TRUE        23323.   21284.   25557.    17952\n#>  4 2020-04-19    32 weekend  23387 TRUE        22848.   20896.   24983.    17627\n#>  5 2020-04-20    33 monday   29287 TRUE        32078.   28549.   36043.    24920\n#>  6 2020-04-21    34 rest_of\u2026 23134 TRUE        24621.   22957.   26406.    19268\n#>  7 2020-04-22    35 rest_of\u2026 21803 TRUE        24120.   22547.   25803.    18934\n#>  8 2020-04-23    36 rest_of\u2026 22298 TRUE        23629.   22141.   25218.    18527\n#>  9 2020-04-24    37 rest_of\u2026 22027 TRUE        23148.   21740.   24648.    17732\n#> 10 2020-04-25    38 weekend  18861 TRUE        20196.   18665.   21852.    15443\n#> # \u2026 with 33 more rows, and 3 more variables: upper_pi <dbl>, outlier <lgl>,\n#> #   classification <fct>\n#> \n#> $date_index\n#> [1] \"date\"\n#> \n#> $last_training_date\n#> [1] \"2020-05-21\"\n#> \n#> $first_testing_date\n#> [1] \"2020-05-22\"\n#> \n#> $.fitted_results\n#> NULL\n#> \n#> attr(,\"class\")\n#> [1] \"trendbreaker\" \"list\"\nplot(res, \"date\")\n```\n \nASMODEE would typically be more useful to investigate shifts in temporal\ntrends from a large number of time series (e.g.\u00a0at a fine geographic\nscale). To make this sort of analysis easier *trendbreaker* also works\nwith [*incidence2*](https://github.com/reconhub/incidence2/) objects. To\nillustrate this we can consider trends over NHS regions.\n``` r\nlibrary(incidence2)   # for `incidence()` objects\n\n# select last 6 weeks of data\nfirst_date <- max(nhs_pathways_covid19$date, na.rm = TRUE) - 6*7\npathways_recent <- filter(nhs_pathways_covid19, date >= first_date)\n\n# create incidence object with extra variables\nlookup <- select(pathways_recent, date, day, weekday) %>%  distinct()\n\ndat <-\n  pathways_recent %>%\n  incidence(date_index = date, groups = nhs_region, count = count) %>%\n  left_join(lookup, by = c(\"date_index\" = \"date\"))\n\n# define candidate models\nmodels <- list(\n  regression = lm_model(count ~ day),\n  poisson_constant = glm_model(count ~ 1, family = \"poisson\"),\n  negbin_time = glm_nb_model(count ~ day),\n  negbin_time_weekday = glm_nb_model(count ~ day + weekday)\n)\n\n# analyses on all data\nres <- asmodee(dat, models, method = evaluate_aic, k = 7)\n\nplot(res)\n```\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/reconhub/trendbreaker/master/README.Rmd",
+      "technique": "supervised_classification"
+    }
+  ],
+  "download_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/reconhub/trendbreaker/releases"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 7
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/reconhub/trendbreaker/forks"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "reconhub/trendbreaker"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_title": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "trendbreaker"
+      },
+      "source": "https://raw.githubusercontent.com/reconhub/trendbreaker/master/README.Rmd",
+      "technique": "regular_expression"
+    }
+  ],
+  "identifier": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://doi.org/10.5281/zenodo.3888494"
+      },
+      "source": "https://raw.githubusercontent.com/reconhub/trendbreaker/master/README.Rmd",
+      "technique": "regular_expression"
+    }
+  ],
+  "images": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/reconhub/trendbreaker/master/man/figures/README-asmodee-1.png"
+      },
+      "source": "https://raw.githubusercontent.com/reconhub/trendbreaker/master/README.Rmd",
+      "technique": "regular_expression"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/reconhub/trendbreaker/master/man/figures/README-incidence2-1.png"
+      },
+      "source": "https://raw.githubusercontent.com/reconhub/trendbreaker/master/README.Rmd",
+      "technique": "regular_expression"
+    }
+  ],
+  "installation": [
+    {
+      "confidence": 0.9808349118504707,
+      "result": {
+        "original_header": "trendbreaker",
+        "type": "Text_excerpt",
+        "value": "[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.3888494.svg)](https://doi.org/10.5281/zenodo.3888494)\n[![R build\nstatus](https://github.com/reconhub/trendbreaker/workflows/R-CMD-check/badge.svg)](https://github.com/reconhub/trendbreaker/actions)\n[![Codecov test\ncoverage](https://codecov.io/gh/reconhub/trendbreaker/branch/master/graph/badge.svg)](https://codecov.io/gh/reconhub/trendbreaker?branch=master)\n[![R-CMD-check](https://github.com/reconhub/trendbreaker/workflows/R-CMD-check/badge.svg)](https://github.com/reconhub/trendbreaker/actions) \n**Disclaimer:** this is work in progress. Please reach out to the\nauthors before using this package. Also note this package may soon be\nrenamed to avoid clashes with other projects and reflect a more general\nscope.\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/reconhub/trendbreaker/master/README.Rmd",
+      "technique": "supervised_classification"
+    }
+  ],
+  "issue_tracker": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/reconhub/trendbreaker/issues"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "keywords": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": ""
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "license": [
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Other",
+        "spdx_id": "NOASSERTION",
+        "type": "License",
+        "url": null,
+        "value": null
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "File_dump",
+        "value": "YEAR: 2020\nCOPYRIGHT HOLDER: Epichange Contributors\n"
+      },
+      "source": "https://raw.githubusercontent.com/reconhub/trendbreaker/master/LICENSE",
+      "technique": "file_exploration"
+    }
+  ],
+  "name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "trendbreaker"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "owner": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Organization",
+        "value": "reconhub"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "programming_languages": [
+    {
+      "confidence": 1,
+      "result": {
+        "name": "R",
+        "size": 45891,
+        "type": "Programming_language",
+        "value": "R"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "readme_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/reconhub/trendbreaker/master/README.Rmd"
+      },
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/reconhub/trendbreaker/master/README.md"
+      },
+      "technique": "file_exploration"
+    }
+  ],
+  "releases": [
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "thibautjombart",
+          "type": "User"
+        },
+        "date_created": "2021-03-18T22:52:00Z",
+        "date_published": "2021-04-23T13:31:54Z",
+        "description": "This release implements the method as described in the initial publication describing ASMODEE (Jombart et al. (2021) Phil Trans B)",
+        "html_url": "https://github.com/reconhub/trendbreaker/releases/tag/initial_version",
+        "name": "Initial (published) version",
+        "release_id": 41903842,
+        "tag": "initial_version",
+        "tarball_url": "https://api.github.com/repos/reconhub/trendbreaker/tarball/initial_version",
+        "type": "Release",
+        "url": "https://api.github.com/repos/reconhub/trendbreaker/releases/41903842",
+        "value": "https://api.github.com/repos/reconhub/trendbreaker/releases/41903842",
+        "zipball_url": "https://api.github.com/repos/reconhub/trendbreaker/zipball/initial_version"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "thibautjombart",
+          "type": "User"
+        },
+        "date_created": "2020-06-10T15:12:58Z",
+        "date_published": "2020-06-10T15:21:58Z",
+        "description": "\r\nversion 0.1.0 (10 June 2020)\r\n----------------------------\r\n\r\nThis is the first release of the package, after renaming from a temporary name\r\n*epichange*. Some elements of the API may change, but core functionalities are\r\navailable and documented. \r\n\r\n\r\n### Main features\r\n\r\n* `asmodee`: implements the Automatic Selection of Models and Outlier DEtection\r\nfor Epidemics\r\n\r\n* `evaluate_models`: a function to compare different models using\r\ncross-validation or goodness-of-fit criteria\r\n\r\n* `select_model`: a function to select the\r\nbest-fitting/best-predicting model from a range of user-specified\r\nmodels\r\n\r\n* `detect_changepoint`: a function to detect the points at which\r\nrecent data deviate from previous temporal trends using a fitted\r\nmodel and data\r\n\r\n* `detect_outliers`: a function to identify outliers using a fitted\r\nmodel and data\r\n",
+        "html_url": "https://github.com/reconhub/trendbreaker/releases/tag/0.1.0",
+        "name": "First release",
+        "release_id": 27417032,
+        "tag": "0.1.0",
+        "tarball_url": "https://api.github.com/repos/reconhub/trendbreaker/tarball/0.1.0",
+        "type": "Release",
+        "url": "https://api.github.com/repos/reconhub/trendbreaker/releases/27417032",
+        "value": "https://api.github.com/repos/reconhub/trendbreaker/releases/27417032",
+        "zipball_url": "https://api.github.com/repos/reconhub/trendbreaker/zipball/0.1.0"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "somef_missing_categories": [
+    "citation",
+    "acknowledgement",
+    "run",
+    "download",
+    "requirements",
+    "contact",
+    "contributors",
+    "documentation",
+    "faq",
+    "support",
+    "has_build_file",
+    "executable_example"
+  ],
+  "somef_provenance": {
+    "date": "2024-10-06 10:30:32",
+    "somef_schema_version": "1.0.0",
+    "somef_version": "0.9.5"
+  },
+  "stargazers_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 18
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "usage": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Getting started",
+        "parent_header": [
+          "trendbreaker"
+        ],
+        "type": "Text_excerpt",
+        "value": "Once it is released on [CRAN](https://CRAN.R-project.org), you will be\nable to install the stable version of the package with:\n\n``` r\ninstall.packages(\"trendbreaker\")\n```\n\nThe development version can be installed from\n[GitHub](https://github.com/) with:\n\n``` r\nif (!require(remotes)) {\n  install.packages(\"remotes\")\n}\nremotes::install_github(\"reconhub/trendbreaker\")\n```\n\nThe best place to start for using this package is to read the\ndocumentation of the function `asmodee` and run its example:\n\n``` r\nlibrary(trendbreaker)\n?asmodee\nexample(asmodee)\n```\n"
+      },
+      "source": "https://raw.githubusercontent.com/reconhub/trendbreaker/master/README.Rmd",
+      "technique": "header_analysis"
+    }
+  ]
+}

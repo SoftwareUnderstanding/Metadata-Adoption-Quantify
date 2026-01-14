@@ -1,0 +1,302 @@
+{
+  "citation": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "References",
+        "parent_header": [
+          "intCC"
+        ],
+        "type": "Text_excerpt",
+        "value": "C. Huang and P. Kuan. (2023). intCC: An efficient weighted integrative consensus clustering of multimodal data. Submitted.\n\nA. Cabassi and P. D. Kirk. (2020). Multiple kernel learning for integrative consensus clustering of omic datasets. Bioinformatics 36, 4789.\n"
+      },
+      "source": "https://raw.githubusercontent.com/candsj/intCC/main/README.html",
+      "technique": "header_analysis"
+    }
+  ],
+  "code_repository": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/candsj/intCC"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_created": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2022-11-06T21:41:03Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_updated": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2023-07-22T11:33:55Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "description": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Introduction",
+        "parent_header": [
+          "intCC"
+        ],
+        "type": "Text_excerpt",
+        "value": "Analysis of omic datasets has become more and more important recently. It could help to define cancer subtypes and reveal novel discoveries. How to integrate omic datasets raised much-growing attention. The Cancer Genome Atlas Program began in 2006 and generated over 2.5 petabytes of genomic, epigenomic, transcriptomic, and proteomic data. This greatly improved the development of omic datasets research. Various integrative clustering methods and tools have been proposed. We proposed 2 layer intCC method to deal with some limitations existed.\n"
+      },
+      "source": "https://raw.githubusercontent.com/candsj/intCC/main/README.html",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 0.9770143846414294,
+      "result": {
+        "original_header": "How intCC works",
+        "type": "Text_excerpt",
+        "value": "First, we load four different type datasets with the same clustering structure (3 clusters of equal size) and different levels of noise.\n```r\n  load(system.file(\"extdata\", \"exampleData.RData\", package = \"intCC\"))\n  normData=exampleData[[1]]\n  binomData=exampleData[[2]]\n  poisData=exampleData[[3]]\n  multData=exampleData[[4]]\n  lopoisData=log(poisData+1)\n```\nSuppoese we only want to apply one method like k-means to each dataset. We could use the `consensusclustering` function to compute a consensus matrix for each dataset. The function will return a list of consensus matrix and clustering result.\n```r\n  normRes=consensuscluster(normData,K=3,B=1000,pItem = 0.8,pFeature = 0.8 ,clMethod =\"kmeans\",finalclmethod=\"pam\")\n  binomRes=consensuscluster(binomData,K=3,B=1000,pItem = 0.8,pFeature = 0.8 ,clMethod =\"kmeans\",finalclmethod=\"pam\")\n  poisRes=consensuscluster(lopoisData,K=3,B=1000,pItem = 0.8,pFeature = 0.8 ,clMethod =\"kmeans\",finalclmethod=\"pam\")\n  multRes=consensuscluster(multData,K=3,B=1000,pItem = 0.8,pFeature = 0.8 ,clMethod =\"kmeans\",finalclmethod=\"pam\")\n```\nThen we could perform 1 layer intCC. We combine consensus clustering results from 4 datasets and calculate the weight for each dataset. Then we calculate the weighted consensus matrix and apply pam method to derive the final clustering result.\n```r\n  #combine consensus clustering results \n  res_1layer <- c(list(normRes),list(binomRes),list(poisRes),list(multRes))\n\n  #calculate weight and weighted consensus matrix\n  weights <-weightcal(res.1layer)\n  wcm=weights[1]*res.1layer[[1]]$consensusMatrix+weights[2]*res.1layer[[2]]$consensusMatrix+\n    weights[3]*res.1layer[[3]]$consensusMatrix+weights[4]*res.1layer[[4]]$consensusMatrix\n  \n  #apply pam method to derive the final clustering result\n  distances <- stats::as.dist(1 - wcm)\n  weight_clusterLabels <- pam(distances,3,diss = TRUE,metric = \"euclidean\" )$clustering\n  ari.weight<- adjustedRandIndex(true.class, weight_clusterLabels)\n```\nThe same can be done simply using the function `intCC`. The function returns clustering results, weights and weighted consensus matrix.\n```r\n  #1 layer\n  res.1layer <- intCC(exampleData, method=\"1 layer\", individualK = rep(3, 4),\n                                   globalK = 3, pFeature = 0.8 ,ccClMethods = \"kmeans\",\n                                    ccDistHCs = \"euclidean\",hclustMethod = \"average\",finalclmethod=\"hclust\",\n                                    finalhclustMethod = \"average\",Silhouette=TRUE)\n```\nSuppose we don't know which clustering method is better and want to apply two methods like k-means and hierarchical clustering to each dataset. As we already finished the consensus clustering using k-means method, we do the consensus clustering using hierarchical clustering first.\n```r\n  normRes1=consensuscluster(normData,K=3,B=1000,pItem = 0.8,pFeature = 0.8 ,clMethod =\"hclust\",finalclmethod=\"pam\")\n  binomRes1=consensuscluster(binomData,K=3,B=1000,pItem = 0.8,pFeature = 0.8 ,clMethod =\"hclust\",dist = \"binary\",finalclmethod=\"pam\")\n  poisRes1=consensuscluster(poisData,K=3,B=1000,pItem = 0.8,pFeature = 0.8 ,clMethod =\"hclust\",dist = \"jaccard\",finalclmethod=\"pam\")\n  multRes1=consensuscluster(multData,K=3,B=1000,pItem = 0.8,pFeature = 0.8 ,clMethod =\"hclust\",dist = \"hamming\",finalclmethod=\"pam\")\n```\nThen we could perform 2 layer intCC. We combine k-means consensus clustering result and hierarchical clustering consensus clustering result for each dataset first and then apply pam method to each weighted consensus matrix. \n```r\n  #norm\n  #combine results using 2 methods\n  res.norm <- c(list(normRes),list(normRes1))\n  #calculate the weight and weighted consensus matrix\n  weight.norm<- weightcal(res.norm)\n  wcm=weight.norm[1]*res.norm[[1]]$consensusMatrix+weight.norm[2]*res.norm[[2]]$consensusMatrix\n  #apply pam method to weighted consensus matrix\n  distances <- stats::as.dist(1 - wcm)\n  weight_clusterLabels <-pam(distances,3,diss = TRUE,metric = \"euclidean\" )$clustering\n  weightnormRes=list(consensusMatrix=wcm,class=weight_clusterLabels)\n  \n  #binom\n  #combine results using 2 methods\n  res.binom <- c(list(binomRes),list(binomRes1))\n  #calculate the weight and weighted consensus matrix\n  weight.binom <- weightcal(res.binom)\n  wcm=weight.binom[1]*res.binom[[1]]$consensusMatrix+weight.binom[2]*res.binom[[2]]$consensusMatrix\n  #apply pam method to weighted consensus matrix\n  distances <- stats::as.dist(1 - wcm)\n  weight_clusterLabels <- pam(distances,3,diss = TRUE,metric = \"euclidean\" )$clustering\n  weightbinomRes=list(consensusMatrix=wcm,class=weight_clusterLabels)\n  \n  #poisson\n  #combine results using 2 methods\n  res.pois <- c(list(poisRes),list(poisRes1))\n  #calculate the weight and weighted consensus matrix\n  weight.pois <- weightcal(res.pois)\n  wcm=weight.pois[1]*res.pois[[1]]$consensusMatrix+weight.pois[2]*res.pois[[2]]$consensusMatrix\n  #apply pam method to weighted consensus matrix\n  distances <- stats::as.dist(1 - wcm)\n  weight_clusterLabels <-pam(distances,3,diss = TRUE,metric = \"euclidean\" )$clustering\n  weightpoisRes=list(consensusMatrix=wcm,class=weight_clusterLabels)\n  \n  #mult\n  #combine results using 2 methods\n  res.mult <- c(list(multRes),list(multRes1))\n  #calculate the weight and weighted consensus matrix\n  weight.mult <- weightcal(res.mult)\n  wcm=weight.mult[1]*res.mult[[1]]$consensusMatrix+weight.mult[2]*res.mult[[2]]$consensusMatrix\n  #apply pam method to weighted consensus matrix\n  distances <- stats::as.dist(1 - wcm)\n  weight_clusterLabels <- pam(distances,3,diss = TRUE,metric = \"euclidean\" )$clustering\n  weightmultRes=list(consensusMatrix=wcm,class=weight_clusterLabels)\n```\nWe combine weighted consensus clustering results from 4 datasets and calculate the weight for each dataset. Then we calculate the weighted of weighted consensus matrix and apply pam method to derive the final clustering result.\n```r\n  #2 layer intCC\n  #combine weighted consensus clustering results\n  res.2layer <- c(list(weightnormRes),list(weightbinomRes),list(weightpoisRes),list(weightmultRes))\n\n  #calculate weight and the weighted of weighted consensus matrix\n  weight.wcm <- weightcal(res.2layer)\n  wcm=weight.wcm[1]*res.2layer[[1]]$consensusMatrix+weight.wcm[2]*res.2layer[[2]]$consensusMatrix+\n    weight.wcm[3]*res.2layer[[3]]$consensusMatrix+weight.wcm[4]*res.2layer[[4]]$consensusMatrix\n  \n  #apply pam method to derive the final clustering result\n  distances <- stats::as.dist(1 - wcm)\n  weight_clusterLabels <- pam(distances,3,diss = TRUE,metric = \"euclidean\" )$clustering\n  ari.wcm <- adjustedRandIndex(true.class, weight_clusterLabels)\n```\nThe same can be done simply using the function `intCC`.\n```r\n  #2 layer\n  data_for_intCC <- list()\n  data_for_intCC[[1]]=normData\n  data_for_intCC[[2]]=binomData\n  data_for_intCC[[3]]=lopoisData\n  data_for_intCC[[4]]=multData\n  data_for_intCC[[5]]=normData\n  data_for_intCC[[6]]=binomData\n  data_for_intCC[[7]]=poisData\n  data_for_intCC[[8]]=multData\n  res.2layer <- intCC(data_for_intCC, method=\"2 layer\", individualK = rep(3, 8),\n                     globalK = 3, pFeature = 0.8 ,ccClMethods = c(\"kmeans\",\"kmeans\",\"kmeans\",\"kmeans\",\n                                                                  \"hclust\",\"hclust\",\"hclust\",\"hclust\"),\n                     ccDistHCs = c(\"euclidean\",\"euclidean\",\"euclidean\",\"euclidean\",\n                                   \"euclidean\",\"binary\",\"jaccard\",\"hamming\"),hclustMethod =   \"average\",finalclmethod=\"hclust\",finalhclustMethod = \"average\",Silhouette=TRUE)\n```\nHeatmap could be generated by `plot_CM` function. `plot_CM` function will return a heatmap of consensus matrix if only consensus clustering result provided.\n```r\n#Heatmap for consensus matrix\nplot_CM(result=normRes)\n```\n`plot_CM` function will return a heatmap of consensus matrix and a heatmap of dataset if both original dataset and consensus clustering result provided.\n```r\n#Heatmap for consensus matrix and dataset if dataset provided\nplot_CM(data=normData,result=normRes)\n```\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/candsj/intCC/main/README.html",
+      "technique": "supervised_classification"
+    }
+  ],
+  "download_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/candsj/intCC/releases"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 0
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/candsj/intCC/forks"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "candsj/intCC"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_title": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "intCC"
+      },
+      "source": "https://raw.githubusercontent.com/candsj/intCC/main/README.html",
+      "technique": "regular_expression"
+    }
+  ],
+  "installation": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Installation",
+        "parent_header": [
+          "intCC"
+        ],
+        "type": "Text_excerpt",
+        "value": "You can install the development version of intCC from\n[GitHub](https://github.com/) with:\n\n``` r\n# install.packages(\"devtools\")\ndevtools::install_github(\"candsj/intCC\")\n```\n\n```r\nlibrary(\"intCC\")\n```\n\n"
+      },
+      "source": "https://raw.githubusercontent.com/candsj/intCC/main/README.html",
+      "technique": "header_analysis"
+    }
+  ],
+  "issue_tracker": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/candsj/intCC/issues"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "keywords": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": ""
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "license": [
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Other",
+        "spdx_id": "NOASSERTION",
+        "type": "License",
+        "url": null,
+        "value": null
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "File_dump",
+        "value": "YEAR: 2022\nCOPYRIGHT HOLDER: weightedCC authors\n"
+      },
+      "source": "https://raw.githubusercontent.com/candsj/intCC/main/LICENSE",
+      "technique": "file_exploration"
+    }
+  ],
+  "name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "intCC"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "owner": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "User",
+        "value": "candsj"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "programming_languages": [
+    {
+      "confidence": 1,
+      "result": {
+        "name": "HTML",
+        "size": 732957,
+        "type": "Programming_language",
+        "value": "HTML"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "R",
+        "size": 81249,
+        "type": "Programming_language",
+        "value": "R"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "readme_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/candsj/intCC/main/README.html"
+      },
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/candsj/intCC/main/README.Rmd"
+      },
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/candsj/intCC/main/README.md"
+      },
+      "technique": "file_exploration"
+    }
+  ],
+  "somef_missing_categories": [
+    "acknowledgement",
+    "run",
+    "download",
+    "requirements",
+    "contact",
+    "contributors",
+    "documentation",
+    "faq",
+    "support",
+    "identifier",
+    "has_build_file",
+    "executable_example"
+  ],
+  "somef_provenance": {
+    "date": "2024-10-03 23:32:18",
+    "somef_schema_version": "1.0.0",
+    "somef_version": "0.9.5"
+  },
+  "stargazers_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 0
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "type": [
+    {
+      "confidence": 0.82,
+      "result": {
+        "type": "String",
+        "value": "commandline-application"
+      },
+      "technique": "software_type_heuristics"
+    }
+  ],
+  "usage": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Usage of intCC",
+        "parent_header": [
+          "intCC"
+        ],
+        "type": "Text_excerpt",
+        "value": "The R package **intCC** (**i**ntegrative **C**onsensus **C**lustering) introduces intCC functions inspired by consensus clustering methods.\n\nThe main function in this package is `intCC`. Users input a list of datasets, clustering methods, the number of clutsers for separate datasets and global, criterions and so on. Then consensus clustering will be applied to each dataset to derive consensus matrix. Depends on 1 layer or 2 layer, consensus matrix will be weighted and combined for each dataset and final clustering. Finally user could choose pam or hierarchical clustering method to derive the clustering results. Some useful functions are also included in this package: \n\n* `criterion`. This function takes a list of consensus matrix, a list of corresponding clustering label results and a vector of corresponding number of clusters. It could use Silhouette, widestGap, dunns and dunn2s index as criterion to choose the best number of clusters.\n\n* `weightcal`. This function takes a list of consensus matrix and clustering label results. Then weights are calculated based on ratio of in-cluster proportion to out-of-cluster proportion using the cluster estimated by the algorithm itself. It could help to estimate weights for different methods of each methods or weights for consensus matrix of each dataset.\n\n* `plot_CM`. This function takes a list of consensus matrix and clustering label results and dataset if provided. Then heatmap could be generated for consensus matrix and dataset if provided.\n\nThe other function needed for this is `consensusCluster`. This function can be found in the R package `coca` and is used to perform consensus clustering on one dataset and obtain a co-clustering matrix  (Monti et al. 2003). We made some changes to this function to allow users to define more distance metric and sample percentage for features.\n\n"
+      },
+      "source": "https://raw.githubusercontent.com/candsj/intCC/main/README.html",
+      "technique": "header_analysis"
+    }
+  ]
+}

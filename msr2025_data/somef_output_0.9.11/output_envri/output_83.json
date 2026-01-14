@@ -1,0 +1,478 @@
+{
+  "acknowledgement": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "EU Acknowledgement",
+        "parent_header": [
+          "ODALA Mobility Data Toolkit"
+        ],
+        "type": "Text_excerpt",
+        "value": "The contents of this publication are the sole responsibility of the authors and do not necessarily reflect the opinion of the European Union.\n\nThis project has received funding from the European Union\u2019s \u201cThe Connecting Europe Facility (CEF) in Telecom\u201d programme under Grant Agreement number: INEA/CEF/ICT/A2019/2063604\n![](https://ec.europa.eu/inea/sites/default/files/ceflogos/en_horizontal_cef_logo_2.png)\n"
+      },
+      "source": "https://raw.githubusercontent.com/nec-research/mobility-toolkit/master/README.md",
+      "technique": "header_analysis"
+    }
+  ],
+  "application_domain": [
+    {
+      "confidence": 0.8886799222627484,
+      "result": {
+        "type": "String",
+        "value": "Semantic web"
+      },
+      "technique": "supervised_classification"
+    }
+  ],
+  "code_repository": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/nec-research/mobility-toolkit"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_created": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2022-02-24T08:30:42Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_updated": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2023-05-09T16:02:43Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "description": [
+    {
+      "confidence": 0.9630602619353044,
+      "result": {
+        "original_header": "1. Overview and Components",
+        "type": "Text_excerpt",
+        "value": "The goal of the ODALA Mobility Data Toolkit (MDT) is to utilize multiple\navailable data sources to estimate real-time CO2 mobility footprints in form of\na \"Green Transport Twin\" for a city. Understanding CO2 footprints of cities\ntransportation networks is crucial to enable a green transformation of Europe as it\nhelps city legislators to take actions to reduce CO2 footprint and track\nprogress through time. \n![](doc/img/transport_emissions.png \"Worldwide emissions and emission trends from transportation sector.\")  \n*Figure 1. Worldwide emissions and emission trends from transportation sector. Transportation is one of the main drivers of emissions in the world.* \n1. **The NREL OpenPath framework (https://www.nrel.gov/transportation/openpath.html):** To collect\n   individual mobility traces directly from a smartphone application installed on the\n   end user devices of the citizens. The open-source framework is maintained by\n   the National Renewable Research Laboratory (NREL) with contributions by NEC: \n   - **OpenPath NGSI-LD Adapter:** An adapter developed by NEC in ODALA to push data from\n       the OpenPath ecosystem to an NGSI-LD context broker. To represent the\n       detailed timeseries data from OpenPath, we designed a new NGSI-LD entity\n       type named named *SectionObserved* that represents user sections from\n       OpenPath (i.e., a timeseries of coordinates that represents a section of a\n       user trip, e.g., a person taking a bus ride or drive in a car). In\n       *SectionObserved* we abstract such section to a simple GEOJson linestring,\n       which we obfuscate by changing the real start and end of the section is\n       randomly. This allows the sharing of such data, e.g., as open data, without\n       intruding into individuals privacy. \n2. **NGSI-LD Context Broker:** An NGSI-LD compliant context broker is needed to\n   let all components exchange data in NGSI-LD. We are using the open source\n   Scorpio broker (https://github.com/ScorpioBroker) that is maintained by NEC. \n\n3. **Green Transport Twin:** The Green Transport Twin (GTT) has the goal to\n   estimate the current CO2 footprint (Emission). GTT queries data from the\n   NGSI-LD context broker (TrafficFlowObserved, Vehicle and SectionObserved data types). For each\n   observed TrafficFlowObserved/Vehicle, it then uses close-by SectionObserved data if available\n   to estimate the approximate length of this specific TrafficFlowObserved/Vehicle observation. Recall that\n   TrafficFlowObserved/Vehicle data is obtained from fixed sensors in the city (e.g., magnetic loop\n   sensors, cameras, bicycle counters) and therefore cannot tell alone how long\n   the associated section/trip of an observation has been. E.g., if we observe\n   a car passing by, we do not know only from this observation of the car trip\n   has been 5km or 50km. However, this length is crucial for CO2 estimation.\n   Therefore we use the available SectionObserved data from OpenPath to\n   estimate the length of each TrafficFlowObserved/Vehicle observation. After we estimate the\n   length, we then calculate the CO2 footprint/emission using the\n   [transport-co2 library](https://pypi.org/project/transport-co2/). This\n   estimation is based on numbers provided by the European Environment Agency\n   (EEA) which provides CO2 per km numbers for different transport modes [on\n   their\n   website](https://www.eea.europa.eu/media/infographics/co2-emissions-from-passenger-transport/view).\n   We then push the estimated CO2 data to the NGSI-LD context broker using the\n   newly defined EmissionObserved data model.\n   - **Vehicle Simulator (optional):** We also developed a simple simulator to\n   generate data of the [FIWARE Vehicle\n   Type](https://github.com/FIWARE/data-models/blob/master/specs/Transportation/Vehicle/Vehicle/doc/spec.md).\n   This simulator allows the user to configure sensing points in arbitrary\n   places in the city and then uses a simple traffic model together with data\n   queried from OpenStreetMap to simulate sensed vehicles (e.g., cars, trucks,\n   bicycles...). Note that in an actual deployment, this simulator is not\n   needed, but deployment cities of the mobility data toolkit need simply to\n   push data of type *TrafficFlowObserved* or *Vehicle* to their NGSI-LD\n   context broker. Dependent on the city, this data can come from various\n   sensors such as magnetic loop sensors, traffic cameras, bicycle counters or\n   even manual traffic counting. \n4. **NGSI-LD adapters:** These adapters map and transform data to NGSI-LD in the\n   Vehicle and TrafficFlowObserved data models:   \n    - from [MDM](https://www.mdm-portal.de), the German National Access Point\n      for Mobility Data (mdm_adapter).\n    - from a NGSIv2 endpoint (ngsiv2_adapter) \n6. **Dash Dashboard:** To visualize the mobility data and the CO2 emissions, we employ\n   [Dash](https://github.com/plotly/dash). We developed an NGSI-LD plugin that\n   enables Dash to directly consume data from an NGSI-LD broker. See Figure 2\n   for an example visualisation of the ODALA deployment in Kiel.\n   ![](doc/img/dashboard.png \"Mobility Data Dashboard\")\n   *Figure 2. Mobility Data Dashboard* \n"
+      },
+      "source": "https://raw.githubusercontent.com/nec-research/mobility-toolkit/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.954083996742208,
+      "result": {
+        "original_header": "Appendix: Data Models",
+        "type": "Text_excerpt",
+        "value": "We are working on further refining SectionObserved and EmissionObserved so they\ncan become part of the official FIWARE smart data catalogue. \nSee below for example instantiations of these data models. \n"
+      },
+      "source": "https://raw.githubusercontent.com/nec-research/mobility-toolkit/master/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "download_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/nec-research/mobility-toolkit/releases"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "executable_example": [
+    {
+      "confidence": 1,
+      "result": {
+        "format": "jupyter_notebook",
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/nec-research/mobility-toolkit/master/emission_adapter/emission/analysis/classification/inference/Classifier.ipynb"
+      },
+      "source": "https://raw.githubusercontent.com/nec-research/mobility-toolkit/master/emission_adapter/emission/analysis/classification/inference/Classifier.ipynb",
+      "technique": "file_exploration"
+    }
+  ],
+  "forks_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 3
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/nec-research/mobility-toolkit/forks"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "nec-research/mobility-toolkit"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_title": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "ODALA Mobility Data Toolkit"
+      },
+      "source": "https://raw.githubusercontent.com/nec-research/mobility-toolkit/master/README.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "has_build_file": [
+    {
+      "confidence": 1,
+      "result": {
+        "format": "docker_compose",
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/nec-research/mobility-toolkit/master/docker-compose.yml"
+      },
+      "source": "https://raw.githubusercontent.com/nec-research/mobility-toolkit/master/docker-compose.yml",
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "format": "dockerfile",
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/nec-research/mobility-toolkit/master/ngsiv2_adapter/Dockerfile"
+      },
+      "source": "https://raw.githubusercontent.com/nec-research/mobility-toolkit/master/ngsiv2_adapter/Dockerfile",
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "format": "dockerfile",
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/nec-research/mobility-toolkit/master/mdm_adapter/Dockerfile"
+      },
+      "source": "https://raw.githubusercontent.com/nec-research/mobility-toolkit/master/mdm_adapter/Dockerfile",
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "format": "dockerfile",
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/nec-research/mobility-toolkit/master/green_transport_twin/Dockerfile"
+      },
+      "source": "https://raw.githubusercontent.com/nec-research/mobility-toolkit/master/green_transport_twin/Dockerfile",
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "format": "dockerfile",
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/nec-research/mobility-toolkit/master/ngsildmap/Dockerfile"
+      },
+      "source": "https://raw.githubusercontent.com/nec-research/mobility-toolkit/master/ngsildmap/Dockerfile",
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "format": "dockerfile",
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/nec-research/mobility-toolkit/master/emission_adapter/Dockerfile"
+      },
+      "source": "https://raw.githubusercontent.com/nec-research/mobility-toolkit/master/emission_adapter/Dockerfile",
+      "technique": "file_exploration"
+    }
+  ],
+  "has_script_file": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/nec-research/mobility-toolkit/master/build_deploy.sh"
+      },
+      "technique": "file_exploration"
+    }
+  ],
+  "images": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/nec-research/mobility-toolkit/master/doc/img/transport_emissions.png"
+      },
+      "source": "https://raw.githubusercontent.com/nec-research/mobility-toolkit/master/README.md",
+      "technique": "regular_expression"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/nec-research/mobility-toolkit/master/doc/img/overview.png"
+      },
+      "source": "https://raw.githubusercontent.com/nec-research/mobility-toolkit/master/README.md",
+      "technique": "regular_expression"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/nec-research/mobility-toolkit/master/doc/img/dashboard.png"
+      },
+      "source": "https://raw.githubusercontent.com/nec-research/mobility-toolkit/master/README.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "installation": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "File_dump",
+        "value": "### Instructions for Open Trip Planner Install\n\n\n\n# Download all of the following files to the same folder.\n\n1. Download the latest .jar file from http://dev.opentripplanner.org/jars/\n\n2. Download the open street data files for the areas you want from http://metro.teczno.com/\n\n3. Download the GTFS files for the public transportation agencies you want by googling \" <agency name> gtfs \" (no quotes)\n\t- Save them all as <name of your choice>.gtfs.zip \n\t(they will downnload as .zip files with long confusing names)\n\n\n\t- The agencies I have found for the bay area are : \n\t\t* BART\n\t\t* MUNI\n\t\t* AC Transit\n\t\t* Caltrain\n\t\t* Caltrain Shuttle\n\t\t* VTA\n\t\t* Sam Trans \n\n\t- Fot Denver I am using \n\t\t* RTD\n\n\n4. You need java 8 for the newer versions of open trip planner\n\n\tTo get java 8 run the following commands:\n\n\t$ sudo add-apt-repository ppa:webupd8team/java\n\t$ sudo apt-get update\n\t$ sudo apt-get install oracle-java8-installer"
+      },
+      "source": "https://raw.githubusercontent.com/nec-research/mobility-toolkit/master/emission_adapter/emission/net/ext_service/otp/otp_install.md",
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Manual Installation",
+        "parent_header": [
+          "ODALA Mobility Data Toolkit",
+          "2. Setup"
+        ],
+        "type": "Text_excerpt",
+        "value": "1. Install and deploy OpenPath. See [OpenPath\n   instructions](https://github.com/e-mission/e-mission-server#deployment) for\n   detailed steps. Docker container is available. Note that the Mobility Data\n   Toolkit will still work without this step, but the estimation of lengths of\n   Vehicle observations is only roughly estimated by putting a normal\n   distribution around average length trips for different transport modes.\n\n2. Install and deploy an NGSI-LD context broker. E.g., follow the instructions\n   for Scorpio\n   [here](https://github.com/ScorpioBroker/ScorpioBroker#installation-and-building).\n   Docker container is available.\n\n3. Push Vehicle or TrafficFlowObserved data to the NGSI-LD context broker or\n   try our the traffic simulation included in the Green Digital Twin to\n   simulate data. Note: For MDM data or NGSIv2 data you can simply use the\n   adapters available in this repository. If OpenPath is deployed, start the\n   NGSI-LD adapter that takes data from OpenPath and continuously publishes it\n   as SectionObserved entities in the context broker.\n\n4. Start the Green Transport Twin, e.g., by using docker or by manually\n   starting the python script.\n\n5. Start the Dash ngsildmap script and observe the CO2 data in the dashbaord :-)\n\n"
+      },
+      "source": "https://raw.githubusercontent.com/nec-research/mobility-toolkit/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Installation using docker-compose",
+        "parent_header": [
+          "ODALA Mobility Data Toolkit",
+          "2. Setup"
+        ],
+        "type": "Text_excerpt",
+        "value": "We also provide a docker-compose file that will fetch and start all the\nnecessary components automatically. Please note that this still requires the following manual steps:\n- set the necessary configuration for OpenPath (see OpenPath documentation for\nthat)\n- setup your existing sensing infrastructure to push data as [Vehicle type](https://github.com/FIWARE/data-models/blob/master/specs/Transportation/Vehicle/Vehicle/doc/spec.md)) to the NGSI-LD broker.\n\n"
+      },
+      "source": "https://raw.githubusercontent.com/nec-research/mobility-toolkit/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 0.9246162499631323,
+      "result": {
+        "original_header": "Appendix: Data Models",
+        "type": "Text_excerpt",
+        "value": "\n```python\nngsi_template_section_observed = {\n    \"id\": \"urn:section1\",\n    \"type\": \"SectionObserved\",\n    \"transportMode\": {\n        \"type\": \"Property\",\n        \"observedAt\": \"2021-03-24T12:10:00Z\",\n        \"value\": \"car\",\n    },\n    \"distance\": {\n        \"type\": \"Property\",\n        \"observedAt\": \"2021-03-24T12:10:00Z\",\n        \"value\": 3464,\n    },\n    \"duration\": {\n        \"type\": \"Property\",\n        \"observedAt\": \"2021-03-24T12:10:00Z\",\n        \"value\": 123,\n    },\n    \"speed\": {\"type\": \"Property\", \"observedAt\": \"2021-03-24T12:10:00Z\", \"value\": 40},\n    \"co2\": {\"type\": \"Property\", \"observedAt\": \"2021-03-24T12:10:00Z\", \"value\": 123},\n    \"location\": {\n        \"type\": \"GeoProperty\",\n        \"value\": {\n            \"type\": \"LineString\",\n            \"coordinates\": [[139.815535, 35.772622999999996], [139.815535, 35.774623]],\n        },\n    },\n    \"@context\": [\n        {\n            \"transportMode\": \"odala:transportMode\",\n            \"distance\": \"odala:distance\",\n            \"duration\": \"odala:duration\",\n            \"co2\": \"odala:co2\",\n            \"speed\": \"odala:speed\",\n        },\n        \"http://uri.etsi.org/ngsi-ld/v1/ngsi-ld-core-context.jsonld\",\n    ],\n}\n``` \n\n```python\nngsi_template_emissionobserved = {\n    \"id\": \"urn:ngsi-ld:EmissionObserved:emissionobserved1\",\n    \"type\": \"EmissionObserved\",\n    \"co2\": {\"type\": \"Property\", \"value\": 42, \"observedAt\": \"2018-09-27T12:00:00Z\"},\n    \"location\": {\n        \"type\": \"GeoProperty\",\n        \"value\": {\n            \"type\": \"Point\",\n            \"coordinates\": [-3.164485591715449, 40.62785133667262],\n        },\n        \"observedAt\": \"2018-09-27T12:00:00Z\",\n    },\n    \"@context\": [\n        \"https://raw.githubusercontent.com/smart-data-models/data-models/master/context.jsonld\",\n        \"https://uri.etsi.org/ngsi-ld/v1/ngsi-ld-core-context.jsonld\",\n    ],\n}\n\n``` \n"
+      },
+      "source": "https://raw.githubusercontent.com/nec-research/mobility-toolkit/master/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "issue_tracker": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/nec-research/mobility-toolkit/issues"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "keywords": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": ""
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "license": [
+    {
+      "confidence": 1,
+      "result": {
+        "name": "BSD 3-Clause \"New\" or \"Revised\" License",
+        "spdx_id": "BSD-3-Clause",
+        "type": "License",
+        "url": "https://api.github.com/licenses/bsd-3-clause",
+        "value": "https://api.github.com/licenses/bsd-3-clause"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "File_dump",
+        "value": "BSD 3-Clause License\n\nCopyright (c) 2021, NEC\nAll rights reserved.\n\nRedistribution and use in source and binary forms, with or without\nmodification, are permitted provided that the following conditions are met:\n\n1. Redistributions of source code must retain the above copyright notice, this\n   list of conditions and the following disclaimer.\n\n2. Redistributions in binary form must reproduce the above copyright notice,\n   this list of conditions and the following disclaimer in the documentation\n   and/or other materials provided with the distribution.\n\n3. Neither the name of the copyright holder nor the names of its\n   contributors may be used to endorse or promote products derived from\n   this software without specific prior written permission.\n\nTHIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS \"AS IS\"\nAND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE\nIMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE\nDISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE\nFOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL\nDAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR\nSERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER\nCAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,\nOR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE\nOF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.\n"
+      },
+      "source": "https://raw.githubusercontent.com/nec-research/mobility-toolkit/master/LICENSE",
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "License",
+        "parent_header": [
+          "ODALA Mobility Data Toolkit"
+        ],
+        "type": "Text_excerpt",
+        "value": "Mobility Data Toolkit is licensed under [BSD-3-Clause](https://spdx.org/licenses/BSD-3-Clause.html).\n\n\u00a9 2022 NEC\n\n"
+      },
+      "source": "https://raw.githubusercontent.com/nec-research/mobility-toolkit/master/README.md",
+      "technique": "header_analysis"
+    }
+  ],
+  "logo": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://ec.europa.eu/inea/sites/default/files/ceflogos/en_horizontal_cef_logo_2.png"
+      },
+      "source": "https://raw.githubusercontent.com/nec-research/mobility-toolkit/master/README.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "mobility-toolkit"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "owner": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Organization",
+        "value": "nec-research"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "programming_languages": [
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Jupyter Notebook",
+        "size": 4635727,
+        "type": "Programming_language",
+        "value": "Jupyter Notebook"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Python",
+        "size": 2009211,
+        "type": "Programming_language",
+        "value": "Python"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "HTML",
+        "size": 33879,
+        "type": "Programming_language",
+        "value": "HTML"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "CSS",
+        "size": 4642,
+        "type": "Programming_language",
+        "value": "CSS"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Dockerfile",
+        "size": 1918,
+        "type": "Programming_language",
+        "value": "Dockerfile"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Shell",
+        "size": 730,
+        "type": "Programming_language",
+        "value": "Shell"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "readme_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/nec-research/mobility-toolkit/master/README.md"
+      },
+      "technique": "file_exploration"
+    }
+  ],
+  "somef_missing_categories": [
+    "citation",
+    "run",
+    "download",
+    "requirements",
+    "contact",
+    "contributors",
+    "documentation",
+    "usage",
+    "faq",
+    "support",
+    "identifier"
+  ],
+  "somef_provenance": {
+    "date": "2024-10-03 23:11:24",
+    "somef_schema_version": "1.0.0",
+    "somef_version": "0.9.5"
+  },
+  "stargazers_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 3
+      },
+      "technique": "GitHub_API"
+    }
+  ]
+}

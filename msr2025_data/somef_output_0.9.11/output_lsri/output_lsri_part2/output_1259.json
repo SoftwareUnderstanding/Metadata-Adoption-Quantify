@@ -1,0 +1,217 @@
+{
+  "code_repository": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/haichangyao/SparkGC"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_created": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2022-06-18T08:07:01Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_updated": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2022-07-29T14:26:40Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "description": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "Spark Based Genome Compression for Large Collections of Genomes"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 0.8282296431871821,
+      "result": {
+        "type": "Text_excerpt",
+        "value": "\ufeff ****************************************************************************                             \r\n\t                              SparkGC\r\n  (Spark Based Genome Compression for Large Collections of Genomes)\r\n\r\n     https://github.com/haichangyao/SparkGC\r\n\r\n          Copyright (C) 2022                  \r\n****************************************************************************\r\n\r\n1. Introduction\r\n\r\n   -SparkGC is implemented with Java and can be run on Linux operating system.\r\n\r\n****************************************************************************\r\n2. Install\r\n   - install BSC\uff0cand configure environment variables\r\n   - install JDK-1.8.0\uff0cHadoop-3.1.3, and Spark-2.1.1\r\n****************************************************************************\r\n3. Use\r\n\r\n3.1 Compress\r\n\r\n3.1.1 FASTA\r\n\r\n    $SPARK_HOME/bin/spark-submit \\                  \r\n       --master {master_url}\\\r\n       --class (main_class_name} \\\r\n       --num-executors {number_of_executors} \\\r\n       --driver-memory {maximum_memory} \\\r\n       --executor-memory {maximum_memory} \\\r\n       compress.jar {reference-file} {to-be-compressed-file-directory} {compressed-file-directory}\r\n    \r\n\t$SPARK_HOME/bin/spark-submit: run the executor in spark_submit command;\r\n\t--master {master_url}\uff1a set the runnning environment of Spark; \r\n\t--class (main_class_name}: set the main class name of the executors; \r\n\t--num-executors {number_of_executors}: set the number of executors run the application; \r\n\t--driver-memory {maximum_memory}: set the maximum memory can be allocated to the application in the driver node; \r\n\t--executor-memory {maximum_memory}: set the maximum memory can be allocated to the application in the executors; \r\n\tcompress.jar: the application file name; \r\n    {reference-file} is the reference file name; \r\n    {to-be-compressed-file-directory} is the HDFS directory of the to-be-compressed files; \r\n    {compressed-file-directory} is the directory used to store the compressed file,the compressed file name is \u2018out.bsc\u2019\r\n\r\n3.1.2 FASTQ\r\n    $SPARK_HOME/bin/spark-submit \\\r\n       --master {master_url}\\\r\n       --class (main_class_name} \\\r\n       --num-executors {number_of_executors} \\\r\n       --driver-memory {maximum_memory} \\\r\n       --executor-memory {maximum_memory} \\\r\n       --executor-cores {number_of_cores} \\\r\n       JarName {reference-file} {to-be-compressed-file-directory} {hdfsDir}{localDir} -1 linespermap\r\n\t\r\n    {hdfsDir} is the directory of compressed files in the HDFS; \r\n    {localDir} is the directory of compressed files in the local file system; \r\n    {linespermap} is the number of lines for each block\r\n\r\n3.2  Decompress\r\n    java -jar JarName {reference-file} {compressed-file} {decompressed-file-directory}\r\n    JarName is the application file name; \r\n    {reference-file} is the reference file name; \r\n    {compressed-file} is the compressed file name; \r\n    {decompressed-file-directory} is the directory used to store the decompressed files\r\n\r\n\r\n3.3 Output:\r\n    1.compressed file named out.bsc in the directory specified in the command line\r\n    2.decompressed file named *.fa/fq in the decompressed directory specified in the command line\r\n\r\n****************************************************************************\r\n\r\n4. Example\r\n\r\n4.1 FASTA\r\ncompress and decompress hg17_chr22.fa and hg18_chr22.fa, using hg13_chr22.fa as reference. The reference file is stored in the local file system, e.g. /home/reference/chr22; the to-be-compressed files are stored in the HDFS, e.g. hdfs://master:9000/chr22/; the compressed file out.bsc is stored in the local file system, e.g. /home/compressed; the decompressed files are stored in the local file system, e.g. /home/decompressed/chr22\r\n\r\n//Compress    \r\n   $SPARK_HOME/bin/spark-submit \\\r\n       --master yarn \\\r\n       --deploy-mode client \\\r\n       --class Main.entrance \\\r\n       --num-executors 4 \\\r\n       --driver-memory 18g \\\r\n       --executor-memory 25000m \\\r\n       --executor-cores 8 \\\r\n       --conf spark.core.connection.ack.wait.timeout=300 \\\r\n       compress.jar /home/reference/chr22/hg13_chr22.fa hdfs://master:9000/chr22/ /home/compressed/\r\n\r\n//Decompress\r\n    java -jar decompress.jar /home/reference/chr22/hg13_chr22.fa out.bsc  /home/decompressed/chr22\r\n\r\n4.2 FASTQ\r\ncompress and decompress SRR17714832.fastq, using hg13_chr22.fa as reference. The FASTQ file is too big to be uploaded to the github, but it can be downloaded from the NCBI site according to the sequence ID.\r\nThe reference file is stored in the local file system, e.g. /home/reference/fastq; the to-be-compressed files are stored in the HDFS, e.g. hdfs://master:9000/fastq/; the compressed file out.bsc is stored in the local file system, e.g. /home/compressed; the decompressed files are stored in the local file system, e.g. /home/decompressed. \r\n\r\n//Compress    \r\n   $SPARK_HOME/bin/spark-submit \\\r\n       --master yarn \\\r\n       --deploy-mode client \\\r\n       --class Main.entrance \\\r\n       --num-executors 4 \\\r\n       --driver-memory 18g \\\r\n       --executor-memory 25000m \\\r\n       --executor-cores 8 \\\r\n       --conf spark.core.connection.ack.wait.timeout=300 \\\r\n       SparkGC_FASTQ.jar /home/reference/fastq/hg13_chr22.fa hdfs://master:9000/fastq/SRR17714832.fastq hdfs://master:9000/compressed/ /home/compressed/\r\n\r\n//Decompress\r\n    java -classpath SparkGC_FASTQ.jar decompress.entrance.DecompressBySparkMain /home/reference/fastq/hg13_chr22.fa /home/compressed/out.bsc /home/decompressed\r\n\r\n4.3 use the\u2018diff\u2019command of Linux to check the difference between the original files and the decompressed files\r\n\r\n***************************************************************************\r\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/haichangyao/SparkGC/main/README.txt",
+      "technique": "supervised_classification"
+    }
+  ],
+  "download_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/haichangyao/SparkGC/releases"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 3
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/haichangyao/SparkGC/forks"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "haichangyao/SparkGC"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_title": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": ""
+      },
+      "source": "https://raw.githubusercontent.com/haichangyao/SparkGC/main/README.txt",
+      "technique": "regular_expression"
+    }
+  ],
+  "installation": [
+    {
+      "confidence": 0.9999999999199645,
+      "result": {
+        "type": "Text_excerpt",
+        "value": "\ufeff ****************************************************************************                             \r\n\t                              SparkGC\r\n  (Spark Based Genome Compression for Large Collections of Genomes)\r\n\r\n     https://github.com/haichangyao/SparkGC\r\n\r\n          Copyright (C) 2022                  \r\n****************************************************************************\r\n\r\n1. Introduction\r\n\r\n   -SparkGC is implemented with Java and can be run on Linux operating system.\r\n\r\n****************************************************************************\r\n2. Install\r\n   - install BSC\uff0cand configure environment variables\r\n   - install JDK-1.8.0\uff0cHadoop-3.1.3, and Spark-2.1.1\r\n****************************************************************************\r\n3. Use\r\n\r\n3.1 Compress\r\n\r\n3.1.1 FASTA\r\n\r\n    $SPARK_HOME/bin/spark-submit \\                  \r\n       --master {master_url}\\\r\n       --class (main_class_name} \\\r\n       --num-executors {number_of_executors} \\\r\n       --driver-memory {maximum_memory} \\\r\n       --executor-memory {maximum_memory} \\\r\n       compress.jar {reference-file} {to-be-compressed-file-directory} {compressed-file-directory}\r\n    \r\n\t$SPARK_HOME/bin/spark-submit: run the executor in spark_submit command;\r\n\t--master {master_url}\uff1a set the runnning environment of Spark; \r\n\t--class (main_class_name}: set the main class name of the executors; \r\n\t--num-executors {number_of_executors}: set the number of executors run the application; \r\n\t--driver-memory {maximum_memory}: set the maximum memory can be allocated to the application in the driver node; \r\n\t--executor-memory {maximum_memory}: set the maximum memory can be allocated to the application in the executors; \r\n\tcompress.jar: the application file name; \r\n    {reference-file} is the reference file name; \r\n    {to-be-compressed-file-directory} is the HDFS directory of the to-be-compressed files; \r\n    {compressed-file-directory} is the directory used to store the compressed file,the compressed file name is \u2018out.bsc\u2019\r\n\r\n3.1.2 FASTQ\r\n    $SPARK_HOME/bin/spark-submit \\\r\n       --master {master_url}\\\r\n       --class (main_class_name} \\\r\n       --num-executors {number_of_executors} \\\r\n       --driver-memory {maximum_memory} \\\r\n       --executor-memory {maximum_memory} \\\r\n       --executor-cores {number_of_cores} \\\r\n       JarName {reference-file} {to-be-compressed-file-directory} {hdfsDir}{localDir} -1 linespermap\r\n\t\r\n    {hdfsDir} is the directory of compressed files in the HDFS; \r\n    {localDir} is the directory of compressed files in the local file system; \r\n    {linespermap} is the number of lines for each block\r\n\r\n3.2  Decompress\r\n    java -jar JarName {reference-file} {compressed-file} {decompressed-file-directory}\r\n    JarName is the application file name; \r\n    {reference-file} is the reference file name; \r\n    {compressed-file} is the compressed file name; \r\n    {decompressed-file-directory} is the directory used to store the decompressed files\r\n\r\n\r\n3.3 Output:\r\n    1.compressed file named out.bsc in the directory specified in the command line\r\n    2.decompressed file named *.fa/fq in the decompressed directory specified in the command line\r\n\r\n****************************************************************************\r\n\r\n4. Example\r\n\r\n4.1 FASTA\r\ncompress and decompress hg17_chr22.fa and hg18_chr22.fa, using hg13_chr22.fa as reference. The reference file is stored in the local file system, e.g. /home/reference/chr22; the to-be-compressed files are stored in the HDFS, e.g. hdfs://master:9000/chr22/; the compressed file out.bsc is stored in the local file system, e.g. /home/compressed; the decompressed files are stored in the local file system, e.g. /home/decompressed/chr22\r\n\r\n//Compress    \r\n   $SPARK_HOME/bin/spark-submit \\\r\n       --master yarn \\\r\n       --deploy-mode client \\\r\n       --class Main.entrance \\\r\n       --num-executors 4 \\\r\n       --driver-memory 18g \\\r\n       --executor-memory 25000m \\\r\n       --executor-cores 8 \\\r\n       --conf spark.core.connection.ack.wait.timeout=300 \\\r\n       compress.jar /home/reference/chr22/hg13_chr22.fa hdfs://master:9000/chr22/ /home/compressed/\r\n\r\n//Decompress\r\n    java -jar decompress.jar /home/reference/chr22/hg13_chr22.fa out.bsc  /home/decompressed/chr22\r\n\r\n4.2 FASTQ\r\ncompress and decompress SRR17714832.fastq, using hg13_chr22.fa as reference. The FASTQ file is too big to be uploaded to the github, but it can be downloaded from the NCBI site according to the sequence ID.\r\nThe reference file is stored in the local file system, e.g. /home/reference/fastq; the to-be-compressed files are stored in the HDFS, e.g. hdfs://master:9000/fastq/; the compressed file out.bsc is stored in the local file system, e.g. /home/compressed; the decompressed files are stored in the local file system, e.g. /home/decompressed. \r\n\r\n//Compress    \r\n   $SPARK_HOME/bin/spark-submit \\\r\n       --master yarn \\\r\n       --deploy-mode client \\\r\n       --class Main.entrance \\\r\n       --num-executors 4 \\\r\n       --driver-memory 18g \\\r\n       --executor-memory 25000m \\\r\n       --executor-cores 8 \\\r\n       --conf spark.core.connection.ack.wait.timeout=300 \\\r\n       SparkGC_FASTQ.jar /home/reference/fastq/hg13_chr22.fa hdfs://master:9000/fastq/SRR17714832.fastq hdfs://master:9000/compressed/ /home/compressed/\r\n\r\n//Decompress\r\n    java -classpath SparkGC_FASTQ.jar decompress.entrance.DecompressBySparkMain /home/reference/fastq/hg13_chr22.fa /home/compressed/out.bsc /home/decompressed\r\n\r\n4.3 use the\u2018diff\u2019command of Linux to check the difference between the original files and the decompressed files\r\n\r\n***************************************************************************\r\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/haichangyao/SparkGC/main/README.txt",
+      "technique": "supervised_classification"
+    }
+  ],
+  "issue_tracker": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/haichangyao/SparkGC/issues"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "keywords": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": ""
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "SparkGC"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "owner": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "User",
+        "value": "haichangyao"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "programming_languages": [
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Java",
+        "size": 195318,
+        "type": "Programming_language",
+        "value": "Java"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "readme_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/haichangyao/SparkGC/main/README.txt"
+      },
+      "technique": "file_exploration"
+    }
+  ],
+  "somef_missing_categories": [
+    "citation",
+    "acknowledgement",
+    "run",
+    "download",
+    "requirements",
+    "contact",
+    "contributors",
+    "documentation",
+    "license",
+    "usage",
+    "faq",
+    "support",
+    "identifier",
+    "has_build_file",
+    "executable_example"
+  ],
+  "somef_provenance": {
+    "date": "2024-10-04 13:47:26",
+    "somef_schema_version": "1.0.0",
+    "somef_version": "0.9.5"
+  },
+  "stargazers_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 1
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "type": [
+    {
+      "confidence": 0.82,
+      "result": {
+        "type": "String",
+        "value": "commandline-application"
+      },
+      "technique": "software_type_heuristics"
+    }
+  ]
+}

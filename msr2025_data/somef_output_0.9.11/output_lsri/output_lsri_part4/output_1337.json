@@ -1,0 +1,363 @@
+{
+  "citation": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Citation",
+        "parent_header": [
+          "demuxlet"
+        ],
+        "type": "Text_excerpt",
+        "value": "Demuxlet has been published: https://www.nature.com/articles/nbt.4042\n\nIf you find it useful, please cite: Kang et al., Nature Biotechnology 2017.\n"
+      },
+      "source": "https://raw.githubusercontent.com/statgen/demuxlet/master/README",
+      "technique": "header_analysis"
+    }
+  ],
+  "code_repository": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/statgen/demuxlet"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_created": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2017-06-12T04:47:41Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_updated": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2024-10-31T06:53:36Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "description": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "Genetic multiplexing of barcoded single cell RNA-seq"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Introduction",
+        "parent_header": [
+          "demuxlet"
+        ],
+        "type": "Text_excerpt",
+        "value": "**_demuxlet_** is a software tool to deconvolute sample identity and identify multiplets when multiple samples are pooled by barcoded single cell sequencing.\n**_demuxlet_** takes (1) a SAM/BAM/CRAM file produced by the standard 10x sequencing platform, or any other barcoded single cell RNA-seq (with proper --tag-UMI and --tag-group) options (2) a VCF/BCF file containing the genotype (GT), posterior probability (GP), or genotype likelihood (GL) to assign each barcode to a specific sample (or a pair of samples) in the VCF file. \n"
+      },
+      "source": "https://raw.githubusercontent.com/statgen/demuxlet/master/README",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 0.9414279833427627,
+      "result": {
+        "original_header": "demuxlet",
+        "type": "Text_excerpt",
+        "value": "Genetic multiplexing of barcoded single cell RNA-seq\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/statgen/demuxlet/master/README",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9370956221656028,
+      "result": {
+        "original_header": "Using demuxlet",
+        "type": "Text_excerpt",
+        "value": "<pre>\nOptions for input SAM/BAM/CRAM\n  --sam           [STR: ]             : Input SAM/BAM/CRAM file. Must be sorted by coordinates and indexed\n  --tag-group     [STR: CB]           : Tag representing readgroup or cell barcodes, in the case to partition the BAM file into multiple groups. For 10x genomics, use CB\n  --tag-UMI       [STR: UB]           : Tag representing UMIs. For 10x genomiucs, use UB \nOptions for input VCF/BCF\n  --vcf           [STR: ]             : Input VCF/BCF file, containing the individual genotypes (GT), posterior probability (GP), or genotype likelihood (PL)\n  --field         [STR: GP]           : FORMAT field to extract the genotype, likelihood, or posterior from\n  --geno-error    [FLT: 0.01]         : Genotype error rate (must be used with --field GT)\n  --min-mac       [INT: 1]            : Minimum minor allele frequency\n  --min-callrate  [FLT: 0.50]         : Minimum call rate\n  --sm            [V_STR: ]           : List of sample IDs to compare to (default: use all)\n  --sm-list       [STR: ]             : File containing the list of sample IDs to compare \nOutput Options\n  --out           [STR: ]             : Output file prefix\n  --alpha         [V_FLT: ]           : Grid of alpha to search for (default is 0.1, 0.2, 0.3, 0.4, 0.5)\n  --write-pair    [FLG: OFF]          : Writing the (HUGE) pair file\n  --doublet-prior [FLT: 0.50]         : Prior of doublet\n  --sam-verbose   [INT: 1000000]      : Verbose message frequency for SAM/BAM/CRAM\n  --vcf-verbose   [INT: 10000]        : Verbose message frequency for VCF/BCF \nCell/droplet filtering options\n  --group-list    [STR: ]             : List of tag readgroup/cell barcode to consider in this run. All other barcodes will be ignored. This is useful for parallelized run\n  --min-total     [INT: 0]            : Minimum number of total reads for a droplet/cell to be considered\n  --min-uniq      [INT: 0]            : Minimum number of unique reads (determined by UMI/SNP pair) for a droplet/cell to be considered\n  --min-snp       [INT: 0]            : Minimum number of SNPs with coverage for a droplet/cell to be considered\n</pre>\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/statgen/demuxlet/master/README",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.8799499856393156,
+      "result": {
+        "original_header": "Interpretation of output files",
+        "type": "Text_excerpt",
+        "value": "**_demuxlet_** generates multiple output file, such as `[prefix].best`, `[prefix].sing`, `[prefix].sing2`, and optionally `[prefix].pair` (with `--write-pair` argument). Each file contains the following information\n* The `[prefix].best` file contains the best guess of the sample identity, with detailed statistics to reach to the best guess\n* The `[prefix].sing` file contains the statistics for matching each cell with each possible sample.\n* The `[prefix].sing2` file contains the statistics similar information to the previous one, but generated for sanity checking of the `[prefix].pair` results.\n* The `[prefix].pair` file contains the statistics for matching each cell with each possible configuration of doublet.  \nThe `[prefix].best` file contains the following 22 columns.\n 1. BARCODE - Cell barcode for the cell that is being assigned in this row\n 2. RD.TOTL - The total number of reads overlapping with variant sites for each droplet.\n 3. RD.PASS - The total number of reads that passed the quality threshold, such as mapping quality, base quality. \n 4. RD.UNIQ - The total number of UMIs that passed the quality threshold. If a UMI is observed in a single variant multiple times, it won't be counted more. If a UMI is observed across multiple variants, it will be counted as different.\n 5. N.SNP   - The total number of variants overlapping with any read in the droplet.\n 6. BEST    - The best assignment for sample ID.\n    * For singlets, SNG-<sample ID>\n    * For doublets, DBL-<sample ID1>-<sampleID2>-<mixture rate>\n    * For ambiguous droplets, , AMB-<best-singlet-sampleID>-<next-best-singlet-sampleID>-<doublet ID1/ID2>)\n 7. SNG.1ST - The best singlet assignment for sample ID\n 8. SNG.LLK1 - The log(likelihood that the ID from SNG.1ST is the correct assignment)       \n 9. SNG.2ND - The next best singlet assignment for sample ID\n 10. SNG.LLK2 - The log(likelihood that the ID from SNG.2ND is the correct assignment)        \n 11. SNG.LLK0 - The log-likelihood from allele frequencies only      \n 12. DBL.1ST - The sample ID that is most likely included if the assignment is a doublet\n 13. DBL.2ND - The sample ID that is next most likely included ifthe assignment is a doublet\n 14. ALPHA   - % Mixture Proportion\n 15. LLK12   - The log(likelihood that the ID is a doublet)\n 16. LLK1    - The log(likelihood that the ID from DBL.1ST is the correct singlet assignment)\n 17. LLK2    - The log(likelihood that the ID from DBL.2ND is the correct singlet assignment)\n 18. LLK10   - The log(likelihood that the ID from DBL.1ST is one of the doublet, and the other doublet identity is calculated from allele frequencies only)   \n 19. LLK20   - The log(likelihood that the ID from DBL.2ND is one of the doublet, and the other doublet identity is calculated from allele frequencies only)   \n 20. LLK00   - The log(likelihood that the droplet is doublet, but both identities are calculated from allele frequencies only)\n 21. PRB.DBL - Posterior probability of the doublet assignment\n 22. PRB.SNG1 - Posterior probability of the singlet assignment when excluding all possible doublets\n    \n \n"
+      },
+      "source": "https://raw.githubusercontent.com/statgen/demuxlet/master/README",
+      "technique": "supervised_classification"
+    }
+  ],
+  "documentation": [
+    {
+      "confidence": 1,
+      "result": {
+        "format": "wiki",
+        "type": "Url",
+        "value": "https://github.com/statgen/demuxlet/wiki"
+      },
+      "source": "https://raw.githubusercontent.com/statgen/demuxlet/master/README",
+      "technique": "regular_expression"
+    }
+  ],
+  "download_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/statgen/demuxlet/releases"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 26
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/statgen/demuxlet/forks"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "statgen/demuxlet"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_title": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "demuxlet"
+      },
+      "source": "https://raw.githubusercontent.com/statgen/demuxlet/master/README",
+      "technique": "regular_expression"
+    }
+  ],
+  "installation": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Installing demuxlet",
+        "parent_header": [
+          "demuxlet"
+        ],
+        "type": "Text_excerpt",
+        "value": "Before installing demuxlet, you need to install [htslib](https://github.com/samtools/htslib) in the same directory you want to install demuxlet (i.e. demuxlet and htslib should be siblings).  \n**NOTE** htslib 1.11 is not supported for now - use earlier releases (e.g. 1.10.x)\n\nAfter installing htslib, you can clone the current snapshot of this repository to install as well\n\n<pre>\n$ git clone https://github.com/statgen/demuxlet.git\n$ cd demuxlet\n$ autoreconf -vfi\n$ ./configure  (with additional options such as --prefix)\n$ make\n$ make install (may require root privilege)\n</pre>\n"
+      },
+      "source": "https://raw.githubusercontent.com/statgen/demuxlet/master/README",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 0.9179369609672099,
+      "result": {
+        "original_header": "Using demuxlet",
+        "type": "Text_excerpt",
+        "value": "demuxlet uses a self-documentation utility. You can run each utility with -man or -help option to see the command line usages. \nThe detailed usage is also pasted below. \n"
+      },
+      "source": "https://raw.githubusercontent.com/statgen/demuxlet/master/README",
+      "technique": "supervised_classification"
+    }
+  ],
+  "issue_tracker": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/statgen/demuxlet/issues"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "keywords": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": ""
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "license": [
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Apache License 2.0",
+        "spdx_id": "Apache-2.0",
+        "type": "License",
+        "url": "https://api.github.com/licenses/apache-2.0",
+        "value": "https://api.github.com/licenses/apache-2.0"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "File_dump",
+        "value": "                                 Apache License\n                           Version 2.0, January 2004\n                        http://www.apache.org/licenses/\n\n   TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION\n\n   1. Definitions.\n\n      \"License\" shall mean the terms and conditions for use, reproduction,\n      and distribution as defined by Sections 1 through 9 of this document.\n\n      \"Licensor\" shall mean the copyright owner or entity authorized by\n      the copyright owner that is granting the License.\n\n      \"Legal Entity\" shall mean the union of the acting entity and all\n      other entities that control, are controlled by, or are under common\n      control with that entity. For the purposes of this definition,\n      \"control\" means (i) the power, direct or indirect, to cause the\n      direction or management of such entity, whether by contract or\n      otherwise, or (ii) ownership of fifty percent (50%) or more of the\n      outstanding shares, or (iii) beneficial ownership of such entity.\n\n      \"You\" (or \"Your\") shall mean an individual or Legal Entity\n      exercising permissions granted by this License.\n\n      \"Source\" form shall mean the preferred form for making modifications,\n      including but not limited to software source code, documentation\n      source, and configuration files.\n\n      \"Object\" form shall mean any form resulting from mechanical\n      transformation or translation of a Source form, including but\n      not limited to compiled object code, generated documentation,\n      and conversions to other media types.\n\n      \"Work\" shall mean the work of authorship, whether in Source or\n      Object form, made available under the License, as indicated by a\n      copyright notice that is included in or attached to the work\n      (an example is provided in the Appendix below).\n\n      \"Derivative Works\" shall mean any work, whether in Source or Object\n      form, that is based on (or derived from) the Work and for which the\n      editorial revisions, annotations, elaborations, or other modifications\n      represent, as a whole, an original work of authorship. For the purposes\n      of this License, Derivative Works shall not include works that remain\n      separable from, or merely link (or bind by name) to the interfaces of,\n      the Work and Derivative Works thereof.\n\n      \"Contribution\" shall mean any work of authorship, including\n      the original version of the Work and any modifications or additions\n      to that Work or Derivative Works thereof, that is intentionally\n      submitted to Licensor for inclusion in the Work by the copyright owner\n      or by an individual or Legal Entity authorized to submit on behalf of\n      the copyright owner. For the purposes of this definition, \"submitted\"\n      means any form of electronic, verbal, or written communication sent\n      to the Licensor or its representatives, including but not limited to\n      communication on electronic mailing lists, source code control systems,\n      and issue tracking systems that are managed by, or on behalf of, the\n      Licensor for the purpose of discussing and improving the Work, but\n      excluding communication that is conspicuously marked or otherwise\n      designated in writing by the copyright owner as \"Not a Contribution.\"\n\n      \"Contributor\" shall mean Licensor and any individual or Legal Entity\n      on behalf of whom a Contribution has been received by Licensor and\n      subsequently incorporated within the Work.\n\n   2. Grant of Copyright License. Subject to the terms and conditions of\n      this License, each Contributor hereby grants to You a perpetual,\n      worldwide, non-exclusive, no-charge, royalty-free, irrevocable\n      copyright license to reproduce, prepare Derivative Works of,\n      publicly display, publicly perform, sublicense, and distribute the\n      Work and such Derivative Works in Source or Object form.\n\n   3. Grant of Patent License. Subject to the terms and conditions of\n      this License, each Contributor hereby grants to You a perpetual,\n      worldwide, non-exclusive, no-charge, royalty-free, irrevocable\n      (except as stated in this section) patent license to make, have made,\n      use, offer to sell, sell, import, and otherwise transfer the Work,\n      where such license applies only to those patent claims licensable\n      by such Contributor that are necessarily infringed by their\n      Contribution(s) alone or by combination of their Contribution(s)\n      with the Work to which such Contribution(s) was submitted. If You\n      institute patent litigation against any entity (including a\n      cross-claim or counterclaim in a lawsuit) alleging that the Work\n      or a Contribution incorporated within the Work constitutes direct\n      or contributory patent infringement, then any patent licenses\n      granted to You under this License for that Work shall terminate\n      as of the date such litigation is filed.\n\n   4. Redistribution. You may reproduce and distribute copies of the\n      Work or Derivative Works thereof in any medium, with or without\n      modifications, and in Source or Object form, provided that You\n      meet the following conditions:\n\n      (a) You must give any other recipients of the Work or\n          Derivative Works a copy of this License; and\n\n      (b) You must cause any modified files to carry prominent notices\n          stating that You changed the files; and\n\n      (c) You must retain, in the Source form of any Derivative Works\n          that You distribute, all copyright, patent, trademark, and\n          attribution notices from the Source form of the Work,\n          excluding those notices that do not pertain to any part of\n          the Derivative Works; and\n\n      (d) If the Work includes a \"NOTICE\" text file as part of its\n          distribution, then any Derivative Works that You distribute must\n          include a readable copy of the attribution notices contained\n          within such NOTICE file, excluding those notices that do not\n          pertain to any part of the Derivative Works, in at least one\n          of the following places: within a NOTICE text file distributed\n          as part of the Derivative Works; within the Source form or\n          documentation, if provided along with the Derivative Works; or,\n          within a display generated by the Derivative Works, if and\n          wherever such third-party notices normally appear. The contents\n          of the NOTICE file are for informational purposes only and\n          do not modify the License. You may add Your own attribution\n          notices within Derivative Works that You distribute, alongside\n          or as an addendum to the NOTICE text from the Work, provided\n          that such additional attribution notices cannot be construed\n          as modifying the License.\n\n      You may add Your own copyright statement to Your modifications and\n      may provide additional or different license terms and conditions\n      for use, reproduction, or distribution of Your modifications, or\n      for any such Derivative Works as a whole, provided Your use,\n      reproduction, and distribution of the Work otherwise complies with\n      the conditions stated in this License.\n\n   5. Submission of Contributions. Unless You explicitly state otherwise,\n      any Contribution intentionally submitted for inclusion in the Work\n      by You to the Licensor shall be under the terms and conditions of\n      this License, without any additional terms or conditions.\n      Notwithstanding the above, nothing herein shall supersede or modify\n      the terms of any separate license agreement you may have executed\n      with Licensor regarding such Contributions.\n\n   6. Trademarks. This License does not grant permission to use the trade\n      names, trademarks, service marks, or product names of the Licensor,\n      except as required for reasonable and customary use in describing the\n      origin of the Work and reproducing the content of the NOTICE file.\n\n   7. Disclaimer of Warranty. Unless required by applicable law or\n      agreed to in writing, Licensor provides the Work (and each\n      Contributor provides its Contributions) on an \"AS IS\" BASIS,\n      WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or\n      implied, including, without limitation, any warranties or conditions\n      of TITLE, NON-INFRINGEMENT, MERCHANTABILITY, or FITNESS FOR A\n      PARTICULAR PURPOSE. You are solely responsible for determining the\n      appropriateness of using or redistributing the Work and assume any\n      risks associated with Your exercise of permissions under this License.\n\n   8. Limitation of Liability. In no event and under no legal theory,\n      whether in tort (including negligence), contract, or otherwise,\n      unless required by applicable law (such as deliberate and grossly\n      negligent acts) or agreed to in writing, shall any Contributor be\n      liable to You for damages, including any direct, indirect, special,\n      incidental, or consequential damages of any character arising as a\n      result of this License or out of the use or inability to use the\n      Work (including but not limited to damages for loss of goodwill,\n      work stoppage, computer failure or malfunction, or any and all\n      other commercial damages or losses), even if such Contributor\n      has been advised of the possibility of such damages.\n\n   9. Accepting Warranty or Additional Liability. While redistributing\n      the Work or Derivative Works thereof, You may choose to offer,\n      and charge a fee for, acceptance of support, warranty, indemnity,\n      or other liability obligations and/or rights consistent with this\n      License. However, in accepting such obligations, You may act only\n      on Your own behalf and on Your sole responsibility, not on behalf\n      of any other Contributor, and only if You agree to indemnify,\n      defend, and hold each Contributor harmless for any liability\n      incurred by, or claims asserted against, such Contributor by reason\n      of your accepting any such warranty or additional liability.\n\n   END OF TERMS AND CONDITIONS\n\n   APPENDIX: How to apply the Apache License to your work.\n\n      To apply the Apache License to your work, attach the following\n      boilerplate notice, with the fields enclosed by brackets \"{}\"\n      replaced with your own identifying information. (Don't include\n      the brackets!)  The text should be enclosed in the appropriate\n      comment syntax for the file format. We also recommend that a\n      file or class name and description of purpose be included on the\n      same \"printed page\" as the copyright notice for easier\n      identification within third-party archives.\n\n   Copyright {yyyy} {name of copyright owner}\n\n   Licensed under the Apache License, Version 2.0 (the \"License\");\n   you may not use this file except in compliance with the License.\n   You may obtain a copy of the License at\n\n       http://www.apache.org/licenses/LICENSE-2.0\n\n   Unless required by applicable law or agreed to in writing, software\n   distributed under the License is distributed on an \"AS IS\" BASIS,\n   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n   See the License for the specific language governing permissions and\n   limitations under the License.\n"
+      },
+      "source": "https://raw.githubusercontent.com/statgen/demuxlet/master/LICENSE",
+      "technique": "file_exploration"
+    }
+  ],
+  "name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "demuxlet"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "owner": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Organization",
+        "value": "statgen"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "programming_languages": [
+    {
+      "confidence": 1,
+      "result": {
+        "name": "C++",
+        "size": 382481,
+        "type": "Programming_language",
+        "value": "C++"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "C",
+        "size": 7719,
+        "type": "Programming_language",
+        "value": "C"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "M4",
+        "size": 1192,
+        "type": "Programming_language",
+        "value": "M4"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Makefile",
+        "size": 995,
+        "type": "Programming_language",
+        "value": "Makefile"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "readme_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/statgen/demuxlet/master/README"
+      },
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/statgen/demuxlet/master/README.md"
+      },
+      "technique": "file_exploration"
+    }
+  ],
+  "run": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Tips for running",
+        "parent_header": [
+          "demuxlet"
+        ],
+        "type": "Text_excerpt",
+        "value": "* Set `--alpha 0 --alpha 0.5`, which assumes the expected proportion of 50% genetic mixture from two individuals, to get better estimates of doublets.\n* Set `--group-list` to a list of barcodes (i.e. barcodes.tsv from 10X) to speed things up and only get demultiplexing for cells called by other methods\n* To reproduce the results presented in Figure 2 of the demuxlet paper, please go to: https://github.com/yelabucsf/demuxlet_paper_code/tree/master/fig2 to download the vcf and the outputs of demuxlet.\n"
+      },
+      "source": "https://raw.githubusercontent.com/statgen/demuxlet/master/README",
+      "technique": "header_analysis"
+    }
+  ],
+  "somef_missing_categories": [
+    "acknowledgement",
+    "download",
+    "requirements",
+    "contact",
+    "contributors",
+    "usage",
+    "faq",
+    "support",
+    "identifier",
+    "has_build_file",
+    "executable_example"
+  ],
+  "somef_provenance": {
+    "date": "2024-11-04 06:49:26",
+    "somef_schema_version": "1.0.0",
+    "somef_version": "0.9.5"
+  },
+  "stargazers_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 119
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "type": [
+    {
+      "confidence": 0.82,
+      "result": {
+        "type": "String",
+        "value": "commandline-application"
+      },
+      "technique": "software_type_heuristics"
+    }
+  ]
+}

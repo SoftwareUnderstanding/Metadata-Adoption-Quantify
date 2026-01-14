@@ -1,0 +1,291 @@
+{
+  "code_repository": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/jstjohn/SimSeq"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_created": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2010-11-24T18:48:25Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_updated": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2024-09-29T00:10:22Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "description": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "An illumina paired-end and mate-pair short read simulator. This project attempts to model as many of the quirks that exist in Illumina data as possible. Some of these quirks include the potential for chimeric reads, and non-biotinylated fragment pull down in mate-pair libraries . Additionally the program provides the ability to model both site and base specific error, and scripts are provided to train this error model on real datasets. My hope in creating this program is to generate as realistic data as possible to assist in assessing the accuracy of genome assembly tools."
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 0.9520612504224546,
+      "result": {
+        "type": "Text_excerpt",
+        "value": "getErrorProfile contains the c source for the program that generates the\nerror model for the sequence simulator. This program utilizes a subset\nof the kent source library (http://hgwdev.cse.ucsc.edu/~kent/src/) which\nis freely available for both commercial and non-commercial use \n(see README in \"ThirdParty/kent\" for more information) \n\nexamples contains some things to run this on. Right now there is\nan example mitochondrial sequence, and an example error profile\nfrom a 100 bp illumina GAIIx dataset. You can simulate any read\nless than or equal to 100bp in length using that error profile. \nusage: java -jar -Xmx2048m SimSeq.jar [required options] [options]\n            Last Updated: 4.12.2011\n -1,--read1_length <arg>            Integer length of first read. Default:\n                                    100\n -2,--read2_length <arg>            Integer length of second read.\n                                    Default: 100\n    --adapter1 <arg>                The first read illumina adapter\n                                    sequence to use when the insert size\n                                    is less than the read length.\n                                    Currently only works on paired end\n                                    simulation.\n                                    Defalt:AGATCGGAAGAGCGGTTCAGCAGGAATGCCG\n                                    AGACCG\n    --adapter2 <arg>                The second read illumina adapter\n                                    sequence to use when the insert size\n                                    is less than the read length.\n                                    Currently only works on paired end\n                                    simulation.\n                                    Defalt:AGATCGGAAGAGCGTCGTGTAGGGAAAGAGT\n                                    GT\n -d,--dip <arg>                     If diploid data desired, path to\n                                    diploid file. (format: chrom pos(0\n                                    based) altChar\n    --debug                         Write debug info to stderr.\n -e,--error <arg>                   If simulated read error desired, path\n                                    to read error file.\n    --error2 <arg>                  If you desire a seperate error\n                                    distribution to be applied to the\n                                    second read, then provide a path to\n                                    that error profile with this option\n -h,--help                          Print this usage message.\n    --inf_id                        Output location information in the\n                                    read ID. Currently this is only\n                                    informative for paired-end data and\n                                    note mate paired.\n -l,--insert_size <arg>             mean library insert size for either\n                                    mate-paired or paired-end. Default:\n                                    200\n -m,--mate_pair                     Perform mate-pair rather than paired\n                                    end run.\n    --mate_frag <arg>               If using a mate-pair library, what is\n                                    your desired loop fragmentation size?\n                                    Default: 500\n    --mate_frag_stdev <arg>         If using a mate-pair library, what is\n                                    your desired loop fragmentation size\n                                    standard deviation? Default: 50\n    --mate_pulldown_error_p <arg>   If using a mate-pair library, what is\n                                    the probability that a read does not\n                                    include the biotin marker? Default:\n                                    0.3\n -n,--read_number <arg>             Integer number of reads you would like\n                                    to sample. Default: 1000000\n -o,--out <arg>                     Filename for output sam file\n                                    (REQUIRED)\n -p,--read_prefix <arg>             Prefix for simulated reads. Default:\n                                    SimSeq_\n    --phred64                       Output phred+64 quality string rather\n                                    than phred+33\n -r,--reference <arg>               Reference genome sequence in\n                                    uncompressed fasta format (REQUIRED)\n -s,--insert_stdev <arg>            mean library insert stdev for either\n                                    mate-paired or paired-end. Default: 20\n -u,--duplicate_probability <arg>   probability of generating a duplicate.\n                                    Default: 0.0 \n===Quick Start Example:===\n==Prerequisits==\n0.0. Download and install samtools: http://samtools.sourceforge.net/ and add executable to your $PATH\n0.1. Download latest Picard jar file: http://sourceforge.net/projects/picard/files/, and extract .jar files somewhere that makes sense like $HOME/jars/, for the rest of this I will assume that all jar files are located in $HOME/jars/\n==Generate and check simulated reads==\n1. Download SimSeq.jar, error_profile.txt, and AlligatorMito.fa\n2. put SImSeq.jar in your jar directory ($HOME/jars/ or something) and put error_profile.txt and AlligatorMito.fa in a folder where you want to work\n3. Run `java -jar -Xmx2048m $HOME/jars/SimSeq.jar -1 100 -2 100 \\\n    --error hiseq_mito_default_bwa_mapping_mq10_1.txt \\\n    --error2 hiseq_mito_default_bwa_mapping_mq10_2.txt \\\n    --insert_size 3000 --insert_stdev 300 \\\n    --mate_pair --mate_frag 500 --mate_frag_stdev 50 \\\n    --mate_pulldown_error_p 0.3 --read_number 10000 \\\n    --read_prefix AMito_ --reference AlligatorMito.fa \\\n    --duplicate_probability 0.01 --out out.sam`\n4. Convert sam output to bam: `samtools view -bS -T AlligatorMito.fa -t AlligatorMito.size  -o out.bam out.sam`\n5. Sort the bam file: `samtools sort out.bam out.sorted`\n6. Index the sorted bam file: `samtools index out.sorted.bam`\n7. Check the alignment in tview: `samtools tview out.sorted.bam AlligatorMito.fa`\n==Convert Sam output to Fastq==\nrun `java -jar -Xmx2048 $HOME/jars/SamToFastq.jar INPUT=out.sorted.bam FASTQ=library.1.fastq SECOND_END_FASTQ=library.2.fastq INCLUDE_NON_PF_READS=true VALIDATION_STRINGENCY=SILENT` \nNote: setting the VALIDATION_STRINGENCY=SILENT is probably not ideal, but for now it is necessary because samtools isn't putting the length of the reference sequence into the header, which is expected by Picard. You get an error about the first read having a coordinate outside of the range of the reference sequence which has a length of 0. If you use Picard to somehow fix the header given the reference sequence this should work without telling it not to validate your sequence. \nAlso Note: The current sam alignment for a chimeric read shows the fragment starting at the left-most coordinate. Since the rest of the sequence occurs before the left most coordinate I use a soft clipping for the remainder of the sequence. This does not effect the output fastq file generated by the above method, but when you are looking at the alignment in samtools tview you will see some sequences as short as 1 nucleotide. This is normal, and doesn't mean that the actual sam records are that short. \n\nWhen producing chimeric reads, samtools doesn't currently allow you to view the backwards jumps that occur. Doing so would involve a '-xN' operation on a cigar string. I added a custom tag ('YC:Z:[CIGAR]') at the end of each sam string that shows either a normal cigar string if the read can be represented with one, or a custom cigar string that allows for negative jumps needed to represent chimeric reads if the read is chimeric. Here is an example of what a chimeric read's tag would look like `YC:Z:97M-4996N3M` while a non-chimeric read would have a normal cigar string in its tag like: `YC:Z:100M`. To reconstruct a chimeric read, you start at the start coordinate for the read which corresponds to the left most coordinate, then you proceed for the number of matches 'M', then you jump the specified number of positions from your current location, in this case -4996, and finally proceed with the remaining CIGAR string. Right now since I don't add indels to the data, this string will either be a match or one of these chimeric jumps. \n"
+      },
+      "source": "https://raw.githubusercontent.com/jstjohn/SimSeq/master/README",
+      "technique": "supervised_classification"
+    }
+  ],
+  "documentation": [
+    {
+      "confidence": 1,
+      "result": {
+        "format": "wiki",
+        "type": "Url",
+        "value": "https://github.com/jstjohn/SimSeq/wiki"
+      },
+      "source": "https://raw.githubusercontent.com/jstjohn/SimSeq/master/README",
+      "technique": "regular_expression"
+    }
+  ],
+  "download_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/jstjohn/SimSeq/releases"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 12
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/jstjohn/SimSeq/forks"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "jstjohn/SimSeq"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_title": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": ""
+      },
+      "source": "https://raw.githubusercontent.com/jstjohn/SimSeq/master/README",
+      "technique": "regular_expression"
+    }
+  ],
+  "invocation": [
+    {
+      "confidence": 0.8194869263644786,
+      "result": {
+        "type": "Text_excerpt",
+        "value": "===Quick Start Example:===\n==Prerequisits==\n0.0. Download and install samtools: http://samtools.sourceforge.net/ and add executable to your $PATH\n0.1. Download latest Picard jar file: http://sourceforge.net/projects/picard/files/, and extract .jar files somewhere that makes sense like $HOME/jars/, for the rest of this I will assume that all jar files are located in $HOME/jars/\n==Generate and check simulated reads==\n1. Download SimSeq.jar, error_profile.txt, and AlligatorMito.fa\n2. put SImSeq.jar in your jar directory ($HOME/jars/ or something) and put error_profile.txt and AlligatorMito.fa in a folder where you want to work\n3. Run `java -jar -Xmx2048m $HOME/jars/SimSeq.jar -1 100 -2 100 \\\n    --error hiseq_mito_default_bwa_mapping_mq10_1.txt \\\n    --error2 hiseq_mito_default_bwa_mapping_mq10_2.txt \\\n    --insert_size 3000 --insert_stdev 300 \\\n    --mate_pair --mate_frag 500 --mate_frag_stdev 50 \\\n    --mate_pulldown_error_p 0.3 --read_number 10000 \\\n    --read_prefix AMito_ --reference AlligatorMito.fa \\\n    --duplicate_probability 0.01 --out out.sam`\n4. Convert sam output to bam: `samtools view -bS -T AlligatorMito.fa -t AlligatorMito.size  -o out.bam out.sam`\n5. Sort the bam file: `samtools sort out.bam out.sorted`\n6. Index the sorted bam file: `samtools index out.sorted.bam`\n7. Check the alignment in tview: `samtools tview out.sorted.bam AlligatorMito.fa`\n==Convert Sam output to Fastq==\nrun `java -jar -Xmx2048 $HOME/jars/SamToFastq.jar INPUT=out.sorted.bam FASTQ=library.1.fastq SECOND_END_FASTQ=library.2.fastq INCLUDE_NON_PF_READS=true VALIDATION_STRINGENCY=SILENT` \n"
+      },
+      "source": "https://raw.githubusercontent.com/jstjohn/SimSeq/master/README",
+      "technique": "supervised_classification"
+    }
+  ],
+  "issue_tracker": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/jstjohn/SimSeq/issues"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "keywords": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": ""
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "license": [
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Other",
+        "spdx_id": "NOASSERTION",
+        "type": "License",
+        "url": null,
+        "value": null
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "SimSeq"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "owner": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "User",
+        "value": "jstjohn"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "programming_languages": [
+    {
+      "confidence": 1,
+      "result": {
+        "name": "C",
+        "size": 1462338,
+        "type": "Programming_language",
+        "value": "C"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Perl",
+        "size": 78224,
+        "type": "Programming_language",
+        "value": "Perl"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Java",
+        "size": 61158,
+        "type": "Programming_language",
+        "value": "Java"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "C++",
+        "size": 9607,
+        "type": "Programming_language",
+        "value": "C++"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Python",
+        "size": 6482,
+        "type": "Programming_language",
+        "value": "Python"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "R",
+        "size": 3146,
+        "type": "Programming_language",
+        "value": "R"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "TeX",
+        "size": 3118,
+        "type": "Programming_language",
+        "value": "TeX"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "readme_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/jstjohn/SimSeq/master/README"
+      },
+      "technique": "file_exploration"
+    }
+  ],
+  "somef_missing_categories": [
+    "installation",
+    "citation",
+    "acknowledgement",
+    "run",
+    "download",
+    "requirements",
+    "contact",
+    "contributors",
+    "usage",
+    "faq",
+    "support",
+    "identifier",
+    "has_build_file",
+    "executable_example"
+  ],
+  "somef_provenance": {
+    "date": "2024-10-06 08:23:41",
+    "somef_schema_version": "1.0.0",
+    "somef_version": "0.9.5"
+  },
+  "stargazers_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 66
+      },
+      "technique": "GitHub_API"
+    }
+  ]
+}

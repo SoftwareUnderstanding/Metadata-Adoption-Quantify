@@ -1,0 +1,817 @@
+{
+  "code_repository": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/bcgsc/NanoSim"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_created": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2015-11-05T23:55:27Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_updated": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2024-10-03T21:54:35Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "description": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "Nanopore sequence read simulator"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 0.9716363024583465,
+      "result": {
+        "type": "Text_excerpt",
+        "value": "NanoSim is a fast and scalable read simulator that captures the technology-specific features of ONT data, and allows for adjustments upon improvement of nanopore sequencing technology.   \nThe second version of NanoSim (v2.0.0) uses minimap2 as default aligner to align long genomic ONT reads to reference genome. It leads to much faster alignment step and reduces the overall runtime of NanoSim. We also utilize HTSeq, a python package, to read SAM alignment files efficiently. \nNanoSim [(v2.5)](https://github.com/bcgsc/NanoSim/releases/tag/v2.5.1) is able to simulate ONT transcriptome reads (cDNA / direct RNA) as well as genomic reads. It also models features of the library preparation protocols used, including intron retention (IR) events in cDNA and directRNA reads. Further, it has stand-alone modes which profiles transcript expression patterns and detects IR events in custom datasets. Additionally, we improved the homopolymer simulation option which simulates homopolymer expansion and contraction events with respect to chosen basecaller. Multiprocessing option allows for faster runtime for large library simulation.   \nNanoSim [(v2.6)](https://github.com/bcgsc/NanoSim/releases/tag/v2.6.0) is able to simulate ONT reads in fastq format. The base quality information is simulated with truncated log-normal distributions, learnt separately from match bases, mismatch bases, insertion bases, deletion bases, and unaligned bases, each from different basecaller and read type.   \nNanoSim [(v3.0)](https://github.com/bcgsc/NanoSim/releases/tag/v3.0.0) is able to simulate ONT metagenome reads. It quantifies metagenome abundance in the characterization stage, and accomodates for chimeric reads. In the simulation stage, it simulates both features as well. In addition, the simulation of chimeric reads is available in genome mode too. Some pre-trained models are re-trained for compatibility issues. \n**Trans-NanoSim**  \nHafezqorani S, Yang C, Lo T, Nip KM, Warren RL, Birol I. Trans-NanoSim characterizes and simulates nanopore RNA-sequencing data. Gigascience. 2020 Jun 1;9(6):giaa061. doi: [10.1093/gigascience/giaa061](https://doi.org/10.1093/gigascience/giaa061). PMID: 32520350; PMCID: PMC7285873. \n**Meta-NanoSim**  \nYang C, Lo T, Nip KM, Hafezqorani S, Warren RL, Birol I. Characterization and simulation of metagenomic nanopore sequencing data with Meta-NanoSim. Gigascience. 2023 Mar 20;12:giad013. doi: [10.1093/gigascience/giad013](https://doi.org/10.1093/gigascience/giad013). PMID: 36939007; PMCID: PMC10025935. \n"
+      },
+      "source": "https://raw.githubusercontent.com/bcgsc/NanoSim/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9219632013657609,
+      "result": {
+        "original_header": "2. Simulation stage",
+        "type": "Text_excerpt",
+        "value": "__genome mode usage:__\n```\nusage: simulator.py genome [-h] -rg REF_G [-c MODEL_PREFIX] [-o OUTPUT]\n                           [-n NUMBER] [-max MAX_LEN] [-min MIN_LEN]\n                           [-med MEDIAN_LEN] [-sd SD_LEN] [--seed SEED] [-hp]\n                           [-k KMERBIAS] [-s STRANDNESS]\n                           [-dna_type {linear,circular}] [--perfect] [--fastq]\n                           [--chimeric] [-t NUM_THREADS]\n\noptional arguments:\n  -h, --help            show this help message and exit\n  -rg REF_G, --ref_g REF_G\n                        Input reference genome\n  -c MODEL_PREFIX, --model_prefix MODEL_PREFIX\n                        Location and prefix of error profiles generated from\n                        characterization step (Default = training)\n  -o OUTPUT, --output OUTPUT\n                        Output location and prefix for simulated reads\n                        (Default = simulated)\n  -n NUMBER, --number NUMBER\n                        Number of reads to be simulated (Default = 20000)\n  -max MAX_LEN, --max_len MAX_LEN\n                        The maximum length for simulated reads (Default =\n                        Infinity)\n  -min MIN_LEN, --min_len MIN_LEN\n                        The minimum length for simulated reads (Default = 50)\n  -med MEDIAN_LEN, --median_len MEDIAN_LEN\n                        The median read length (Default = None), Note: this\n                        simulation is not compatible with chimeric reads\n                        simulation\n  -sd SD_LEN, --sd_len SD_LEN\n                        The standard deviation of read length in log scale\n                        (Default = None), Note: this simulation is not\n                        compatible with chimeric reads simulation\n  --seed SEED           Manually seeds the pseudo-random number generator\n  -hp, --homopolymer    Simulate homopolymer lengths (Default = False)\n  -k KMERBIAS, --KmerBias KMERBIAS\n                        Minimum homopolymer length to simulate homopolymer\n                        contraction and expansion events in, a typical k is 5\n  -s STRANDNESS, --strandness STRANDNESS\n                        Proportion of sense sequences. Overrides the value\n                        profiled in characterization stage. Should be between\n                        0 and 1\n  -dna_type {linear,circular}\n                        Specify the dna type: circular OR linear (Default =\n                        linear)\n  --perfect             Ignore error profiles and simulate perfect reads\n  --fastq               Output fastq files instead of fasta files\n  --chimeric            Simulate chimeric reads\n  -t NUM_THREADS, --num_threads NUM_THREADS\n                        Number of threads for simulation (Default = 1)\n``` \n__transcriptome mode usage:__\n```\nusage: simulator.py transcriptome [-h] -rt REF_T [-rg REF_G] -e EXP\n                                  [-c MODEL_PREFIX] [-o OUTPUT] [-n NUMBER]\n                                  [-max MAX_LEN] [-min MIN_LEN] [--seed SEED]\n                                  [-hp] [-k KMERBIAS] [-b {albacore,guppy}]\n                                  [-s STRANDNESS] [--no_model_ir] [--perfect]\n                                  [--polya POLYA] [--fastq] [-t NUM_THREADS]\n                                  [--uracil]\n\noptional arguments:\n  -h, --help            show this help message and exit\n  -rt REF_T, --ref_t REF_T\n                        Input reference transcriptome\n  -rg REF_G, --ref_g REF_G\n                        Input reference genome, required if intron retention\n                        simulation is on\n  -e EXP, --exp EXP     Expression profile in the specified format as\n                        described in README\n  -c MODEL_PREFIX, --model_prefix MODEL_PREFIX\n                        Location and prefix of error profiles generated from\n                        characterization step (Default = training)\n  -o OUTPUT, --output OUTPUT\n                        Output location and prefix for simulated reads\n                        (Default = simulated)\n  -n NUMBER, --number NUMBER\n                        Number of reads to be simulated (Default = 20000)\n  -max MAX_LEN, --max_len MAX_LEN\n                        The maximum length for simulated reads (Default =\n                        Infinity)\n  -min MIN_LEN, --min_len MIN_LEN\n                        The minimum length for simulated reads (Default = 50)\n  --seed SEED           Manually seeds the pseudo-random number generator\n  -hp, --homopolymer    Simulate homopolymer lengths (Default = False)\n  -k KMERBIAS, --KmerBias KMERBIAS\n                        Minimum homopolymer length to simulate homopolymer\n                        contraction and expansion events in, a typical k is 6\n  -b {albacore,guppy}, --basecaller {albacore,guppy}\n                        Simulate polyA tails with respect to chosen\n                        basecaller: albacore or guppy\n  -s STRANDNESS, --strandness STRANDNESS\n                        Proportion of sense sequences. Overrides the value\n                        profiled in characterization stage. Should be between\n                        0 and 1\n  --no_model_ir         Ignore simulating intron retention events\n  --perfect             Ignore profiles and simulate perfect reads\n  --polya POLYA         Simulate polyA tails for given list of transcripts\n  --fastq               Output fastq files instead of fasta files\n  -t NUM_THREADS, --num_threads NUM_THREADS\n                        Number of threads for simulation (Default = 1)\n  --uracil              Converts the thymine (T) bases to uracil (U) in the\n                        output fasta format\n``` \n__sample expression file for transcriptome simulation__  \nThe expression profile is a tsv file containing expression levels of each isoform to be simulated. Users can use the output of `quantify` mode as template for modify or use the following format for constructing a new expression profile.  \nThe first row is header row specifying the format of the file. `target_id` is the id of each transcript. The `tpm` column is used for simulating, while the `est_count` is just a placeholder to be compatible with the output of the `quantify` mode and other quantification tools such as Salmon. \nThe following rows are entries for each transcript isoform and the id of which needs to exist in the provided reference transcriptome. The id should start with `ENS`. \n**metagenome mode**  \nIf you are interested in simulating ONT metagenome reads, you need to run the simulation stage in \"metagenome\" mode with following options. We have provided sample config files for users to construct their own `-gl`, `-a`, and `-dl` config files correctly. \n__metagenome mode usage:__\n```\nusage: simulator.py metagenome [-h] -gl GENOME_LIST -a ABUN\n                               [-dl DNA_TYPE_LIST] [-c MODEL_PREFIX]\n                               [-o OUTPUT] [-max MAX_LEN] [-min MIN_LEN]\n                               [-med MEDIAN_LEN] [-sd SD_LEN] [--seed SEED]\n                               [-s STRANDNESS] [--perfect]\n                               [--abun_var ABUN_VAR [ABUN_VAR ...]] [--fastq]\n                               [--chimeric] [-t NUM_THREADS]\n\noptional arguments:\n  -h, --help            show this help message and exit\n  -gl GENOME_LIST, --genome_list GENOME_LIST\n                        Reference metagenome list, tsv file, the first column\n                        is species/strain name, the second column is the\n                        reference genome fasta/fastq file directory\n  -a ABUN, --abun ABUN  Abundance list, tsv file with header, the abundance of\n                        all species in each sample need to sum up to 100. See\n                        example in README and provided config files\n  -dl DNA_TYPE_LIST, --dna_type_list DNA_TYPE_LIST\n                        DNA type list, tsv file, the first column is\n                        species/strain, the second column is the chromosome\n                        name, the third column is the DNA type: circular OR\n                        linear\n  -c MODEL_PREFIX, --model_prefix MODEL_PREFIX\n                        Location and prefix of error profiles generated from\n                        characterization step (Default = training)\n  -o OUTPUT, --output OUTPUT\n                        Output location and prefix for simulated reads\n                        (Default = simulated)\n  -max MAX_LEN, --max_len MAX_LEN\n                        The maximum length for simulated reads (Default =\n                        Infinity)\n  -min MIN_LEN, --min_len MIN_LEN\n                        The minimum length for simulated reads (Default = 50)\n  -med MEDIAN_LEN, --median_len MEDIAN_LEN\n                        The median read length (Default = None), Note: this\n                        simulation is not compatible with chimeric reads\n                        simulation\n  -sd SD_LEN, --sd_len SD_LEN\n                        The standard deviation of read length in log scale\n                        (Default = None), Note: this simulation is not\n                        compatible with chimeric reads simulation\n  --seed SEED           Manually seeds the pseudo-random number generator\n  -s STRANDNESS, --strandness STRANDNESS\n                        Percentage of antisense sequences. Overrides the value\n                        profiled in characterization stage. Should be between\n                        0 and 1\n  --perfect             Ignore error profiles and simulate perfect reads\n  --abun_var ABUN_VAR [ABUN_VAR ...]\n                        Simulate random variation in abundance values, takes\n                        in two values, format: relative_var_low,\n                        relative_var_high, Example: -0.5 0.5)\n  --fastq               Output fastq files instead of fasta files\n  --chimeric            Simulate chimeric reads\n  -t NUM_THREADS, --num_threads NUM_THREADS\n                        Number of threads for simulation (Default = 1)\n``` \nThe abundance file is a tsv file, with rows representing the abundance of each sample and columns representing each sample. Each column (except for the first row) needs to sum up to 100, because the total abundance of each sample needs to be 100.   \nThe first row is header row to specify the number of reads in each sample. The format of the first row is:  \n`Size  total_reads_in_sample1  total_reads_in_sample2  ...`  \nThe following rows are in the format as:  \n`Species abundance_in_sample1  abundance_in_sample2  ...`     \n\nIn the above example, there are two samples. The first sample will contain 20,0000 reads, while the second sample will contain 100 reads. The abundances in sample 1 and 2 are as shown in th table, and both of them add up to 100.   \n\\* Notice: the use of `max_len` and `min_len` in genome mode will affect the read length distributions. If the range between `max_len` and `min_len` is too small, the program will run slowlier accordingly.   \n\\* Notice: the transcript name in the expression tsv file and the ones in th polyadenylated transcript list has to be consistent with the ones in the reference transcripts, otherwise the tool won't recognize them and don't know where to find them to extract reads for simulation. \n4 If you want to simulate human genome with length limits between 1000nt to 10000nt  \n`./simulator.py genome -dna_type linear -rg human_ref.fasta -c human -max 10000 -min 1000`   \n5 If you want to simulate human genome with controlled median read length and standard deviation, NanoSim will use log-normal distribution to approximate the read length distribution \n`./simulator.py genome -dna_type linear -rg human_ref.fasta -c human -med 5000 -sd 1.05` \n8 If you want to simulate two thousands cDNA/directRNA reads from human reference transcriptome with polya tails, mimicking homopolymer bias (starting from homopolymer length >= 6) and reads in fastq format  \n`./simulator.py transcriptome -rt Homo_sapiens.GRCh38.cdna.all.fa -c Homo_sapiens_model -e abundance.tsv -rg Homo_sapiens.GRCh38.dna.primary.assembly.fa --polya transcripts_with_polya_tails --fastq -k 6 --basecaller guppy -r dRNA` \n9 If you want to simulate two metagenome samples with abundance variation, and chimeric reads  \n`.simulator.py metagenome -gl sample_config_file/metagenome_list_for_simulation -a sample_config_file/abundance_for_simulation_multi_sample.tsv -dl sample_config_file/dna_type_list.tsv -c pre-trained_models/metagenome_ERR3152364_Even/training --abun_var -0.5 0.5 --chimeric`\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/bcgsc/NanoSim/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9828489454864276,
+      "result": {
+        "original_header": "1.1 Characterization stage (genome)",
+        "type": "Text_excerpt",
+        "value": "2. `training_aligned_reads.pkl` Kernel density function of aligned reads  \n3. `training_ht_length.pkl`  Kernel density function of unaligned regions on aligned reads  \n4. `training_besthit.bam` The best alignment of each read based on length  \n5. `training_match.hist/training_mis.hist/training_del.hist/training_ins.hist` Histogram of match, mismatch, and indels  \n6. `training_first_match.hist` Histogram of the first match length of each alignment  \n7. `training_error_markov_model` Markov model of error types  \n8. `training_ht_ratio.pkl` Kernel density function of head/(head + tail) on aligned reads    \n9. `training.bam` The alignment output  \n10. `training_match_markov_model` Markov model of the length of matches (stretches of correct base calls)  \n11. `training_model_profile` Fitted model for errors  \n12. `training_processed.bam` A re-formatted BAM file for user-provided alignment file  \n13. `training_unaligned_length.pkl` Kernel density function of unaligned reads  \n14. `training_error_rate.tsv` Mismatch rate, insertion rate and deletion rate\n15. `training_strandness_rate` Strandness rate in input reads\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/bcgsc/NanoSim/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9903044361066242,
+      "result": {
+        "original_header": "1.2 Characterization stage (transcriptome)",
+        "type": "Text_excerpt",
+        "value": "2. `training_aligned_region_2d.pkl` Two-dimensional kernel density function of aligned regions over the length of reference transcript they aligned\n3. `training_aligned_reads.pkl` Kernel density function of aligned reads\n4. `training_ht_length.pkl`  Kernel density function of unaligned regions on aligned reads\n5. `training_besthit.bam` The best alignment of each read based on length\n6. `training_match.hist/training_mis.hist/training_del.hist/training_ins.hist` Histogram of match, mismatch, and indels\n7. `training_first_match.hist` Histogram of the first match length of each alignment\n8. `training_error_markov_model` Markov model of error types\n9. `training_ht_ratio.pkl` Kernel density function of head/(head + tail) on aligned reads\n10. `training.bam` The alignment output\n11. `training_match_markov_model` Markov model of the length of matches (stretches of correct base calls)\n12. `training_model_profile` Fitted model for errors\n13. `training_processed.bam` A re-formatted BAM file for user-provided alignment file\n14. `training_unaligned_length.pkl` Kernel density function of unaligned reads\n15. `training_error_rate.tsv` Mismatch rate, insertion rate and deletion rate\n16. `training_strandness_rate` Strandness rate in input reads\n17. `training_addedintron_final.gff3` gff3 file format containing the intron coordinate information\n18. `training_IR_info` List of transcripts in which there is a retained intron based on IR modeling step\n19. `training_IR_markov_model` Markov model of Intron Retention events\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/bcgsc/NanoSim/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9725904495672832,
+      "result": {
+        "original_header": "1.3 Characterization stage (metagenome)",
+        "type": "Text_excerpt",
+        "value": "2. `training_aligned_reads.pkl` Kernel density function of aligned reads  \n3. `training_ht_length.pkl`  Kernel density function of unaligned regions on aligned reads  \n4. `training_besthit.bam` The best alignment of each read based on length  \n5. `training_match.hist/training_mis.hist/training_del.hist/training_ins.hist` Histogram of match, mismatch, and indels  \n6. `training_first_match.hist` Histogram of the first match length of each alignment  \n7. `training_error_markov_model` Markov model of error types  \n8. `training_ht_ratio.pkl` Kernel density function of head/(head + tail) on aligned reads    \n9. `training.bam` The alignment output  \n10. `training_match_markov_model` Markov model of the length of matches (stretches of correct base calls)  \n11. `training_model_profile` Fitted model for errors  \n12. `training_processed.bam` A re-formatted BAM file for user-provided alignment file  \n13. `training_unaligned_length.pkl` Kernel density function of unaligned reads  \n14. `training_error_rate.tsv` Mismatch rate, insertion rate and deletion rate\n15. `training_strandness_rate` Strandness rate in input reads\n16. `training_chimeric_info` Information for chimeric reads  \n17. `training_gap_length.pkl` The gap size between suplementary alignments   \n1. `simulated_reads.fasta`\n  FASTA file of simulated reads. Each reads has \"unaligned\", \"aligned\", or \"perfect\" in the header determining their error rate. \"unaligned\" means that the reads have an error rate over 90% and cannot be aligned. \"aligned\" reads have the same error rate as training reads. \"perfect\" reads have no errors.  \n  \n  To explain the information in the header, we have two examples:  \n  * `>ref|NC-001137|-[chromosome=V]_468529_unaligned_0_F_0_3236_0`  \n    All information before the first `_` are chromosome information. `468529` is the start position and `unaligned` suggesting it should be unaligned to the reference. The first `0` is the sequence index. `F` represents a forward strand. `0_3236_0` means that sequence length extracted from the reference is 3236 bases.  \n  * `>ref|NC-001143|-[chromosome=XI]_115406_aligned_16565_R_92_12710_2`  \n    This is an aligned read coming from chromosome XI at position 115406. `16565` is the sequence index. `R` represents a reverse complement strand. `92_12710_2` means that this read has 92-base head region (cannot be aligned), followed by 12710 bases of middle region, and then 2-base tail region.  \n  \n  The information in the header can help users to locate the read easily.  \n  \n__Specific to transcriptome simulation__: for reads that include retained introns, the header contains the information starting from `Retained_intron`, each genomic interval is separated by `;`. \n__Specific to chimeric reads simulation__: for chimeric reads, different source chromosome and locations are separated by `;`, and there's a `chimeric` in the header to indicate.\n  \n2. `simulated_error_profile`\n  Contains all the information of errors introduced into each reads, including error type, position, original bases and current bases.   \n"
+      },
+      "source": "https://raw.githubusercontent.com/bcgsc/NanoSim/master/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "documentation": [
+    {
+      "confidence": 1,
+      "result": {
+        "format": "wiki",
+        "type": "Url",
+        "value": "https://github.com/bcgsc/NanoSim/wiki"
+      },
+      "source": "https://raw.githubusercontent.com/bcgsc/NanoSim/master/README.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "download": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Downloads",
+        "type": "Text_excerpt",
+        "value": "For **releases before v2.2.0**, we provide profiles trained for _E. coli_ or _S. cerevisiae_ datasets. Flowcell chemistry is R7.3 and R9, and they were basecalled by Metrichor. They can be downloaded from **[our ftp site](http://www.bcgsc.ca/downloads/supplementary/NanoSim/)**\n\nFor **release v2.5.0 and onwards**, we provide profiles trained for _H. sapiens_ NA12878 gDNA, cDNA 1D2, and directRNA datasets, _Mus. musculus_ cDNA dataset, and the ZymoBIOMICS mock community datasets with 10 species and two abundance levels. Flowcell chemistry is R9.4 for all datasets. NA12878 gDNA and directRNA were basecalled by Guppy 3.1.5; NA12878 cDNA 1D2 was basecalled by Albacore 2.3.1; mouse cDNA was basecalled by Metrichor. These models are available within **[pre-trained_models folder](https://github.com/bcgsc/NanoSim/tree/master/pre-trained_models)**.  \n\nFor **release v3.1.1**, we provide a trained model for _H. sapiens_ NA24385 - AshkenazimTrio - Son (hg002) which is sequenced using Kit **v14** (R10 chemistry) and basecalled by dorado. You may find the trained model on 1 Million subsampled reads on the GitHub page (available along with the other models at **[pre-trained_models folder](https://github.com/bcgsc/NanoSim/tree/master/pre-trained_models)**). If you are interested in the trained model based on the whole dataset, you can get it through **[Zenodo - DOI: 10.5281/zenodo.10064740](https://zenodo.org/records/10064741)**. The model is trained using `NanoSim v3.0.2` with `scikit-learn v0.23.2` and `python v3.7.10`.\n\nFor **release v3.2.1**, we provide a [trained model](https://github.com/bcgsc/NanoSim/tree/master/pre-trained_models) for _H. sapiens_ NA24385  - AshkenazimTrio - Son (hg002) which is sequenced using Kit **v14** (R10 chemistry) and basecalled by dorado (human_giab_hg002_sub1M_kitv14_dorado_v3.2.1.tar.gz). The model is trained using `NanoSim v3.2.1` with `python 3.7` and `scikit-learn v0.23.2`.\n\n**If you have any issues using the pre-trained models, check the [dependencies](https://github.com/bcgsc/NanoSim#dependencies) section for some information and tips.**\n"
+      },
+      "source": "https://raw.githubusercontent.com/bcgsc/NanoSim/master/README.md",
+      "technique": "header_analysis"
+    }
+  ],
+  "download_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/bcgsc/NanoSim/releases"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 56
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/bcgsc/NanoSim/forks"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "bcgsc/NanoSim"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_title": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": ""
+      },
+      "source": "https://raw.githubusercontent.com/bcgsc/NanoSim/master/README.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "installation": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Installation",
+        "type": "Text_excerpt",
+        "value": "Before you begin, make sure that your conda channels are [configured properly for bioconda](https://bioconda.github.io/). \n\nOption 1. Install the latest release through bioconda:\n```\nconda install -c bioconda nanosim\n```\n \nOption 2. Install the development code in our repo:\n1. `git clone https://github.com/bcgsc/NanoSim.git`  \n2. `conda create --name nanosim python=3.7`\n3. `conda activate nanosim`\n4. `conda install --file requirements.txt -c conda-forge -c bioconda`\n\n> **_NOTE:_**  If you have difficulty with installing all the dependent packages with `conda`. We strongly recommend that you create a dedicated environment for running NanoSim. If you have issues with `conda install` being eternally stuck, use **mamba** instead of `conda` to install your conda packages: https://github.com/mamba-org/mamba .\n> \n> So, integrating all these together:\n> ```\n> conda create -n nanosim_env\n> conda activate nanosim_env\n> \n> mamba install scikit-learn=0.22.1 six samtools pysam pybedtools minimap2 joblib htseq genometools-genometools\n> ```\n> Note that here we only specified the version for `scikit-learn` but not for the other packages. `mamba` should be able to pick the appropriate versions for the specified packages, python, and numpy, etc.\n"
+      },
+      "source": "https://raw.githubusercontent.com/bcgsc/NanoSim/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 0.9995677457377349,
+      "result": {
+        "type": "Text_excerpt",
+        "value": "> **_NOTE:_**\n> We usually add new pre-trained models and make them available through the latest releases! Users can choose to download the whole package or only scripts without models to speed it up. Please check the [downloads](https://github.com/bcgsc/NanoSim/edit/master/README.md#downloads) section for more information regarding the pre-trained models. \n"
+      },
+      "source": "https://raw.githubusercontent.com/bcgsc/NanoSim/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9508620128552094,
+      "result": {
+        "original_header": "2. Simulation stage",
+        "type": "Text_excerpt",
+        "value": "__Simulation stage general usage:__\n```\nusage: simulator.py [-h] [-v] {genome,transcriptome,metagenome} ...\n\nSimulation step\n-----------------------------------------------------------\nGiven error profiles, reference genome, metagenome,\nand/or transcriptome, simulate ONT DNA or RNA reads\n\noptional arguments:\n  -h, --help            show this help message and exit\n  -v, --version         show program's version number and exit\n\nsubcommands:\n  \n  There are two modes in read_analysis.\n  For detailed usage of each mode:\n      simulator.py mode -h\n  -------------------------------------------------------\n\n  {genome,transcriptome}\n                        You may run the simulator on genome, transcriptome,\n                        or metagenome mode.\n    genome              Run the simulator on genome mode\n    transcriptome       Run the simulator on transcriptome mode\n    metagenome          Run the simulator on metagenome mode\n\n``` \n**genome mode**  \nIf you are interested in simulating ONT genomic reads, you need to run the simulation stage in \"genome\" mode with following options. \n**transcriptome mode**  \nIf you are interested in simulating ONT transcriptome reads, you need to run the simulation stage in \"transcriptome\" mode with following options. \n**metagenome mode**  \nIf you are interested in simulating ONT metagenome reads, you need to run the simulation stage in \"metagenome\" mode with following options. We have provided sample config files for users to construct their own `-gl`, `-a`, and `-dl` config files correctly. \n__Example runs:__  \n1 If you want to simulate _E. coli_ genome, then circular command must be chosen because it's a circular genome  \n`./simulator.py genome -dna_type circular -rg Ecoli_ref.fasta -c ecoli` \n2 If you want to simulate only perfect reads, _i.e._ no snps, or indels, just simulate the read length distribution  \n`./simulator.py genome -dna_type circular -rg Ecoli_ref.fasta -c ecoli --perfect` \n3 If you want to simulate _S. cerevisiae_ genome with kmer bias, then linear command must be chosen because it's a linear genome  \n`./simulator.py genome -dna_type linear -rg yeast_ref.fasta -c yeast --KmerBias`   \n4 If you want to simulate human genome with length limits between 1000nt to 10000nt  \n`./simulator.py genome -dna_type linear -rg human_ref.fasta -c human -max 10000 -min 1000`   \n5 If you want to simulate human genome with controlled median read length and standard deviation, NanoSim will use log-normal distribution to approximate the read length distribution \n`./simulator.py genome -dna_type linear -rg human_ref.fasta -c human -med 5000 -sd 1.05` \n6 If you want to simulate ten thousands cDNA/directRNA reads from mouse reference transcriptome  \n`./simulator.py transcriptome -rt Mus_musculus.GRCm38.cdna.all.fa -rg Mus_musculus.GRCm38.dna.primary_assembly.fa -c mouse_cdna -e abundance.tsv -n 10000` \n"
+      },
+      "source": "https://raw.githubusercontent.com/bcgsc/NanoSim/master/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "invocation": [
+    {
+      "confidence": 0.8677982509526866,
+      "result": {
+        "original_header": "2. Simulation stage",
+        "type": "Text_excerpt",
+        "value": "Example:  \n| target_id | est_counts | tpm |\n| --------- |:----------:|----:|\n| ENST00000222247.9 | 2307.2992 | 3145.3749 |  \n| ENST00000274065.8 | 2641.9534 | 3601.5848 |  \n| ENST00000400259.5 | 623.6130 | 850.1268 |  \n| ENST00000344548.7 | 1828.3466 | 2492.4533 |  \n| ENST00000484610.5 | 766.3528 | 1044.7137 | \n"
+      },
+      "source": "https://raw.githubusercontent.com/bcgsc/NanoSim/master/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "issue_tracker": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/bcgsc/NanoSim/issues"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "keywords": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "genome, nanopore-sequencing, oxford-nanopore, simulator, transcriptome"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "license": [
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Other",
+        "spdx_id": "NOASSERTION",
+        "type": "License",
+        "url": null,
+        "value": null
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "File_dump",
+        "value": "NanoSim\nCopyright 2016 Chen Yang\n\nThis program is free software: you can redistribute it and/or modify\nit under the terms of the GNU General Public License as published by\nthe Free Software Foundation, version 3.\n\nThis program is distributed in the hope that it will be useful,\nbut WITHOUT ANY WARRANTY; without even the implied warranty of\nMERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the\nGNU General Public License for more details.\n\nYou should have received a copy of the GNU General Public License\nalong with this program. If not, see <http://www.gnu.org/licenses/>.\n\nFor commercial licensing options, please contact\nPatrick Rebstein <prebstein@bccancer.bc.ca>\n\nSee the file COPYRIGHT for details of the copyright and license of\neach individual file included with this software.\n\n                    GNU GENERAL PUBLIC LICENSE\n                       Version 3, 29 June 2007\n\n Copyright (C) 2007 Free Software Foundation, Inc. <http://fsf.org/>\n Everyone is permitted to copy and distribute verbatim copies\n of this license document, but changing it is not allowed.\n\n                            Preamble\n\n  The GNU General Public License is a free, copyleft license for\nsoftware and other kinds of works.\n\n  The licenses for most software and other practical works are designed\nto take away your freedom to share and change the works.  By contrast,\nthe GNU General Public License is intended to guarantee your freedom to\nshare and change all versions of a program--to make sure it remains free\nsoftware for all its users.  We, the Free Software Foundation, use the\nGNU General Public License for most of our software; it applies also to\nany other work released this way by its authors.  You can apply it to\nyour programs, too.\n\n  When we speak of free software, we are referring to freedom, not\nprice.  Our General Public Licenses are designed to make sure that you\nhave the freedom to distribute copies of free software (and charge for\nthem if you wish), that you receive source code or can get it if you\nwant it, that you can change the software or use pieces of it in new\nfree programs, and that you know you can do these things.\n\n  To protect your rights, we need to prevent others from denying you\nthese rights or asking you to surrender the rights.  Therefore, you have\ncertain responsibilities if you distribute copies of the software, or if\nyou modify it: responsibilities to respect the freedom of others.\n\n  For example, if you distribute copies of such a program, whether\ngratis or for a fee, you must pass on to the recipients the same\nfreedoms that you received.  You must make sure that they, too, receive\nor can get the source code.  And you must show them these terms so they\nknow their rights.\n\n  Developers that use the GNU GPL protect your rights with two steps:\n(1) assert copyright on the software, and (2) offer you this License\ngiving you legal permission to copy, distribute and/or modify it.\n\n  For the developers' and authors' protection, the GPL clearly explains\nthat there is no warranty for this free software.  For both users' and\nauthors' sake, the GPL requires that modified versions be marked as\nchanged, so that their problems will not be attributed erroneously to\nauthors of previous versions.\n\n  Some devices are designed to deny users access to install or run\nmodified versions of the software inside them, although the manufacturer\ncan do so.  This is fundamentally incompatible with the aim of\nprotecting users' freedom to change the software.  The systematic\npattern of such abuse occurs in the area of products for individuals to\nuse, which is precisely where it is most unacceptable.  Therefore, we\nhave designed this version of the GPL to prohibit the practice for those\nproducts.  If such problems arise substantially in other domains, we\nstand ready to extend this provision to those domains in future versions\nof the GPL, as needed to protect the freedom of users.\n\n  Finally, every program is threatened constantly by software patents.\nStates should not allow patents to restrict development and use of\nsoftware on general-purpose computers, but in those that do, we wish to\navoid the special danger that patents applied to a free program could\nmake it effectively proprietary.  To prevent this, the GPL assures that\npatents cannot be used to render the program non-free.\n\n  The precise terms and conditions for copying, distribution and\nmodification follow.\n\n                       TERMS AND CONDITIONS\n\n  0. Definitions.\n\n  \"This License\" refers to version 3 of the GNU General Public License.\n\n  \"Copyright\" also means copyright-like laws that apply to other kinds of\nworks, such as semiconductor masks.\n\n  \"The Program\" refers to any copyrightable work licensed under this\nLicense.  Each licensee is addressed as \"you\".  \"Licensees\" and\n\"recipients\" may be individuals or organizations.\n\n  To \"modify\" a work means to copy from or adapt all or part of the work\nin a fashion requiring copyright permission, other than the making of an\nexact copy.  The resulting work is called a \"modified version\" of the\nearlier work or a work \"based on\" the earlier work.\n\n  A \"covered work\" means either the unmodified Program or a work based\non the Program.\n\n  To \"propagate\" a work means to do anything with it that, without\npermission, would make you directly or secondarily liable for\ninfringement under applicable copyright law, except executing it on a\ncomputer or modifying a private copy.  Propagation includes copying,\ndistribution (with or without modification), making available to the\npublic, and in some countries other activities as well.\n\n  To \"convey\" a work means any kind of propagation that enables other\nparties to make or receive copies.  Mere interaction with a user through\na computer network, with no transfer of a copy, is not conveying.\n\n  An interactive user interface displays \"Appropriate Legal Notices\"\nto the extent that it includes a convenient and prominently visible\nfeature that (1) displays an appropriate copyright notice, and (2)\ntells the user that there is no warranty for the work (except to the\nextent that warranties are provided), that licensees may convey the\nwork under this License, and how to view a copy of this License.  If\nthe interface presents a list of user commands or options, such as a\nmenu, a prominent item in the list meets this criterion.\n\n  1. Source Code.\n\n  The \"source code\" for a work means the preferred form of the work\nfor making modifications to it.  \"Object code\" means any non-source\nform of a work.\n\n  A \"Standard Interface\" means an interface that either is an official\nstandard defined by a recognized standards body, or, in the case of\ninterfaces specified for a particular programming language, one that\nis widely used among developers working in that language.\n\n  The \"System Libraries\" of an executable work include anything, other\nthan the work as a whole, that (a) is included in the normal form of\npackaging a Major Component, but which is not part of that Major\nComponent, and (b) serves only to enable use of the work with that\nMajor Component, or to implement a Standard Interface for which an\nimplementation is available to the public in source code form.  A\n\"Major Component\", in this context, means a major essential component\n(kernel, window system, and so on) of the specific operating system\n(if any) on which the executable work runs, or a compiler used to\nproduce the work, or an object code interpreter used to run it.\n\n  The \"Corresponding Source\" for a work in object code form means all\nthe source code needed to generate, install, and (for an executable\nwork) run the object code and to modify the work, including scripts to\ncontrol those activities.  However, it does not include the work's\nSystem Libraries, or general-purpose tools or generally available free\nprograms which are used unmodified in performing those activities but\nwhich are not part of the work.  For example, Corresponding Source\nincludes interface definition files associated with source files for\nthe work, and the source code for shared libraries and dynamically\nlinked subprograms that the work is specifically designed to require,\nsuch as by intimate data communication or control flow between those\nsubprograms and other parts of the work.\n\n  The Corresponding Source need not include anything that users\ncan regenerate automatically from other parts of the Corresponding\nSource.\n\n  The Corresponding Source for a work in source code form is that\nsame work.\n\n  2. Basic Permissions.\n\n  All rights granted under this License are granted for the term of\ncopyright on the Program, and are irrevocable provided the stated\nconditions are met.  This License explicitly affirms your unlimited\npermission to run the unmodified Program.  The output from running a\ncovered work is covered by this License only if the output, given its\ncontent, constitutes a covered work.  This License acknowledges your\nrights of fair use or other equivalent, as provided by copyright law.\n\n  You may make, run and propagate covered works that you do not\nconvey, without conditions so long as your license otherwise remains\nin force.  You may convey covered works to others for the sole purpose\nof having them make modifications exclusively for you, or provide you\nwith facilities for running those works, provided that you comply with\nthe terms of this License in conveying all material for which you do\nnot control copyright.  Those thus making or running the covered works\nfor you must do so exclusively on your behalf, under your direction\nand control, on terms that prohibit them from making any copies of\nyour copyrighted material outside their relationship with you.\n\n  Conveying under any other circumstances is permitted solely under\nthe conditions stated below.  Sublicensing is not allowed; section 10\nmakes it unnecessary.\n\n  3. Protecting Users' Legal Rights From Anti-Circumvention Law.\n\n  No covered work shall be deemed part of an effective technological\nmeasure under any applicable law fulfilling obligations under article\n11 of the WIPO copyright treaty adopted on 20 December 1996, or\nsimilar laws prohibiting or restricting circumvention of such\nmeasures.\n\n  When you convey a covered work, you waive any legal power to forbid\ncircumvention of technological measures to the extent such circumvention\nis effected by exercising rights under this License with respect to\nthe covered work, and you disclaim any intention to limit operation or\nmodification of the work as a means of enforcing, against the work's\nusers, your or third parties' legal rights to forbid circumvention of\ntechnological measures.\n\n  4. Conveying Verbatim Copies.\n\n  You may convey verbatim copies of the Program's source code as you\nreceive it, in any medium, provided that you conspicuously and\nappropriately publish on each copy an appropriate copyright notice;\nkeep intact all notices stating that this License and any\nnon-permissive terms added in accord with section 7 apply to the code;\nkeep intact all notices of the absence of any warranty; and give all\nrecipients a copy of this License along with the Program.\n\n  You may charge any price or no price for each copy that you convey,\nand you may offer support or warranty protection for a fee.\n\n  5. Conveying Modified Source Versions.\n\n  You may convey a work based on the Program, or the modifications to\nproduce it from the Program, in the form of source code under the\nterms of section 4, provided that you also meet all of these conditions:\n\n    a) The work must carry prominent notices stating that you modified\n    it, and giving a relevant date.\n\n    b) The work must carry prominent notices stating that it is\n    released under this License and any conditions added under section\n    7.  This requirement modifies the requirement in section 4 to\n    \"keep intact all notices\".\n\n    c) You must license the entire work, as a whole, under this\n    License to anyone who comes into possession of a copy.  This\n    License will therefore apply, along with any applicable section 7\n    additional terms, to the whole of the work, and all its parts,\n    regardless of how they are packaged.  This License gives no\n    permission to license the work in any other way, but it does not\n    invalidate such permission if you have separately received it.\n\n    d) If the work has interactive user interfaces, each must display\n    Appropriate Legal Notices; however, if the Program has interactive\n    interfaces that do not display Appropriate Legal Notices, your\n    work need not make them do so.\n\n  A compilation of a covered work with other separate and independent\nworks, which are not by their nature extensions of the covered work,\nand which are not combined with it such as to form a larger program,\nin or on a volume of a storage or distribution medium, is called an\n\"aggregate\" if the compilation and its resulting copyright are not\nused to limit the access or legal rights of the compilation's users\nbeyond what the individual works permit.  Inclusion of a covered work\nin an aggregate does not cause this License to apply to the other\nparts of the aggregate.\n\n  6. Conveying Non-Source Forms.\n\n  You may convey a covered work in object code form under the terms\nof sections 4 and 5, provided that you also convey the\nmachine-readable Corresponding Source under the terms of this License,\nin one of these ways:\n\n    a) Convey the object code in, or embodied in, a physical product\n    (including a physical distribution medium), accompanied by the\n    Corresponding Source fixed on a durable physical medium\n    customarily used for software interchange.\n\n    b) Convey the object code in, or embodied in, a physical product\n    (including a physical distribution medium), accompanied by a\n    written offer, valid for at least three years and valid for as\n    long as you offer spare parts or customer support for that product\n    model, to give anyone who possesses the object code either (1) a\n    copy of the Corresponding Source for all the software in the\n    product that is covered by this License, on a durable physical\n    medium customarily used for software interchange, for a price no\n    more than your reasonable cost of physically performing this\n    conveying of source, or (2) access to copy the\n    Corresponding Source from a network server at no charge.\n\n    c) Convey individual copies of the object code with a copy of the\n    written offer to provide the Corresponding Source.  This\n    alternative is allowed only occasionally and noncommercially, and\n    only if you received the object code with such an offer, in accord\n    with subsection 6b.\n\n    d) Convey the object code by offering access from a designated\n    place (gratis or for a charge), and offer equivalent access to the\n    Corresponding Source in the same way through the same place at no\n    further charge.  You need not require recipients to copy the\n    Corresponding Source along with the object code.  If the place to\n    copy the object code is a network server, the Corresponding Source\n    may be on a different server (operated by you or a third party)\n    that supports equivalent copying facilities, provided you maintain\n    clear directions next to the object code saying where to find the\n    Corresponding Source.  Regardless of what server hosts the\n    Corresponding Source, you remain obligated to ensure that it is\n    available for as long as needed to satisfy these requirements.\n\n    e) Convey the object code using peer-to-peer transmission, provided\n    you inform other peers where the object code and Corresponding\n    Source of the work are being offered to the general public at no\n    charge under subsection 6d.\n\n  A separable portion of the object code, whose source code is excluded\nfrom the Corresponding Source as a System Library, need not be\nincluded in conveying the object code work.\n\n  A \"User Product\" is either (1) a \"consumer product\", which means any\ntangible personal property which is normally used for personal, family,\nor household purposes, or (2) anything designed or sold for incorporation\ninto a dwelling.  In determining whether a product is a consumer product,\ndoubtful cases shall be resolved in favor of coverage.  For a particular\nproduct received by a particular user, \"normally used\" refers to a\ntypical or common use of that class of product, regardless of the status\nof the particular user or of the way in which the particular user\nactually uses, or expects or is expected to use, the product.  A product\nis a consumer product regardless of whether the product has substantial\ncommercial, industrial or non-consumer uses, unless such uses represent\nthe only significant mode of use of the product.\n\n  \"Installation Information\" for a User Product means any methods,\nprocedures, authorization keys, or other information required to install\nand execute modified versions of a covered work in that User Product from\na modified version of its Corresponding Source.  The information must\nsuffice to ensure that the continued functioning of the modified object\ncode is in no case prevented or interfered with solely because\nmodification has been made.\n\n  If you convey an object code work under this section in, or with, or\nspecifically for use in, a User Product, and the conveying occurs as\npart of a transaction in which the right of possession and use of the\nUser Product is transferred to the recipient in perpetuity or for a\nfixed term (regardless of how the transaction is characterized), the\nCorresponding Source conveyed under this section must be accompanied\nby the Installation Information.  But this requirement does not apply\nif neither you nor any third party retains the ability to install\nmodified object code on the User Product (for example, the work has\nbeen installed in ROM).\n\n  The requirement to provide Installation Information does not include a\nrequirement to continue to provide support service, warranty, or updates\nfor a work that has been modified or installed by the recipient, or for\nthe User Product in which it has been modified or installed.  Access to a\nnetwork may be denied when the modification itself materially and\nadversely affects the operation of the network or violates the rules and\nprotocols for communication across the network.\n\n  Corresponding Source conveyed, and Installation Information provided,\nin accord with this section must be in a format that is publicly\ndocumented (and with an implementation available to the public in\nsource code form), and must require no special password or key for\nunpacking, reading or copying.\n\n  7. Additional Terms.\n\n  \"Additional permissions\" are terms that supplement the terms of this\nLicense by making exceptions from one or more of its conditions.\nAdditional permissions that are applicable to the entire Program shall\nbe treated as though they were included in this License, to the extent\nthat they are valid under applicable law.  If additional permissions\napply only to part of the Program, that part may be used separately\nunder those permissions, but the entire Program remains governed by\nthis License without regard to the additional permissions.\n\n  When you convey a copy of a covered work, you may at your option\nremove any additional permissions from that copy, or from any part of\nit.  (Additional permissions may be written to require their own\nremoval in certain cases when you modify the work.)  You may place\nadditional permissions on material, added by you to a covered work,\nfor which you have or can give appropriate copyright permission.\n\n  Notwithstanding any other provision of this License, for material you\nadd to a covered work, you may (if authorized by the copyright holders of\nthat material) supplement the terms of this License with terms:\n\n    a) Disclaiming warranty or limiting liability differently from the\n    terms of sections 15 and 16 of this License; or\n\n    b) Requiring preservation of specified reasonable legal notices or\n    author attributions in that material or in the Appropriate Legal\n    Notices displayed by works containing it; or\n\n    c) Prohibiting misrepresentation of the origin of that material, or\n    requiring that modified versions of such material be marked in\n    reasonable ways as different from the original version; or\n\n    d) Limiting the use for publicity purposes of names of licensors or\n    authors of the material; or\n\n    e) Declining to grant rights under trademark law for use of some\n    trade names, trademarks, or service marks; or\n\n    f) Requiring indemnification of licensors and authors of that\n    material by anyone who conveys the material (or modified versions of\n    it) with contractual assumptions of liability to the recipient, for\n    any liability that these contractual assumptions directly impose on\n    those licensors and authors.\n\n  All other non-permissive additional terms are considered \"further\nrestrictions\" within the meaning of section 10.  If the Program as you\nreceived it, or any part of it, contains a notice stating that it is\ngoverned by this License along with a term that is a further\nrestriction, you may remove that term.  If a license document contains\na further restriction but permits relicensing or conveying under this\nLicense, you may add to a covered work material governed by the terms\nof that license document, provided that the further restriction does\nnot survive such relicensing or conveying.\n\n  If you add terms to a covered work in accord with this section, you\nmust place, in the relevant source files, a statement of the\nadditional terms that apply to those files, or a notice indicating\nwhere to find the applicable terms.\n\n  Additional terms, permissive or non-permissive, may be stated in the\nform of a separately written license, or stated as exceptions;\nthe above requirements apply either way.\n\n  8. Termination.\n\n  You may not propagate or modify a covered work except as expressly\nprovided under this License.  Any attempt otherwise to propagate or\nmodify it is void, and will automatically terminate your rights under\nthis License (including any patent licenses granted under the third\nparagraph of section 11).\n\n  However, if you cease all violation of this License, then your\nlicense from a particular copyright holder is reinstated (a)\nprovisionally, unless and until the copyright holder explicitly and\nfinally terminates your license, and (b) permanently, if the copyright\nholder fails to notify you of the violation by some reasonable means\nprior to 60 days after the cessation.\n\n  Moreover, your license from a particular copyright holder is\nreinstated permanently if the copyright holder notifies you of the\nviolation by some reasonable means, this is the first time you have\nreceived notice of violation of this License (for any work) from that\ncopyright holder, and you cure the violation prior to 30 days after\nyour receipt of the notice.\n\n  Termination of your rights under this section does not terminate the\nlicenses of parties who have received copies or rights from you under\nthis License.  If your rights have been terminated and not permanently\nreinstated, you do not qualify to receive new licenses for the same\nmaterial under section 10.\n\n  9. Acceptance Not Required for Having Copies.\n\n  You are not required to accept this License in order to receive or\nrun a copy of the Program.  Ancillary propagation of a covered work\noccurring solely as a consequence of using peer-to-peer transmission\nto receive a copy likewise does not require acceptance.  However,\nnothing other than this License grants you permission to propagate or\nmodify any covered work.  These actions infringe copyright if you do\nnot accept this License.  Therefore, by modifying or propagating a\ncovered work, you indicate your acceptance of this License to do so.\n\n  10. Automatic Licensing of Downstream Recipients.\n\n  Each time you convey a covered work, the recipient automatically\nreceives a license from the original licensors, to run, modify and\npropagate that work, subject to this License.  You are not responsible\nfor enforcing compliance by third parties with this License.\n\n  An \"entity transaction\" is a transaction transferring control of an\norganization, or substantially all assets of one, or subdividing an\norganization, or merging organizations.  If propagation of a covered\nwork results from an entity transaction, each party to that\ntransaction who receives a copy of the work also receives whatever\nlicenses to the work the party's predecessor in interest had or could\ngive under the previous paragraph, plus a right to possession of the\nCorresponding Source of the work from the predecessor in interest, if\nthe predecessor has it or can get it with reasonable efforts.\n\n  You may not impose any further restrictions on the exercise of the\nrights granted or affirmed under this License.  For example, you may\nnot impose a license fee, royalty, or other charge for exercise of\nrights granted under this License, and you may not initiate litigation\n(including a cross-claim or counterclaim in a lawsuit) alleging that\nany patent claim is infringed by making, using, selling, offering for\nsale, or importing the Program or any portion of it.\n\n  11. Patents.\n\n  A \"contributor\" is a copyright holder who authorizes use under this\nLicense of the Program or a work on which the Program is based.  The\nwork thus licensed is called the contributor's \"contributor version\".\n\n  A contributor's \"essential patent claims\" are all patent claims\nowned or controlled by the contributor, whether already acquired or\nhereafter acquired, that would be infringed by some manner, permitted\nby this License, of making, using, or selling its contributor version,\nbut do not include claims that would be infringed only as a\nconsequence of further modification of the contributor version.  For\npurposes of this definition, \"control\" includes the right to grant\npatent sublicenses in a manner consistent with the requirements of\nthis License.\n\n  Each contributor grants you a non-exclusive, worldwide, royalty-free\npatent license under the contributor's essential patent claims, to\nmake, use, sell, offer for sale, import and otherwise run, modify and\npropagate the contents of its contributor version.\n\n  In the following three paragraphs, a \"patent license\" is any express\nagreement or commitment, however denominated, not to enforce a patent\n(such as an express permission to practice a patent or covenant not to\nsue for patent infringement).  To \"grant\" such a patent license to a\nparty means to make such an agreement or commitment not to enforce a\npatent against the party.\n\n  If you convey a covered work, knowingly relying on a patent license,\nand the Corresponding Source of the work is not available for anyone\nto copy, free of charge and under the terms of this License, through a\npublicly available network server or other readily accessible means,\nthen you must either (1) cause the Corresponding Source to be so\navailable, or (2) arrange to deprive yourself of the benefit of the\npatent license for this particular work, or (3) arrange, in a manner\nconsistent with the requirements of this License, to extend the patent\nlicense to downstream recipients.  \"Knowingly relying\" means you have\nactual knowledge that, but for the patent license, your conveying the\ncovered work in a country, or your recipient's use of the covered work\nin a country, would infringe one or more identifiable patents in that\ncountry that you have reason to believe are valid.\n\n  If, pursuant to or in connection with a single transaction or\narrangement, you convey, or propagate by procuring conveyance of, a\ncovered work, and grant a patent license to some of the parties\nreceiving the covered work authorizing them to use, propagate, modify\nor convey a specific copy of the covered work, then the patent license\nyou grant is automatically extended to all recipients of the covered\nwork and works based on it.\n\n  A patent license is \"discriminatory\" if it does not include within\nthe scope of its coverage, prohibits the exercise of, or is\nconditioned on the non-exercise of one or more of the rights that are\nspecifically granted under this License.  You may not convey a covered\nwork if you are a party to an arrangement with a third party that is\nin the business of distributing software, under which you make payment\nto the third party based on the extent of your activity of conveying\nthe work, and under which the third party grants, to any of the\nparties who would receive the covered work from you, a discriminatory\npatent license (a) in connection with copies of the covered work\nconveyed by you (or copies made from those copies), or (b) primarily\nfor and in connection with specific products or compilations that\ncontain the covered work, unless you entered into that arrangement,\nor that patent license was granted, prior to 28 March 2007.\n\n  Nothing in this License shall be construed as excluding or limiting\nany implied license or other defenses to infringement that may\notherwise be available to you under applicable patent law.\n\n  12. No Surrender of Others' Freedom.\n\n  If conditions are imposed on you (whether by court order, agreement or\notherwise) that contradict the conditions of this License, they do not\nexcuse you from the conditions of this License.  If you cannot convey a\ncovered work so as to satisfy simultaneously your obligations under this\nLicense and any other pertinent obligations, then as a consequence you may\nnot convey it at all.  For example, if you agree to terms that obligate you\nto collect a royalty for further conveying from those to whom you convey\nthe Program, the only way you could satisfy both those terms and this\nLicense would be to refrain entirely from conveying the Program.\n\n  13. Use with the GNU Affero General Public License.\n\n  Notwithstanding any other provision of this License, you have\npermission to link or combine any covered work with a work licensed\nunder version 3 of the GNU Affero General Public License into a single\ncombined work, and to convey the resulting work.  The terms of this\nLicense will continue to apply to the part which is the covered work,\nbut the special requirements of the GNU Affero General Public License,\nsection 13, concerning interaction through a network will apply to the\ncombination as such.\n\n  14. Revised Versions of this License.\n\n  The Free Software Foundation may publish revised and/or new versions of\nthe GNU General Public License from time to time.  Such new versions will\nbe similar in spirit to the present version, but may differ in detail to\naddress new problems or concerns.\n\n  Each version is given a distinguishing version number.  If the\nProgram specifies that a certain numbered version of the GNU General\nPublic License \"or any later version\" applies to it, you have the\noption of following the terms and conditions either of that numbered\nversion or of any later version published by the Free Software\nFoundation.  If the Program does not specify a version number of the\nGNU General Public License, you may choose any version ever published\nby the Free Software Foundation.\n\n  If the Program specifies that a proxy can decide which future\nversions of the GNU General Public License can be used, that proxy's\npublic statement of acceptance of a version permanently authorizes you\nto choose that version for the Program.\n\n  Later license versions may give you additional or different\npermissions.  However, no additional obligations are imposed on any\nauthor or copyright holder as a result of your choosing to follow a\nlater version.\n\n  15. Disclaimer of Warranty.\n\n  THERE IS NO WARRANTY FOR THE PROGRAM, TO THE EXTENT PERMITTED BY\nAPPLICABLE LAW.  EXCEPT WHEN OTHERWISE STATED IN WRITING THE COPYRIGHT\nHOLDERS AND/OR OTHER PARTIES PROVIDE THE PROGRAM \"AS IS\" WITHOUT WARRANTY\nOF ANY KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING, BUT NOT LIMITED TO,\nTHE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR\nPURPOSE.  THE ENTIRE RISK AS TO THE QUALITY AND PERFORMANCE OF THE PROGRAM\nIS WITH YOU.  SHOULD THE PROGRAM PROVE DEFECTIVE, YOU ASSUME THE COST OF\nALL NECESSARY SERVICING, REPAIR OR CORRECTION.\n\n  16. Limitation of Liability.\n\n  IN NO EVENT UNLESS REQUIRED BY APPLICABLE LAW OR AGREED TO IN WRITING\nWILL ANY COPYRIGHT HOLDER, OR ANY OTHER PARTY WHO MODIFIES AND/OR CONVEYS\nTHE PROGRAM AS PERMITTED ABOVE, BE LIABLE TO YOU FOR DAMAGES, INCLUDING ANY\nGENERAL, SPECIAL, INCIDENTAL OR CONSEQUENTIAL DAMAGES ARISING OUT OF THE\nUSE OR INABILITY TO USE THE PROGRAM (INCLUDING BUT NOT LIMITED TO LOSS OF\nDATA OR DATA BEING RENDERED INACCURATE OR LOSSES SUSTAINED BY YOU OR THIRD\nPARTIES OR A FAILURE OF THE PROGRAM TO OPERATE WITH ANY OTHER PROGRAMS),\nEVEN IF SUCH HOLDER OR OTHER PARTY HAS BEEN ADVISED OF THE POSSIBILITY OF\nSUCH DAMAGES.\n\n  17. Interpretation of Sections 15 and 16.\n\n  If the disclaimer of warranty and limitation of liability provided\nabove cannot be given local legal effect according to their terms,\nreviewing courts shall apply local law that most closely approximates\nan absolute waiver of all civil liability in connection with the\nProgram, unless a warranty or assumption of liability accompanies a\ncopy of the Program in return for a fee.\n\n                     END OF TERMS AND CONDITIONS\n"
+      },
+      "source": "https://raw.githubusercontent.com/bcgsc/NanoSim/master/LICENSE",
+      "technique": "file_exploration"
+    }
+  ],
+  "logo": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/bcgsc/NanoSim/master/NanoSim_logo.png"
+      },
+      "source": "https://raw.githubusercontent.com/bcgsc/NanoSim/master/README.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "NanoSim"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "owner": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Organization",
+        "value": "bcgsc"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "programming_languages": [
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Python",
+        "size": 248673,
+        "type": "Programming_language",
+        "value": "Python"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Lua",
+        "size": 1048,
+        "type": "Programming_language",
+        "value": "Lua"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "readme_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/bcgsc/NanoSim/master/README.md"
+      },
+      "technique": "file_exploration"
+    }
+  ],
+  "releases": [
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "lcoombe",
+          "type": "User"
+        },
+        "date_created": "2024-09-17T19:25:41Z",
+        "date_published": "2024-09-17T19:37:45Z",
+        "description": "**General changes:**\r\n* Bugfixes for `--fastq` mode of the characterization stage for genome and metagenome modes (#222)\r\n* Bugfix for base quality characterization in chimeric mode (#223)\r\n* Corrections to help pages\r\n* Updating README.md for current help pages of `read_analysis.py` and `simulator.py`\r\n* Add missing dependencies to `requirements.txt`\r\n\r\n**Enhancements:**\r\n* Added a new pre-trained model for newest release, which includes characterization of base qualities and homopolymers (#224)",
+        "html_url": "https://github.com/bcgsc/NanoSim/releases/tag/v3.2.1",
+        "name": "v3.2.1",
+        "release_id": 175530581,
+        "tag": "v3.2.1",
+        "tarball_url": "https://api.github.com/repos/bcgsc/NanoSim/tarball/v3.2.1",
+        "type": "Release",
+        "url": "https://api.github.com/repos/bcgsc/NanoSim/releases/175530581",
+        "value": "https://api.github.com/repos/bcgsc/NanoSim/releases/175530581",
+        "zipball_url": "https://api.github.com/repos/bcgsc/NanoSim/zipball/v3.2.1"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "SaberHQ",
+          "type": "User"
+        },
+        "date_created": "2024-08-17T04:42:17Z",
+        "date_published": "2024-08-17T04:42:56Z",
+        "description": "# **NanoSim Version 3.2.0 Release Notes**\r\n\r\n### **Overview**\r\n\r\nThis release includes changes from April 2022 to August 2024. It adds a new feature to NanoSim and provides a new pre-trained model (R10 Chemistry and Dorado Basecaller) for users to choose from. It also contains several bugfixes. Details of all updates are outlined below:\r\n\r\n### **New Feature**\r\n\r\n- This release incorporates the calculation and analyses related to homopolymer length and base quality into the characterization stage, removing the dependency on hard-coded metrics as discussed in #212 (pull request #217). Thanks, @theottlo for this. \r\n\r\n### **Enhancements**\r\n\r\n- Uploaded a new pre-trained model: NA24385 - hg002 AshkenazimTrio - Son, sequenced by Kitv14 (R10 chemistry) and basecalled by dorado. Thanks @lcoombe for this. The model trained on 1M subset reads is uploaded to [NanoSim Github](https://github.com/bcgsc/NanoSim/tree/master/pre-trained_models) and the model with the whole dataset is available through [Zenodo](https://zenodo.org/records/10064741). (79e5f9292bf150f325268dc926c5113d576a81ec) - by @SaberHQ \r\n- Relaxed package requirements by @kmnip in https://github.com/bcgsc/NanoSim/pull/177\r\n\r\n### **Bug Fixes**\r\n\r\n- Fixed a bug related to read headers in metagenome simulation by @LokiLuciferase in https://github.com/bcgsc/NanoSim/pull/167\r\n- Fixed a bug related to potential infinite loops in metagenome mode by @kmnip in https://github.com/bcgsc/NanoSim/pull/189 (Addresses #184 and #185)\r\n- Fixed an infinite loop bug for very short references by @kmnip in https://github.com/bcgsc/NanoSim/pull/199 (fixes the issue reported in https://github.com/bcgsc/NanoSim/issues/130#issuecomment-1825097891)\r\n\r\n\r\n### **Documentation Updates**\r\n\r\nWe made changes to NanoSim\u2019s documentation, so that it is more clear. \r\n\r\n- Consolidated citation format, clarified installation details, and updated old content: https://github.com/bcgsc/NanoSim/pull/192\r\n- Added more clarification regarding the pre-trained models and included information about the newly trained model on NA24385 - hg002 with R10 chemistry and basecalled with dorado. (ef569779e9aec74cc4db24032014a3b0cb9979e3) - by @SaberHQ \r\n- Added information on how to avoid package incompatibility issues and also problems with conda installations (f7b6cea14ea6d6d813505391aabf3d69a239b845) - by @SaberHQ \r\n- Fixed typo by @xinehc in https://github.com/bcgsc/NanoSim/pull/169\r\n- Added information about `cs` tag in BAM files (adfd7c6be40ea735c8fd208260fc7a2f97ccdac0)\r\n\r\n\r\n### **Known Issues**\r\n\r\nWe acknowledge that there is still package dependency issue when using the old pre-trained models with the newest version of some python packages such as sci-kit-learn. We highly recommend everyone to take a look at [dependencies section of readme file](https://github.com/bcgsc/NanoSim?tab=readme-ov-file#dependencies) for more information. That being said, if you want to train your own models (which is super easy and straight forward), NanoSim should work just fine. However, if you prefer to use older pre-trained models, then you should pay attention to the package versions installed on your environment and use the same versions indicated [here](https://github.com/bcgsc/NanoSim?tab=readme-ov-file#dependencies). \r\n\r\n\r\n**Full Changelog**: https://github.com/bcgsc/NanoSim/compare/v3.1.0...v3.2.0",
+        "html_url": "https://github.com/bcgsc/NanoSim/releases/tag/v3.2.0",
+        "name": "v3.2.0",
+        "release_id": 170700551,
+        "tag": "v3.2.0",
+        "tarball_url": "https://api.github.com/repos/bcgsc/NanoSim/tarball/v3.2.0",
+        "type": "Release",
+        "url": "https://api.github.com/repos/bcgsc/NanoSim/releases/170700551",
+        "value": "https://api.github.com/repos/bcgsc/NanoSim/releases/170700551",
+        "zipball_url": "https://api.github.com/repos/bcgsc/NanoSim/zipball/v3.2.0"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "SaberHQ",
+          "type": "User"
+        },
+        "date_created": "2022-04-13T00:42:33Z",
+        "date_published": "2022-04-13T07:04:10Z",
+        "description": "This release contains several major bugfixes + new added features as outlined below. \r\n\r\n**General changes:**\r\n- updated `requirements.txt`\r\n  - added missing package names (fixes #135)\r\n  - updated package version (fixes #159, #120, and #131)\r\n- fixed bug where head/tail lengths are calculated without considering the strand of the alignment\r\n- fixed bug where sequence IDs in `_aligned_error_profile` do not match those in `_aligned_reads.fastq` (fixes #151)\r\n- set default file compression level to 1 (previously level 6)\r\n\r\n**`genome` mode:**\r\n- fixes bug where `-c` option crashes\r\n\r\n**`transcriptome` mode:**\r\n- new options for `read_analysis.py`:\r\n  - `-c` detect chimeric reads\r\n  - `-q` quantify transcript expression\r\n  - `-n` normalize expression values by transcript length\r\n- new expression quantification algorithm based on abundance estimation in metagenome mode\r\n- fixed bug where identical read lengths are simulated for the same transcript (fixes #155; thanks Haoran Li)\r\n- fixed bug where transcripts without a `ENS` name prefix cannot be simulated, which may result in an infinite loop (fixes #112, #156)\r\n- optimized various parts of simulation (see #150, #158)\r\n- fixed bug where head/tail lengths are calculated without considering genome alignments in addition to transcriptome alignments (fixes #136)\r\n\r\n**`metagenome` mode:**\r\n- the option `--dna_type_list` is not required when reference genomes are streamed from RefSeq\r\n\r\n",
+        "html_url": "https://github.com/bcgsc/NanoSim/releases/tag/v3.1.0",
+        "name": "v3.1.0",
+        "release_id": 64329060,
+        "tag": "v3.1.0",
+        "tarball_url": "https://api.github.com/repos/bcgsc/NanoSim/tarball/v3.1.0",
+        "type": "Release",
+        "url": "https://api.github.com/repos/bcgsc/NanoSim/releases/64329060",
+        "value": "https://api.github.com/repos/bcgsc/NanoSim/releases/64329060",
+        "zipball_url": "https://api.github.com/repos/bcgsc/NanoSim/zipball/v3.1.0"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "cheny19",
+          "type": "User"
+        },
+        "date_created": "2021-09-17T20:32:17Z",
+        "date_published": "2021-09-17T21:15:29Z",
+        "description": "This release is the version used to generate Meta-NanoSim manuscript. \r\n\r\nChanges include:\r\n\r\n1. Update README.md to include more information about dependencies and installation instructions.\r\n2. Bug fix for the pysam get cigar string function.\r\n3. Bug fix for simulated read length output.\r\n4. Included the option for EM base-level abundance quantification without chimeric reads detection.",
+        "html_url": "https://github.com/bcgsc/NanoSim/releases/tag/v3.0.2",
+        "name": "v3.0.2",
+        "release_id": 49777755,
+        "tag": "v3.0.2",
+        "tarball_url": "https://api.github.com/repos/bcgsc/NanoSim/tarball/v3.0.2",
+        "type": "Release",
+        "url": "https://api.github.com/repos/bcgsc/NanoSim/releases/49777755",
+        "value": "https://api.github.com/repos/bcgsc/NanoSim/releases/49777755",
+        "zipball_url": "https://api.github.com/repos/bcgsc/NanoSim/zipball/v3.0.2"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "cheny19",
+          "type": "User"
+        },
+        "date_created": "2021-06-23T20:16:35Z",
+        "date_published": "2021-06-24T19:00:02Z",
+        "description": "In this release, we are introducing a new feature about compressed files and have fixed a few bugs as follows:\r\n\r\n1. NanoSim now supports reading `.gz` sequence files, and `bam` files. When processing intermediate files, it saves `bam` files instead of `sam` files to reduce disk space.\r\n\r\n2. Every subprocess is re-seeded before running, to avoid the repetitive random sequences in simulated reads.\r\n\r\n3. Lognormal distribution simulation and `-max_len` feature bug was fixed (#118). \r\n\r\n4. Bug fix for `read_analysis.py genome` mode (#123).\r\n\r\n5. Added clarification to the README file about external programs needed to run NanoSim, including GenomeTools (gt) which is required to work with gtf/gff files for Intron Retention analysis.",
+        "html_url": "https://github.com/bcgsc/NanoSim/releases/tag/V3.0.1",
+        "name": "v3.0.1",
+        "release_id": 45127903,
+        "tag": "V3.0.1",
+        "tarball_url": "https://api.github.com/repos/bcgsc/NanoSim/tarball/V3.0.1",
+        "type": "Release",
+        "url": "https://api.github.com/repos/bcgsc/NanoSim/releases/45127903",
+        "value": "https://api.github.com/repos/bcgsc/NanoSim/releases/45127903",
+        "zipball_url": "https://api.github.com/repos/bcgsc/NanoSim/zipball/V3.0.1"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "cheny19",
+          "type": "User"
+        },
+        "date_created": "2021-04-19T18:29:12Z",
+        "date_published": "2021-04-19T18:39:24Z",
+        "description": "### Official release of version 3.0.0\r\n\r\n**Major improvements from previous beta version:**\r\n\r\n1. Quantification of metagenome abundance levels using EM algorithm\r\n\r\n2. Quantification mode now includes metagenome abundance level estimation. Parameters are a bit different now.\r\n\r\n3. `requirements.txt` includes `joblib` library, and the version numbers are removed. So users may install the latest versions of each package with best compatibility.\r\n\r\n**Minor changes:**\r\n\r\n1. `human_NA12878_cDNA_Bham1_guppy` model is re-trained.\r\n\r\n2. README is updated with more info on input files",
+        "html_url": "https://github.com/bcgsc/NanoSim/releases/tag/v3.0.0",
+        "name": "V3.0.0",
+        "release_id": 41663569,
+        "tag": "v3.0.0",
+        "tarball_url": "https://api.github.com/repos/bcgsc/NanoSim/tarball/v3.0.0",
+        "type": "Release",
+        "url": "https://api.github.com/repos/bcgsc/NanoSim/releases/41663569",
+        "value": "https://api.github.com/repos/bcgsc/NanoSim/releases/41663569",
+        "zipball_url": "https://api.github.com/repos/bcgsc/NanoSim/zipball/v3.0.0"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "cheny19",
+          "type": "User"
+        },
+        "date_created": "2020-11-19T14:01:35Z",
+        "date_published": "2020-11-19T14:23:45Z",
+        "description": "Here we are announcing **NanoSim v3.0.0 pre-release**, and we will make it an official one once the manuscript is published. Please note that the tar ball attached doesn't contain any pre-trained models, so the downloading will be much faster.\r\n\r\nIn this release, NanoSim is able to simulate metagenomes with variable abundance profiles. \r\n\r\n**Key features include:**\r\n\r\n1. Quantify species abundance level, which is not readily available in existing abundance quantification tools\r\n\r\n2. Simulate multiple samples in one batch \r\n\r\n3. Simulate chimeric reads in `metagenome` mode and `genome` mode\r\n\r\n4. Simulate abundance variance deviated from expected value\r\n\r\n**Bug fixes and small improvements:**\r\n\r\n1. Fixed the bug in fastq simulation which leads to discrepancy between quality score length and sequence length\r\n\r\n2. Changed the way of importing model files, allowing better compatibility\r\n\r\n3. Re-trained all the models to be compatible with the model importing\r\n\r\n4. Added 2 more pre-trained models for metagenome datasets",
+        "html_url": "https://github.com/bcgsc/NanoSim/releases/tag/V3.0.0-beta",
+        "name": "NanoSim v3.0.0 pre-release",
+        "release_id": 34177113,
+        "tag": "V3.0.0-beta",
+        "tarball_url": "https://api.github.com/repos/bcgsc/NanoSim/tarball/V3.0.0-beta",
+        "type": "Release",
+        "url": "https://api.github.com/repos/bcgsc/NanoSim/releases/34177113",
+        "value": "https://api.github.com/repos/bcgsc/NanoSim/releases/34177113",
+        "zipball_url": "https://api.github.com/repos/bcgsc/NanoSim/zipball/V3.0.0-beta"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "cheny19",
+          "type": "User"
+        },
+        "date_created": "2020-06-09T04:31:38Z",
+        "date_published": "2020-06-09T04:48:47Z",
+        "description": "In this release, there's a key update in the simulation stage. NanoSim is capable of simulating fastq files now! We characterized a few datasets and used truncated log-normal distribution models to simulate the base quality of unaligned reads, matched bases, erroneous bases for genome and transcriptome reads separately.\r\n\r\nMost of the changes in this release are for the simulation stage.\r\n\r\nOther features:\r\n\r\n1. Perfect reads can have poly(A) tails now.\r\n\r\n2. Read files and error profiles for unaligned reads are separated from aligned reads now.\r\n\r\nBug fixes:\r\n\r\n1. Minor bugs in IR modeling, eliminated the exon extraction biases and read orientation problem\r\n\r\n2. Reversed the strandness information in simulation, which was opposite to the real orientation\r\n\r\n3. Solved occasional crashes when simulating unaligned reads\r\n\r\n4. Fixed the reversed head/tail length for reads from negative strand in transcriptome simulaiton\r\n\r\n5. Added missing file in pre-trained model",
+        "html_url": "https://github.com/bcgsc/NanoSim/releases/tag/v2.6.0",
+        "name": "V2.6.0",
+        "release_id": 27352772,
+        "tag": "v2.6.0",
+        "tarball_url": "https://api.github.com/repos/bcgsc/NanoSim/tarball/v2.6.0",
+        "type": "Release",
+        "url": "https://api.github.com/repos/bcgsc/NanoSim/releases/27352772",
+        "value": "https://api.github.com/repos/bcgsc/NanoSim/releases/27352772",
+        "zipball_url": "https://api.github.com/repos/bcgsc/NanoSim/zipball/v2.6.0"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "cheny19",
+          "type": "User"
+        },
+        "date_created": "2020-01-24T01:26:45Z",
+        "date_published": "2020-01-24T01:49:12Z",
+        "description": "To download only the source scripts, please go to [url]( https://github.com/bcgsc/NanoSim/releases/download/v2.5.1/NanoSim-v2.5.1.tar.gz)\r\n\r\n**Features**  \r\n\r\n1. In this release, we provide 6 pre-trained models, including 3 RNA-seq models, which are human direct RNA, cDNA, mouse cDNA, and 3 DNA-seq models, which are human DNA dataset basecalled by 3 different basecalling algorithms. These models can be downloaded from [pre-trained_models](https://github.com/bcgsc/NanoSim/tree/master/pre-trained_models). \r\n\r\n2. We also provide a few more homopolymer models to mimic different basecalling algorithms under different sequencing settings (direct RNA or cDNA 1D2 or cDNA 1D). \r\n\r\n3. We implemented `-r, --read_type` in transcriptome simulation mode. Since different read type, `directRNA, cDNA 1D2, or cDNA 1D`, has an effect on the homopolymer bias, users can specify which one to simulate based on.\r\n\r\n**Minor bug fixes**\r\n\r\n1. A minor bug in `detect_ir` module in the characterization stage.\r\n\r\n2. Prevents python from spawning out processes when only one processor is requested.  \r\n\r\n3. Display the correct help information for transcriptome simulation when wrong parameters are passed in.\r\n",
+        "html_url": "https://github.com/bcgsc/NanoSim/releases/tag/v2.5.1",
+        "name": "NanoSim v2.5.1",
+        "release_id": 23090660,
+        "tag": "v2.5.1",
+        "tarball_url": "https://api.github.com/repos/bcgsc/NanoSim/tarball/v2.5.1",
+        "type": "Release",
+        "url": "https://api.github.com/repos/bcgsc/NanoSim/releases/23090660",
+        "value": "https://api.github.com/repos/bcgsc/NanoSim/releases/23090660",
+        "zipball_url": "https://api.github.com/repos/bcgsc/NanoSim/zipball/v2.5.1"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "cheny19",
+          "type": "User"
+        },
+        "date_created": "2019-12-23T23:12:27Z",
+        "date_published": "2019-12-23T23:35:33Z",
+        "description": "**In this release, we implemented a few new features and resolved a few bugs.**\r\n\r\n**New features:**\r\n\r\n1. Multiprocessing in the simulation stage. Based on our experience, 4 to 12 processers balance well between runtime and memory usage for simulating 1 million reads. The memory increases roughly linearly due to the nature of Python multiprocessing. As a rough estimate, it takes less than 5G memory to simulate human transcriptome with 4 processers.\r\n\r\n2. Homopolymer simulation. For this parameter, we provide three options, each targeting each basecaller: Albacore, Guppy, and Guppy + flipflop model\r\n\r\n3. Simulate aligned reads first, and then unaligned reads. These two types of reads are stored in separate files for better user experience.  \r\n\r\n**Bug fixes:**\r\n\r\n1. Fixed retained intron / deleted exon problem in error calculation\r\n\r\n2. Fixed `index out of range` bug in the simulation stage ",
+        "html_url": "https://github.com/bcgsc/NanoSim/releases/tag/v2.5.0",
+        "name": "v2.5.0 ",
+        "release_id": 22437808,
+        "tag": "v2.5.0",
+        "tarball_url": "https://api.github.com/repos/bcgsc/NanoSim/tarball/v2.5.0",
+        "type": "Release",
+        "url": "https://api.github.com/repos/bcgsc/NanoSim/releases/22437808",
+        "value": "https://api.github.com/repos/bcgsc/NanoSim/releases/22437808",
+        "zipball_url": "https://api.github.com/repos/bcgsc/NanoSim/zipball/v2.5.0"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "SaberHQ",
+          "type": "User"
+        },
+        "date_created": "2019-07-18T21:28:37Z",
+        "date_published": "2019-07-18T21:51:03Z",
+        "description": "This is a pre-release version which is now capable of simulating both genomic and transcriptomic (cDNA and directRNA) ONT reads with even increased performance. Users may run the pipeline in \"genome\" or \"transcriptome\" mode. The transcriptome mode also models features of the library preparation protocols used, including intron retention events in cDNA and direct RNA reads. Further, it profiles transcript expression patterns.\r\n\r\nWe provided a very comprehensive [README](https://github.com/bcgsc/NanoSim/blob/master/README.md \"NanoSim Readme\") file for more information on how to run the pipeline in both modes.\r\n\r\nUsers who may have tried [Trans-NanoSim](https://github.com/bcgsc/Trans-NanoSim) before, can now rely on this version to simulate transcriptome ONT reads.\r\n\r\n**Major updates since pre-release v2.3-beta:**\r\n\r\n1. Added an optional flag (--uracil) to convert the thymine (T) bases to uracil (U) in the output fasta format. It is helpful if you are dealing with direct RNA reads.\r\n1. Fixed a bug related to input file requirements when you use (--no_model_ir). Refer here: https://github.com/bcgsc/NanoSim/issues/63\r\n1. Increased simulation speed substantially when IR modelling is not set (--no_model_ir). It performs 5-folds faster now. We also removed some redundant and unnecessary code lines to improve the overall performance of the pipeline.\r\n1. As for \"Perfect\" reads (--perfect), we are now considering expression profiles when simulating them. Therefore your \"perfect\" error-free reads are going to follow your desired expression levels as well.\r\n\r\nPlease keep using the pipeline and share your thoughts on it. Cheers! \r\n\r\n",
+        "html_url": "https://github.com/bcgsc/NanoSim/releases/tag/v2.4-beta",
+        "name": "Simulating transcriptome ONT reads",
+        "release_id": 18590873,
+        "tag": "v2.4-beta",
+        "tarball_url": "https://api.github.com/repos/bcgsc/NanoSim/tarball/v2.4-beta",
+        "type": "Release",
+        "url": "https://api.github.com/repos/bcgsc/NanoSim/releases/18590873",
+        "value": "https://api.github.com/repos/bcgsc/NanoSim/releases/18590873",
+        "zipball_url": "https://api.github.com/repos/bcgsc/NanoSim/zipball/v2.4-beta"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "SaberHQ",
+          "type": "User"
+        },
+        "date_created": "2019-06-17T23:03:02Z",
+        "date_published": "2019-06-17T23:31:07Z",
+        "description": "**NOTE:** Please do not use this release as it has an input requirement bug. \r\n\r\nThis is a pre-release version which is now capable of simulating both genomic and transcriptomic (cDNA and directRNA) ONT reads with even increased performance. Users may run the pipeline in \"genome\" or \"transcriptome\" mode. The transcriptome mode also models features of the library preparation protocols used, including intron retention events in cDNA and direct RNA reads. Further, it profiles transcript expression patterns.\r\n\r\nWe provided a very comprehensive [README](https://github.com/bcgsc/NanoSim/blob/master/README.md \"NanoSim Readme\") file for more information on how to run the pipeline in both modes.\r\n\r\nUsers who may have tried [Trans-NanoSim](https://github.com/bcgsc/Trans-NanoSim) before, can now rely on this version to simulate transcriptome ONT reads.\r\n\r\nThis version has been tested on Python 2.7 and Python 3.6 with the latest compatible packages respectively.",
+        "html_url": "https://github.com/bcgsc/NanoSim/releases/tag/v2.3-beta",
+        "name": "Simulating transcriptome ONT reads",
+        "release_id": 18049755,
+        "tag": "v2.3-beta",
+        "tarball_url": "https://api.github.com/repos/bcgsc/NanoSim/tarball/v2.3-beta",
+        "type": "Release",
+        "url": "https://api.github.com/repos/bcgsc/NanoSim/releases/18049755",
+        "value": "https://api.github.com/repos/bcgsc/NanoSim/releases/18049755",
+        "zipball_url": "https://api.github.com/repos/bcgsc/NanoSim/zipball/v2.3-beta"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "cheny19",
+          "type": "User"
+        },
+        "date_created": "2019-01-17T19:22:08Z",
+        "date_published": "2019-01-17T19:27:58Z",
+        "description": "Bug fix:\r\n\r\nFixed the bug that might generate negative read length when using the log-normal distribution for simulation.",
+        "html_url": "https://github.com/bcgsc/NanoSim/releases/tag/v2.2.1-beta",
+        "name": "V2.2.1-beta",
+        "release_id": 15039733,
+        "tag": "v2.2.1-beta",
+        "tarball_url": "https://api.github.com/repos/bcgsc/NanoSim/tarball/v2.2.1-beta",
+        "type": "Release",
+        "url": "https://api.github.com/repos/bcgsc/NanoSim/releases/15039733",
+        "value": "https://api.github.com/repos/bcgsc/NanoSim/releases/15039733",
+        "zipball_url": "https://api.github.com/repos/bcgsc/NanoSim/zipball/v2.2.1-beta"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "cheny19",
+          "type": "User"
+        },
+        "date_created": "2018-12-04T22:22:30Z",
+        "date_published": "2018-12-04T22:32:13Z",
+        "description": "This version has been tested on Python 2.7 and Python 3.6 with the latest compatible packages repectively. In this release, we made a few big changes, and the pre-trained model profiles on our ftp site are not compatible anymore, but users are still welcome to use the fasta files for training. We will provide pre-trained models soon.  \r\n\r\nMajor changes:  \r\n\r\n1. Use Kernel Density Estimation (KDE) instead of Empirical cumulative density function (ECDF) to simulate the length distribution of reads (aligned and unaligned)  \r\n2. Removed the bining strategy in simulating the align ratio on each reads, and the length distribution of simulated reads are more smooth  \r\n3. Introduce `--median_len` and `--sd_len` options. Users can use these two options to control the median read length and the standard deviation, and the read lengths will follow lognormal distribution instead of the empirical length distribution from training reads  \r\n\r\nNote:\r\n\r\nFor ONT reads, the median length and mean length are quite different. The read length generally follow lognormal distribution, so please refer to [wikipedia](https://en.wikipedia.org/wiki/Log-normal_distribution) for details about these two parameters. The values are `--median_len 5642` and `--sd_len 1.015` for R9 1D reads, which is also roughly the same for other libraries.",
+        "html_url": "https://github.com/bcgsc/NanoSim/releases/tag/v2.2.0",
+        "name": "V2.2.0",
+        "release_id": 14350562,
+        "tag": "v2.2.0",
+        "tarball_url": "https://api.github.com/repos/bcgsc/NanoSim/tarball/v2.2.0",
+        "type": "Release",
+        "url": "https://api.github.com/repos/bcgsc/NanoSim/releases/14350562",
+        "value": "https://api.github.com/repos/bcgsc/NanoSim/releases/14350562",
+        "zipball_url": "https://api.github.com/repos/bcgsc/NanoSim/zipball/v2.2.0"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "cheny19",
+          "type": "User"
+        },
+        "date_created": "2018-05-24T00:14:18Z",
+        "date_published": "2018-05-24T00:24:47Z",
+        "description": "Changes:\r\n\r\n1. The model fitting stage is run in Python now and supports multiprocessing. R is no longer required for the whole NanoSim pipeline\r\n\r\n2. Improvement on runtime in model fitting stage\r\n\r\n**Notice:**\r\nWe noticed that the proposed mixture model may not be well fitted for indels inferred from `minimap2` and NanoSim will throw out warnings when it does not fit well. Users can still use the best available parameters to simulate, and the overall error rate will not be hugely affected.\r\n\r\nWe are working on new models for `minimap2`, stay tuned.",
+        "html_url": "https://github.com/bcgsc/NanoSim/releases/tag/v2.1.0",
+        "name": "V2.1.0",
+        "release_id": 11147460,
+        "tag": "v2.1.0",
+        "tarball_url": "https://api.github.com/repos/bcgsc/NanoSim/tarball/v2.1.0",
+        "type": "Release",
+        "url": "https://api.github.com/repos/bcgsc/NanoSim/releases/11147460",
+        "value": "https://api.github.com/repos/bcgsc/NanoSim/releases/11147460",
+        "zipball_url": "https://api.github.com/repos/bcgsc/NanoSim/zipball/v2.1.0"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "cheny19",
+          "type": "User"
+        },
+        "date_created": "2018-04-27T00:07:56Z",
+        "date_published": "2018-04-27T00:15:43Z",
+        "description": "Major changes:\r\n\r\nAdded -a option to specify the aligner, Minimap2 or LAST. [Minimap2](https://github.com/lh3/minimap2#cs) is used as the default aligner in read analysis stage. Users can also feed in their own maf file or sam file (with MD string).\r\n\r\n`HTSeq` is used to parse alignment files.\r\n\r\n**Tested on Python 2.7 and Python3.6**",
+        "html_url": "https://github.com/bcgsc/NanoSim/releases/tag/v2.0.0",
+        "name": "NanoSim v2.0.0",
+        "release_id": 10746454,
+        "tag": "v2.0.0",
+        "tarball_url": "https://api.github.com/repos/bcgsc/NanoSim/tarball/v2.0.0",
+        "type": "Release",
+        "url": "https://api.github.com/repos/bcgsc/NanoSim/releases/10746454",
+        "value": "https://api.github.com/repos/bcgsc/NanoSim/releases/10746454",
+        "zipball_url": "https://api.github.com/repos/bcgsc/NanoSim/zipball/v2.0.0"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "cheny19",
+          "type": "User"
+        },
+        "date_created": "2018-03-16T18:29:44Z",
+        "date_published": "2018-03-16T20:11:37Z",
+        "description": "Bug fixes:  \r\n\r\nHandels lowercase bases in reference genome \r\n\r\nNew features:  \r\n1. Outputs a separate file containing mismatch rate, insertion rate, and deletion rate  \r\n2. Introducing random seed generator as a parameter that users can generate two identical outputs.",
+        "html_url": "https://github.com/bcgsc/NanoSim/releases/tag/v1.3.0",
+        "name": "v1.3.0",
+        "release_id": 10128137,
+        "tag": "v1.3.0",
+        "tarball_url": "https://api.github.com/repos/bcgsc/NanoSim/tarball/v1.3.0",
+        "type": "Release",
+        "url": "https://api.github.com/repos/bcgsc/NanoSim/releases/10128137",
+        "value": "https://api.github.com/repos/bcgsc/NanoSim/releases/10128137",
+        "zipball_url": "https://api.github.com/repos/bcgsc/NanoSim/zipball/v1.3.0"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "cheny19",
+          "type": "User"
+        },
+        "date_created": "2017-07-18T17:18:41Z",
+        "date_published": "2017-07-18T17:23:46Z",
+        "description": "Speed improvement:\r\n\r\n1. reading in reference genome, useful when simulating large genomes (human).  \r\n\r\n2. converting ambiguous bases\r\n\r\n",
+        "html_url": "https://github.com/bcgsc/NanoSim/releases/tag/v1.2.0",
+        "name": "NanoSim v1.2.0",
+        "release_id": 7082474,
+        "tag": "v1.2.0",
+        "tarball_url": "https://api.github.com/repos/bcgsc/NanoSim/tarball/v1.2.0",
+        "type": "Release",
+        "url": "https://api.github.com/repos/bcgsc/NanoSim/releases/7082474",
+        "value": "https://api.github.com/repos/bcgsc/NanoSim/releases/7082474",
+        "zipball_url": "https://api.github.com/repos/bcgsc/NanoSim/zipball/v1.2.0"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "cheny19",
+          "type": "User"
+        },
+        "date_created": "2017-03-31T22:22:53Z",
+        "date_published": "2017-03-31T23:02:39Z",
+        "description": "__Bug fix__:  \r\n1. For multi-chromosome genomes, total length of each read is fixed to be smaller than the largest chromosome  \r\n2. `head`/`tail` unassigned in extreme cases\r\n\r\n__Compatibility__:\r\nThanks to @karel-brinda NanoSim works now with Python 2.6, 2.7, 3.2, 3.3., 3.4, 3.5 and 3.6",
+        "html_url": "https://github.com/bcgsc/NanoSim/releases/tag/v1.1.0",
+        "name": "v1.1.0",
+        "release_id": 5942569,
+        "tag": "v1.1.0",
+        "tarball_url": "https://api.github.com/repos/bcgsc/NanoSim/tarball/v1.1.0",
+        "type": "Release",
+        "url": "https://api.github.com/repos/bcgsc/NanoSim/releases/5942569",
+        "value": "https://api.github.com/repos/bcgsc/NanoSim/releases/5942569",
+        "zipball_url": "https://api.github.com/repos/bcgsc/NanoSim/zipball/v1.1.0"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "cheny19",
+          "type": "User"
+        },
+        "date_created": "2017-02-02T23:21:38Z",
+        "date_published": "2017-02-02T23:32:55Z",
+        "description": "Bug fix:\n- `min_len` feature\n- `model fitting` in profiling stage\n",
+        "html_url": "https://github.com/bcgsc/NanoSim/releases/tag/v1.0.1",
+        "release_id": 5346618,
+        "tag": "v1.0.1",
+        "tarball_url": "https://api.github.com/repos/bcgsc/NanoSim/tarball/v1.0.1",
+        "type": "Release",
+        "url": "https://api.github.com/repos/bcgsc/NanoSim/releases/5346618",
+        "value": "https://api.github.com/repos/bcgsc/NanoSim/releases/5346618",
+        "zipball_url": "https://api.github.com/repos/bcgsc/NanoSim/zipball/v1.0.1"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "cheny19",
+          "type": "User"
+        },
+        "date_created": "2017-01-13T01:06:25Z",
+        "date_published": "2017-01-13T20:36:56Z",
+        "description": "This is the first release. \n",
+        "html_url": "https://github.com/bcgsc/NanoSim/releases/tag/v1.0.0",
+        "name": "First release",
+        "release_id": 5156317,
+        "tag": "v1.0.0",
+        "tarball_url": "https://api.github.com/repos/bcgsc/NanoSim/tarball/v1.0.0",
+        "type": "Release",
+        "url": "https://api.github.com/repos/bcgsc/NanoSim/releases/5156317",
+        "value": "https://api.github.com/repos/bcgsc/NanoSim/releases/5156317",
+        "zipball_url": "https://api.github.com/repos/bcgsc/NanoSim/zipball/v1.0.0"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "requirements": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Dependencies",
+        "type": "Text_excerpt",
+        "value": "> **_NOTE:_**  Please kindly note that the pretrained models in NanoSim (v3.0.2) were made using an older version of `scikit-learn` (e.g. <=0.22.1). If you have to use these models (instead of creating your own models), then you **must** use `scikit-learn=0.22.1` but not the newer versions. If you have a newer version of `scikit-learn` installed, then you will get the error for `No module named 'sklearn.neighbors.kde'`. If you would like to create your own models (instead of using the pretrained models), then NanoSim should work just fine with `scikit-learn=1.0.2` from our experience. For future releases of NanoSim, we will try to include newly pre-trained models with the updated versions of required packages in order to solve the incompatibility issues.\n\n![Python}](https://img.shields.io/pypi/pyversions/py)  \nPython packages:  \n* HTSeq (Tested with version 0.11.2)\n* joblib (Tested with version 0.14.1)  \n* numpy (Tested with version 1.17.2)\n* pybedtools (Tested with version 0.8.2)\n* pysam (Tested with version 0.13 or above)  \n* scikit-learn (Tested with version 0.21.3)\n* scipy (Tested with verson 1.4.1)  \n* six (Tested with version 1.16.0)\n* piecewise-regression (Tested with version 1.1.2)\n\nExternal programs:\n* [minimap2](https://github.com/lh3/minimap2) (Tested with versions 2.10, 2.17, 2.18)  \n* [LAST](https://gitlab.com/mcfrith/last) (Tested with versions 581 and 916)  \n* [samtools](https://github.com/samtools/samtools) (Tested with version 1.12)  \n* [GenomeTools](http://genometools.org/) (Tested with version 1.6.1)\n* [sam2pairwise](https://github.com/mlafave/sam2pairwise) (Tested with version 1.0.0)\n"
+      },
+      "source": "https://raw.githubusercontent.com/bcgsc/NanoSim/master/README.md",
+      "technique": "header_analysis"
+    }
+  ],
+  "somef_missing_categories": [
+    "citation",
+    "acknowledgement",
+    "run",
+    "contact",
+    "contributors",
+    "usage",
+    "faq",
+    "support",
+    "identifier",
+    "has_build_file",
+    "executable_example"
+  ],
+  "somef_provenance": {
+    "date": "2024-10-06 01:53:42",
+    "somef_schema_version": "1.0.0",
+    "somef_version": "0.9.5"
+  },
+  "stargazers_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 233
+      },
+      "technique": "GitHub_API"
+    }
+  ]
+}

@@ -1,0 +1,311 @@
+{
+  "code_repository": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/OncoRNALab/CiLiQuant"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_created": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2021-09-08T10:01:41Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_updated": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2024-07-12T08:54:06Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "description": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "Tool to assess relative circular to linear fraction"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 0.9854621890569648,
+      "result": {
+        "original_header": "General Information",
+        "type": "Text_excerpt",
+        "value": "If you use this code, please cite our [work](https://doi.org/10.3389/fbinf.2022.834034):\nMorlion, A.; Hulstaert, E.; Vromman, M.; Anckaert, J.; Everaert, C.; Vandesompele, J.; Mestdagh, P. CiLiQuant: Quantification of RNA Junction Reads Based on Their Circular or Linear Transcript Origin. Frontiers in Bioinformatics, 2022. doi: 10.3389/fbinf.2022.834034 \n"
+      },
+      "source": "https://raw.githubusercontent.com/OncoRNALab/CiLiQuant/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.880136963953115,
+      "result": {
+        "original_header": "CiLiQuant.py",
+        "type": "Text_excerpt",
+        "value": "This script separates junction reads based on their linear or circular origin (if a forward splice junction falls within another backsplice junction, the circular or linear origin cannot be determined -> ambiguous). Only the non-ambiguous junction reads are used to compare the relative linear and circular transcript abundance.  \nTogether with the circ fraction (circ/(circ+lin)), a 95% confidence interval is provided.\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/OncoRNALab/CiLiQuant/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9563014862219783,
+      "result": {
+        "original_header": "Input",
+        "type": "Text_excerpt",
+        "value": "Each time BED-format for first 6 columns (chromosome, start, stop, name, score, strand), but score column may be filled with dots instead of numbers or may already contain the nr of reads\n- a (forward-splice) junction file that contains coordinates of junctions and number of junction spanning reads (e.g. TopHat's junctions.bed or STAR's SJ.out.tab)\n  - Note STAR's SJ.out.tab is not in BED-format and strand info formatting needs to be consistent with that of the back-splice and exon or gene file (+/-). This can be changed with:\n    ```awk 'BEGIN {OFS=\"\\t\"} { if ($4 == 1) { $4 = \"+\" } else if ($4 == 2) { $4 = \"-\" } print $1,$2,$3,\".\",\".\",$4,$7 }' SJ.out.tab > SJ.out.tab.modified ```\n- a corresponding back-splice junction file that contains coordinates of backsplice junctions and number of junction spanning reads (e.g. CIRCexplorer or find_circ output)\n- an exon or gene file that contains start and stop positions of the (exons of the) genes of interest. Note that fractions will only be calculated for circRNAs that can be assigned to these genes of interest. \nNote that if you want to exclude junction reads with low counts for the circular fraction calculation, you need to remove these junctions in the input files before running the script.\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/OncoRNALab/CiLiQuant/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9982761929342787,
+      "result": {
+        "original_header": "Output",
+        "type": "Text_excerpt",
+        "value": "- **CiLiQuant_circ.txt**: a file that for every unique backsplice junctions (within boundaries of exon file), gives the nr of left and right flanking junction reads together with the estimated circRNA fraction for this site and CI\t\n  - *bs_reads*: total number of backsplice reads for each circ_id\n  - (*lfl_reads, rfl_reads*): sum of linear only reads that partially overlap with backsplice junction on the left and right resp.\n  - (*lfl_junctions, rfl_junctions*): number of unique flanking junctions on the left and right of circ_id resp. (sometimes 2 or more unique junctions partially overlap with the backsplice on one side)\n  - (*lfl_junctions_ambi, rfl_junctions_ambi*): number of ambiguous (inside other backsplice) flanking junctions on left and right of circ_id resp.\n  - (*linfl_reads, linfl_reads_av*): sum of linear only flanking reads and average (sum divided by nr of linear only flanking junctions) resp.\n  - *circ_fraction_fl*: circRNA fraction for circ_id based on its backsplice reads and linear flanking junction reads: bs_reads/(bs_reads+linfl_reads_av)\n  - (*p_AC_fl, ci_lower_AC_fl, ci_upper_AC_fl*): cf. circ_fraction_fl, here estimated proportion and CI based on modified Wald (Agresti-Coull, 1998; Brown et al, 2001)\n  - *lin_reads_gene_av*: average nr of linear only junction reads in gene; see lin_reads_av in CiLiQuant_gene.txt below\n  - *circ_fraction_all*: circRNA fraction for circ_id based on its backsplice reads and all linear only junction reads in gene: bs_reads/(bs_reads+lin_reads_gene_av)\n  - (*p_AC_all, ci_lower_AC_all, ci_upper_AC_all*): estimated proportion and CI of circ_fraction_all based on modified Wald (Agresti-Coull, 1998; Brown et al, 2001)\n- **CiLiQuant_gene.txt**: a file that for every gene in the exon file shows how much backsplice, linear only and ambiguous reads and junctions there are together with the estimated circRNA fraction for this gene and CI\n  - (*linear_reads, linear_junctions*): sum of linear only reads for each gene_id & corresponding nr of unique linear junctions resp.\n  - (*ambiguous_reads, ambiguous_junctions*): sum of ambiguous junction reads & corresponding nr of unique ambiguous junctions resp.\n  - (*circ_reads, circ_junctions*): sum of circular (backsplice) reads for each gene_id & corresponding nr of unique backsplice junctions resp.\n  - *lin_reads_av*: linear only junction reads corrected for nr of linear only junctions\n  - *circ_reads_av*: circular (backsplice) only junction reads corrected for nr of circular only junctions\n  - *circ_fraction*: circRNA fraction in gene based on average of all backsplice and linear only junction reads in gene: circ_reads_av/(circ_reads_av+lin_reads_av)\n  - (*p_AC, ci_lower_AC, ci_upper_AC*): estimated proportion and CI of circ_fraction based on modified Wald (Agresti-Coull, 1998; Brown et al, 2001)\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/OncoRNALab/CiLiQuant/master/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "download_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/OncoRNALab/CiLiQuant/releases"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 1
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/OncoRNALab/CiLiQuant/forks"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "OncoRNALab/CiLiQuant"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_title": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "General Information"
+      },
+      "source": "https://raw.githubusercontent.com/OncoRNALab/CiLiQuant/master/README.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "installation": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Installation &amp; dependencies",
+        "parent_header": [
+          "CiLiQuant.py"
+        ],
+        "type": "Text_excerpt",
+        "value": "The following libraries are required:\n* [Python](https://www.python.org) 3.6\n* [Pandas](https://pandas.pydata.org) 1.0\n\nTo use this tool, you can simply download the CiLiQuant.py script or clone the repository using the command line:\n```\ngit clone https://github.com/OncoRNALab/CiLiQuant.git\n```\n"
+      },
+      "source": "https://raw.githubusercontent.com/OncoRNALab/CiLiQuant/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 0.9201256680751835,
+      "result": {
+        "original_header": "Input",
+        "type": "Text_excerpt",
+        "value": "Note that if you want to exclude junction reads with low counts for the circular fraction calculation, you need to remove these junctions in the input files before running the script.\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/OncoRNALab/CiLiQuant/master/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "issue_tracker": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/OncoRNALab/CiLiQuant/issues"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "keywords": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": ""
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "license": [
+    {
+      "confidence": 1,
+      "result": {
+        "name": "MIT License",
+        "spdx_id": "MIT",
+        "type": "License",
+        "url": "https://api.github.com/licenses/mit",
+        "value": "https://api.github.com/licenses/mit"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "File_dump",
+        "value": "MIT License\n\nCopyright (c) 2021 Ghent University\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.\n"
+      },
+      "source": "https://raw.githubusercontent.com/OncoRNALab/CiLiQuant/master/LICENSE",
+      "technique": "file_exploration"
+    }
+  ],
+  "name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "CiLiQuant"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "owner": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Organization",
+        "value": "OncoRNALab"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "programming_languages": [
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Python",
+        "size": 24409,
+        "type": "Programming_language",
+        "value": "Python"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "readme_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/OncoRNALab/CiLiQuant/master/README.md"
+      },
+      "technique": "file_exploration"
+    }
+  ],
+  "requirements": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Installation &amp; dependencies",
+        "parent_header": [
+          "CiLiQuant.py"
+        ],
+        "type": "Text_excerpt",
+        "value": "The following libraries are required:\n* [Python](https://www.python.org) 3.6\n* [Pandas](https://pandas.pydata.org) 1.0\n\nTo use this tool, you can simply download the CiLiQuant.py script or clone the repository using the command line:\n```\ngit clone https://github.com/OncoRNALab/CiLiQuant.git\n```\n"
+      },
+      "source": "https://raw.githubusercontent.com/OncoRNALab/CiLiQuant/master/README.md",
+      "technique": "header_analysis"
+    }
+  ],
+  "run": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Run script",
+        "parent_header": [
+          "CiLiQuant.py"
+        ],
+        "type": "Text_excerpt",
+        "value": "```\nPython3 CiLiQuant.py --help                                                                       \nusage: CiLiQuant.py [-h] -j JUNCTIONS -b BACKSPLICE -e EXONS -bc BSREADS_COLUMN -fc FSREADS_COLUMN [-v OVERLAP_COLUMN] [-o OUTPUT]\n                    [-n NAME_PREFIX] [-ff FSFILTER] [-bf BSFILTER] [-s {yes,no}]\n\noptional arguments:\n  -h, --help            show this help message and exit\n  -j JUNCTIONS, --junctions JUNCTIONS\n                        Normal (forward) junction file (BED format)\n  -b BACKSPLICE, --backsplice BACKSPLICE\n                        Backsplice junction file (BED format)\n  -e EXONS, --exons EXONS\n                        Exon or gene file (BED format)\n  -bc BSREADS_COLUMN, --bsreads_column BSREADS_COLUMN\n                        Column in backsplice junction file that contains the number of junction reads\n  -fc FSREADS_COLUMN, --fsreads_column FSREADS_COLUMN\n                        Column in forward junction file that contains the number of junction reads\n  -v OVERLAP_COLUMN, --overlap_column OVERLAP_COLUMN\n                        In case the start and stop columns contain the max spanning read positions instead of exact sites, indicate which\n                        column contains overlap at left and right side of junction (e.g. column 11 in TopHat junction file, not needed in\n                        STAR junction file)\n  -o OUTPUT, --output OUTPUT\n                        Optional output directory\n  -n NAME_PREFIX, --name_prefix NAME_PREFIX\n                        Optional pefix (e.g. sample name) for output files\n  -ff FSFILTER, --fsfilter FSFILTER\n                        Filter out forward junctions with less reads than this filter (default=1)\n  -bf BSFILTER, --bsfilter BSFILTER\n                        Filter out backsplice junctions with less reads than this filter (default=1)\n  -s {yes,no}, --strand {yes,no}\n                        Run in strand-specific mode or not? (default=yes)\n```\nRemark: A long exon file will require more time to process.\nIf it really takes too long, you can split the exon file per chromosome and run the script on the exon file subsets (no need to split the forward splice and backsplice junction files - the script will only use the junctions that are between the exon file boundaries).\n"
+      },
+      "source": "https://raw.githubusercontent.com/OncoRNALab/CiLiQuant/master/README.md",
+      "technique": "header_analysis"
+    }
+  ],
+  "somef_missing_categories": [
+    "citation",
+    "acknowledgement",
+    "download",
+    "contact",
+    "contributors",
+    "documentation",
+    "usage",
+    "faq",
+    "support",
+    "identifier",
+    "has_build_file",
+    "executable_example"
+  ],
+  "somef_provenance": {
+    "date": "2024-10-06 06:50:41",
+    "somef_schema_version": "1.0.0",
+    "somef_version": "0.9.5"
+  },
+  "stargazers_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 1
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "type": [
+    {
+      "confidence": 0.82,
+      "result": {
+        "type": "String",
+        "value": "commandline-application"
+      },
+      "technique": "software_type_heuristics"
+    }
+  ]
+}

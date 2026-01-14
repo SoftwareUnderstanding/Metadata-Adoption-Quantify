@@ -1,0 +1,273 @@
+{
+  "code_repository": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/mhguo1/TRAPD"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_created": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2018-01-04T21:39:21Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_updated": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2024-05-23T13:22:44Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "description": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "Burden testing against public controls"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 0.9420721893522536,
+      "result": {
+        "original_header": "TRAPD",
+        "type": "Text_excerpt",
+        "value": "\nFinding genes associated with Mendelian disorders can often be challenging. While some disorders are amenable gene discovery using family-based analyses (e.g., linkage or segregation), other disorders may be very challenging for a number of reasons (see Guo et al., AJHG. 2016. PMID: 27545677). One approach to identify genes associated with Mendelian disorders is to use burden testing, where the aggregate burden of rare protein-altering variants in each gene is tested against a set of suitable controls. While one may sequence a set of control samples or have control sample sequencing readily available, this is often too expensive and unavailable. Here, we provide a simple-to-use program called TRAPD (Testing Rare vAriants using Public Data) that allows for burden testing against publicly-available summary level data (e.g., ExAC or gnomAD). \nWe have had a number of users ask us about how to filter their data. We refer users to our paper. Filtering data for parameters such as variant quality are dependent on your data and likely will need to be calibrated. Our paper outlines how we did this for our samples and outlines some general approaches. However, there is no one-size-fits-all approach. \nRequirements:\nTRAPD is written in Python and R. For Python, it is recommended to use Python version 2.7. For R, any version 2.+ should be okay. \n\t0.1-0.2) Separating multi-allelics and left-aligning indels:\n\tThere are several ways to do this. Please see https://genome.sph.umich.edu/wiki/Variant_Normalization for additional details on this issue. We use Bcftools to accomplish these two steps:\n\t(https://samtools.github.io/bcftools/bcftools.html):\n\tbcftools norm -m -any -f Homo_sapiens_assembly19.fasta in.vcf.gz | bgzip > out.vcf.gz\n\t\n\t0.3) Annotation:\n\tFor variant annotation, we have achieved our best results using VEP (https://www.ensembl.org/info/docs/tools/vep/script/index.html). Several additional annotators include SnpEff (http://snpeff.sourceforge.net/) and ANNOVAR (http://annovar.openbioinformatics.org/en/latest/).\n\tWe highly recommend annotating the case and control data in the same way.\n\t\n\t0.4) Read depth filter:\n\tOptional step if you want to filter for sites meeting certain criteria, e.g., read depth. Please see code at bottom of page for how this was performed in our paper.\n\t\nPlease note that if you do not properly separate out multi-allelic varints, TRAPD will automatically remove that variant in later steps. \n**1a) Creating a SNP file**\nA SNP file maps qualifying variants to genes. Qualifying variants are variants that you think may be pathogenic, usually based on minor allele frequency (e.g., less than 0.1% frequency in a reference population) and annotations of predicted effect of the variant (e.g., rare protein-altering variants). You can create a separate SNP file for your cases and controls, or you can make the same SNP file. The SNP file format for TRAPD has two columns: 1) Column 1 is your gene name, and 2) Column 2 is a comma separated list of variants assigned to that gene. A variant can be assigned to multiple genes. The header for this file is: \"#GENE SNPS\". \n2) -o, --outfile: This is a path to your desired outfile name: e.g., /Users/smith/dat/snp_file.txt. The default is \"snpfile.txt\" \n3) --genecolname: This is a field within the INFO field of your vcf telling the script which gene that variant belongs to. For SNPEFF, this is typically SNPEFF_GENENAME. If you used VEP to annotate your vcf (see Step 0), you must supply the --vep option below, and you'll use the column name within the CSQ field for VEP (usually \"genename\" or the like). \nAdditional Options:\n4) INFO field filter options (--includeinfo, --excludeinfo): These are criteria based on the INFO field of your vcf to include or exclude variants. You may include as many inclusion or exclusion criteria as you wish.  \nThese criteria are structured as: \"FIELD[operator]threshold\". Here, FIELD is any field within the INFO field of your vcf (e.g., AC, ExAC_AF, AF). Operator is any operator from the following: \n\t'<': less than\n  \t'<=' : less than or equal to\n\t'>' : greater than\n\t'>=' : greater than or equal to\n \t '=' : equals\n  \t'!=' : does not equal\n\t'in': in\n  \n Also, note that if you use the \"in\" operator, you should include a list of test values enclosed by parentheses (e.g., \"annotation[in](missense,nonsense,frameshift)\" \nSome examples:\n--includeinfo \"AC[<]5\" #Filters in variants with Aalele count (AC) less than five\n--excludeinfo \"AF[>]0.05\" #Filters out variants with allele frequency (AF) greater than 0.05\n--includeinfo \"SNPEFF_EFFECT[=]missense\" #Filters in variants with SNPEFF_EFFECT annotated as missense. \n5) VEP INFO field filter options (--includevep, --excludevep). These are criteria based on the VEP INFO field of your vcf to include or exclude variants. They are structured the same as --includeinfo and --excludeinfo, and as many as you want may be used. If these options are used, --vep must be supplied. Some examples:\n--includeinfo \"BIOTYPE[=]protein_coding\" #Include variants where the VEP CSQ consequence is protein_coding\n--excludeinfo \"consequence[=]synonymous\" #Exclude variants where the VEP CSQ consequence is synonymous \n6) --snpformat: Format for SNPs. Default is \"CHRPOSREFALT\". Your SNPs may be defined in any one of two ways.  If you supply the option \"VCFID\", then the program will use the VCF variant name in column 3 of your vcf (often rsIDs). Alternatively, you may supply \"CHRPOSREFALT\", in which case variants will be formatted as chr:pos:ref:alt (e.g., 1:1000:A:T). We highly recommend that you use CHRPOSREFALT as this reduces ambiguity. \n8) --pass: Keep only PASS variants based on the \"FILTER\" field of your vcf \n9) --genenull: Values for which a gene is to be considered null. Default is \"NA\" or \".\". Genes names having any of these values will be excluded from teh output. In addition, any variants without a gene name annotation will be excluded. \n**1b) Merging SNP files**\nThis is an optional step if you need to merge two SNP files (for example, if you performed step 1a separately for SNPs and indels). It can also be used if you perfomed Step 1a separately for each chromosome. It has two required options: \nRequired Options\n1) -s, --snpfiles: This is a comma-separated list of SNP files from Step 1a you are trying to merge. \n2) -o, --outfile: This is a path to your desired outfile name: e.g., /Users/smith/dat/out.txt. \n\n**2a) Counting carriers in case cohort**\nThis script will tabulate the number of cases carrying qualifying variants in each gene as defined by a SNP file.  \n2) -s, --snpfile: This is the path to your SNP file containing mappings of qualifying variants to gene (see Step 1).  \n3) -o, --outfile: This is a path to your desired outfile name: e.g., /Users/smith/dat/out.txt. The default is \"case_counts.txt\" \nAdditional Options:\n4) --snpformat: Format for SNPs. Default is \"CHRPOSREFALT\". Your SNPs may be defined in any one of two ways.  If you supply the option \"VCFID\", then the program will use the VCF variant name in column 3 of your vcf (often rsIDs). Alternatively, you may supply \"CHRPOSREFALT\", in which case variants will be formatted as chr:pos:ref:alt (e.g., 1:1000:A:T). \n5) --samplefile: Optional file containing list of samples to use. The file should contain one sample per row. Only samples present in this list and in the VCF will be used.  \n6) --pass: Keep only PASS variants based on the \"FILTER\" field of your vcf \n7) --maxAC: Keep only variants with allele count (AC) less than this value. Note that this is calculated based on all samples in the VCF (and not just the samples in the --samplefile). The default is 99999. \n8) --maxAF: Keep only variants with allele frequency (AF) less than this value. Note that this is calculated based on all samples in the VCF (and not just the samples in the --samplefile). The default is 1.0. \n9) --minAN: Keep only variants with allele number (AN) greater than this value. Note that this is calculated based on all samples in the VCF (and not just the samples in the --samplefile). The default is 0.  \n11) --GTfield: The format field within the genotype data from which genotypes should be extracted. The default is \"GT\" \n**2b) Counting carriers in public control cohorts**\nThis script will tabulate the approximate number of controls carrying qualifying variants in each gene as defined by a SNP file. Currently, this script has been configured to run using ExAC (http://exac.broadinstitute.org/downloads) or gnomAD (http://gnomad.broadinstitute.org/) data, but any sites-only vcf can be used (as long as it contains AC and AN in the INFO field).  \n2) -s, --snpfile: This is the path to your SNP file containing mappings of qualifying variants to genes (see Step 1).  \n5) --pop: Comma separated list of continental populations to use. For ExAC, these include AFR, AMR, EAS, FIN, NFE, SAS, OTH.  For gnomad, these include AFR, AMR, ASJ, EAS, FIN, NFE, SAS, OTH. If ALL is included, then all populations are used. The default is \"ALL\" \n6) -d, --database: Control database used. Default is \"generic\", which is any vcf that contains at least AC and AN in the INFO column. Other options are \"gnomad\" or \"exac\" \n7) --pass: Keep only PASS variants based on the \"FILTER\" field of VCF \n8) --maxAC: Keep only variants with allele count (AC) less than this value. Note that this is based on the INFO/AC field in the VCF. The default is 99999. \n9) --maxAF: Keep only variants with allele frequency (AF) less than this value. Note that this is calculated based on the INFO/AC and INFO/AN fields in your VCF. The default is 1.0. \n10) --minAN: Keep only variants with allele number (AN) greater than this value.  Note that this is based on the INFO/AN field in the VCF. The default is 0.  \n11) --popmaxAF: Keep only variants with population maximum AF less than this value. These values are provided in the INFO field for ExAC and gnomAD. If using a \"generic\" database, then you must have an INFO field called \"AF_POPMAX\" in order to use this option. The default is 1.0. \n11) --homcol: This argument is only relevant if the database is \"generic\". This argument specifies the INFO field that contains the counts of the number of homozygotes. If not specified for a generic database, then homozygotes will not be counted. \nOutput: The output file will contain four columns: \n- #GENE: gene name\n- CONTROL_COUNT_HET: Approximate number of individuals carrying heterozygous qualifying variants in a given gene \n- CONTROL_COUNT_HOM: Number of individuals carrying homozygous qualifying variants in a given gene. \n- CONTROL_TOTAL_AC: Total AC for a given gene. \n\n**3) Run burden testing**\nThis script will run the actual burden testing. It performs a one-sided Fisher's exact test to determine if there is a greater burden of qualifying variants in cases as compared to controls for each gene. It will perform this burden testing under a dominant and a recessive model. \nOutput: A tab delimited file with 10 columns:\n- #GENE: Gene name\n- CASE_COUNT_HET: Number of cases carrying heterozygous qualifying variants in a given gene \n- CASE_COUNT_CH: Number of cases carrying potentially compound heterozygous qualifying variants in a given gene \n- CASE_COUNT_HOM: Number of cases carrying homozygous qualifying variants in a given gene. \n- CASE_TOTAL_AC: Total AC for a given gene.\n- CONTROL_COUNT_HET: Approximate number of controls carrying heterozygous qualifying variants in a given gene \n- CONTROL_COUNT_HOM: Number of controlss carrying homozygous qualifying variants in a given gene. \n- CONTROL_TOTAL_AC: Total AC for a given gene.\n- P_DOM: p-value under the dominant model.\n- P_REC: p-value under the recessive model. \n**Generate QQ Plot**\nThe last step is the generate the QQ plot and calculate the lambda_delta95 as described in our paper \nRequired Options\n--pvalfile: This is the output from burden testing from Step 3 \n--plotfile: This is the file name for the output. Must end in \".png\" \nAdditional Options\n--maxp: truncates plot at a -log10(p-value) of this value. Default is 100.\n--recessive: Instructs script to use recessive p-values (P_REC) from above rather than P_DOM. Default is FALSE\n--removenull: Instructs plot to remove any values where the p-value is 1. Can be used to generate prettier plots when a lot of genes have p-values of 1 (commonly seen if case sample size is small). Default is FALSE. \n**Creating read depth filter (Step 0.4)**\nAs several users have requested our approach for read depth filtering, we have included code for how we filtered for sites with > 90% of samples having DP > 10 \nWe first downloaded the read depth files for gnomAD (https://storage.googleapis.com/gnomad-public/release/2.0.2/coverage/combined_tars/gnomad.exomes.r2.0.2.coverage.all.tar). We then subsetted on sites with >90% of samples with DP > 10 (column 7 of file). Using chr21 as an example:\nzcat gnomad.exomes.r2.0.2.chr21.coverage.txt.gz  | tail -n+2 | awk '$7>0.9 {print $1\"\\t\"($2-1)\"\\t\"$2}' | bedtools merge -i stdin > gnomad.dp10.bed  \nFinally, we intersected the case and control bed files to get only positions meeting criteria for both datasets.\nbedtools intersect -a gnomad.dp10.bed -b cases.dp10.bed | sort -k1,1n -k2,2n | bedtools merge -i stdin > combined.dp10.bed \nCiting TRAPD:\nGuo MH, Plummer L, Chan Y-M, Hirschhorn JN, Lippincott MF. Burden testing of rare variants identified through exome sequencing using publicly available control data. American Journal of Human Genetics. 2018. 103(4):522-534. \n\nContact:\nFor questions, suggestions, and bugs, please contact Michael Guo at mguo at broadinstitute.org \n"
+      },
+      "source": "https://raw.githubusercontent.com/mhguo1/TRAPD/master/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "documentation": [
+    {
+      "confidence": 1,
+      "result": {
+        "format": "wiki",
+        "type": "Url",
+        "value": "https://github.com/mhguo1/TRAPD/wiki"
+      },
+      "source": "https://raw.githubusercontent.com/mhguo1/TRAPD/master/README.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "download_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/mhguo1/TRAPD/releases"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 31
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/mhguo1/TRAPD/forks"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "mhguo1/TRAPD"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_title": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "TRAPD"
+      },
+      "source": "https://raw.githubusercontent.com/mhguo1/TRAPD/master/README.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "installation": [
+    {
+      "confidence": 0.9692434959835989,
+      "result": {
+        "original_header": "TRAPD",
+        "type": "Text_excerpt",
+        "value": "Requirements:\nTRAPD is written in Python and R. For Python, it is recommended to use Python version 2.7. For R, any version 2.+ should be okay. \nRequired Python packages:\n- optparse\n- operator \nNOTE: As of 10/8/2019, TRAPD no longer required pybedtools. \n\t0.1-0.2) Separating multi-allelics and left-aligning indels:\n\tThere are several ways to do this. Please see https://genome.sph.umich.edu/wiki/Variant_Normalization for additional details on this issue. We use Bcftools to accomplish these two steps:\n\t(https://samtools.github.io/bcftools/bcftools.html):\n\tbcftools norm -m -any -f Homo_sapiens_assembly19.fasta in.vcf.gz | bgzip > out.vcf.gz\n\t\n\t0.3) Annotation:\n\tFor variant annotation, we have achieved our best results using VEP (https://www.ensembl.org/info/docs/tools/vep/script/index.html). Several additional annotators include SnpEff (http://snpeff.sourceforge.net/) and ANNOVAR (http://annovar.openbioinformatics.org/en/latest/).\n\tWe highly recommend annotating the case and control data in the same way.\n\t\n\t0.4) Read depth filter:\n\tOptional step if you want to filter for sites meeting certain criteria, e.g., read depth. Please see code at bottom of page for how this was performed in our paper.\n\t\nPlease note that if you do not properly separate out multi-allelic varints, TRAPD will automatically remove that variant in later steps. \nTo create the SNP file, you must have an annotated vcf from which you define your gene names. The vcf does not need to have any genotypes (i.e., can be a sites-only vcf).  \npython make_snp_file.py --vcffile $vcffilename --outfile $outfilename --genecolname $genecol [--includeinfo --excludeinfo --includevep --excludevep --snpformat --bedfile --pass --genenull --vep --snponly --indelonly] \nRequired Options\n1) -v, --vcffile: This is a path to your vcffile: e.g., /Users/smith/dat/test.vcf.gz. Your vcf must be gzipped or bgzipped. \n2) -o, --outfile: This is a path to your desired outfile name: e.g., /Users/smith/dat/snp_file.txt. The default is \"snpfile.txt\" \n3) --genecolname: This is a field within the INFO field of your vcf telling the script which gene that variant belongs to. For SNPEFF, this is typically SNPEFF_GENENAME. If you used VEP to annotate your vcf (see Step 0), you must supply the --vep option below, and you'll use the column name within the CSQ field for VEP (usually \"genename\" or the like). \nVariants that are kept will need to meet ALL criteria supplied! \n6) --snpformat: Format for SNPs. Default is \"CHRPOSREFALT\". Your SNPs may be defined in any one of two ways.  If you supply the option \"VCFID\", then the program will use the VCF variant name in column 3 of your vcf (often rsIDs). Alternatively, you may supply \"CHRPOSREFALT\", in which case variants will be formatted as chr:pos:ref:alt (e.g., 1:1000:A:T). We highly recommend that you use CHRPOSREFALT as this reduces ambiguity. \n10) --vep: Option that should be supplied if you used VEP to annotate your vcf. \n**1b) Merging SNP files**\nThis is an optional step if you need to merge two SNP files (for example, if you performed step 1a separately for SNPs and indels). It can also be used if you perfomed Step 1a separately for each chromosome. It has two required options: \nRequired Options\n1) -s, --snpfiles: This is a comma-separated list of SNP files from Step 1a you are trying to merge. \n2) -o, --outfile: This is a path to your desired outfile name: e.g., /Users/smith/dat/out.txt. \nThe command takes in a vcf file containing case sample genotypes and a SNP file listing the qualifying variants for each gene. The general command is:\npython count_cases.py -v test.vcf.gz -s snpfile.txt -o casecounts.txt [--snpformat --samplefile --pass --maxAC --maxAF --minAN --GTfield].  \nRequired Options\n1) -v, --vcffile: This is the path to your VCF file containing case genotypes: e.g., /Users/smith/dat/test.vcf.gz. Your vcf must be gzipped or bgzipped. \n3) -o, --outfile: This is a path to your desired outfile name: e.g., /Users/smith/dat/out.txt. The default is \"case_counts.txt\" \nAdditional Options:\n4) --snpformat: Format for SNPs. Default is \"CHRPOSREFALT\". Your SNPs may be defined in any one of two ways.  If you supply the option \"VCFID\", then the program will use the VCF variant name in column 3 of your vcf (often rsIDs). Alternatively, you may supply \"CHRPOSREFALT\", in which case variants will be formatted as chr:pos:ref:alt (e.g., 1:1000:A:T). \nThe general command is:\npython count_controls.py -v test.vcf.gz -s snpfile.txt -o controlcounts.txt [--snpformat --pop --database --pass --maxAC --maxAF --minAN --popmaxAF --homcol --bedfile] \nRequired Options\n1) -v, --vcffile: This is the path to  VCF file containing control genotypes: e.g., /Users/smith/dat/public.vcf.gz. The vcf must be gzipped or bgzipped. The VCF should be downloaded from ExAC (http://exac.broadinstitute.org/downloads) or gnomAD (http://gnomad.broadinstitute.org/) \nIt requires R; the script was tested using R v3.1, but any version of R should work. The script should be run as:\nRscript burden.R --casefile casecounts.txt --casesize 100 --controlfile controlcounts.txt --controlsize 60000 --output burden.out.txt \nIt requires R; the script was tested using R v3.1, but any version of R should work. The script should be run as:\nRscript QQ.R --pvalfile burden.out.txt --plotfile out.png [--maxp --recessive --removenull] \nRequired Options\n--pvalfile: This is the output from burden testing from Step 3 \n--plotfile: This is the file name for the output. Must end in \".png\" \nWe first downloaded the read depth files for gnomAD (https://storage.googleapis.com/gnomad-public/release/2.0.2/coverage/combined_tars/gnomad.exomes.r2.0.2.coverage.all.tar). We then subsetted on sites with >90% of samples with DP > 10 (column 7 of file). Using chr21 as an example:\nzcat gnomad.exomes.r2.0.2.chr21.coverage.txt.gz  | tail -n+2 | awk '$7>0.9 {print $1\"\\t\"($2-1)\"\\t\"$2}' | bedtools merge -i stdin > gnomad.dp10.bed  \n"
+      },
+      "source": "https://raw.githubusercontent.com/mhguo1/TRAPD/master/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "invocation": [
+    {
+      "confidence": 0.8719175014823624,
+      "result": {
+        "original_header": "TRAPD",
+        "type": "Text_excerpt",
+        "value": "python make_snp_file.py --vcffile $vcffilename --outfile $outfilename --genecolname $genecol [--includeinfo --excludeinfo --includevep --excludevep --snpformat --bedfile --pass --genenull --vep --snponly --indelonly] \nThe command takes in a vcf file containing case sample genotypes and a SNP file listing the qualifying variants for each gene. The general command is:\npython count_cases.py -v test.vcf.gz -s snpfile.txt -o casecounts.txt [--snpformat --samplefile --pass --maxAC --maxAF --minAN --GTfield].  \nThe general command is:\npython count_controls.py -v test.vcf.gz -s snpfile.txt -o controlcounts.txt [--snpformat --pop --database --pass --maxAC --maxAF --minAN --popmaxAF --homcol --bedfile] \nWe then calculated read depth for case samples using GATK (v3.4):\njava -jar GATK.jar -T DepthOfCoverage -I bam.list -R human_g1k_v37.fasta --omitIntervalStatistics --omitLocusTable --minBaseQuality 0 --minMappingQuality 20 --includeRefNSites --countType COUNT_FRAGMENTS -o cases.counts.txt \n"
+      },
+      "source": "https://raw.githubusercontent.com/mhguo1/TRAPD/master/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "issue_tracker": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/mhguo1/TRAPD/issues"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "keywords": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": ""
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "license": [
+    {
+      "confidence": 1,
+      "result": {
+        "name": "MIT License",
+        "spdx_id": "MIT",
+        "type": "License",
+        "url": "https://api.github.com/licenses/mit",
+        "value": "https://api.github.com/licenses/mit"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "File_dump",
+        "value": "MIT License\n\nCopyright (c) 2018 Michael Guo\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.\n"
+      },
+      "source": "https://raw.githubusercontent.com/mhguo1/TRAPD/master/LICENSE",
+      "technique": "file_exploration"
+    }
+  ],
+  "name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "TRAPD"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "owner": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "User",
+        "value": "mhguo1"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "programming_languages": [
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Python",
+        "size": 60433,
+        "type": "Programming_language",
+        "value": "Python"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "R",
+        "size": 3710,
+        "type": "Programming_language",
+        "value": "R"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "readme_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/mhguo1/TRAPD/master/README.md"
+      },
+      "technique": "file_exploration"
+    }
+  ],
+  "somef_missing_categories": [
+    "citation",
+    "acknowledgement",
+    "run",
+    "download",
+    "requirements",
+    "contact",
+    "contributors",
+    "usage",
+    "faq",
+    "support",
+    "identifier",
+    "has_build_file",
+    "executable_example"
+  ],
+  "somef_provenance": {
+    "date": "2024-10-06 08:17:01",
+    "somef_schema_version": "1.0.0",
+    "somef_version": "0.9.5"
+  },
+  "stargazers_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 49
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "type": [
+    {
+      "confidence": 0.82,
+      "result": {
+        "type": "String",
+        "value": "commandline-application"
+      },
+      "technique": "software_type_heuristics"
+    }
+  ]
+}

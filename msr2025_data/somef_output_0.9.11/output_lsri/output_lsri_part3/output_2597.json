@@ -1,0 +1,387 @@
+{
+  "citation": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Cite this article",
+        "parent_header": [
+          "iCAT: Immune Cells Analysis software Tool <img src=\"inst/app/www/cat2.png\" align=\"right\" width=\"125\"/>"
+        ],
+        "type": "Text_excerpt",
+        "value": "Rajeh A, Wolf K, Schiebout C et al. iCAT: diagnostic assessment tool of immunological history using high-throughput T-cell receptor sequencing. F1000Research 2021, 10:65 [(https://doi.org/10.12688/f1000research.27214.2)](https://doi.org/10.12688/f1000research.27214.2).\n\n"
+      },
+      "source": "https://raw.githubusercontent.com/BioHPC/iCAT/master/README.md",
+      "technique": "header_analysis"
+    }
+  ],
+  "code_repository": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/BioHPC/iCAT"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_created": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2018-04-22T00:38:10Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_updated": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2021-10-27T03:52:39Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "description": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "iCAT: Immune Cells Analysis software Tool"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Summary",
+        "parent_header": [
+          "iCAT: Immune Cells Analysis software Tool <img src=\"inst/app/www/cat2.png\" align=\"right\" width=\"125\"/>"
+        ],
+        "type": "Text_excerpt",
+        "value": "High throughput sequencing of immune cell receptor\u00a0sequences presents a unique opportunity to inform our understanding of immunological response to infection and how we can detect it. iCAT is a user-friendly, graphical-interface software that takes exposed and non-exposed samples of T-cell receptor (TCR) clonotypes as input and identifies pathogen-specific TCR sequences. Using these sequences, iCAT can also classify independent samples of TCR clonotypes. iCAT was able to identify vaccine-associated TCR sequences with up to 95% prediction accuracy in mice. \n"
+      },
+      "source": "https://raw.githubusercontent.com/BioHPC/iCAT/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 0.9248141842157326,
+      "result": {
+        "original_header": "Graphical Interface Workflow",
+        "type": "Text_excerpt",
+        "value": "In R:\n```  \nlibrary(iCAT)\niCATinteractive()\n```   \nThis will launch a graphical user interface (GUI) for iCAT. The GUI has three tabs, separating major functionalities: training, library, and prediction. \n*Note*: If the iCATinteractive() cannot launch the html with an error as \"Error in loadNamespace: namespace \u2018htmltools\u2019 0.X.X is already loaded, but >= 0.X.Y is required\", please restart the R session. \nIndividual samples\u2019 sequencing data should be in .tsv format. \n5)\tChoose the `Range of Acceptable Copies per Clonotype`, which determines the minimum and maximum number of copies a clonotype must have to be included in the analysis. Enter as a space delimted range. Defaults to `1 99`. An example of when this could be useful: in case there is expected artifacts in the processing/data that overestimate the copy number of some clonotypes. \n5)\tChoose the `Min Threshold of Public Sequences`, which determines the minimum number of training samples a TCR sequence must be observed in to be considered as potentially \"associated\" with the positive group. Defaults to 1. Recommend setting at 10% of positive training samples. E.g. if there are 30 positive training samples, a recommended minimum threshold is 3.  \nA progress bar will show on the bottom-right corner to update on the satatus of training. After finishing, the _training_ tab will show some exploratory tables and a figure regarding the training data and the model built, which can all be downloaded to the user's machine. In addition, the _library_ and _prediction_ tab will unlock. \nThe _Library_ tab displays a table consisting of the \"target associated receptor sequences\" (TARS), determined to be statistically associated with exposure to the target/agent/pathogen. The table displays each sequence, number of positive and negative training samples the sequence is present in/absent from, and how statistically associated the sequence is to the positive training data (*p*-value). The table can be downloaded to the user's computer for further analysis using excel, commandline, etc using the download `Table` button below the table. \nThe _Prediction_ tab allows the user to add sequencing data from unknown samples (e.g. not included in the previous training data) for classification as \"Positive\" or \"Negative\" and determining the accuracy of the diagnostic assay. \nA table will appear after analysis is complete. The table displays sample names along with the prediction \"Positive\" (red)/ \"Negative\" (blue), and displays the \u2018%TARS\u2019: the percent of individual sequences from the sample that are included in the TARS library. The prediction results can be downloaded as a table.\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/BioHPC/iCAT/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.8958714668499519,
+      "result": {
+        "original_header": "R-interface Workflow",
+        "type": "Text_excerpt",
+        "value": "1) Define the parameters you would like to use for building the model:\n```\nFIELD <- \"aminoAcid vGeneName jGeneName\" #\"aaSeqCDR3\"\nCOUNT <- \"copy\"\nCOPY_RANGE <- \"1 99\" \nP_CUTOFF <- 0.11\nMIN_PUBLIC <- 1\n```     \n2) Make lists of .tsv Positive and Negative training samples:\n```     \nlistPos <- tsvDir(\"inst/extdata/Post/\")\nlistNeg <- tsvDir(\"inst/extdata/Pre/\")\n       \n```     \n - _optional_ Collect summary statistics about training samples:\n```     \ntrnStats(listNeg, listPos, FIELD, COUNT, COPY_RANGE)\n#>         # Samples # Clonotypes # Unique Sequences\n#>Negative         9       101942             281336\n#>Positive         9        34158              89150\n```     \n3) Read in Positive and Negative training samples:\n```     \nnaive <- readTrn(listNeg, FIELD, COUNT, COPY_RANGE, \"naive\")\nvaccs <- readTrn(listPos, FIELD, COUNT, COPY_RANGE, \"vacc\")     \n```     \n4) Build a model using the training data:\nBASH5*     \n       \n - _optional_ Produce a table estimating the classification accuracy of the model: \n```     \nclassMat(mod)\n```     \n - _optional_ Produce a figure showing % of TCR associated with positve samples in positive and negative samples:\n    \nBASH7*          \n - _optional_ Produce the library of TCR sequences associated with positve samples:\n```     \ngetLib(mod) \n```     \n \n5) Predict sample(s) exposure based on model:\n```\npred(mod, \"path/to/unknown-sample\", \"unknown-sample-label\", FIELD, COUNT, COPYRANGE)\n```     \n_Note_: If predicting multiple samples, use vectors for paths and labels.\n       \n       \n \n"
+      },
+      "source": "https://raw.githubusercontent.com/BioHPC/iCAT/master/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "documentation": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/BioHPC/iCAT/tree/master/docs"
+      },
+      "technique": "file_exploration"
+    }
+  ],
+  "download_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/BioHPC/iCAT/releases"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 1
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/BioHPC/iCAT/forks"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "BioHPC/iCAT"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_title": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "iCAT: Immune Cells Analysis software Tool "
+      },
+      "source": "https://raw.githubusercontent.com/BioHPC/iCAT/master/README.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "images": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/BioHPC/iCAT/master/inst/app/www/cat2.png"
+      },
+      "source": "https://raw.githubusercontent.com/BioHPC/iCAT/master/README.md",
+      "technique": "regular_expression"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/BioHPC/iCAT/master//screenshot/icat.png?raw=true"
+      },
+      "source": "https://raw.githubusercontent.com/BioHPC/iCAT/master/README.md",
+      "technique": "regular_expression"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/BioHPC/iCAT/master//screenshot/lib-icat2.png?raw=true"
+      },
+      "source": "https://raw.githubusercontent.com/BioHPC/iCAT/master/README.md",
+      "technique": "regular_expression"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/BioHPC/iCAT/master//screenshot/pred-icatv2.png?raw=true"
+      },
+      "source": "https://raw.githubusercontent.com/BioHPC/iCAT/master/README.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "installation": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Installing iCAT",
+        "parent_header": [
+          "iCAT: Immune Cells Analysis software Tool <img src=\"inst/app/www/cat2.png\" align=\"right\" width=\"125\"/>"
+        ],
+        "type": "Text_excerpt",
+        "value": "Using an R interface, type:\n```  \ndevtools::install_github(\"BioHPC/iCAT\") \n```  \n\n*Note*: Alternatively, you can clone/download the repository and run `devtools::install(\"iCAT/\")`\n"
+      },
+      "source": "https://raw.githubusercontent.com/BioHPC/iCAT/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 0.8936030125141174,
+      "result": {
+        "original_header": "Graphical Interface Workflow",
+        "type": "Text_excerpt",
+        "value": "*Note*: If the iCATinteractive() cannot launch the html with an error as \"Error in loadNamespace: namespace \u2018htmltools\u2019 0.X.X is already loaded, but >= 0.X.Y is required\", please restart the R session. \n\n1) In the _Training_ tab, enter your negative training samples (na\u00efve, unexposed, pre-infection, etc.) using the `Browse` button. \n3) Choose if you want to analyze data by: \n- `CDR3 Amino Acid Sequence` (TCRs will need the same CDR3 region to be called \u2018Identical\u2019)\n- `TCRV-CDR3-TCRJ` (TCRs will need the same TCRBV segment, CDR3 region, and TCRJ segment to be called \u2018Identical\u2019) *Recommended*\n- `Nucleic Acid (DNA)` (TCRs will need the exact same DNA rearrangements/sequence across TCRBV, CDR3, and TCRJ)\n- `other` (customized column name) \n"
+      },
+      "source": "https://raw.githubusercontent.com/BioHPC/iCAT/master/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "invocation": [
+    {
+      "confidence": 0.8026886361969203,
+      "result": {
+        "original_header": "Graphical Interface Workflow",
+        "type": "Text_excerpt",
+        "value": "6) Once all options are selected click `Train Model` \n"
+      },
+      "source": "https://raw.githubusercontent.com/BioHPC/iCAT/master/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "issue_tracker": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/BioHPC/iCAT/issues"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "keywords": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": ""
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "license": [
+    {
+      "confidence": 1,
+      "result": {
+        "name": "MIT License",
+        "spdx_id": "MIT",
+        "type": "License",
+        "url": "https://api.github.com/licenses/mit",
+        "value": "https://api.github.com/licenses/mit"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "File_dump",
+        "value": "MIT License\n\nCopyright (c) 2021 Tae-Hyuk Ahn\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.\n"
+      },
+      "source": "https://raw.githubusercontent.com/BioHPC/iCAT/master/LICENSE",
+      "technique": "file_exploration"
+    }
+  ],
+  "name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "iCAT"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "owner": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "User",
+        "value": "BioHPC"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "programming_languages": [
+    {
+      "confidence": 1,
+      "result": {
+        "name": "R",
+        "size": 32687,
+        "type": "Programming_language",
+        "value": "R"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "readme_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/BioHPC/iCAT/master/README.md"
+      },
+      "technique": "file_exploration"
+    }
+  ],
+  "releases": [
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "BioHPC",
+          "type": "User"
+        },
+        "date_created": "2020-09-09T19:54:48Z",
+        "date_published": "2021-01-13T13:39:15Z",
+        "description": "This is the first release.",
+        "html_url": "https://github.com/BioHPC/iCAT/releases/tag/v1.0.0",
+        "name": "First release of iCAT",
+        "release_id": 36333908,
+        "tag": "v1.0.0",
+        "tarball_url": "https://api.github.com/repos/BioHPC/iCAT/tarball/v1.0.0",
+        "type": "Release",
+        "url": "https://api.github.com/repos/BioHPC/iCAT/releases/36333908",
+        "value": "https://api.github.com/repos/BioHPC/iCAT/releases/36333908",
+        "zipball_url": "https://api.github.com/repos/BioHPC/iCAT/zipball/v1.0.0"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "requirements": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Pre-requisites",
+        "parent_header": [
+          "iCAT: Immune Cells Analysis software Tool <img src=\"inst/app/www/cat2.png\" align=\"right\" width=\"125\"/>"
+        ],
+        "type": "Text_excerpt",
+        "value": "* R version\n  * Download R (>3.4.0) version from CRAN.\n    * Windows: https://cran.r-project.org/bin/windows/base/\n    * Mac OS X: https://cran.r-project.org/bin/macosx/\n    * Linux: https://cran.r-project.org/bin/linux/\n\n* Libraries:\n    - devtools\n\nTo install devtools, use the command:\n```\ninstall.packages(\"devtools\") \n``` \n\n* For Windows Users:\n  - Rtools is required if you have a R version >= R 4.0.0 in your Windows system. Please follow the [Rtools installing guide](https://cran.r-project.org/bin/windows/Rtools/) to download and install it.\n\n*Note*: iCAT also uses shiny, shinyjs, data.table, ggplot2, DT, hash, and magrittr. However, those packages will be installed if using `install_github` from below.\n"
+      },
+      "source": "https://raw.githubusercontent.com/BioHPC/iCAT/master/README.md",
+      "technique": "header_analysis"
+    }
+  ],
+  "somef_missing_categories": [
+    "acknowledgement",
+    "run",
+    "download",
+    "contact",
+    "contributors",
+    "usage",
+    "faq",
+    "support",
+    "identifier",
+    "has_build_file",
+    "executable_example"
+  ],
+  "somef_provenance": {
+    "date": "2024-10-06 09:28:42",
+    "somef_schema_version": "1.0.0",
+    "somef_version": "0.9.5"
+  },
+  "stargazers_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 6
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "type": [
+    {
+      "confidence": 0.82,
+      "result": {
+        "type": "String",
+        "value": "commandline-application"
+      },
+      "technique": "software_type_heuristics"
+    }
+  ]
+}

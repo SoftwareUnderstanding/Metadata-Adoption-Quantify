@@ -1,0 +1,338 @@
+{
+  "application_domain": [
+    {
+      "confidence": 17.31,
+      "result": {
+        "type": "String",
+        "value": "Computer Vision"
+      },
+      "technique": "supervised_classification"
+    }
+  ],
+  "code_repository": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/InfOmics/stardust"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_created": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2021-01-14T12:40:23Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_updated": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2024-06-11T08:13:35Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "download_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/InfOmics/stardust/releases"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 2
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/InfOmics/stardust/forks"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "InfOmics/stardust"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_title": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "Stardust installation and usage"
+      },
+      "source": "https://raw.githubusercontent.com/InfOmics/stardust/master/README.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "installation": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Stardust installation and usage",
+        "type": "Text_excerpt",
+        "value": "Stardust can be installed as a standalone R package or can be used through the dedicated docker image. We suggest installing the following tools on a UNIX-like OS (like MacOS or a Linux distribution). The main aim of the tool is, given as input an expression matrix, the positions of spots and, possibly, a space weight configuration, to derive a vector of cluster identities for each spot in the input data. \nStardust depends on Seurat (for clustering and data visualization) and on rCASC for the computation of the stability scores and generation of the distributions comparison. Stardust, Seurat and rCASC installation instructions and usage are reported in the following subsections. Stardust tuning linkage is reported in the last subsection. \n"
+      },
+      "source": "https://raw.githubusercontent.com/InfOmics/stardust/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Standalone R package",
+        "parent_header": [
+          "Stardust installation and usage"
+        ],
+        "type": "Text_excerpt",
+        "value": "Stardust depends on Seurat, so we first need to install this package through the remotes package (in this way we can install a fixed version of Seurat). After Seurat installation, we can install Stardust from our GitHub repository. **NOTE**: Stardust requires a version of R > 4. \n```R\n# R code\ninstall.packages(\"devtools\")\ninstall.packages(\"remotes\")\n\n# install Seurat\nremotes::install_version(\"Seurat\", version = \"3.2.2\")\n# install Stardust\ndevtools::install_github(\"InfOmics/stardust\")\n\n```\nOnce the packages are installed, you can execute the following sample workflow based on the Mouse Kidney dataset. \nLet us download the input data.\n```bash\n# Bash code\n# create a working directory and enter in it\nmkdir MouseKidney && cd MouseKidney\n# using wget download the expression matrix and spot positions of the Mouse Kidney            \n# dataset. Download also the full dataset for the creation of a Seurat object for \n# visualization purposes\n\nwget https://github.com/InfOmics/stardust/raw/validation_data/stardustData/Datasets/MouseKidney/filtered_expression_matrix.txt.zip\n\nwget https://github.com/InfOmics/stardust/raw/validation_data/stardustData/Datasets/MouseKidney/spot_coordinates.txt\n\nwget https://github.com/InfOmics/stardust/raw/validation_data/stardustData/Datasets/MouseKidney/FullDataset.zip\n\n# unzip the archives and delete unused data\nunzip filtered_expression_matrix.txt.zip\nunzip FullDataset.zip\nrm -rf __MACOSX\nrm filtered_expression_matrix.txt.zip FullDataset.zip\n\n# start R\nR\n```\nNow compute the cluster identities for each spot. \nStardust can be executed by performing a linear transformation through a space weight parameter or by applying a non-linear formulation. \n```R\n# R code\n# load Seurat and Stardust\nlibrary(\"Seurat\")\nlibrary(\"stardust\")\n\n# load the count matrix and spot coordinates for the Mouse Kidney dataset (look at the validation_data branch for more details on the input data)\n# dataframe with spots id as columns and genes id as rows\ncountMatrix = read.table(\"./filtered_expression_matrix.txt\",row.names=1,header = TRUE)\n# dataframe with x and y spot coordinates as columns and spots id as rows \nspotPositions = read.table(\"./spot_coordinates.txt\",row.names=1,header = TRUE)\n\n# execute stardust by passing to the method the count matrix, the spot positions, \n# the weight of spatial information relative to the transcriptional \n# similarity (spaceWeight can be a real number between 0 and 1), \n# the PCA dimensions and the resolution for the Louvain algorithm\noutput <- weightStardust(countMatrix = countMatrix, spotPositions = spotPositions, \n                         spaceWeight = 0.75, pcaDimensions=10, res=0.8)\n                                              \n# alternatively, execute stardust by passing to the method the count matrix, the spot positions,\n# the PCA dimensions and the resolution for the Louvain algorithm\noutput <- autoStardust(countMatrix = countMatrix, spotPositions = spotPositions, \n                       pcaDimensions=10, res=0.8)\n\n# get the vector of cluster identities for each spot\nclusters_identities = output@active.ident\n```\nFinally, load the full dataset (i.e. with histological images) published on 10x website (10x, Datasets) and assign to it the cluster identities. This object can then be visualized with Seurat.\n```R\n# R code\n# create a full Seurat object with the data already downloaded\nMouseKidney = Load10X_Spatial(\"./FullDataset/\")\n\n# assign cluster identities to the Seurat object\nMouseKidney@active.ident = clusters_identities\n\n# visualize the clusters overlaid to the tissue image\nSeurat::SpatialDimPlot(MouseKidney)\n```"
+      },
+      "source": "https://raw.githubusercontent.com/InfOmics/stardust/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Standalone R package with docker",
+        "parent_header": [
+          "Stardust installation and usage",
+          "Standalone R package"
+        ],
+        "type": "Text_excerpt",
+        "value": "If you want a straight forward usage of Stardust you can also pull the dedicated docker container and skip all the possible dependency problems you could encounter with the package installation:\n```bash\n# Bash code\n# First, pull the docker image and run it\ndocker pull eviesi/stardust\ndocker run --rm -it eviesi/stardust /bin/bash\n\n# create a working directory and enter in it\nmkdir MouseKidney && cd MouseKidney\n\n# Using wget, download the count matrix and spot coordinates \n# (plus the full dataset for visualization purposes)\n\nwget https://github.com/InfOmics/stardust/raw/validation_data/stardustData/Datasets/MouseKidney/filtered_expression_matrix.txt.zip\n\nwget https://github.com/InfOmics/stardust/raw/validation_data/stardustData/Datasets/MouseKidney/spot_coordinates.txt\n\nwget https://github.com/InfOmics/stardust/raw/validation_data/stardustData/Datasets/MouseKidney/FullDataset.zip\n\n# unzip the archives and delete unused data\nunzip filtered_expression_matrix.txt.zip\nunzip FullDataset.zip\nrm -rf __MACOSX\nrm filtered_expression_matrix.txt.zip FullDataset.zip\n\n# start R\nR\n```\n\n```R\n# R code\n# load Seurat and Stardust\nlibrary(\"Seurat\")\nlibrary(\"stardust\")\n\n# load the count matrix and spot coordinates for the Mouse Kidney dataset\ncountMatrix = read.table(\"./filtered_expression_matrix.txt\",row.names=1,header = TRUE)\n\nspotPositions = read.table(\"./spot_coordinates.txt\",row.names=1,header = TRUE)\n\n# execute stardust by passing to the method the count matrix, the spot positions, \n# the weight of spatial information relative to the transcriptional \n# similarity (spaceWeight can be a real number between 0 and 1), \n# the PCA dimensions and the resolution for the Louvain algorithm\noutput <- weightStardust(countMatrix = countMatrix, spotPositions = spotPositions, \n                         spaceWeight = 0.75, pcaDimensions=10, res=0.8)\n                                              \n# alternatively, execute stardust by passing to the method the count matrix, the spot positions,\n# the PCA dimensions and the resolution for the Louvain algorithm\noutput <- autoStardust(countMatrix = countMatrix, spotPositions = spotPositions, \n                       pcaDimensions=10, res=0.8)\n\n# get the vector of cluster identities for each spot\nclusters_identities = output@active.ident\n\n# you can save the cluster identities to export them outside if you need them\nwrite.table(clusters_identities,file=\"clusters_identities.txt\")\n\n# load the full dataset as a Seurat object and overwrite the cluster identities\nMouseKidney = Load10X_Spatial(\"./FullDataset/\")\nMouseKidney@active.ident = factor(clusters_identities)\n\n# save the plot as a png to export outside the container\npng(\"spatialClustersPlot.png\", units=\"px\", width=800, height=800, res=150)\n# alternatively, you can save the plot as a jpg\njpeg('spatialClustersPlot.jpg')\n\nSeurat::SpatialDimPlot(MouseKidney)\ndev.off()\n```\n\n```bash\n# Bash code (on a new terminal)\n# get the container id\ndocker ps\n\n# extract the cluster identities and clusters plot from the container\ndocker cp container_id:/MouseKidney/clusters_identities.txt .\ndocker cp container_id:/MouseKidney/spatialClustersPlot.png .\n\n# you can now inspect in your local machine the clusters id that Stardust assigned to each spot and the clusters plot.\n```\n"
+      },
+      "source": "https://raw.githubusercontent.com/InfOmics/stardust/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Stability scores computation with rCASC",
+        "parent_header": [
+          "Stardust installation and usage"
+        ],
+        "type": "Text_excerpt",
+        "value": "rCASC stability scores computation allows users to evaluate which Stardust configuration performs better on your particular dataset. rCASC is designed with a container architecture so that it can provide computational reproducibility across different machines. The package can be installed from our fork on GitHub and the required docker images can be pulled from Docker Hub.\n\n```bash\n# Bash code\n# pull the image to run the permutations of Stardust \n# on multiple permutated datasets\ndocker pull eviesi/permutationstardust22\n\n# pull the image to run the stability scores computation\ndocker pull repbioinfo/seuratanalysis\n\n# prepare a dedicated directory and download the count matrix and spot positions for \n# the Mouse Kidney dataset (as an example)\nmkdir -p MouseKidney/scratch && cd MouseKidney\n\nwget https://github.com/InfOmics/stardust/raw/validation_data/stardustData/Datasets/MouseKidney/filtered_expression_matrix.txt.zip\n\nwget https://github.com/InfOmics/stardust/raw/validation_data/stardustData/Datasets/MouseKidney/spot_coordinates.txt\n\n# unzip the archive and delete unused data\nunzip filtered_expression_matrix.txt.zip\nrm -rf __MACOSX\nrm filtered_expression_matrix.txt.zip\n\n# start R \nR\n```\n\n```R\n# R code\n# install our rCASC fork on GitHub through the R package devtools\nlibrary(devtools)\ninstall_github(\"InfOmics/rCASC\")\n\n# install ggplot that is a dependency for the figure generation\ninstall.packages(\"ggplot2\")\nlibrary(\"ggplot2\")\n```\nWhen your dependencies are installed you can generate the violin plot image. In this way you can explore which configuration works best for your dataset by varying the parameters. \n\nIf you want to evaluate the stability of one Stardust configuration, you can call the StardustPermutation and the permAnalysisSeurat methods. \n\n```R\n# load rCASC\nlibrary(rCASC)\n\n# set the variables that contain the paths for the temporary files folder of rCASC, \n# the count matrix and the spot positions file\nscratch.folder <- paste(getwd(),\"/scratch\",sep=\"\")\nfile <- paste(getwd(),\"/filtered_expression_matrix.txt\",sep=\"\")\ntissuePosition <- paste(getwd(),\"/spot_coordinates.txt\",sep=\"\")\n\n# call the rCASC method to perform the permutations of a particular configuration. \n# The parameters meaning are:\n# group \u2192 to create the docker image without superuser privileges\n# scratch.folder \u2192 path of the folder that rCASC use for storing temporary files\n# file \u2192 path of the count matrix file\n# tissuePosition \u2192 path of the spot coordinates file\n# method \u2192  method to be used to calculate the space weight [sw, indsw]\n# spaceWeight \u2192 real number between 0 and 1 that describe how much space weight if\n#               compared to the transcriptional similarity\n# res \u2192 clustering resolution \n# nPerm \u2192 number of permutations to be computed\n# permAtTime \u2192 number of permutation to compute in parallel\n# percent \u2192 percentage of the input dataset to remove for each permutation\n# pcaDimensions \u2192 number of principal components \n# separator \u2192 character separator of values in the input files\n\n# execute the method \"sw\" to perform a linear transformation by setting the space weight parameter\nStardustPermutation(group=\"docker\", scratch.folder=scratch.folder, file=file,\n                    tissuePosition=tissuePosition, method=\"sw\", spaceWeight=0.75, \n                    res=0.8, nPerm=80, permAtTime=8, percent=10, pcaDimensions=10, separator=\"\\t\")\n                    \n# alternatively, execute the method \"indsw\" to perform a non-linear transformation                    \nStardustPermutation(group=\"docker\", scratch.folder=scratch.folder, file=file,\n                    tissuePosition=tissuePosition, method=\"indsw\", spaceWeight=0, \n                    res=0.8, nPerm=80, permAtTime=8, percent=10, pcaDimensions=10, separator=\"\\t\")\n\n# extract the number of clusters obtained in order to configure the next method call\ncluster.path <- paste(data.folder=dirname(file), \"Results\", strsplit(basename(file),\"\\\\.\")[[1]][1], sep=\"/\")\ncluster <- as.numeric(list.dirs(cluster.path, full.names = FALSE, recursive = FALSE))\n\n# call permAnalysisSeurat in order to compute the stability scores based on the \n# previous permutations. The parameters meaning are:\n# group \u2192 to create the docker image without superuser privileges\n# scratch.folder \u2192 path of the folder that rCASC use for storing temporary files\n# file \u2192 path of the count matrix file\n# nCluster \u2192 number of cluster obtained before\n# separator \u2192 character separator of values in the input files\n# sp \u2192 minimum number of percentage of cells that has to be in common between two \n#      permutation to be the same cluster.\n\npermAnalysisSeurat(group=\"docker\", scratch.folder = scratch.folder, file=file, nCluster=cluster, separator=\"\\t\", sp=0.8)\n``` \nIn \u201cResults/filtered_expression_matrix/9/filtered_expression_matrix_clustering.output.txt\u201d file, you will find the assigned cluster identity of each spot, and in \u201cResults/filtered_expression_matrix/9/filtered_expression_matrix_scoreSum.txt\u201d file its stability score for the configuration used (spaceWeight=0.75).\n\nThe coefficient of variation value can be computed from the \"filtered_expression_matrix_scoreSum.txt\u201d file as follows. \n\n```R\n# R code\n# Read the stability scores and compute the coefficient of variation\nmat <- read.table(\"filtered_expression_matrix_scoreSum.txt\")\ncv <- sd(mat$V2)/mean(mat$V2)\ncv\n``` \nFor each compared method, a dedicated container image can be pulled to run the permutations. Note that each tool requires specific input data that must be prepared in advance. \n\n```bash\n# Bash code\n# pull the image for each tool\ndocker pull giovannics/bayespacepermutation\ndocker pull giovannics/giottopermutation\ndocker pull giovannics/spagcnpermutation\ndocker pull giovannics/stlearn-rcasc \n# start R\nR\n```\n\n```R\n# R code\nlibrary(rCASC) \n\n# For BayesSpace use\nbayeSpacePermutation(group=\"docker\", scratch.folder=scratch.folder, file=file, filtered_feature_bc_matrix=filtered_feature_bc_matrix, \nn_clusters=n_clusters, spatial=spatial,nPerm=80, permAtTime=8)\n\n# For Giotto use\nGiottoPermutation(group=\"docker\", scratch.folder=scratch.folder, file=file, h5matrix.name=h5matrix.name, \nspotpositions.name=spotpositions.name, n_clusters=n_clusters, pcaDimensions=pcaDimensions, nPerm=80, permAtTime=8, percent=10)\n\n# For SpaGCN use\nspaGCNPermutation(group=\"docker\", scratch.folder=scratch.folder, h5matrix.name=h5matrix.name, spotpositions.name=spotpositions.name, \nimage.name=image.name, use_histology=TRUE, lResolution=lResolution, pcaDimensions=pcaDimensions, nPerm=80, permAtTime=8)\n\n# For stLearn use\nSTLearnPermutation(group=\"docker\", scratch.folder=scratch.folder, file=file, filtered_feature_bc_matrix=filtered_feature_bc_matrix, \nlResolution=res, nPerm=80, permAtTime=8,percent=10, pcaDimensions=pcaDimensions)\n\n# For each method, extract the number of clusters obtained in order to configure \n# the next method call as in the workflow above\ncluster.path <- paste(data.folder=dirname(file), \"Results\", strsplit(basename(file),\"\\\\.\")[[1]][1], sep=\"/\")\ncluster <- as.numeric(list.dirs(cluster.path, full.names=FALSE, recursive=FALSE))\n\n# call permAnalysisSeurat in order to compute the stability scores based on the \n# previous permutations. The parameters meaning are:\n# group \u2192 to create the docker image without superuser privileges\n# scratch.folder \u2192 path of the folder that rCASC use for storing temporary files\n# file \u2192 path of the count matrix file\n# nCluster \u2192 number of cluster obtained before\n# separator \u2192 character separator of values in the input files\n# sp \u2192 minimum number of percentage of cells that has to be in common between two \n#      permutation to be the same cluster.\n\npermAnalysisSeurat(group=\"docker\", scratch.folder=scratch.folder, file=file, nCluster=cluster, separator=\"\\t\", sp=0.8)\n``` \n"
+      },
+      "source": "https://raw.githubusercontent.com/InfOmics/stardust/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Stardust tuning",
+        "parent_header": [
+          "Stardust installation and usage"
+        ],
+        "type": "Text_excerpt",
+        "value": "At the following repository https://github.com/SimoneAvesani/Tuning_Stardust you can find all the steps required to perform the tuning of Stardust parameters.\n"
+      },
+      "source": "https://raw.githubusercontent.com/InfOmics/stardust/master/README.md",
+      "technique": "header_analysis"
+    }
+  ],
+  "issue_tracker": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/InfOmics/stardust/issues"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "keywords": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": ""
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "license": [
+    {
+      "confidence": 1,
+      "result": {
+        "name": "MIT License",
+        "spdx_id": "MIT",
+        "type": "License",
+        "url": "https://api.github.com/licenses/mit",
+        "value": "https://api.github.com/licenses/mit"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "File_dump",
+        "value": "MIT License\n\nCopyright (c) 2021 InfOmics\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.\n"
+      },
+      "source": "https://raw.githubusercontent.com/InfOmics/stardust/master/LICENSE",
+      "technique": "file_exploration"
+    }
+  ],
+  "name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "stardust"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "owner": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Organization",
+        "value": "InfOmics"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "programming_languages": [
+    {
+      "confidence": 1,
+      "result": {
+        "name": "R",
+        "size": 5566,
+        "type": "Programming_language",
+        "value": "R"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "readme_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/InfOmics/stardust/master/README.md"
+      },
+      "technique": "file_exploration"
+    }
+  ],
+  "somef_missing_categories": [
+    "citation",
+    "acknowledgement",
+    "run",
+    "download",
+    "requirements",
+    "contact",
+    "description",
+    "contributors",
+    "documentation",
+    "faq",
+    "support",
+    "identifier",
+    "has_build_file",
+    "executable_example"
+  ],
+  "somef_provenance": {
+    "date": "2024-10-06 00:29:36",
+    "somef_schema_version": "1.0.0",
+    "somef_version": "0.9.5"
+  },
+  "stargazers_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 3
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "usage": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Stardust installation and usage",
+        "type": "Text_excerpt",
+        "value": "Stardust can be installed as a standalone R package or can be used through the dedicated docker image. We suggest installing the following tools on a UNIX-like OS (like MacOS or a Linux distribution). The main aim of the tool is, given as input an expression matrix, the positions of spots and, possibly, a space weight configuration, to derive a vector of cluster identities for each spot in the input data. \nStardust depends on Seurat (for clustering and data visualization) and on rCASC for the computation of the stability scores and generation of the distributions comparison. Stardust, Seurat and rCASC installation instructions and usage are reported in the following subsections. Stardust tuning linkage is reported in the last subsection. \n"
+      },
+      "source": "https://raw.githubusercontent.com/InfOmics/stardust/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Standalone R package",
+        "parent_header": [
+          "Stardust installation and usage"
+        ],
+        "type": "Text_excerpt",
+        "value": "Stardust depends on Seurat, so we first need to install this package through the remotes package (in this way we can install a fixed version of Seurat). After Seurat installation, we can install Stardust from our GitHub repository. **NOTE**: Stardust requires a version of R > 4. \n```R\n# R code\ninstall.packages(\"devtools\")\ninstall.packages(\"remotes\")\n\n# install Seurat\nremotes::install_version(\"Seurat\", version = \"3.2.2\")\n# install Stardust\ndevtools::install_github(\"InfOmics/stardust\")\n\n```\nOnce the packages are installed, you can execute the following sample workflow based on the Mouse Kidney dataset. \nLet us download the input data.\n```bash\n# Bash code\n# create a working directory and enter in it\nmkdir MouseKidney && cd MouseKidney\n# using wget download the expression matrix and spot positions of the Mouse Kidney            \n# dataset. Download also the full dataset for the creation of a Seurat object for \n# visualization purposes\n\nwget https://github.com/InfOmics/stardust/raw/validation_data/stardustData/Datasets/MouseKidney/filtered_expression_matrix.txt.zip\n\nwget https://github.com/InfOmics/stardust/raw/validation_data/stardustData/Datasets/MouseKidney/spot_coordinates.txt\n\nwget https://github.com/InfOmics/stardust/raw/validation_data/stardustData/Datasets/MouseKidney/FullDataset.zip\n\n# unzip the archives and delete unused data\nunzip filtered_expression_matrix.txt.zip\nunzip FullDataset.zip\nrm -rf __MACOSX\nrm filtered_expression_matrix.txt.zip FullDataset.zip\n\n# start R\nR\n```\nNow compute the cluster identities for each spot. \nStardust can be executed by performing a linear transformation through a space weight parameter or by applying a non-linear formulation. \n```R\n# R code\n# load Seurat and Stardust\nlibrary(\"Seurat\")\nlibrary(\"stardust\")\n\n# load the count matrix and spot coordinates for the Mouse Kidney dataset (look at the validation_data branch for more details on the input data)\n# dataframe with spots id as columns and genes id as rows\ncountMatrix = read.table(\"./filtered_expression_matrix.txt\",row.names=1,header = TRUE)\n# dataframe with x and y spot coordinates as columns and spots id as rows \nspotPositions = read.table(\"./spot_coordinates.txt\",row.names=1,header = TRUE)\n\n# execute stardust by passing to the method the count matrix, the spot positions, \n# the weight of spatial information relative to the transcriptional \n# similarity (spaceWeight can be a real number between 0 and 1), \n# the PCA dimensions and the resolution for the Louvain algorithm\noutput <- weightStardust(countMatrix = countMatrix, spotPositions = spotPositions, \n                         spaceWeight = 0.75, pcaDimensions=10, res=0.8)\n                                              \n# alternatively, execute stardust by passing to the method the count matrix, the spot positions,\n# the PCA dimensions and the resolution for the Louvain algorithm\noutput <- autoStardust(countMatrix = countMatrix, spotPositions = spotPositions, \n                       pcaDimensions=10, res=0.8)\n\n# get the vector of cluster identities for each spot\nclusters_identities = output@active.ident\n```\nFinally, load the full dataset (i.e. with histological images) published on 10x website (10x, Datasets) and assign to it the cluster identities. This object can then be visualized with Seurat.\n```R\n# R code\n# create a full Seurat object with the data already downloaded\nMouseKidney = Load10X_Spatial(\"./FullDataset/\")\n\n# assign cluster identities to the Seurat object\nMouseKidney@active.ident = clusters_identities\n\n# visualize the clusters overlaid to the tissue image\nSeurat::SpatialDimPlot(MouseKidney)\n```"
+      },
+      "source": "https://raw.githubusercontent.com/InfOmics/stardust/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Standalone R package with docker",
+        "parent_header": [
+          "Stardust installation and usage",
+          "Standalone R package"
+        ],
+        "type": "Text_excerpt",
+        "value": "If you want a straight forward usage of Stardust you can also pull the dedicated docker container and skip all the possible dependency problems you could encounter with the package installation:\n```bash\n# Bash code\n# First, pull the docker image and run it\ndocker pull eviesi/stardust\ndocker run --rm -it eviesi/stardust /bin/bash\n\n# create a working directory and enter in it\nmkdir MouseKidney && cd MouseKidney\n\n# Using wget, download the count matrix and spot coordinates \n# (plus the full dataset for visualization purposes)\n\nwget https://github.com/InfOmics/stardust/raw/validation_data/stardustData/Datasets/MouseKidney/filtered_expression_matrix.txt.zip\n\nwget https://github.com/InfOmics/stardust/raw/validation_data/stardustData/Datasets/MouseKidney/spot_coordinates.txt\n\nwget https://github.com/InfOmics/stardust/raw/validation_data/stardustData/Datasets/MouseKidney/FullDataset.zip\n\n# unzip the archives and delete unused data\nunzip filtered_expression_matrix.txt.zip\nunzip FullDataset.zip\nrm -rf __MACOSX\nrm filtered_expression_matrix.txt.zip FullDataset.zip\n\n# start R\nR\n```\n\n```R\n# R code\n# load Seurat and Stardust\nlibrary(\"Seurat\")\nlibrary(\"stardust\")\n\n# load the count matrix and spot coordinates for the Mouse Kidney dataset\ncountMatrix = read.table(\"./filtered_expression_matrix.txt\",row.names=1,header = TRUE)\n\nspotPositions = read.table(\"./spot_coordinates.txt\",row.names=1,header = TRUE)\n\n# execute stardust by passing to the method the count matrix, the spot positions, \n# the weight of spatial information relative to the transcriptional \n# similarity (spaceWeight can be a real number between 0 and 1), \n# the PCA dimensions and the resolution for the Louvain algorithm\noutput <- weightStardust(countMatrix = countMatrix, spotPositions = spotPositions, \n                         spaceWeight = 0.75, pcaDimensions=10, res=0.8)\n                                              \n# alternatively, execute stardust by passing to the method the count matrix, the spot positions,\n# the PCA dimensions and the resolution for the Louvain algorithm\noutput <- autoStardust(countMatrix = countMatrix, spotPositions = spotPositions, \n                       pcaDimensions=10, res=0.8)\n\n# get the vector of cluster identities for each spot\nclusters_identities = output@active.ident\n\n# you can save the cluster identities to export them outside if you need them\nwrite.table(clusters_identities,file=\"clusters_identities.txt\")\n\n# load the full dataset as a Seurat object and overwrite the cluster identities\nMouseKidney = Load10X_Spatial(\"./FullDataset/\")\nMouseKidney@active.ident = factor(clusters_identities)\n\n# save the plot as a png to export outside the container\npng(\"spatialClustersPlot.png\", units=\"px\", width=800, height=800, res=150)\n# alternatively, you can save the plot as a jpg\njpeg('spatialClustersPlot.jpg')\n\nSeurat::SpatialDimPlot(MouseKidney)\ndev.off()\n```\n\n```bash\n# Bash code (on a new terminal)\n# get the container id\ndocker ps\n\n# extract the cluster identities and clusters plot from the container\ndocker cp container_id:/MouseKidney/clusters_identities.txt .\ndocker cp container_id:/MouseKidney/spatialClustersPlot.png .\n\n# you can now inspect in your local machine the clusters id that Stardust assigned to each spot and the clusters plot.\n```\n"
+      },
+      "source": "https://raw.githubusercontent.com/InfOmics/stardust/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Stability scores computation with rCASC",
+        "parent_header": [
+          "Stardust installation and usage"
+        ],
+        "type": "Text_excerpt",
+        "value": "rCASC stability scores computation allows users to evaluate which Stardust configuration performs better on your particular dataset. rCASC is designed with a container architecture so that it can provide computational reproducibility across different machines. The package can be installed from our fork on GitHub and the required docker images can be pulled from Docker Hub.\n\n```bash\n# Bash code\n# pull the image to run the permutations of Stardust \n# on multiple permutated datasets\ndocker pull eviesi/permutationstardust22\n\n# pull the image to run the stability scores computation\ndocker pull repbioinfo/seuratanalysis\n\n# prepare a dedicated directory and download the count matrix and spot positions for \n# the Mouse Kidney dataset (as an example)\nmkdir -p MouseKidney/scratch && cd MouseKidney\n\nwget https://github.com/InfOmics/stardust/raw/validation_data/stardustData/Datasets/MouseKidney/filtered_expression_matrix.txt.zip\n\nwget https://github.com/InfOmics/stardust/raw/validation_data/stardustData/Datasets/MouseKidney/spot_coordinates.txt\n\n# unzip the archive and delete unused data\nunzip filtered_expression_matrix.txt.zip\nrm -rf __MACOSX\nrm filtered_expression_matrix.txt.zip\n\n# start R \nR\n```\n\n```R\n# R code\n# install our rCASC fork on GitHub through the R package devtools\nlibrary(devtools)\ninstall_github(\"InfOmics/rCASC\")\n\n# install ggplot that is a dependency for the figure generation\ninstall.packages(\"ggplot2\")\nlibrary(\"ggplot2\")\n```\nWhen your dependencies are installed you can generate the violin plot image. In this way you can explore which configuration works best for your dataset by varying the parameters. \n\nIf you want to evaluate the stability of one Stardust configuration, you can call the StardustPermutation and the permAnalysisSeurat methods. \n\n```R\n# load rCASC\nlibrary(rCASC)\n\n# set the variables that contain the paths for the temporary files folder of rCASC, \n# the count matrix and the spot positions file\nscratch.folder <- paste(getwd(),\"/scratch\",sep=\"\")\nfile <- paste(getwd(),\"/filtered_expression_matrix.txt\",sep=\"\")\ntissuePosition <- paste(getwd(),\"/spot_coordinates.txt\",sep=\"\")\n\n# call the rCASC method to perform the permutations of a particular configuration. \n# The parameters meaning are:\n# group \u2192 to create the docker image without superuser privileges\n# scratch.folder \u2192 path of the folder that rCASC use for storing temporary files\n# file \u2192 path of the count matrix file\n# tissuePosition \u2192 path of the spot coordinates file\n# method \u2192  method to be used to calculate the space weight [sw, indsw]\n# spaceWeight \u2192 real number between 0 and 1 that describe how much space weight if\n#               compared to the transcriptional similarity\n# res \u2192 clustering resolution \n# nPerm \u2192 number of permutations to be computed\n# permAtTime \u2192 number of permutation to compute in parallel\n# percent \u2192 percentage of the input dataset to remove for each permutation\n# pcaDimensions \u2192 number of principal components \n# separator \u2192 character separator of values in the input files\n\n# execute the method \"sw\" to perform a linear transformation by setting the space weight parameter\nStardustPermutation(group=\"docker\", scratch.folder=scratch.folder, file=file,\n                    tissuePosition=tissuePosition, method=\"sw\", spaceWeight=0.75, \n                    res=0.8, nPerm=80, permAtTime=8, percent=10, pcaDimensions=10, separator=\"\\t\")\n                    \n# alternatively, execute the method \"indsw\" to perform a non-linear transformation                    \nStardustPermutation(group=\"docker\", scratch.folder=scratch.folder, file=file,\n                    tissuePosition=tissuePosition, method=\"indsw\", spaceWeight=0, \n                    res=0.8, nPerm=80, permAtTime=8, percent=10, pcaDimensions=10, separator=\"\\t\")\n\n# extract the number of clusters obtained in order to configure the next method call\ncluster.path <- paste(data.folder=dirname(file), \"Results\", strsplit(basename(file),\"\\\\.\")[[1]][1], sep=\"/\")\ncluster <- as.numeric(list.dirs(cluster.path, full.names = FALSE, recursive = FALSE))\n\n# call permAnalysisSeurat in order to compute the stability scores based on the \n# previous permutations. The parameters meaning are:\n# group \u2192 to create the docker image without superuser privileges\n# scratch.folder \u2192 path of the folder that rCASC use for storing temporary files\n# file \u2192 path of the count matrix file\n# nCluster \u2192 number of cluster obtained before\n# separator \u2192 character separator of values in the input files\n# sp \u2192 minimum number of percentage of cells that has to be in common between two \n#      permutation to be the same cluster.\n\npermAnalysisSeurat(group=\"docker\", scratch.folder = scratch.folder, file=file, nCluster=cluster, separator=\"\\t\", sp=0.8)\n``` \nIn \u201cResults/filtered_expression_matrix/9/filtered_expression_matrix_clustering.output.txt\u201d file, you will find the assigned cluster identity of each spot, and in \u201cResults/filtered_expression_matrix/9/filtered_expression_matrix_scoreSum.txt\u201d file its stability score for the configuration used (spaceWeight=0.75).\n\nThe coefficient of variation value can be computed from the \"filtered_expression_matrix_scoreSum.txt\u201d file as follows. \n\n```R\n# R code\n# Read the stability scores and compute the coefficient of variation\nmat <- read.table(\"filtered_expression_matrix_scoreSum.txt\")\ncv <- sd(mat$V2)/mean(mat$V2)\ncv\n``` \nFor each compared method, a dedicated container image can be pulled to run the permutations. Note that each tool requires specific input data that must be prepared in advance. \n\n```bash\n# Bash code\n# pull the image for each tool\ndocker pull giovannics/bayespacepermutation\ndocker pull giovannics/giottopermutation\ndocker pull giovannics/spagcnpermutation\ndocker pull giovannics/stlearn-rcasc \n# start R\nR\n```\n\n```R\n# R code\nlibrary(rCASC) \n\n# For BayesSpace use\nbayeSpacePermutation(group=\"docker\", scratch.folder=scratch.folder, file=file, filtered_feature_bc_matrix=filtered_feature_bc_matrix, \nn_clusters=n_clusters, spatial=spatial,nPerm=80, permAtTime=8)\n\n# For Giotto use\nGiottoPermutation(group=\"docker\", scratch.folder=scratch.folder, file=file, h5matrix.name=h5matrix.name, \nspotpositions.name=spotpositions.name, n_clusters=n_clusters, pcaDimensions=pcaDimensions, nPerm=80, permAtTime=8, percent=10)\n\n# For SpaGCN use\nspaGCNPermutation(group=\"docker\", scratch.folder=scratch.folder, h5matrix.name=h5matrix.name, spotpositions.name=spotpositions.name, \nimage.name=image.name, use_histology=TRUE, lResolution=lResolution, pcaDimensions=pcaDimensions, nPerm=80, permAtTime=8)\n\n# For stLearn use\nSTLearnPermutation(group=\"docker\", scratch.folder=scratch.folder, file=file, filtered_feature_bc_matrix=filtered_feature_bc_matrix, \nlResolution=res, nPerm=80, permAtTime=8,percent=10, pcaDimensions=pcaDimensions)\n\n# For each method, extract the number of clusters obtained in order to configure \n# the next method call as in the workflow above\ncluster.path <- paste(data.folder=dirname(file), \"Results\", strsplit(basename(file),\"\\\\.\")[[1]][1], sep=\"/\")\ncluster <- as.numeric(list.dirs(cluster.path, full.names=FALSE, recursive=FALSE))\n\n# call permAnalysisSeurat in order to compute the stability scores based on the \n# previous permutations. The parameters meaning are:\n# group \u2192 to create the docker image without superuser privileges\n# scratch.folder \u2192 path of the folder that rCASC use for storing temporary files\n# file \u2192 path of the count matrix file\n# nCluster \u2192 number of cluster obtained before\n# separator \u2192 character separator of values in the input files\n# sp \u2192 minimum number of percentage of cells that has to be in common between two \n#      permutation to be the same cluster.\n\npermAnalysisSeurat(group=\"docker\", scratch.folder=scratch.folder, file=file, nCluster=cluster, separator=\"\\t\", sp=0.8)\n``` \n"
+      },
+      "source": "https://raw.githubusercontent.com/InfOmics/stardust/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Stardust tuning",
+        "parent_header": [
+          "Stardust installation and usage"
+        ],
+        "type": "Text_excerpt",
+        "value": "At the following repository https://github.com/SimoneAvesani/Tuning_Stardust you can find all the steps required to perform the tuning of Stardust parameters.\n"
+      },
+      "source": "https://raw.githubusercontent.com/InfOmics/stardust/master/README.md",
+      "technique": "header_analysis"
+    }
+  ]
+}

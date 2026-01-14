@@ -1,0 +1,387 @@
+{
+  "citation": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Putting reference and index files on each node of the cluster",
+        "parent_header": [
+          "SparkRA"
+        ],
+        "type": "Text_excerpt",
+        "value": "This can be done in three different ways, as listed below.\n\n1. The first obvious way is to manually place these files in some local directory of each node.\n2. Another way is to give the value `./` to the `sfFolder` field of SparkRA's configuration file. Giving this value means that these files should be in an executor's current directory. Therefore SparkRA will itself download them from the HDFS.\n3. The third way is to use the filesDownloader utility, which will copy these files on each node. The filesDownloader utility takes an xml file as input (Please see Section **Configuration file for the downloader utility** for more details) and can be run using the `runDownloader.py` python script. This script takes at least two parameters. The first parameter is the path of the xml file, while the second parameter is the mode. The mode can be one of the following. Note that for some modes (For example, **cp**) a third parameter is required.\n\t* **cpAll**: Copy all the reference and index files to the local directory (sfFolder) of all nodes\n\t* **cp**: Copy a file (name of file is given as the third parameter) from the input hdfs folder to the local directory (sfFolder) of all nodes\n\t* **rmAll**: Remove all files from the local directory (sfFolder) of all nodes\n\t* **rmJunk**: Remove junk files, that is, every file besides the referenced and index files, from the local directory (sfFolder) of all nodes.\n\t* **rmExt**: Remove files of a certain extension (extension is given as the third parameter) from the local directory directory (sfFolder) of all nodes\n\t* **rm:** Remove a file (name of file is given as the third parameter) from the local directory (sfFolder) of all nodes\n\t* **ls**: Display files in the local directory (sfFolder) of all nodes\n"
+      },
+      "source": "https://raw.githubusercontent.com/SaiyiW/SparkRA/master/README.md",
+      "technique": "header_analysis"
+    }
+  ],
+  "code_repository": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/SaiyiW/SparkRA"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_created": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2019-12-29T09:55:33Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_updated": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2020-08-08T14:49:53Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "description": [
+    {
+      "confidence": 0.9605833468837716,
+      "result": {
+        "original_header": "SparkRA",
+        "type": "Text_excerpt",
+        "value": "SparkRA is an Apache Spark based scalable implementation of the best practice RNA analysis pipeline by Broad Institute. A paper describing its implementation was accepted by Genes. So, if you use SparkRA for your work, please cite the following paper. \n"
+      },
+      "source": "https://raw.githubusercontent.com/SaiyiW/SparkRA/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.8702610522017009,
+      "result": {
+        "original_header": "Compiling",
+        "type": "Text_excerpt",
+        "value": "For compiling, go to the program folder and type `sbt package`. Likewise, for compiling the filesDownloader utility, go to the filesDownloader folder and type `sbt package`. The code for the chunker utility can be found at https://github.com/HamidMushtaq/FastqChunker, but a compiled jar file is also placed in the chunker folder here.\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/SaiyiW/SparkRA/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9496599884476756,
+      "result": {
+        "original_header": "Files required",
+        "type": "Text_excerpt",
+        "value": "1. The input xml file which contains configuration parameters for running SparkRA. Each tag for that xml file is explained in Section **Configuration file for SparkRA**. \n2. All the reference and index files. This means files such as the fasta, bwt, dict and known snp vcf files etc. These are the same files that are required for the classical GATK pipeline from broad. These files are required to be available in a folder or in the HDFS, depending upon whether you are running SparkRA in local or cluster (yarn-client or yarn-cluster) mode. For cluster mode, you can put these files on the local directories of each node in three different ways. This is explained later in this document in Section **Putting reference and index files on each node of the cluster**. Note that the .dict file should also be present in SparkRA's main folder.  \n3. The input FASTQ files, either in compressed (gzipped) or uncompressed form. For a single-ended input, only one FASTQ file is requied, while for pair-ended input, two files are required. The chunker program can be used to make chunks or interleaved chunks (for paired-ended input) from the input files. However, this chunking can be done in parallel with the execution of SparkRA, by simply adding two extra parameters in the input xml file. More on this is described later in this document. When chunking is done in parallel, SparkRA will start execution as soon as the first chunks are made available by the chunker program. In this way, the chunker program could be uploading the chunks on the fly. \n4. All the tools in one directory. This path of this directory is specified as the value of ```toolsFolder``` in the input xml file. The following tools should be in the ```toolsFolder``` directory.\n\t* bwa 0.7.x\n\t* bedtools 2.x\n\t* Picard's Mardkuplicates.jar and CleanSam.jar, version 1.11x\n\t* GATK's GenomeAnalysisTK.jar, version 3.x \n"
+      },
+      "source": "https://raw.githubusercontent.com/SaiyiW/SparkRA/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9811686693616415,
+      "result": {
+        "original_header": "Configuration file for SparkRA",
+        "type": "Text_excerpt",
+        "value": "10. **STARrefFolder** - This only makes sense for the **RNA pipeline**. Users should copy the genome index files generated by STAR to this folder. For local mode, it should be in a local directory. For cluster mode it should be on HDFS.\n11. **STARLocalFolder** - This only makes sense for the **RNA pipeline in cluster mode**. It will be present on each node and deleted at the end of execution. e.g. `/tmp/sparkra/starLocal`. Do not use `./`.(?) \n11. **rgString** - The read group string given to the bwa program\n12. **extraBWAParams** - Any extra parameters given to the bwa program besides the read group string, input files, reference fasta file name and number of threads. For example, for paired-ended reads, you must put `-p`, as the chunker utility would always create interleaved chunks for paired-ended FASTQ files.\n13. **gatkOpts** - Any additional parameters given when running jar files. For example, `-XX:+AggressiveOpts`.\n14. **ignoreList** - Name of Chromosomes (as given in the reference dictionary file) that have to be ignored. The list should be comma separated. White spaces characters such as newlines, spaces and tabs are ignored.\n15. **numRegions** - The number of regions to create for variant calling. The number of regions created by the second part (dynamic load balancing) would be not exact though, but just an approximate.\n16. **regionsFactor** - The number of regions would be multiplied by this factor. We have found that the ideal value of numRegions is around 300, as increasing its value would increase HDFS access overhead. If you want more regions than that, then use `regionsFactor`. The total number of regions created would then be `numRegions * regionsFactor.`\n17. **execMemGB1** - The executor memory in GB for Part 1. Note that this parameter doesn't make sense for local mode. So, for local mode, you can even ommit it.\n18. **driverMemGB1** - The driver memory in GB for Part 1. For local mode, if say you want to use the full memory of the system, then the driver memory should be nearly equal to the full memory of the system. For cluster modes however, this is only the memory of the driver.\n19. **numInstances1** - The number of instances of executors for Part 1. Note that this parameter doesn't make sense for local mode. So, for local mode, you can even ommit it.\n20. **numThreads1** - The number of threads to use for bwa in Part 1.\n21. **numTasks1** - The number of tasks per each executor in part1. In cluster modes, the total number of tasks running on the whole cluster would then be `numInstances1 * numTasks1`. For local mode, on the other hand, the total number of tasks would simply be equal to `numTasks1`.\n22. **execMemGB2** - The executor memory in GB for Part 2. Note that this parameter doesn't make sense for local mode. So, for local mode, you can even ommit it.\n23. **driverMemGB2** - The driver memory in GB for Part 2. For local mode, if say you want to use the full memory of the system, then the driver memory should be nearly equal to the full memory of the system. For cluster modes however, this is only the memory of the driver.\n24. **numInstances2** - The number of instances of executors for Part 2. Note that this parameter doesn't make sense for local mode. So, for local mode, you can even ommit it.\n25. **numThreads2** - The maximum number of threads to use for dynamic load balancing in Part 2.\n26. **numTasks2** - The number of tasks per each executor in Part 2. In cluster modes, the total number of tasks running on the whole cluster would then be `numInstances2 * numTasks2`. For local mode, on the other hand, the total number of tasks would simply be equal to `numTasks2`.\n27. **execMemGB3** - The executor memory in GB for Part 3. Note that this parameter doesn't make sense for local mode. So, for local mode, you can even ommit it.\n28. **vcMemGB** - The memory in GB used by Java to run a jar program.\n29. **driverMemGB3** - The driver memory in GB for Part 3. For local mode, if say you want to use the full memory of the system, then the driver memory should be nearly equal to the full memory of the system. For cluster modes however, this is only the memory of the driver.\n30. **numInstances3** - The number of instances of executors for Part 3. Note that this parameter doesn't make sense for local mode. So, for local mode, you can even ommit it.\n31. **numThreads3** - The number of threads to use for variant discovery tools of Part 3. We have noticed that for haplotype caller, for regions with a lot of mutations, increasing the number of threads greatly improve the performance. When running on a machine with simultaneous multithreading, at least keep the number of threads equal to the number of simultaneous threads of a core.\n32. **numTasks3** - The number of tasks per each executor in Part 3. In cluster modes, the total number of tasks running on the whole cluster would then be `numInstances3 * numTasks3`. For local mode, on the other hand, the total number of tasks would simply be equal to `numTasks3`. \n33. **standEC** - The value of `stand_emit_conf` for haplotype caller. For GATK 3.7+, keep this value 0.\n34. **standCC** - The value of `stand_call_conf` for haplotype caller. For GATK 3.7+, keep this value 0.\n35. **doIndelRealignment** - `true `or `false` depending on whether you want to perform indel realignment. Assumed `true` if ommitted.\n36. **doPrintReads** - `true `or `false` depending on whether you want to perform print reads. Assumed `true` if ommitted.\n37. **chunkerConfigFilePath** - If you want to perform chunking of the input FASTQ files on the fly, give the path of the config file for the chunker utility. If you leave this field empty or ommit it, chunking would not be done on the fly. \n38. **chunkerGroupSize** - When chunking is done in parallel, the Part 1 of SparkRA would process chunks in groups. For example, if you give a group size of 512, and the chunker eventually creates 1500 chunks overall, Part 1 would first process the 512 files and when all those 512 files are processed, will start processing the next 512 chunks. So, it would complete execution in 3 steps. However, if you can accurately predict the number of chunks that would be created by the chunker, you can give a slightly higher estimate. For example, if you give a value of 1700 for our example, Part 1 would just use one round. The tasks processing chunk IDs greater than 1499 would simply return without doing anything, as no correspodnding chunk would exist for such IDs. Therefore, giving a slightly higher estimate won't impact the execution speed of Part 1 as such. If you are not doing chunking in parallel, then of course you can leave this field empty or even ommit it altogether.\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/SaiyiW/SparkRA/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9392720171219409,
+      "result": {
+        "original_header": "Configuration file for the chunker utility",
+        "type": "Text_excerpt",
+        "value": "The chunker program is run on the master node, which means it is not distributed like SparkRA. It can take both compressed (gzipped) or uncompressed FASTQ files as input. By default, it uploads the chunks it makes to an HDFS directory specified as `outputFolder` in the configuration file. However, if you prefix the value of `outputFolder` with `local:`, it would put the chunks in a local folder. For example, if you specify `local:/home/hamidmushtaq/data/chunks`, it would put the chunks in the folder `/home/hamidmushtaq/data/chunks`. So, when using with SparkRA in local mode, always use the prefix `local:` for the `outputFolder` in the configuration file of the chunker utility. Moreover, you don't have to create the output folder yourself, as the chunker program would create one itself. Two example configuration files are shown in the `config/chunkerConfig folder`. \n1. **fastq1Path** - The path of the first FASTQ file for a pair-ended input or the only FASTQ file for a single-ended input. Note that the chunker utility would automatically infer if the input file is compressed or not by seeing the `.gz` extension.\n2. **fastq2Path** - The path of the second FASTQ file for a pair-ended input. For a single-ended input, leave this field empty (Like this -> `<fastq2Path></fastq2Path>`). You can't ommit it though.\n3. **outputFolder** - The output folder path where the chunks would be placed. Prefix with `local:` if you want this folder to be in the local directory.\n4. **compLevel** - The chunks made are compressed by the level specified in this field. Value can be from 1 to 9.\n5. **chunkSizeMB** - The size of the chunks in MB.\n6. **blockSizeMB** - The input FASTQ files are read block by block. In this field, you specify how big such block should be in MBs. The bigger the block size, the more memory would be consumed. However, bigger block size can also mean better performance.\n7. **driverMemGB** - The memory used by the chunker utility in GBs.\n8. **numThreads** - The number of threads performing chunking. Try to use as many threads as possible as allowed by your system.\n9. **interleave** - `true` or `false` depending on whether you want to interleave the contents of the two FASTQ files for a paired-ended input into single chunks. For SparkRA, when using pair-ended input, you must always set this field to `false`. For single-ended input, this field is ignored and can even be ommitted.\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/SaiyiW/SparkRA/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.939601112941095,
+      "result": {
+        "original_header": "Configuration file for the downloader utility",
+        "type": "Text_excerpt",
+        "value": "1. **mode** - Can be either `yarn-cluster` or `yarn-client`.\n2. **inputFolder** - The HDFS folder containing all the reference and index files.\n3. **refFileName** - The reference FASTA file name. Name of files accompanying that FASTA file, such as \\*.dict and *.fasta.fai would be infered automatically by the downloader utility.\n4. **snpFileName** - The name of the vcf file containing the known snps. The name of the accompanying index file would be infered automatically by the downloader utility.\n5. **indelFileName** - The name of the vcf file containing the known indels. The name of the accompanying index file would be infered automatically by the downloader utility. Leave this field empty if you don't want to use such file with the the indel realigner.\n6. **sfFolder** - This is the folder, where all the reference and index files would be stored. This folder would be in a local directory. This folder would be present on each node, and would be created by the downloader utility if not present.\n7. **numNodes** - The total number of nodes in the cluster.\n8. **execMemGB** - The executor memory in GB. Its value should be between 0.5 and 1 of the total memory in each data node, so that exactly one executor runs and therefore copies files on each node. It is assumed here that each node has the same amount of memory. Moreover, it is assumed that no other program is running on the cluster.\n9. **driverMemGB** - The driver memory in GB.\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/SaiyiW/SparkRA/master/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "download_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/SaiyiW/SparkRA/releases"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 0
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/SaiyiW/SparkRA/forks"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "SaiyiW/SparkRA"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_title": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "SparkRA"
+      },
+      "source": "https://raw.githubusercontent.com/SaiyiW/SparkRA/master/README.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "installation": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "System requirements and Installation",
+        "parent_header": [
+          "SparkRA"
+        ],
+        "type": "Text_excerpt",
+        "value": "For SparkRA, you must have the following software packages installed in your system/cluster. Note that SparkRA runs on a yarn cluster, so when running in cluster mode, the cluster should have been properly setup. Moreover, your system/cluster must be Linux-based.\n\n* Java 1.7 or greater\n* Hadoop 2.4 or greater\n* Apache Spark 2.0.0 or greater\n\nNote that your Spark version should match the hadoop version. For example, if you have hadoop version 2.5.1, you must use spark-2.x.x-bin-hadoop2.4. Moreover you must have an evironment variable ```$SPARK_HOME``` that points to the Spark directory. When running in cluster mode (yarn-client or yarn-cluster), you must add the following to ```$SPARK_HOME/conf/spark-env.sh```,\n\n> HADOOP_CONF_DIR=$HADOOP_INSTALL/etc/hadoop\n\nThis of course assumes that you have an environment variable $HADOOP_INSTALL that points to the hadoop's home directory.\n"
+      },
+      "source": "https://raw.githubusercontent.com/SaiyiW/SparkRA/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 0.9999964549344921,
+      "result": {
+        "original_header": "SparkRA",
+        "type": "Text_excerpt",
+        "value": "This README contains the following sections.\n1. **System requirements and Installation**\n2. **Compiling**\n3. **Files required**\n4. **Putting reference and index files on each node of the cluster**\n5. **Configuration files**\n\t* **Configuration file for SparkRA**\n\t* **Configuration file for the chunker utility**\n\t* **Configuration file for the downloader utility**\n6. **Running SparkRA**\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/SaiyiW/SparkRA/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.999884229079061,
+      "result": {
+        "original_header": "Compiling",
+        "type": "Text_excerpt",
+        "value": "For compiling, go to the program folder and type `sbt package`. Likewise, for compiling the filesDownloader utility, go to the filesDownloader folder and type `sbt package`. The code for the chunker utility can be found at https://github.com/HamidMushtaq/FastqChunker, but a compiled jar file is also placed in the chunker folder here.\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/SaiyiW/SparkRA/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9614170421037054,
+      "result": {
+        "original_header": "Files required",
+        "type": "Text_excerpt",
+        "value": "Before you run SparkRA, make sure you have the following files available. \n5. In SparkRA's main folder, you must have the file ```lib/htsjdk-1.143```. Besides that, to run the SparkRA program, you must use the python scripts BASH3* (to run each part, which are mapping, dynamic load balancing and variant calling, separately) or BASH4* (to run all the parts one after another). These scripts should be in SparkRA's main folder. Note that the BASH4* script internally uses BASH3* to run all the parts one after another. More details are given in the section **Running SparkRA**. \n6. In SparkRA's main folder, you must have the main program ```sparkga1_2.11-1.0.jar``` in a folder named BASH6*. \n7. The chunker program ```chunker_2.11-1.0.jar``` should be in the folder BASH8* inside the SparkRA's main folder. If you want to make the chunks separately (not on the fly), you must use the the python script BASH9* in SparkRA's main folder. In either case, you also need a separate xml configuration file for the chunker program. Each tag for such xml file is explained in Section **Configuration file for the chunker utility**. \n8. If you are using the downloader utility (More on the downloader utility later in the text), you must have the downloader program ```filesdownloader_2.11-1.0.jar``` in the folder BASH11*. To run the downloader utility, you must use the python script BASH12* in SparkRA's main folder. Like SparkRA's main program and the chunker utility, the downloader utility requires an input xml file, which is explained in Section **Configuration file for the downloader utility**.\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/SaiyiW/SparkRA/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9856681046817074,
+      "result": {
+        "original_header": "Configuration file for the chunker utility",
+        "type": "Text_excerpt",
+        "value": "The chunker program is run on the master node, which means it is not distributed like SparkRA. It can take both compressed (gzipped) or uncompressed FASTQ files as input. By default, it uploads the chunks it makes to an HDFS directory specified as `outputFolder` in the configuration file. However, if you prefix the value of `outputFolder` with `local:`, it would put the chunks in a local folder. For example, if you specify `local:/home/hamidmushtaq/data/chunks`, it would put the chunks in the folder `/home/hamidmushtaq/data/chunks`. So, when using with SparkRA in local mode, always use the prefix `local:` for the `outputFolder` in the configuration file of the chunker utility. Moreover, you don't have to create the output folder yourself, as the chunker program would create one itself. Two example configuration files are shown in the `config/chunkerConfig folder`. \n"
+      },
+      "source": "https://raw.githubusercontent.com/SaiyiW/SparkRA/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.8078576086241726,
+      "result": {
+        "original_header": "Configuration file for the downloader utility",
+        "type": "Text_excerpt",
+        "value": "An example configuration file is placed in the config folder by the name of `downloadExample.xml`. \n"
+      },
+      "source": "https://raw.githubusercontent.com/SaiyiW/SparkRA/master/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "issue_tracker": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/SaiyiW/SparkRA/issues"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "keywords": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": ""
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "license": [
+    {
+      "confidence": 1,
+      "result": {
+        "name": "GNU General Public License v3.0",
+        "spdx_id": "GPL-3.0",
+        "type": "License",
+        "url": "https://api.github.com/licenses/gpl-3.0",
+        "value": "https://api.github.com/licenses/gpl-3.0"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "File_dump",
+        "value": "                   GNU GENERAL PUBLIC LICENSE\n                       Version 3, 29 June 2007\n\n Copyright (C) 2007 Free Software Foundation, Inc. <http://fsf.org/>\n Everyone is permitted to copy and distribute verbatim copies\n of this license document, but changing it is not allowed.\n\n                            Preamble\n\n  The GNU General Public License is a free, copyleft license for\nsoftware and other kinds of works.\n\n  The licenses for most software and other practical works are designed\nto take away your freedom to share and change the works.  By contrast,\nthe GNU General Public License is intended to guarantee your freedom to\nshare and change all versions of a program--to make sure it remains free\nsoftware for all its users.  We, the Free Software Foundation, use the\nGNU General Public License for most of our software; it applies also to\nany other work released this way by its authors.  You can apply it to\nyour programs, too.\n\n  When we speak of free software, we are referring to freedom, not\nprice.  Our General Public Licenses are designed to make sure that you\nhave the freedom to distribute copies of free software (and charge for\nthem if you wish), that you receive source code or can get it if you\nwant it, that you can change the software or use pieces of it in new\nfree programs, and that you know you can do these things.\n\n  To protect your rights, we need to prevent others from denying you\nthese rights or asking you to surrender the rights.  Therefore, you have\ncertain responsibilities if you distribute copies of the software, or if\nyou modify it: responsibilities to respect the freedom of others.\n\n  For example, if you distribute copies of such a program, whether\ngratis or for a fee, you must pass on to the recipients the same\nfreedoms that you received.  You must make sure that they, too, receive\nor can get the source code.  And you must show them these terms so they\nknow their rights.\n\n  Developers that use the GNU GPL protect your rights with two steps:\n(1) assert copyright on the software, and (2) offer you this License\ngiving you legal permission to copy, distribute and/or modify it.\n\n  For the developers' and authors' protection, the GPL clearly explains\nthat there is no warranty for this free software.  For both users' and\nauthors' sake, the GPL requires that modified versions be marked as\nchanged, so that their problems will not be attributed erroneously to\nauthors of previous versions.\n\n  Some devices are designed to deny users access to install or run\nmodified versions of the software inside them, although the manufacturer\ncan do so.  This is fundamentally incompatible with the aim of\nprotecting users' freedom to change the software.  The systematic\npattern of such abuse occurs in the area of products for individuals to\nuse, which is precisely where it is most unacceptable.  Therefore, we\nhave designed this version of the GPL to prohibit the practice for those\nproducts.  If such problems arise substantially in other domains, we\nstand ready to extend this provision to those domains in future versions\nof the GPL, as needed to protect the freedom of users.\n\n  Finally, every program is threatened constantly by software patents.\nStates should not allow patents to restrict development and use of\nsoftware on general-purpose computers, but in those that do, we wish to\navoid the special danger that patents applied to a free program could\nmake it effectively proprietary.  To prevent this, the GPL assures that\npatents cannot be used to render the program non-free.\n\n  The precise terms and conditions for copying, distribution and\nmodification follow.\n\n                       TERMS AND CONDITIONS\n\n  0. Definitions.\n\n  \"This License\" refers to version 3 of the GNU General Public License.\n\n  \"Copyright\" also means copyright-like laws that apply to other kinds of\nworks, such as semiconductor masks.\n\n  \"The Program\" refers to any copyrightable work licensed under this\nLicense.  Each licensee is addressed as \"you\".  \"Licensees\" and\n\"recipients\" may be individuals or organizations.\n\n  To \"modify\" a work means to copy from or adapt all or part of the work\nin a fashion requiring copyright permission, other than the making of an\nexact copy.  The resulting work is called a \"modified version\" of the\nearlier work or a work \"based on\" the earlier work.\n\n  A \"covered work\" means either the unmodified Program or a work based\non the Program.\n\n  To \"propagate\" a work means to do anything with it that, without\npermission, would make you directly or secondarily liable for\ninfringement under applicable copyright law, except executing it on a\ncomputer or modifying a private copy.  Propagation includes copying,\ndistribution (with or without modification), making available to the\npublic, and in some countries other activities as well.\n\n  To \"convey\" a work means any kind of propagation that enables other\nparties to make or receive copies.  Mere interaction with a user through\na computer network, with no transfer of a copy, is not conveying.\n\n  An interactive user interface displays \"Appropriate Legal Notices\"\nto the extent that it includes a convenient and prominently visible\nfeature that (1) displays an appropriate copyright notice, and (2)\ntells the user that there is no warranty for the work (except to the\nextent that warranties are provided), that licensees may convey the\nwork under this License, and how to view a copy of this License.  If\nthe interface presents a list of user commands or options, such as a\nmenu, a prominent item in the list meets this criterion.\n\n  1. Source Code.\n\n  The \"source code\" for a work means the preferred form of the work\nfor making modifications to it.  \"Object code\" means any non-source\nform of a work.\n\n  A \"Standard Interface\" means an interface that either is an official\nstandard defined by a recognized standards body, or, in the case of\ninterfaces specified for a particular programming language, one that\nis widely used among developers working in that language.\n\n  The \"System Libraries\" of an executable work include anything, other\nthan the work as a whole, that (a) is included in the normal form of\npackaging a Major Component, but which is not part of that Major\nComponent, and (b) serves only to enable use of the work with that\nMajor Component, or to implement a Standard Interface for which an\nimplementation is available to the public in source code form.  A\n\"Major Component\", in this context, means a major essential component\n(kernel, window system, and so on) of the specific operating system\n(if any) on which the executable work runs, or a compiler used to\nproduce the work, or an object code interpreter used to run it.\n\n  The \"Corresponding Source\" for a work in object code form means all\nthe source code needed to generate, install, and (for an executable\nwork) run the object code and to modify the work, including scripts to\ncontrol those activities.  However, it does not include the work's\nSystem Libraries, or general-purpose tools or generally available free\nprograms which are used unmodified in performing those activities but\nwhich are not part of the work.  For example, Corresponding Source\nincludes interface definition files associated with source files for\nthe work, and the source code for shared libraries and dynamically\nlinked subprograms that the work is specifically designed to require,\nsuch as by intimate data communication or control flow between those\nsubprograms and other parts of the work.\n\n  The Corresponding Source need not include anything that users\ncan regenerate automatically from other parts of the Corresponding\nSource.\n\n  The Corresponding Source for a work in source code form is that\nsame work.\n\n  2. Basic Permissions.\n\n  All rights granted under this License are granted for the term of\ncopyright on the Program, and are irrevocable provided the stated\nconditions are met.  This License explicitly affirms your unlimited\npermission to run the unmodified Program.  The output from running a\ncovered work is covered by this License only if the output, given its\ncontent, constitutes a covered work.  This License acknowledges your\nrights of fair use or other equivalent, as provided by copyright law.\n\n  You may make, run and propagate covered works that you do not\nconvey, without conditions so long as your license otherwise remains\nin force.  You may convey covered works to others for the sole purpose\nof having them make modifications exclusively for you, or provide you\nwith facilities for running those works, provided that you comply with\nthe terms of this License in conveying all material for which you do\nnot control copyright.  Those thus making or running the covered works\nfor you must do so exclusively on your behalf, under your direction\nand control, on terms that prohibit them from making any copies of\nyour copyrighted material outside their relationship with you.\n\n  Conveying under any other circumstances is permitted solely under\nthe conditions stated below.  Sublicensing is not allowed; section 10\nmakes it unnecessary.\n\n  3. Protecting Users' Legal Rights From Anti-Circumvention Law.\n\n  No covered work shall be deemed part of an effective technological\nmeasure under any applicable law fulfilling obligations under article\n11 of the WIPO copyright treaty adopted on 20 December 1996, or\nsimilar laws prohibiting or restricting circumvention of such\nmeasures.\n\n  When you convey a covered work, you waive any legal power to forbid\ncircumvention of technological measures to the extent such circumvention\nis effected by exercising rights under this License with respect to\nthe covered work, and you disclaim any intention to limit operation or\nmodification of the work as a means of enforcing, against the work's\nusers, your or third parties' legal rights to forbid circumvention of\ntechnological measures.\n\n  4. Conveying Verbatim Copies.\n\n  You may convey verbatim copies of the Program's source code as you\nreceive it, in any medium, provided that you conspicuously and\nappropriately publish on each copy an appropriate copyright notice;\nkeep intact all notices stating that this License and any\nnon-permissive terms added in accord with section 7 apply to the code;\nkeep intact all notices of the absence of any warranty; and give all\nrecipients a copy of this License along with the Program.\n\n  You may charge any price or no price for each copy that you convey,\nand you may offer support or warranty protection for a fee.\n\n  5. Conveying Modified Source Versions.\n\n  You may convey a work based on the Program, or the modifications to\nproduce it from the Program, in the form of source code under the\nterms of section 4, provided that you also meet all of these conditions:\n\n    a) The work must carry prominent notices stating that you modified\n    it, and giving a relevant date.\n\n    b) The work must carry prominent notices stating that it is\n    released under this License and any conditions added under section\n    7.  This requirement modifies the requirement in section 4 to\n    \"keep intact all notices\".\n\n    c) You must license the entire work, as a whole, under this\n    License to anyone who comes into possession of a copy.  This\n    License will therefore apply, along with any applicable section 7\n    additional terms, to the whole of the work, and all its parts,\n    regardless of how they are packaged.  This License gives no\n    permission to license the work in any other way, but it does not\n    invalidate such permission if you have separately received it.\n\n    d) If the work has interactive user interfaces, each must display\n    Appropriate Legal Notices; however, if the Program has interactive\n    interfaces that do not display Appropriate Legal Notices, your\n    work need not make them do so.\n\n  A compilation of a covered work with other separate and independent\nworks, which are not by their nature extensions of the covered work,\nand which are not combined with it such as to form a larger program,\nin or on a volume of a storage or distribution medium, is called an\n\"aggregate\" if the compilation and its resulting copyright are not\nused to limit the access or legal rights of the compilation's users\nbeyond what the individual works permit.  Inclusion of a covered work\nin an aggregate does not cause this License to apply to the other\nparts of the aggregate.\n\n  6. Conveying Non-Source Forms.\n\n  You may convey a covered work in object code form under the terms\nof sections 4 and 5, provided that you also convey the\nmachine-readable Corresponding Source under the terms of this License,\nin one of these ways:\n\n    a) Convey the object code in, or embodied in, a physical product\n    (including a physical distribution medium), accompanied by the\n    Corresponding Source fixed on a durable physical medium\n    customarily used for software interchange.\n\n    b) Convey the object code in, or embodied in, a physical product\n    (including a physical distribution medium), accompanied by a\n    written offer, valid for at least three years and valid for as\n    long as you offer spare parts or customer support for that product\n    model, to give anyone who possesses the object code either (1) a\n    copy of the Corresponding Source for all the software in the\n    product that is covered by this License, on a durable physical\n    medium customarily used for software interchange, for a price no\n    more than your reasonable cost of physically performing this\n    conveying of source, or (2) access to copy the\n    Corresponding Source from a network server at no charge.\n\n    c) Convey individual copies of the object code with a copy of the\n    written offer to provide the Corresponding Source.  This\n    alternative is allowed only occasionally and noncommercially, and\n    only if you received the object code with such an offer, in accord\n    with subsection 6b.\n\n    d) Convey the object code by offering access from a designated\n    place (gratis or for a charge), and offer equivalent access to the\n    Corresponding Source in the same way through the same place at no\n    further charge.  You need not require recipients to copy the\n    Corresponding Source along with the object code.  If the place to\n    copy the object code is a network server, the Corresponding Source\n    may be on a different server (operated by you or a third party)\n    that supports equivalent copying facilities, provided you maintain\n    clear directions next to the object code saying where to find the\n    Corresponding Source.  Regardless of what server hosts the\n    Corresponding Source, you remain obligated to ensure that it is\n    available for as long as needed to satisfy these requirements.\n\n    e) Convey the object code using peer-to-peer transmission, provided\n    you inform other peers where the object code and Corresponding\n    Source of the work are being offered to the general public at no\n    charge under subsection 6d.\n\n  A separable portion of the object code, whose source code is excluded\nfrom the Corresponding Source as a System Library, need not be\nincluded in conveying the object code work.\n\n  A \"User Product\" is either (1) a \"consumer product\", which means any\ntangible personal property which is normally used for personal, family,\nor household purposes, or (2) anything designed or sold for incorporation\ninto a dwelling.  In determining whether a product is a consumer product,\ndoubtful cases shall be resolved in favor of coverage.  For a particular\nproduct received by a particular user, \"normally used\" refers to a\ntypical or common use of that class of product, regardless of the status\nof the particular user or of the way in which the particular user\nactually uses, or expects or is expected to use, the product.  A product\nis a consumer product regardless of whether the product has substantial\ncommercial, industrial or non-consumer uses, unless such uses represent\nthe only significant mode of use of the product.\n\n  \"Installation Information\" for a User Product means any methods,\nprocedures, authorization keys, or other information required to install\nand execute modified versions of a covered work in that User Product from\na modified version of its Corresponding Source.  The information must\nsuffice to ensure that the continued functioning of the modified object\ncode is in no case prevented or interfered with solely because\nmodification has been made.\n\n  If you convey an object code work under this section in, or with, or\nspecifically for use in, a User Product, and the conveying occurs as\npart of a transaction in which the right of possession and use of the\nUser Product is transferred to the recipient in perpetuity or for a\nfixed term (regardless of how the transaction is characterized), the\nCorresponding Source conveyed under this section must be accompanied\nby the Installation Information.  But this requirement does not apply\nif neither you nor any third party retains the ability to install\nmodified object code on the User Product (for example, the work has\nbeen installed in ROM).\n\n  The requirement to provide Installation Information does not include a\nrequirement to continue to provide support service, warranty, or updates\nfor a work that has been modified or installed by the recipient, or for\nthe User Product in which it has been modified or installed.  Access to a\nnetwork may be denied when the modification itself materially and\nadversely affects the operation of the network or violates the rules and\nprotocols for communication across the network.\n\n  Corresponding Source conveyed, and Installation Information provided,\nin accord with this section must be in a format that is publicly\ndocumented (and with an implementation available to the public in\nsource code form), and must require no special password or key for\nunpacking, reading or copying.\n\n  7. Additional Terms.\n\n  \"Additional permissions\" are terms that supplement the terms of this\nLicense by making exceptions from one or more of its conditions.\nAdditional permissions that are applicable to the entire Program shall\nbe treated as though they were included in this License, to the extent\nthat they are valid under applicable law.  If additional permissions\napply only to part of the Program, that part may be used separately\nunder those permissions, but the entire Program remains governed by\nthis License without regard to the additional permissions.\n\n  When you convey a copy of a covered work, you may at your option\nremove any additional permissions from that copy, or from any part of\nit.  (Additional permissions may be written to require their own\nremoval in certain cases when you modify the work.)  You may place\nadditional permissions on material, added by you to a covered work,\nfor which you have or can give appropriate copyright permission.\n\n  Notwithstanding any other provision of this License, for material you\nadd to a covered work, you may (if authorized by the copyright holders of\nthat material) supplement the terms of this License with terms:\n\n    a) Disclaiming warranty or limiting liability differently from the\n    terms of sections 15 and 16 of this License; or\n\n    b) Requiring preservation of specified reasonable legal notices or\n    author attributions in that material or in the Appropriate Legal\n    Notices displayed by works containing it; or\n\n    c) Prohibiting misrepresentation of the origin of that material, or\n    requiring that modified versions of such material be marked in\n    reasonable ways as different from the original version; or\n\n    d) Limiting the use for publicity purposes of names of licensors or\n    authors of the material; or\n\n    e) Declining to grant rights under trademark law for use of some\n    trade names, trademarks, or service marks; or\n\n    f) Requiring indemnification of licensors and authors of that\n    material by anyone who conveys the material (or modified versions of\n    it) with contractual assumptions of liability to the recipient, for\n    any liability that these contractual assumptions directly impose on\n    those licensors and authors.\n\n  All other non-permissive additional terms are considered \"further\nrestrictions\" within the meaning of section 10.  If the Program as you\nreceived it, or any part of it, contains a notice stating that it is\ngoverned by this License along with a term that is a further\nrestriction, you may remove that term.  If a license document contains\na further restriction but permits relicensing or conveying under this\nLicense, you may add to a covered work material governed by the terms\nof that license document, provided that the further restriction does\nnot survive such relicensing or conveying.\n\n  If you add terms to a covered work in accord with this section, you\nmust place, in the relevant source files, a statement of the\nadditional terms that apply to those files, or a notice indicating\nwhere to find the applicable terms.\n\n  Additional terms, permissive or non-permissive, may be stated in the\nform of a separately written license, or stated as exceptions;\nthe above requirements apply either way.\n\n  8. Termination.\n\n  You may not propagate or modify a covered work except as expressly\nprovided under this License.  Any attempt otherwise to propagate or\nmodify it is void, and will automatically terminate your rights under\nthis License (including any patent licenses granted under the third\nparagraph of section 11).\n\n  However, if you cease all violation of this License, then your\nlicense from a particular copyright holder is reinstated (a)\nprovisionally, unless and until the copyright holder explicitly and\nfinally terminates your license, and (b) permanently, if the copyright\nholder fails to notify you of the violation by some reasonable means\nprior to 60 days after the cessation.\n\n  Moreover, your license from a particular copyright holder is\nreinstated permanently if the copyright holder notifies you of the\nviolation by some reasonable means, this is the first time you have\nreceived notice of violation of this License (for any work) from that\ncopyright holder, and you cure the violation prior to 30 days after\nyour receipt of the notice.\n\n  Termination of your rights under this section does not terminate the\nlicenses of parties who have received copies or rights from you under\nthis License.  If your rights have been terminated and not permanently\nreinstated, you do not qualify to receive new licenses for the same\nmaterial under section 10.\n\n  9. Acceptance Not Required for Having Copies.\n\n  You are not required to accept this License in order to receive or\nrun a copy of the Program.  Ancillary propagation of a covered work\noccurring solely as a consequence of using peer-to-peer transmission\nto receive a copy likewise does not require acceptance.  However,\nnothing other than this License grants you permission to propagate or\nmodify any covered work.  These actions infringe copyright if you do\nnot accept this License.  Therefore, by modifying or propagating a\ncovered work, you indicate your acceptance of this License to do so.\n\n  10. Automatic Licensing of Downstream Recipients.\n\n  Each time you convey a covered work, the recipient automatically\nreceives a license from the original licensors, to run, modify and\npropagate that work, subject to this License.  You are not responsible\nfor enforcing compliance by third parties with this License.\n\n  An \"entity transaction\" is a transaction transferring control of an\norganization, or substantially all assets of one, or subdividing an\norganization, or merging organizations.  If propagation of a covered\nwork results from an entity transaction, each party to that\ntransaction who receives a copy of the work also receives whatever\nlicenses to the work the party's predecessor in interest had or could\ngive under the previous paragraph, plus a right to possession of the\nCorresponding Source of the work from the predecessor in interest, if\nthe predecessor has it or can get it with reasonable efforts.\n\n  You may not impose any further restrictions on the exercise of the\nrights granted or affirmed under this License.  For example, you may\nnot impose a license fee, royalty, or other charge for exercise of\nrights granted under this License, and you may not initiate litigation\n(including a cross-claim or counterclaim in a lawsuit) alleging that\nany patent claim is infringed by making, using, selling, offering for\nsale, or importing the Program or any portion of it.\n\n  11. Patents.\n\n  A \"contributor\" is a copyright holder who authorizes use under this\nLicense of the Program or a work on which the Program is based.  The\nwork thus licensed is called the contributor's \"contributor version\".\n\n  A contributor's \"essential patent claims\" are all patent claims\nowned or controlled by the contributor, whether already acquired or\nhereafter acquired, that would be infringed by some manner, permitted\nby this License, of making, using, or selling its contributor version,\nbut do not include claims that would be infringed only as a\nconsequence of further modification of the contributor version.  For\npurposes of this definition, \"control\" includes the right to grant\npatent sublicenses in a manner consistent with the requirements of\nthis License.\n\n  Each contributor grants you a non-exclusive, worldwide, royalty-free\npatent license under the contributor's essential patent claims, to\nmake, use, sell, offer for sale, import and otherwise run, modify and\npropagate the contents of its contributor version.\n\n  In the following three paragraphs, a \"patent license\" is any express\nagreement or commitment, however denominated, not to enforce a patent\n(such as an express permission to practice a patent or covenant not to\nsue for patent infringement).  To \"grant\" such a patent license to a\nparty means to make such an agreement or commitment not to enforce a\npatent against the party.\n\n  If you convey a covered work, knowingly relying on a patent license,\nand the Corresponding Source of the work is not available for anyone\nto copy, free of charge and under the terms of this License, through a\npublicly available network server or other readily accessible means,\nthen you must either (1) cause the Corresponding Source to be so\navailable, or (2) arrange to deprive yourself of the benefit of the\npatent license for this particular work, or (3) arrange, in a manner\nconsistent with the requirements of this License, to extend the patent\nlicense to downstream recipients.  \"Knowingly relying\" means you have\nactual knowledge that, but for the patent license, your conveying the\ncovered work in a country, or your recipient's use of the covered work\nin a country, would infringe one or more identifiable patents in that\ncountry that you have reason to believe are valid.\n\n  If, pursuant to or in connection with a single transaction or\narrangement, you convey, or propagate by procuring conveyance of, a\ncovered work, and grant a patent license to some of the parties\nreceiving the covered work authorizing them to use, propagate, modify\nor convey a specific copy of the covered work, then the patent license\nyou grant is automatically extended to all recipients of the covered\nwork and works based on it.\n\n  A patent license is \"discriminatory\" if it does not include within\nthe scope of its coverage, prohibits the exercise of, or is\nconditioned on the non-exercise of one or more of the rights that are\nspecifically granted under this License.  You may not convey a covered\nwork if you are a party to an arrangement with a third party that is\nin the business of distributing software, under which you make payment\nto the third party based on the extent of your activity of conveying\nthe work, and under which the third party grants, to any of the\nparties who would receive the covered work from you, a discriminatory\npatent license (a) in connection with copies of the covered work\nconveyed by you (or copies made from those copies), or (b) primarily\nfor and in connection with specific products or compilations that\ncontain the covered work, unless you entered into that arrangement,\nor that patent license was granted, prior to 28 March 2007.\n\n  Nothing in this License shall be construed as excluding or limiting\nany implied license or other defenses to infringement that may\notherwise be available to you under applicable patent law.\n\n  12. No Surrender of Others' Freedom.\n\n  If conditions are imposed on you (whether by court order, agreement or\notherwise) that contradict the conditions of this License, they do not\nexcuse you from the conditions of this License.  If you cannot convey a\ncovered work so as to satisfy simultaneously your obligations under this\nLicense and any other pertinent obligations, then as a consequence you may\nnot convey it at all.  For example, if you agree to terms that obligate you\nto collect a royalty for further conveying from those to whom you convey\nthe Program, the only way you could satisfy both those terms and this\nLicense would be to refrain entirely from conveying the Program.\n\n  13. Use with the GNU Affero General Public License.\n\n  Notwithstanding any other provision of this License, you have\npermission to link or combine any covered work with a work licensed\nunder version 3 of the GNU Affero General Public License into a single\ncombined work, and to convey the resulting work.  The terms of this\nLicense will continue to apply to the part which is the covered work,\nbut the special requirements of the GNU Affero General Public License,\nsection 13, concerning interaction through a network will apply to the\ncombination as such.\n\n  14. Revised Versions of this License.\n\n  The Free Software Foundation may publish revised and/or new versions of\nthe GNU General Public License from time to time.  Such new versions will\nbe similar in spirit to the present version, but may differ in detail to\naddress new problems or concerns.\n\n  Each version is given a distinguishing version number.  If the\nProgram specifies that a certain numbered version of the GNU General\nPublic License \"or any later version\" applies to it, you have the\noption of following the terms and conditions either of that numbered\nversion or of any later version published by the Free Software\nFoundation.  If the Program does not specify a version number of the\nGNU General Public License, you may choose any version ever published\nby the Free Software Foundation.\n\n  If the Program specifies that a proxy can decide which future\nversions of the GNU General Public License can be used, that proxy's\npublic statement of acceptance of a version permanently authorizes you\nto choose that version for the Program.\n\n  Later license versions may give you additional or different\npermissions.  However, no additional obligations are imposed on any\nauthor or copyright holder as a result of your choosing to follow a\nlater version.\n\n  15. Disclaimer of Warranty.\n\n  THERE IS NO WARRANTY FOR THE PROGRAM, TO THE EXTENT PERMITTED BY\nAPPLICABLE LAW.  EXCEPT WHEN OTHERWISE STATED IN WRITING THE COPYRIGHT\nHOLDERS AND/OR OTHER PARTIES PROVIDE THE PROGRAM \"AS IS\" WITHOUT WARRANTY\nOF ANY KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING, BUT NOT LIMITED TO,\nTHE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR\nPURPOSE.  THE ENTIRE RISK AS TO THE QUALITY AND PERFORMANCE OF THE PROGRAM\nIS WITH YOU.  SHOULD THE PROGRAM PROVE DEFECTIVE, YOU ASSUME THE COST OF\nALL NECESSARY SERVICING, REPAIR OR CORRECTION.\n\n  16. Limitation of Liability.\n\n  IN NO EVENT UNLESS REQUIRED BY APPLICABLE LAW OR AGREED TO IN WRITING\nWILL ANY COPYRIGHT HOLDER, OR ANY OTHER PARTY WHO MODIFIES AND/OR CONVEYS\nTHE PROGRAM AS PERMITTED ABOVE, BE LIABLE TO YOU FOR DAMAGES, INCLUDING ANY\nGENERAL, SPECIAL, INCIDENTAL OR CONSEQUENTIAL DAMAGES ARISING OUT OF THE\nUSE OR INABILITY TO USE THE PROGRAM (INCLUDING BUT NOT LIMITED TO LOSS OF\nDATA OR DATA BEING RENDERED INACCURATE OR LOSSES SUSTAINED BY YOU OR THIRD\nPARTIES OR A FAILURE OF THE PROGRAM TO OPERATE WITH ANY OTHER PROGRAMS),\nEVEN IF SUCH HOLDER OR OTHER PARTY HAS BEEN ADVISED OF THE POSSIBILITY OF\nSUCH DAMAGES.\n\n  17. Interpretation of Sections 15 and 16.\n\n  If the disclaimer of warranty and limitation of liability provided\nabove cannot be given local legal effect according to their terms,\nreviewing courts shall apply local law that most closely approximates\nan absolute waiver of all civil liability in connection with the\nProgram, unless a warranty or assumption of liability accompanies a\ncopy of the Program in return for a fee.\n\n                     END OF TERMS AND CONDITIONS\n\n            How to Apply These Terms to Your New Programs\n\n  If you develop a new program, and you want it to be of the greatest\npossible use to the public, the best way to achieve this is to make it\nfree software which everyone can redistribute and change under these terms.\n\n  To do so, attach the following notices to the program.  It is safest\nto attach them to the start of each source file to most effectively\nstate the exclusion of warranty; and each file should have at least\nthe \"copyright\" line and a pointer to where the full notice is found.\n\n    <one line to give the program's name and a brief idea of what it does.>\n    Copyright (C) <year>  <name of author>\n\n    This program is free software: you can redistribute it and/or modify\n    it under the terms of the GNU General Public License as published by\n    the Free Software Foundation, either version 3 of the License, or\n    (at your option) any later version.\n\n    This program is distributed in the hope that it will be useful,\n    but WITHOUT ANY WARRANTY; without even the implied warranty of\n    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the\n    GNU General Public License for more details.\n\n    You should have received a copy of the GNU General Public License\n    along with this program.  If not, see <http://www.gnu.org/licenses/>.\n\nAlso add information on how to contact you by electronic and paper mail.\n\n  If the program does terminal interaction, make it output a short\nnotice like this when it starts in an interactive mode:\n\n    <program>  Copyright (C) <year>  <name of author>\n    This program comes with ABSOLUTELY NO WARRANTY; for details type `show w'.\n    This is free software, and you are welcome to redistribute it\n    under certain conditions; type `show c' for details.\n\nThe hypothetical commands `show w' and `show c' should show the appropriate\nparts of the General Public License.  Of course, your program's commands\nmight be different; for a GUI interface, you would use an \"about box\".\n\n  You should also get your employer (if you work as a programmer) or school,\nif any, to sign a \"copyright disclaimer\" for the program, if necessary.\nFor more information on this, and how to apply and follow the GNU GPL, see\n<http://www.gnu.org/licenses/>.\n\n  The GNU General Public License does not permit incorporating your program\ninto proprietary programs.  If your program is a subroutine library, you\nmay consider it more useful to permit linking proprietary applications with\nthe library.  If this is what you want to do, use the GNU Lesser General\nPublic License instead of this License.  But first, please read\n<http://www.gnu.org/philosophy/why-not-lgpl.html>."
+      },
+      "source": "https://raw.githubusercontent.com/SaiyiW/SparkRA/master/LICENSE",
+      "technique": "file_exploration"
+    }
+  ],
+  "name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "SparkRA"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "owner": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "User",
+        "value": "SaiyiW"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "programming_languages": [
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Scala",
+        "size": 107865,
+        "type": "Programming_language",
+        "value": "Scala"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Java",
+        "size": 37245,
+        "type": "Programming_language",
+        "value": "Java"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Python",
+        "size": 11180,
+        "type": "Programming_language",
+        "value": "Python"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "readme_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/SaiyiW/SparkRA/master/README.md"
+      },
+      "technique": "file_exploration"
+    }
+  ],
+  "requirements": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "System requirements and Installation",
+        "parent_header": [
+          "SparkRA"
+        ],
+        "type": "Text_excerpt",
+        "value": "For SparkRA, you must have the following software packages installed in your system/cluster. Note that SparkRA runs on a yarn cluster, so when running in cluster mode, the cluster should have been properly setup. Moreover, your system/cluster must be Linux-based.\n\n* Java 1.7 or greater\n* Hadoop 2.4 or greater\n* Apache Spark 2.0.0 or greater\n\nNote that your Spark version should match the hadoop version. For example, if you have hadoop version 2.5.1, you must use spark-2.x.x-bin-hadoop2.4. Moreover you must have an evironment variable ```$SPARK_HOME``` that points to the Spark directory. When running in cluster mode (yarn-client or yarn-cluster), you must add the following to ```$SPARK_HOME/conf/spark-env.sh```,\n\n> HADOOP_CONF_DIR=$HADOOP_INSTALL/etc/hadoop\n\nThis of course assumes that you have an environment variable $HADOOP_INSTALL that points to the hadoop's home directory.\n"
+      },
+      "source": "https://raw.githubusercontent.com/SaiyiW/SparkRA/master/README.md",
+      "technique": "header_analysis"
+    }
+  ],
+  "run": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Running SparkRA",
+        "parent_header": [
+          "SparkRA"
+        ],
+        "type": "Text_excerpt",
+        "value": "SparkRA consists of three parts. The python script `runAll.py` will run these three parts one after another using the `runPart.py` script. The `runPart.py` script takes two parameters. The first being the input xml file, while the second being the part number. For example, if the xml file's path is config/config.xml, you can run the Part 1 by typing `runPart.py config/config.xml 1`. If you want to run all the parts one after the other without your intervention, you can simply use the `runAll.py` script which takes the input xml file as a parameter. The `runAll.py` script would also save the Spark's output in log files (log1.txt, log2.txt and log3.txt respectively for the three parts) for each part. You can also give runAll.py an optional second parameter to start execution from a certain part. For example, `runAll.py config/config.xml 2` would start execution from the second part, rather than the first part.\n\nIf you are not running the chunker utility in parallel (to make chunks on the fly), and want to run the chunker utility separately first before running SparkRA, you can use the `runChunker.py` python script which takes an xml file as an input (See Section **Configuration file for the chunker utility** for more details on that xml file).\n\n\n\n\n\n\n\n"
+      },
+      "source": "https://raw.githubusercontent.com/SaiyiW/SparkRA/master/README.md",
+      "technique": "header_analysis"
+    }
+  ],
+  "somef_missing_categories": [
+    "acknowledgement",
+    "download",
+    "contact",
+    "contributors",
+    "documentation",
+    "usage",
+    "faq",
+    "support",
+    "identifier",
+    "has_build_file",
+    "executable_example"
+  ],
+  "somef_provenance": {
+    "date": "2024-10-06 13:00:12",
+    "somef_schema_version": "1.0.0",
+    "somef_version": "0.9.5"
+  },
+  "stargazers_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 1
+      },
+      "technique": "GitHub_API"
+    }
+  ]
+}

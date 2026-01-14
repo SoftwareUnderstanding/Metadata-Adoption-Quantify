@@ -1,0 +1,445 @@
+{
+  "citation": [
+    {
+      "confidence": 1,
+      "result": {
+        "format": "cff",
+        "type": "File_dump",
+        "value": "# YAML 1.2\n# Metadata for citation of this software according to the CFF format (https://citation-file-format.github.io/)\ncff-version: 1.0.3\nmessage: If you use this software, please cite it as below.\ntitle: Massive-PotreeConverter\ndoi: 10.5281/zenodo.910906\nauthors:\n- given-names: Oscar\n  family-names: Rubi\n  name-particle: Martinez\n  affiliation: Netherlands eScience Center\n- given-names: Stefan\n  family-names: Verhoeven\n  affiliation: Nederlands eScience Center\n- given-names: Yifat\n  family-names: Dzigan\n  affiliation: Netherlands eScience Center\n- given-names: Gijs\n  family-names: van Oord\n  affiliation: Netherlands eScience Center\n- given-names: Romulo\n  family-names: Goncalves\n  affiliation: Netherlands eScience Center\nversion: 1.1.0\ndate-released: 2017-09-21\nrepository-code: https://github.com/NLeSC/Massive-PotreeConverter\nlicense: Apache-2.0\nreferences:\n- type: conference-paper\n  doi: 10.13140/RG.2.1.1731.4326/1\n  title: 'Taming the beast: Free and open-source massive point cloud web visualization'\n  authors:\n  - given-names: Oscar\n    family-names: Martinez-Rubi\n  - given-names: Stefan\n    family-names: Verhoeven\n  - given-names: Maarten Van\n    family-names: Meersbergen\n  - given-names: Markus\n    family-names: Sch\u00fctz\n  - given-names: Peter Van\n    family-names: Oosterom\n  - given-names: Romulo\n    family-names: Goncalves\n  - given-names: Theo\n    family-names: Tijssen\n"
+      },
+      "source": "https://raw.githubusercontent.com/NLeSC/Massive-PotreeConverter/master/CITATION.cff",
+      "technique": "file_exploration"
+    }
+  ],
+  "code_repository": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/NLeSC/Massive-PotreeConverter"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_created": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2015-06-08T12:57:11Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_updated": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2024-06-03T11:39:09Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "description": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "Convert massive pointcloud, for example ahn2 (640 Billion points) to potree format."
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 0.9547259107642916,
+      "result": {
+        "original_header": "Massive-PotreeConverter",
+        "type": "Text_excerpt",
+        "value": "The [PotreeConverter](https://github.com/potree/PotreeConverter) builds potree octree from laz files.\nWhen you have very many or big laz files then running a single PotreeConverter job will take a very long time.\nThe Massive-PotreeConverter reduces the wallclock time of creating the octree by a divide and conquer approach.\nIt does this by creating octree's in parallel and merging the octree's into a single octree. \nThis repository extends the [PotreeConverter](https://github.com/potree/PotreeConverter)\nthrough a bunch of Python scripts to make it able to convert massive\npoint clouds to the Potree-OctTree format. \nFor a detailed description of each step the user should read [**Taming the beast: Free and open-source massive point cloud web visualization**](http://dx.doi.org/10.13140/RG.2.1.1731.4326/1). \nIn addition, this repository also contains tools to:\n - Sort and index a bunch of LAS/LAZ files in parallel.\n - Dump the extents of a bunch of LAS/LAZ files into a PostGIS database. This is useful for LAStools as a pre-filter step when dealing with large number of files.\n - Dump the extents of the nodes of a Potree-OctTree into a PostGIS database. Each node of the tree is stored in a separate file. \nThese additional tools can be used to make rectangular selections on the raw data or in the different levels of the Potree-OctTree offering a multi-level selection tool. This is for example done in https://github.com/NLeSC/ahn-pointcloud-viewer-ws/blob/master/src/main/python/create_user_file.py. In this example a LAS/LAZ file is created from the selected data. \n"
+      },
+      "source": "https://raw.githubusercontent.com/NLeSC/Massive-PotreeConverter/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9340399521612268,
+      "result": {
+        "original_header": "Method",
+        "type": "Text_excerpt",
+        "value": "- mpc-info: We get the bounding cube, the number of points and the average density of the massive point cloud.\nFirst argument is the input folder with all the input data. Second argument is the number of processes we want to use to get the information.\nThe tool also computes suggested values for the number of tiles and for the Cubic Axis Aligned Bounding Box (CAABB), the spacing, the number of levels and suggested potreeconverter command. These values must be used in the next steps! Assuming [laz input directory] is a folder with a bunch of LAS or LAZ files, run:\n```\nmpc-info -i [laz input directory] -c [number processes]\n``` \n- We use `mpc-tiling` to create tiles and we use the previous computed (by `mpc-info`)\nnumber of tiles and CAABB (only X and Y coordinates). Note that the number of tiles\nmust be power of 4, in this way and thanks to the used\nbounding box, the extents of the tiles will match the extent of the OctTree\nnodes at a certain level (and thus the future merging will be done faster)\n```\nmpc-tiling -i input -o tiles -t temp -e \"[minX] [minY] [maxX] [maxY]\" -n [number tiles] -p [number processes]\n``` \n- Run the individual PotreeConverters for each tile using ALWAYS the same\npreviously computed CAABB, spacing and number of levels.\nUse `mpc-create-config-pycoeman` to create a XML with the list of PotreeConverter commands that have to be executed.\nThe format used is the parallel commands XML configuration file format for pycoeman.\nThen run any of the pycoeman tools to execute the commands. There are options to run them locally, in a SGE cluster or in a bunch of ssh-reachable hosts.\nIn all cases it is not recommended to use more than 8 cores per machine since the processing is quite IO-bound. The example is using pycoeman locally in which case `.` must be the parent folder of `tiles`. For other pycoeman parallel commands execution modes visit https://github.com/NLeSC/pycoeman.\n```\nmpc-create-config-pycoeman -i tiles -o ParallelPotreeConverter.xml -f [format LAS or LAZ] -l [levels] -s [spacing] -e \"[minX] [minY] [minZ] [maxX] [maxY] [maxZ]\"\ncoeman-par-local -d . -c ParallelPotreeConverter.xml -e ParallelExecution -n [number processes]\n``` \nSee an example in [AHN2](http://ahn2.pointclouds.nl).\nFor this web also the following repositories where used: \n"
+      },
+      "source": "https://raw.githubusercontent.com/NLeSC/Massive-PotreeConverter/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.8820782133818107,
+      "result": {
+        "original_header": "Optional steps",
+        "type": "Text_excerpt",
+        "value": "- Fill a DB with the extents of the files in the raw data. Before running `mpc-db-extents`, first create an user, a DB and add the postgis extension:\n```\n#login into postgres\nsudo -u postgres psql\n\n> create user <your_linux_user_name> with password '<password>';\n> create database pc_extents owner <your_linux_user_name>;\n> \\connect pc_extents\n> create extension postgis\n> \\q\n``` \n"
+      },
+      "source": "https://raw.githubusercontent.com/NLeSC/Massive-PotreeConverter/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9641715212404484,
+      "result": {
+        "original_header": "Docker",
+        "type": "Text_excerpt",
+        "value": "We have created a Dockerfile to use the basic tools of Massive-PotreeConverter.\nIt is meant to help you when running `mpc-info`, `mpc-tiling`, `mpc-create-config-pycoeman`, `coeman-par-local` and `mpc-merge` (or `mpc-merge-all`) \nThere is also an image build in [Docker Hub](https://registry.hub.docker.com/u/oscarmartinezrubi/massive-potreeconverter/) that can be directly pulled and worked with! \nIn addition to installing all the required software it also creates three volumnes (/data1, /data2, /data3) which are meant to be mounted from different devices when executing docker run. Ideally always try to run in a way that the input data is in one device and the output in another (we actually have 3 volumes because of temp data folder required by `mpc-tiling`) \n- Run `mpc-tiling` to generate tiles (use the number of tiles and X,Y values of the CAABB suggested in the previous step). Note that we specify 3 different local folders which will be available in the docker container, one for the input data, one for the output and one for the temporal data. Also note that a local file in `/media/data/big/sample/myfile` is accessed as `/data1/myfile` in the container.\n```\ndocker run -v /media/data/big/sample:/data1 -v /media/data/big/sample_tiles:/data2 -v /media/data/big/sample_tiles_temp:/data3 oscar/mpc:v1 mpc-tiling -i /data1/ -o /data2/ -t /data3/ -e \"1555 1749 21659 21853\" -n 4 -p 4\n``` \n- Run `mpc-create-config-pycoeman` to create the XML configuration file for the different PotreeConverters. Then run them in parallel in the local machine with `coeman-par-local`. Note that we use the details suggested by `mpc-info` for the PotreeConverters. Note that pycoeman can also be used to run the various PotreeConverters in a SGE cluster or in a bunch of ssh-reachable machines. However, the docker instance is only meant for local executions. To use SGE clusters or a bunch of ssh-reachable machines you need to install Massive-PotreeConverter and dependencies in all the involved machines.\n```\nmkdir /media/data/big/sample_distpotree\ndocker run -v /media/data/big/sample_distpotree:/data1 -v /media/data/big/sample_tiles:/data2 oscar/mpc:v1 mpc-create-config-pycoeman -i /data2 -o /data1/ParallelPotreeConverter.xml -f LAZ -l 9 -s 83 -e \"1555 1749 -94 21659 21853 20010\"\ndocker run -v /media/data/big/sample_distpotree:/data1 -v /media/data/big/sample_tiles:/data2 oscar/mpc:v1 coeman-par-local -d / -c /data1/ParallelPotreeConverter.xml -e /data1/execution -n 4\n``` \n- Run the script to merge all the Potree-OctTrees into one. Note that in this case we only mount and use one volume. For this specific script it is better to have the same device for both input and output.\n```\nsudo mv sample_distpotree/execution/*/* sample_distpotree/poctrees/\ndocker run -v /media/data/big/sample_distpotree:/data1 oscar/mpc:v1 mpc-merge-all -i /data1/poctrees -o /data1/poctrees_merge -m\n```\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/NLeSC/Massive-PotreeConverter/master/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "documentation": [
+    {
+      "confidence": 1,
+      "result": {
+        "format": "wiki",
+        "type": "Url",
+        "value": "https://github.com/NLeSC/Massive-PotreeConverter/wiki"
+      },
+      "source": "https://raw.githubusercontent.com/NLeSC/Massive-PotreeConverter/master/README.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "download_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/NLeSC/Massive-PotreeConverter/releases"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 19
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/NLeSC/Massive-PotreeConverter/forks"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "NLeSC/Massive-PotreeConverter"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_title": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "Massive-PotreeConverter"
+      },
+      "source": "https://raw.githubusercontent.com/NLeSC/Massive-PotreeConverter/master/README.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "has_build_file": [
+    {
+      "confidence": 1,
+      "result": {
+        "format": "dockerfile",
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/NLeSC/Massive-PotreeConverter/master/Dockerfile"
+      },
+      "source": "https://raw.githubusercontent.com/NLeSC/Massive-PotreeConverter/master/Dockerfile",
+      "technique": "file_exploration"
+    }
+  ],
+  "identifier": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://doi.org/10.5281/zenodo.910906"
+      },
+      "source": "https://raw.githubusercontent.com/NLeSC/Massive-PotreeConverter/master/README.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "images": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/NLeSC/Massive-PotreeConverter/master/figures/2D-simplification-of-the-various-steps.png"
+      },
+      "source": "https://raw.githubusercontent.com/NLeSC/Massive-PotreeConverter/master/README.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "installation": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Installation",
+        "parent_header": [
+          "Massive-PotreeConverter"
+        ],
+        "type": "Text_excerpt",
+        "value": "Clone this repository and install it with pip (using a virtualenv is recommended):\n\n```\ngit clone https://github.com/NLeSC/Massive-PotreeConverter\ncd Massive-PotreeConverter\npip install .\n```\n\nor install directly with:\n\n```\npip install git+https://github.com/NLeSC/Massive-PotreeConverter\n```\n"
+      },
+      "source": "https://raw.githubusercontent.com/NLeSC/Massive-PotreeConverter/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Installation for additional steps",
+        "parent_header": [
+          "Massive-PotreeConverter",
+          "Installation"
+        ],
+        "type": "Text_excerpt",
+        "value": "In order to perform the additional components some additional libraries/packages have to be installed:\n\n- To insert extents LAS/LAZ files a Potree-OctTrees in a PostGIS database, the additional requirements are:\n  - PostgreSQL, PostGIS\n  - Python modules: psycopg2\n\n- To sort/index LAS/LAZ files in parallel (allowing faster selection), the additional requirements are:\n  - LAStools with license. For the licensed-part of LAStools to run in Linux environments wine (https://www.winehq.org/) needs to be installed\n"
+      },
+      "source": "https://raw.githubusercontent.com/NLeSC/Massive-PotreeConverter/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Installation tips",
+        "parent_header": [
+          "Massive-PotreeConverter",
+          "Installation"
+        ],
+        "type": "Text_excerpt",
+        "value": "For the installation of PotreeConverter look at https://github.com/potree/PotreeConverter. You will need to add the build executable manually to the PATH.\n\nLook at the web page of [PDAL](http://www.pdal.io/compilation/unix.html) to install it. You will need to install also GDAL, Geos, GeoTiff and LASzip. Note that for Massive-PotreeConverter there is no need to build PDAL with PostgreSQL support.\n\n"
+      },
+      "source": "https://raw.githubusercontent.com/NLeSC/Massive-PotreeConverter/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 0.964351454936608,
+      "result": {
+        "original_header": "Massive-PotreeConverter",
+        "type": "Text_excerpt",
+        "value": "All these steps are summarized in the following scheme: ![](figures/2D-simplification-of-the-various-steps.png).  \n"
+      },
+      "source": "https://raw.githubusercontent.com/NLeSC/Massive-PotreeConverter/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9711496010412866,
+      "result": {
+        "original_header": "Method",
+        "type": "Text_excerpt",
+        "value": "More detailed steps: \n- After the various Potree-OctTrees are created (one per tile) we need to merge them\ninto a single one. For this you need to use the `mpc-merge` tool which\njoins two Potree-OctTrees into one.\nYou need to run different iterations until there is only one Potree-OctTree\nThe script `mpc-merge-all` can be used to merged all the Potree-OctTrees into one\nbut this has to be used carefully. The final Potree-Octree will be the folder in `Potree-OctTrees-merged` with the highest merging value.\n```\nmkdir Potree-OctTrees\nmv ParallelExecution/*/* Potree-OctTrees\nmpc-merge-all -i Potree-OctTrees -o Potree-OctTrees-merged -m\n``` \n - https://github.com/NLeSC/ahn-pointcloud-viewer\n - https://github.com/NLeSC/ahn-pointcloud-viewer-ws\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/NLeSC/Massive-PotreeConverter/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9948630187585472,
+      "result": {
+        "original_header": "Optional steps",
+        "type": "Text_excerpt",
+        "value": "- Fill a DB with the extents of the files in the raw data. Before running `mpc-db-extents`, first create an user, a DB and add the postgis extension:\n```\n#login into postgres\nsudo -u postgres psql\n\n> create user <your_linux_user_name> with password '<password>';\n> create database pc_extents owner <your_linux_user_name>;\n> \\connect pc_extents\n> create extension postgis\n> \\q\n``` \n"
+      },
+      "source": "https://raw.githubusercontent.com/NLeSC/Massive-PotreeConverter/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9327360778286564,
+      "result": {
+        "original_header": "Docker",
+        "type": "Text_excerpt",
+        "value": "- Build the Massive-PotreeConverter docker image from the Dockerfile in this GitHub repository or pull the image from Docker Hub. The following instructions assume that the first option was used. If you pulled the image from Docker you will need to replace the image name.\n```\ncd /path/to/Massive-PotreeConverter\ndocker build -t oscar/mpc:v1 .\n# OR\ndocker pull oscarmartinezrubi/massive-potreeconverter\n``` \n- Run the script to merge all the Potree-OctTrees into one. Note that in this case we only mount and use one volume. For this specific script it is better to have the same device for both input and output.\n```\nsudo mv sample_distpotree/execution/*/* sample_distpotree/poctrees/\ndocker run -v /media/data/big/sample_distpotree:/data1 oscar/mpc:v1 mpc-merge-all -i /data1/poctrees -o /data1/poctrees_merge -m\n```\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/NLeSC/Massive-PotreeConverter/master/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "invocation": [
+    {
+      "confidence": 0.8411742608541403,
+      "result": {
+        "original_header": "Docker",
+        "type": "Text_excerpt",
+        "value": "- Assuming that our LAZ/LAS files are in `/media/data/big/sample`, run `mpc-info` to know the point cloud details:\n```\ndocker run -v /media/data/big/sample:/data1 oscar/mpc:v1 mpc-info -i /data1 -c 4\n``` \n"
+      },
+      "source": "https://raw.githubusercontent.com/NLeSC/Massive-PotreeConverter/master/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "issue_tracker": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/NLeSC/Massive-PotreeConverter/issues"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "keywords": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": ""
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "license": [
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Apache License 2.0",
+        "spdx_id": "Apache-2.0",
+        "type": "License",
+        "url": "https://api.github.com/licenses/apache-2.0",
+        "value": "https://api.github.com/licenses/apache-2.0"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "File_dump",
+        "value": "                                 Apache License\n                           Version 2.0, January 2004\n                        http://www.apache.org/licenses/\n\n   TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION\n\n   1. Definitions.\n\n      \"License\" shall mean the terms and conditions for use, reproduction,\n      and distribution as defined by Sections 1 through 9 of this document.\n\n      \"Licensor\" shall mean the copyright owner or entity authorized by\n      the copyright owner that is granting the License.\n\n      \"Legal Entity\" shall mean the union of the acting entity and all\n      other entities that control, are controlled by, or are under common\n      control with that entity. For the purposes of this definition,\n      \"control\" means (i) the power, direct or indirect, to cause the\n      direction or management of such entity, whether by contract or\n      otherwise, or (ii) ownership of fifty percent (50%) or more of the\n      outstanding shares, or (iii) beneficial ownership of such entity.\n\n      \"You\" (or \"Your\") shall mean an individual or Legal Entity\n      exercising permissions granted by this License.\n\n      \"Source\" form shall mean the preferred form for making modifications,\n      including but not limited to software source code, documentation\n      source, and configuration files.\n\n      \"Object\" form shall mean any form resulting from mechanical\n      transformation or translation of a Source form, including but\n      not limited to compiled object code, generated documentation,\n      and conversions to other media types.\n\n      \"Work\" shall mean the work of authorship, whether in Source or\n      Object form, made available under the License, as indicated by a\n      copyright notice that is included in or attached to the work\n      (an example is provided in the Appendix below).\n\n      \"Derivative Works\" shall mean any work, whether in Source or Object\n      form, that is based on (or derived from) the Work and for which the\n      editorial revisions, annotations, elaborations, or other modifications\n      represent, as a whole, an original work of authorship. For the purposes\n      of this License, Derivative Works shall not include works that remain\n      separable from, or merely link (or bind by name) to the interfaces of,\n      the Work and Derivative Works thereof.\n\n      \"Contribution\" shall mean any work of authorship, including\n      the original version of the Work and any modifications or additions\n      to that Work or Derivative Works thereof, that is intentionally\n      submitted to Licensor for inclusion in the Work by the copyright owner\n      or by an individual or Legal Entity authorized to submit on behalf of\n      the copyright owner. For the purposes of this definition, \"submitted\"\n      means any form of electronic, verbal, or written communication sent\n      to the Licensor or its representatives, including but not limited to\n      communication on electronic mailing lists, source code control systems,\n      and issue tracking systems that are managed by, or on behalf of, the\n      Licensor for the purpose of discussing and improving the Work, but\n      excluding communication that is conspicuously marked or otherwise\n      designated in writing by the copyright owner as \"Not a Contribution.\"\n\n      \"Contributor\" shall mean Licensor and any individual or Legal Entity\n      on behalf of whom a Contribution has been received by Licensor and\n      subsequently incorporated within the Work.\n\n   2. Grant of Copyright License. Subject to the terms and conditions of\n      this License, each Contributor hereby grants to You a perpetual,\n      worldwide, non-exclusive, no-charge, royalty-free, irrevocable\n      copyright license to reproduce, prepare Derivative Works of,\n      publicly display, publicly perform, sublicense, and distribute the\n      Work and such Derivative Works in Source or Object form.\n\n   3. Grant of Patent License. Subject to the terms and conditions of\n      this License, each Contributor hereby grants to You a perpetual,\n      worldwide, non-exclusive, no-charge, royalty-free, irrevocable\n      (except as stated in this section) patent license to make, have made,\n      use, offer to sell, sell, import, and otherwise transfer the Work,\n      where such license applies only to those patent claims licensable\n      by such Contributor that are necessarily infringed by their\n      Contribution(s) alone or by combination of their Contribution(s)\n      with the Work to which such Contribution(s) was submitted. If You\n      institute patent litigation against any entity (including a\n      cross-claim or counterclaim in a lawsuit) alleging that the Work\n      or a Contribution incorporated within the Work constitutes direct\n      or contributory patent infringement, then any patent licenses\n      granted to You under this License for that Work shall terminate\n      as of the date such litigation is filed.\n\n   4. Redistribution. You may reproduce and distribute copies of the\n      Work or Derivative Works thereof in any medium, with or without\n      modifications, and in Source or Object form, provided that You\n      meet the following conditions:\n\n      (a) You must give any other recipients of the Work or\n          Derivative Works a copy of this License; and\n\n      (b) You must cause any modified files to carry prominent notices\n          stating that You changed the files; and\n\n      (c) You must retain, in the Source form of any Derivative Works\n          that You distribute, all copyright, patent, trademark, and\n          attribution notices from the Source form of the Work,\n          excluding those notices that do not pertain to any part of\n          the Derivative Works; and\n\n      (d) If the Work includes a \"NOTICE\" text file as part of its\n          distribution, then any Derivative Works that You distribute must\n          include a readable copy of the attribution notices contained\n          within such NOTICE file, excluding those notices that do not\n          pertain to any part of the Derivative Works, in at least one\n          of the following places: within a NOTICE text file distributed\n          as part of the Derivative Works; within the Source form or\n          documentation, if provided along with the Derivative Works; or,\n          within a display generated by the Derivative Works, if and\n          wherever such third-party notices normally appear. The contents\n          of the NOTICE file are for informational purposes only and\n          do not modify the License. You may add Your own attribution\n          notices within Derivative Works that You distribute, alongside\n          or as an addendum to the NOTICE text from the Work, provided\n          that such additional attribution notices cannot be construed\n          as modifying the License.\n\n      You may add Your own copyright statement to Your modifications and\n      may provide additional or different license terms and conditions\n      for use, reproduction, or distribution of Your modifications, or\n      for any such Derivative Works as a whole, provided Your use,\n      reproduction, and distribution of the Work otherwise complies with\n      the conditions stated in this License.\n\n   5. Submission of Contributions. Unless You explicitly state otherwise,\n      any Contribution intentionally submitted for inclusion in the Work\n      by You to the Licensor shall be under the terms and conditions of\n      this License, without any additional terms or conditions.\n      Notwithstanding the above, nothing herein shall supersede or modify\n      the terms of any separate license agreement you may have executed\n      with Licensor regarding such Contributions.\n\n   6. Trademarks. This License does not grant permission to use the trade\n      names, trademarks, service marks, or product names of the Licensor,\n      except as required for reasonable and customary use in describing the\n      origin of the Work and reproducing the content of the NOTICE file.\n\n   7. Disclaimer of Warranty. Unless required by applicable law or\n      agreed to in writing, Licensor provides the Work (and each\n      Contributor provides its Contributions) on an \"AS IS\" BASIS,\n      WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or\n      implied, including, without limitation, any warranties or conditions\n      of TITLE, NON-INFRINGEMENT, MERCHANTABILITY, or FITNESS FOR A\n      PARTICULAR PURPOSE. You are solely responsible for determining the\n      appropriateness of using or redistributing the Work and assume any\n      risks associated with Your exercise of permissions under this License.\n\n   8. Limitation of Liability. In no event and under no legal theory,\n      whether in tort (including negligence), contract, or otherwise,\n      unless required by applicable law (such as deliberate and grossly\n      negligent acts) or agreed to in writing, shall any Contributor be\n      liable to You for damages, including any direct, indirect, special,\n      incidental, or consequential damages of any character arising as a\n      result of this License or out of the use or inability to use the\n      Work (including but not limited to damages for loss of goodwill,\n      work stoppage, computer failure or malfunction, or any and all\n      other commercial damages or losses), even if such Contributor\n      has been advised of the possibility of such damages.\n\n   9. Accepting Warranty or Additional Liability. While redistributing\n      the Work or Derivative Works thereof, You may choose to offer,\n      and charge a fee for, acceptance of support, warranty, indemnity,\n      or other liability obligations and/or rights consistent with this\n      License. However, in accepting such obligations, You may act only\n      on Your own behalf and on Your sole responsibility, not on behalf\n      of any other Contributor, and only if You agree to indemnify,\n      defend, and hold each Contributor harmless for any liability\n      incurred by, or claims asserted against, such Contributor by reason\n      of your accepting any such warranty or additional liability.\n\n   END OF TERMS AND CONDITIONS\n\n   APPENDIX: How to apply the Apache License to your work.\n\n      To apply the Apache License to your work, attach the following\n      boilerplate notice, with the fields enclosed by brackets \"{}\"\n      replaced with your own identifying information. (Don't include\n      the brackets!)  The text should be enclosed in the appropriate\n      comment syntax for the file format. We also recommend that a\n      file or class name and description of purpose be included on the\n      same \"printed page\" as the copyright notice for easier\n      identification within third-party archives.\n\n   Copyright {yyyy} {name of copyright owner}\n\n   Licensed under the Apache License, Version 2.0 (the \"License\");\n   you may not use this file except in compliance with the License.\n   You may obtain a copy of the License at\n\n       http://www.apache.org/licenses/LICENSE-2.0\n\n   Unless required by applicable law or agreed to in writing, software\n   distributed under the License is distributed on an \"AS IS\" BASIS,\n   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n   See the License for the specific language governing permissions and\n   limitations under the License.\n\n"
+      },
+      "source": "https://raw.githubusercontent.com/NLeSC/Massive-PotreeConverter/master/LICENSE",
+      "technique": "file_exploration"
+    }
+  ],
+  "name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "Massive-PotreeConverter"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "owner": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Organization",
+        "value": "NLeSC"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "programming_languages": [
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Python",
+        "size": 69341,
+        "type": "Programming_language",
+        "value": "Python"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "readme_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/NLeSC/Massive-PotreeConverter/master/README.md"
+      },
+      "technique": "file_exploration"
+    }
+  ],
+  "releases": [
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "goord",
+          "type": "User"
+        },
+        "date_created": "2017-09-21T14:11:41Z",
+        "date_published": "2017-09-21T14:23:48Z",
+        "description": "The PotreeConverter builds potree octree from laz files. When you have very many or big laz files then running a single PotreeConverter job will take a very long time. The Massive-PotreeConverter reduces the wallclock time of creating the octree by a divide and conquer approach. It does this by creating octree's in parallel and merging the octree's into a single octree.\r\n\r\nChanges in this release:\r\n\r\n- Various bugfixes in the pympc python scripts\r\n- Docker file was updated\r\n- Improved installation script\r\n- Improved README\r\n- Tested an example from the UK LIDAR point cloud survey and documented it in Readme_UK.md",
+        "html_url": "https://github.com/NLeSC/Massive-PotreeConverter/releases/tag/1.1.0",
+        "name": "1.1.0",
+        "release_id": 7840577,
+        "tag": "1.1.0",
+        "tarball_url": "https://api.github.com/repos/NLeSC/Massive-PotreeConverter/tarball/1.1.0",
+        "type": "Release",
+        "url": "https://api.github.com/repos/NLeSC/Massive-PotreeConverter/releases/7840577",
+        "value": "https://api.github.com/repos/NLeSC/Massive-PotreeConverter/releases/7840577",
+        "zipball_url": "https://api.github.com/repos/NLeSC/Massive-PotreeConverter/zipball/1.1.0"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "requirements": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Requirements",
+        "parent_header": [
+          "Massive-PotreeConverter"
+        ],
+        "type": "Text_excerpt",
+        "value": "The following libraries/packages are required for the basic components of Massive-PotreeConverter:\n\n- [PDAL](http://www.pdal.io/)\n- [PotreeConverter](https://github.com/potree/PotreeConverter)\n- [pycoeman](https://github.com/NLeSC/pycoeman)\n- [LAStools](http://rapidlasso.com/lastools/) (the open-source license is enough). The *<path_to_lastools>/bin* should be added to the Linux **PATH**.\n\nConcretely the following command-line tools must be available: pdal, PotreeConverter, coeman-par-local (or coeman-par-sge or coeman-par-ssh), lasinfo and lasmerge\n\nFor now Massive-PotreeConverter works only in Linux systems. Requires Python 3.5.\n\nThere is a Dockerfile available and a image build in [Docker Hub](https://registry.hub.docker.com/u/oscarmartinezrubi/massive-potreeconverter/). See end of page for information on how to use it.\n"
+      },
+      "source": "https://raw.githubusercontent.com/NLeSC/Massive-PotreeConverter/master/README.md",
+      "technique": "header_analysis"
+    }
+  ],
+  "somef_missing_categories": [
+    "acknowledgement",
+    "run",
+    "download",
+    "contact",
+    "contributors",
+    "usage",
+    "faq",
+    "support",
+    "executable_example"
+  ],
+  "somef_provenance": {
+    "date": "2024-10-03 23:27:54",
+    "somef_schema_version": "1.0.0",
+    "somef_version": "0.9.5"
+  },
+  "stargazers_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 80
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "type": [
+    {
+      "confidence": 0.82,
+      "result": {
+        "type": "String",
+        "value": "commandline-application"
+      },
+      "technique": "software_type_heuristics"
+    }
+  ]
+}

@@ -1,0 +1,731 @@
+{
+  "citation": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "References",
+        "type": "Text_excerpt",
+        "value": "- Needlestack: an ultra-sensitive variant caller for multi-sample next generation sequencing data\nTiffany M. Delhomme, Patrice H. Avogbe, Aurelie A.G. Gabriel, Nicolas Alcala, Noemie Leblay, Catherine Voegele, Maxime Vallee, Priscilia Chopard, Amelie Chabrier, Behnoush Abedi-Ardekani, Valerie Gaborieau, Ivana Holcatova, Vladimir Janout, Lenka Foretova, Sasa Milosavljevic, David Zaridze, Anush Mukeriya, Elisabeth Brambilla, Paul Brennan, Ghislaine Scelo, Lynnette Fernandez-Cuesta, Graham Byrnes, Florence Le Calvez-Kelm, James D D. McKay, Matthieu Foll\nbioRxiv 639377; doi: https://doi.org/10.1101/639377. https://www.biorxiv.org/content/10.1101/639377v1\n\nNeedlestack has been used in these papers:\n- Urinary TERT promoter mutations as non-invasive biomarkers for the comprehensive detection of urothelial cancer\nAvogbe et al. 2019 [EBioMedicine](https://www.ebiomedicine.com/article/S2352-3964(19)30305-6/fulltext).\n- Fernandez-Cuesta L, Perdomo S, Avogbe PH, Leblay N, Delhomme TM, Gaborieau V, Abedi-Ardekani B, Chanudet E, Olivier M, Zaridze D, Mukeria A, Vilensky M, Holcatova I, Polesel J, Simonato L, Canova C, Lagiou P, Brambilla C, Brambilla E, Byrnes G, Scelo G, Le Calvez-Kelm F, Foll M, McKay JD, Brennan P. Identification of Circulating Tumor DNA for the Early Detection of Small-cell Lung Cancer. [EBioMedicine](http://www.sciencedirect.com/science/article/pii/S2352396416302894). 2016 Aug;10:117-23. doi: [10.1016/j.ebiom.2016.06.032](http://dx.doi.org/10.1016/j.ebiom.2016.06.032). Epub 2016 Jun 25. PubMed PMID: [27377626](https://www.ncbi.nlm.nih.gov/pubmed/27377626); PubMed Central PMCID: [PMC5036515](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5036515/).\n- Le Calvez-Kelm F, Foll M, Wozniak MB, Delhomme TM, Durand G, Chopard P, Pertesi M, Fabianova E, Adamcakova Z, Holcatova I, Foretova L, Janout V, Vallee MP, Rinaldi S, Brennan P, McKay JD, Byrnes GB, Scelo G. KRAS mutations in blood circulating cell-free DNA: a pancreatic cancer case-control. [Oncotarget](http://www.impactjournals.com/oncotarget/index.php?journal=oncotarget&page=article&op=view&path%5b%5d=12386). 2016 Nov 29;7(48):78827-78840. doi: [10.18632/oncotarget.12386](https://doi.org/10.18632/oncotarget.12386). PubMed PMID: [27705932](https://www.ncbi.nlm.nih.gov/pubmed/27705932); PubMed Central PMCID: [PMC5346680](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5346680/).\n"
+      },
+      "source": "https://raw.githubusercontent.com/IARCbioinfo/needlestack/master/README.md",
+      "technique": "header_analysis"
+    }
+  ],
+  "code_repository": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/IARCbioinfo/needlestack"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_created": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2015-06-16T13:33:24Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_updated": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2024-10-16T08:20:55Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "description": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "Multi-sample somatic variant caller"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Description",
+        "type": "Text_excerpt",
+        "value": "Needlestack is an ultra-sensitive multi-sample variant caller for Next Generation Sequencing (NGS) data. It is based on the idea that analysing several samples together can help estimate the distribution of sequencing errors to accurately identify variants. It has been initially developed for somatic variant calling using very deep NGS data from circulating free DNA, but is also applicable to lower coverage data like Whole Exome Sequencing (WES) or even Whole Genome Sequencing (WGS). It is a highly scalable and reproducible pipeline thanks to the use of [nextflow](http://www.nextflow.io/) and [Docker](https://www.docker.com)/[Singularity](http://singularity.lbl.gov) container technologies.\n\nHere is a summary of the method:\n\n- At each position and for each candidate variant, we model sequencing errors using a negative binomial regression with a linear link and a zero intercept. The data is extracted from the BAM files using [samtools](http://www.htslib.org).\n- Genetic variants are detected as being outliers from the error model. To avoid these outliers biasing the regression we use a robust estimator for the negative binomial regression (published [here](http://www.ncbi.nlm.nih.gov/pubmed/25156188) with code available [here](https://github.com/williamaeberhard/glmrob.nb)).\n- We calculate for each sample a p-value for being a variant (outlier from the regression) that we further transform into q-values to account for multiple testing.\n\nNote that needlestack is not performing a re-assembly of reads to determine haplotypes as some other modern variant callers are doing ([Mutect2](https://gatkforums.broadinstitute.org/gatk/discussion/11076/local-re-assembly-and-haplotype-determination-haplotypecaller-mutect2), Strelka2 etc.). For this reason we recommend using [ABRA2](https://github.com/mozack/abra2), a realigner for NGS data, before running needlestack. We also host a [nextflow pipeline for ABRA2](https://github.com/IARCbioinfo/abra-nf).\n\nThe detection of a variant can be visualized graphically. Here are two examples of a variant detected, one from a series of samples with a coverage of 120X (left) and one with a very high coverage (50000X, right). Each dot represents a sequenced sample colored according to its [Phred scale](https://en.wikipedia.org/wiki/Phred_quality_score) q-value. The black regression line shows the estimated sequencing-error rate along with the 99% confidence interval (black dotted lines) containing samples. Colored-dotted lines correspond to the limits of regions defined for different significance q-value thresholds. In both case one sample appears as outlier from the regression (in red), and is therefore classified as carrying the given mutation. Note that the position on the left has a high error rate, while the position on the right has a very low error rate, allowing the detection of a variant with a tiny allelic fraction (0.025%).\n![Example of an alignment plot](reg_ex.png \"Example of an regression plot\")\n"
+      },
+      "source": "https://raw.githubusercontent.com/IARCbioinfo/needlestack/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Germline, somatic, matched Tumor-Normal pairs calling and contamination",
+        "parent_header": [
+          "Detailed description"
+        ],
+        "type": "Text_excerpt",
+        "value": "When using matched tumor/normal, Needlestack can classify variants (VCF `FORMAT/STATUS` field) according to the following table:\n![Status Table](STATUS_TABLE.png)\n\nFor this, one need to provide a tab-delimited file containing two columns with normal and tumor sample names using the `--tn_pairs` option. The first line of this file is a header with `TUMOR` and `NORMAL` keywords. When one normal or one tumor is missing, one can write `NA`. In this mode, the parameter `power_min_af` defines the allelic fraction in the tumor one is trying to detect to classify genotypes as `./.` or `0/0` depending on the power to detect this allelic fraction. Variants found as somatic in a tumor, but germline in another sample of the series will be flagged as `POSSIBLE_CONTAMINATION`. We found this particularly important, as needlestack is very sensitive to low allelic fractions, to filter out contamination among samples, coming for example from pooled exome capture.\n\nIn other cases (when there is no `--tn_pairs` parameter defined), genotypes are defined as `./.` or `0/0` assuming one is looking for allelic fractions expected for germline variants (negative binomial distribution centered at 0.5 with over-dispersion parameter sigma=`sigma_normal`, with `sigma_normal=0.1` by default). If you are looking for somatic variants without matched-normal and assuming you are interesting to correctly distinguish `./.` and `0/0`genotypes, you can set the `power_min_af` parameter to the lowest allelic fraction of somatic variants you are interested with (and your coverage allows you to find).  Note that this is by far not the most common situation, and that in most cases you don't have to worry about the `power_min_af` parameter.\n"
+      },
+      "source": "https://raw.githubusercontent.com/IARCbioinfo/needlestack/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Two options to consider:",
+        "parent_header": [
+          "Detailed description",
+          "Plot options"
+        ],
+        "type": "Text_excerpt",
+        "value": "1. `--plots`:\n\t* `SOMATIC`: produce pdf regression plots (like in the description above) only for somatic variants (option not available in the annotation mode). Default value when using matched tumor/normal.\n\t* `ALL`: produce pdf regression plots for all variants. Default value when not using matched tumor/normal or when using annotation mode.\n\t* `NONE`: remove pdf regression plots from the output.\n\n2. `--do_alignments`: To add the alignments plots after the regression plots. If this flag is used, the name of the reference genome (`--genome_release` option) needs to be provided to choose the correct annotation (See *`--genome_release` option* below).\n\nThe following [bioconductor](https://bioconductor.org/) packages need to be installed for plotting the alignments:\n\n- The [Gviz](https://bioconductor.org/packages/release/bioc/html/Gviz.html) package\n- An [Annotation package for TxDb objects](http://bioconductor.org/packages/release/BiocViews.html#___TxDb).\n- A [Genome wide annotation](https://bioconductor.org/packages/release/BiocViews.html#___OrgDb), it contains mappings between Entrez Gene identifiers and GenBank accession numbers. Examples: the Genome wide annotation package for Human: *`org.Hs.eg.db`* and for the mouse: *`org.Mm.eg.db`*.\n\nExample: If the hg19 release of the human genome is used, the following packages should be installed: *`Gviz`*, *`TxDb.Hsapiens.UCSC.hg19.knownGene`* (hg18 and hg38 UCSC version can also be used) and *`org.Hs.eg.db`*\n\nThese packages exist for other organisms than Human but have not been tested. One can for example generate the alignments plot for mouse data by installing *`TxDb.Mmusculus.UCSC.mm10.knownGene`* (mm9 UCSC version can also be used) and *`org.Mm.eg.db`*. For the other organisms the packages need to have the same nomenclature as the ones listed above.\n\nThe `--genome_release` option needs to be provided and corresponds to the TxDb annotation package name without its prefix and suffix. For the hg19 release of the human genome, one needs to set `--genome_release` to *`Hsapiens.UCSC.hg19`*.\nNote that the packages chosen for the annotations are compatible with the UCSC notations since most of the Gviz fonctionalities can handle these notations. The reference genome used for the BAM alignments can be based on GENCODE, UCSC or ENSEMBL genome varieties.\n\nWarning: the docker/singularity containers don't include the bioconductor packages needed to plot alignments.\n\n![Example of an alignment plot](alignments.png \"Example of an alignment plot\")\n\nThe alignment plot represents from top to bottom:\n- Chromosome representation: a red vertical line shows the position of the variant.\n- Genomic axis associated with the alignment.\n- BAM alignment(s) (50 bases on both sides of the variant): the variant position is highlighted in red. Note that insertions and deletions are [not currently supported](https://support.bioconductor.org/p/95750/) by Gviz.\n- The reference genome: the variant position is highlighted in red.\n- Genome annotation: the yellow blocks represent exons, the variant position is highlighted in red. The annotation is represented only if the variant is not in an intergenic region.\n- Zoom-out on the genome annotation: representation of the whole gene with its name on the left side. The annotation is represented only if the variant is not in an intergenic region. A red vertical line shows the position of the variant.\n- Genomic axis corresponding to the previous gene annotation. A red vertical line shows the position of the variant.\n"
+      },
+      "source": "https://raw.githubusercontent.com/IARCbioinfo/needlestack/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Common variants",
+        "parent_header": [
+          "Detailed description"
+        ],
+        "type": "Text_excerpt",
+        "value": "Needlestack is designed to identify rare variants (i.e. only a few samples in your set of samples have a particular variant), because of the robust regression used. Therefore, common SNPs (>10%) or strong somatic hotspots will be missed. The optional `extra_robust_gl` can overcome partially this issue for common germline mutations: it first discard high allelic fraction (>20%, assuming these are likely true variants) before fitting the regression model when between 10% and 50% of sample have such a high allelic fraction. A flag is written in the VCF `INFO/WARN` field when this happened (`EXTRA_ROBUST_GL`). Additionally, when an other allele than the reference allele is the most common, it is taken as the reference allele and a flag is also written in the VCF (`INFO/WARN=INV_REF`).\n"
+      },
+      "source": "https://raw.githubusercontent.com/IARCbioinfo/needlestack/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Strand bias",
+        "parent_header": [
+          "Detailed description"
+        ],
+        "type": "Text_excerpt",
+        "value": "For conventional variant callers, GATK WES/WGS [recommended values](http://gatkforums.broadinstitute.org/discussion/5533/strandoddsratio-computation) for SOR strand bias are SOR < 4 for SNVs and < 10 for indels. We haven't found this particularly useful, but a more detailed evaluation is necessary. For amplicon based targeted sequencing, RVSB>0.85 seems to reduce some errors. There is no hard filter by default as this is easy to do afterward using [bcftools filter](http://samtools.github.io/bcftools/bcftools.html#filter) command.\n"
+      },
+      "source": "https://raw.githubusercontent.com/IARCbioinfo/needlestack/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 0.8957151675743642,
+      "result": {
+        "original_header": "A multi-sample somatic variant caller",
+        "type": "Text_excerpt",
+        "value": "Jump over [here](https://github.com/IARCbioinfo/needlestack#usage) for a quick start! \nNeedlestack development is support by the US National Cancer Institute (grant number R21CA175979) and the French Institut national du cancer. \n"
+      },
+      "source": "https://raw.githubusercontent.com/IARCbioinfo/needlestack/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9857073123109283,
+      "result": {
+        "original_header": "WARNING",
+        "type": "Text_excerpt",
+        "value": "Since the last release, we have harmonized our [pipelines](https://github.com/IARCbioinfo/IARC-nf) and the following option names changed:\n- `bam_folder` is now `input_bams` and accepts text file  \n- `fasta_ref` is now `ref`\n- `max_DP` is now `max_dp`\n- `out_folder` is now `output_folder`\n- `out_vcf` is now `output_vcf` and is now a mandatory argument\n- `out_annotated_vcf` is now `output_annotated_vcf`\n- `pairs_file` is now `tn_pairs`\n- `no_plots` is now `plots` (see the Detailed description section)\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/IARCbioinfo/needlestack/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.919065798366723,
+      "result": {
+        "original_header": "Input",
+        "type": "Text_excerpt",
+        "value": "| Type      | Description     |\n|-----------|---------------|\n| [BAM files](https://samtools.github.io/hts-specs/)  | BAM files (called `*.bam`) grouped in a single folder or described in a text file (one BAM path per line) along with their [index files](http://www.htslib.org/doc/samtools.html) (called `*.bam.bai` or `*.bai`). A minimum of 20 BAM files is recommended. |\n| [fasta file](https://en.wikipedia.org/wiki/FASTA_format)  |A reference fasta file (eventually compressed with [bgzip](http://www.htslib.org/doc/tabix.html)) along with its [faidx index](http://www.htslib.org/doc/faidx.html) (and `*.gzi` faidx index if compressed). |\n| [bed file](https://genome.ucsc.edu/FAQ/FAQformat.html#format1) | Optional input file. Otherwise the variant calling is performed on the whole reference provided.| \n"
+      },
+      "source": "https://raw.githubusercontent.com/IARCbioinfo/needlestack/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9001967220665552,
+      "result": {
+        "original_header": "Mandatory",
+        "type": "Text_excerpt",
+        "value": "A sample dataset is available [here](https://github.com/mfoll/NGS_data_test.git) for testing. \n"
+      },
+      "source": "https://raw.githubusercontent.com/IARCbioinfo/needlestack/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.939444225263691,
+      "result": {
+        "original_header": "Parameters",
+        "type": "Text_excerpt",
+        "value": "Type `--help` to get the full list of options. All parameters are prefixed with a double-dash like in `--help`. \n| Name      | Default value | Description     |\n|-----------|---------------|-----------------|\n| `min_dp` \\*    |            `30` | Minimum median coverage to consider a site. In addition, at least 10 samples have to be covered by `min_dp`. |\n| `min_ao` \\*| `3` | Minimum number of non-ref reads in at least one sample to consider a site |\n| `min_af` \\* | `0` | Minimum allelic fraction in at least one sample to consider a site |\n| `nsplit` | `1` | Split the bed file in nsplit pieces and run in parallel |\n| `min_qval` | `50` | qvalue threshold in [Phred scale](https://en.wikipedia.org/wiki/Phred_quality_score) to consider a variant |\n| `sb_type` | `SOR` | Strand bias measure, either `SOR`, `RVSB` or `FS` |\n| `sb_snv` | `100` or `1000` | Strand bias threshold for SNVs. The default of 100 (1000 if `sb_type` is `FS`) means no filter |\n| `sb_indel` | `100` or `1000` | Strand bias threshold for indels. The default of 100 (1000 if `sb_type` is `FS`) means no filter|\n| `map_qual` | `0` | Min mapping quality (passed to `samtools`) |\n| `base_qual` | `13` | Min base quality (passed to `samtools`) |\n| `max_dp` | `50000` | Downsample coverage per sample (passed to `samtools`) |\n| `plots` | `SOMATIC` if `tn_pairs` provided, `ALL` if not | Creates pdf plots of regressions in the output. To remove plots set `--plots` to `NONE` (See *Plot options* paragraph).|\n| `genome_release` |  - | Reference genome for the annotions on the alignments plots. Examples: *`Hsapiens.UCSC.hg19`*, *`Hsapiens.UCSC.hg18`*, *`Hsapiens.UCSC.hg38`*, *`Mmusculus.UCSC.mm10`*. The right terminology is described below (*Plot options* paragraph). WARNING: this option is mandatory if the `--do_alignments` flag is used|\n| `output_folder` | --bam_folder | Output folder, by default equals to the input bam folder |\n| `bed` |  - | BED file containing a list of regions (or positions) where needlestack will perform variant calling |\n| `region` |  - | A region in format CHR:START-END where calling should be done |\n| `tn_pairs` | - | A tab-delimited file containing two columns (normal and tumor sample names) for each sample in line. This enables matched tumor/normal pair calling features (see below) |\n| `sigma_normal` | `0.1` | Sigma parameter for negative binomial modeling of expected germline allelic fraction. We strongly recommend not to change this parameter unless you really know what it means |\n| `min_af_extra_rob` | `0.2` | Minimum allelic fraction to exclude a sample at a position for extra-robust regression |\n| `min_prop_extra_rob` | `0.1` | Minimum proportion of samples having an allelic fraction to be excluded from extra-robust regression |\n| `max_prop_extra_rob` | `0.8` | Maximum proportion of samples having an allelic fraction to be excluded from extra-robust regression |\n| `power_min_af` | | Allelic fraction used to classify genotypes as 0/0 or ./. depending of the power to detect a variant at this fraction (see below) |\n| `input_vcf` | | A VCF file (from GATK) where calling should be done. Needlestack will extract DP and AO from this VCF (DP and AD fields) and annotate it with phred q-value score (`FORMAT/QVAL` field), error rate (`INFO/ERR`) and over-dispersion sigma parameter (`INFO/SIG`). WARNING: by default, only works with split (coreutils) version > 8.13 | \n"
+      },
+      "source": "https://raw.githubusercontent.com/IARCbioinfo/needlestack/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9401943272164801,
+      "result": {
+        "original_header": "Flags",
+        "type": "Text_excerpt",
+        "value": "| Name      | Description     |\n|-----------|-----------------|\n| `help`    | Display help |\n| `all_SNVs` | Output all SNVs, even when no variant is detected |\n| `extra_robust_gl` | Perform extra-robust regression (useful for common germline SNPs, see below) |\n| `no_labels` | No label for the outliers on regression plots |\n| `no_indels` | Do not perform variant calling for insertions and deletions |\n| `no_contours` | Do not plot q-values contours (for q-value threshold={10,30,50,70,100} by default) and do not plot minimum detectable allelic fraction as a function function of coverage |\n| `use_file_name` | Use the bam file names as sample names. By default the sample name is extracted from the bam file `SM` tag |\n| `do_alignments` | Add alignments plots to the pdf plots of regressions |\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/IARCbioinfo/needlestack/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9676230891818649,
+      "result": {
+        "original_header": "Parameters",
+        "type": "Text_excerpt",
+        "value": "## Output\n  | Type      | Description     |\n  |-----------|---------------|\n  | [VCF file](https://samtools.github.io/hts-specs/)  | File containing all the variants detected. It contains a header of meta-information and data lines containing information about each variant position |\n  | PDF files    | For each variant detected a pdf is generated, this pdf file contains the regression plots and alignments plots if the --do_alignments flag is used | \nFor this, one need to provide a tab-delimited file containing two columns with normal and tumor sample names using the `--tn_pairs` option. The first line of this file is a header with `TUMOR` and `NORMAL` keywords. When one normal or one tumor is missing, one can write `NA`. In this mode, the parameter `power_min_af` defines the allelic fraction in the tumor one is trying to detect to classify genotypes as `./.` or `0/0` depending on the power to detect this allelic fraction. Variants found as somatic in a tumor, but germline in another sample of the series will be flagged as `POSSIBLE_CONTAMINATION`. We found this particularly important, as needlestack is very sensitive to low allelic fractions, to filter out contamination among samples, coming for example from pooled exome capture. \nIn other cases (when there is no `--tn_pairs` parameter defined), genotypes are defined as `./.` or `0/0` assuming one is looking for allelic fractions expected for germline variants (negative binomial distribution centered at 0.5 with over-dispersion parameter sigma=`sigma_normal`, with `sigma_normal=0.1` by default). If you are looking for somatic variants without matched-normal and assuming you are interesting to correctly distinguish `./.` and `0/0`genotypes, you can set the `power_min_af` parameter to the lowest allelic fraction of somatic variants you are interested with (and your coverage allows you to find).  Note that this is by far not the most common situation, and that in most cases you don't have to worry about the `power_min_af` parameter. \n- The [Gviz](https://bioconductor.org/packages/release/bioc/html/Gviz.html) package\n- An [Annotation package for TxDb objects](http://bioconductor.org/packages/release/BiocViews.html#___TxDb).\n- A [Genome wide annotation](https://bioconductor.org/packages/release/BiocViews.html#___OrgDb), it contains mappings between Entrez Gene identifiers and GenBank accession numbers. Examples: the Genome wide annotation package for Human: *`org.Hs.eg.db`* and for the mouse: *`org.Mm.eg.db`*. \nExample: If the hg19 release of the human genome is used, the following packages should be installed: *`Gviz`*, *`TxDb.Hsapiens.UCSC.hg19.knownGene`* (hg18 and hg38 UCSC version can also be used) and *`org.Hs.eg.db`* \nThe `--genome_release` option needs to be provided and corresponds to the TxDb annotation package name without its prefix and suffix. For the hg19 release of the human genome, one needs to set `--genome_release` to *`Hsapiens.UCSC.hg19`*.\nNote that the packages chosen for the annotations are compatible with the UCSC notations since most of the Gviz fonctionalities can handle these notations. The reference genome used for the BAM alignments can be based on GENCODE, UCSC or ENSEMBL genome varieties. \nThe alignment plot represents from top to bottom:\n- Chromosome representation: a red vertical line shows the position of the variant.\n- Genomic axis associated with the alignment.\n- BAM alignment(s) (50 bases on both sides of the variant): the variant position is highlighted in red. Note that insertions and deletions are [not currently supported](https://support.bioconductor.org/p/95750/) by Gviz.\n- The reference genome: the variant position is highlighted in red.\n- Genome annotation: the yellow blocks represent exons, the variant position is highlighted in red. The annotation is represented only if the variant is not in an intergenic region.\n- Zoom-out on the genome annotation: representation of the whole gene with its name on the left side. The annotation is represented only if the variant is not in an intergenic region. A red vertical line shows the position of the variant.\n- Genomic axis corresponding to the previous gene annotation. A red vertical line shows the position of the variant. \nNeedlestack is designed to identify rare variants (i.e. only a few samples in your set of samples have a particular variant), because of the robust regression used. Therefore, common SNPs (>10%) or strong somatic hotspots will be missed. The optional `extra_robust_gl` can overcome partially this issue for common germline mutations: it first discard high allelic fraction (>20%, assuming these are likely true variants) before fitting the regression model when between 10% and 50% of sample have such a high allelic fraction. A flag is written in the VCF `INFO/WARN` field when this happened (`EXTRA_ROBUST_GL`). Additionally, when an other allele than the reference allele is the most common, it is taken as the reference allele and a flag is also written in the VCF (`INFO/WARN=INV_REF`). \nFor conventional variant callers, GATK WES/WGS [recommended values](http://gatkforums.broadinstitute.org/discussion/5533/strandoddsratio-computation) for SOR strand bias are SOR < 4 for SNVs and < 10 for indels. We haven't found this particularly useful, but a more detailed evaluation is necessary. For amplicon based targeted sequencing, RVSB>0.85 seems to reduce some errors. There is no hard filter by default as this is easy to do afterward using [bcftools filter](http://samtools.github.io/bcftools/bcftools.html#filter) command. \n"
+      },
+      "source": "https://raw.githubusercontent.com/IARCbioinfo/needlestack/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.8150228194078142,
+      "result": {
+        "original_header": "Contributions",
+        "type": "Text_excerpt",
+        "value": "  | Name      | Email | Description     |\n  |-----------|---------------|-----------------|\n  | Matthieu Foll*    |          follm@iarc.fr | Lead developer, contact for support |\n  | Tiffany Delhomme*    |            delhommet@students.iarc.fr | Main developer, contact for support |\n  | Nicolas Alcala  |   alcalan@fellows.iarc.fr | tumor/normal pair mode, power calculation |\n  | Aurelie Gabriel  |   gabriela@students.iarc.fr | Alignment plot, nextflow pipeline, mpileup2readcounts, bash version |\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/IARCbioinfo/needlestack/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9619072685680217,
+      "result": {
+        "original_header": "Parameters",
+        "type": "Text_excerpt",
+        "value": "Needlestack has been used in these papers:\n- Urinary TERT promoter mutations as non-invasive biomarkers for the comprehensive detection of urothelial cancer\nAvogbe et al. 2019 [EBioMedicine](https://www.ebiomedicine.com/article/S2352-3964(19)30305-6/fulltext).\n- Fernandez-Cuesta L, Perdomo S, Avogbe PH, Leblay N, Delhomme TM, Gaborieau V, Abedi-Ardekani B, Chanudet E, Olivier M, Zaridze D, Mukeria A, Vilensky M, Holcatova I, Polesel J, Simonato L, Canova C, Lagiou P, Brambilla C, Brambilla E, Byrnes G, Scelo G, Le Calvez-Kelm F, Foll M, McKay JD, Brennan P. Identification of Circulating Tumor DNA for the Early Detection of Small-cell Lung Cancer. [EBioMedicine](http://www.sciencedirect.com/science/article/pii/S2352396416302894). 2016 Aug;10:117-23. doi: [10.1016/j.ebiom.2016.06.032](http://dx.doi.org/10.1016/j.ebiom.2016.06.032). Epub 2016 Jun 25. PubMed PMID: [27377626](https://www.ncbi.nlm.nih.gov/pubmed/27377626); PubMed Central PMCID: [PMC5036515](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5036515/).\n- Le Calvez-Kelm F, Foll M, Wozniak MB, Delhomme TM, Durand G, Chopard P, Pertesi M, Fabianova E, Adamcakova Z, Holcatova I, Foretova L, Janout V, Vallee MP, Rinaldi S, Brennan P, McKay JD, Byrnes GB, Scelo G. KRAS mutations in blood circulating cell-free DNA: a pancreatic cancer case-control. [Oncotarget](http://www.impactjournals.com/oncotarget/index.php?journal=oncotarget&page=article&op=view&path%5b%5d=12386). 2016 Nov 29;7(48):78827-78840. doi: [10.18632/oncotarget.12386](https://doi.org/10.18632/oncotarget.12386). PubMed PMID: [27705932](https://www.ncbi.nlm.nih.gov/pubmed/27705932); PubMed Central PMCID: [PMC5346680](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5346680/).\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/IARCbioinfo/needlestack/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9857073123109283,
+      "result": {
+        "original_header": "Mandatory",
+        "type": "Text_excerpt",
+        "value": "## WARNING\nSince the last release, we have harmonized our [pipelines](https://github.com/IARCbioinfo/IARC-nf) and the following option names changed:\n- `bam_folder` is now `input_bams` and accepts text file  \n- `fasta_ref` is now `ref`\n- `max_DP` is now `max_dp`\n- `out_folder` is now `output_folder`\n- `out_vcf` is now `output_vcf` and is now a mandatory argument\n- `out_annotated_vcf` is now `output_annotated_vcf`\n- `pairs_file` is now `tn_pairs`\n- `no_plots` is now `plots` (see the Detailed description section) \n"
+      },
+      "source": "https://raw.githubusercontent.com/IARCbioinfo/needlestack/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9927137666765332,
+      "result": {
+        "original_header": "Description",
+        "type": "Text_excerpt",
+        "value": "Needlestack is an ultra-sensitive multi-sample variant caller for Next Generation Sequencing (NGS) data. It is based on the idea that analysing several samples together can help estimate the distribution of sequencing errors to accurately identify variants. It has been initially developed for somatic variant calling using very deep NGS data from circulating free DNA, but is also applicable to lower coverage data like Whole Exome Sequencing (WES) or even Whole Genome Sequencing (WGS). It is a highly scalable and reproducible pipeline thanks to the use of [nextflow](http://www.nextflow.io/) and [Docker](https://www.docker.com)/[Singularity](http://singularity.lbl.gov) container technologies. \nHere is a summary of the method: \n- At each position and for each candidate variant, we model sequencing errors using a negative binomial regression with a linear link and a zero intercept. The data is extracted from the BAM files using [samtools](http://www.htslib.org).\n- Genetic variants are detected as being outliers from the error model. To avoid these outliers biasing the regression we use a robust estimator for the negative binomial regression (published [here](http://www.ncbi.nlm.nih.gov/pubmed/25156188) with code available [here](https://github.com/williamaeberhard/glmrob.nb)).\n- We calculate for each sample a p-value for being a variant (outlier from the regression) that we further transform into q-values to account for multiple testing. \nNote that needlestack is not performing a re-assembly of reads to determine haplotypes as some other modern variant callers are doing ([Mutect2](https://gatkforums.broadinstitute.org/gatk/discussion/11076/local-re-assembly-and-haplotype-determination-haplotypecaller-mutect2), Strelka2 etc.). For this reason we recommend using [ABRA2](https://github.com/mozack/abra2), a realigner for NGS data, before running needlestack. We also host a [nextflow pipeline for ABRA2](https://github.com/IARCbioinfo/abra-nf). \n"
+      },
+      "source": "https://raw.githubusercontent.com/IARCbioinfo/needlestack/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9802586696064617,
+      "result": {
+        "original_header": "Mandatory",
+        "type": "Text_excerpt",
+        "value": "The detection of a variant can be visualized graphically. Here are two examples of a variant detected, one from a series of samples with a coverage of 120X (left) and one with a very high coverage (50000X, right). Each dot represents a sequenced sample colored according to its [Phred scale](https://en.wikipedia.org/wiki/Phred_quality_score) q-value. The black regression line shows the estimated sequencing-error rate along with the 99% confidence interval (black dotted lines) containing samples. Colored-dotted lines correspond to the limits of regions defined for different significance q-value thresholds. In both case one sample appears as outlier from the regression (in red), and is therefore classified as carrying the given mutation. Note that the position on the left has a high error rate, while the position on the right has a very low error rate, allowing the detection of a variant with a tiny allelic fraction (0.025%).\n![Example of an alignment plot](reg_ex.png \"Example of an regression plot\") \n"
+      },
+      "source": "https://raw.githubusercontent.com/IARCbioinfo/needlestack/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.91710150207696,
+      "result": {
+        "original_header": "Dependencies",
+        "type": "Text_excerpt",
+        "value": "1. This pipeline is based on [nextflow](https://www.nextflow.io). As we host several nextflow pipelines, we have centralized the common information in the [IARC-nf](https://github.com/IARCbioinfo/IARC-nf) repository. Please read it carefully as it contains essential information for the installation, basic usage and configuration of nextflow and our pipelines. \nTo use needlestack without nextflow, in addition to the previous tools, download the files in this [bin](https://github.com/IARCbioinfo/needlestack/tree/gabriela_cpp/bin) directory and add them to your path. See the Usage section to run needlestack without nextflow. \n"
+      },
+      "source": "https://raw.githubusercontent.com/IARCbioinfo/needlestack/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9255120986628512,
+      "result": {
+        "original_header": "Mandatory",
+        "type": "Text_excerpt",
+        "value": "\n## Input\n| Type      | Description     |\n|-----------|---------------|\n| [BAM files](https://samtools.github.io/hts-specs/)  | BAM files (called `*.bam`) grouped in a single folder or described in a text file (one BAM path per line) along with their [index files](http://www.htslib.org/doc/samtools.html) (called `*.bam.bai` or `*.bai`). A minimum of 20 BAM files is recommended. |\n| [fasta file](https://en.wikipedia.org/wiki/FASTA_format)  |A reference fasta file (eventually compressed with [bgzip](http://www.htslib.org/doc/tabix.html)) along with its [faidx index](http://www.htslib.org/doc/faidx.html) (and `*.gzi` faidx index if compressed). |\n| [bed file](https://genome.ucsc.edu/FAQ/FAQformat.html#format1) | Optional input file. Otherwise the variant calling is performed on the whole reference provided.| \n"
+      },
+      "source": "https://raw.githubusercontent.com/IARCbioinfo/needlestack/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9943231268572477,
+      "result": {
+        "original_header": "Output",
+        "type": "Text_excerpt",
+        "value": "  | Type      | Description     |\n  |-----------|---------------|\n  | [VCF file](https://samtools.github.io/hts-specs/)  | File containing all the variants detected. It contains a header of meta-information and data lines containing information about each variant position |\n  | PDF files    | For each variant detected a pdf is generated, this pdf file contains the regression plots and alignments plots if the --do_alignments flag is used | \n"
+      },
+      "source": "https://raw.githubusercontent.com/IARCbioinfo/needlestack/master/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "documentation": [
+    {
+      "confidence": 1,
+      "result": {
+        "format": "wiki",
+        "type": "Url",
+        "value": "https://github.com/IARCbioinfo/needlestack/wiki"
+      },
+      "source": "https://raw.githubusercontent.com/IARCbioinfo/needlestack/master/README.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "download_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/IARCbioinfo/needlestack/releases"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 15
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/IARCbioinfo/needlestack/forks"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "IARCbioinfo/needlestack"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_title": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": ""
+      },
+      "source": "https://raw.githubusercontent.com/IARCbioinfo/needlestack/master/README.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "has_build_file": [
+    {
+      "confidence": 1,
+      "result": {
+        "format": "dockerfile",
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/IARCbioinfo/needlestack/master/docker/Dockerfile"
+      },
+      "source": "https://raw.githubusercontent.com/IARCbioinfo/needlestack/master/docker/Dockerfile",
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "format": "dockerfile",
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/IARCbioinfo/needlestack/master/bin/Dockerfile"
+      },
+      "source": "https://raw.githubusercontent.com/IARCbioinfo/needlestack/master/bin/Dockerfile",
+      "technique": "file_exploration"
+    }
+  ],
+  "has_script_file": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/IARCbioinfo/needlestack/master/deploy.sh"
+      },
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/IARCbioinfo/needlestack/master/bin/needlestack.sh"
+      },
+      "technique": "file_exploration"
+    }
+  ],
+  "installation": [
+    {
+      "confidence": 0.9813752179931592,
+      "result": {
+        "original_header": "A multi-sample somatic variant caller",
+        "type": "Text_excerpt",
+        "value": "<img align=\"center\" src=\"https://cloud.githubusercontent.com/assets/3366818/10489240/7da79144-729c-11e5-8cb3-0225106d9b06.jpg\" width=\"500\"> \nA preprint describing needlestack is available on biorxiv: https://www.biorxiv.org/content/10.1101/639377v1 \n"
+      },
+      "source": "https://raw.githubusercontent.com/IARCbioinfo/needlestack/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9621338441574596,
+      "result": {
+        "original_header": "Parameters",
+        "type": "Text_excerpt",
+        "value": "  * #### Optional \nBy default, if neither `--bed` nor `--region` are provided, needlestack runs on the whole reference genome provided, building a bed file from fasta index.\nIf `--bed` and `--region` are both provided, it runs on the region only. \n\t```bash\n\tgit clone --depth=1 https://github.com/IARCbioinfo/data_test\n\t``` \n\t```bash\n\tcd data_test\n\tnextflow run iarcbioinfo/needlestack -with-docker \\\n                     --bed BED/TP53_all.bed \\\n                     --input_bams BAM/BAM_multiple/ \\\n                     --ref REF/17.fasta \\\n                     --output_vcf all_variants.vcf \n\t``` \n\tYou will find a [VCF file](https://samtools.github.io/hts-specs/) called `all_variants.vcf` in the `BAM_multiple/` folder once done. \n\tOfficial releases can be found [here](https://github.com/iarcbioinfo/needlestack/releases/). There is a corresponding official [docker container](https://hub.docker.com/r/iarcbioinfo/needlestack/) for each release and one can run a particular version using (for example for v0.3):\n\t```bash\n\tnextflow run iarcbioinfo/needlestack -r v0.3 -with-docker \\\n\t\t        --bed BED/TP53_all.bed --bam_folder BAM/BAM_multiple/ --fasta_ref REF/17.fasta --out_vcf all_variants.vcf\n\t```\nIt is also possible to run the pipeline without nextflow (not recommended) using the `needlestack.sh`. Here on the example dataset downloaded above:\n\tBASH4* \nWhen using matched tumor/normal, Needlestack can classify variants (VCF `FORMAT/STATUS` field) according to the following table:\n![Status Table](STATUS_TABLE.png) \n2. `--do_alignments`: To add the alignments plots after the regression plots. If this flag is used, the name of the reference genome (`--genome_release` option) needs to be provided to choose the correct annotation (See *`--genome_release` option* below). \nThe following [bioconductor](https://bioconductor.org/) packages need to be installed for plotting the alignments: \nExample: If the hg19 release of the human genome is used, the following packages should be installed: *`Gviz`*, *`TxDb.Hsapiens.UCSC.hg19.knownGene`* (hg18 and hg38 UCSC version can also be used) and *`org.Hs.eg.db`* \nThe `--genome_release` option needs to be provided and corresponds to the TxDb annotation package name without its prefix and suffix. For the hg19 release of the human genome, one needs to set `--genome_release` to *`Hsapiens.UCSC.hg19`*.\nNote that the packages chosen for the annotations are compatible with the UCSC notations since most of the Gviz fonctionalities can handle these notations. The reference genome used for the BAM alignments can be based on GENCODE, UCSC or ENSEMBL genome varieties. \n"
+      },
+      "source": "https://raw.githubusercontent.com/IARCbioinfo/needlestack/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9777229710247382,
+      "result": {
+        "original_header": "Mandatory",
+        "type": "Text_excerpt",
+        "value": "<img align=\"center\" src=\"https://cloud.githubusercontent.com/assets/3366818/12507528/99afd6fa-c0f6-11e5-993b-5ac925d178fa.png\" width=\"700\"> \n"
+      },
+      "source": "https://raw.githubusercontent.com/IARCbioinfo/needlestack/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9629007642962877,
+      "result": {
+        "original_header": "Description",
+        "type": "Text_excerpt",
+        "value": "Note that needlestack is not performing a re-assembly of reads to determine haplotypes as some other modern variant callers are doing ([Mutect2](https://gatkforums.broadinstitute.org/gatk/discussion/11076/local-re-assembly-and-haplotype-determination-haplotypecaller-mutect2), Strelka2 etc.). For this reason we recommend using [ABRA2](https://github.com/mozack/abra2), a realigner for NGS data, before running needlestack. We also host a [nextflow pipeline for ABRA2](https://github.com/IARCbioinfo/abra-nf). \n"
+      },
+      "source": "https://raw.githubusercontent.com/IARCbioinfo/needlestack/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.8949328696916322,
+      "result": {
+        "original_header": "Mandatory",
+        "type": "Text_excerpt",
+        "value": "## Dependencies \n"
+      },
+      "source": "https://raw.githubusercontent.com/IARCbioinfo/needlestack/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9884191249172289,
+      "result": {
+        "original_header": "Dependencies",
+        "type": "Text_excerpt",
+        "value": "Needlestack works under most Linux distributions and Apple OS X. \n2. External software:\n - [bedtools](http://bedtools.readthedocs.org/en/latest/)\n - [samtools](http://www.htslib.org)\n - [R](https://www.r-project.org) with Rscript\n - Compile the file *`mpileup2readcounts.cc`* located [here](https://github.com/IARCbioinfo/mpileup2readcounts)\n - Add the previous tools to your path (executables are assumed to be respectively called `samtools`, `Rscript` and `mpileup2readcounts`)\n - Optionally, the bioconductor packages required for the alignments plots (see the Detailed description section) \nYou can avoid installing all the external software by using [Docker](https://www.docker.com) or [Singularity](http://singularity.lbl.gov). See the [IARC-nf](https://github.com/IARCbioinfo/IARC-nf) repository for more information. Warning: the docker/singularity containers don't include the bioconductor packages needed to plot alignments. \nTo use needlestack without nextflow, in addition to the previous tools, download the files in this [bin](https://github.com/IARCbioinfo/needlestack/tree/gabriela_cpp/bin) directory and add them to your path. See the Usage section to run needlestack without nextflow. \n"
+      },
+      "source": "https://raw.githubusercontent.com/IARCbioinfo/needlestack/master/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "invocation": [
+    {
+      "confidence": 0.8837474920599268,
+      "result": {
+        "original_header": "Parameters",
+        "type": "Text_excerpt",
+        "value": "| Name      | Example value | Description     |\n|-----------|---------------|-----------------|\n| `input_bams` |  `BAM/` or `bams.txt`| Folder containing the BAM files |\n| `ref`   |        `fasta_name.fa`   | Reference fasta file  |\n| `output_vcf`   | `vcf_name.vcf` | Name of the output VCF file generated by needlestack | \n1. Optionally download a sample dataset. \n### Plot options \n"
+      },
+      "source": "https://raw.githubusercontent.com/IARCbioinfo/needlestack/master/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "issue_tracker": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/IARCbioinfo/needlestack/issues"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "keywords": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "bam-files, docker, negative-binomial-regression, nextflow, ngs, pipeline, regression, samtools, somatic-mutations, variants"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "license": [
+    {
+      "confidence": 1,
+      "result": {
+        "name": "GNU General Public License v3.0",
+        "spdx_id": "GPL-3.0",
+        "type": "License",
+        "url": "https://api.github.com/licenses/gpl-3.0",
+        "value": "https://api.github.com/licenses/gpl-3.0"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "needlestack"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "owner": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Organization",
+        "value": "IARCbioinfo"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "programming_languages": [
+    {
+      "confidence": 1,
+      "result": {
+        "name": "R",
+        "size": 109585,
+        "type": "Programming_language",
+        "value": "R"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Nextflow",
+        "size": 31742,
+        "type": "Programming_language",
+        "value": "Nextflow"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Shell",
+        "size": 20824,
+        "type": "Programming_language",
+        "value": "Shell"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Dockerfile",
+        "size": 4121,
+        "type": "Programming_language",
+        "value": "Dockerfile"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "TeX",
+        "size": 3650,
+        "type": "Programming_language",
+        "value": "TeX"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "readme_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/IARCbioinfo/needlestack/master/README.md"
+      },
+      "technique": "file_exploration"
+    }
+  ],
+  "releases": [
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "mfoll",
+          "type": "User"
+        },
+        "date_created": "2019-05-23T07:20:13Z",
+        "date_published": "2019-05-23T07:21:36Z",
+        "description": "[Full Changelog](https://github.com/IARCbioinfo/needlestack/compare/v1.0...v1.1)\r\n\r\n**Implemented enhancements:**\r\n\r\n- add needlestack logo in log.info [\\#182](https://github.com/IARCbioinfo/needlestack/issues/182)\r\n- add INFO field containing allelic frequency [\\#174](https://github.com/IARCbioinfo/needlestack/issues/174)\r\n- Add an option to only plot somatic mutations [\\#149](https://github.com/IARCbioinfo/needlestack/issues/149)\r\n- Make the main 3 processes pipe-friendly to avoid intermediate outputs [\\#147](https://github.com/IARCbioinfo/needlestack/issues/147)\r\n- Re-write pileup2baseindel.pl in C++ [\\#146](https://github.com/IARCbioinfo/needlestack/issues/146)\r\n- Flag possible cross-sample contamination of normal DNA in tumor samples [\\#138](https://github.com/IARCbioinfo/needlestack/issues/138)\r\n- Put ./. genotype when there is no power to identify a variant [\\#137](https://github.com/IARCbioinfo/needlestack/issues/137)\r\n- Implement Tumor-Normal pair somatic variant calling  [\\#133](https://github.com/IARCbioinfo/needlestack/issues/133)\r\n- Add alignment plot in the PDF [\\#73](https://github.com/IARCbioinfo/needlestack/issues/73)\r\n- Make a script that would run needlestack without nextflow [\\#72](https://github.com/IARCbioinfo/needlestack/issues/72)\r\n\r\n**Fixed bugs:**\r\n\r\n- max\\_dp default value in readme is wrong [\\#176](https://github.com/IARCbioinfo/needlestack/issues/176)\r\n- --help should exit 0 [\\#161](https://github.com/IARCbioinfo/needlestack/issues/161)\r\n- Manage bed specification for both bed and region [\\#157](https://github.com/IARCbioinfo/needlestack/issues/157)\r\n- Using  renamed symlinks as input BAM files doesn't work with --use\\_file\\_name option [\\#152](https://github.com/IARCbioinfo/needlestack/issues/152)\r\n\r\n**Closed issues:**\r\n\r\n- How to identify each sample? [\\#166](https://github.com/IARCbioinfo/needlestack/issues/166)\r\n- Github readme != Docker readme [\\#159](https://github.com/IARCbioinfo/needlestack/issues/159)\r\n",
+        "html_url": "https://github.com/IARCbioinfo/needlestack/releases/tag/v1.1",
+        "name": "v1.1",
+        "release_id": 17534886,
+        "tag": "v1.1",
+        "tarball_url": "https://api.github.com/repos/IARCbioinfo/needlestack/tarball/v1.1",
+        "type": "Release",
+        "url": "https://api.github.com/repos/IARCbioinfo/needlestack/releases/17534886",
+        "value": "https://api.github.com/repos/IARCbioinfo/needlestack/releases/17534886",
+        "zipball_url": "https://api.github.com/repos/IARCbioinfo/needlestack/zipball/v1.1"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "mfoll",
+          "type": "User"
+        },
+        "date_created": "2017-02-17T17:55:27Z",
+        "date_published": "2017-02-17T18:00:57Z",
+        "description": "[Full Changelog](https://github.com/IARCbioinfo/needlestack/compare/v0.3...v1.0)\n\n**Implemented enhancements:**\n- Manage the three possible genotypes in vcf [#130](https://github.com/IARCbioinfo/needlestack/issues/130)\n- The graph showing AF vs log10(qval) should show phred-scaled qvalues [#121](https://github.com/IARCbioinfo/needlestack/issues/121)\n- Flag possible cross-sample contamination of normal DNA in tumor samples [#138](https://github.com/IARCbioinfo/needlestack/issues/138)\n- Put ./. genotype when there is no power to identify a variant [#137](https://github.com/IARCbioinfo/needlestack/issues/137)\n- Implement Tumor-Normal pair somatic variant calling [#133](https://github.com/IARCbioinfo/needlestack/issues/133)\n\n**Fixed bugs:**\n- Contours seem to be incorrect [#128](https://github.com/IARCbioinfo/needlestack/issues/128)\n- correct file name extraction for sample name [#126](https://github.com/IARCbioinfo/needlestack/issues/126)\n- Let min_qval be equal to 0 [#119](https://github.com/IARCbioinfo/needlestack/issues/119)\n- plot improved error rate confidence interval  [#117](https://github.com/IARCbioinfo/needlestack/issues/117)\n\n**Closed issues:**\n- QUAL should not be reported as Inf in VCF when q-value=0 [#125](https://github.com/IARCbioinfo/needlestack/issues/125)\n- Add pipeline execution DAG in README [#123](https://github.com/IARCbioinfo/needlestack/issues/123)\n",
+        "html_url": "https://github.com/IARCbioinfo/needlestack/releases/tag/v1.0",
+        "name": "v1.0",
+        "release_id": 5493325,
+        "tag": "v1.0",
+        "tarball_url": "https://api.github.com/repos/IARCbioinfo/needlestack/tarball/v1.0",
+        "type": "Release",
+        "url": "https://api.github.com/repos/IARCbioinfo/needlestack/releases/5493325",
+        "value": "https://api.github.com/repos/IARCbioinfo/needlestack/releases/5493325",
+        "zipball_url": "https://api.github.com/repos/IARCbioinfo/needlestack/zipball/v1.0"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "mfoll",
+          "type": "User"
+        },
+        "date_created": "2016-05-03T13:47:11Z",
+        "date_published": "2016-05-03T14:16:39Z",
+        "description": "[Full Changelog](https://github.com/IARCbioinfo/needlestack/compare/v0.2...v0.3)\n\n**Implemented enhancements:**\n- Change the number of entry in the INFO and FORMAT VCF fields [#108](https://github.com/IARCbioinfo/needlestack/issues/108)\n- Add contour lines for a set of qvalues in the plot [#100](https://github.com/IARCbioinfo/needlestack/issues/100)\n- color points by qvalues in regression plot [#85](https://github.com/IARCbioinfo/needlestack/issues/85)\n- Add an option to choose output VCF file name (--out_vcf?) [#81](https://github.com/IARCbioinfo/needlestack/issues/81)\n- Add an option to directly input a region for calling in the command line [#71](https://github.com/IARCbioinfo/needlestack/issues/71)\n- Change the way we publish new version [#69](https://github.com/IARCbioinfo/needlestack/issues/69)\n- Make the stable docker file more stable [#68](https://github.com/IARCbioinfo/needlestack/issues/68)\n- Add more tests in CircleCI [#55](https://github.com/IARCbioinfo/needlestack/issues/55)\n- Remove unnecessary intermediate outputs [#51](https://github.com/IARCbioinfo/needlestack/issues/51)\n- Improve the bed split method [#47](https://github.com/IARCbioinfo/needlestack/issues/47)\n- In the absence of a bed file the pipeline should run on the full reference genome [#39](https://github.com/IARCbioinfo/needlestack/issues/39)\n- Add version numbers in VCF output [#20](https://github.com/IARCbioinfo/needlestack/issues/20)\n\n**Fixed bugs:**\n- VCF files have to be sorted [#110](https://github.com/IARCbioinfo/needlestack/issues/110)\n- Sometimes large number in VCF files are written in scientific notations [#109](https://github.com/IARCbioinfo/needlestack/issues/109)\n- error when coverage is null for every bam file [#99](https://github.com/IARCbioinfo/needlestack/issues/99)\n- Calling doesn't work when a region contains only T in the reference [#96](https://github.com/IARCbioinfo/needlestack/issues/96)\n- Check that BAM folder contains bam files  [#66](https://github.com/IARCbioinfo/needlestack/issues/66)\n- Check if the gzi is present if the ref is gz [#65](https://github.com/IARCbioinfo/needlestack/issues/65)\n- Verify the user inputs are correct [#42](https://github.com/IARCbioinfo/needlestack/issues/42)\n",
+        "html_url": "https://github.com/IARCbioinfo/needlestack/releases/tag/v0.3",
+        "name": "v0.3",
+        "release_id": 3128999,
+        "tag": "v0.3",
+        "tarball_url": "https://api.github.com/repos/IARCbioinfo/needlestack/tarball/v0.3",
+        "type": "Release",
+        "url": "https://api.github.com/repos/IARCbioinfo/needlestack/releases/3128999",
+        "value": "https://api.github.com/repos/IARCbioinfo/needlestack/releases/3128999",
+        "zipball_url": "https://api.github.com/repos/IARCbioinfo/needlestack/zipball/v0.3"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "mfoll",
+          "type": "User"
+        },
+        "date_created": "2015-10-19T12:47:38Z",
+        "date_published": "2015-10-19T12:51:14Z",
+        "description": "[Full Changelog](https://github.com/IARCbioinfo/needlestack/compare/v0.1...v0.2)\n\n### New features\n- Added `--no_indel` option (#56)\n- Added `--out_folder` option\n- The software is now called `needlestack` (#31)\n- Added program usage when launched with `--help` (#40)\n- Added information about the pipeline in the log (#41)\n- We now verify the user inputs are correct (#42)\n\n### Improvements\n- Added a zoomed regression plot (#21)\n- Added contigs in VCF header (#25 and #34)\n- Moved to IARCbioinfo organisation repo (#22)\n- Corrected typos in readme, help and log (#53)\n\n### Changes\n- Option `all_sites` is now a flag called `all_SNVs` and no longer needs to be set to TRUE or FALSE (#33)\n- Option `do_plots` is now a flag called `--no_plots` and no longer needs to be set to TRUE or FALSE\n- Option `sample_names`is now a flag called `--use_file_name` and no longer needs to be set to BAM or FILE\n\n### Bug fixes\n- QVAL was wrongly called GQ for indels (#36)\n- The pipeline no longer crashes if PDF files are not copied correctly (#49)\n\n### Testing/deployment bug fixes (don't affect users)\n- CircleCI deploy.sh now triggers correctly Docker Hub (#26)\n- Dockerfile now adds scripts from the correct branch (#27)\n",
+        "html_url": "https://github.com/IARCbioinfo/needlestack/releases/tag/v0.2",
+        "name": "v0.2",
+        "release_id": 1982152,
+        "tag": "v0.2",
+        "tarball_url": "https://api.github.com/repos/IARCbioinfo/needlestack/tarball/v0.2",
+        "type": "Release",
+        "url": "https://api.github.com/repos/IARCbioinfo/needlestack/releases/1982152",
+        "value": "https://api.github.com/repos/IARCbioinfo/needlestack/releases/1982152",
+        "zipball_url": "https://api.github.com/repos/IARCbioinfo/needlestack/zipball/v0.2"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "mfoll",
+          "type": "User"
+        },
+        "date_created": "2015-09-18T08:47:27Z",
+        "date_published": "2015-10-15T07:49:19Z",
+        "description": "**This pre-release has been deprecated and will no longer work with docker due to change of file names and repository names (see #22 and #31)**\n\nCompared to our even earlier internal version:\n- Now we don't have a hard filter for strand bias by default (#15)\n- Fixed a crash when no variant is found (#14)\n",
+        "html_url": "https://github.com/IARCbioinfo/needlestack/releases/tag/v0.1",
+        "name": "v0.1",
+        "release_id": 1833296,
+        "tag": "v0.1",
+        "tarball_url": "https://api.github.com/repos/IARCbioinfo/needlestack/tarball/v0.1",
+        "type": "Release",
+        "url": "https://api.github.com/repos/IARCbioinfo/needlestack/releases/1833296",
+        "value": "https://api.github.com/repos/IARCbioinfo/needlestack/releases/1833296",
+        "zipball_url": "https://api.github.com/repos/IARCbioinfo/needlestack/zipball/v0.1"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "requirements": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Dependencies",
+        "type": "Text_excerpt",
+        "value": "Needlestack works under most Linux distributions and Apple OS X.\n\n1. This pipeline is based on [nextflow](https://www.nextflow.io). As we host several nextflow pipelines, we have centralized the common information in the [IARC-nf](https://github.com/IARCbioinfo/IARC-nf) repository. Please read it carefully as it contains essential information for the installation, basic usage and configuration of nextflow and our pipelines.\n\n2. External software:\n - [bedtools](http://bedtools.readthedocs.org/en/latest/)\n - [samtools](http://www.htslib.org)\n - [R](https://www.r-project.org) with Rscript\n - Compile the file *`mpileup2readcounts.cc`* located [here](https://github.com/IARCbioinfo/mpileup2readcounts)\n - Add the previous tools to your path (executables are assumed to be respectively called `samtools`, `Rscript` and `mpileup2readcounts`)\n - Optionally, the bioconductor packages required for the alignments plots (see the Detailed description section)\n\nYou can avoid installing all the external software by using [Docker](https://www.docker.com) or [Singularity](http://singularity.lbl.gov). See the [IARC-nf](https://github.com/IARCbioinfo/IARC-nf) repository for more information. Warning: the docker/singularity containers don't include the bioconductor packages needed to plot alignments.\n\nTo use needlestack without nextflow, in addition to the previous tools, download the files in this [bin](https://github.com/IARCbioinfo/needlestack/tree/gabriela_cpp/bin) directory and add them to your path. See the Usage section to run needlestack without nextflow.\n\n"
+      },
+      "source": "https://raw.githubusercontent.com/IARCbioinfo/needlestack/master/README.md",
+      "technique": "header_analysis"
+    }
+  ],
+  "somef_missing_categories": [
+    "acknowledgement",
+    "run",
+    "download",
+    "contact",
+    "contributors",
+    "faq",
+    "support",
+    "identifier",
+    "executable_example"
+  ],
+  "somef_provenance": {
+    "date": "2024-11-04 04:43:29",
+    "somef_schema_version": "1.0.0",
+    "somef_version": "0.9.5"
+  },
+  "stargazers_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 49
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "usage": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Usage",
+        "type": "Text_excerpt",
+        "value": "1. Optionally download a sample dataset.\n\n\t```bash\n\tgit clone --depth=1 https://github.com/IARCbioinfo/data_test\n\t```\n\n2. Run the pipeline using nextflow (here using docker).\n\n\t```bash\n\tcd data_test\n\tnextflow run iarcbioinfo/needlestack -with-docker \\\n                     --bed BED/TP53_all.bed \\\n                     --input_bams BAM/BAM_multiple/ \\\n                     --ref REF/17.fasta \\\n                     --output_vcf all_variants.vcf \n\t```\n\n\tYou will find a [VCF file](https://samtools.github.io/hts-specs/) called `all_variants.vcf` in the `BAM_multiple/` folder once done.\n\n\tThe first time it will take more time as the pipeline will be downloaded from github and the docker container from [dockerhub](https://hub.docker.com/r/iarcbioinfo/needlestack/).\n\n\tOfficial releases can be found [here](https://github.com/iarcbioinfo/needlestack/releases/). There is a corresponding official [docker container](https://hub.docker.com/r/iarcbioinfo/needlestack/) for each release and one can run a particular version using (for example for v0.3):\n\t```bash\n\tnextflow run iarcbioinfo/needlestack -r v0.3 -with-docker \\\n\t\t        --bed BED/TP53_all.bed --bam_folder BAM/BAM_multiple/ --fasta_ref REF/17.fasta --out_vcf all_variants.vcf\n\t```\nIt is also possible to run the pipeline without nextflow (not recommended) using the `needlestack.sh`. Here on the example dataset downloaded above:\n\t```bash\n\tcd data_test/\n\tneedlestack.sh --region=17:7572814-7573814 --bam_folder=BAM/BAM_multiple --ref=REF/17.fasta --output_vcf=all_variants.vcf\n\t```\n"
+      },
+      "source": "https://raw.githubusercontent.com/IARCbioinfo/needlestack/master/README.md",
+      "technique": "header_analysis"
+    }
+  ],
+  "workflows": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/IARCbioinfo/needlestack/master/needlestack.nf"
+      },
+      "technique": "file_exploration"
+    }
+  ]
+}

@@ -1,0 +1,1525 @@
+{
+  "citation": [
+    {
+      "confidence": 1,
+      "result": {
+        "format": "bibtex",
+        "type": "File_dump",
+        "value": "bibentry(\n  bibtype='Article',\n  title='SQMtools: automated processing and visual analysis of \\'omics data with R and anvi\\'o',\n  author='Puente-S\\u00e1nchez, Fernando and Garc\\u00eda-Garc\\u00eda, Natalia and Tamames, Javier',\n  journal='BMC bioinformatics',\n  volume='21',\n  number='1',\n  pages='1--11',\n  year='2020',\n  publisher='BioMed Central',\n  textVersion = 'Puente-S\\u00e1nchez F., Garc\\u00eda-Garc\\u00eda N. and Tamames J., SQMtools: automated\nprocessing and visual analysis of \\'omics data with R and anvi\\'o.\nBMC Bioinformatics 21, 358 (2020). doi: 10.1186/s12859-020-03703-2.')\n\n"
+      },
+      "source": "https://raw.githubusercontent.com/jtamames/SqueezeMeta/master/lib/SQMtools/inst/CITATION",
+      "technique": "file_exploration"
+    }
+  ],
+  "code_repository": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/jtamames/SqueezeMeta"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_created": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2018-03-15T12:11:57Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_updated": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2024-10-04T13:51:14Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "description": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "A complete pipeline for metagenomic analysis"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 0.9939518878110958,
+      "result": {
+        "original_header": "1. What is SqueezeMeta?",
+        "type": "Text_excerpt",
+        "value": "SqueezeMeta is a full automatic pipeline for metagenomics/metatranscriptomics, covering all steps of the analysis. SqueezeMeta includes multi-metagenome support allowing the co-assembly of related metagenomes and the retrieval of individual genomes via binning procedures. Thus, SqueezeMeta features several unique characteristics: \n1) Co-assembly procedure with read mapping for estimation of the abundances of genes in each metagenome\n2) Co-assembly of a large number of metagenomes via merging of individual metagenomes\n3) Includes binning and bin checking, for retrieving individual genomes \n4) The results are stored in a database, where they can be easily exported and shared, and can be inspected anywhere using a web interface. \n5) Internal checks for the assembly and binning steps inform about the consistency of contigs and bins, allowing to spot potential chimeras. \n6) Metatranscriptomic support via mapping of cDNA reads against reference metagenomes  \nSqueezeMeta supports different assembly strategies (co-assembly, sequential, assembly merging, and sequential-merging) and different assemblers (see below for details). SqueezeMeta uses a combination of custom scripts and external software packages for the different steps of the analysis: \n1)  Assembly\n2)  RNA prediction and classification\n3)  ORF (CDS) prediction\n4)  Homology searching against taxonomic and functional databases\n5)  Hmmer searching against Pfam database\n6)  Taxonomic assignment of genes \n7)  Functional assignment of genes (OPTIONAL)\n8)  Blastx on parts of the contigs with no gene prediction or no hits\n9)  Taxonomic assignment of contigs, and check for taxonomic disparities\n10) Coverage and abundance estimation for genes and contigs \n11) Estimation of taxa abundances\n12) Estimation of function abundances\n13) Merging of previous results to obtain the ORF table\n14) Binning with different methods\n15) Binning integration with DAS tool\n16) Taxonomic assignment of bins, and check for taxonomic disparities\n17) Checking of bins with CheckM\n18) Merging of previous results to obtain the bin table\n19) Merging of previous results to obtain the contig table\n20) Prediction of kegg and metacyc patwhays for each bin\n21) Final statistics for the run \n"
+      },
+      "source": "https://raw.githubusercontent.com/jtamames/SqueezeMeta/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9617290850883686,
+      "result": {
+        "original_header": "4. Choosing an assembly strategy",
+        "type": "Text_excerpt",
+        "value": "- Coassembly mode: Reads from all samples are pooled and a single assembly is performed. Then reads from individual samples are mapped to the coassembly to obtain gene abundances in each sample. Binning methods allow to obtain genome bins. \n- Merged mode: if many big samples are available, co-assembly could crash because of memory requirements. This mode allows the co-assembly of an unlimited number of samples, using a procedure inspired by the one used by Benjamin Tully for analysing TARA Oceans data (https://dx.doi.org/10.17504/protocols.io.hfqb3mw). Briefly, samples are assembled individually and the resulting contigs are merged in a single co-assembly. Then the analysis proceeds as in the co-assembly mode. This is not the recommended procedure (use co-assembly if possible) since the possibility of creating chimeric contigs is higher. But it is a viable alternative when standard co-assembly is not possible. \n- Seqmerge mode: This is intended to work with more samples than the merged mode. Instead of merging all individual assemblies in a single step, which can be very computationally demanding, seqmerge works sequentially. First, it assembles individually all samples, as in merged mode. But then it will merge the two most similar assemblies. Similarity is measured as Amino Acid Identity values using the wonderful CompareM software by Donovan Parks. After this first merging, it again evaluates similarity and merge, and proceeds this way until all metagenomes have been merged in one. Therefore, for n metagenomes, it will need n-1 merging steps. \nNote that the *merged* and *seqmerge* modes work well as a substitute of coassembly for running small datasets in computers with low memory (e.g. 16 Gb) but are very slow for analising large datasets (>10 samples) even in workstations with plenty of resources. Still, setting `-contiglen` to 1000 or higher can make *seqmerge* a viable strategy even in those cases. Otherwise, we recommend to use either the sequential or the co-assembly modes. \nRegarding the choice of assembler, MEGAHIT and SPAdes work better with short Illumina reads, while Canu and Flye support long reads from PacBio or ONT-Minion. MEGAHIT (the default in SqueezeMeta) is more resource-efficient than SPAdes, consuming less memory, but SPAdes supports more analysis modes and produces slightly better assembly statistics. SqueezeMeta can call SPAdes in three different ways. The option *-a spades* is meant for metagenomic datasets, and will automatically add the flags *--meta -k 21,33,55,77,99,127* to the *spades.py* call. Conversely, *-a rnaspades* will add the flags *--rna -k 21,33,55,77,99,127*. Finally, the option *-a spades_base* will add no additional flags to the *spades.py* call. This can be used in conjunction with *--assembly options* when one wants to fully customize the call to SPAdes, e.g. for assembling single cell genomes. \n"
+      },
+      "source": "https://raw.githubusercontent.com/jtamames/SqueezeMeta/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9719436315957257,
+      "result": {
+        "original_header": "7. Using external databases for functional annotation",
+        "type": "Text_excerpt",
+        "value": "Version 1.0 implements the possibility of using one or several user-provided databases for functional annotation. This is invoked using the *-extdb* option. Please refer to the manual for details. \n"
+      },
+      "source": "https://raw.githubusercontent.com/jtamames/SqueezeMeta/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9501403145888423,
+      "result": {
+        "original_header": "8. Extra sensitive detection of ORFs",
+        "type": "Text_excerpt",
+        "value": "Version 1.0 implements the *--D* option (*doublepass*), that attempts to provide a more sensitive ORF detection by combining the Prodigal prediction with a BlastX search on parts of the contigs where no ORFs were predicted, or where predicted ORFs did not match anything in the taxonomic and functional databases. \n"
+      },
+      "source": "https://raw.githubusercontent.com/jtamames/SqueezeMeta/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.8199252005659545,
+      "result": {
+        "original_header": "9. Testing SqueezeMeta",
+        "type": "Text_excerpt",
+        "value": "In addition to this mock dataset, we also provide two real metagenomes. A test run on those can be executed with \n"
+      },
+      "source": "https://raw.githubusercontent.com/jtamames/SqueezeMeta/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9937322558532121,
+      "result": {
+        "original_header": "10. Working with Oxford Nanopore MinION and PacBio reads",
+        "type": "Text_excerpt",
+        "value": "Since version 0.3.0, SqueezeMeta is able to seamlessly work with single-end reads. In order to obtain better mappings of MinION and PacBio reads against the assembly, we advise to use minimap2 for read counting, by including the *-map minimap2-ont* (MinION) or *-map minimap2-pb* (PacBio) flags when calling SqueezeMeta.\nWe also include the Canu and Flye assemblers, which are specially tailored to work with long, noisy reads. They can be selected by including the *-a canu* or *-a flye* flag when calling SqueezeMeta. As a shortcut, the *--minion* flag will use both Canu and minimap2 for Oxford Nanopore MinION reads.\nAs an alternative to assembly, we also provide the *sqm_longreads.pl* script, which will predict and annotate ORFs within individual long reads. \n"
+      },
+      "source": "https://raw.githubusercontent.com/jtamames/SqueezeMeta/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9897383697952657,
+      "result": {
+        "original_header": "11. Working in a low-memory environment",
+        "type": "Text_excerpt",
+        "value": "In our experience, assembly and DIAMOND alignment against the nr database are the most memory-hungry parts of the pipeline. By default SqueezeMeta will set up the right parameters for DIAMOND and the Canu assembler based on the available memory in the system. DIAMOND memory usage can be manually controlled via the *-b* parameter (DIAMOND will consume ~5\\**b* Gb of memory according to the documentation, but to be safe we set *-b* to *free_ram/8*). Assembly memory usage is trickier, as memory requirements increase with the number of reads in a sample. We have managed to run SqueezeMeta with as much as 42M 2x100 Illumina HiSeq pairs on a virtual machine with only 16Gb of memory. Conceivably, larger samples could be split an assembled in chunks using the merged mode.\nWe include the shortcut flag *--lowmem*, which will set DIAMOND block size to 3, and Canu memory usage to 15Gb. This is enough to make SqueezeMeta run on 16Gb of memory, and allows the *in situ* analysis of Oxford Nanopore MinION reads. Under such computational limitations, we have been able to coassemble and analyze 10 MinION metagenomes (taken from SRA project [SRP163045](https://www.ncbi.nlm.nih.gov/sra/?term=SRP163045)) in less than 4 hours. \n"
+      },
+      "source": "https://raw.githubusercontent.com/jtamames/SqueezeMeta/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9261881558762617,
+      "result": {
+        "original_header": "12. Tips for working in a computing cluster",
+        "type": "Text_excerpt",
+        "value": "SqueezeMeta will work fine inside a computing cluster, but there are some extra things that must be taken into account. Here is a list in progress based on frequent issues that have been reported.\n- Run `test_install.pl` to make sure that everything is properly configured.\n- If using the conda environment, make sure that it is properly activated by your batch script.\n- If an administrator has set up SqueezeMeta for you (and you have no write privileges in the installation directory), make sure they have run `make_databases.pl`, `download_databases.pl` or `configure_nodb.pl` according to the installation instructions. Once again, `test_install.pl` should tell you whether things seem to be ok.\n- Make sure to request enough memory. See the previous section for a rough guide on what is \"enough\". If you get a crash during the assembly or during the annotation step, it will be likely because you ran out of memory.\n- Make sure to manually set the `-b` parameter so that it matches the amount of memory that you requested divided by 8. Otherwise, SqueezeMeta will assume that it can use all the free memory in the node in which it is running. This is fine if you got a full node for yourself, but will lead to crashes otherwise. \n"
+      },
+      "source": "https://raw.githubusercontent.com/jtamames/SqueezeMeta/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9767706440914927,
+      "result": {
+        "original_header": "14. Downstream analysis of SqueezeMeta results",
+        "type": "Text_excerpt",
+        "value": "SqueezeMeta comes with a variety of options to explore the results and generate different plots. These are fully described in the PDF manual and in the [wiki](https://github.com/jtamames/SqueezeMeta/wiki). Briefly, the three main ways to analyze the output of SqueezeMeta are the following: \n**1) Integration with R:** We provide the *SQMtools* R package, which allows to easily load a whole SqueezeMeta project and expose the results into R. The package includes functions to select particular taxa or functions and generate plots. The package also makes the different tables generated by SqueezeMeta easily available for third-party R packages such as *vegan* (for multivariate analysis), *DESeq2* (for differential abundance testing) or for custom analysis pipelines. See examples [here](https://github.com/jtamames/SqueezeMeta/wiki/Using-R-to-analyze-your-SQM-results). ***SQMtools* can also be used in Mac or Windows**, meaning that you can run SqueezeMeta in your Linux server and then move the results to your own computer and analyze them there. See advice for this below. \n**2) Integration with the anvi'o analysis pipeline:** We provide a compatibility layer for loading SqueezeMeta results into the anvi'o analysis and visualization platform (http://merenlab.org/software/anvio/). This includes a built-in query language for selecting the contigs to be visualized in the anvi'o interactive interface. See examples [here](https://github.com/jtamames/SqueezeMeta/wiki/Loading-SQM-results-into-anvi'o). \nWe also include utility scripts for generating [itol](https://itol.embl.de/) and [pavian](https://ccb.jhu.edu/software/pavian/) -compatible outputs. \n"
+      },
+      "source": "https://raw.githubusercontent.com/jtamames/SqueezeMeta/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9183903862638289,
+      "result": {
+        "original_header": "15. Analyzing SqueezeMeta results in your desktop computer",
+        "type": "Text_excerpt",
+        "value": "Many users run SqueezeMeta remotely (e.g. in a computing cluster). However it is easier to explore the results interactively from your own computer. Since version 1.6.2, we provide an easy way to achieve this.\n1) In the system in which you ran SqueezeMeta, run the utility script `sqm2zip.py /path/to/my_project /output/dir`, where `/path/to/my_project` is the path to the output of SqueezeMeta, and `/output/dir` an arbitrary output directory.\n2) This will generate a file in `/output/dir` named `my_project.zip`, which contains the essential files needed to load your project into SQMtools. Transfer this file to your desktop computer.\n3) Assuming R is present in your desktop computer, you can install SQMtools with `if (!require(\"BiocManager\", quietly = TRUE)) { install.packages(\"BiocManager\")}; BiocManager::install(\"SQMtools\")`. This will work seamlessly in Windows and Mac computers, for Linux you may need to previously install the *libcurl* development library.\n4) You can load the project directly from the zip file (no need for decompressing) with `import(SQMtools); SQM = loadSQM(\"/path/to/my_project.zip\")`. \n"
+      },
+      "source": "https://raw.githubusercontent.com/jtamames/SqueezeMeta/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9553560406846647,
+      "result": {
+        "original_header": "16. Alternative analysis modes",
+        "type": "Text_excerpt",
+        "value": "In addition to the main SqueezeMeta pipeline, we provide two extra modes that enable the analysis of individual reads. \n**1) sqm_reads.pl**: This script performs taxonomic and functional assignments on individual reads rather than contigs. This can be useful when the assembly quality is low, or when looking for low abundance functions that might not have enough coverage to be assembled. \n**2) sqm_longreads.pl**: This script performs taxonomic and functional assignments on individual reads rather than contigs, assuming that more than one ORF can be found in the same read (e.g. as happens in PacBio or MinION reads). \n**3) sqm_hmm_reads.pl**: This script provides a wrapper to the [Short-Pair](https://sourceforge.net/projects/short-pair/) software, which allows to screen the reads for particular functions using an ultra-sensitive HMM algorithm. \n**4) sqm_mapper.pl**: This script maps reads to a given reference using one of the included sequence aligners (Bowtie2, BWA), and provides estimation of the abundance of the contigs and ORFs in the reference. Alternatively, it can be used to filter out the reads mapping to a given reference. \n**5) sqm_annot.pl**: This script performs functional and taxonomic annotation for a set of genes, for instance these encoded in a genome (or sets of contigs). \n"
+      },
+      "source": "https://raw.githubusercontent.com/jtamames/SqueezeMeta/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.8879806661841179,
+      "result": {
+        "original_header": "17. Adding new binners and assemblers",
+        "type": "Text_excerpt",
+        "value": "With some extra scripting, you can integrate other assembly and binning programs into the SqueezeMeta pipeline. See the PDF manual for details. \n"
+      },
+      "source": "https://raw.githubusercontent.com/jtamames/SqueezeMeta/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9903512827734893,
+      "result": {
+        "original_header": "19. About",
+        "type": "Text_excerpt",
+        "value": "SqueezeMeta is developed by Javier Tamames and Fernando Puente-S\u00e1nchez. Feel free to contact us for support (jtamames@cnb.csic.es, fernando.puente.sanchez@slu.se). \n"
+      },
+      "source": "https://raw.githubusercontent.com/jtamames/SqueezeMeta/master/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "documentation": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/jtamames/SqueezeMeta/tree/master/bin/Flye-2.9/docs"
+      },
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "format": "wiki",
+        "type": "Url",
+        "value": "https://github.com/jtamames/SqueezeMeta/wiki"
+      },
+      "source": "https://raw.githubusercontent.com/jtamames/SqueezeMeta/master/README.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "download": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "3. Downloading or building databases",
+        "parent_header": [
+          "SqueezeMeta: a fully automated metagenomics pipeline, from reads to bins"
+        ],
+        "type": "Text_excerpt",
+        "value": "SqueezeMeta uses several databases. GenBank nr for taxonomic assignment, and eggnog, KEGG and Pfam for functional assignment. \nThe script *download_databases.pl* can be run to download a pre-formatted version of all the databases required by SqueezeMeta.\n\n`/path/to/SqueezeMeta/utils/install_utils/download_databases.pl /download/path`\n\n, where `/download/path` is the destination folder. This is the recommended option, but the files are hosted in our institutional server, which can at times be unreachable.\n\nAlternatively, the script *make_databases.pl* can be run to download from source and format the latest version of the databases.\n\n`/path/to/SqueezeMeta/utils/install_utils/make_databases.pl /download/path`\n\nGenerally, `donwload_databases.pl` is the safest choice for getting your databases set up. When running `make_databases.pl`, data download (e.g. from the NCBI server) can be interrupted, leading to a corrupted database. Always run `test_install.pl` to check that the database was properly created. Otherwise, you can try re-running `make_databases.pl`, or just run `download_databases.pl` instead.\n\nThe databases occupy 200Gb, but we recommend having at least 350Gb free disk space during the building process.\n\nTwo directories will be generated after running either `make_databases.pl` or `download_databases.pl`.\n- `/download/path/db`, which contains the actual databases.\n- `/download/path/test`, which contains data for a test run of SqueezeMeta.\n\nIf `download_databases.pl` or `make_databases.pl` can't find our server, you can instead run `make_databases_alt.pl` (same syntax as `make_databases.pl`) which will try to download the data from an alternative site.\n\nIf the SqueezeMeta databases are already built in another location in the system, a different copy of SqueezeMeta can be configured to use them with\n\n`/path/to/SqueezeMeta/utils/install_utils/configure_nodb.pl /path/to/db`\n\n, where `/path/to/db` is the route to the `db` folder that was generated by either `make_databases.pl` or `download_databases.pl`.\n\nAfter configuring the databases, the `test_install.pl` can be run in order to check that SqueezeMeta is ready to work (see previous section).\n\n"
+      },
+      "source": "https://raw.githubusercontent.com/jtamames/SqueezeMeta/master/README.md",
+      "technique": "header_analysis"
+    }
+  ],
+  "download_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/jtamames/SqueezeMeta/releases"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 80
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/jtamames/SqueezeMeta/forks"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "jtamames/SqueezeMeta"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_title": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "SqueezeMeta: a fully automated metagenomics pipeline, from reads to bins"
+      },
+      "source": "https://raw.githubusercontent.com/jtamames/SqueezeMeta/master/README.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "has_build_file": [
+    {
+      "confidence": 1,
+      "result": {
+        "format": "dockerfile",
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/jtamames/SqueezeMeta/master/bin/CONCOCT-1.1.0/Dockerfile"
+      },
+      "source": "https://raw.githubusercontent.com/jtamames/SqueezeMeta/master/bin/CONCOCT-1.1.0/Dockerfile",
+      "technique": "file_exploration"
+    }
+  ],
+  "has_script_file": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/jtamames/SqueezeMeta/master/conda/build.sh"
+      },
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/jtamames/SqueezeMeta/master/conda/dev/build.sh"
+      },
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/jtamames/SqueezeMeta/master/conda/master/build.sh"
+      },
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/jtamames/SqueezeMeta/master/bin/Short-Pair/get_hmm.sh"
+      },
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/jtamames/SqueezeMeta/master/bin/Short-Pair/chmod_scripts.sh"
+      },
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/jtamames/SqueezeMeta/master/bin/Short-Pair/hmmer3_pipeline_missing_end.sh"
+      },
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/jtamames/SqueezeMeta/master/bin/DAS_Tool/src/Fasta_to_Scaffolds2Bin.sh"
+      },
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/jtamames/SqueezeMeta/master/bin/CONCOCT-1.1.0/scripts/map-bowtie2-markduplicates.sh"
+      },
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/jtamames/SqueezeMeta/master/bin/CONCOCT-1.1.0/scripts/RPSBLAST.sh"
+      },
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/jtamames/SqueezeMeta/master/bin/CONCOCT-1.1.0/scripts/execute_complete_example.sh"
+      },
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/jtamames/SqueezeMeta/master/bin/Flye-2.9/lib/samtools-1.9/version.sh"
+      },
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/jtamames/SqueezeMeta/master/bin/Flye-2.9/lib/samtools-1.9/htslib-1.9/version.sh"
+      },
+      "technique": "file_exploration"
+    }
+  ],
+  "images": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/jtamames/SqueezeM/images/Figure_1_readmeSQM.png"
+      },
+      "source": "https://raw.githubusercontent.com/jtamames/SqueezeMeta/master/README.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "installation": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "File_dump",
+        "value": "Flye Installation\n=================\n\nAvailability\n------------\n\nFlye is available for Linux and MacOS platforms.\n\nBioconda Releases\n-----------------\n\nYou can get the latest stable release through Bioconda:\n\n    conda install flye\n\nAlternatively, you can get a release version from the github releases page\n\n\nBuilding Requirements\n---------------------\n\n* Python 2.7 or 3.5+ (with setuptools package installed)\n* C++ compiler with C++11 support (GCC 4.8+ / Clang 3.3+ / Apple Clang 5.0+)\n* GNU make\n* Git\n* Core OS development headers (zlib, ...)\n\n\nLocal building (without installation)\n-------------------------------------\n\nYou may use the package locally without system installation.\nTo get and compile the latest git version, run:\n\n    git clone https://github.com/fenderglass/Flye\n    cd Flye\n    make\n\nThen, Flye will be available as:\n\n    python bin/flye\n\nBuilding on ARM architecture\n----------------------------\n\nIn case building Flye on ARM architecture fails, you might need to modify minimap2 compilation parameters:\nhttps://github.com/fenderglass/Flye/issues/386\n\nInstalling from source\n----------------------\n\nTo install the Flye package into your system, run:\n\n    git clone https://github.com/fenderglass/Flye\n\tcd Flye\n    python setup.py install\n\nDepending on your OS, you might need to add\n```--user``` or ```--prefix``` options to the \ninstall command for the local installation.\n\nAfter installation, Flye could be invoked via:\n\n    flye\n\nOptionally, run some tests to ensure that installation was successful:\n\n    python flye/tests/test_toy.py\n"
+      },
+      "source": "https://raw.githubusercontent.com/jtamames/SqueezeMeta/master/bin/Flye-2.9/docs/INSTALL.md",
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "2. Installation",
+        "parent_header": [
+          "SqueezeMeta: a fully automated metagenomics pipeline, from reads to bins"
+        ],
+        "type": "Text_excerpt",
+        "value": "SqueezeMeta is intended to be run in a x86-64 Linux OS (tested in Ubuntu and CentOS). The easiest way to install it is by using conda. The default conda solver might however be slow solving the dependencies, so it's better to first set up the libmamba solver with\n\n```\nconda update -n base conda # if your conda version is below 22.11\nconda install -n base conda-libmamba-solver\nconda config --set solver libmamba\n```\n\nand then use conda to install SqueezeMeta\n\n`conda create -n SqueezeMeta -c conda-forge -c bioconda -c anaconda -c fpusan  squeezemeta=1.6 --no-channel-priority`\n\nThis will create a new conda environment named SqueezeMeta, which must then be activated.\n\n`conda activate SqueezeMeta`\n\nWhen using conda, all the scripts from the SqueezeMeta distribution will be available on `$PATH`.\n\nAlternatively, you can download the latest release from the GitHub repository and uncompress the tarball in a suitable directory. The tarball includes the SqueezeMeta scripts as well as the third-party software redistributed with SqueezeMeta. The INSTALL files contain detailed installation instructions, including all the external libraries required to make SqueezeMeta run in a vanilla Ubuntu 20.04. Note that you may need different libraries and potentially recompiling some binaries from source in order for the manual install to work in other Ubuntu versions or other distributions. The conda method is now the recommended way to install SqueezeMeta, and we may not be able to support issues regarding manual installation. \n\nThe `test_install.pl` script can be run in order to check whether the required dependencies are available in your environment.\n\n`/path/to/SqueezeMeta/utils/install_utils/test_install.pl`\n\n "
+      },
+      "source": "https://raw.githubusercontent.com/jtamames/SqueezeMeta/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 0.997708255597185,
+      "result": {
+        "original_header": "SqueezeMeta: a fully automated metagenomics pipeline, from reads to bins",
+        "type": "Text_excerpt",
+        "value": "- Find the SqueezeMeta paper at: https://www.frontiersin.org/articles/10.3389/fmicb.2018.03349/full \n- Find a second paper on how to analyse the output of SqueezeMeta at: https://bmcbioinformatics.biomedcentral.com/articles/10.1186/s12859-020-03703-2\n- Check some papers using SqueezeMeta: https://github.com/jtamames/SqueezeMeta/wiki/Some-papers-using-SqueezeMeta-(non-comprehensive-list)\n- Make sure to [check the wiki!](https://github.com/jtamames/SqueezeMeta/wiki)\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/jtamames/SqueezeMeta/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9211793149514249,
+      "result": {
+        "original_header": "7. Using external databases for functional annotation",
+        "type": "Text_excerpt",
+        "value": "Version 1.0 implements the possibility of using one or several user-provided databases for functional annotation. This is invoked using the *-extdb* option. Please refer to the manual for details. \n"
+      },
+      "source": "https://raw.githubusercontent.com/jtamames/SqueezeMeta/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9437900410886918,
+      "result": {
+        "original_header": "9. Testing SqueezeMeta",
+        "type": "Text_excerpt",
+        "value": "The *download_databases.pl* and *make_databases.pl* scripts also download two datasets for testing that the program is running correctly. Assuming either was run with the directory `/download/path` as its target the test run can be executed with \n`cd </download/path/test>`  \n`SqueezeMeta.pl -m coassembly -p Hadza -s test.mock.samples -f raw` \nAlternatively, `-m sequential` or `-m merged` can be used. \n"
+      },
+      "source": "https://raw.githubusercontent.com/jtamames/SqueezeMeta/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9999999991964614,
+      "result": {
+        "original_header": "12. Tips for working in a computing cluster",
+        "type": "Text_excerpt",
+        "value": "SqueezeMeta will work fine inside a computing cluster, but there are some extra things that must be taken into account. Here is a list in progress based on frequent issues that have been reported.\n- Run `test_install.pl` to make sure that everything is properly configured.\n- If using the conda environment, make sure that it is properly activated by your batch script.\n- If an administrator has set up SqueezeMeta for you (and you have no write privileges in the installation directory), make sure they have run `make_databases.pl`, `download_databases.pl` or `configure_nodb.pl` according to the installation instructions. Once again, `test_install.pl` should tell you whether things seem to be ok.\n- Make sure to request enough memory. See the previous section for a rough guide on what is \"enough\". If you get a crash during the assembly or during the annotation step, it will be likely because you ran out of memory.\n- Make sure to manually set the `-b` parameter so that it matches the amount of memory that you requested divided by 8. Otherwise, SqueezeMeta will assume that it can use all the free memory in the node in which it is running. This is fine if you got a full node for yourself, but will lead to crashes otherwise. \n"
+      },
+      "source": "https://raw.githubusercontent.com/jtamames/SqueezeMeta/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9526150265158122,
+      "result": {
+        "original_header": "13. Updating SqueezeMeta",
+        "type": "Text_excerpt",
+        "value": "Assuming your databases are not inside the SqueezeMeta directory, just remove it, download the new version and configure it with \n"
+      },
+      "source": "https://raw.githubusercontent.com/jtamames/SqueezeMeta/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.8630118044562463,
+      "result": {
+        "original_header": "3. Downloading or building databases",
+        "type": "Text_excerpt",
+        "value": "`/path/to/SqueezeMeta/utils/install_utils/configure_nodb.pl /path/to/db` \n"
+      },
+      "source": "https://raw.githubusercontent.com/jtamames/SqueezeMeta/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9112947136649258,
+      "result": {
+        "original_header": "14. Downstream analysis of SqueezeMeta results",
+        "type": "Text_excerpt",
+        "value": "<img align=\"right\" src=\"https://github.com/jtamames/SqueezeM/blob/images/Figure_1_readmeSQM.png\" width=\"50%\"> \n**1) Integration with R:** We provide the *SQMtools* R package, which allows to easily load a whole SqueezeMeta project and expose the results into R. The package includes functions to select particular taxa or functions and generate plots. The package also makes the different tables generated by SqueezeMeta easily available for third-party R packages such as *vegan* (for multivariate analysis), *DESeq2* (for differential abundance testing) or for custom analysis pipelines. See examples [here](https://github.com/jtamames/SqueezeMeta/wiki/Using-R-to-analyze-your-SQM-results). ***SQMtools* can also be used in Mac or Windows**, meaning that you can run SqueezeMeta in your Linux server and then move the results to your own computer and analyze them there. See advice for this below. \n"
+      },
+      "source": "https://raw.githubusercontent.com/jtamames/SqueezeMeta/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 1.0,
+      "result": {
+        "original_header": "15. Analyzing SqueezeMeta results in your desktop computer",
+        "type": "Text_excerpt",
+        "value": "Many users run SqueezeMeta remotely (e.g. in a computing cluster). However it is easier to explore the results interactively from your own computer. Since version 1.6.2, we provide an easy way to achieve this.\n1) In the system in which you ran SqueezeMeta, run the utility script `sqm2zip.py /path/to/my_project /output/dir`, where `/path/to/my_project` is the path to the output of SqueezeMeta, and `/output/dir` an arbitrary output directory.\n2) This will generate a file in `/output/dir` named `my_project.zip`, which contains the essential files needed to load your project into SQMtools. Transfer this file to your desktop computer.\n3) Assuming R is present in your desktop computer, you can install SQMtools with `if (!require(\"BiocManager\", quietly = TRUE)) { install.packages(\"BiocManager\")}; BiocManager::install(\"SQMtools\")`. This will work seamlessly in Windows and Mac computers, for Linux you may need to previously install the *libcurl* development library.\n4) You can load the project directly from the zip file (no need for decompressing) with `import(SQMtools); SQM = loadSQM(\"/path/to/my_project.zip\")`. \n"
+      },
+      "source": "https://raw.githubusercontent.com/jtamames/SqueezeMeta/master/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "invocation": [
+    {
+      "confidence": 0.9225361054613466,
+      "result": {
+        "original_header": "9. Testing SqueezeMeta",
+        "type": "Text_excerpt",
+        "value": "`cd </download/path/test>`  \n`SqueezeMeta.pl -m coassembly -p Hadza -s test.mock.samples -f raw` \n`SqueezeMeta.pl -m coassembly -p Hadza -s test.samples -f raw` \n"
+      },
+      "source": "https://raw.githubusercontent.com/jtamames/SqueezeMeta/master/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "issue_tracker": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/jtamames/SqueezeMeta/issues"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "keywords": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "metagenomes, metagenomics, pipeline, taxonomic-assignment"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "license": [
+    {
+      "confidence": 1,
+      "result": {
+        "name": "GNU General Public License v3.0",
+        "spdx_id": "GPL-3.0",
+        "type": "License",
+        "url": "https://api.github.com/licenses/gpl-3.0",
+        "value": "https://api.github.com/licenses/gpl-3.0"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "File_dump",
+        "value": "                    GNU GENERAL PUBLIC LICENSE\n                       Version 3, 29 June 2007\n\n Copyright (C) 2007 Free Software Foundation, Inc. <http://fsf.org/>\n Everyone is permitted to copy and distribute verbatim copies\n of this license document, but changing it is not allowed.\n\n                            Preamble\n\n  The GNU General Public License is a free, copyleft license for\nsoftware and other kinds of works.\n\n  The licenses for most software and other practical works are designed\nto take away your freedom to share and change the works.  By contrast,\nthe GNU General Public License is intended to guarantee your freedom to\nshare and change all versions of a program--to make sure it remains free\nsoftware for all its users.  We, the Free Software Foundation, use the\nGNU General Public License for most of our software; it applies also to\nany other work released this way by its authors.  You can apply it to\nyour programs, too.\n\n  When we speak of free software, we are referring to freedom, not\nprice.  Our General Public Licenses are designed to make sure that you\nhave the freedom to distribute copies of free software (and charge for\nthem if you wish), that you receive source code or can get it if you\nwant it, that you can change the software or use pieces of it in new\nfree programs, and that you know you can do these things.\n\n  To protect your rights, we need to prevent others from denying you\nthese rights or asking you to surrender the rights.  Therefore, you have\ncertain responsibilities if you distribute copies of the software, or if\nyou modify it: responsibilities to respect the freedom of others.\n\n  For example, if you distribute copies of such a program, whether\ngratis or for a fee, you must pass on to the recipients the same\nfreedoms that you received.  You must make sure that they, too, receive\nor can get the source code.  And you must show them these terms so they\nknow their rights.\n\n  Developers that use the GNU GPL protect your rights with two steps:\n(1) assert copyright on the software, and (2) offer you this License\ngiving you legal permission to copy, distribute and/or modify it.\n\n  For the developers' and authors' protection, the GPL clearly explains\nthat there is no warranty for this free software.  For both users' and\nauthors' sake, the GPL requires that modified versions be marked as\nchanged, so that their problems will not be attributed erroneously to\nauthors of previous versions.\n\n  Some devices are designed to deny users access to install or run\nmodified versions of the software inside them, although the manufacturer\ncan do so.  This is fundamentally incompatible with the aim of\nprotecting users' freedom to change the software.  The systematic\npattern of such abuse occurs in the area of products for individuals to\nuse, which is precisely where it is most unacceptable.  Therefore, we\nhave designed this version of the GPL to prohibit the practice for those\nproducts.  If such problems arise substantially in other domains, we\nstand ready to extend this provision to those domains in future versions\nof the GPL, as needed to protect the freedom of users.\n\n  Finally, every program is threatened constantly by software patents.\nStates should not allow patents to restrict development and use of\nsoftware on general-purpose computers, but in those that do, we wish to\navoid the special danger that patents applied to a free program could\nmake it effectively proprietary.  To prevent this, the GPL assures that\npatents cannot be used to render the program non-free.\n\n  The precise terms and conditions for copying, distribution and\nmodification follow.\n\n                       TERMS AND CONDITIONS\n\n  0. Definitions.\n\n  \"This License\" refers to version 3 of the GNU General Public License.\n\n  \"Copyright\" also means copyright-like laws that apply to other kinds of\nworks, such as semiconductor masks.\n\n  \"The Program\" refers to any copyrightable work licensed under this\nLicense.  Each licensee is addressed as \"you\".  \"Licensees\" and\n\"recipients\" may be individuals or organizations.\n\n  To \"modify\" a work means to copy from or adapt all or part of the work\nin a fashion requiring copyright permission, other than the making of an\nexact copy.  The resulting work is called a \"modified version\" of the\nearlier work or a work \"based on\" the earlier work.\n\n  A \"covered work\" means either the unmodified Program or a work based\non the Program.\n\n  To \"propagate\" a work means to do anything with it that, without\npermission, would make you directly or secondarily liable for\ninfringement under applicable copyright law, except executing it on a\ncomputer or modifying a private copy.  Propagation includes copying,\ndistribution (with or without modification), making available to the\npublic, and in some countries other activities as well.\n\n  To \"convey\" a work means any kind of propagation that enables other\nparties to make or receive copies.  Mere interaction with a user through\na computer network, with no transfer of a copy, is not conveying.\n\n  An interactive user interface displays \"Appropriate Legal Notices\"\nto the extent that it includes a convenient and prominently visible\nfeature that (1) displays an appropriate copyright notice, and (2)\ntells the user that there is no warranty for the work (except to the\nextent that warranties are provided), that licensees may convey the\nwork under this License, and how to view a copy of this License.  If\nthe interface presents a list of user commands or options, such as a\nmenu, a prominent item in the list meets this criterion.\n\n  1. Source Code.\n\n  The \"source code\" for a work means the preferred form of the work\nfor making modifications to it.  \"Object code\" means any non-source\nform of a work.\n\n  A \"Standard Interface\" means an interface that either is an official\nstandard defined by a recognized standards body, or, in the case of\ninterfaces specified for a particular programming language, one that\nis widely used among developers working in that language.\n\n  The \"System Libraries\" of an executable work include anything, other\nthan the work as a whole, that (a) is included in the normal form of\npackaging a Major Component, but which is not part of that Major\nComponent, and (b) serves only to enable use of the work with that\nMajor Component, or to implement a Standard Interface for which an\nimplementation is available to the public in source code form.  A\n\"Major Component\", in this context, means a major essential component\n(kernel, window system, and so on) of the specific operating system\n(if any) on which the executable work runs, or a compiler used to\nproduce the work, or an object code interpreter used to run it.\n\n  The \"Corresponding Source\" for a work in object code form means all\nthe source code needed to generate, install, and (for an executable\nwork) run the object code and to modify the work, including scripts to\ncontrol those activities.  However, it does not include the work's\nSystem Libraries, or general-purpose tools or generally available free\nprograms which are used unmodified in performing those activities but\nwhich are not part of the work.  For example, Corresponding Source\nincludes interface definition files associated with source files for\nthe work, and the source code for shared libraries and dynamically\nlinked subprograms that the work is specifically designed to require,\nsuch as by intimate data communication or control flow between those\nsubprograms and other parts of the work.\n\n  The Corresponding Source need not include anything that users\ncan regenerate automatically from other parts of the Corresponding\nSource.\n\n  The Corresponding Source for a work in source code form is that\nsame work.\n\n  2. Basic Permissions.\n\n  All rights granted under this License are granted for the term of\ncopyright on the Program, and are irrevocable provided the stated\nconditions are met.  This License explicitly affirms your unlimited\npermission to run the unmodified Program.  The output from running a\ncovered work is covered by this License only if the output, given its\ncontent, constitutes a covered work.  This License acknowledges your\nrights of fair use or other equivalent, as provided by copyright law.\n\n  You may make, run and propagate covered works that you do not\nconvey, without conditions so long as your license otherwise remains\nin force.  You may convey covered works to others for the sole purpose\nof having them make modifications exclusively for you, or provide you\nwith facilities for running those works, provided that you comply with\nthe terms of this License in conveying all material for which you do\nnot control copyright.  Those thus making or running the covered works\nfor you must do so exclusively on your behalf, under your direction\nand control, on terms that prohibit them from making any copies of\nyour copyrighted material outside their relationship with you.\n\n  Conveying under any other circumstances is permitted solely under\nthe conditions stated below.  Sublicensing is not allowed; section 10\nmakes it unnecessary.\n\n  3. Protecting Users' Legal Rights From Anti-Circumvention Law.\n\n  No covered work shall be deemed part of an effective technological\nmeasure under any applicable law fulfilling obligations under article\n11 of the WIPO copyright treaty adopted on 20 December 1996, or\nsimilar laws prohibiting or restricting circumvention of such\nmeasures.\n\n  When you convey a covered work, you waive any legal power to forbid\ncircumvention of technological measures to the extent such circumvention\nis effected by exercising rights under this License with respect to\nthe covered work, and you disclaim any intention to limit operation or\nmodification of the work as a means of enforcing, against the work's\nusers, your or third parties' legal rights to forbid circumvention of\ntechnological measures.\n\n  4. Conveying Verbatim Copies.\n\n  You may convey verbatim copies of the Program's source code as you\nreceive it, in any medium, provided that you conspicuously and\nappropriately publish on each copy an appropriate copyright notice;\nkeep intact all notices stating that this License and any\nnon-permissive terms added in accord with section 7 apply to the code;\nkeep intact all notices of the absence of any warranty; and give all\nrecipients a copy of this License along with the Program.\n\n  You may charge any price or no price for each copy that you convey,\nand you may offer support or warranty protection for a fee.\n\n  5. Conveying Modified Source Versions.\n\n  You may convey a work based on the Program, or the modifications to\nproduce it from the Program, in the form of source code under the\nterms of section 4, provided that you also meet all of these conditions:\n\n    a) The work must carry prominent notices stating that you modified\n    it, and giving a relevant date.\n\n    b) The work must carry prominent notices stating that it is\n    released under this License and any conditions added under section\n    7.  This requirement modifies the requirement in section 4 to\n    \"keep intact all notices\".\n\n    c) You must license the entire work, as a whole, under this\n    License to anyone who comes into possession of a copy.  This\n    License will therefore apply, along with any applicable section 7\n    additional terms, to the whole of the work, and all its parts,\n    regardless of how they are packaged.  This License gives no\n    permission to license the work in any other way, but it does not\n    invalidate such permission if you have separately received it.\n\n    d) If the work has interactive user interfaces, each must display\n    Appropriate Legal Notices; however, if the Program has interactive\n    interfaces that do not display Appropriate Legal Notices, your\n    work need not make them do so.\n\n  A compilation of a covered work with other separate and independent\nworks, which are not by their nature extensions of the covered work,\nand which are not combined with it such as to form a larger program,\nin or on a volume of a storage or distribution medium, is called an\n\"aggregate\" if the compilation and its resulting copyright are not\nused to limit the access or legal rights of the compilation's users\nbeyond what the individual works permit.  Inclusion of a covered work\nin an aggregate does not cause this License to apply to the other\nparts of the aggregate.\n\n  6. Conveying Non-Source Forms.\n\n  You may convey a covered work in object code form under the terms\nof sections 4 and 5, provided that you also convey the\nmachine-readable Corresponding Source under the terms of this License,\nin one of these ways:\n\n    a) Convey the object code in, or embodied in, a physical product\n    (including a physical distribution medium), accompanied by the\n    Corresponding Source fixed on a durable physical medium\n    customarily used for software interchange.\n\n    b) Convey the object code in, or embodied in, a physical product\n    (including a physical distribution medium), accompanied by a\n    written offer, valid for at least three years and valid for as\n    long as you offer spare parts or customer support for that product\n    model, to give anyone who possesses the object code either (1) a\n    copy of the Corresponding Source for all the software in the\n    product that is covered by this License, on a durable physical\n    medium customarily used for software interchange, for a price no\n    more than your reasonable cost of physically performing this\n    conveying of source, or (2) access to copy the\n    Corresponding Source from a network server at no charge.\n\n    c) Convey individual copies of the object code with a copy of the\n    written offer to provide the Corresponding Source.  This\n    alternative is allowed only occasionally and noncommercially, and\n    only if you received the object code with such an offer, in accord\n    with subsection 6b.\n\n    d) Convey the object code by offering access from a designated\n    place (gratis or for a charge), and offer equivalent access to the\n    Corresponding Source in the same way through the same place at no\n    further charge.  You need not require recipients to copy the\n    Corresponding Source along with the object code.  If the place to\n    copy the object code is a network server, the Corresponding Source\n    may be on a different server (operated by you or a third party)\n    that supports equivalent copying facilities, provided you maintain\n    clear directions next to the object code saying where to find the\n    Corresponding Source.  Regardless of what server hosts the\n    Corresponding Source, you remain obligated to ensure that it is\n    available for as long as needed to satisfy these requirements.\n\n    e) Convey the object code using peer-to-peer transmission, provided\n    you inform other peers where the object code and Corresponding\n    Source of the work are being offered to the general public at no\n    charge under subsection 6d.\n\n  A separable portion of the object code, whose source code is excluded\nfrom the Corresponding Source as a System Library, need not be\nincluded in conveying the object code work.\n\n  A \"User Product\" is either (1) a \"consumer product\", which means any\ntangible personal property which is normally used for personal, family,\nor household purposes, or (2) anything designed or sold for incorporation\ninto a dwelling.  In determining whether a product is a consumer product,\ndoubtful cases shall be resolved in favor of coverage.  For a particular\nproduct received by a particular user, \"normally used\" refers to a\ntypical or common use of that class of product, regardless of the status\nof the particular user or of the way in which the particular user\nactually uses, or expects or is expected to use, the product.  A product\nis a consumer product regardless of whether the product has substantial\ncommercial, industrial or non-consumer uses, unless such uses represent\nthe only significant mode of use of the product.\n\n  \"Installation Information\" for a User Product means any methods,\nprocedures, authorization keys, or other information required to install\nand execute modified versions of a covered work in that User Product from\na modified version of its Corresponding Source.  The information must\nsuffice to ensure that the continued functioning of the modified object\ncode is in no case prevented or interfered with solely because\nmodification has been made.\n\n  If you convey an object code work under this section in, or with, or\nspecifically for use in, a User Product, and the conveying occurs as\npart of a transaction in which the right of possession and use of the\nUser Product is transferred to the recipient in perpetuity or for a\nfixed term (regardless of how the transaction is characterized), the\nCorresponding Source conveyed under this section must be accompanied\nby the Installation Information.  But this requirement does not apply\nif neither you nor any third party retains the ability to install\nmodified object code on the User Product (for example, the work has\nbeen installed in ROM).\n\n  The requirement to provide Installation Information does not include a\nrequirement to continue to provide support service, warranty, or updates\nfor a work that has been modified or installed by the recipient, or for\nthe User Product in which it has been modified or installed.  Access to a\nnetwork may be denied when the modification itself materially and\nadversely affects the operation of the network or violates the rules and\nprotocols for communication across the network.\n\n  Corresponding Source conveyed, and Installation Information provided,\nin accord with this section must be in a format that is publicly\ndocumented (and with an implementation available to the public in\nsource code form), and must require no special password or key for\nunpacking, reading or copying.\n\n  7. Additional Terms.\n\n  \"Additional permissions\" are terms that supplement the terms of this\nLicense by making exceptions from one or more of its conditions.\nAdditional permissions that are applicable to the entire Program shall\nbe treated as though they were included in this License, to the extent\nthat they are valid under applicable law.  If additional permissions\napply only to part of the Program, that part may be used separately\nunder those permissions, but the entire Program remains governed by\nthis License without regard to the additional permissions.\n\n  When you convey a copy of a covered work, you may at your option\nremove any additional permissions from that copy, or from any part of\nit.  (Additional permissions may be written to require their own\nremoval in certain cases when you modify the work.)  You may place\nadditional permissions on material, added by you to a covered work,\nfor which you have or can give appropriate copyright permission.\n\n  Notwithstanding any other provision of this License, for material you\nadd to a covered work, you may (if authorized by the copyright holders of\nthat material) supplement the terms of this License with terms:\n\n    a) Disclaiming warranty or limiting liability differently from the\n    terms of sections 15 and 16 of this License; or\n\n    b) Requiring preservation of specified reasonable legal notices or\n    author attributions in that material or in the Appropriate Legal\n    Notices displayed by works containing it; or\n\n    c) Prohibiting misrepresentation of the origin of that material, or\n    requiring that modified versions of such material be marked in\n    reasonable ways as different from the original version; or\n\n    d) Limiting the use for publicity purposes of names of licensors or\n    authors of the material; or\n\n    e) Declining to grant rights under trademark law for use of some\n    trade names, trademarks, or service marks; or\n\n    f) Requiring indemnification of licensors and authors of that\n    material by anyone who conveys the material (or modified versions of\n    it) with contractual assumptions of liability to the recipient, for\n    any liability that these contractual assumptions directly impose on\n    those licensors and authors.\n\n  All other non-permissive additional terms are considered \"further\nrestrictions\" within the meaning of section 10.  If the Program as you\nreceived it, or any part of it, contains a notice stating that it is\ngoverned by this License along with a term that is a further\nrestriction, you may remove that term.  If a license document contains\na further restriction but permits relicensing or conveying under this\nLicense, you may add to a covered work material governed by the terms\nof that license document, provided that the further restriction does\nnot survive such relicensing or conveying.\n\n  If you add terms to a covered work in accord with this section, you\nmust place, in the relevant source files, a statement of the\nadditional terms that apply to those files, or a notice indicating\nwhere to find the applicable terms.\n\n  Additional terms, permissive or non-permissive, may be stated in the\nform of a separately written license, or stated as exceptions;\nthe above requirements apply either way.\n\n  8. Termination.\n\n  You may not propagate or modify a covered work except as expressly\nprovided under this License.  Any attempt otherwise to propagate or\nmodify it is void, and will automatically terminate your rights under\nthis License (including any patent licenses granted under the third\nparagraph of section 11).\n\n  However, if you cease all violation of this License, then your\nlicense from a particular copyright holder is reinstated (a)\nprovisionally, unless and until the copyright holder explicitly and\nfinally terminates your license, and (b) permanently, if the copyright\nholder fails to notify you of the violation by some reasonable means\nprior to 60 days after the cessation.\n\n  Moreover, your license from a particular copyright holder is\nreinstated permanently if the copyright holder notifies you of the\nviolation by some reasonable means, this is the first time you have\nreceived notice of violation of this License (for any work) from that\ncopyright holder, and you cure the violation prior to 30 days after\nyour receipt of the notice.\n\n  Termination of your rights under this section does not terminate the\nlicenses of parties who have received copies or rights from you under\nthis License.  If your rights have been terminated and not permanently\nreinstated, you do not qualify to receive new licenses for the same\nmaterial under section 10.\n\n  9. Acceptance Not Required for Having Copies.\n\n  You are not required to accept this License in order to receive or\nrun a copy of the Program.  Ancillary propagation of a covered work\noccurring solely as a consequence of using peer-to-peer transmission\nto receive a copy likewise does not require acceptance.  However,\nnothing other than this License grants you permission to propagate or\nmodify any covered work.  These actions infringe copyright if you do\nnot accept this License.  Therefore, by modifying or propagating a\ncovered work, you indicate your acceptance of this License to do so.\n\n  10. Automatic Licensing of Downstream Recipients.\n\n  Each time you convey a covered work, the recipient automatically\nreceives a license from the original licensors, to run, modify and\npropagate that work, subject to this License.  You are not responsible\nfor enforcing compliance by third parties with this License.\n\n  An \"entity transaction\" is a transaction transferring control of an\norganization, or substantially all assets of one, or subdividing an\norganization, or merging organizations.  If propagation of a covered\nwork results from an entity transaction, each party to that\ntransaction who receives a copy of the work also receives whatever\nlicenses to the work the party's predecessor in interest had or could\ngive under the previous paragraph, plus a right to possession of the\nCorresponding Source of the work from the predecessor in interest, if\nthe predecessor has it or can get it with reasonable efforts.\n\n  You may not impose any further restrictions on the exercise of the\nrights granted or affirmed under this License.  For example, you may\nnot impose a license fee, royalty, or other charge for exercise of\nrights granted under this License, and you may not initiate litigation\n(including a cross-claim or counterclaim in a lawsuit) alleging that\nany patent claim is infringed by making, using, selling, offering for\nsale, or importing the Program or any portion of it.\n\n  11. Patents.\n\n  A \"contributor\" is a copyright holder who authorizes use under this\nLicense of the Program or a work on which the Program is based.  The\nwork thus licensed is called the contributor's \"contributor version\".\n\n  A contributor's \"essential patent claims\" are all patent claims\nowned or controlled by the contributor, whether already acquired or\nhereafter acquired, that would be infringed by some manner, permitted\nby this License, of making, using, or selling its contributor version,\nbut do not include claims that would be infringed only as a\nconsequence of further modification of the contributor version.  For\npurposes of this definition, \"control\" includes the right to grant\npatent sublicenses in a manner consistent with the requirements of\nthis License.\n\n  Each contributor grants you a non-exclusive, worldwide, royalty-free\npatent license under the contributor's essential patent claims, to\nmake, use, sell, offer for sale, import and otherwise run, modify and\npropagate the contents of its contributor version.\n\n  In the following three paragraphs, a \"patent license\" is any express\nagreement or commitment, however denominated, not to enforce a patent\n(such as an express permission to practice a patent or covenant not to\nsue for patent infringement).  To \"grant\" such a patent license to a\nparty means to make such an agreement or commitment not to enforce a\npatent against the party.\n\n  If you convey a covered work, knowingly relying on a patent license,\nand the Corresponding Source of the work is not available for anyone\nto copy, free of charge and under the terms of this License, through a\npublicly available network server or other readily accessible means,\nthen you must either (1) cause the Corresponding Source to be so\navailable, or (2) arrange to deprive yourself of the benefit of the\npatent license for this particular work, or (3) arrange, in a manner\nconsistent with the requirements of this License, to extend the patent\nlicense to downstream recipients.  \"Knowingly relying\" means you have\nactual knowledge that, but for the patent license, your conveying the\ncovered work in a country, or your recipient's use of the covered work\nin a country, would infringe one or more identifiable patents in that\ncountry that you have reason to believe are valid.\n\n  If, pursuant to or in connection with a single transaction or\narrangement, you convey, or propagate by procuring conveyance of, a\ncovered work, and grant a patent license to some of the parties\nreceiving the covered work authorizing them to use, propagate, modify\nor convey a specific copy of the covered work, then the patent license\nyou grant is automatically extended to all recipients of the covered\nwork and works based on it.\n\n  A patent license is \"discriminatory\" if it does not include within\nthe scope of its coverage, prohibits the exercise of, or is\nconditioned on the non-exercise of one or more of the rights that are\nspecifically granted under this License.  You may not convey a covered\nwork if you are a party to an arrangement with a third party that is\nin the business of distributing software, under which you make payment\nto the third party based on the extent of your activity of conveying\nthe work, and under which the third party grants, to any of the\nparties who would receive the covered work from you, a discriminatory\npatent license (a) in connection with copies of the covered work\nconveyed by you (or copies made from those copies), or (b) primarily\nfor and in connection with specific products or compilations that\ncontain the covered work, unless you entered into that arrangement,\nor that patent license was granted, prior to 28 March 2007.\n\n  Nothing in this License shall be construed as excluding or limiting\nany implied license or other defenses to infringement that may\notherwise be available to you under applicable patent law.\n\n  12. No Surrender of Others' Freedom.\n\n  If conditions are imposed on you (whether by court order, agreement or\notherwise) that contradict the conditions of this License, they do not\nexcuse you from the conditions of this License.  If you cannot convey a\ncovered work so as to satisfy simultaneously your obligations under this\nLicense and any other pertinent obligations, then as a consequence you may\nnot convey it at all.  For example, if you agree to terms that obligate you\nto collect a royalty for further conveying from those to whom you convey\nthe Program, the only way you could satisfy both those terms and this\nLicense would be to refrain entirely from conveying the Program.\n\n  13. Use with the GNU Affero General Public License.\n\n  Notwithstanding any other provision of this License, you have\npermission to link or combine any covered work with a work licensed\nunder version 3 of the GNU Affero General Public License into a single\ncombined work, and to convey the resulting work.  The terms of this\nLicense will continue to apply to the part which is the covered work,\nbut the special requirements of the GNU Affero General Public License,\nsection 13, concerning interaction through a network will apply to the\ncombination as such.\n\n  14. Revised Versions of this License.\n\n  The Free Software Foundation may publish revised and/or new versions of\nthe GNU General Public License from time to time.  Such new versions will\nbe similar in spirit to the present version, but may differ in detail to\naddress new problems or concerns.\n\n  Each version is given a distinguishing version number.  If the\nProgram specifies that a certain numbered version of the GNU General\nPublic License \"or any later version\" applies to it, you have the\noption of following the terms and conditions either of that numbered\nversion or of any later version published by the Free Software\nFoundation.  If the Program does not specify a version number of the\nGNU General Public License, you may choose any version ever published\nby the Free Software Foundation.\n\n  If the Program specifies that a proxy can decide which future\nversions of the GNU General Public License can be used, that proxy's\npublic statement of acceptance of a version permanently authorizes you\nto choose that version for the Program.\n\n  Later license versions may give you additional or different\npermissions.  However, no additional obligations are imposed on any\nauthor or copyright holder as a result of your choosing to follow a\nlater version.\n\n  15. Disclaimer of Warranty.\n\n  THERE IS NO WARRANTY FOR THE PROGRAM, TO THE EXTENT PERMITTED BY\nAPPLICABLE LAW.  EXCEPT WHEN OTHERWISE STATED IN WRITING THE COPYRIGHT\nHOLDERS AND/OR OTHER PARTIES PROVIDE THE PROGRAM \"AS IS\" WITHOUT WARRANTY\nOF ANY KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING, BUT NOT LIMITED TO,\nTHE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR\nPURPOSE.  THE ENTIRE RISK AS TO THE QUALITY AND PERFORMANCE OF THE PROGRAM\nIS WITH YOU.  SHOULD THE PROGRAM PROVE DEFECTIVE, YOU ASSUME THE COST OF\nALL NECESSARY SERVICING, REPAIR OR CORRECTION.\n\n  16. Limitation of Liability.\n\n  IN NO EVENT UNLESS REQUIRED BY APPLICABLE LAW OR AGREED TO IN WRITING\nWILL ANY COPYRIGHT HOLDER, OR ANY OTHER PARTY WHO MODIFIES AND/OR CONVEYS\nTHE PROGRAM AS PERMITTED ABOVE, BE LIABLE TO YOU FOR DAMAGES, INCLUDING ANY\nGENERAL, SPECIAL, INCIDENTAL OR CONSEQUENTIAL DAMAGES ARISING OUT OF THE\nUSE OR INABILITY TO USE THE PROGRAM (INCLUDING BUT NOT LIMITED TO LOSS OF\nDATA OR DATA BEING RENDERED INACCURATE OR LOSSES SUSTAINED BY YOU OR THIRD\nPARTIES OR A FAILURE OF THE PROGRAM TO OPERATE WITH ANY OTHER PROGRAMS),\nEVEN IF SUCH HOLDER OR OTHER PARTY HAS BEEN ADVISED OF THE POSSIBILITY OF\nSUCH DAMAGES.\n\n  17. Interpretation of Sections 15 and 16.\n\n  If the disclaimer of warranty and limitation of liability provided\nabove cannot be given local legal effect according to their terms,\nreviewing courts shall apply local law that most closely approximates\nan absolute waiver of all civil liability in connection with the\nProgram, unless a warranty or assumption of liability accompanies a\ncopy of the Program in return for a fee.\n\n                     END OF TERMS AND CONDITIONS\n\n            How to Apply These Terms to Your New Programs\n\n  If you develop a new program, and you want it to be of the greatest\npossible use to the public, the best way to achieve this is to make it\nfree software which everyone can redistribute and change under these terms.\n\n  To do so, attach the following notices to the program.  It is safest\nto attach them to the start of each source file to most effectively\nstate the exclusion of warranty; and each file should have at least\nthe \"copyright\" line and a pointer to where the full notice is found.\n\n    <one line to give the program's name and a brief idea of what it does.>\n    Copyright (C) <year>  <name of author>\n\n    This program is free software: you can redistribute it and/or modify\n    it under the terms of the GNU General Public License as published by\n    the Free Software Foundation, either version 3 of the License, or\n    (at your option) any later version.\n\n    This program is distributed in the hope that it will be useful,\n    but WITHOUT ANY WARRANTY; without even the implied warranty of\n    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the\n    GNU General Public License for more details.\n\n    You should have received a copy of the GNU General Public License\n    along with this program.  If not, see <http://www.gnu.org/licenses/>.\n\nAlso add information on how to contact you by electronic and paper mail.\n\n  If the program does terminal interaction, make it output a short\nnotice like this when it starts in an interactive mode:\n\n    <program>  Copyright (C) <year>  <name of author>\n    This program comes with ABSOLUTELY NO WARRANTY; for details type `show w'.\n    This is free software, and you are welcome to redistribute it\n    under certain conditions; type `show c' for details.\n\nThe hypothetical commands `show w' and `show c' should show the appropriate\nparts of the General Public License.  Of course, your program's commands\nmight be different; for a GUI interface, you would use an \"about box\".\n\n  You should also get your employer (if you work as a programmer) or school,\nif any, to sign a \"copyright disclaimer\" for the program, if necessary.\nFor more information on this, and how to apply and follow the GNU GPL, see\n<http://www.gnu.org/licenses/>.\n\n  The GNU General Public License does not permit incorporating your program\ninto proprietary programs.  If your program is a subroutine library, you\nmay consider it more useful to permit linking proprietary applications with\nthe library.  If this is what you want to do, use the GNU Lesser General\nPublic License instead of this License.  But first, please read\n<http://www.gnu.org/philosophy/why-not-lgpl.html>.\n"
+      },
+      "source": "https://raw.githubusercontent.com/jtamames/SqueezeMeta/master/LICENSE",
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "18. License and third-party software",
+        "parent_header": [
+          "SqueezeMeta: a fully automated metagenomics pipeline, from reads to bins"
+        ],
+        "type": "Text_excerpt",
+        "value": "SqueezeMeta is distributed under a GPL-3 license.\nAdditionally, SqueezeMeta redistributes the following third-party software:\n* [trimmomatic](http://www.usadellab.org/cms/?page=trimmomatic)\n* [Megahit](https://github.com/voutcn/megahit)\n* [Spades](http://cab.spbu.ru/software/spades)\n* [canu](https://github.com/marbl/canu)\n* [prinseq](http://prinseq.sourceforge.net)\n* [kmer-db](https://github.com/refresh-bio/kmer-db)\n* [cd-hit](https://github.com/weizhongli/cdhit)\n* [amos](http://www.cs.jhu.edu/~genomics/AMOS)\n* [mummer](https://github.com/mummer4/mummer)\n* [hmmer](http://hmmer.org/)\n* [barrnap](https://github.com/tseemann/barrnap)\n* [aragorn](http://130.235.244.92/ARAGORN/)\n* [prodigal](https://github.com/hyattpd/Prodigal)\n* [DIAMOND](https://github.com/bbuchfink/diamond)\n* [bwa](https://github.com/lh3/bwa)\n* [minimap2](https://github.com/lh3/minimap2)\n* [bowtie2](http://bowtie-bio.sourceforge.net/bowtie2/index.shtml)\n* [MaxBin](https://downloads.jbei.org/data/microbial_communities/MaxBin/MaxBin.html)\n* [MetaBAT](https://bitbucket.org/berkeleylab/metabat)\n* [CONCOCT](https://github.com/BinPro/CONCOCT)\n* [DAS tool](https://github.com/cmks/DAS_Tool)\n* [checkm](http://ecogenomics.github.io/CheckM)\n* [comparem](https://github.com/dparks1134/CompareM)\n* [MinPath](http://omics.informatics.indiana.edu/MinPath)\n* [RDP classifier](https://github.com/rdpstaff/classifier)\n* [pullseq](https://github.com/bcthomas/pullseq)\n* [Short-Pair](https://sourceforge.net/projects/short-pair/)\n* [SAMtools](http://samtools.sourceforge.net/)\n* [Mothur](https://mothur.org/)\n* [Flye](https://github.com/fenderglass/Flye)\n\n"
+      },
+      "source": "https://raw.githubusercontent.com/jtamames/SqueezeMeta/master/README.md",
+      "technique": "header_analysis"
+    }
+  ],
+  "logo": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/jtamames/SqueezeM/images/logo.svg"
+      },
+      "source": "https://raw.githubusercontent.com/jtamames/SqueezeMeta/master/README.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "SqueezeMeta"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "owner": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "User",
+        "value": "jtamames"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "programming_languages": [
+    {
+      "confidence": 1,
+      "result": {
+        "name": "C",
+        "size": 3384837,
+        "type": "Programming_language",
+        "value": "C"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "C++",
+        "size": 3263782,
+        "type": "Programming_language",
+        "value": "C++"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Python",
+        "size": 3026191,
+        "type": "Programming_language",
+        "value": "Python"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Perl",
+        "size": 2065842,
+        "type": "Programming_language",
+        "value": "Perl"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "R",
+        "size": 227223,
+        "type": "Programming_language",
+        "value": "R"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Roff",
+        "size": 119999,
+        "type": "Programming_language",
+        "value": "Roff"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "HTML",
+        "size": 110601,
+        "type": "Programming_language",
+        "value": "HTML"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Shell",
+        "size": 110024,
+        "type": "Programming_language",
+        "value": "Shell"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "JavaScript",
+        "size": 94608,
+        "type": "Programming_language",
+        "value": "JavaScript"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Makefile",
+        "size": 70316,
+        "type": "Programming_language",
+        "value": "Makefile"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "M4",
+        "size": 59049,
+        "type": "Programming_language",
+        "value": "M4"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Lua",
+        "size": 28217,
+        "type": "Programming_language",
+        "value": "Lua"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Cython",
+        "size": 13333,
+        "type": "Programming_language",
+        "value": "Cython"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Ruby",
+        "size": 11708,
+        "type": "Programming_language",
+        "value": "Ruby"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Java",
+        "size": 9223,
+        "type": "Programming_language",
+        "value": "Java"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Dockerfile",
+        "size": 1074,
+        "type": "Programming_language",
+        "value": "Dockerfile"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "readme_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/jtamames/SqueezeMeta/master/README.md"
+      },
+      "technique": "file_exploration"
+    }
+  ],
+  "releases": [
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "fpusan",
+          "type": "User"
+        },
+        "date_created": "2024-08-08T08:06:16Z",
+        "date_published": "2024-08-08T09:01:29Z",
+        "description": "- Fix a bug in which `--cleaning` would only use one pair of files per sample, even if more were specified in the samples file.\r\n- Fixed a bug in which the pipeline would stop with an error at step 10 if the number of mapped reads was too low.\r\n- This is a fast release aimed to fix a couple of bugs. We have not updated SQMtools or the PDF manual so they both reflect version 1.6.3.",
+        "html_url": "https://github.com/jtamames/SqueezeMeta/releases/tag/v1.6.5",
+        "name": "v1.6.5",
+        "release_id": 169268528,
+        "tag": "v1.6.5",
+        "tarball_url": "https://api.github.com/repos/jtamames/SqueezeMeta/tarball/v1.6.5",
+        "type": "Release",
+        "url": "https://api.github.com/repos/jtamames/SqueezeMeta/releases/169268528",
+        "value": "https://api.github.com/repos/jtamames/SqueezeMeta/releases/169268528",
+        "zipball_url": "https://api.github.com/repos/jtamames/SqueezeMeta/zipball/v1.6.5"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "fpusan",
+          "type": "User"
+        },
+        "date_created": "2024-07-07T06:32:06Z",
+        "date_published": "2024-07-07T07:03:45Z",
+        "description": "- This changes the way that bin disparity is calculated. Now it will be simply the ratio of contigs disagreeing with the consensus taxonomy. This is faster and leads to comparable results overall. This also fix an issue in which very large bins (such as eukaryotic bins) may consume a lot of memory during step 16.\r\n- This is a fast release aimed to fix a single bug. We have not updated SQMtools or the PDF manual so they both reflect version 1.6.3.",
+        "html_url": "https://github.com/jtamames/SqueezeMeta/releases/tag/v1.6.4",
+        "name": "v1.6.4",
+        "release_id": 164269011,
+        "tag": "v1.6.4",
+        "tarball_url": "https://api.github.com/repos/jtamames/SqueezeMeta/tarball/v1.6.4",
+        "type": "Release",
+        "url": "https://api.github.com/repos/jtamames/SqueezeMeta/releases/164269011",
+        "value": "https://api.github.com/repos/jtamames/SqueezeMeta/releases/164269011",
+        "zipball_url": "https://api.github.com/repos/jtamames/SqueezeMeta/zipball/v1.6.4"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "fpusan",
+          "type": "User"
+        },
+        "date_created": "2023-09-20T07:38:25Z",
+        "date_published": "2023-09-20T07:54:46Z",
+        "description": "- Conda installations will now prioritize conda binaries instead of the vendored ones in some cases. This will hopefully fix certain issues in which SqueezeMeta was failing on certain distributions/versions.\r\n- `test_install.pl` now performs additional tests to check that binaries can be executed in the current environment.\r\n- Increased speed and reduced memory usage in step 10 (read counting).\r\n- Fixed an error in which projects created with the sequential mode would fail to restart. Note that each sample still has to be restarted individually.\r\n- Fixed an error in which step 16 (DAStool bin merging) would be attempted even if the `--nobins` flag was provided.\r\n- SQMtools: fixed an error in `exportPathways` when the requested KEGG map had only arrows.\r\n- SQMtools: fixed an error in which figures would not generated properly when `count='percent' was selected if any sample had 0 reads (as could happen when analyzing subsets).",
+        "html_url": "https://github.com/jtamames/SqueezeMeta/releases/tag/v1.6.3",
+        "name": "v1.6.3",
+        "release_id": 121510267,
+        "tag": "v1.6.3",
+        "tarball_url": "https://api.github.com/repos/jtamames/SqueezeMeta/tarball/v1.6.3",
+        "type": "Release",
+        "url": "https://api.github.com/repos/jtamames/SqueezeMeta/releases/121510267",
+        "value": "https://api.github.com/repos/jtamames/SqueezeMeta/releases/121510267",
+        "zipball_url": "https://api.github.com/repos/jtamames/SqueezeMeta/zipball/v1.6.3"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "fpusan",
+          "type": "User"
+        },
+        "date_created": "2023-07-12T16:04:36Z",
+        "date_published": "2023-07-12T16:13:32Z",
+        "description": "- Update SPAdes to 3.15.5 so it works with python 3.10",
+        "html_url": "https://github.com/jtamames/SqueezeMeta/releases/tag/v1.6.2post3",
+        "name": "v1.6.2post3",
+        "release_id": 111980222,
+        "tag": "v1.6.2post3",
+        "tarball_url": "https://api.github.com/repos/jtamames/SqueezeMeta/tarball/v1.6.2post3",
+        "type": "Release",
+        "url": "https://api.github.com/repos/jtamames/SqueezeMeta/releases/111980222",
+        "value": "https://api.github.com/repos/jtamames/SqueezeMeta/releases/111980222",
+        "zipball_url": "https://api.github.com/repos/jtamames/SqueezeMeta/zipball/v1.6.2post3"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "fpusan",
+          "type": "User"
+        },
+        "date_created": "2023-07-11T10:24:15Z",
+        "date_published": "2023-07-11T16:15:27Z",
+        "description": "- Upgrade to python 3.10 and improve conda packaging, hopefully fix #705 and be more future-proof",
+        "html_url": "https://github.com/jtamames/SqueezeMeta/releases/tag/v1.6.2post2",
+        "name": "v1.6.2post2",
+        "release_id": 111822744,
+        "tag": "v1.6.2post2",
+        "tarball_url": "https://api.github.com/repos/jtamames/SqueezeMeta/tarball/v1.6.2post2",
+        "type": "Release",
+        "url": "https://api.github.com/repos/jtamames/SqueezeMeta/releases/111822744",
+        "value": "https://api.github.com/repos/jtamames/SqueezeMeta/releases/111822744",
+        "zipball_url": "https://api.github.com/repos/jtamames/SqueezeMeta/zipball/v1.6.2post2"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "fpusan",
+          "type": "User"
+        },
+        "date_created": "2023-05-03T18:06:31Z",
+        "date_published": "2023-05-03T18:26:28Z",
+        "description": "- Fix an issue in which pysam was not properly installed when installing SqueezeMeta through conda",
+        "html_url": "https://github.com/jtamames/SqueezeMeta/releases/tag/v1.6.2post1",
+        "name": "v1.6.2post1",
+        "release_id": 101766546,
+        "tag": "v1.6.2post1",
+        "tarball_url": "https://api.github.com/repos/jtamames/SqueezeMeta/tarball/v1.6.2post1",
+        "type": "Release",
+        "url": "https://api.github.com/repos/jtamames/SqueezeMeta/releases/101766546",
+        "value": "https://api.github.com/repos/jtamames/SqueezeMeta/releases/101766546",
+        "zipball_url": "https://api.github.com/repos/jtamames/SqueezeMeta/zipball/v1.6.2post1"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "fpusan",
+          "type": "User"
+        },
+        "date_created": "2023-03-21T17:01:56Z",
+        "date_published": "2023-03-21T17:29:48Z",
+        "description": "### New features\r\n- Added `spades-base` as a possible assembler for SqueezeMeta. This will make SqueezeMeta call SPAdes with no additional flags. Flags for SPAdes can then customized by the user by passing `--assembly_options \"EXTRA OPTIONS\"` when calling SqueezeMeta. More information can be found in the ReadMe and the PDF manual.\r\n- Added the utility script `sqm2zip.py`, which allows to pack the essential files from a SqueezeMeta project into a single zip file.\r\n- SQMtools: `loadSQM` can now load a project directly from a zip file created by `sqm2zip.py` (syntax would be `loadSQM(\"/path/to/my_project.zip\").\r\n- SQMtools: SQMtools is now available in CRAN and can be installed with `install.packages(\"SQMtools\")` in Windows, Mac and Linux computers.\r\n- These changes are meant to allow users to easily transfer their data from their clusters/workstations to their personal computers and explore their results there.\r\n- SQMtools: `mostAbundant` and `mostVariable` now accept the argument `bycol = TRUE`, which will make these functions operate on columns rather than rows.\r\n\r\n### Minor changes / bugfixes\r\n- We now use coverage variances in addition to average contig coverages when calling metabat2, which should improve the quality of the resulting bins.\r\n- Mapping results are now stored as BAM files instead of SAM files, which should reduce disk usage.\r\n\r\n### Known issues / Other announcements\r\n- The `make_databases.pl` script may spend a lot of time in the \"Creating SQLite databases\" step. We have included a patch to improve this, but still it happens inconsistently (taking a few hours in some systems, and several days in others). Having a lot (1-2 Tb) of free disk space may help. `download_databases.pl` should be considered as the preferred way of quickly getting reasonably-up-to-date databases.\r\n- We are discontinuing official support for CentOS7, as its default libraries are too outdated now. We plan on supporting SqueezeMeta in Debian, WSL2-Ubuntu and (hopefully) CentOS Upstream in the not so distant future.",
+        "html_url": "https://github.com/jtamames/SqueezeMeta/releases/tag/v1.6.2",
+        "name": "v1.6.2",
+        "release_id": 95416522,
+        "tag": "v1.6.2",
+        "tarball_url": "https://api.github.com/repos/jtamames/SqueezeMeta/tarball/v1.6.2",
+        "type": "Release",
+        "url": "https://api.github.com/repos/jtamames/SqueezeMeta/releases/95416522",
+        "value": "https://api.github.com/repos/jtamames/SqueezeMeta/releases/95416522",
+        "zipball_url": "https://api.github.com/repos/jtamames/SqueezeMeta/zipball/v1.6.2"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "fpusan",
+          "type": "User"
+        },
+        "date_created": "2023-02-06T09:32:45Z",
+        "date_published": "2023-02-07T12:34:19Z",
+        "description": "- Fix for yesterday's release, which did not include all the intended features.",
+        "html_url": "https://github.com/jtamames/SqueezeMeta/releases/tag/v1.6.1post1",
+        "name": "v1.6.1post1",
+        "release_id": 91593874,
+        "tag": "v1.6.1post1",
+        "tarball_url": "https://api.github.com/repos/jtamames/SqueezeMeta/tarball/v1.6.1post1",
+        "type": "Release",
+        "url": "https://api.github.com/repos/jtamames/SqueezeMeta/releases/91593874",
+        "value": "https://api.github.com/repos/jtamames/SqueezeMeta/releases/91593874",
+        "zipball_url": "https://api.github.com/repos/jtamames/SqueezeMeta/zipball/v1.6.1post1"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "fpusan",
+          "type": "User"
+        },
+        "date_created": "2022-12-22T13:48:37Z",
+        "date_published": "2023-02-06T10:23:56Z",
+        "description": "### New features\r\n- Added the `seqvec2fasta` function to `SQMtools`. It will print a named vector containing sequences (as the ones used to store contig and ORF sequences in `SQM$contigs$seqs` and `SQM$orfs$seqs` as a single fasta-formatted string.\r\n- The `make_databases.pl`, `download_databases.pl` and `configure_nodb.pl` scripts now perform more error checking after each database creation step, and will call `test_install.pl` before finishing. This should help detect the instances in which database creation was unsuccessful e.g. due to a failed download.\r\n\r\n### Minor changes / bugfixes\r\n- Fixed a bug in `remap.pl`.\r\n- Fixed a bug introduced in v1.6.0 in which trimmomatic was not being called even when the `--cleaning` flag was provided.\r\n- Fixed a bug in which single reads were causing problems during assembly.\r\n- Fixed a bug in which `cover.pl` was using the system's perl interpreter instead the one in the user environment.\r\n- Improved SQL queries in `make_databases.pl` to hopefully speed up database creation.\r\n- Fixed an issue in which mothur dependencies were not correctly fulfilled by conda.\r\n- Fixed an issue in which restarting a sequential project failed at step 4.\r\n- Fixed several minor issues with the restart mode.\r\n- Fixed `remove_duplicate_markers.pl` so it works in the new binning structure.\r\n- Fixed an issue in which SPAdes was using only 400G of memory even if more was available in the system.\r\n- `engine=\"data.table` and `tax_mode=\"prokfilter\"` are now the default options in `loadSQM`.\r\n- Fixed an issue in which `subsetSamples` corrupted the binning information, making it impossible to further subset the resulting object.\r\n- The PDF SQMtools manual is back. Future availability will depend on whether I can keep getting R's clunky latex interface to produce PDF's in which the tables are rendered correctly.\r\n\r\n### Known issues\r\n- The `make_databases.pl` may spend a lot of time in the \"Creating SQLite databases\" step. We have included a patch to improve this, but still it happens inconsistently (taking a few hours in some systems, and several days in others). Having a lot (1-2 Tb) of free disk space may help. `download_databases.pl` should be considered as the preferred way of quickly getting reasonably-up-to-date databases.",
+        "html_url": "https://github.com/jtamames/SqueezeMeta/releases/tag/v1.6.1",
+        "name": "v1.6.1",
+        "release_id": 84370486,
+        "tag": "v1.6.1",
+        "tarball_url": "https://api.github.com/repos/jtamames/SqueezeMeta/tarball/v1.6.1",
+        "type": "Release",
+        "url": "https://api.github.com/repos/jtamames/SqueezeMeta/releases/84370486",
+        "value": "https://api.github.com/repos/jtamames/SqueezeMeta/releases/84370486",
+        "zipball_url": "https://api.github.com/repos/jtamames/SqueezeMeta/zipball/v1.6.1"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "fpusan",
+          "type": "User"
+        },
+        "date_created": "2022-09-09T14:57:16Z",
+        "date_published": "2022-09-10T07:39:57Z",
+        "description": "### New features\r\n- The script `restart.pl` has been removed. Project restart is now achieved by calling `SqueezeMeta.pl --restart -p <project_name>`. The flags `-step <STEP> --force-overwrite` can be added to this call in order to restart the pipeline from a specific step.\r\n- Users can now control whether the source of bin taxonomy is the LCA algorithm from SqueezeMeta, or the taxonomic assignment performed by CheckM. This can be controlled with the flag `-taxbinmode`. Options are `s` (SqueezeMeta only, default), `c` (CheckM), `s+c` (SqueezeMeta, missing ranks will be completed with CheckM taxonomy when possible) or `c+s` (CheckM, missing ranks will be completed with SqueezeMeta taxonomy when possible).\r\n- Users can now control the minimum percentage of genes from the same taxa needed in order to taxonomically annotate a contig. This can be done with the flag `-consensus` .\r\n- `sqm_longreads.pl` will now consider partial hits completely contained inside a long read as valid hits. Before, partial hits were only considered valid if they occurred at the beginning or end of the reads. This has a noticeable impact in the annotation percentages. The old behaviour can be reinstated with the flags `-n` or `-nopartialhits`.\r\n- `sqm2pavian.pl` now works with results from `sqm_reads.pl` and `sqm_longreads.pl`.\r\n- Added the option `--filter` to `sqm_mapper.pl`. When this flag is present, the script will filter a set of input sequences, returning only the ones that did not map to the reference.\r\n- SQMtools: SQM objects now track the length, abundance, mapped bases, coverage and coverage per million reads of bins. The corresponding matrices can be found under the `SQM$bins` list. When running `subsetContigs`, these values will be updated taking in consideration only the contigs from each bin that were selected.\r\n- SQMtools: added the `subsetSamples` function to generate subsetted SQM objects containing only the requested samples.\r\n- SQMtoools: added the `plotBins` function to generate barcharts with the distribution of bins across samples.\r\n- SQMtools: unmapped reads for functions are no longer tracked, since it led to inconsistent results in some cases (see #442). This also affects the tables generated by `sqm2tables.py`.\r\n- SQMtools: added the `mostVariable` function, which will return the most variable rows (based on their coefficient of variation) from a data.frame or matrix. The interface is otherwise similar to the `mostAbundant` function.\r\n- SQMtools: SQM objects now track the coverage per million of reads of orfs, contigs, bins and functions. Each can be accessed inside the corresponding list under the `cpm` name. `\"cpm\"` is also a valid `count` option for `plotFunctions` and `plotBins`.\r\n\r\n### Minor changes / bugfixes\r\n- SQMtools will from now on follow the same version numbers as the corresponding SqueezeMeta releases. \r\n- Updated DIAMOND version to 2.0.15.\r\n- Fixed a bug when adding taxonomic assignments to bins, in which a lack of consensus in a high level prevented looking for consensus at deeper levels.\r\n- Fixed a bug in which `data.table` may make `DAStool` crash if it was called with a very high number of threads.\r\n- Fixed a bug in which both reads of a pair were counted as mapped even if only one of them actually mapped to the reference. This had little impact in real datasets, but is corrected now.\r\n- Fixed a bug in which custom arguments passed to bowtie2 with `-mapping_options` conflicted in some cases with the `--very-sensitive-local` option that we use by default when calling bowtie2. `--very-sensitive-local` is now skipped when the user provides custom arguments to bowtie2.\r\n- Fixed an uncommon issue in which contigs could end up being assigned to more than one bin after restarting the pipeline.\r\n- Fixed a bug in `sqm_longreads.pl` when using several input files from the same sample.\r\n- `loadSQM` now removes redundant info from the orfs and contigs tables when loading a project into `SQMtools` resulting in less memory usage.\r\n- Fixed a bug in which loading a project with `loadSQM` could randomly caused an error.\r\n- We no longer provide a PDF manual for SQMtools. The documentation for each function can still be accessed from the R terminal or RStudio.\r\n\r\n### Compatibility Changes\r\n- Results generated by previous versions of SqueezeMeta will not load into SQMtools 1.6.0 (which corresponds to SqueezeMeta release 1.6.0). Running `19.getcontigs.pl /path/to/project` will make a project generated with SqueezeMeta v1.5 compatible with the new version of SQMtools.   ",
+        "html_url": "https://github.com/jtamames/SqueezeMeta/releases/tag/v1.6.0",
+        "name": "v1.6.0 - One egg for many baskets",
+        "release_id": 76305710,
+        "tag": "v1.6.0",
+        "tarball_url": "https://api.github.com/repos/jtamames/SqueezeMeta/tarball/v1.6.0",
+        "type": "Release",
+        "url": "https://api.github.com/repos/jtamames/SqueezeMeta/releases/76305710",
+        "value": "https://api.github.com/repos/jtamames/SqueezeMeta/releases/76305710",
+        "zipball_url": "https://api.github.com/repos/jtamames/SqueezeMeta/zipball/v1.6.0"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "fpusan",
+          "type": "User"
+        },
+        "date_created": "2022-04-12T11:10:27Z",
+        "date_published": "2022-04-12T11:14:26Z",
+        "description": "### Minor changes / bugfixes\r\n- Fixed a bug in consensus taxonomy search during binning, in which a bin could get assigned to a low taxonomic rank even if there was no consensus at higher taxonomic ranks.\r\n- Updated DIAMOND version to 2.0.14. This should get rid of several cases in which search against the nr database resulted in out of memory errors.\r\n- Fixed a typo in the PDF manual in which Figure 6 was missing",
+        "html_url": "https://github.com/jtamames/SqueezeMeta/releases/tag/v1.5.2",
+        "name": "v1.5.2",
+        "release_id": 64229720,
+        "tag": "v1.5.2",
+        "tarball_url": "https://api.github.com/repos/jtamames/SqueezeMeta/tarball/v1.5.2",
+        "type": "Release",
+        "url": "https://api.github.com/repos/jtamames/SqueezeMeta/releases/64229720",
+        "value": "https://api.github.com/repos/jtamames/SqueezeMeta/releases/64229720",
+        "zipball_url": "https://api.github.com/repos/jtamames/SqueezeMeta/zipball/v1.5.2"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "fpusan",
+          "type": "User"
+        },
+        "date_created": "2022-01-20T17:37:05Z",
+        "date_published": "2022-01-20T17:40:31Z",
+        "description": "### Minor changes / bugfixes\r\n- Fixes #417, in which flye was missing some necessary binaries",
+        "html_url": "https://github.com/jtamames/SqueezeMeta/releases/tag/v1.5.1",
+        "name": "v1.5.1",
+        "release_id": 57597515,
+        "tag": "v1.5.1",
+        "tarball_url": "https://api.github.com/repos/jtamames/SqueezeMeta/tarball/v1.5.1",
+        "type": "Release",
+        "url": "https://api.github.com/repos/jtamames/SqueezeMeta/releases/57597515",
+        "value": "https://api.github.com/repos/jtamames/SqueezeMeta/releases/57597515",
+        "zipball_url": "https://api.github.com/repos/jtamames/SqueezeMeta/zipball/v1.5.1"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "fpusan",
+          "type": "User"
+        },
+        "date_created": "2022-01-10T15:40:39Z",
+        "date_published": "2022-01-10T15:53:46Z",
+        "description": "### Minor changes / bugfixes\r\n- Added a timeout when checking for available download servers, to avoid locks in the database download scripts if a server is down.",
+        "html_url": "https://github.com/jtamames/SqueezeMeta/releases/tag/v1.5.0-post2",
+        "name": "v1.5.0-post.2",
+        "release_id": 56750794,
+        "tag": "v1.5.0-post2",
+        "tarball_url": "https://api.github.com/repos/jtamames/SqueezeMeta/tarball/v1.5.0-post2",
+        "type": "Release",
+        "url": "https://api.github.com/repos/jtamames/SqueezeMeta/releases/56750794",
+        "value": "https://api.github.com/repos/jtamames/SqueezeMeta/releases/56750794",
+        "zipball_url": "https://api.github.com/repos/jtamames/SqueezeMeta/zipball/v1.5.0-post2"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "fpusan",
+          "type": "User"
+        },
+        "date_created": "2022-01-10T11:44:16Z",
+        "date_published": "2022-01-10T14:33:42Z",
+        "description": "### Minor changes / bugfixes\r\n- Changed the installation instructions so that they recommend using `mamba` instead of `conda` for installing SqueezeMeta. The ReadMe and the PDF manual also now indicate how to get `mamba` working in your base conda environment.",
+        "html_url": "https://github.com/jtamames/SqueezeMeta/releases/tag/v1.5.0-post.1",
+        "name": "v1.5.0-post.1",
+        "release_id": 56744270,
+        "tag": "v1.5.0-post.1",
+        "tarball_url": "https://api.github.com/repos/jtamames/SqueezeMeta/tarball/v1.5.0-post.1",
+        "type": "Release",
+        "url": "https://api.github.com/repos/jtamames/SqueezeMeta/releases/56744270",
+        "value": "https://api.github.com/repos/jtamames/SqueezeMeta/releases/56744270",
+        "zipball_url": "https://api.github.com/repos/jtamames/SqueezeMeta/zipball/v1.5.0-post.1"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "fpusan",
+          "type": "User"
+        },
+        "date_created": "2021-12-30T17:30:36Z",
+        "date_published": "2021-12-31T16:52:11Z",
+        "description": "### New features\r\n- Binning was refurnished. Binners can be now selected from command line using the `-binners` option. Options `--nomaxbin` and `--nometabat` are now obsolete. Steps 14 (metabat) and 15 (maxbin) were dropped, and replaced by a single step doing all binning. This produced a change in numbering for subsequent scripts and results. The script versionchange.pl was introduced to provide compatibility of old results with this current one.\r\n- Added the utility script `sqm_mapper.pl`, which maps reads to a given reference using one of the included sequence aligners (Bowtie2, BWA), and provides estimation of the abundance of the contigs and ORFs in the reference.\r\n- Reworked the utility script `sqm_annot.pl`. This script performs functional and taxonomic annotation for a set of genes or genomes. Genomes must be nucleotide sequences, while gene sequences can be either nucleotides or amino acids. All sequence files must be in fasta format. \r\n- Added [CONCOCT](https://github.com/BinPro/CONCOCT) as an extra option for binning.\r\n- Added the possibility of selecting only the functions/taxa of interest when using the  `sqmreads2tables.py` to create summary tables from `sqm_reads.pl` and `sqm_longreads.pl` projects. This is achieved by passing an extra `-q/--query` parameter to `sqmreads2tables.py`. Query syntax is similar to that of `anvi-filter-sqm.py`.\r\n- Added the utility script `add_databases.pl`, which will add one or several new databases to the results of an existing project.  The script will run DIAMOND searches for the new databases, and then will re-run several SqueezeMeta scripts to include the new database(s) to the existing results. The following scripts will be invoked: 07, 12, 13 and 21.\r\n\r\n\r\n### Minor changes / bugfixes\r\n- Added the `--norename` flag to `SqueezeMeta.pl`, to keep the original contig names produced by the assemblers, or already present in the external assembly provided with the `-extassembly` parameter. Contig names containing underscores may break the pipeline, so use it with caution.\r\n- Added compatibility for anvi'o 7.1 in the `anvi-load-sqm.py` and `anvi-filter-sqm.py` scripts.\r\n- Updated canu to version 2.2.\r\n- Updated flye to version 2.9.\r\n- Fixed a bug in which neither the last contig nor its length were included in calculations.\r\n- Changed the automatic calculation of the `-b` parameter in DIAMOND from `free_ram/5` to `free_ram/8` to be more conservative with memory usage.\r\n- Fixed a bug in which `sqm2anvio.pl` woud fail if the file names contained the substring \"sam\" (other than having \".sam\" as the extension).\r\n- Added the `--very-sensitive-local` parameter to bowtie2 calls to increase performance.\r\n- Fixed an issue in the `blastxcollapse.pl` script than appeared when the number of sequences was smaller than the number of threads.\r\n- Allow to use minimap2 as a mapper in the `sqm_mapper.pl` script.\r\n- Corrected an error in which the RPKM of the contigs was multiplied by 10^9 rather than 10^6.\r\n- Fixed an issue in which the minpath step generated files in the wrong paths.\r\n- SQMtools: Added the `metadata_groups` parameter to `plotTaxonomy`, `plotFunctions`, `plotBars` and `plotHeatmat` to divide samples between different subplots.\r\n\r\n\r\n### Compatibility Changes\r\n- Results generated by previous versions of SqueezeMeta will not load into SQMtools 0.7.0 (which corresponds to SqueezeMeta release 1.5). We provide the utility script `versionchange.pl` in order to make older projects compatible with the new versions.\r\n- Conversely, projects generated with SqueezeMeta v1.5 will not load into older versions of SQMtools.\r\n\r\nAs always, please open an issue if something's not working for you.",
+        "html_url": "https://github.com/jtamames/SqueezeMeta/releases/tag/v1.5.0",
+        "name": "v1.5.0 - Await another voice",
+        "release_id": 56093080,
+        "tag": "v1.5.0",
+        "tarball_url": "https://api.github.com/repos/jtamames/SqueezeMeta/tarball/v1.5.0",
+        "type": "Release",
+        "url": "https://api.github.com/repos/jtamames/SqueezeMeta/releases/56093080",
+        "value": "https://api.github.com/repos/jtamames/SqueezeMeta/releases/56093080",
+        "zipball_url": "https://api.github.com/repos/jtamames/SqueezeMeta/zipball/v1.5.0"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "fpusan",
+          "type": "User"
+        },
+        "date_created": "2021-05-20T13:40:34Z",
+        "date_published": "2021-05-20T15:04:26Z",
+        "description": "### New features\r\n- Added the `utils/sqm_annot.pl` utility script, which performs functional and taxonomic annotation for a set of query genes.\r\n- Added `rnaspades` as a valid option for the `-a` parameter when calling `SqueezeMeta.pl`.\r\n- Added the `-mapping_options ` parameter, which allows the user to provide a string with custom parameters to be passed to the read mapping software.\r\n- We have dropped support for the MySQL db interface, as it was complex to maintain and rarely/never used.\r\n- Features (or reads mapping to features) that do not contain protein-coding sequences (and thus can not be classified taxonomically by our LCA method) are now removed from the \"Unclassified\" category and grouped into the \"No CDS\" category instead, in both `sqm2tables.py` and `SQMtools`. The presence of non-protein-coding genes was a minor issue with metagenomics data, but generated a lot of unexpected Unclassified reads in metatranscriptomes, which can be attributed to the high proportion of rRNAs in those datasets (see #279, and thanks to @seppedm for the heads up!). Hopefully this will help users to notice when this is happening to their data. We recommend ignoring those reads (they are not truly \"Unclassified\", rather they are not classified by SqueezeMeta's main pipeline. From now on the \"Unclassified\" category  is meant to represent only features that were classifiable by our pipeline, but weren't classified due to lack of a sufficiently close homolog in the reference database.\r\n\r\n### Minor changes / bugfixes\r\n- Updated DIAMOND to v2.0.8 and SPAdes to v3.15.2.\r\n- Fixed a bug in which `01.remap.pl` generated temp files colliding with the output of step 10 (references and SAM).\r\n- The `04.rundiamond.pl` now creates a file named `DB_BUILD_DATE` in the `intermediate` directory, which contains information on the `nr` database version used for taxonomic annotation.\r\n- Fixed nomenclature issues in the `09.summarycontigs3.pl` script regarding \"super\" ranks and the usage of brackets in taxa names.\r\n- Fixed an error introduced in v1.3.1 in which `09.summarycontigs.pl` would fail if SqueezeMeta was run in the `--euk` mode.\r\n- Fixed an error introduced in v1.3.1 in which `anvi-load-sqm.py` would not work.\r\n- Fixed the redistributed version of `samtools` not running in Ubuntu20.\r\n- Installation instructions now priorize `conda-forge` over `bioconda`, to fix a bug with the `XML::Parser` perl library.\r\n- `test_install.pl` now correctly checks for the `XML::Parser` perl library.\r\n- `download_databases.pl`, `make_databases.pl`, and `configure_databases.pl` will now try to download their data from a list of available hosts (not many so far, though). This should reduce individual server load and allow people to download the databases even if poor old silvani is down.\r\n- SQMtools: added the option `nocds` to `plotTaxonomy` to control how \"No CDS\" reads (see new features) will be treated during plotting. Possible options are \"treat_separately\" (plot them into their own category; default), \"treat_as_unclassified\" (plot them together with the \"Unclassified\" category) and \"ignore\" (do not plot them).\r\n- SQMtools: fixed a bug in which `combineSQM` would fail if data was loaded using the `data.table` engine.\r\n- SQMtools: fix `loadSQM` and `subset` functions breaking if PFAM annotations were not computed while running SqueezeMeta.\r\n\r\n### Compatibility Changes\r\n- `loadSQM` (from SQMtools) and `sqm2tables.py` and `anvi-load-sqm.py` will fail when trying to parse projects created with versions prior to v1.3.1. To make the project work in 1.3.1, please:\r\n    1) Run step 9 again (perl 09.summarycontigs3.pl /path/to/your/project).\r\n    2) Remove the /path/to/your/project/results/tables, if present.\r\n\r\nAs always, please open an issue if something's not working for you.",
+        "html_url": "https://github.com/jtamames/SqueezeMeta/releases/tag/v1.4.0",
+        "name": "v1.4.0 - Not the destination",
+        "release_id": 40828665,
+        "tag": "v1.4.0",
+        "tarball_url": "https://api.github.com/repos/jtamames/SqueezeMeta/tarball/v1.4.0",
+        "type": "Release",
+        "url": "https://api.github.com/repos/jtamames/SqueezeMeta/releases/40828665",
+        "value": "https://api.github.com/repos/jtamames/SqueezeMeta/releases/40828665",
+        "zipball_url": "https://api.github.com/repos/jtamames/SqueezeMeta/zipball/v1.4.0"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "fpusan",
+          "type": "User"
+        },
+        "date_created": "2021-02-01T19:52:15Z",
+        "date_published": "2021-02-01T20:23:04Z",
+        "description": "### New features\r\n- Added `sqm_mapper.pl`, an utility script that maps reads to a given reference using Bowtie2 or BWA and provides estimation of the abundance of the contigs and ORFs in the reference.\r\n- Added the `make_databases_alt.pl`, which works like `make_databases.pl` but tries to download the data from a different mirror.\r\n\r\n### Minor changes / bugfixes\r\n- Fixed a bug in which the `--cleaning` would use clean reads for assembly, but all the reads for mapping.\r\n- Added multithreading for parsing SAM results in Step 10.\r\n- Removed RPKM columns from tables 19 and 20.\r\n- `test_install.pl` now also checks the integrity of the `nr.dmnd` and `taxid.db` databases, making it easier to spot a corrupted database installation.\r\n- Anvi`o v7 is now oficially supported.\r\n- SQMtools: fixed a bug in which subsetting only one ORF would fail.\r\n- SQMtools: fixed a bug that appeared in v1.3, in which Unmapped reads were incorrectly calculated when subsetting SQM objects.\r\n- SQMtools: fixed a bug in which ORF TPMs were not properly rescaled after using `rescale=T` in any of the subset functions.\r\n- SQMtools: we now use contig taxonomies for the `nofilter` and `prokfilter` modes, instead of ORF taxonomies. This gets rid of a bug that appeared in v1.3, in which reads mapping to contigs but not ORFs were incorrectly treated as Unmapped.\r\n\r\n### Compatibility Changes\r\n- `loadSQM` (from SQMtools) and `sqm2tables.py` will fail when trying to parse projects created with versions prior to v1.3.1. To make the project work in 1.3.1, please:\r\n    1) Run step 9 again (`perl 09.summarycontigs3.pl /path/to/your/project`).\r\n    2) Remove the `/path/to/your/project/results/tables`, if present.\r\n\r\nAs always, please open an issue if something's not working for you.",
+        "html_url": "https://github.com/jtamames/SqueezeMeta/releases/tag/v1.3.1",
+        "name": "v1.3.1",
+        "release_id": 37075853,
+        "tag": "v1.3.1",
+        "tarball_url": "https://api.github.com/repos/jtamames/SqueezeMeta/tarball/v1.3.1",
+        "type": "Release",
+        "url": "https://api.github.com/repos/jtamames/SqueezeMeta/releases/37075853",
+        "value": "https://api.github.com/repos/jtamames/SqueezeMeta/releases/37075853",
+        "zipball_url": "https://api.github.com/repos/jtamames/SqueezeMeta/zipball/v1.3.1"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "fpusan",
+          "type": "User"
+        },
+        "date_created": "2020-10-29T17:13:39Z",
+        "date_published": "2020-10-29T19:04:33Z",
+        "description": "### New features\r\n- The [Flye](https://github.com/fenderglass/Flye) assembler for single molecule sequencing reads is now provided as an alternative to Canu for ONT/PacBio reads. It can be selected with the flag `-a flye` when launching SqueezeMeta.\r\n- The installation scripts (`make_databases.pl`, `test_databases.pl`, and `configure_databases.pl`) will now verify that files are properly downloaded and unpacked (succesfull download command + md5 check). Together with `test_install.pl`, this should minimize the issues caused by unproperly configured installations.\r\n- Added the `--singletons` flag to `SqueezeMeta.pl`, which makes unassembled reads be treated as contigs for the purposes of ORF prediction, annotation, etc. This will increase the number of contigs to process by a lot, with the corresponding increase in execution time.\r\n- Added the `cover.pl` utility script in order to estimate the amount of sequencing effort required to a certain coverage. See the PDF manual for details on the algorithm and its operation.\r\n- SQMtools: added the `combineSQMlite` function, which allows to combine `SQMlite` and/or `SQM` objects even if they come from different projects. This covers and expands the functionality previously implemented in the `combine-sqm-tables.py` script (which we'll nonetheless keep maintaining for the time being). An example of the new functionality would be to load different SqueezeMeta projects with `loadSQM`, filter each of them with `subsetFun` or `subsetTax`, and finally combining the different results into one object with `combineSQMlite`. This will produce a single `SQMlite` object that can then be plotted using the different functions included in the package.\r\n- SQMtools: `sqm2tables.py` and SQMtools now also track _Unmapped_ reads (reads not mapping to any contig), in addition to the previously _Unclassified_ reads (reads mapping to contigs without taxonomic/functional classification).\r\n\r\n### Minor changes / bugfixes\r\n- The `/path/to/project/syslog` file now contains extra logging which should facilitate debugging.\r\n- Fixed ORF lengths being 1 nucleotide and 1 aminoacid higher than they should be in table 13.\r\n- Fixed an issue in which SqueezeMeta.pl would crash trying to run steps 12 and 21 if the user specified that the necessary annotation steps should be skipped. Right now steps 12 and 21 will only be run if all the necessary annotation steps were performed.\r\n- Fixed a similar issue in which `combine-sqm-tables.py` would crash if the user provided the `--nocog`, `--nokegg` or `--nopfam` flags when running `SqueezeMeta.pl`.\r\n- Fixed a rare issue in which Aragorn predicting ORFs with negative starting positions would results in stretchs of Ns being added to some ORFs.\r\n- Fixed an error in script `10.mapsamples.pl` in which only half of the reads got counted.\r\n- Support for uncompressed fasta and fastq files should now work more consistently.\r\n- Sample files generated with Windows should no longer give an error when runing `SqueezeMeta.pl`.\r\n- Fixed an error in the `sqm_longreads.pl` script in which some reads were counted more than one time.\r\n- Added `nofilter` as a valid option for the `tax_source` parameter in the `loadSQM` and `loadSQMlite` functions (alongside `allfilter` and `prokfilter`). This will load taxonomic profiles in which the identity thresholds described in [Luo _et al._ (2014)](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4005636/) are not applied for _any_ taxa. This will give you more results at lower taxonomic ranks (e.g genus) at the cost of more false positives.\r\n- Fixed a bug in which SQMtools was not tracking any user provided external databases apart from the first one.\r\n- Fixed a bug in which the subset and combine functions from SQMtools would produce integer overflows when working with very large datasets.\r\n- `sqmreads2tables.py` and SQMtools will now work with results generated by the `sqm_longreads.pl` script.\r\n- SQMtools now includes a new set of marker genes from [Salazar _et al._ (2019)](https://www.sciencedirect.com/science/article/pii/S009286741931164X) for performing normalization to copy numbers. See the `MGOGs` and `MGKOs` entries in the SQMtools manual for more details. Note that by default all copy number calculations will still be performed using _RecA_ as a reference.",
+        "html_url": "https://github.com/jtamames/SqueezeMeta/releases/tag/v1.3.0",
+        "name": "v1.3.0- A problem halved",
+        "release_id": 33173683,
+        "tag": "v1.3.0",
+        "tarball_url": "https://api.github.com/repos/jtamames/SqueezeMeta/tarball/v1.3.0",
+        "type": "Release",
+        "url": "https://api.github.com/repos/jtamames/SqueezeMeta/releases/33173683",
+        "value": "https://api.github.com/repos/jtamames/SqueezeMeta/releases/33173683",
+        "zipball_url": "https://api.github.com/repos/jtamames/SqueezeMeta/zipball/v1.3.0"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "fpusan",
+          "type": "User"
+        },
+        "date_created": "2020-06-16T09:49:12Z",
+        "date_published": "2020-06-16T10:34:23Z",
+        "description": "### New features\r\n- New analysis mode in `utils/sqm_longreads.pl` for analyzing unassembled long reads (e.g. from ONT MinION). Its output can be normally loaded in SQMtools with the `loadSQMlite` function.\r\n- SQMtools can now optionally use the `data.table` package for loading and processing large tables, which should greatly speed up the workflow on large datasets.\r\n\r\n### Minor changes / bugfixes\r\n- Fixed one issue related to the parsing of NCBI taxonomy strings.\r\n- Fixed a bug in which counts were missing in table 12 for external database annotations.\r\n- Fixed a bug related to the parsing of samples files with DOS line endings.\r\n- Script `10.mapsamples.pl` will now consider multiple alignment when parsing SAM files.\r\n- Fixed a bug in which some user-provided assembler options were overridden by our defaults.\r\n- Loading the SqueezeMeta conda environment with `conda activate` will override the PERL5LIB environment variable to ensure that the proper libraries are used. Running `conda deactivate` will return it to its original state.",
+        "html_url": "https://github.com/jtamames/SqueezeMeta/releases/tag/v1.2.0",
+        "name": "v1.2.0 - No place but home",
+        "release_id": 27485840,
+        "tag": "v1.2.0",
+        "tarball_url": "https://api.github.com/repos/jtamames/SqueezeMeta/tarball/v1.2.0",
+        "type": "Release",
+        "url": "https://api.github.com/repos/jtamames/SqueezeMeta/releases/27485840",
+        "value": "https://api.github.com/repos/jtamames/SqueezeMeta/releases/27485840",
+        "zipball_url": "https://api.github.com/repos/jtamames/SqueezeMeta/zipball/v1.2.0"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "fpusan",
+          "type": "User"
+        },
+        "date_created": "2020-04-22T15:28:59Z",
+        "date_published": "2020-04-22T16:13:46Z",
+        "description": "### New features\r\n- LCA steps are now multithreaded in SqueezeMeta and SQMreads.\r\n- The `exportPathway` function in SQMtools now can color KEGG reactions based on their abundance in the different samples, or in their log2 fold-change between two groups of samples.\r\n- The `plotTaxonomy` function in SQMtools now can optionally use an arbitrary maximum for the y-scale, and collapse partially classified reads into a single \"Unclassified\" category.\r\n\r\n### Minor changes / bugfixes\r\n- Fixed a bug in which the SQMtools package would not install in R < 3.5.\r\n- Fixed a bug in which SQMtools taxonomy tables did not work directly in DESeq2.\r\n- Fixed a bug in the PFAM table generation by `sqm2tables.py`.\r\n- Fixed a minor bug in which some non-standard NCBI taxa would cause checkm to fail.",
+        "html_url": "https://github.com/jtamames/SqueezeMeta/releases/tag/v1.1.1",
+        "name": "v1.1.1",
+        "release_id": 25772728,
+        "tag": "v1.1.1",
+        "tarball_url": "https://api.github.com/repos/jtamames/SqueezeMeta/tarball/v1.1.1",
+        "type": "Release",
+        "url": "https://api.github.com/repos/jtamames/SqueezeMeta/releases/25772728",
+        "value": "https://api.github.com/repos/jtamames/SqueezeMeta/releases/25772728",
+        "zipball_url": "https://api.github.com/repos/jtamames/SqueezeMeta/zipball/v1.1.1"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "fpusan",
+          "type": "User"
+        },
+        "date_created": "2020-03-10T15:58:34Z",
+        "date_published": "2020-03-10T16:05:17Z",
+        "description": "### New features\r\n- SqueezeMeta can now be installed usind [conda](https://docs.conda.io/en/latest/miniconda.html). This does not require any kind of root access. Just get in conda, install it with `conda create -n SqueezeMeta -c fpusan -c bioconda squeezemeta` and then activate the package with `conda activate SqueezeMeta`. Don't like conda? No problem, we'll keep updating and testing the old installation instructions too.\r\n- Added the `utils/install_utils/test_install.pl` script to quickly test whether all the required dependencies are present in the user's environment and that the databases are correctly downloaded and configured. The script will inform the user if any problem is found. This covers interpreters and libraries for perl, python, java, ruby and R, but not other system libraries, so passing the tests does not 100% guarantee that there won't be any problem when running the pipeline. Still, we hope it will help to identify common issues that may arise during installation.\r\n- We now provide the `seqmerge` assembly mode, which first perform an individual assembly of all the samples, and then combines them pairwaise in a sequential fashion. This should be less memory demanding that the `coassembly` and `merged` modes.\r\n- Added the `--euk` which will drop identity filters for the taxonomic annotation of eukaryotic contigs. This will greatly increase the number of eukaryotic sequences reported by SqueezeMeta. By default, SqueezeMeta applies [Luo et al. (2014)](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4005636/) identity cutoffs in order to assign an ORF to a given taxonomic rank. These cutoffs were devised using bacterial genomes, and may be too stringent for eukaryotic sequences.\r\n- We now provide the `utils/combine-sqm-tables.py` script to combine the outputs of different SqueezeMeta or SQM_reads projects. This can prove useful in high performance computation clusters, in which each computing node will be running \"small\" SqueezeMeta or SQM_reads projects consisting only of a few samples, which then need to be aggregated into a single set of results.\r\n- We now redistribute and apply [aragorn](http://130.235.244.92/ARAGORN/) for detecting tRNA coding regions in the contigs.\r\n- The `nobinning` flag can be added to the samples file to tag samples that will used for mapping but not for binning.\r\n- The scripts from the SqueezeMeta suite no longer need to be run in the same directory where the project was created, and should now consistently be able to read and write in arbitrary locations.\r\n- The functionality of the SQMtools R package was expanded:\r\n\t- Annotations from user-supplied databases are now consideres\r\n\t- Added the `loadSQMlite` function, which loads only the aggregated functional/taxonomic profiles (but not the orf/contig/bins tables and sequences). This has a much smaller memory footprint, and can be used with results coming from SQM_reads or `combine-sqm-tables.py`.\r\n\t- Added the `exportKrona` (kudos to Giussepe d'Auria for the idea and the code!) and the `exportPathway` functions, to respectively generate Krona Charts and KEGG pathway plots from `SQM` or `SQMlite` objects.\r\n- SqueezeMeta works on top of LOTS of awesome software which deserves due credit! Running SqueezeMeta will now produce a citation report at `<project>/methods.txt` containing a summary of the software used in that run, and the corresponding bibliographic references.\r\n\r\n### Minor changes / bugfixes\r\n- Decreased memory usage while generating the ORF table.\r\n- Fixed missing nucleotide lengths for RNAs in the ORF table.\r\n- Fixed \"{}\" appearing instead of a rank code when Unclassified reads were summarized by `sqm2tables.py`.\r\n- Minimum R version for the SQMtools package was downgraded from 3.4.0 to 3.2.0.\r\n- Subset methods in the SQMtools package will now work when trying to subset only one ORF.\r\n- Binning will now work even if one of the two methods (maxbin or metabat) produces no results.\r\n- SQM_reads now supports the use of user-supplied databases for annotation, similarly to `SqueezeMeta.pl`.\r\n- Non-standard taxonomy ranks (e.g. suborder) are now ignored and treated as \"no_rank\" in order to avoid problems with checkm.\r\n- All python2 scripts were ported to python3.\r\n- All scripts in SqueezeMeta will now use the interpreters present in the user's PATH rather than being hardcoded to use `/usr/bin/`.\r\n- Fixed an issue producing incomplete taxonomic assignments in SQM_reads and the doublepass mode.\r\n- Megahit was updated to v1.2.9, which fixed some uncommon crashes.\r\n- Fixed an empty \"Name\" field appearing in the `12.*.cog.funcover` table.\r\n- We now redistribute comparem so the `sqm2itol.pl` script should work out of the box.\r\n- Fixed an issue during database creation in which plasmid sequences ended up having a non-consistent taxonomy string that broke the parsers in `sqm2tables.py` and `sqmreads2tables.py`.\r\n- Fixed an issue during database creation in which symbiont species were missing parts of their species name\r\n- Contig nomenclature was standardized to `assemblyMethod_contigNumber`.\r\n- Added extra checks to ensure that reverse reads (pair2) have corresponding forward reads (pair1) in the samples file, which would cause the pipeline to stall at step 10.\r\n- Fixed base counting from SAM files with unusual CIGAR strings.\r\n- Change \"RAW base count\" to \"Raw base count\" in the headers of the ORF table for consistency.\r\n- `sqm2tables.py` and `sqmreads2tables.py` now generate extra information.\r\n- The `SQM` and `SQMlite` R objects now store extra information on function names.\r\n- The SqueezeMeta to anvi'o pipeline will now work with anvio 6.\r\n- The `utils` directory was subdivided into subdirectories to better organize the different functionalities of the SqueezeMeta suite. The ReadMe and the manual have been updated to reflect the new paths.",
+        "html_url": "https://github.com/jtamames/SqueezeMeta/releases/tag/v1.1.0",
+        "name": "v1.1.0 - Easier done than said",
+        "release_id": 24394296,
+        "tag": "v1.1.0",
+        "tarball_url": "https://api.github.com/repos/jtamames/SqueezeMeta/tarball/v1.1.0",
+        "type": "Release",
+        "url": "https://api.github.com/repos/jtamames/SqueezeMeta/releases/24394296",
+        "value": "https://api.github.com/repos/jtamames/SqueezeMeta/releases/24394296",
+        "zipball_url": "https://api.github.com/repos/jtamames/SqueezeMeta/zipball/v1.1.0"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "fpusan",
+          "type": "User"
+        },
+        "date_created": "2019-07-10T15:55:36Z",
+        "date_published": "2019-07-10T15:59:08Z",
+        "description": "### New features\r\n- This update focuses on the **downstream analysis of SqueezeMeta results**. It includes different ways of **exploring your data and generating different plots**. It also comes with a revamped PDF manual explaining all the SqueezeMeta algorithms in detail.\r\n- **Integration with R:** We provide the *SQMtools* R package, which allows to easily load a whole SqueezeMeta project and expose the results into R. The package includes functions to select particular taxa or functions and generate plots. The package also makes the different tables generated by SqueezeMeta easily available for third-party R packages such as *vegan* (for multivariate analysis), *DESeq2* (for differential abundance testing) or for custom analysis pipelines. A description of the package can be found in the SqueezeMeta manual. The full documentation (including usage examples) can be found in the `SQMtools_v0.3.pdf` file.\r\n- **Don't like R?** We can't blame you. The `sqm2tables.py` script will generate tabular outputs that can be loaded in your favourite analysis environment.\r\n- **Integration with the anvi'o analysis pipeline:** We provide a compatibility layer for loading SqueezeMeta results into the anvi'o analysis and visualization platform (http://merenlab.org/software/anvio/). This includes a built-in query language for selecting the contigs to be visualized in the anvi'o interactive interface. Check the SqueezeMeta manual for more details.\r\n- We also include the `sqm2itol.pl` and `sqm2pavian.pl` scripts for generating **[itol](https://itol.embl.de/)** and **[pavian](https://ccb.jhu.edu/software/pavian/)** -compatible outputs.\r\n- We have added the `SQM_hmm_reads.pl`script for performing sensitive searches for particular functions in unassembled reads. This comes in addition to `SQM_reads.pl`, which performs taxonomic and functional profiling of metagenomes without resorting to assembly.\r\n- We have added the `remove_duplicate_markers.pl` and `find_missing_markers.pl` scripts for refining individual bins.\r\n\r\n### Minor changes/bugfixes\r\n- Updated installation instructions.\r\n- Changed some column names in the `13.*.orftable`, `19.*.bintable` and `20.*.contigtable` outputs so that the three tables follow a consistent naming style.\r\n- SqueezeMeta should no longer crash when fed a samples file generated in Windows.\r\n- Fixed abundance calculation in the bin table.\r\n- Fixed 16S rRNA taxonomy not appearing in the bin table.\r\n- Fixed reads and bases being swapped in the `11.*.mcount` table.\r\n- Fixed the last ORF/RNA predicted by prodigal/barrnap having an empty nucleotide length in the orf table.",
+        "html_url": "https://github.com/jtamames/SqueezeMeta/releases/tag/v1.0.0",
+        "name": "v1.0.0 - Worth a thousand words",
+        "release_id": 18529297,
+        "tag": "v1.0.0",
+        "tarball_url": "https://api.github.com/repos/jtamames/SqueezeMeta/tarball/v1.0.0",
+        "type": "Release",
+        "url": "https://api.github.com/repos/jtamames/SqueezeMeta/releases/18529297",
+        "value": "https://api.github.com/repos/jtamames/SqueezeMeta/releases/18529297",
+        "zipball_url": "https://api.github.com/repos/jtamames/SqueezeMeta/zipball/v1.0.0"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "fpusan",
+          "type": "User"
+        },
+        "date_created": "2019-05-24T10:52:07Z",
+        "date_published": "2019-05-24T17:06:07Z",
+        "description": "- This patch fixes a bug that appeared in v1.0.0-beta in which SqueezeMeta would die at step 13 when not using the doublepass mode.\r\n\r\n\r\n------------------------------------------------------------------------------------------------\r\n\r\n\r\n### This is a pre-release!\r\n- This update comes with significant additions and changes to the SqueezeMeta pipeline. We have already tested them extensively, but we still expect to include some extra features and bug fixes in the \"real\" v1.0.0.\r\n- If something is not working for you, please don't hesitate to open an issue or write us directly!\r\n\r\n### New features\r\n- We now include a PDF manual with details on SqueezeMeta and its different algorithms. Make sure to check it!\r\n- Different parameters for fine-tuning SqueezeMeta can be found (together with a brief documentation) in the `.../SqueezeMeta/scripts/parameters.pl` file. The different parameters are set to sensible defaults, but users can modify the file.\r\n- We have added the option of skipping the assembly step and working with an user-supplied assembly. This should help users that prefer to use a custom assembly pipeline (e.g. assembling minION reads with canu, and then using Illumina reads and pylon to correct the resulting contigs).\r\n- Users can now provide their own reference databases for functional annotation (e.g. of membrane transporters, mobile elements, antibiotic resistance genes... etc). The results will be seamlessly included into the different SqueezeMeta output files. Please refer to the PDF manual for details.\r\n- We have added an optional step for extra-sensitive ORF detection which combines the prodigal predictions with a BlastX search on parts of the contigs where no ORFs were predicted, or where predicted ORFs did not match anything in the taxonomic and functional databases. This can be selected by providing the *--D* (*doublepass*) flag when calling SqueezeMeta.\r\n- We added the `.../SqueezeMeta/utils` directory, which includes useful scripts related to the SqueezeMeta p\u00ecpeline. These include:\r\n    - *sqm2itol.pl*: generate the files required for creating a radial plot of bin abundances across samples using [itol](https://itol.embl.de/).\r\n    - *make-tables.py*: generate tabular outputs, suitable for analysis in environments such as R, summarizing the taxonomic and functional profiles obtained in a SqueezeMeta run.\r\n    - *make-SqueezeMdb-files.py*: generate the files required for loading a SqueezeMeta project into the built in MySQL database (https://github.com/jtamames/SqueezeMdb).\r\n    - *SQM_reads.pl*: run SqueezeMeta's taxonomic and functional classification algorithms on individual metagenomic reads. Short reads are harder to annotate, but provide a view of the metagenome that is free from assembly and ORF prediction biases.\r\n\r\n### Minor changes / Bug fixes\r\n- We now use TPM instead of RPKM for reporting normalized counts of genes and functions. \r\n- The format of the taxonomy strings produced by SqueezeMeta has changed from `superkingdom:foo;phylum:bar;class:baz;...` to `k_foo;p_bar;c_baz;...`. \r\n- Some outputs have been moved from the results directory to two new directories called *intermediate* and *ext_tables*. Please refer to the PDF manual for details.\r\n- Increased the number of KEGG functions with detailed text descriptions in the 12.<project>.kegg.funcover and 13.<project>.orftable files. \r\n- SqueezeMeta should now provide more detailed error messages when dying.\r\n- Minimus2 now uses multiple threads to run nucmer.\r\n- Updated maxbin to v2.2.6. This fixes an error that appeared when assigning a large number of threads.\r\n- We now redistribute libpcre with SqueezeMeta, which should simplify installation in Centos7 and fix some issues with DAS_tool / pullseq.\r\n- Fixed the cause for a warning message (*package ?methods? in options(\"defaultPackages\") was not found*) that appeared when running DAS_tool. Also removed some warnings about missing usearch/blast, as those programs are not needed for running DAS_tool within the SqueezeMeta pipeline.\r\n- SqueezeMeta should now print a warning message instead of dying in the unlikely case that no bins are reported by DAS_tool.",
+        "html_url": "https://github.com/jtamames/SqueezeMeta/releases/tag/V1.0.0-beta2",
+        "name": "v1.0.0-beta2",
+        "release_id": 17576323,
+        "tag": "V1.0.0-beta2",
+        "tarball_url": "https://api.github.com/repos/jtamames/SqueezeMeta/tarball/V1.0.0-beta2",
+        "type": "Release",
+        "url": "https://api.github.com/repos/jtamames/SqueezeMeta/releases/17576323",
+        "value": "https://api.github.com/repos/jtamames/SqueezeMeta/releases/17576323",
+        "zipball_url": "https://api.github.com/repos/jtamames/SqueezeMeta/zipball/V1.0.0-beta2"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "fpusan",
+          "type": "User"
+        },
+        "date_created": "2019-04-15T16:29:53Z",
+        "date_published": "2019-04-15T17:43:03Z",
+        "description": "### This is a pre-release!\r\n- This update comes with significant additions and changes to the SqueezeMeta pipeline. We have already tested them extensively, but we still expect to include some extra features and bug fixes in the \"real\" v1.0.0.\r\n\r\n### New features\r\n- We now include a PDF manual with details on SqueezeMeta and its different algorithms. Make sure to check it!\r\n- Different parameters for fine-tuning SqueezeMeta can be found (together with a brief documentation) in the `.../SqueezeMeta/scripts/parameters.pl` file. The different parameters are set to sensible defaults, but users can modify the file.\r\n- We have added the option of skipping the assembly step and working with an user-supplied assembly. This should help users that prefer to use a custom assembly pipeline (e.g. assembling minION reads with canu, and then using Illumina reads and pylon to correct the resulting contigs).\r\n- Users can now provide their own reference databases for functional annotation (e.g. of membrane transporters, mobile elements, antibiotic resistance genes... etc). The results will be seamlessly included into the different SqueezeMeta output files. Please refer to the PDF manual for details.\r\n- We have added an optional step for extra-sensitive ORF detection which combines the prodigal predictions with a BlastX search on parts of the contigs where no ORFs were predicted, or where predicted ORFs did not match anything in the taxonomic and functional databases. This can be selected by providing the *--D* (*doublepass*) flag when calling SqueezeMeta.\r\n- We added the `.../SqueezeMeta/utils` directory, which includes useful scripts related to the SqueezeMeta p\u00ecpeline. These include:\r\n    - *sqm2itol.pl*: generate the files required for creating a radial plot of bin abundances across samples using [itol](https://itol.embl.de/).\r\n    - *make-tables.py*: generate tabular outputs, suitable for analysis in environments such as R, summarizing the taxonomic and functional profiles obtained in a SqueezeMeta run.\r\n    - *make-SqueezeMdb-files.py*: generate the files required for loading a SqueezeMeta project into the built in MySQL database (https://github.com/jtamames/SqueezeMdb).\r\n    - *SQM_reads.pl*: run SqueezeMeta's taxonomic and functional classification algorithms on individual metagenomic reads. Short reads are harder to annotate, but provide a view of the metagenome that is free from assembly and ORF prediction biases.\r\n\r\n### Minor changes / Bug fixes\r\n- We now use TPM instead of RPKM for reporting normalized counts of genes and functions. \r\n- The format of the taxonomy strings produced by SqueezeMeta has changed from `superkingdom:foo;phylum:bar;class:baz;...` to `k_foo;p_bar;c_baz;...`. \r\n- Some outputs have been moved from the results directory to two new directories called *intermediate* and *ext_tables*. Please refer to the PDF manual for details.\r\n- Increased the number of KEGG functions with detailed text descriptions in the 12.<project>.kegg.funcover and 13.<project>.orftable files. \r\n- SqueezeMeta should now provide more detailed error messages when dying.\r\n- Minimus2 now uses multiple threads to run nucmer.\r\n- Updated maxbin to v2.2.6. This fixes an error that appeared when assigning a large number of threads.\r\n- We now redistribute libpcre with SqueezeMeta, which should simplify installation in Centos7 and fix some issues with DAS_tool / pullseq.\r\n- Fixed the cause for a warning message (*package ?methods? in options(\"defaultPackages\") was not found*) that appeared when running DAS_tool. Also removed some warnings about missing usearch/blast, as those programs are not needed for running DAS_tool within the SqueezeMeta pipeline.\r\n- SqueezeMeta should now print a warning message instead of dying in the unlikely case that no bins are reported by DAS_tool.",
+        "html_url": "https://github.com/jtamames/SqueezeMeta/releases/tag/v1.0.0-beta",
+        "name": "v1.0.0-beta",
+        "release_id": 16724089,
+        "tag": "v1.0.0-beta",
+        "tarball_url": "https://api.github.com/repos/jtamames/SqueezeMeta/tarball/v1.0.0-beta",
+        "type": "Release",
+        "url": "https://api.github.com/repos/jtamames/SqueezeMeta/releases/16724089",
+        "value": "https://api.github.com/repos/jtamames/SqueezeMeta/releases/16724089",
+        "zipball_url": "https://api.github.com/repos/jtamames/SqueezeMeta/zipball/v1.0.0-beta"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "fpusan",
+          "type": "User"
+        },
+        "date_created": "2019-02-25T14:24:12Z",
+        "date_published": "2019-03-05T09:48:17Z",
+        "description": "### Announcements\r\n- The web interface for accessing SqueezeMeta results has been updated, and the remaining bugs have been ironed out. You can find it [here](https://github.com/jtamames/SqueezeMdb).\r\n- The next version will likely be v1.0.0, and will include updated and more detailed documentation, extra features and more simple outputs. Stay tuned, and meanwhile write us if you have any question or would like something to be included!\r\n\r\n### Minor changes / bug fixes\r\n- Minpath can fail to run for small bins, if it finds zero potential pathways. This now prints a warning instead of propagating and killing SqueezeMeta.\r\n- The LCA step now generates an additional set of files `06.<PROJECT_NAME>.fun3.tax.noidfilter*` including the taxonomic assignment that the ORF would have gotten if the identity filters from [Luo _et al._ (2014)](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4005636/) had not been applied. We still apply them by default throughout our pipeline, but we have become aware that they might be too stringent when working with uncultured eukaryotes. We thus provide the unfiltered taxonomy so that the user can search for her/his favourite bugs there.\r\n- The DIAMOND against the COG database was being run twice. This has been fixed.\r\n- Previously SqueezeMeta would die if DAS returned zero bins. This is an unlikely, but not impossible, scenario. Behaviour has been changed to print a warning and skip further bin-related steps.\r\n- Fixed minor bugs in output construction.",
+        "html_url": "https://github.com/jtamames/SqueezeMeta/releases/tag/v0.4.4",
+        "name": "v0.4.4",
+        "release_id": 15914854,
+        "tag": "v0.4.4",
+        "tarball_url": "https://api.github.com/repos/jtamames/SqueezeMeta/tarball/v0.4.4",
+        "type": "Release",
+        "url": "https://api.github.com/repos/jtamames/SqueezeMeta/releases/15914854",
+        "value": "https://api.github.com/repos/jtamames/SqueezeMeta/releases/15914854",
+        "zipball_url": "https://api.github.com/repos/jtamames/SqueezeMeta/zipball/v0.4.4"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "fpusan",
+          "type": "User"
+        },
+        "date_created": "2019-02-06T08:52:19Z",
+        "date_published": "2019-02-06T08:53:01Z",
+        "description": "### Minor changes\r\n- We now provide a pre-compiled version of the database, which can be downloaded via the script `.../SqueezeMeta/scripts/preparing_databases/download_databases.pl <datapath>`. This is quicker and safer against changes in NCBI.\r\n- Removed dependency on bedtools.",
+        "html_url": "https://github.com/jtamames/SqueezeMeta/releases/tag/v0.4.3",
+        "name": "v0.4.3",
+        "release_id": 15391750,
+        "tag": "v0.4.3",
+        "tarball_url": "https://api.github.com/repos/jtamames/SqueezeMeta/tarball/v0.4.3",
+        "type": "Release",
+        "url": "https://api.github.com/repos/jtamames/SqueezeMeta/releases/15391750",
+        "value": "https://api.github.com/repos/jtamames/SqueezeMeta/releases/15391750",
+        "zipball_url": "https://api.github.com/repos/jtamames/SqueezeMeta/zipball/v0.4.3"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "fpusan",
+          "type": "User"
+        },
+        "date_created": "2019-01-18T10:55:53Z",
+        "date_published": "2019-01-18T11:32:25Z",
+        "description": "### Announcement\r\n- The latest NCBI nr release didn't play nice with our parser. In particular, one of the new entries led to the appearance of unclosed quotes in an intermediate file, which in turn led to SQLite not parsing the file from that point on. As a result, taxonomic annotation was far more scarce that it should be. Those of you that have been experiencing troubles and downloaded the database in the last month might want to re-build it using the scripts provided in this version, which fix that particular problem. We'll keep improving our parser so that issues like that become as infrequent as possible. Meanwhile, please smash that issue button if you find that something is not working as intended!\r\n\r\n### New features\r\n- SqueezeMeta does now work in CentOS7, in addition to Ubuntu14+. All necessary dependencies and installation instructions are listed in the INSTALL-CENTOS7 file.\r\n\r\n### Minor changes / Bug fixes\r\n- Removed dependency on GCC5.\r\n- Fixed an issue in which a recently-added entry in the NCBI nr database resulted in our LCA database being only partially created.\r\n- Added extra checks in the make_databases.pl script to ensure that the LCA SQLite database has the same number of rows as its plain text source file.",
+        "html_url": "https://github.com/jtamames/SqueezeMeta/releases/tag/v0.4.2",
+        "name": "v0.4.2",
+        "release_id": 15052163,
+        "tag": "v0.4.2",
+        "tarball_url": "https://api.github.com/repos/jtamames/SqueezeMeta/tarball/v0.4.2",
+        "type": "Release",
+        "url": "https://api.github.com/repos/jtamames/SqueezeMeta/releases/15052163",
+        "value": "https://api.github.com/repos/jtamames/SqueezeMeta/releases/15052163",
+        "zipball_url": "https://api.github.com/repos/jtamames/SqueezeMeta/zipball/v0.4.2"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "fpusan",
+          "type": "User"
+        },
+        "date_created": "2018-12-21T10:51:18Z",
+        "date_published": "2018-12-24T10:10:39Z",
+        "description": "### Christmas announcement\r\n- We've started working on an installation guide for CentOS 7. Stay tuned!\r\n\r\n### Minor changes / Bug fixes\r\n- Contigs with no proteins are now included in the 19.*.contigtable file.\r\n- Fixed a bug occurring in newer versions of Perl (such as the one shipped with Ubuntu 18).\r\n- Fixed a bug in which CheckM was called incorrectly with bins assigned to Candidatus genera.\r\n- Fixed a minor bug when calculating the best average functional assignment for orfs.",
+        "html_url": "https://github.com/jtamames/SqueezeMeta/releases/tag/v0.4.1",
+        "name": "v0.4.1",
+        "release_id": 14682845,
+        "tag": "v0.4.1",
+        "tarball_url": "https://api.github.com/repos/jtamames/SqueezeMeta/tarball/v0.4.1",
+        "type": "Release",
+        "url": "https://api.github.com/repos/jtamames/SqueezeMeta/releases/14682845",
+        "value": "https://api.github.com/repos/jtamames/SqueezeMeta/releases/14682845",
+        "zipball_url": "https://api.github.com/repos/jtamames/SqueezeMeta/zipball/v0.4.1"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "fpusan",
+          "type": "User"
+        },
+        "date_created": "2018-12-07T14:56:29Z",
+        "date_published": "2018-12-08T08:55:49Z",
+        "description": "### New features\r\n- Changed name from SqueezeM to SqueezeMeta\r\n- Full support for long reads (MinION, PacBio) through canu and minimap2\r\n- Inclusion of DAS_tool for integrating the binning results of MaxBin and MetaBAT\r\n- Control diamond memory usage via the -b parameter\r\n\r\n### Minor changes / Bug fixes\r\n- Default minimum contig length is now 200 instead of 1200\r\n- SqueezeMeta.pl and restart.pl should now be much more consistent at stopping whenever an intermediate step fails, and display more informative error messages\r\n- Contig/bin \"chimerism\" is now called \"disparity\" instead\r\n- Fixed a bug in which the latest release of nr wasn't being properly parched during database creation\r\n- Fixed a bug in which some ORFs had an incomplete taxonomic annotation\r\n- Fixed a bug in which many ORFs were being ignored when running MinPath\r\n- Fixed some unfrequent bugs when using the merged mode on uncompressed files or single-end reads\r\n- Unmapped reads now count towards the total in rpkm normalization",
+        "html_url": "https://github.com/jtamames/SqueezeMeta/releases/tag/v0.4.0",
+        "name": "v0.4.0",
+        "release_id": 14421858,
+        "tag": "v0.4.0",
+        "tarball_url": "https://api.github.com/repos/jtamames/SqueezeMeta/tarball/v0.4.0",
+        "type": "Release",
+        "url": "https://api.github.com/repos/jtamames/SqueezeMeta/releases/14421858",
+        "value": "https://api.github.com/repos/jtamames/SqueezeMeta/releases/14421858",
+        "zipball_url": "https://api.github.com/repos/jtamames/SqueezeMeta/zipball/v0.4.0"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "fpusan",
+          "type": "User"
+        },
+        "date_created": "2018-11-12T09:09:45Z",
+        "date_published": "2018-11-14T17:19:02Z",
+        "description": "Fix a bug in the lca.pl script that was leading to incomplete taxonomic annotations for some ORFs.",
+        "html_url": "https://github.com/jtamames/SqueezeMeta/releases/tag/v0.3.1",
+        "name": "v0.3.1",
+        "release_id": 14003825,
+        "tag": "v0.3.1",
+        "tarball_url": "https://api.github.com/repos/jtamames/SqueezeMeta/tarball/v0.3.1",
+        "type": "Release",
+        "url": "https://api.github.com/repos/jtamames/SqueezeMeta/releases/14003825",
+        "value": "https://api.github.com/repos/jtamames/SqueezeMeta/releases/14003825",
+        "zipball_url": "https://api.github.com/repos/jtamames/SqueezeMeta/zipball/v0.3.1"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "run": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Scripts location",
+        "parent_header": [
+          "SqueezeMeta: a fully automated metagenomics pipeline, from reads to bins",
+          "5. Execution, restart and running scripts"
+        ],
+        "type": "Text_excerpt",
+        "value": "The scripts composing the SqueezeMeta pipeline can be found in the `/path/to/SqueezeMeta/scripts` directory. Other utility scripts can be found in the `/path/to/SqueezeMeta/utils` directory. See the PDF manual for more information on utility scripts.\n"
+      },
+      "source": "https://raw.githubusercontent.com/jtamames/SqueezeMeta/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Execution",
+        "parent_header": [
+          "SqueezeMeta: a fully automated metagenomics pipeline, from reads to bins",
+          "5. Execution, restart and running scripts"
+        ],
+        "type": "Text_excerpt",
+        "value": "The command for running SqueezeMeta has the following syntax:\n\n`SqueezeMeta.pl -m <mode> -p <projectname> -s <equivfile> -f <raw fastq dir> <options>`\n\n**Arguments** \n*Mandatory parameters* \n* *-m* <sequential, coassembly, merged, seqmerge>: Mode (REQUIRED) \n* *-p* \\<string\\>: Project name (REQUIRED in coassembly and merged modes) \n* *-s*|*-samples* \\<path\\>: Samples file (REQUIRED) \n* *-f*|*-seq* \\<path\\>: Fastq read files' directory (REQUIRED) \n\n*Restarting*\n* *--restart*: Restarts the given project where it stopped (project must be speciefied with -p option) (will NOT overwite previous results, unless --force_overwrite is also provided)\n* *-step* [int]: In combination with _--restart_, restarts the project starting in the given step number (combine with --force_overwrite to regenerate results)\n* *--force_overwrite*: Do not check for previous results, and overwrite existing ones\n \n*Filtering* \n* *--cleaning*: Filters with Trimmomatic (Default: no) \n* *-cleaning_options* [string]: Options for Trimmomatic (default: \"LEADING:8 TRAILING:8 SLIDINGWINDOW:10:15 MINLEN:30\"). Please provide all options as a single quoted string.\n \n*Assembly*  \n* *-a* [megahit,spades,rnaspades,spades-base,canu,flye]: assembler. (default: megahit).\n* *-assembly_options* [string]: Extra options for the assembler (refer to the manual of the specific assembler). Please provide all the extra options as a single quoted string (e.g. _-assembly_options \u201c--opt1 foo --opt2 bar\u201d_)\n* *-c*|*-contiglen* [number]: Minimum length of contigs (Default:200) \n* *-extassembly* [path]: Path to a file containing an external assembly provided by the user. The file must contain contigs in the fasta format. This overrides the assembly step of SqueezeMeta.\n* *--sq/--singletons*: unassembled reads will be treated as contigs and included in the contig fasta file resulting from the assembly. This will produce 100% mapping percentages, and will increase BY A LOT the number of contigs to process. Use with caution (Default: no)\n* *-contigid* [string]: Nomenclature for contigs (Default: assembler\u00b4s name)\n* *--norename*: Don't rename contigs (Use at your own risk, characters like '_' in contig names will make it crash)\n \n*Annotation* \n* *-db* [file]: Specifies the location of a new taxonomy database (in Diamond format, .dmnd)\n* *--nocog*: Skip COG assignment (Default: no) \n* *--nokegg*: Skip KEGG assignment (Default: no) \n* *--nopfam*: Skip Pfam assignment (Default: no) \n* *--euk*: Drop identity filters for eukaryotic annotation (Default: no). This is recommended for analyses in which the eukaryotic population is relevant, as it will yield more annotations. See the manual for details\n* *-consensus* [float]: Minimum percentage of genes for a taxon needed for contig consensus (Default: 50)\n* *-extdb* [path]: List of additional user-provided databases for functional annotations. More information can be found in the manual\n* *--D*|*--doublepass*: Run BlastX ORF prediction in addition to Prodigal (Default: no) \n \n*Mapping* \n* *-map* [bowtie,bwa,minimap2-ont,minimap2-pb,minimap2-sr]: Read mapper (Default: bowtie) \n* *-mapping_options* [string]: Extra options for the mapper (refer to the manual of the specific mapper). Please provide all the extra options as a single quoted string (e.g. _-mapping_options \u201c--opt1 foo --opt2 bar\u201d_)\n\n*Binning*\n* *--nobins*: Skip all binning  (Default: no). Overrides -binners \n* *-binners* [string]: Comma-separated list with the binning programs to be used (available: maxbin, metabat, concoct)  (Default: concoct,metabat)\n* *-taxbinmode* [string]: Source of taxonomy annotation of bins (s: SqueezeMeta; c: CheckM; s+c: SqueezeMeta+CheckM;  c+s: CheckM+SqueezeMeta; (Default: s)\n* *-extbins* [path]: Path to a directory containing external genomes/bins provided by the user. There must be one file per genome/bin, containing each contigs in the fasta format. This overrides the assembly and binning steps.\n\n*Performance* \n* *-t* [number]: Number of threads (Default:12) \n* *-b*|*-block-size* [number]: Block size for DIAMOND against the nr database (Default: calculate automatically) \n* *-canumem* [number]: Memory for Canu in Gb (Default: 32) \n* *--lowmem*: Run on less than 16 Gb of RAM memory (Default: no). Equivalent to: -b 3 -canumem 15 \n \n*Other* \n* *--minion*: Run on MinION reads (Default: no). Equivalent to -a canu -map minimap2-ont \n* *-test* [step]: For testing purposes, stops AFTER the given step number\n* *--empty*: Creates an empty directory structure and configuration files. It does not run the pipeline\n \n*Information* \n* *-v*: Version number \n* *-h*: Display help \n \n \n**Example SqueezeMeta call:** `SqueezeMeta.pl -m coassembly -p test -s test.samples -f mydir --nopfam -miniden 50`\n\nThis will create a project \"test\" for co-assembling the samples specified in the file \"test.samples\", using a minimum identity of 50% for taxonomic and functional assignment, and skipping Pfam annotation. The -p parameter indicates the name under which all results and data files will be saved. This is not required for sequential mode, where the name will be taken from the samples file instead. The -f parameter indicates the directory where the read files specified in the sample file are stored.\n"
+      },
+      "source": "https://raw.githubusercontent.com/jtamames/SqueezeMeta/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "The samples file:",
+        "parent_header": [
+          "SqueezeMeta: a fully automated metagenomics pipeline, from reads to bins",
+          "5. Execution, restart and running scripts"
+        ],
+        "type": "Text_excerpt",
+        "value": "The samples file specifies the samples, the names of their corresponding raw read files and the sequencing pair represented in those files, separated by tabulators.\n\nIt has the format: `<Sample>   <filename>  <pair1|pair2>`\n\nAn example would be\n\n```\nSample1\treadfileA_1.fastq\tpair1\nSample1\treadfileA_2.fastq\tpair2\nSample1\treadfileB_1.fastq\tpair1\nSample1\treadfileB_2.fastq\tpair2\nSample2\treadfileC_1.fastq.gz\tpair1\nSample2\treadfileC_2.fastq.gz\tpair2\nSample3\treadfileD_1.fastq\tpair1\tnoassembly\nSample3\treadfileD_2.fastq\tpair2\tnoassembly\n```\n\nThe first column indicates the sample id (this will be the project name in sequential mode), the second contains the file names of the sequences, and the third specifies the pair number of the reads. A fourth optional column can take the `noassembly` value, indicating that these sample must not be assembled with the rest (but will be mapped against the assembly to get abundances). This is the case for RNAseq reads that can hamper the assembly but we want them mapped to get transcript abundance of the genes in the assembly. Similarly, an extra column with the `nobinning` value can be included in order to avoid using those samples for binning. Notice that a sample can have more than one set of paired reads. The sequence files can be in fastq or fasta format, and can be gzipped. If a sample contains paired libraries, it is the user's responsability to make sure that the forward and reverse files are truly paired (i.e. they contain the same number of reads in the same order). Some quality filtering / trimming tools may produce unpaired filtered fastq files from paired input files (particularly if run without the right parameters). This may result in SqueezeMeta failing or producing incorrect results.\n"
+      },
+      "source": "https://raw.githubusercontent.com/jtamames/SqueezeMeta/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Restart",
+        "parent_header": [
+          "SqueezeMeta: a fully automated metagenomics pipeline, from reads to bins",
+          "5. Execution, restart and running scripts"
+        ],
+        "type": "Text_excerpt",
+        "value": "Any interrupted SqueezeMeta run can be restarted using the program the flag `--restart`. It has the syntax:\n\n`SqueezeMeta.pl -p <projectname> --restart`\n\nThis command will restart the run of that project by reading the progress.txt file to find out the point where the run stopped. \n \nAlternatively, the run can be restarted from a specific step by issuing the command:\n\n`SqueezeMeta.pl -p <projectname> --restart -step <step_to_restart_from>`\n\nBy default, already completed steps will not be repeated when restarting, even if requested with `-step`. In order to repeat already completed steps you must also provide the flag `--force_overwrite`.\n\ne.g. `SqueezeMeta.pl --restart -p <projectname> -step 6 --force_overwrite` would restart the pipeline from the taxonomic assignment of genes. The different steps of the pipeline are listed in section 1.\n"
+      },
+      "source": "https://raw.githubusercontent.com/jtamames/SqueezeMeta/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Running scripts",
+        "parent_header": [
+          "SqueezeMeta: a fully automated metagenomics pipeline, from reads to bins",
+          "5. Execution, restart and running scripts"
+        ],
+        "type": "Text_excerpt",
+        "value": "Also, any individual script of the pipeline can be run using the same syntax: \n\n`script <projectname>` (for instance, `04.rundiamond.pl <projectname>` to repeat the DIAMOND run for the project)\n\n"
+      },
+      "source": "https://raw.githubusercontent.com/jtamames/SqueezeMeta/master/README.md",
+      "technique": "header_analysis"
+    }
+  ],
+  "somef_missing_categories": [
+    "acknowledgement",
+    "requirements",
+    "contact",
+    "contributors",
+    "usage",
+    "faq",
+    "support",
+    "identifier",
+    "executable_example"
+  ],
+  "somef_provenance": {
+    "date": "2024-10-06 07:52:08",
+    "somef_schema_version": "1.0.0",
+    "somef_version": "0.9.5"
+  },
+  "stargazers_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 373
+      },
+      "technique": "GitHub_API"
+    }
+  ]
+}

@@ -1,0 +1,500 @@
+{
+  "citation": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "ssCheck",
+        "parent_header": [
+          "Reference based benchmarking"
+        ],
+        "type": "Text_excerpt",
+        "value": "We describe here the tool **ssCheck** for accuracy benchmarking of reads and transcripts mapped to a reference genome. ssCheck reads as input an alignment file in paf format and an annotation file in GTF format to compare with:\n\n```\npython ss_check.py [-h] [--beautiful] ref.gtf aln.paf\n\nCalculate known/novel splice sites from PAF alignment and ref GTF file\n\npositional arguments:\n  ref.gtf      Reference GTF file (required)\n  aln.paf      Alignment file in PAF format (required)\n\noptional arguments:\n  -h, --help   show this help message and exit\n  --beautiful  Beautiful output (instead of csv)\n```\n\nssCheck works by comparing annotation features in the mapped reads/sequences (exons, introns, exon-chains, intron-chains) with same features in the annotation and calculates the number of unique features as well as the total number of features predicted in the mapped reads. An intron-chain is defined as an ordered sequence of introns in an annotated transcript or mapped read. Similarly for exon-chains. The recall is calculated as the fraction of unique annotated features correctly found; precision is calculated as the fraction of unique predicted features that were in the annotation and read-precision is calculated as the fraction of the total number of predicted features in reads that corresponded to annotated features. Read-precision is affected by abundance levels but better reflects the accuracy per read. \n\nWe developed ssCheck to be able to calculate the read-precision. Other methods merge identical intron-chains with different identifiers, which precludes this calculation.\n\n## Example dataset\n\nWe provide below example datasets and ss_check.py commands. We make available all input and output files in the folder **toyset/sscheck**. The inputs are based on the same dataset described above for the RATTLE toyset. \nThis input files are available at **./toyset/sscheck/input**. We describe below the steps to run ss_check.py:\n\n**sam2paf**\n\nWe first use minimap2 paftools.js to convert the mapped reads in sam **format** to **paf** format. Please make sure minimap2 is installed and in yout PATH to use the below command.**\n```\n$ ./minimap2/misc/paftools.js sam2paf ./toyset/sscheck/input/sample.sam > ./toyset/sscheck/input/sample.paf\n```\nBoth the files sample.sam and sample.paf are available at ./toyset/sscheck/input/\n\n**ss_check with csv output**\n```\n$ python ./misc/ss_check.py  ./toyset/sscheck/input/sample_ref.gtf ./toyset/sscheck/input/sample.paf > ./toyset/sscheck/output/sample_output_sscheck.csv\n```\nThe output generated from this step is a csv file for example ./toyset/sscheck/output/sample_output_sscheck.csv\nThe annotation file **sample_ref.gtf** is available at ./toyset/sscheck/input/ and corresponds to the GTF file selected for chr20 from Homo_sapiens.GRCh38.99.gtf downloaded from http://ftp.ensembl.org/pub/release-99/gtf/homo_sapiens/.\n\n**ss_check with beautiful output**\n```\n$ python ./misc/ss_check.py --beautiful ./toyset/sscheck/input/sample_ref.gtf ./toyset/sscheck/input/sample.paf > ./toyset/sscheck/output/sample_output_sscheck.beautiful\n```\nThe output generated in this case is easier to read. The output file for this command can be found in  ./toyset/sscheck/output/sample_output_sscheck.beautiful\n\nFor instance, for introns:\n\n```\n########################################\n#             INTRON LEVEL             #\n########################################\nIntrons in reference: 17769\nUnique introns in reads: 1721\nReference introns found: 952/17769 (5.36%)\nTotal introns in reads: 15323\n--> Known: 10121 (66.05%)\n--> Novel: 5202 (33.95%)\n```\n"
+      },
+      "source": "https://raw.githubusercontent.com/comprna/RATTLE/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Cluster benchmark",
+        "parent_header": [
+          "Reference based benchmarking"
+        ],
+        "type": "Text_excerpt",
+        "value": "We describe here the tool **cluster_benchmark** for cluster accuracy of predicted reads cluster label compared with reads mapped transciptome id. \n\n```\npython cluster_benchmark.py [input] [output folder] [threads] [--rna]\n\npositional arguments:\n[input]  input fasta fie (required)\n[output] output folder (required)\n\noptional arguments:\nthreads  number of threads to run RATTLE\n--rna    use this mode if data is direct RNA\n```\nCluster_benchmark is designed to calculate the cluster accuracy scores (homogeneity, completeness) of the result from RATTLE clustering step. \n\n**example**  \n\nWe provide below example dataset and cluster_banchmark.py commands. We make available all input and output files under the folder ./toyset/cluster_benchmark. The inputs (sample.fa) are based on the same dataset described above for the RATTLE toyset with mapped transcriptome id label. And input (ref.fa) is a subset of the reference dataset downloaded from http://ftp.ensembl.org/pub/release-105/fasta/homo_sapiens/. This input files are available at ./toyset/cluster_benchmark/input. We describe below the steps to run cluster benchmark.\n\n**label the sample reads**  \n\nWe use minimap to label the sample reads with human transcriptome id. \n\n```\n./minimap2 -ax map-ont --secondary=no ./toyset/cluster_benchmark/input/ref.fa ./toyset/rna/input/sample.fastq > ./toyset/cluster_benchmark/input/sample.sam\n```\nThen convert the sam file into a fasta file (sample.fa). The ref.fa and converted sample.fa file are both available at /toyset/cluster_benchmark/input folder. \n\n**cluster accuracy benchmark**  \n\nWe run the cluster_benchmark.py to benchmark the accuracy scores. The python file would automatically execute the RATTLE cluster and cluster summary step. Then use the summary tsv/csv file to calculate the accuracy score. \n```\npython ./misc/cluster_benchmark.py ./toyset/cluster_benchmark/input/sample.fa ./toyset/cluster_benchmark/output 24 --rna\n```\n\n**result**  \n\nThis cluster accuracy benchmark result is generated from RATTLE v1.0.\n| mode - reference    | homogeneity   | completeness   |\n| :----------------|:-------------:| :-------------|\n| RNA - transcriptome  | 84.56%    |92.22%     |\n| RNA - genome  |  98.87%    |96.24%         |\n| cDNA - transcriptome  | 84.52%   |92.21%     |\n| cDNA - genome  |  98.78%    |96.22%         |\n"
+      },
+      "source": "https://raw.githubusercontent.com/comprna/RATTLE/master/README.md",
+      "technique": "header_analysis"
+    }
+  ],
+  "code_repository": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/comprna/RATTLE"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_created": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2018-07-13T14:09:34Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_updated": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2024-06-07T15:12:33Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "description": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "Reference-free reconstruction and error correction of transcriptomes from Nanopore long-read sequencing"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Description of clustering parameters",
+        "parent_header": [
+          "Running RATTLE",
+          "Clustering"
+        ],
+        "type": "Text_excerpt",
+        "value": "**General parameters for the clustering step**\n  \n    --raw\n\nIf this flag is used, all reads from the input are used without any filtering for length, i.e. --lower-length and \u2013upper-length parameters below are not used\n\n    --lower-length (default: 150)\n\nBy default, we do not use reads that are shorter than 150nt. This limit can be increase to produce longer transcript models. Nanopore short-read sequencing is becoming possible, so this lower bound could be lowered to enable the reference-free reconstruction of small non-coding RNAs.\n\n    --upper-length (default: 100,000)\n\nAlthough very long transcripts are possible, we generally found reads longer than 100,000 nt not to be reliable, possibly resulting from experimental artifacts. As data improves, this parameter can be relaxed to identify ultra-long transcripts. \n\n**Parameters related to the bitvector comparison in the Clustering step**\n\n    -B, --bv-start-threshold (default: 0.4)\n\nThis threshold is the minimal bitvector score to consider two reads to be potentially in the same gene cluster. The bitvector score defined as the fraction of unique k-mers that two reads have in common over the maximum of unique k-mers in the two reads. If the score is above this threshold, the two reads are compared using the LIS similarity score (see below \u2013score-threshold). This threshold is the minimal score used. RATTLE performs multiple iterations of this test with all reads starting at the value of \u201c-B\u201d and decreasing by a step of \u201c-f\u201d until the threshold of \u201c-b\u201d. These multiple iterations makes it possible to test all reads under various conditions for clustering. To see the result of changing this parameter, please see Table S11 from RATTLE\u2019s paper.\n\n    -b, --bv-end-threshold (default: 0.2)\n\nThe ending threshold for the bitvector score in the iterations. A low value for -b makes possible to rescue reads have not been clustered in previous iterations. If -b is close to -B (or the same) only one or few iterations will be performed. This will make the clustering less sensitive, potentially resulting in many unclustered reads. To see the result of changing this parameter, please see Table S11 from RATTLE\u2019s paper.\n\n    -f, --bv-falloff (default: 0.05)\n\nThis is the step-change value between the first (-B) and final (-b) bitvector score thresholds and determines the number of iterations to perform clustering. A small value will provide more resolution in the definition of clusters but will result in more iterations, potentially leading to longer computational time. To see the result of changing this parameter, please see Table S11 from RATTLE\u2019s paper.\n\n    -r, --min-reads-cluster (default: 0)\n\nOnly clusters with more than this number of reads will be reported and used in the next step. The default means that also singletons (clusters composed of 1 single read) are also included.\n\n    -p, --repr-percentile (default: 0.15)\n\nIn the iterative algorithm for clustering, reads are tested against representative of a cluster, rather than all the reads from that cluster. The value of -p is the position percentile position of the read in the ranking of reads sorted by length (from longest to shortest) in a cluster that is used as representative. The smaller the value, the closer to the top of the ranking. The longes read in a cluster may seem to be a better representative. However, during RATTLE optimization, we observed that this is not always the case, and using one few positions below (0.15 percentile, i.e. position 15th in a cluster of 100 reads) results in better performance.\n\n**Parameters related to the LIS-based similarity in the Clustering step**\n\n    -k, --kmer-size (default: 10, maximum: 16)\n\nThis is the size of k-mer used to compare two reads using the Longest Increasing Subsequence (LIS) algorithm (see RATTLE\u2019s paper for details). A low value will enable a more sensitive comparison but will result in longer computing times. A higher value will make the comparison faster, but may miss cases due to sequencing errors. For reads with low error rate, this can be set to a value higher than the default. The maximum of 16 is used to ensure the efficiency of the algorithmic implementation.\n\n    -s, --score-threshold (default: 0.2)\n\nThis parameter sets the minimum score threshold to include a read in a cluster. The similarity score is defined from the Longest Increasing Subsequence (LIS) algorithm as the number of bases covered by co-linearly matching k-mers (defined by \u2013kmer-size) over the length of the shortest read in the pair. The score is calculated between the test read and the representative from the cluster. As any other similarity thresholds, a higher value will be more restrictive and result in more clusters, whereas a lower value would be more permissive and result in fewer clusters.\n\n    -v, --max-variance (default: 1000000)\n\nTwo reads could present matching co-linear k-mers (defined by --kmer-size) that have gaps relative to each other. This parameter sets the maximum variance in the distribution of these gap lengths allowed to group two reads into the same gene cluster. It is set to be very large to enable clustering of reads into gene-like structures despite them having large gap differences. This first coarse-grained step can be refined in each gene cluster if the option \u201c--iso\u201d is used (see below). \n\n**Parameters related to the generation of transcript clusters**\n\n    --iso\n\nWhen this flag is used, RATTLE will process each gene cluster to determine whether the reads in the cluster can be separated into transcript clusters based on the properties of the co-linear matching k-mers. \n\n    --iso-kmer-size (default: 11, maximum: 16)\n\nThis is the size of k-mer used to compare two reads in the same gene cluster using the Longest Increasing Subsequence (LIS) algorithm to determine whether they should be split into separate transcript clusters. A low value will enable a more sensitive comparison but will result in longer computing times. A higher value will make the comparison faster, but may not be as accurate as separating reads that originate from different transcripts. The maximum of 16 is used to ensure the efficiency of the algorithmic implementation.\n\n    --iso-score-threshold (default: 0.3)\n\nSimilar to \u2013score-threshold but for the comparison of reads in the same gene cluster. This parameter sets the minimum score threshold to keep two reads in the same transcript cluster. The similarity score is defined from the Longest Increasing Subsequence (LIS) algorithm as the number of bases covered by co-linearly matching k-mers (defined by \u2013kmer-size) over the length of the shortest read in the pair. The score is calculated between the test read and the representative from the cluster. As any other similarity thresholds, a higher value will be more restrictive and result in more clusters, whereas a lower value would be more permissive and result in fewer clusters.\n\n\n    --iso-max-variance (default: 25)\n\nTwo reads belonging to the same gene cluster present matching co-linear k-mers (defined by --kmer-size) that may have gaps relative to each other. This parameter sets the maximum allowed variance in the distribution of these gap lengths. If the variance is above this threshold, the two reads are split into different transcript clusters. As described in RATTLE\u2019s paper, a smaller value enables reconstruction of transcript isoforms that differ by smaller alternative exons. \n\n\n"
+      },
+      "source": "https://raw.githubusercontent.com/comprna/RATTLE/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Clustering summary",
+        "parent_header": [
+          "Running RATTLE",
+          "Clustering"
+        ],
+        "type": "Text_excerpt",
+        "value": "```\n$ ./rattle cluster_summary -h\n    -h, --help\n        shows this help message\n    -i, --input\n        input fasta/fastq file (required)\n    -l, --label\n        labels for the files in order of entry (optional)\n    -c, --clusters\n        clusters file. This is the output file from clustering step (required)\n```\n\nThis command will output a CSV file to stdout containing two or three columns:\n```\nread_id, gene_cluster_id, [transcript_cluster_id]\n```\n"
+      },
+      "source": "https://raw.githubusercontent.com/comprna/RATTLE/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Description of error correction parameters",
+        "parent_header": [
+          "Running RATTLE",
+          "Error correction"
+        ],
+        "type": "Text_excerpt",
+        "value": "    -g, --gap-occ (default: 0.3)\n\nDuring the error correction step, RATTLE identifies small blocks (<10nt) followed by large gaps (larger than or equal to 20 positions) at both ends of each aligned read and removes them. A block is defined as a subsequence that has gaps occurring at a rate shorter to or equal to gap-occ (default 0.3, i.e. ~3nt in every 9-10 nt). RATTLE keeps removing blocks that satisfy these conditions at both ends of every aligned read until there no more such blocks are found\n\n    -m, --min-occ (default: 0.3)\n\nA consensus from each column in the MSA is then extracted in the following way: for each read and each base of the read, the base is changed to the consensus unless this base has an error  if the consensus base occurs with at least 60% frequency, but not if this base has an error probability (obtained from the FASTQ file) less than or equal to 1/3 times the average for the consensus base in that position of the alignment. Indels are treated similarly, but without the error constraint. This is only performed using aligned positions.\n\n"
+      },
+      "source": "https://raw.githubusercontent.com/comprna/RATTLE/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 0.9842445592915379,
+      "result": {
+        "original_header": "RATTLE",
+        "type": "Text_excerpt",
+        "value": "Reference-free reconstruction and quantification of transcriptomes from long-read sequencing \n"
+      },
+      "source": "https://raw.githubusercontent.com/comprna/RATTLE/master/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "download_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/comprna/RATTLE/releases"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "faq": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Error correction",
+        "parent_header": [
+          "Running RATTLE"
+        ],
+        "type": "Text_excerpt",
+        "value": "This is the second main step in RATTLE. This command will perform error correction in each of the transcript clusters generated before. The command requires as input the previous clusters (`-c` option) and the original reads in fastq form (`-i` option), since the quality values are used in the correction step.\n\n```\n$ ./rattle correct -h\n    -h, --help\n        shows this help message\n    -i, --input\n        input fasta/fastq file (required)\n    -l, --label\n        labels for the files in order of entry (optional)\n    -c, --clusters\n        clusters file. This is the output file from clustering step (required)\n    -o, --output\n        output folder (default: .)\n    -g, --gap-occ\n        gap-occ (default: 0.3)\n    -m, --min-occ\n        min-occ (default: 0.3)\n    -s, --split\n        split clusters into sub-clusters of size s for the multiple sequence alignment (default: 200)\n    -r, --min-reads\n        lower bound in the number of reads in a cluster to do the correction and produce a consensus (default: 5)\n    -t, --threads\n        number of threads to use (default: 1)\n    --verbose\n        use this flag to print the progress of the run\n```\n\nThis step will generate 3 files:\n* **corrected.fq**: contains reads that have been corrected by RATTLE\n* **uncorrected.fq**: contains reads that have been left uncorrected by RATTLE. These will generally be those in clusters with fewer reads than specified with the option `-r`\n* **consensi.fq**: contains one consensus sequence per transcript cluster\n"
+      },
+      "source": "https://raw.githubusercontent.com/comprna/RATTLE/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Description of error correction parameters",
+        "parent_header": [
+          "Running RATTLE",
+          "Error correction"
+        ],
+        "type": "Text_excerpt",
+        "value": "    -g, --gap-occ (default: 0.3)\n\nDuring the error correction step, RATTLE identifies small blocks (<10nt) followed by large gaps (larger than or equal to 20 positions) at both ends of each aligned read and removes them. A block is defined as a subsequence that has gaps occurring at a rate shorter to or equal to gap-occ (default 0.3, i.e. ~3nt in every 9-10 nt). RATTLE keeps removing blocks that satisfy these conditions at both ends of every aligned read until there no more such blocks are found\n\n    -m, --min-occ (default: 0.3)\n\nA consensus from each column in the MSA is then extracted in the following way: for each read and each base of the read, the base is changed to the consensus unless this base has an error  if the consensus base occurs with at least 60% frequency, but not if this base has an error probability (obtained from the FASTQ file) less than or equal to 1/3 times the average for the consensus base in that position of the alignment. Indels are treated similarly, but without the error constraint. This is only performed using aligned positions.\n\n"
+      },
+      "source": "https://raw.githubusercontent.com/comprna/RATTLE/master/README.md",
+      "technique": "header_analysis"
+    }
+  ],
+  "forks_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 10
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/comprna/RATTLE/forks"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "comprna/RATTLE"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_title": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "RATTLE"
+      },
+      "source": "https://raw.githubusercontent.com/comprna/RATTLE/master/README.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "has_script_file": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/comprna/RATTLE/master/build.sh"
+      },
+      "technique": "file_exploration"
+    }
+  ],
+  "installation": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Installation",
+        "type": "Text_excerpt",
+        "value": "* Clone the repository\n```\ngit clone --recurse-submodules https://github.com/comprna/RATTLE\n```\n\n* Build RATTLE\n```\ncd RATTLE\n./build.sh\n```\n(this will generally take less than 1 minute)\n\n"
+      },
+      "source": "https://raw.githubusercontent.com/comprna/RATTLE/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 0.9960415297359706,
+      "result": {
+        "original_header": "Snakemake",
+        "type": "Text_excerpt",
+        "value": "Below we show how the user can run all steps in one go using Snakemake. We show this using the toy dataset as example. \nThis can be adapted to any other dataset.\n```\nsnakemake -s rattle_snakefile -p toyset/rna/snakemake_output/transcriptome.fq --cores 1\n```\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/comprna/RATTLE/master/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "issue_tracker": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/comprna/RATTLE/issues"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "keywords": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "bioinformatics, clustering, genomics, nanopore, rna-seq, transcriptome"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "license": [
+    {
+      "confidence": 1,
+      "result": {
+        "name": "GNU General Public License v3.0",
+        "spdx_id": "GPL-3.0",
+        "type": "License",
+        "url": "https://api.github.com/licenses/gpl-3.0",
+        "value": "https://api.github.com/licenses/gpl-3.0"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "File_dump",
+        "value": "                    GNU GENERAL PUBLIC LICENSE\n                       Version 3, 29 June 2007\n\n Copyright (C) 2007 Free Software Foundation, Inc. <http://fsf.org/>\n Everyone is permitted to copy and distribute verbatim copies\n of this license document, but changing it is not allowed.\n\n                            Preamble\n\n  The GNU General Public License is a free, copyleft license for\nsoftware and other kinds of works.\n\n  The licenses for most software and other practical works are designed\nto take away your freedom to share and change the works.  By contrast,\nthe GNU General Public License is intended to guarantee your freedom to\nshare and change all versions of a program--to make sure it remains free\nsoftware for all its users.  We, the Free Software Foundation, use the\nGNU General Public License for most of our software; it applies also to\nany other work released this way by its authors.  You can apply it to\nyour programs, too.\n\n  When we speak of free software, we are referring to freedom, not\nprice.  Our General Public Licenses are designed to make sure that you\nhave the freedom to distribute copies of free software (and charge for\nthem if you wish), that you receive source code or can get it if you\nwant it, that you can change the software or use pieces of it in new\nfree programs, and that you know you can do these things.\n\n  To protect your rights, we need to prevent others from denying you\nthese rights or asking you to surrender the rights.  Therefore, you have\ncertain responsibilities if you distribute copies of the software, or if\nyou modify it: responsibilities to respect the freedom of others.\n\n  For example, if you distribute copies of such a program, whether\ngratis or for a fee, you must pass on to the recipients the same\nfreedoms that you received.  You must make sure that they, too, receive\nor can get the source code.  And you must show them these terms so they\nknow their rights.\n\n  Developers that use the GNU GPL protect your rights with two steps:\n(1) assert copyright on the software, and (2) offer you this License\ngiving you legal permission to copy, distribute and/or modify it.\n\n  For the developers' and authors' protection, the GPL clearly explains\nthat there is no warranty for this free software.  For both users' and\nauthors' sake, the GPL requires that modified versions be marked as\nchanged, so that their problems will not be attributed erroneously to\nauthors of previous versions.\n\n  Some devices are designed to deny users access to install or run\nmodified versions of the software inside them, although the manufacturer\ncan do so.  This is fundamentally incompatible with the aim of\nprotecting users' freedom to change the software.  The systematic\npattern of such abuse occurs in the area of products for individuals to\nuse, which is precisely where it is most unacceptable.  Therefore, we\nhave designed this version of the GPL to prohibit the practice for those\nproducts.  If such problems arise substantially in other domains, we\nstand ready to extend this provision to those domains in future versions\nof the GPL, as needed to protect the freedom of users.\n\n  Finally, every program is threatened constantly by software patents.\nStates should not allow patents to restrict development and use of\nsoftware on general-purpose computers, but in those that do, we wish to\navoid the special danger that patents applied to a free program could\nmake it effectively proprietary.  To prevent this, the GPL assures that\npatents cannot be used to render the program non-free.\n\n  The precise terms and conditions for copying, distribution and\nmodification follow.\n\n                       TERMS AND CONDITIONS\n\n  0. Definitions.\n\n  \"This License\" refers to version 3 of the GNU General Public License.\n\n  \"Copyright\" also means copyright-like laws that apply to other kinds of\nworks, such as semiconductor masks.\n\n  \"The Program\" refers to any copyrightable work licensed under this\nLicense.  Each licensee is addressed as \"you\".  \"Licensees\" and\n\"recipients\" may be individuals or organizations.\n\n  To \"modify\" a work means to copy from or adapt all or part of the work\nin a fashion requiring copyright permission, other than the making of an\nexact copy.  The resulting work is called a \"modified version\" of the\nearlier work or a work \"based on\" the earlier work.\n\n  A \"covered work\" means either the unmodified Program or a work based\non the Program.\n\n  To \"propagate\" a work means to do anything with it that, without\npermission, would make you directly or secondarily liable for\ninfringement under applicable copyright law, except executing it on a\ncomputer or modifying a private copy.  Propagation includes copying,\ndistribution (with or without modification), making available to the\npublic, and in some countries other activities as well.\n\n  To \"convey\" a work means any kind of propagation that enables other\nparties to make or receive copies.  Mere interaction with a user through\na computer network, with no transfer of a copy, is not conveying.\n\n  An interactive user interface displays \"Appropriate Legal Notices\"\nto the extent that it includes a convenient and prominently visible\nfeature that (1) displays an appropriate copyright notice, and (2)\ntells the user that there is no warranty for the work (except to the\nextent that warranties are provided), that licensees may convey the\nwork under this License, and how to view a copy of this License.  If\nthe interface presents a list of user commands or options, such as a\nmenu, a prominent item in the list meets this criterion.\n\n  1. Source Code.\n\n  The \"source code\" for a work means the preferred form of the work\nfor making modifications to it.  \"Object code\" means any non-source\nform of a work.\n\n  A \"Standard Interface\" means an interface that either is an official\nstandard defined by a recognized standards body, or, in the case of\ninterfaces specified for a particular programming language, one that\nis widely used among developers working in that language.\n\n  The \"System Libraries\" of an executable work include anything, other\nthan the work as a whole, that (a) is included in the normal form of\npackaging a Major Component, but which is not part of that Major\nComponent, and (b) serves only to enable use of the work with that\nMajor Component, or to implement a Standard Interface for which an\nimplementation is available to the public in source code form.  A\n\"Major Component\", in this context, means a major essential component\n(kernel, window system, and so on) of the specific operating system\n(if any) on which the executable work runs, or a compiler used to\nproduce the work, or an object code interpreter used to run it.\n\n  The \"Corresponding Source\" for a work in object code form means all\nthe source code needed to generate, install, and (for an executable\nwork) run the object code and to modify the work, including scripts to\ncontrol those activities.  However, it does not include the work's\nSystem Libraries, or general-purpose tools or generally available free\nprograms which are used unmodified in performing those activities but\nwhich are not part of the work.  For example, Corresponding Source\nincludes interface definition files associated with source files for\nthe work, and the source code for shared libraries and dynamically\nlinked subprograms that the work is specifically designed to require,\nsuch as by intimate data communication or control flow between those\nsubprograms and other parts of the work.\n\n  The Corresponding Source need not include anything that users\ncan regenerate automatically from other parts of the Corresponding\nSource.\n\n  The Corresponding Source for a work in source code form is that\nsame work.\n\n  2. Basic Permissions.\n\n  All rights granted under this License are granted for the term of\ncopyright on the Program, and are irrevocable provided the stated\nconditions are met.  This License explicitly affirms your unlimited\npermission to run the unmodified Program.  The output from running a\ncovered work is covered by this License only if the output, given its\ncontent, constitutes a covered work.  This License acknowledges your\nrights of fair use or other equivalent, as provided by copyright law.\n\n  You may make, run and propagate covered works that you do not\nconvey, without conditions so long as your license otherwise remains\nin force.  You may convey covered works to others for the sole purpose\nof having them make modifications exclusively for you, or provide you\nwith facilities for running those works, provided that you comply with\nthe terms of this License in conveying all material for which you do\nnot control copyright.  Those thus making or running the covered works\nfor you must do so exclusively on your behalf, under your direction\nand control, on terms that prohibit them from making any copies of\nyour copyrighted material outside their relationship with you.\n\n  Conveying under any other circumstances is permitted solely under\nthe conditions stated below.  Sublicensing is not allowed; section 10\nmakes it unnecessary.\n\n  3. Protecting Users' Legal Rights From Anti-Circumvention Law.\n\n  No covered work shall be deemed part of an effective technological\nmeasure under any applicable law fulfilling obligations under article\n11 of the WIPO copyright treaty adopted on 20 December 1996, or\nsimilar laws prohibiting or restricting circumvention of such\nmeasures.\n\n  When you convey a covered work, you waive any legal power to forbid\ncircumvention of technological measures to the extent such circumvention\nis effected by exercising rights under this License with respect to\nthe covered work, and you disclaim any intention to limit operation or\nmodification of the work as a means of enforcing, against the work's\nusers, your or third parties' legal rights to forbid circumvention of\ntechnological measures.\n\n  4. Conveying Verbatim Copies.\n\n  You may convey verbatim copies of the Program's source code as you\nreceive it, in any medium, provided that you conspicuously and\nappropriately publish on each copy an appropriate copyright notice;\nkeep intact all notices stating that this License and any\nnon-permissive terms added in accord with section 7 apply to the code;\nkeep intact all notices of the absence of any warranty; and give all\nrecipients a copy of this License along with the Program.\n\n  You may charge any price or no price for each copy that you convey,\nand you may offer support or warranty protection for a fee.\n\n  5. Conveying Modified Source Versions.\n\n  You may convey a work based on the Program, or the modifications to\nproduce it from the Program, in the form of source code under the\nterms of section 4, provided that you also meet all of these conditions:\n\n    a) The work must carry prominent notices stating that you modified\n    it, and giving a relevant date.\n\n    b) The work must carry prominent notices stating that it is\n    released under this License and any conditions added under section\n    7.  This requirement modifies the requirement in section 4 to\n    \"keep intact all notices\".\n\n    c) You must license the entire work, as a whole, under this\n    License to anyone who comes into possession of a copy.  This\n    License will therefore apply, along with any applicable section 7\n    additional terms, to the whole of the work, and all its parts,\n    regardless of how they are packaged.  This License gives no\n    permission to license the work in any other way, but it does not\n    invalidate such permission if you have separately received it.\n\n    d) If the work has interactive user interfaces, each must display\n    Appropriate Legal Notices; however, if the Program has interactive\n    interfaces that do not display Appropriate Legal Notices, your\n    work need not make them do so.\n\n  A compilation of a covered work with other separate and independent\nworks, which are not by their nature extensions of the covered work,\nand which are not combined with it such as to form a larger program,\nin or on a volume of a storage or distribution medium, is called an\n\"aggregate\" if the compilation and its resulting copyright are not\nused to limit the access or legal rights of the compilation's users\nbeyond what the individual works permit.  Inclusion of a covered work\nin an aggregate does not cause this License to apply to the other\nparts of the aggregate.\n\n  6. Conveying Non-Source Forms.\n\n  You may convey a covered work in object code form under the terms\nof sections 4 and 5, provided that you also convey the\nmachine-readable Corresponding Source under the terms of this License,\nin one of these ways:\n\n    a) Convey the object code in, or embodied in, a physical product\n    (including a physical distribution medium), accompanied by the\n    Corresponding Source fixed on a durable physical medium\n    customarily used for software interchange.\n\n    b) Convey the object code in, or embodied in, a physical product\n    (including a physical distribution medium), accompanied by a\n    written offer, valid for at least three years and valid for as\n    long as you offer spare parts or customer support for that product\n    model, to give anyone who possesses the object code either (1) a\n    copy of the Corresponding Source for all the software in the\n    product that is covered by this License, on a durable physical\n    medium customarily used for software interchange, for a price no\n    more than your reasonable cost of physically performing this\n    conveying of source, or (2) access to copy the\n    Corresponding Source from a network server at no charge.\n\n    c) Convey individual copies of the object code with a copy of the\n    written offer to provide the Corresponding Source.  This\n    alternative is allowed only occasionally and noncommercially, and\n    only if you received the object code with such an offer, in accord\n    with subsection 6b.\n\n    d) Convey the object code by offering access from a designated\n    place (gratis or for a charge), and offer equivalent access to the\n    Corresponding Source in the same way through the same place at no\n    further charge.  You need not require recipients to copy the\n    Corresponding Source along with the object code.  If the place to\n    copy the object code is a network server, the Corresponding Source\n    may be on a different server (operated by you or a third party)\n    that supports equivalent copying facilities, provided you maintain\n    clear directions next to the object code saying where to find the\n    Corresponding Source.  Regardless of what server hosts the\n    Corresponding Source, you remain obligated to ensure that it is\n    available for as long as needed to satisfy these requirements.\n\n    e) Convey the object code using peer-to-peer transmission, provided\n    you inform other peers where the object code and Corresponding\n    Source of the work are being offered to the general public at no\n    charge under subsection 6d.\n\n  A separable portion of the object code, whose source code is excluded\nfrom the Corresponding Source as a System Library, need not be\nincluded in conveying the object code work.\n\n  A \"User Product\" is either (1) a \"consumer product\", which means any\ntangible personal property which is normally used for personal, family,\nor household purposes, or (2) anything designed or sold for incorporation\ninto a dwelling.  In determining whether a product is a consumer product,\ndoubtful cases shall be resolved in favor of coverage.  For a particular\nproduct received by a particular user, \"normally used\" refers to a\ntypical or common use of that class of product, regardless of the status\nof the particular user or of the way in which the particular user\nactually uses, or expects or is expected to use, the product.  A product\nis a consumer product regardless of whether the product has substantial\ncommercial, industrial or non-consumer uses, unless such uses represent\nthe only significant mode of use of the product.\n\n  \"Installation Information\" for a User Product means any methods,\nprocedures, authorization keys, or other information required to install\nand execute modified versions of a covered work in that User Product from\na modified version of its Corresponding Source.  The information must\nsuffice to ensure that the continued functioning of the modified object\ncode is in no case prevented or interfered with solely because\nmodification has been made.\n\n  If you convey an object code work under this section in, or with, or\nspecifically for use in, a User Product, and the conveying occurs as\npart of a transaction in which the right of possession and use of the\nUser Product is transferred to the recipient in perpetuity or for a\nfixed term (regardless of how the transaction is characterized), the\nCorresponding Source conveyed under this section must be accompanied\nby the Installation Information.  But this requirement does not apply\nif neither you nor any third party retains the ability to install\nmodified object code on the User Product (for example, the work has\nbeen installed in ROM).\n\n  The requirement to provide Installation Information does not include a\nrequirement to continue to provide support service, warranty, or updates\nfor a work that has been modified or installed by the recipient, or for\nthe User Product in which it has been modified or installed.  Access to a\nnetwork may be denied when the modification itself materially and\nadversely affects the operation of the network or violates the rules and\nprotocols for communication across the network.\n\n  Corresponding Source conveyed, and Installation Information provided,\nin accord with this section must be in a format that is publicly\ndocumented (and with an implementation available to the public in\nsource code form), and must require no special password or key for\nunpacking, reading or copying.\n\n  7. Additional Terms.\n\n  \"Additional permissions\" are terms that supplement the terms of this\nLicense by making exceptions from one or more of its conditions.\nAdditional permissions that are applicable to the entire Program shall\nbe treated as though they were included in this License, to the extent\nthat they are valid under applicable law.  If additional permissions\napply only to part of the Program, that part may be used separately\nunder those permissions, but the entire Program remains governed by\nthis License without regard to the additional permissions.\n\n  When you convey a copy of a covered work, you may at your option\nremove any additional permissions from that copy, or from any part of\nit.  (Additional permissions may be written to require their own\nremoval in certain cases when you modify the work.)  You may place\nadditional permissions on material, added by you to a covered work,\nfor which you have or can give appropriate copyright permission.\n\n  Notwithstanding any other provision of this License, for material you\nadd to a covered work, you may (if authorized by the copyright holders of\nthat material) supplement the terms of this License with terms:\n\n    a) Disclaiming warranty or limiting liability differently from the\n    terms of sections 15 and 16 of this License; or\n\n    b) Requiring preservation of specified reasonable legal notices or\n    author attributions in that material or in the Appropriate Legal\n    Notices displayed by works containing it; or\n\n    c) Prohibiting misrepresentation of the origin of that material, or\n    requiring that modified versions of such material be marked in\n    reasonable ways as different from the original version; or\n\n    d) Limiting the use for publicity purposes of names of licensors or\n    authors of the material; or\n\n    e) Declining to grant rights under trademark law for use of some\n    trade names, trademarks, or service marks; or\n\n    f) Requiring indemnification of licensors and authors of that\n    material by anyone who conveys the material (or modified versions of\n    it) with contractual assumptions of liability to the recipient, for\n    any liability that these contractual assumptions directly impose on\n    those licensors and authors.\n\n  All other non-permissive additional terms are considered \"further\nrestrictions\" within the meaning of section 10.  If the Program as you\nreceived it, or any part of it, contains a notice stating that it is\ngoverned by this License along with a term that is a further\nrestriction, you may remove that term.  If a license document contains\na further restriction but permits relicensing or conveying under this\nLicense, you may add to a covered work material governed by the terms\nof that license document, provided that the further restriction does\nnot survive such relicensing or conveying.\n\n  If you add terms to a covered work in accord with this section, you\nmust place, in the relevant source files, a statement of the\nadditional terms that apply to those files, or a notice indicating\nwhere to find the applicable terms.\n\n  Additional terms, permissive or non-permissive, may be stated in the\nform of a separately written license, or stated as exceptions;\nthe above requirements apply either way.\n\n  8. Termination.\n\n  You may not propagate or modify a covered work except as expressly\nprovided under this License.  Any attempt otherwise to propagate or\nmodify it is void, and will automatically terminate your rights under\nthis License (including any patent licenses granted under the third\nparagraph of section 11).\n\n  However, if you cease all violation of this License, then your\nlicense from a particular copyright holder is reinstated (a)\nprovisionally, unless and until the copyright holder explicitly and\nfinally terminates your license, and (b) permanently, if the copyright\nholder fails to notify you of the violation by some reasonable means\nprior to 60 days after the cessation.\n\n  Moreover, your license from a particular copyright holder is\nreinstated permanently if the copyright holder notifies you of the\nviolation by some reasonable means, this is the first time you have\nreceived notice of violation of this License (for any work) from that\ncopyright holder, and you cure the violation prior to 30 days after\nyour receipt of the notice.\n\n  Termination of your rights under this section does not terminate the\nlicenses of parties who have received copies or rights from you under\nthis License.  If your rights have been terminated and not permanently\nreinstated, you do not qualify to receive new licenses for the same\nmaterial under section 10.\n\n  9. Acceptance Not Required for Having Copies.\n\n  You are not required to accept this License in order to receive or\nrun a copy of the Program.  Ancillary propagation of a covered work\noccurring solely as a consequence of using peer-to-peer transmission\nto receive a copy likewise does not require acceptance.  However,\nnothing other than this License grants you permission to propagate or\nmodify any covered work.  These actions infringe copyright if you do\nnot accept this License.  Therefore, by modifying or propagating a\ncovered work, you indicate your acceptance of this License to do so.\n\n  10. Automatic Licensing of Downstream Recipients.\n\n  Each time you convey a covered work, the recipient automatically\nreceives a license from the original licensors, to run, modify and\npropagate that work, subject to this License.  You are not responsible\nfor enforcing compliance by third parties with this License.\n\n  An \"entity transaction\" is a transaction transferring control of an\norganization, or substantially all assets of one, or subdividing an\norganization, or merging organizations.  If propagation of a covered\nwork results from an entity transaction, each party to that\ntransaction who receives a copy of the work also receives whatever\nlicenses to the work the party's predecessor in interest had or could\ngive under the previous paragraph, plus a right to possession of the\nCorresponding Source of the work from the predecessor in interest, if\nthe predecessor has it or can get it with reasonable efforts.\n\n  You may not impose any further restrictions on the exercise of the\nrights granted or affirmed under this License.  For example, you may\nnot impose a license fee, royalty, or other charge for exercise of\nrights granted under this License, and you may not initiate litigation\n(including a cross-claim or counterclaim in a lawsuit) alleging that\nany patent claim is infringed by making, using, selling, offering for\nsale, or importing the Program or any portion of it.\n\n  11. Patents.\n\n  A \"contributor\" is a copyright holder who authorizes use under this\nLicense of the Program or a work on which the Program is based.  The\nwork thus licensed is called the contributor's \"contributor version\".\n\n  A contributor's \"essential patent claims\" are all patent claims\nowned or controlled by the contributor, whether already acquired or\nhereafter acquired, that would be infringed by some manner, permitted\nby this License, of making, using, or selling its contributor version,\nbut do not include claims that would be infringed only as a\nconsequence of further modification of the contributor version.  For\npurposes of this definition, \"control\" includes the right to grant\npatent sublicenses in a manner consistent with the requirements of\nthis License.\n\n  Each contributor grants you a non-exclusive, worldwide, royalty-free\npatent license under the contributor's essential patent claims, to\nmake, use, sell, offer for sale, import and otherwise run, modify and\npropagate the contents of its contributor version.\n\n  In the following three paragraphs, a \"patent license\" is any express\nagreement or commitment, however denominated, not to enforce a patent\n(such as an express permission to practice a patent or covenant not to\nsue for patent infringement).  To \"grant\" such a patent license to a\nparty means to make such an agreement or commitment not to enforce a\npatent against the party.\n\n  If you convey a covered work, knowingly relying on a patent license,\nand the Corresponding Source of the work is not available for anyone\nto copy, free of charge and under the terms of this License, through a\npublicly available network server or other readily accessible means,\nthen you must either (1) cause the Corresponding Source to be so\navailable, or (2) arrange to deprive yourself of the benefit of the\npatent license for this particular work, or (3) arrange, in a manner\nconsistent with the requirements of this License, to extend the patent\nlicense to downstream recipients.  \"Knowingly relying\" means you have\nactual knowledge that, but for the patent license, your conveying the\ncovered work in a country, or your recipient's use of the covered work\nin a country, would infringe one or more identifiable patents in that\ncountry that you have reason to believe are valid.\n\n  If, pursuant to or in connection with a single transaction or\narrangement, you convey, or propagate by procuring conveyance of, a\ncovered work, and grant a patent license to some of the parties\nreceiving the covered work authorizing them to use, propagate, modify\nor convey a specific copy of the covered work, then the patent license\nyou grant is automatically extended to all recipients of the covered\nwork and works based on it.\n\n  A patent license is \"discriminatory\" if it does not include within\nthe scope of its coverage, prohibits the exercise of, or is\nconditioned on the non-exercise of one or more of the rights that are\nspecifically granted under this License.  You may not convey a covered\nwork if you are a party to an arrangement with a third party that is\nin the business of distributing software, under which you make payment\nto the third party based on the extent of your activity of conveying\nthe work, and under which the third party grants, to any of the\nparties who would receive the covered work from you, a discriminatory\npatent license (a) in connection with copies of the covered work\nconveyed by you (or copies made from those copies), or (b) primarily\nfor and in connection with specific products or compilations that\ncontain the covered work, unless you entered into that arrangement,\nor that patent license was granted, prior to 28 March 2007.\n\n  Nothing in this License shall be construed as excluding or limiting\nany implied license or other defenses to infringement that may\notherwise be available to you under applicable patent law.\n\n  12. No Surrender of Others' Freedom.\n\n  If conditions are imposed on you (whether by court order, agreement or\notherwise) that contradict the conditions of this License, they do not\nexcuse you from the conditions of this License.  If you cannot convey a\ncovered work so as to satisfy simultaneously your obligations under this\nLicense and any other pertinent obligations, then as a consequence you may\nnot convey it at all.  For example, if you agree to terms that obligate you\nto collect a royalty for further conveying from those to whom you convey\nthe Program, the only way you could satisfy both those terms and this\nLicense would be to refrain entirely from conveying the Program.\n\n  13. Use with the GNU Affero General Public License.\n\n  Notwithstanding any other provision of this License, you have\npermission to link or combine any covered work with a work licensed\nunder version 3 of the GNU Affero General Public License into a single\ncombined work, and to convey the resulting work.  The terms of this\nLicense will continue to apply to the part which is the covered work,\nbut the special requirements of the GNU Affero General Public License,\nsection 13, concerning interaction through a network will apply to the\ncombination as such.\n\n  14. Revised Versions of this License.\n\n  The Free Software Foundation may publish revised and/or new versions of\nthe GNU General Public License from time to time.  Such new versions will\nbe similar in spirit to the present version, but may differ in detail to\naddress new problems or concerns.\n\n  Each version is given a distinguishing version number.  If the\nProgram specifies that a certain numbered version of the GNU General\nPublic License \"or any later version\" applies to it, you have the\noption of following the terms and conditions either of that numbered\nversion or of any later version published by the Free Software\nFoundation.  If the Program does not specify a version number of the\nGNU General Public License, you may choose any version ever published\nby the Free Software Foundation.\n\n  If the Program specifies that a proxy can decide which future\nversions of the GNU General Public License can be used, that proxy's\npublic statement of acceptance of a version permanently authorizes you\nto choose that version for the Program.\n\n  Later license versions may give you additional or different\npermissions.  However, no additional obligations are imposed on any\nauthor or copyright holder as a result of your choosing to follow a\nlater version.\n\n  15. Disclaimer of Warranty.\n\n  THERE IS NO WARRANTY FOR THE PROGRAM, TO THE EXTENT PERMITTED BY\nAPPLICABLE LAW.  EXCEPT WHEN OTHERWISE STATED IN WRITING THE COPYRIGHT\nHOLDERS AND/OR OTHER PARTIES PROVIDE THE PROGRAM \"AS IS\" WITHOUT WARRANTY\nOF ANY KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING, BUT NOT LIMITED TO,\nTHE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR\nPURPOSE.  THE ENTIRE RISK AS TO THE QUALITY AND PERFORMANCE OF THE PROGRAM\nIS WITH YOU.  SHOULD THE PROGRAM PROVE DEFECTIVE, YOU ASSUME THE COST OF\nALL NECESSARY SERVICING, REPAIR OR CORRECTION.\n\n  16. Limitation of Liability.\n\n  IN NO EVENT UNLESS REQUIRED BY APPLICABLE LAW OR AGREED TO IN WRITING\nWILL ANY COPYRIGHT HOLDER, OR ANY OTHER PARTY WHO MODIFIES AND/OR CONVEYS\nTHE PROGRAM AS PERMITTED ABOVE, BE LIABLE TO YOU FOR DAMAGES, INCLUDING ANY\nGENERAL, SPECIAL, INCIDENTAL OR CONSEQUENTIAL DAMAGES ARISING OUT OF THE\nUSE OR INABILITY TO USE THE PROGRAM (INCLUDING BUT NOT LIMITED TO LOSS OF\nDATA OR DATA BEING RENDERED INACCURATE OR LOSSES SUSTAINED BY YOU OR THIRD\nPARTIES OR A FAILURE OF THE PROGRAM TO OPERATE WITH ANY OTHER PROGRAMS),\nEVEN IF SUCH HOLDER OR OTHER PARTY HAS BEEN ADVISED OF THE POSSIBILITY OF\nSUCH DAMAGES.\n\n  17. Interpretation of Sections 15 and 16.\n\n  If the disclaimer of warranty and limitation of liability provided\nabove cannot be given local legal effect according to their terms,\nreviewing courts shall apply local law that most closely approximates\nan absolute waiver of all civil liability in connection with the\nProgram, unless a warranty or assumption of liability accompanies a\ncopy of the Program in return for a fee.\n\n                     END OF TERMS AND CONDITIONS\n\n            How to Apply These Terms to Your New Programs\n\n  If you develop a new program, and you want it to be of the greatest\npossible use to the public, the best way to achieve this is to make it\nfree software which everyone can redistribute and change under these terms.\n\n  To do so, attach the following notices to the program.  It is safest\nto attach them to the start of each source file to most effectively\nstate the exclusion of warranty; and each file should have at least\nthe \"copyright\" line and a pointer to where the full notice is found.\n\n    <one line to give the program's name and a brief idea of what it does.>\n    Copyright (C) <year>  <name of author>\n\n    This program is free software: you can redistribute it and/or modify\n    it under the terms of the GNU General Public License as published by\n    the Free Software Foundation, either version 3 of the License, or\n    (at your option) any later version.\n\n    This program is distributed in the hope that it will be useful,\n    but WITHOUT ANY WARRANTY; without even the implied warranty of\n    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the\n    GNU General Public License for more details.\n\n    You should have received a copy of the GNU General Public License\n    along with this program.  If not, see <http://www.gnu.org/licenses/>.\n\nAlso add information on how to contact you by electronic and paper mail.\n\n  If the program does terminal interaction, make it output a short\nnotice like this when it starts in an interactive mode:\n\n    <program>  Copyright (C) <year>  <name of author>\n    This program comes with ABSOLUTELY NO WARRANTY; for details type `show w'.\n    This is free software, and you are welcome to redistribute it\n    under certain conditions; type `show c' for details.\n\nThe hypothetical commands `show w' and `show c' should show the appropriate\nparts of the General Public License.  Of course, your program's commands\nmight be different; for a GUI interface, you would use an \"about box\".\n\n  You should also get your employer (if you work as a programmer) or school,\nif any, to sign a \"copyright disclaimer\" for the program, if necessary.\nFor more information on this, and how to apply and follow the GNU GPL, see\n<http://www.gnu.org/licenses/>.\n\n  The GNU General Public License does not permit incorporating your program\ninto proprietary programs.  If your program is a subroutine library, you\nmay consider it more useful to permit linking proprietary applications with\nthe library.  If this is what you want to do, use the GNU Lesser General\nPublic License instead of this License.  But first, please read\n<http://www.gnu.org/philosophy/why-not-lgpl.html>.\n"
+      },
+      "source": "https://raw.githubusercontent.com/comprna/RATTLE/master/LICENSE",
+      "technique": "file_exploration"
+    }
+  ],
+  "name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "RATTLE"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "owner": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Organization",
+        "value": "comprna"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "programming_languages": [
+    {
+      "confidence": 1,
+      "result": {
+        "name": "C++",
+        "size": 138139,
+        "type": "Programming_language",
+        "value": "C++"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Python",
+        "size": 16356,
+        "type": "Programming_language",
+        "value": "Python"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Makefile",
+        "size": 902,
+        "type": "Programming_language",
+        "value": "Makefile"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Shell",
+        "size": 116,
+        "type": "Programming_language",
+        "value": "Shell"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "readme_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/comprna/RATTLE/master/README.md"
+      },
+      "technique": "file_exploration"
+    }
+  ],
+  "releases": [
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "eileen-xue",
+          "type": "User"
+        },
+        "date_created": "2022-06-28T06:18:33Z",
+        "date_published": "2022-06-28T06:55:26Z",
+        "description": "A stable version of RATTLE.\r\nPlease use the uploaded compressed files. The compressed source code doesn't have the submodules.",
+        "html_url": "https://github.com/comprna/RATTLE/releases/tag/v1.0",
+        "name": "RATTLE v1.0",
+        "release_id": 70708590,
+        "tag": "v1.0",
+        "tarball_url": "https://api.github.com/repos/comprna/RATTLE/tarball/v1.0",
+        "type": "Release",
+        "url": "https://api.github.com/repos/comprna/RATTLE/releases/70708590",
+        "value": "https://api.github.com/repos/comprna/RATTLE/releases/70708590",
+        "zipball_url": "https://api.github.com/repos/comprna/RATTLE/zipball/v1.0"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "requirements": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Requirements",
+        "type": "Text_excerpt",
+        "value": "GCC, G++ with C++14 suppport\n\n(GCC version < 10)\n\n"
+      },
+      "source": "https://raw.githubusercontent.com/comprna/RATTLE/master/README.md",
+      "technique": "header_analysis"
+    }
+  ],
+  "run": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Running RATTLE",
+        "type": "Text_excerpt",
+        "value": "We provide here the details of each RATTLE command.\n"
+      },
+      "source": "https://raw.githubusercontent.com/comprna/RATTLE/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Clustering",
+        "parent_header": [
+          "Running RATTLE"
+        ],
+        "type": "Text_excerpt",
+        "value": "This is the first and most important step in RATTLE. This command will generate the first set of read clusters representing potential genes and transcripts.\n\n```\n$ ./rattle cluster -h\n    -h, --help\n        shows this help message\n    -i, --input\n        input fasta/fastq file or compressed with .gz extension, will automatically check file extension (required)\n    -l, --label\n        labels for the files in order of entry (optional)\n    -o, --output\n        output folder (default: .)\n    -t, --threads\n        number of threads to use (default: 1)\n    -k, --kmer-size\n        k-mer size for gene clustering (default: 10, maximum: 16)\n    -s, --score-threshold\n        minimum score for two reads to be in the same gene cluster (default: 0.2)\n    -v, --max-variance\n        max allowed variance for two reads to be in the same gene cluster (default: 1000000)\n    --iso\n        perform clustering at the isoform level\n    --iso-kmer-size\n        k-mer size for isoform clustering (default: 11, maximum: 16)\n    --iso-score-threshold\n        minimum score for two reads to be in the same isoform cluster (default: 0.3)\n    --iso-max-variance\n        max allowed variance for two reads to be in the same isoform cluster (default: 25)\n    -B, --bv-start-threshold\n        starting threshold for the bitvector k-mer comparison (default: 0.4)\n    -b, --bv-end-threshold\n        ending threshold for the bitvector k-mer comparison (default: 0.2)\n    -f, --bv-falloff\n        falloff value for the bitvector threshold for each iteration (default: 0.05)\n    -r, --min-reads-cluster\n        minimum number of reads per cluster (default: 0)\n    -p, --repr-percentile\n        cluster representative percentile (default: 0.15)\n    --rna\n        use this mode if data is direct RNA (disables checking both strands)\n    --verbose\n        use this flag to print the progress of the run\n    --raw\n        set this flag to use all the reads without any length filtering (off by default)\n    --lower-length\n        filter out reads shorter than this value (default: 150)\n    --upper-length\n        filter out reads longer than this value (default: 100,000)\n```\n\nThis clustering step will generate a file containing read clusters in binary format (clusters.out). To work with these clusters, the following commands are used.\n\nYou can run the RATTLE pipeline with multiple inputs. RATTLE will keep track of the source label for each read. That is, RATTLE will create gene clusters, transcript clusters, and consensus transcript with all reads from all input samples, and you can identify which reads were used from each input sample in each cluster or transcript. You can simply specify the multiple inputs and labels separated by commas:\n\n```\n-i input_1,input_2,input_3,...,input_n -l label_1,label_2,label_3,...,label_n\n```\n"
+      },
+      "source": "https://raw.githubusercontent.com/comprna/RATTLE/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Cluster extraction",
+        "parent_header": [
+          "Running RATTLE",
+          "Clustering"
+        ],
+        "type": "Text_excerpt",
+        "value": "```\n$ ./rattle extract_clusters -h\n    -h, --help\n        shows this help message\n    -i, --input\n        input fasta/fastq file (required)\n    -l, --label\n        labels for the files in order of entry (optional)\n    -c, --clusters\n        clusters file. This is the output file from clustering step (required)\n    -o, --output-folder\n        output folder for fastx files (default: .)\n    -m, --min-reads\n        min reads per cluster to save it into a file\n    --fastq\n        whether input and output should be in fastq format (instead of fasta)\n```\n\nThis command will generate 1 fastq/fasta file per cluster in the specified folder. This is useful to analyze particular clusters, perform alignments, etc.\n"
+      },
+      "source": "https://raw.githubusercontent.com/comprna/RATTLE/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Polishing step",
+        "parent_header": [
+          "Running RATTLE"
+        ],
+        "type": "Text_excerpt",
+        "value": "In this last RATTLE step, transcript consensus sequences and gene definitions are reassessed to perform a cluster refinement using the same RATTLE metrics, and to obtain a final set of transcripts, consensus sequences (generated_from_transcript_clusters), abundances (total_reads) and labels.\n\n```\n$ ./rattle polish -h\n    -h, --help\n        shows this help message\n    -i, --input\n        input RATTLE consensi fasta/fastq file (required)\n    -o, --output-folder\n        output folder for fastx files (default: .)\n    -l, --label\n        labels for the files. if used, must be same as previous steps (optional)\n    -t, --threads\n        number of threads to use (default: 1)\n    --rna\n        use this mode if data is direct RNA (disables checking both strands)\n    --verbose\n        use this flag to print the progress of the run\n    --summary\n        use this flag to print a summary of transcript/gene clusters used to generate the transcriptome\n```\n\nInput must be the consensus sequences from the previous step.\n\nThe `--summary` option provides a summary of which transcript cluster and gene cluster we use to generate the transcriptome. The ids of transcript and gene cluster are the same with the clustering and error correction step. The ids of the new_cluster are the new cluster ids for the polish transcriptome. \n```\ntranscript_cluster_id, gene_cluster_id, new_cluster_id\n```\n"
+      },
+      "source": "https://raw.githubusercontent.com/comprna/RATTLE/master/README.md",
+      "technique": "header_analysis"
+    }
+  ],
+  "somef_missing_categories": [
+    "acknowledgement",
+    "download",
+    "contact",
+    "contributors",
+    "documentation",
+    "support",
+    "identifier",
+    "has_build_file",
+    "executable_example"
+  ],
+  "somef_provenance": {
+    "date": "2024-10-06 07:53:40",
+    "somef_schema_version": "1.0.0",
+    "somef_version": "0.9.5"
+  },
+  "stargazers_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 56
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "usage": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Quick start",
+        "type": "Text_excerpt",
+        "value": "We provide here some of the most common commands used when running RATTLE. \n**Note**: The commands and parameters are still under development and may be subject to changes in future versions\n\n* Cluster cDNA Nanopore reads at gene level with 24 threads\n```\n$ ./rattle cluster -i reads.fq -t 24 -o . \n```\n\n* Cluster cDNA Nanopore reads with labels at gene level with 24 threads\n```\n$ ./rattle cluster -i reads.fq -t 24 -o . \n```\n\n* Cluster cDNA Nanopore reads at isoform level with 24 threads\n```\n$ ./rattle cluster -i reads.fq -t 24 --iso\n```\n\n* Cluster RNA Nanopore reads at isoform level with 24 threads\n```\n$ ./rattle cluster -i reads.fq -t 24 --iso --rna\n```\n\n* View clustering summary (csv with read_id,cluster_id)\n```\n$ ./rattle cluster_summary -i reads.fq -c clusters.out\n```\n\n* Extract 1 fastq file per cluster in clusters/ folder\n```\n$ mkdir clusters\n$ ./rattle extract_clusters -i reads.fq -c transcripts.out -o clusters --fastq\n```\n\n* Correct reads with 24 threads using isoform clusters\n```\n$ ./rattle correct -i reads.fq -c clusters.out -t 24\n```\n\n* Polish RNA consensus sequences and build final transcriptome using 24 threads\n```\n$ ./rattle polish -i consensi.fq -t 24 --rna\n```\n"
+      },
+      "source": "https://raw.githubusercontent.com/comprna/RATTLE/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Example dataset",
+        "parent_header": [
+          "Reference based benchmarking"
+        ],
+        "type": "Text_excerpt",
+        "value": "We provide below example datasets and rattle commands. We make available all input and output files in the folder **toyset/rna**. \n"
+      },
+      "source": "https://raw.githubusercontent.com/comprna/RATTLE/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Human direct RNA sequencing",
+        "parent_header": [
+          "Example dataset"
+        ],
+        "type": "Text_excerpt",
+        "value": "We provide here as an example the analysis of a direct RNA sequencing dataset of 8306 reads. These are reads from an experiment in heart tissue used in the RATTLE manuscript and is available from the European Nucleotide Archive (ENA) under the umbrella study PRJEB40410 (https://www.ebi.ac.uk/ena/browser/view/PRJEB40410). The sample reads used in this example correspond to the subset that mapped to the human chromosome 20 with quality 60 (uniquely mapping reads). This input file is available at **./toyset/rna/input/sample.fastq**. We describe below the steps to build a reference-free transcriptome with RATTLE from these reads:\n\n**cluster**\n```\n$ ./rattle cluster -i ./toyset/rna/input/sample.fastq -t 24 -o ./toyset/rna/output --rna\n```\nThe output file generated from this step is clusters.out at ./toyset/rna/output/\n\n**cluster_summary**\n```\n$ ./rattle cluster_summary -i ./toyset/rna/input/sample.fastq -c ./toyset/rna/output/clusters.out > ./toyset/rna/output/cluster_summary.tsv\n```\nThe output generated from this step is a tsv file on the standard output which can be redirected to a file, for example ./toyset/rna/output/cluster_summary.tsv\n\n**extract_clusters**\n```\nmkdir ./toyset/rna/output/clusters\n$  ./rattle extract_clusters -i ./toyset/rna/input/sample.fastq -c ./toyset/rna/output/clusters.out -o ./toyset/rna/output/clusters --fastq\n```\nThe output generated from this step is a clusters folder with 1 fastq file per cluster, for example ./toyset/rna/output/clusters\n\n**correct**\n```\n$  ./rattle correct -i ./toyset/rna/input/sample.fastq -c ./toyset/rna/output/clusters.out -o ./toyset/rna/output/ -t 24\n```\nThe output generated from this step are three files uncorrected.fq, corrected.fq and consensi.fq at ./toyset/rna/output/\n\n**polish**\n```\n$  ./rattle polish -i ./toyset/rna/output/consensi.fq -o ./toyset/rna/output/ -t 24 --rna\n```\nThe output generated from this step is the transcriptome.fq at ./toyset/rna/output/\n\n**run time on example dataset (Aug 2021)** \n\n| command          | 1 thread      | 24 threads    |\t\n| :----------------|:-------------:| :-------------|\n| cluster \t       | 0m21.302s     |0m8.457s       |\n| cluster_summary  |  0m0.068s     |-              |\n| extract_clusters |\t0m0.079s\t   |-              |  \n| correct  \t\t     | 1m16.180s\t   | 0m15.939s     |\n| polish  \t\t     |  0m2.615s\t   | 0m2.693s      |\n\n**run time on example dataset (Latest)** \n\n| command          | 1 thread      | 24 threads    |\t\n| :----------------|:-------------:| :-------------|\n| cluster \t       | 0m16.1s     |0m4.24s       |\n| cluster_summary  |  0m0.05s     |-              |\n| extract_clusters |\t0m0.11s\t   |-              |  \n| correct  \t\t     | 1m16.103s\t   | 0m10.947s     |\n| polish  \t\t     |  0m3.78s\t   | 0m0.59s      |\n"
+      },
+      "source": "https://raw.githubusercontent.com/comprna/RATTLE/master/README.md",
+      "technique": "header_analysis"
+    }
+  ]
+}

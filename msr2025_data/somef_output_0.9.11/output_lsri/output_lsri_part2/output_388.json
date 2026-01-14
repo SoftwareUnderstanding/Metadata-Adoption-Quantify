@@ -1,0 +1,610 @@
+{
+  "acknowledgement": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Acknowledgements",
+        "parent_header": [
+          "ecmtool - Uncover organisms' metabolic blueprints"
+        ],
+        "type": "Text_excerpt",
+        "value": "The original source code with indirect enumeration was written by [Tom Clement](https://scholar.google.com/citations?user=kUD5y04AAAAJ). [Erik Baalhuis](https://github.com/EBaalhuis) later expanded the code with a direct enumeration method that improved parallellisation. [Daan de Groot](https://scholar.google.com/citations?user=xY_GjWkAAAAJ) helped with many new features, bug fixes, and code reviews. [Bianca Buchner](https://github.com/BeeAnka) added support for `mplrs`, which raises the maximal size of networks you can enumerate with ecmtool. \n"
+      },
+      "source": "https://raw.githubusercontent.com/SystemsBioinformatics/ecmtool/master/README.md",
+      "technique": "header_analysis"
+    }
+  ],
+  "citation": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Citing ecmtool",
+        "parent_header": [
+          "ecmtool - Uncover organisms' metabolic blueprints"
+        ],
+        "type": "Text_excerpt",
+        "value": "Please refer to the following papers when using ecmtool:\n\nInitial version - [https://www.cell.com/patterns/fulltext/S2666-3899(20)30241-5](https://www.cell.com/patterns/fulltext/S2666-3899(20)30241-5).\n\n`mplrs` improved version - [https://doi.org/10.1093/bioinformatics/btad095](https://doi.org/10.1093/bioinformatics/btad095).\n"
+      },
+      "source": "https://raw.githubusercontent.com/SystemsBioinformatics/ecmtool/master/README.md",
+      "technique": "header_analysis"
+    }
+  ],
+  "code_repository": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/SystemsBioinformatics/ecmtool"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "contributing_guidelines": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Automatically testing ecmtool and contributing to ecmtool",
+        "parent_header": [
+          "ecmtool - Uncover organisms' metabolic blueprints"
+        ],
+        "type": "Text_excerpt",
+        "value": "When ecmtool is installed properly its functioning with various parameter settings can be tested using some predefined tests using\n```bash\npython3 -m pytest tests/test_conversions.py\n```\nWhen contributing to ecmtool please make sure that these tests are passed before making a pull request. \n"
+      },
+      "source": "https://raw.githubusercontent.com/SystemsBioinformatics/ecmtool/master/README.md",
+      "technique": "header_analysis"
+    }
+  ],
+  "date_created": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2018-10-04T16:04:30Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_updated": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2023-12-24T15:00:42Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "description": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "Uncover organisms' metabolic blueprints"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 0.8878192714015319,
+      "result": {
+        "original_header": "ecmtool - Uncover organisms' metabolic blueprints",
+        "type": "Text_excerpt",
+        "value": "With this tool you can calculate _Elementary Conversion Modes_ (ECMs) from metabolic networks. Combinations of ECMs comprise all metabolic influences an organism can exert on its environment. \n"
+      },
+      "source": "https://raw.githubusercontent.com/SystemsBioinformatics/ecmtool/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9757664811939415,
+      "result": {
+        "original_header": "Mode 1: standalone command line tool",
+        "type": "Text_excerpt",
+        "value": "In this mode, you can call ecmtool like a normal program from your command line. It reads metabolic networks in the SBML format, and writes resulting ECMs into a CSV file for later analysis. Most researchers will use this method. For running ecmtool on computing clusters efficiently, see the Advanced Usage section in this readme.\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/SystemsBioinformatics/ecmtool/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9598974546786417,
+      "result": {
+        "original_header": "Mode 2: Python library",
+        "type": "Text_excerpt",
+        "value": "ecmtool can also be used as a separate programming interface from within your own Python code. To do so, install ecmtool using _pip_ (e.g. `pip install ecmtool`). The most crucial method is ecmtool.conversion_cone:get_conversion_cone(), which returns the ECMs of a given stoichiometric matrix. For information on how to use advanced features like SBML parsing, network compression, and metabolite direction estimation, please see ecmtool/main.py. \n\n### Example\n```python\nfrom ecmtool.network import extract_sbml_stoichiometry\nfrom ecmtool.conversion_cone import get_conversion_cone\nfrom ecmtool.helpers import unsplit_metabolites, print_ecms_direct\nimport numpy as np\n\nDETERMINE_INPUTS_OUTPUTS = False # Determines whether ecmtool tries to infer directionality (input/output/both)\nPRINT_CONVERSIONS = True # Prints the resulting ECMs on the console\n\nnetwork = extract_sbml_stoichiometry('models/sxp_toy.xml', add_objective=True, determine_inputs_outputs=DETERMINE_INPUTS_OUTPUTS)\n\n# Some steps of compression only work when cone is in one orthant, so we need to split external metabolites with\n# direction \"both\" into two metabolites, one of which is output, and one is input\nnetwork.split_in_out(only_rays=False)\n\n# It is generally a good idea to compress the network before computation\nnetwork.compress(verbose=True, SCEI=True, cycle_removal=True, remove_infeasible=True)\n\nstoichiometry = network.N\n\necms = get_conversion_cone(stoichiometry, network.external_metabolite_indices(),\n network.reversible_reaction_indices(), network.input_metabolite_indices(), \n network.output_metabolite_indices(), verbose=True)\n \n# Since we have split the \"both\" metabolites, we now need to unsplit them again\ncone_transpose, ids = unsplit_metabolites(np.transpose(ecms), network)\ncone = np.transpose(cone_transpose)\n\n# We can remove all internal metabolites, since their values are zero in the conversions (by definition of internal)\ninternal_ids = []\nfor metab in network.metabolites:\n    if not metab.is_external:\n        id_ind = [ind for ind, id in enumerate(ids) if id == metab.id]\n        if len(id_ind):\n            internal_ids.append(id_ind[0])\n\nids = list(np.delete(ids, internal_ids))\ncone = np.delete(cone, internal_ids, axis=1)\n\n# If you wish, one can print the ECM results:\nif PRINT_CONVERSIONS:\n    print_ecms_direct(np.transpose(cone), ids)\n\n```\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/SystemsBioinformatics/ecmtool/master/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "download_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/SystemsBioinformatics/ecmtool/releases"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 6
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/SystemsBioinformatics/ecmtool/forks"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "SystemsBioinformatics/ecmtool"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_title": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "ecmtool - Uncover organisms' metabolic blueprints"
+      },
+      "source": "https://raw.githubusercontent.com/SystemsBioinformatics/ecmtool/master/README.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "has_build_file": [
+    {
+      "confidence": 1,
+      "result": {
+        "format": "dockerfile",
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/SystemsBioinformatics/ecmtool/master/docker/Dockerfile"
+      },
+      "source": "https://raw.githubusercontent.com/SystemsBioinformatics/ecmtool/master/docker/Dockerfile",
+      "technique": "file_exploration"
+    }
+  ],
+  "has_script_file": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/SystemsBioinformatics/ecmtool/master/run_tests.sh"
+      },
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/SystemsBioinformatics/ecmtool/master/run_docker_mac.sh"
+      },
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/SystemsBioinformatics/ecmtool/master/examples_and_results/launch_separate_mmsyn_newest.sh"
+      },
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/SystemsBioinformatics/ecmtool/master/examples_and_results/example_runscripts/launch_ecmtool_mmsyn.sh"
+      },
+      "technique": "file_exploration"
+    }
+  ],
+  "installation": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Installation",
+        "parent_header": [
+          "ecmtool - Uncover organisms' metabolic blueprints",
+          "Mode 1: standalone command line tool"
+        ],
+        "type": "Text_excerpt",
+        "value": "* Download the latest ecmtool source through `git clone`, or as a zip file from https://github.com/tjclement/ecmtool.\n* Open a command prompt, and navigate to the ecmtool directory (e.g. `cd C:\\Users\\You\\Git\\ecmtool`, where the\npath should be replaced with the path ecmtool was downloaded to).\n* Install the dependencies in requirements.txt inside the ecmtool directory (e.g. by running `pip install -r requirements.txt`).\n* Linux only: install _redund_ of package _lrslib_ (e.g. by running `apt install lrslib`).\n"
+      },
+      "source": "https://raw.githubusercontent.com/SystemsBioinformatics/ecmtool/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Installing ecmtool using Docker",
+        "parent_header": [
+          "ecmtool - Uncover organisms' metabolic blueprints",
+          "Mode 1: standalone command line tool",
+          "Installation"
+        ],
+        "type": "Text_excerpt",
+        "value": "For convenience, there's a Docker script you can use that has all dependencies already installed, and allows you to directly run ecmtool.\nOpen a terminal with the ecmtool project as its working directory, and run:\n\n```bash\ndocker build -t ecmtool -f docker/Dockerfile .\ndocker run -ti ecmtool bash\n```\n"
+      },
+      "source": "https://raw.githubusercontent.com/SystemsBioinformatics/ecmtool/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Installing ecmtool using Singularity",
+        "parent_header": [
+          "ecmtool - Uncover organisms' metabolic blueprints",
+          "Mode 1: standalone command line tool",
+          "Installation"
+        ],
+        "type": "Text_excerpt",
+        "value": "To be continued.\n"
+      },
+      "source": "https://raw.githubusercontent.com/SystemsBioinformatics/ecmtool/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Installation of ecmtool when the user does not have root privileges on the cluster (a case report)",
+        "parent_header": [
+          "ecmtool - Uncover organisms' metabolic blueprints",
+          "Advanced usage",
+          "Advanced ECM-computation on a computing cluster"
+        ],
+        "type": "Text_excerpt",
+        "value": "On some computing clusters, it is not easy to install OpenMPI and mplrs. One method that was successful is outlined here. This cluster had an OpenMPI already available as a module that could be loaded. The available versions can be seen by \n```bash\nmodule av OpenMPI\n```\nFor the installation of mplrs, we will also need GMP, check this by\n```bash\nmodule av GMP\n```\nIt is important that the versions of OpenMPI and GMP have to match. In this case, we used\n```bash\nmodule load OpenMPI/4.1.1-GCC-10.3.0\nmodule load GMP/6.2.1-GCCcore-10.3.0\n```\nwhere the last number indicates that they are using a compatible version of GCC. Now, we are ready to install mplrs. This can be done via:\n```bash\napt install libopenmpi-dev\nwget http://cgm.cs.mcgill.ca/~avis/C/lrslib/archive/lrslib-071a.tar.gz\ntar -xzf lrslib-071a.tar.gz\ncd lrslib-071a\nmake && make mplrs && make install\n```\nNow we need to tell the cluster where to find the installed mplrs. We can do this by adding the path to mplrs to the search path:\n```bash\nexport LD_LIBRARY_PATH=/scicore/home/nimwegen/degroo0000/ecmtool/lrslib-071a:$LD_LIBRARY_PATH\nexport PATH=/scicore/home/nimwegen/degroo0000/ecmtool/lrslib-071a:$PATH\n```\nNow using the command\n```bash\nmplrs\n```\nshould give some output that indicates that mplrs is working and can be found.\n"
+      },
+      "source": "https://raw.githubusercontent.com/SystemsBioinformatics/ecmtool/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 0.9988232998199547,
+      "result": {
+        "original_header": "ecmtool - Uncover organisms' metabolic blueprints",
+        "type": "Text_excerpt",
+        "value": "ecmtool can be used in two different modes: either as a standalone command line tool, or as a Python library for your own scripts. We will describe how to install and use both modes.\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/SystemsBioinformatics/ecmtool/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9810254171156793,
+      "result": {
+        "original_header": "Mode 2: Python library",
+        "type": "Text_excerpt",
+        "value": "*We strongly advise the user to either use ecmtool as a command line tool, or to pay much attention to carefully copy the order from ecmtool/main.py.* \n"
+      },
+      "source": "https://raw.githubusercontent.com/SystemsBioinformatics/ecmtool/master/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "issue_tracker": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/SystemsBioinformatics/ecmtool/issues"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "keywords": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": ""
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "license": [
+    {
+      "confidence": 1,
+      "result": {
+        "name": "MIT License",
+        "spdx_id": "MIT",
+        "type": "License",
+        "url": "https://api.github.com/licenses/mit",
+        "value": "https://api.github.com/licenses/mit"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "File_dump",
+        "value": "MIT License\n\nCopyright (c) 2020 Tom Clement, Erik Baalhuis, Daan de Groot\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.\n"
+      },
+      "source": "https://raw.githubusercontent.com/SystemsBioinformatics/ecmtool/master/LICENSE",
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "License",
+        "parent_header": [
+          "ecmtool - Uncover organisms' metabolic blueprints"
+        ],
+        "type": "Text_excerpt",
+        "value": "ecmtool is released with the liberal MIT license. You are free to use it for any purpose. We hope others will contribute to the field by making derived work publicly available too.\n"
+      },
+      "source": "https://raw.githubusercontent.com/SystemsBioinformatics/ecmtool/master/README.md",
+      "technique": "header_analysis"
+    }
+  ],
+  "name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "ecmtool"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "owner": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Organization",
+        "value": "SystemsBioinformatics"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "programming_languages": [
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Python",
+        "size": 254803,
+        "type": "Programming_language",
+        "value": "Python"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "MATLAB",
+        "size": 37203,
+        "type": "Programming_language",
+        "value": "MATLAB"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Cython",
+        "size": 11844,
+        "type": "Programming_language",
+        "value": "Cython"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Shell",
+        "size": 5642,
+        "type": "Programming_language",
+        "value": "Shell"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Dockerfile",
+        "size": 954,
+        "type": "Programming_language",
+        "value": "Dockerfile"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Batchfile",
+        "size": 72,
+        "type": "Programming_language",
+        "value": "Batchfile"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "readme_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/SystemsBioinformatics/ecmtool/master/README.md"
+      },
+      "technique": "file_exploration"
+    }
+  ],
+  "requirements": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Prerequisites",
+        "parent_header": [
+          "ecmtool - Uncover organisms' metabolic blueprints"
+        ],
+        "type": "Text_excerpt",
+        "value": "* Download and install Python. Ecmtool is compatible with python 3.x, and tested on 3.10. Ensure both python and its package manager _pip_ are added to your PATH environment variable. If this last step is omitted, an error like the following will be thrown when you try to run python: `\u2019python\u2019 is not recognized as an internal or external command [..]`.\n* Download and install Java. ecmtool is tested with OpenJDK 17. Make sure you have a 64bit version; you can check this with `java -version`. Otherwise, you might get an error `Invalid maximum heap size`.\n"
+      },
+      "source": "https://raw.githubusercontent.com/SystemsBioinformatics/ecmtool/master/README.md",
+      "technique": "header_analysis"
+    }
+  ],
+  "run": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Running",
+        "parent_header": [
+          "ecmtool - Uncover organisms' metabolic blueprints",
+          "Mode 1: standalone command line tool"
+        ],
+        "type": "Text_excerpt",
+        "value": "Ecmtool can be run by executing `python main.py \u2013-model_path <path/to/model.xml> [arguments]` from the command line, after navigating to the ecmtool directory as described above. The possible arguments and their default values are printed when you run `python main.py --help`.\nAfter execution is done, the found conversions have been written to file (default: _conversions.csv_). The first row of this CSV file contain the metabolite IDs as read from the SBML model.\n"
+      },
+      "source": "https://raw.githubusercontent.com/SystemsBioinformatics/ecmtool/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Running ecmtool using separate runs for non-parallel and parallel parts, with a .sh-script (on a slurm-cluster)",
+        "parent_header": [
+          "ecmtool - Uncover organisms' metabolic blueprints",
+          "Advanced usage",
+          "Advanced ECM-computation on a computing cluster"
+        ],
+        "type": "Text_excerpt",
+        "value": "To fully exploit parallel computation on a cluster, one would like to use ecmtool in separate steps, as outlined below. (In the ecmtool-folder one can also find an example-script that can be used on a computing cluster that is using slurm: ```examples_and_results/launch_separate_mmsyn_newest.sh```.)\n\n1. preprocessing and compression of the model on a compute node (instead of a login node). For this run \n```bash\nsrun --ntasks=1 --nodes=1 python3 main.py all_until_mplrs --model_path ${MODEL_PATH} --auto_direction ${AUTO_DIRECT} --hide \"${HIDE}\" --prohibit \"${PROHIBIT}\" --tag \"${TAG}\" --inputs \"${INPUTS}\" --outputs \"${OUTPUTS}\" --use_external_compartment \"${EXT_COMP}\" --add_objective_metabolite \"${ADD_OBJ}\" --compress \"${COMPRESS}\" --hide_all_in_or_outputs \"${HIDE_ALL_IN_OR_OUTPUTS}\n```\nwhere the arguments in curly brackets should be replaced by your choices for these arguments.\n\n2. first vertex enumeration step with mplrs in parallel. For this run \n```bash\nmpirun -np <number of processes> mplrs -redund ecmtool/tmp/mplrs.ine ecmtool/tmp/redund.ine\nmpirun -np <number of processes>  mplrs ecmtool/tmp/redund.ine ecmtool/tmp/mplrs.out\n```\n\n3. processing of results from first vertex enumeration step, adding steady-state constraints and removing redundant rays using a parallelized redundancy check.\n```bash\nmpirun -np <number of processes> python3 main.py all_between_mplrs\n```\n\n4. second vertex enumeration step with mplrs in parallel\n```bash\nmpirun -np <number of processes> mplrs -redund ecmtool/tmp/mplrs.ine ecmtool/tmp/redund.ine\nmpirun -np <number of processes>  mplrs ecmtool/tmp/redund.ine ecmtool/tmp/mplrs.out\n```\n\n5. processing of results from second vertex enumeration step, unsplitting of metabolites, ensuring that results are unique, and saving ecms to file\n```bash\nsrun --ntasks=1 --nodes=1 python3 main.py all_from_mplrs --out_path ${OUT_PATH}\n```\n"
+      },
+      "source": "https://raw.githubusercontent.com/SystemsBioinformatics/ecmtool/master/README.md",
+      "technique": "header_analysis"
+    }
+  ],
+  "somef_missing_categories": [
+    "download",
+    "contact",
+    "contributors",
+    "documentation",
+    "faq",
+    "identifier",
+    "executable_example"
+  ],
+  "somef_provenance": {
+    "date": "2024-10-04 10:29:18",
+    "somef_schema_version": "1.0.0",
+    "somef_version": "0.9.5"
+  },
+  "stargazers_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 12
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "support": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Installation of ecmtool when the user does not have root privileges on the cluster (a case report)",
+        "parent_header": [
+          "ecmtool - Uncover organisms' metabolic blueprints",
+          "Advanced usage",
+          "Advanced ECM-computation on a computing cluster"
+        ],
+        "type": "Text_excerpt",
+        "value": "On some computing clusters, it is not easy to install OpenMPI and mplrs. One method that was successful is outlined here. This cluster had an OpenMPI already available as a module that could be loaded. The available versions can be seen by \n```bash\nmodule av OpenMPI\n```\nFor the installation of mplrs, we will also need GMP, check this by\n```bash\nmodule av GMP\n```\nIt is important that the versions of OpenMPI and GMP have to match. In this case, we used\n```bash\nmodule load OpenMPI/4.1.1-GCC-10.3.0\nmodule load GMP/6.2.1-GCCcore-10.3.0\n```\nwhere the last number indicates that they are using a compatible version of GCC. Now, we are ready to install mplrs. This can be done via:\n```bash\napt install libopenmpi-dev\nwget http://cgm.cs.mcgill.ca/~avis/C/lrslib/archive/lrslib-071a.tar.gz\ntar -xzf lrslib-071a.tar.gz\ncd lrslib-071a\nmake && make mplrs && make install\n```\nNow we need to tell the cluster where to find the installed mplrs. We can do this by adding the path to mplrs to the search path:\n```bash\nexport LD_LIBRARY_PATH=/scicore/home/nimwegen/degroo0000/ecmtool/lrslib-071a:$LD_LIBRARY_PATH\nexport PATH=/scicore/home/nimwegen/degroo0000/ecmtool/lrslib-071a:$PATH\n```\nNow using the command\n```bash\nmplrs\n```\nshould give some output that indicates that mplrs is working and can be found.\n"
+      },
+      "source": "https://raw.githubusercontent.com/SystemsBioinformatics/ecmtool/master/README.md",
+      "technique": "header_analysis"
+    }
+  ],
+  "type": [
+    {
+      "confidence": 0.82,
+      "result": {
+        "type": "String",
+        "value": "commandline-application"
+      },
+      "technique": "software_type_heuristics"
+    }
+  ],
+  "usage": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Example",
+        "parent_header": [
+          "ecmtool - Uncover organisms' metabolic blueprints",
+          "Mode 2: Python library"
+        ],
+        "type": "Text_excerpt",
+        "value": "```bash\npython main.py --model_path models/e_coli_core.xml --auto_direction true --out_path core_conversions.csv\n```\n"
+      },
+      "source": "https://raw.githubusercontent.com/SystemsBioinformatics/ecmtool/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Example scripts",
+        "parent_header": [
+          "ecmtool - Uncover organisms' metabolic blueprints",
+          "Mode 2: Python library"
+        ],
+        "type": "Text_excerpt",
+        "value": "See the scripts in the folder examples_and_results for examples on how to use ecmtool as a library. In particular: ECM_calc_script.py, compare_efms_ecms_number.py.\n"
+      },
+      "source": "https://raw.githubusercontent.com/SystemsBioinformatics/ecmtool/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Advanced usage",
+        "parent_header": [
+          "ecmtool - Uncover organisms' metabolic blueprints"
+        ],
+        "type": "Text_excerpt",
+        "value": "After testing how the tool works, most users will want to run their workloads on computing clusters instead of on single machines. This section describes some of the steps that are useful for running on clusers\n"
+      },
+      "source": "https://raw.githubusercontent.com/SystemsBioinformatics/ecmtool/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Parallel computing with OpenMPI",
+        "parent_header": [
+          "ecmtool - Uncover organisms' metabolic blueprints",
+          "Advanced usage"
+        ],
+        "type": "Text_excerpt",
+        "value": "On Linux or Mac, ecmtool can make use of OpenMPI for running on parallel in a computing cluster. To make use of this feature, in addition to the dependencies in requirements.txt, OpenMPI, mpi4py, and mplrs are required. The installation of OpenMPI and mplrs is done via:\n\n```bash\napt install libopenmpi-dev\nwget http://cgm.cs.mcgill.ca/~avis/C/lrslib/archive/lrslib-071a.tar.gz\ntar -xzf lrslib-071a.tar.gz\ncd lrslib-071a\nmake && make mplrs && make install\nln -s `pwd`/mplrs /usr/local/bin/mplrs\nln -s `pwd`/redund /usr/local/bin/redund\ncd ..\n```\n\nThe installation of mpi4py is done via:\n```bash\npip3 install mpi4py==3.1.4\n```\n\nRunning ecmtool on a cluster using the indirect enumeration method is now as simple as running:\n```bash\npython3 main.py --processes <number of processes for enumeration> --model_path models/e_coli_core.xml\n```\nNote that this performs preprocessing steps like network compression on the node you run this command on, and not on the compute cluster.\n\nFor direct enumeration, the number of processes for enumeration is passed to mpiexec instead:\n```bash\nmpiexec -n <number of processes for enumeration> python3 main.py --direct true --model_path models/e_coli_core.xml\n```\nIn this mode, preprocessing steps are run on the compute cluster too.\n"
+      },
+      "source": "https://raw.githubusercontent.com/SystemsBioinformatics/ecmtool/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Doubling direct enumeration method speed",
+        "parent_header": [
+          "ecmtool - Uncover organisms' metabolic blueprints",
+          "Advanced usage"
+        ],
+        "type": "Text_excerpt",
+        "value": "The direct enumeration method can be sped up by compiling our LU decomposition code with Cython. The following describes the steps needed on Linux, but the same concept also applies to Mac OS and Windows. First make sure all dependencies are satisfied. Then execute:\n\n```\npython3 cython_setup.py build_ext --inplace\n\nmv _bglu* ecmtool/\n```\n\n\u2139\ufe0f Note that in the Docker script, this optimisation has already been done. You don't need to compile anything there.\n"
+      },
+      "source": "https://raw.githubusercontent.com/SystemsBioinformatics/ecmtool/master/README.md",
+      "technique": "header_analysis"
+    }
+  ]
+}

@@ -1,0 +1,311 @@
+{
+  "citation": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Citing CLOUDe",
+        "parent_header": [
+          "CLOUDe"
+        ],
+        "type": "Text_excerpt",
+        "value": "-------------\nThank you for using the CLOUDe classifier and predictor.\n\nIf you use this R package, then please cite:\n    Andre Luiz Campelo dos Santos, Michael DeGiorgio, Raquel Assis, Predicting evolutionary targets and parameters of gene deletion from expression data, Bioinformatics Advances, Volume 4, Issue 1, 2024, vbae002, https://doi.org/10.1093/bioadv/vbae002\n\n----------------"
+      },
+      "source": "https://raw.githubusercontent.com/anddssan/CLOUDe/main/README.md",
+      "technique": "header_analysis"
+    }
+  ],
+  "code_repository": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/anddssan/CLOUDe"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_created": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2023-04-24T20:46:47Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_updated": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2023-04-24T20:50:38Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "description": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "CLOUDe is an R implementation of Campelo dos Santos, DeGiorgio and Assis' (2023) suite of machine learning methods for predicting evolutionary targets of gene deletion events from expression data in two species."
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 0.999700868589921,
+      "result": {
+        "original_header": "CLOUDe",
+        "type": "Text_excerpt",
+        "value": "CLOUDe is an R implementation of Campelo dos Santos, DeGiorgio and Assis' (2023) suite of machine learning methods for predicting evolutionary targets of gene deletion events from expression data in two species. \n"
+      },
+      "source": "https://raw.githubusercontent.com/anddssan/CLOUDe/main/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9143728137777599,
+      "result": {
+        "original_header": "Format of input file",
+        "type": "Text_excerpt",
+        "value": "--------------------\nA space-delimited file with N+1 rows and 3m columns, where N is the number of genes and m is the number of conditions (e.g., tissues, ages, etc.) for expression data. The first row is a header. \nEach row (rows 2 to N+1) is a deletion event, and each column is an absolute log10(x+1) expression value at a particular condition in a particular gene corresponding to the deletion event. The first m columns are the expression values for the m conditions in the derived gene, the next m columns are the expression values for the m conditions in the survived gene, and the last m columns are the expression values for the m conditions in the lost gene. Specifically, columns j, m+j, and 2m+j represent the expression values at condition j (j = 1, 2, ..., m) in the derived, survived, and lost genes, respectively. \nwhere eD1 to eDm denote derived gene expression values for conditions 1 to m, eS1 to eSm denote survived gene expression values for conditions 1 to m, and eL1 to eLm denote lost gene expression values for conditions 1 to m. \nThe ExampleFiles directory contains a file called EmpiricalData.data, which illustrates this format for N=100 deletion events at m=6 tissues. \n"
+      },
+      "source": "https://raw.githubusercontent.com/anddssan/CLOUDe/main/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9910602906790801,
+      "result": {
+        "original_header": "Generating training data from an OU process",
+        "type": "Text_excerpt",
+        "value": "where m is the number of conditions, Nk is the number of training observations for each of the two classes, training_prefix is the prefix given to all files output by this function, empiricalFile is the full name of the input file formatted as described in \"Format of input file\", and the rest of the parameters are used to define the ranges that the evolutionary parameters theta (optimal expression), alpha (strength of selection) and sigmaSq (strength of phenotypic drift) of the OU process are drawn from. \nThe GenerateTrainingData() function also outputs the p=3m features to the file training_prefix.features, a one-hot encoded matrix of classifications for all training observations to the file training_prefix.classes, a matrix of predicted expression optima for all training observations to the file training_prefix.responses, raw simulated data to the file training_prefix.data, and the means and standard deviations for each of the p features and each of the 3m model parameters in training_prefix.X_stdparams and training_prefix.Y_stdparams, respectively. \n"
+      },
+      "source": "https://raw.githubusercontent.com/anddssan/CLOUDe/main/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9610045358312056,
+      "result": {
+        "original_header": "Training CLOUDe",
+        "type": "Text_excerpt",
+        "value": "---------------\nDue to their speed, training of the CLOUDe support vector machine and random forest are performed on-the-fly while being applied to test data. Thus, this step only needs to be performed if using the CLOUDe neural network or extreme gradient boosting. Otherwise, the user can skip this section.  \nThe CLOUDe neural network and extreme gradient boosting models are trained on the training data outputted by the GenerateTrainingData() function, as described in \"Generating training data from an OU process\". However, because estimating their many hyperparameters is a time-consuming process, we implement hyperparameter tuning of the CLOUDe neural network and extreme gradient boosting predictors separately from final model training. For the CLOUDe neural network, we perform five-fold cross-validation to identify optimal hyperparameters for the predictor with num_layer layers (num_layer in {0, 1, 2, 3, 4, 5}), regularization tuning parameter lambda, and elastic net tuning parameter gamma. Conditional on the optimal lambda and gamma hyperparameters, CLOUDe then fits a neural network predictor with num_layer hidden layers. The optimal number of hidden layers is chosen as the one with the smallest validation loss. For the CLOUDe extreme gradient boosting models, we perform five-fold cross-validation to identify optimal hyperparameters for the predictor with maximum depth of trees of max_depth (max_depth in {1, 2, 3, 4, 5, 6}), regularization tuning parameter lambda, elastic net tuning parameter gamma, and learning rate parameter eta. Conditional on the optimal lambda, gamma, and eta, hyperparameters, CLOUDe then fits an extreme gradient boosting predictor with maximum depth of trees of max_depth. The optimal maximum depth of trees is chosen as the one with the smallest validation loss. \nThe ClassifierCVnn() and ClassifierCVxgb() functions are used to respectively train the CLOUDe neural network and extreme gradient boosting methods to predict classes (\"Redundant\" or \"Unique\"), and the PredictorCVnn() and PredictorCVxgb() functions are used to train the CLOUDe neural network and extreme gradient boosting methods to predict evolutionary parameters (theta1, theta2, and log10(sigmaSq/(2*alpha))). For CLOUDe neural network, we consider log(lambda) evenly distributed within [log_lambda_min, log_lambda_max] for num_lambda values, and gamma evenly distributed within [gamma_min, gamma_max] with num_gamma values, assuming a batch size of batchsize observations per epoch and trained for num_epochs epochs with the commands: \nwhere num_layers is the number of layers (0, 1, 2, 3, 4 or 5) of the neural network, batchsize is the number of training observations used in each epoch, num_epochs is the number of training epochs, hyperparameter lambda is drawn from log10(lambda) in interval [log_lambda_min, log_lambda_max] for num_lambda evenly spaced points, hyperparameter gamma is drawn from interval [gamma_min, gamma_max] for num_gamma evenly spaced points, and training_prefix is the prefix to all files outputted by this function. \nThese functions output the set of optimal hyperparameters chosen through cross-validation to the files training_prefix.nn.num_layers.classifier_cv and training_prefix.nn.num_layers.predictor_cv, and the fitted neural network models in TensorFlow format to the files training_prefix.nn.num_layers.classifier.hdf5 and training_prefix.nn.num_layers.predictor.hdf5. \nFor CLOUDe extreme gradient boosting, we consider eta evenly distributed within [eta_min, eta_max] with num_eta values, log(lambda) evenly distributed within [log_lambda_min, log_lambda_max] for num_lambda values, and gamma evenly distributed within [gamma_min, gamma_max] with num_gamma values with the commands: \nwhere max_depth is the maximum depth (1, 2, 3, 4, 5 or 6) of trees in the models, hyperparameter eta is drawn from interval [eta_min, eta_max] for num_eta evenly spaced points, hyperparameter lambda is drawn from log10(lambda) in interval [log_lambda_min, log_lambda_max] for num_lambda evenly spaced points, hyperparameter gamma is drawn from interval [gamma_min, gamma_max] for num_gamma evenly spaced points, and training_prefix is the prefix to all files outputted by this function. \nThese functions output the set of optimal hyperparameters chosen through cross-validation to the files training_prefix.xgb.max_depth.classifier_cv and training_prefix.xgb.max_depth.predictor_cv. \n"
+      },
+      "source": "https://raw.githubusercontent.com/anddssan/CLOUDe/main/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.966982426777657,
+      "result": {
+        "original_header": "Performing test predictions",
+        "type": "Text_excerpt",
+        "value": "---------------------------\nCLOUDe can predict classes (\"Redundant\" or \"Unique\") and evolutionary parameters (theta1, theta2, and log10(sigmaSq/(2*alpha))) for each gene in a test dataset.  \n    CLOUDeClassifyNN(training_prefix, testing_prefix, num_layers)   # neural network\n    CLOUDeClassifyXGB(training_prefix, testing_prefix, max_depth)   # extreme gradient boosting\n    CLOUDeClassifyRF(training_prefix, testing_prefix)               # random forest\n    CLOUDeClassifySVM(training_prefix, testing_prefix)              # support vector machine\n  \nwhere training_prefix and testing_prefix are the prefixes to training and testing feature files that were outputted by the GenerateTrainingData() function, num_layers is the number of layers (0, 1, 2, 3, 4 or 5) of the neural network, and max_depth is the maximum depth of trees (1, 2, 3, 4, 5 or 6) of the extreme gradient boosting models.\n  \nThe CLOUDeClassifyNN(), CLOUDeClassifyXGB(), CLOUDeClassifyRF(), and CLOUDeClassifySVM() functions output predicted classes and probabilities for each deletion event in the test dataset to the respective files \nand \n    CLOUDePredictNN(training_prefix, testing_prefix, num_layers)    # neural network\n    CLOUDePredictXGB(training_prefix, testing_prefix, max_depth)    # extreme gradient boosting\n    CLOUDePredictRF(training_prefix, testing_prefix)                # random forest\n    CLOUDePredictSVM(training_prefix, testing_prefix)               # support vector machine\n  \nwhere training_prefix and testing_prefix are the prefixes to training and testing feature files that were outputted by the GenerateTrainingData() function, num_layers is the number of layers (0, 1, 2, 3, 4 or 5) of the neural network, and max_depth is the maximum depth of trees (1, 2, 3, 4, 5 or 6) of the extreme gradient boosting models.\n  \nThe CLOUDePredictNN(), CLOUDePredictXGB(), CLOUDePredictRF(), and CLOUDePredictSVM() functions output the 3m predicted evolutionary parameters for each gene in the test dataset to the respective files  \n"
+      },
+      "source": "https://raw.githubusercontent.com/anddssan/CLOUDe/main/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "download_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/anddssan/CLOUDe/releases"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 2
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/anddssan/CLOUDe/forks"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "anddssan/CLOUDe"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_title": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "CLOUDe"
+      },
+      "source": "https://raw.githubusercontent.com/anddssan/CLOUDe/main/README.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "installation": [
+    {
+      "confidence": 0.9659877685361266,
+      "result": {
+        "original_header": "Reporting issues",
+        "type": "Text_excerpt",
+        "value": "----------------\nIf you find any issues running CLOUDe, then please contact Andre Luiz Campelo dos Santos directly through acampelodossanto@fau.edu.\n\t\n---------------\t \n"
+      },
+      "source": "https://raw.githubusercontent.com/anddssan/CLOUDe/main/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "issue_tracker": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/anddssan/CLOUDe/issues"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "keywords": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": ""
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "license": [
+    {
+      "confidence": 1,
+      "result": {
+        "name": "MIT License",
+        "spdx_id": "MIT",
+        "type": "License",
+        "url": "https://api.github.com/licenses/mit",
+        "value": "https://api.github.com/licenses/mit"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "File_dump",
+        "value": "MIT License\n\nCopyright (c) 2023 Andre Santos\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.\n"
+      },
+      "source": "https://raw.githubusercontent.com/anddssan/CLOUDe/main/LICENSE",
+      "technique": "file_exploration"
+    }
+  ],
+  "name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "CLOUDe"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "owner": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "User",
+        "value": "anddssan"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "programming_languages": [
+    {
+      "confidence": 1,
+      "result": {
+        "name": "R",
+        "size": 54370,
+        "type": "Programming_language",
+        "value": "R"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "readme_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/anddssan/CLOUDe/main/README.md"
+      },
+      "technique": "file_exploration"
+    }
+  ],
+  "somef_missing_categories": [
+    "acknowledgement",
+    "run",
+    "download",
+    "requirements",
+    "contact",
+    "contributors",
+    "documentation",
+    "faq",
+    "support",
+    "identifier",
+    "has_build_file",
+    "executable_example"
+  ],
+  "somef_provenance": {
+    "date": "2024-10-03 23:30:59",
+    "somef_schema_version": "1.0.0",
+    "somef_version": "0.9.5"
+  },
+  "stargazers_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 0
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "usage": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Getting started",
+        "parent_header": [
+          "CLOUDe"
+        ],
+        "type": "Text_excerpt",
+        "value": "---------------\nBefore you are able to use the CLOUDe R package, you will need to have the dplyr, mvtnorm, tensorflow, keras, ranger, devtools, liquidSVM, and xgboost libraries installed in your R environment. These libraries can be installed with the following commands in R:\n\n    install.packages(\"dplyr\")\n    install.packages(\"mvtnorm\")\n    install.packages(\"tensorflow\")\n    install.packages(\"keras\")\n    install.packages(\"ranger\")\n    install.packages(\"devtools\")\n    library(devtools)\n    install_version(\"liquidSVM\", \"1.2.0\")\n    install.packages(\"xgboost\")\n  \nThe CLOUDe package comes with the script CLOUDe.R and an ExampleFiles directory containing example files to help you get started.\n  \nThe CLOUDe package can be loaded in R with the command:\n\n    source(\"CLOUDe.R\")\n\nNote that this command assumes that you are in the directory where the CLOUDe.R script is located.\n\nTo run CLOUDe, you will need to provide an input file containing expression data for sets of genes that underwent deletion events. The format of this file is described in the next section, and an example file called EmpiricalData.data is provided in the ExampleFiles directory.\n\n--------------------"
+      },
+      "source": "https://raw.githubusercontent.com/anddssan/CLOUDe/main/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Example application of CLOUDe",
+        "parent_header": [
+          "CLOUDe"
+        ],
+        "type": "Text_excerpt",
+        "value": "-----------------------------\nWithin the R environment, set the working directory to the directory containing both the CLOUDe.r script and the subdirectory ExampleFiles containing the example files. \n\nLoad the functions of the CLOUDe package by typing the command:\n  \n    source(\"CLOUDe.r\")\n\nNext, generate a training dataset of 100 observations in six conditions for each of the two classes, and store the training data with prefix Training, by typing the command:\n\n    GenerateTrainingData(6, 100, \"ExampleFiles/Training\", 0, 5, 0, 3, -2, 3, \"ExampleFiles/EmpiricalData.data\")\n\nThe above operation will output the files\n\n    Training.data\n    Training.features\n    Training.X_stdparams\n    Training.classes\n    Training.responses\n    Training.Y_stdparams\n\nfor which log10(theta) is drawn between 0 and 5, log10(alpha) is drawn between 0 and 3, and log10(sigmaSq) is drawn between -2 and 3.\n\nTo train the CLOUDe neural network with 2 hidden layers on this training dataset using five-fold cross-validation with hyperparameters log(lambda) drawn from {-3, -2, -1, 0, 1, 2, 3} and gamma drawn from {0, 0.5, 1}, assuming a batch size of 50 observations per epoch and trained for 50 epochs, type the commands:\n\n    ClassifierCVnn(2, 50, 50, -3, 3, 7, 0, 1, 3, \"ExampleFiles/Training\")\n    PredictorCVnn(2, 50, 50, -3, 3, 7, 0, 1, 3, \"ExampleFiles/Training\")\n\nThe above operations will output the files \n\n    Training.nn.2.classifier_cv\n    Training.nn.2.classifier.hdf5\n    Training.nn.2.predictor_cv\n    Training.nn.2.predictor.hdf5\n\nTo train the CLOUDe extreme gradient boosting models with a maximum depth of tress of 4 on this training dataset using five-fold cross-validation with hyperparameters eta drawn from {1, 2, 3}, log(lambda) drawn from {-3, -2, -1, 0, 1, 2, 3} and gamma drawn from {0, 0.5, 1}, type the commands:\n\n    ClassifierCVxgb(4, 1, 3, 3, -3, 3, 7, 0, 1, 3, \"ExampleFiles/Training\")\n    PredictorCVxgb(4, 1, 3, 3, -3, 3, 7, 0, 1, 3, \"ExampleFiles/Training\")\n\nThe above operations will output the files \n\n    Training.xgb.4.classifier_cv\n    Training.xgb.4.predictor_cv\n\nNote that we perform training and hyperparameter tuning of the CLOUDe neural network and extreme gradrient boosting models in advance of application to test data, whereas the CLOUDe support vector machine and random forest classifiers and predictors are trained on-the-fly during application to test data.\n\nFinally, to predict classes and evolutionary parameters for genes in an empirical dataset with the CLOUDe two-layer neural network, random forest, and support vector machine, type the commands:\n\n    CLOUDeClassifyNN(\"ExampleFiles/Training\", \"ExampleFiles/EmpiricalData\", 2)\n    CLOUDePredictNN(\"ExampleFiles/Training\", \"ExampleFiles/EmpiricalData\", 2)\n\n    CLOUDeClassifyXGB(\"ExampleFiles/Training\", \"ExampleFiles/EmpiricalData\", 4)\n    CLOUDePredictXGB(\"ExampleFiles/Training\", \"ExampleFiles/EmpiricalData\", 4)\n\n    CLOUDeClassifyRF(\"ExampleFiles/Training\", \"ExampleFiles/EmpiricalData\")\n    CLOUDePredictRF(\"ExampleFiles/Training\", \"ExampleFiles/EmpiricalData\")\n\n    CLOUDeClassifySVM(\"ExampleFiles/Training\", \"ExampleFiles/EmpiricalData\")\n    CLOUDePredictSVM(\"ExampleFiles/Training\", \"ExampleFiles/EmpiricalData\")\n\nThe above operations will output the files\n\n    EmpiricalData.nn.2.classifications\n    EmpiricalData.nn.2.probabilities\n    EmpiricalData.nn.2.predictions\n\n    EmpiricalData.xgb.4.classifications\n    EmpiricalData.xgb.4.probabilities\n    EmpiricalData.xgb.4.predictions\n  \n    EmpiricalData.rf.classifications\n    EmpiricalData.rf.probabilities\n    EmpiricalData.rf.predictions\n\n    EmpiricalData.svm.classifications\n    EmpiricalData.svm.probabilities\n    EmpiricalData.svm.predictions\n"
+      },
+      "source": "https://raw.githubusercontent.com/anddssan/CLOUDe/main/README.md",
+      "technique": "header_analysis"
+    }
+  ]
+}

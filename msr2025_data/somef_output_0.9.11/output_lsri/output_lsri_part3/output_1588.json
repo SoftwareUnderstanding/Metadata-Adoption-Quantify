@@ -1,0 +1,675 @@
+{
+  "code_repository": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/chrisquince/STRONG"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_created": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2018-12-03T18:32:32Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_updated": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2024-09-14T08:47:00Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "description": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "Strain Resolution ON Graphs"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 0.9272671126532341,
+      "result": {
+        "original_header": "Config file",
+        "type": "Text_excerpt",
+        "value": "The config yaml file is used to store the parameters of a run. It is divided into \nsections with parts corresponding to the different steps of the pipeline. This is the test_config.yaml \nfor the Test data set as an example. We will deal with parameters that are specific to these steps below \nin the relevant steps but we will highlight a few general parameters here.\n```\n# ------ Samples ------\nsamples: ['sample*'] # specify a list samples to use or '*' to use all samples\n\n# ------ Resources ------\nthreads : 8 # single task nb threads\n\n# ------ Assembly parameters ------ \ndata:  /home/ubuntu/STRONG_Runs/Test  # path to data folder\n\n# ----- Annotation database -----\ncog_database: /home/ubuntu/rpsblast_cog_db/Cog # COG database\n\n# ----- Binner ------\nbinner: \"concoct\"\n\n# ----- Binning parameters ------\nconcoct:\n    contig_size: 1000\n\nread_length: 150\nassembly: \n    assembler: spades\n    k: [77]\n    mem: 2000\n    threads: 24\n\n# ----- BayesPaths parameters ------\nbayespaths:\n    nb_strains: 5\n    nmf_runs: 1\n    max_giter: 1\n    min_orf_number_to_merge_bins: 18\n    min_orf_number_to_run_a_bin: 10\n    percent_unitigs_shared: 0.1\n\n# ----- DESMAN parameters ------\ndesman:\n    execution: 1\n    nb_haplotypes: 10\n    nb_repeat: 5\n    min_cov: 1\n\n# -----  Evaluation ------\nevaluation:\n    execution: 1\n    genomes: \"/home/ubuntu/STRONG_Runs/Test/Eval\" # path to reference genomes\n```\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/chrisquince/STRONG/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9497884003403945,
+      "result": {
+        "original_header": "Sample specification",
+        "type": "Text_excerpt",
+        "value": "STRONG requires for all samples to be in separate folders inside the **data** directory specified above, here this points to '/home/ubuntu/STRONG_Runs/Test'. STRONG needs exactly 2 paired reads files ending with any of the following .fasta, .fasta.gz, .fa, .fna, .fsa, .fastq, .fastq.gz, .fq, .fq.gz, .fna.gz.  No check is done at this point and the pipeline will naturally fail during assembly if your samples do not contain the same number of reads or are not paired.... \nIn the sample test data used above eight samples are used.  \nUsing  the ***samples*** variable it is possible to use bash extended globbing to select which folder should be run. The simplest specification is : ['\\*'] which will select all folder inside   **data** directory, in our example this equivalent to the also valid : [\"sample1\", \"sample2\", \"sample3\", \"sample4\", \"sample5\", \"sample6\", \"sample7\", \"sample8\".]. More complicated expression can be used, for instance : ['\\*{[1-3],[6-7]}'], this will select any folder ending with 1,2,3,6,7. This can be tested beforehand on terminal console. \n"
+      },
+      "source": "https://raw.githubusercontent.com/chrisquince/STRONG/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9300285829815916,
+      "result": {
+        "original_header": "Assembly, COG annotation and binning",
+        "type": "Text_excerpt",
+        "value": "The first step of the pipeline is a coassembly of all samples followed by binning. This \ninvolves multiple steps, including mapping with bowtie2 to get coverages and annotations \nto COGs with RPS-Blast, this is summarised in the figure: \n1. ***read_length***: read length used for sequencing  \n2. ***mag_quality_threshold***: fraction of SCGs in single-copy for a bin to be considered a MAG, should be set between 0 and 1, defaults to 0.75, a higher value will give higher \nquality MAGs \n\n3. ***binner***:  The default binner is CONCOCT, it is possible to use metabat2 as an alternative. \nAccepted value for the \"binning\" parameter are : \"concoct\" or \"metabat2\". If this keyword is not specified CONCOCT will be run by defaults.  \n4. ***contig_size***: mininum contig length for the CONCOCT binning defaults to 1000 \n5. ***fragment_size***: size at which contigs are fragmented for CONCOCT inputs defaults to 10000\n6.  ***bin_multiplier***: the program calculates the median SCG number and then multiplies \nby this value to get the initial bin number for CONCOCT, defaults to 3 \n7. ***bin_max***: maximum initial bin number for CONCOCT defaults to 2000 reduce this to speed up the CONCOCT binning \n7. ***contig_size***: mininum contig length for the metabat2  binning defaults to 1500, and anything smaller will be ignored.  \n8. ***assembler***: program for coassembly currently only metaSPAdes is supported specify as ***spades*** which is also the default\n9. ***k***: kmer length for assembly 77 is a good choice for 150 bp reads. It is possible to use a list of \nkmers here but they should all be odd so for instance '[33,55,77]' defaults to [21, 33, 55]\n10. ***mem***: This is the maximum memory allocated to metaSPAdes in Mb it may have to be increased above 2000 defaults to 120\nfor complex data sets:\n11. ***threads***: The number of threads used by metaSPAdes defaults to 16 \n\nThis part of the pipeline produces a number of intermediate output files. We detail the key ones here: \n1. ***assembly/spades/***: This directory contains the standard metaSPAdes run including ***assembly.fasta*** the contigs used in MAG construction \n2. ***assembly/high_res/***: This directory contains the high resolution assembly graph pre- ***graph_pack.gfa*** and post-simplication ***simplified.gfa*** \nand also ***simplified.mult_prof*** the unitig kmer coverages of the simplified graph across samples\n3. ***annotation***: This directory contains contains the contig ORF predictions and COG annotations with RPS-BLAST\n4. ***binning***: Contains the binner output. The CONCOCT folder contain bins post refinement and merging these are given in ***clustering_concoct.csv*** as a csv file of contig names with bin assignments, together with a list of MAGs satisfying 75% single-copy core genes in single copy ***list_mags.tsv***  \nThe list of single-copy core genes are given as COGs in the data file ***SnakeNest/scg_data/scg_cogs_to_run.txt*** as default but this file can be changed. \n"
+      },
+      "source": "https://raw.githubusercontent.com/chrisquince/STRONG/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9416927332522066,
+      "result": {
+        "original_header": "Graph extraction and BayesPaths",
+        "type": "Text_excerpt",
+        "value": "This part of the pipeline extracts the single-copy core genes for each MAG from the \nsimplified HRAG together with the unitig coverage profiles. These then undergo another round of simplification using the MAG coverages as well as potential merging of bins \nthat share unitigs on the SCG subgraphs. These SCGs for each MAG are then run in the BayesPaths strain resolution algorithm. In detail: \n1. ***min_orf_number_to_merge_bins***: The number of overlapping ORFs that triggers bin merging defaults to 10\n2. ***percent_unitigs_shared***: Fraction of unitigs shared that cause ORFs to be flagged as overlapping defaults to 0.1\n3. ***nb_strains****: initial strain number in a MAG prior to automatic relevance determination, this is the maximum number that can be resolved per MAG, defaults to 16\n4. ***max_giter***: number of iterations of SCG filtering defaults to 4 \nThis section produces a number of outputs: \n1. ***subgraphs/bin_merged/bin_name/simplif***: directory contains the simplified SCG graphs for each MAG\n2. ***bayespaths/selected_bins.txt***: text file listing MAGs that are run by BayesPaths\n3. ***bayespaths/bin_name***: directory contains the BayesPaths output for each MAG with id bin_name. This contains:\n   1. bin_nameF_Haplo_X.fa: SCG haplotypes for the X strains predicted for this MAG\n   2. bin_nameF_Intensity.csv: the intensities for each strain in each sample (coverage depth/read length) \n   3. bin_nameF_varIntensity.csv: the variance of the intensities for each strain in each sample (coverage depth/read length) \n   4. bin_nameF_Divergence.csv: the divergences for each strain, these are proportional to \npath uncertainties\n   5. bin_nameF_maxPath.tsv: most likely unitig paths for each strain\n   6. bin_nameF_geneError.csv: errors associated with individual SCGs\n   7. bin_nameF_Bias.csv: unitig biases \n   8. bin_nameF_Precision.csv: unitig precisions \n"
+      },
+      "source": "https://raw.githubusercontent.com/chrisquince/STRONG/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.8710279776741416,
+      "result": {
+        "original_header": "Evaluation",
+        "type": "Text_excerpt",
+        "value": "The evaluation section is run if ***execution*** in the evaluation section is set to 1 (default 0), ***genomes*** points at a directory containing the reference genomes. Files needed in that folder are described in the section [Requirement for evaluation](#setup_eval).   \nEach directory contains ***SpeciesMaxCov.csv*** which gives the assignment of each bin \nto evaluation species in format:\n```\nBin_name, Species, Fraction of reads from Species, No. Strains in Species, StrainList, StrainCoverages\n```\ne.g.\n```\nBin_54,1833,1,3,234621_0,1136179_0,1289591_0,18.7347619181,35.0871752417,18.0545478654\n```\nand for each bin a file ***bin_name_combine.tsv*** that compares inferred haplotypes against the references strains with format:\n```\nStrainId,FoundStatus,Coverage,Error rate,Marginal Uncertainty, Divergence, Inferred strain intensity\n```\ne.g.\n```\n234621_0,Found,18.7347619181,0.0001,0.0017751,0.00353233830846,0.0840492547464\n1136179_0,Found,35.0871752417,0.0,0.00014209,0.0,0.162462141975\n1289591_0,Found,18.0545478654,0.0001,0.0030513,0.00128712871287,0.0799360441519\n```\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/chrisquince/STRONG/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9394379612510204,
+      "result": {
+        "original_header": "Results",
+        "type": "Text_excerpt",
+        "value": "This part of the pipeline generates results summaries of the MAG strain inference. The steps are detailed below: \nA sub-directory is generated for each bin. These contain: \n1. A phylogentic trees of strains created on the single-copy genes with a combined heat map of percent sequence identity for the bin, for example: \n2. In the ***graph*** sub-directory gfa files coloured by haplotype. These are viewable with [Bandage](https://rrwick.github.io/Bandage/) the file ***joined_SCG_graph.gfa*** contains all scgs in a single graph and the individual graphs are in the  ***cogs*** subdirectory \n3. A barchart of the strain intensities in each sample: \nThere are also combined pdfs in the top level of results ***haplotypes_coverage.pdf***\nand ***haplotypes_tree.pdf***. Finally ***summary.tsv*** contains some info on the assembly and number of strains resolved. \n"
+      },
+      "source": "https://raw.githubusercontent.com/chrisquince/STRONG/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9441208653730518,
+      "result": {
+        "original_header": "DESMAN",
+        "type": "Text_excerpt",
+        "value": "This section runs the [DESMAN](https://genomebiology.biomedcentral.com/articles/10.1186/s13059-017-1309-9) program on each MAG to infer strains using variant \nfrequencies across samples obtained from read mapping. This can be viewed as a complement \nto the BayesPaths algorithm and a validation of its predictions. The detailed pipeline is: \nThis produces outputs in the ***desman*** directory for each MAG there is a sub-directory \n***bin_name*** which contains: \n1. ***best_run.txt***: the predicted strain number for the bin format \n(G,H,R,Err,TauFile)\nwhere G is the number of haplotypes, H the number that are reliable, Err their mean error and the TauFile points to the best haplotype encodings\n2. ***Run_m_n***: DESMAN run repeat n for m haplotypes\n3. ***Deviance.pdf***: Deviance plot of fit with haplotype number \n"
+      },
+      "source": "https://raw.githubusercontent.com/chrisquince/STRONG/master/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "download_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/chrisquince/STRONG/releases"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 9
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/chrisquince/STRONG/forks"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "chrisquince/STRONG"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_title": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "STRONG - Strain Resolution ON Graphs"
+      },
+      "source": "https://raw.githubusercontent.com/chrisquince/STRONG/master/README.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "has_script_file": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/chrisquince/STRONG/master/install_STRONG.sh"
+      },
+      "technique": "file_exploration"
+    }
+  ],
+  "images": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/chrisquince/STRONG/master/./Figures/Dag_rules1.png"
+      },
+      "source": "https://raw.githubusercontent.com/chrisquince/STRONG/master/README.md",
+      "technique": "regular_expression"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/chrisquince/STRONG/master/./Figures/Dag_rules2.png"
+      },
+      "source": "https://raw.githubusercontent.com/chrisquince/STRONG/master/README.md",
+      "technique": "regular_expression"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/chrisquince/STRONG/master/./Figures/Dag_rules6.png"
+      },
+      "source": "https://raw.githubusercontent.com/chrisquince/STRONG/master/README.md",
+      "technique": "regular_expression"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/chrisquince/STRONG/master/./Figures/Dag_rules7.png"
+      },
+      "source": "https://raw.githubusercontent.com/chrisquince/STRONG/master/README.md",
+      "technique": "regular_expression"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/chrisquince/STRONG/master/./Figures/TreeExample24.png"
+      },
+      "source": "https://raw.githubusercontent.com/chrisquince/STRONG/master/README.md",
+      "technique": "regular_expression"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/chrisquince/STRONG/master/./Figures/GraphExample.png"
+      },
+      "source": "https://raw.githubusercontent.com/chrisquince/STRONG/master/README.md",
+      "technique": "regular_expression"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/chrisquince/STRONG/master/./Figures/IntensityExample.png"
+      },
+      "source": "https://raw.githubusercontent.com/chrisquince/STRONG/master/README.md",
+      "technique": "regular_expression"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/chrisquince/STRONG/master/./Figures/Dag_rules4.png"
+      },
+      "source": "https://raw.githubusercontent.com/chrisquince/STRONG/master/README.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "installation": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Conda installation",
+        "parent_header": [
+          "STRONG - Strain Resolution ON Graphs"
+        ],
+        "type": "Text_excerpt",
+        "value": "STRONG can be installed anywhere but for the below we assume it will be placed in a location SPATH that you set as an environment variable:\n```\nexport SPATH=/mypath/to/repos\ncd $SPATH\n```\n\nWe begin by cloning STRONG recursively:\n\n```\ngit clone --recurse-submodules https://github.com/chrisquince/STRONG.git\n```\n\nSTRONG contains [DESMAN](https://github.com/chrisquince/DESMAN) and [BayesPaths](https://github.com/chrisquince/BayesPaths) as submodules.\n\nIf you need to update in future:\n\n```\ncd STRONG\ngit submodule foreach git pull origin master\n```"
+      },
+      "source": "https://raw.githubusercontent.com/chrisquince/STRONG/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Automatic installation",
+        "parent_header": [
+          "STRONG - Strain Resolution ON Graphs",
+          "Conda installation"
+        ],
+        "type": "Text_excerpt",
+        "value": "All the steps described below have been compiled for convenience in the install_STRONG.sh script. \nIt is mostly silent and all logs are found in install.log. \nThis script does not however install any databases. So please refer to corresponding section for those : [Database needed (COG)](#DB_cog)  \n\nInside the STRONG directory, type the following command:\n```\n./install_STRONG.sh \n```\n\n\n"
+      },
+      "source": "https://raw.githubusercontent.com/chrisquince/STRONG/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "SPAdes/DESMAN/Bayespath manual installation",
+        "parent_header": [
+          "STRONG - Strain Resolution ON Graphs",
+          "Conda installation"
+        ],
+        "type": "Text_excerpt",
+        "value": "We recommend that you first compile the SPAdes and COG tools executables outside of conda:\n\n```\ncd ./STRONG/SPAdes/assembler\n\n./build_cog_tools.sh \n\n```\n\nThe full list of requirements is listed in the file conda_env.yaml we recommend mamba for install. This can be \nitself installed through conda by:\n```\nconda install -c conda-forge mamba\n```\n\nThen we use mamba to resolve the STRONG environment from within the STRONG home directory:\n\n```\ncd $SPATH/STRONG\n\nmamba env create -f conda_env.yaml\n```\n\nThis should take 5 - 10 minutes with mamba. \n\n\nOnce the STRONG environment has been installed activate it with the following command :\n\n```\nconda activate STRONG\n```\n\n\nIt is also necessary to install the BayesPaths executable with the STRONG conda:\n\n```\ncd BayesPaths\npython ./setup.py install\n```\n\nAnd also DESMAN:\n\n```\ncd ../DESMAN\npython ./setup.py install\n```\n\n\nBayesPaths uses precompiled executables in the runfg_source directory. These are only compatible \nwith Linux x86-64 and on other platforms they will require compilation from source see\nthe [BayesPaths repo](https://github.com/chrisquince/BayesPaths]) for details. \n"
+      },
+      "source": "https://raw.githubusercontent.com/chrisquince/STRONG/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Fix conda install",
+        "parent_header": [
+          "STRONG - Strain Resolution ON Graphs",
+          "Conda installation"
+        ],
+        "type": "Text_excerpt",
+        "value": " 1. Fix concoct refine\n\nUnfortunately there is a bug in the conda CONCOCT package caused by updates to Pandas\nthis needs to be fixed before running the pipeline:\n\n```\nCPATH=`which concoct_refine`\nsed -i 's/values/to_numpy/g' $CPATH\nsed -i 's/as_matrix/to_numpy/g' $CPATH\nsed -i 's/int(NK), args.seed, args.threads)/ int(NK), args.seed, args.threads, 500)/g' $CPATH\n```\n\n 2. Fix R lapack library location item\n\nThere is a bug in the current conda install of R where the lapack library while being present is not exactly where it should be for all required library to work. It is easily fixed with symbolic link\n```\nln -s $CONDA_PREFIX/lib/R/modules/lapack.so $CONDA_PREFIX/lib/R/modules/libRlapack.so\n```\n\n<a name=\"DB_cog\"/>\n"
+      },
+      "source": "https://raw.githubusercontent.com/chrisquince/STRONG/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Database needed (COG)",
+        "parent_header": [
+          "STRONG - Strain Resolution ON Graphs",
+          "Conda installation"
+        ],
+        "type": "Text_excerpt",
+        "value": "We will also need a version of the COG database installed. We make this available for download \nand it can be placed anywhere. Here we point the DB_PATH variable to its location which should \nbe chosen appropriately:\n\n```\nexport DB_PATH=/path/to_my/database\ncd $DB_PATH\nwget https://microbial-metag-strong.s3.climb.ac.uk/rpsblast_cog_db.tar.gz\ntar -xvzf rpsblast_cog_db.tar.gz\nrm rpsblast_cog_db.tar.gz\n```\n"
+      },
+      "source": "https://raw.githubusercontent.com/chrisquince/STRONG/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Optional Database (GTDB)",
+        "parent_header": [
+          "STRONG - Strain Resolution ON Graphs",
+          "Conda installation"
+        ],
+        "type": "Text_excerpt",
+        "value": "GTDB is used in the last part of the pipeline as for MAG classification optionally. If the a gtdb path is given in the config file, STRONG will check naively for its presence and will download it if it is absent. \nWe recommand preinstalling it, the actual download may take a while:\n\n```\nwget https://data.ace.uq.edu.au/public/gtdb/data/releases/release95/95.0/auxillary_files/gtdbtk_r95_data.tar.gz\ntar xvzf gtdbtk_r95_data.tar.gz\nrm -r db\nmv release95 db\n\n```\n"
+      },
+      "source": "https://raw.githubusercontent.com/chrisquince/STRONG/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Check install",
+        "parent_header": [
+          "STRONG - Strain Resolution ON Graphs",
+          "Conda installation"
+        ],
+        "type": "Text_excerpt",
+        "value": "Some issues may crop up with R libraries and/or forgotten installation step. This can be checked for by running `SnakeNest/scripts/check_on_dependencies.py`\n"
+      },
+      "source": "https://raw.githubusercontent.com/chrisquince/STRONG/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Native installation (Not supported yet)",
+        "parent_header": [
+          "STRONG - Strain Resolution ON Graphs"
+        ],
+        "type": "Text_excerpt",
+        "value": "STRONG has a lot of required software, at the moment we recommend using the conda recipe above.\n\n<a name=\"QuickStart\"/>\n"
+      },
+      "source": "https://raw.githubusercontent.com/chrisquince/STRONG/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 0.9583209124662105,
+      "result": {
+        "original_header": "Table of Contents",
+        "type": "Text_excerpt",
+        "value": "<a name=\"Installation\"/>\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/chrisquince/STRONG/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.947985219868047,
+      "result": {
+        "original_header": "Sample specification",
+        "type": "Text_excerpt",
+        "value": "STRONG requires for all samples to be in separate folders inside the **data** directory specified above, here this points to '/home/ubuntu/STRONG_Runs/Test'. STRONG needs exactly 2 paired reads files ending with any of the following .fasta, .fasta.gz, .fa, .fna, .fsa, .fastq, .fastq.gz, .fq, .fq.gz, .fna.gz.  No check is done at this point and the pipeline will naturally fail during assembly if your samples do not contain the same number of reads or are not paired.... \nIn the sample test data used above eight samples are used.  \nUsing  the ***samples*** variable it is possible to use bash extended globbing to select which folder should be run. The simplest specification is : ['\\*'] which will select all folder inside   **data** directory, in our example this equivalent to the also valid : [\"sample1\", \"sample2\", \"sample3\", \"sample4\", \"sample5\", \"sample6\", \"sample7\", \"sample8\".]. More complicated expression can be used, for instance : ['\\*{[1-3],[6-7]}'], this will select any folder ending with 1,2,3,6,7. This can be tested beforehand on terminal console. \n"
+      },
+      "source": "https://raw.githubusercontent.com/chrisquince/STRONG/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9935619363321944,
+      "result": {
+        "original_header": "GTDB MAG classification",
+        "type": "Text_excerpt",
+        "value": "If you wish MAGs to be classified with the excellent [GTDBTk program](https://github.com/Ecogenomics/GTDBTk) \nthen simply specify the location of the GTDB database adding following line to config for example:\n```\ngtdb_path: \"/mypathto/miniconda3/envs/gtdbtk/share/gtdbtk-0.3.2/db\"\n```\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/chrisquince/STRONG/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9691381402737148,
+      "result": {
+        "original_header": "Assembly, COG annotation and binning",
+        "type": "Text_excerpt",
+        "value": "We will explain the config parameters relevant to these steps. These are: \n"
+      },
+      "source": "https://raw.githubusercontent.com/chrisquince/STRONG/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9954876237118582,
+      "result": {
+        "original_header": "Evaluation",
+        "type": "Text_excerpt",
+        "value": "This section of the pipeline should only be run if known reference genomes are \navailable because this is a benchmarking run with synthetic reads or in vitro mock communities. The following steps are run: \n"
+      },
+      "source": "https://raw.githubusercontent.com/chrisquince/STRONG/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.8980636947306708,
+      "result": {
+        "original_header": "Results",
+        "type": "Text_excerpt",
+        "value": "This will include the Bin consensus contig sequence (Bin_Name) (and alternatives if multiple COGs are present in bin - Bin_Name_nb) and evaluation strains when available.  \n"
+      },
+      "source": "https://raw.githubusercontent.com/chrisquince/STRONG/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9561784810883573,
+      "result": {
+        "original_header": "DESMAN",
+        "type": "Text_excerpt",
+        "value": "The DESMAN steps are parameterised by the following options in the ***desman*** subsection of the config yaml: \n"
+      },
+      "source": "https://raw.githubusercontent.com/chrisquince/STRONG/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9999999999997158,
+      "result": {
+        "original_header": "Synthetic community data",
+        "type": "Text_excerpt",
+        "value": "The synthetic community data from the paper can be downloaded from the following links complete with config yamls corresponding to the published processing and evaluation.\n```\nwget https://strongtest.s3.climb.ac.uk/Synth_G45_S03D.tar.gz\n \nwget https://strongtest.s3.climb.ac.uk/Synth_G45_S05D.tar.gz\n  \nwget https://strongtest.s3.climb.ac.uk/Synth_G45_S10D.tar.gz\n   \nwget https://strongtest.s3.climb.ac.uk/Synth_G45_S15D.tar.gz\n```\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/chrisquince/STRONG/master/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "issue_tracker": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/chrisquince/STRONG/issues"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "keywords": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": ""
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "license": [
+    {
+      "confidence": 1,
+      "result": {
+        "name": "MIT License",
+        "spdx_id": "MIT",
+        "type": "License",
+        "url": "https://api.github.com/licenses/mit",
+        "value": "https://api.github.com/licenses/mit"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "STRONG"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "owner": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "User",
+        "value": "chrisquince"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "programming_languages": [
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Python",
+        "size": 137689,
+        "type": "Programming_language",
+        "value": "Python"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Perl",
+        "size": 11347,
+        "type": "Programming_language",
+        "value": "Perl"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "R",
+        "size": 8179,
+        "type": "Programming_language",
+        "value": "R"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Shell",
+        "size": 1341,
+        "type": "Programming_language",
+        "value": "Shell"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "readme_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/chrisquince/STRONG/master/README.md"
+      },
+      "technique": "file_exploration"
+    }
+  ],
+  "releases": [
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "chrisquince",
+          "type": "User"
+        },
+        "date_created": "2021-05-06T11:36:07Z",
+        "date_published": "2021-05-06T12:03:43Z",
+        "description": "v0.0.1-beta ",
+        "html_url": "https://github.com/chrisquince/STRONG/releases/tag/v0.0.1-beta",
+        "name": "Beta release used to generate results in paper",
+        "release_id": 42535950,
+        "tag": "v0.0.1-beta",
+        "tarball_url": "https://api.github.com/repos/chrisquince/STRONG/tarball/v0.0.1-beta",
+        "type": "Release",
+        "url": "https://api.github.com/repos/chrisquince/STRONG/releases/42535950",
+        "value": "https://api.github.com/repos/chrisquince/STRONG/releases/42535950",
+        "zipball_url": "https://api.github.com/repos/chrisquince/STRONG/zipball/v0.0.1-beta"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "Sebastien-Raguideau",
+          "type": "User"
+        },
+        "date_created": "2020-09-21T16:05:26Z",
+        "date_published": "2020-10-06T17:44:32Z",
+        "html_url": "https://github.com/chrisquince/STRONG/releases/tag/v0.0.0",
+        "name": "pre-release for conda packaging purpose",
+        "release_id": 32231233,
+        "tag": "v0.0.0",
+        "tarball_url": "https://api.github.com/repos/chrisquince/STRONG/tarball/v0.0.0",
+        "type": "Release",
+        "url": "https://api.github.com/repos/chrisquince/STRONG/releases/32231233",
+        "value": "https://api.github.com/repos/chrisquince/STRONG/releases/32231233",
+        "zipball_url": "https://api.github.com/repos/chrisquince/STRONG/zipball/v0.0.0"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "requirements": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Prerequisites",
+        "parent_header": [
+          "STRONG - Strain Resolution ON Graphs",
+          "Installation"
+        ],
+        "type": "Text_excerpt",
+        "value": "The following pieces of software should be installed on your machine before attempting to install STRONG\n    - conda (miniconda)\n    - cmake, zlib, GNU readline, G++\n    \nFor a standard Ubuntu 16.04 distribution. The above packages would be installed as:\n\n```\n    sudo apt-get update\n    sudo apt-get -y install libbz2-dev libreadline-dev cmake g++ zlib1g zlib1g-dev\n```\n\nWe then need to install miniconda we recommend the Python 3.8 version.\nTo install miniconda follow the instructions [here](https://docs.conda.io/en/latest/miniconda.html).\nRemember that conda activation may require logging back in again.\n"
+      },
+      "source": "https://raw.githubusercontent.com/chrisquince/STRONG/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Requirement for evaluation",
+        "parent_header": [
+          "STRONG - Strain Resolution ON Graphs"
+        ],
+        "type": "Text_excerpt",
+        "value": "**Disclaimer** : mainly intended for STRONG development, no care has been taken into transforming a series of legacy script into a user friendly framework. Use at your own risk. \n\n\n\n\nThe evaluation section of the pipeline should only be run if known reference genomes are \navailable because this is a benchmarking run with synthetic reads or in vitro mock communities. \nThe evaluation section is run if ***execution*** in the evaluation section is set to 1 (default 0), ***genomes*** points at a directory which should contain the following files/folder:\n\n1. **AllGenomes.fa**: A fasta file resulting from concatenation of all references genomes fasta files. \n2. **select.tsv**: A .tsv file mapping each reference genome strain taxonomic id to it's species taxonomic id. It contains 4 columns : \\<species level taxonomic id\\>, \\<strain taxonomic\\>, \\<number of contigs\\>, \\<misc\\>. The last 2 columns can be ignored but should still be populated, with for instance \"NA\". The strain taxonomic id should be in the format :  \\<taxaid\\>_\\<strainnb\\>, where \\<taxaid\\> can be a species or strain taxonomic id and  \\<strainnb\\> can be an arbitrary number, for instance 767463_0.\n3. **Genome**:   a folder containing all references genomes fasta files. Each file should be named \\<taxaid\\>\\_\\<strainnb\\>seq.tmp. With \\<taxaid\\>\\_\\<strainnb\\> being identical to those of the **select.tsv file**. For instance : 767463_0seq.tmp.\n4. **MapSeq.csv**: This file contains the same information as  **select.tsv** but also list contig header names of each reference genome. The first three columns contains: \\<species level taxonomic id>, \\<strain taxonomic>, \\<number of contigs>. This time it is important that \\<number of contigs> is correct. Past the third column, is a list of all headers of that reference genome, if there is 4 contigs, 4 headers are expected. As such, number of column will vary from genome to genome.\n5. **coverage.tsv**: This file should be a \"melted\" table of coverage of each genome in each sample. It is relevant when using simulated dataset and when species level coverage is known. Like previous file, it is not optional and would need to be completed even with meaningless values. It is used to generate the file ***SpeciesMaxCov.csv***  which will be directly impacted in aforementioned case. \nThe following field are required : \\<sample\\>, \\<species taxonomic id\\>,  \\<taxaid\\>\\_\\<strainnb\\> , \\<coverage\\>, \\<relative coverage\\>. The last field is not used but should be populated. \n\n**Note**:  Please be sure to keep headers without space. \n\n**Note2**: Previous synthetic datasets all contains example of evaluation folders and files, for a better understanding of how required files should look like. \n"
+      },
+      "source": "https://raw.githubusercontent.com/chrisquince/STRONG/master/README.md",
+      "technique": "header_analysis"
+    }
+  ],
+  "somef_missing_categories": [
+    "citation",
+    "acknowledgement",
+    "run",
+    "download",
+    "contact",
+    "contributors",
+    "documentation",
+    "faq",
+    "support",
+    "identifier",
+    "has_build_file",
+    "executable_example"
+  ],
+  "somef_provenance": {
+    "date": "2024-10-06 05:32:18",
+    "somef_schema_version": "1.0.0",
+    "somef_version": "0.9.5"
+  },
+  "stargazers_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 45
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "usage": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Quick start",
+        "parent_header": [
+          "STRONG - Strain Resolution ON Graphs"
+        ],
+        "type": "Text_excerpt",
+        "value": "First we will download a fairly simple synthetic test data set from known microbial strains into another directory \n/mypath/torunthings/STRONG_Runs that we will use for STRONG output:\n\n```\nexport SRPATH=/mypath/torunthings/STRONG_Runs\nmkdir $SRPATH\ncd  $SRPATH\nwget https://microbial-metag-strong.s3.climb.ac.uk/Test.tar.gz\ntar -xvzf Test.tar.gz\nrm Test.tar.gz\n```\n\nWe are now ready to run STRONG from within the STRONG directory. Two example yamls are \nprovided in the SnakeNest directory, for a high quality run of real data start from config.yaml but for this simple example \nuse test_config.yaml which assumes a maximum of 5 strains per MAG as explained below.\nThis file will need to be edited though. The following edits are necessary:\n\n1. The data directory needs to point at the samples to be assembled in this case edit:\n\n```\ndata: /mypath/torunthings/STRONG_Runs/Test\n```\n\n2. The cog_database field to:\n```\ncog_database: /path/to_my/database/rpsblast_cog_db/Cog\n```\n\n3. The evaluation genomes field which contains the known genomes to validate to \n```\ngenomes: /mypath/torunthings/STRONG_Runs/Test/Eval\n```\nFor real data this step would be deactivated by setting 'execution: 0'\n\n  \n\nAll these paths need to be absolute see below for more details on the config file.\n\nThen run the following command:\n\n```\ncd $SPATH/STRONG/\n./bin/STRONG --config ./SnakeNest/test_config.yaml $SRPATH/TestResults --threads 8 --dryrun --verbose\n```\n\nThis will run the pipeline in 'dryrun' mode which will list commands to be run without actually \nexecuting. This can only get as far as a checkpoint where an assertion error will be generated. Do \nnot worry about this. If it looks similar to:\n```\nStep #3 - Strain Decomposition\n...\nAssertionError in line 184 of /home/ubuntu/repos/STRONG/SnakeNest/Common.snake.\n  File \"/home/ubuntu/repos/STRONG/SnakeNest/BayesAGraph.snake\", line 7, in <module>\n  File \"/home/ubuntu/repos/STRONG/SnakeNest/Common.snake\", line 184, in read_selected_bins\nTraceback (most recent call last):\n  File \"./bin/STRONG\", line 96, in <module>\n    call_snake([\"--snakefile\", \"SnakeNest/BayesAGraph.snake\"])\n  File \"./bin/STRONG\", line 81, in call_snake\n    subprocess.check_call(base_params + extra_params, stdout=sys.stdout, stderr=sys.stderr)\n  File \"/home/ubuntu/miniconda3/envs/STRONG/lib/python3.7/subprocess.py\", line 363, in check_call\n    raise CalledProcessError(retcode, cmd)\nsubprocess.CalledProcessError: Command '['snakemake', '--directory', '/home/ubuntu/STRONG_Runs/TestResults2', '--cores', '8', '--config', 'LOCAL_DIR=/home/ubuntu/repos/STRONG', '--configfile=/home/ubuntu/STRONG_Runs/TestResults2/config.yaml', '--latency-wait', '120', '-k', '-p', '-r', '--verbose', '--dryrun', '--snakefile', 'SnakeNest/BayesAGraph.snake']' returned non-zero exit status 1.\n\n```\n\nThen it is fine to run the actual pipeline as follows:\n```\n./bin/STRONG $SRPATH/TestResults --threads 8 --verbose\n```\nThe number of threads is optional and should be set as appropriate to your system.\n\n<a name=\"Usage\"/>\n"
+      },
+      "source": "https://raw.githubusercontent.com/chrisquince/STRONG/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Usage",
+        "parent_header": [
+          "STRONG - Strain Resolution ON Graphs"
+        ],
+        "type": "Text_excerpt",
+        "value": "STRONG should be run from within the STRONG repository minimal usage as follows:\n\n```\n./bin/STRONG outputdir\n```\n\nThis will run all steps generate output in ***outputdir*** and search for the config yaml in ***outputdir***. Optionally the config file can be specified:\n\n```\n./bin/STRONG outputdir --config config.yaml\n```\n\nIt is also possible to run just part of the pipeline:\n\n1. ***assembly***: Runs just the [assembly steps](#assembly)  \n2. ***graphextraction***: Runs just the [graph extraction](#graphextraction)\n3. ***bayespaths***: Runs just the [bayespaths](#bayespaths)\n4. ***evaluation***:  Runs just the [evaluation steps](#evaluation)\n5. ***results***:  Runs just the [results steps](#results)\n6. ***desman***:  Runs just the [desman steps](#desman)\n\nBy specifying desired step e.g.:\n```\n./bin/STRONG outputdir --config config.yaml bayespaths\n```\n\nThis is useful if for example you wish to rerun strain resolution with alternate parameters then simily remove the bayespaths directory and rerun as above.\n\nThe program also takes the following optional parameters:\n\n```\n  --threads THREADS, -t THREADS\n```\n\nSpecify the maximum thread number to be used.\n\n```\n  --verbose, -v         Increase verbosity level\n```\n\nUseful to obtain more info from SnakeMake\n\n```\n  --dryrun, -n          Show tasks, do not execute them\n```\n\nAgain snakemake command to list commands that would be run not to actually execute them.\n\n\n```\n  --unlock, -u          Unlock the directory\n```\n\nWill unlock directories if snakemake fails.\n\n```\n  --dag DAG, -d DAG     file where you want the dag to be stored\n```\n\nGenerate diagram of jobs.\n\n\n```\n  -s ...                Pass additional argument directly to snakemake\n```\n\nEnables any additional commands to be passed to snakemake.\n\n  \n\n<a name=\"ConfigFile\"/>\n"
+      },
+      "source": "https://raw.githubusercontent.com/chrisquince/STRONG/master/README.md",
+      "technique": "header_analysis"
+    }
+  ]
+}

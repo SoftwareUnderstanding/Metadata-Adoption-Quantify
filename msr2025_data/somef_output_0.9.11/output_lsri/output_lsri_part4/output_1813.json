@@ -1,0 +1,786 @@
+{
+  "citation": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "a) Default reference",
+        "parent_header": [
+          "MAPseq v1.2.6 (24 Mar 2020)",
+          "2. MAPseq usage instructions"
+        ],
+        "type": "Text_excerpt",
+        "value": "MAPseq takes as input a fasta file with raw sequence data which should have been previously\ndemultiplexed and quality filtered usually from a fastq file produced by the sequencing machine.\n\nIf the input sequences can be found in the file \"rawseqs.fa\". Then to classify the reads\none simply has to run the following command:\n\nmapseq rawseqs.fa > rawseqs.fa.mseq\n\nThis will classify all the sequences found in rawseqs against the standard reference dataset\nprovided with MAPseq.\n\nYou can change the number of threads that MAPseq uses with the -nthreads <no_threads> argument.\n"
+      },
+      "source": "https://raw.githubusercontent.com/jfmrod/mapseq/master/README",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "b) Custom user-provided reference",
+        "parent_header": [
+          "MAPseq v1.2.6 (24 Mar 2020)",
+          "2. MAPseq usage instructions"
+        ],
+        "type": "Text_excerpt",
+        "value": "You can use mapseq with your own fasta reference and taxonomy files with the following command:\n\nmapseq rawseqs.fa <customref.fasta> <customref.tax> [customref.tax2 ...] > rawseqs.fa.mseq\n\nWhere customref.fasta is a nucleotide fasta file with your reference set and customref.tax, customref.tax2 are one or more taxonomic assignments for each sequence in the reference.\n\nThe taxonomy file should have a header (preceeded with the # character) with the identity cutoff parameters and description of the taxonomy followed by two tab-separated columns composed of the accession id and the taxonomy. For example:\n"
+      },
+      "source": "https://raw.githubusercontent.com/jfmrod/mapseq/master/README",
+      "technique": "header_analysis"
+    }
+  ],
+  "code_repository": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/jfmrod/MAPseq"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_created": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2017-07-15T21:00:05Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_updated": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2024-09-25T10:49:29Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "description": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "highthroughput rRNA sequence classification and OTU mapping for metagenomic samples"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "c) Single sample counts summary",
+        "parent_header": [
+          "levels: Kingdom Phylum Class Order Family Genus Species"
+        ],
+        "type": "Text_excerpt",
+        "value": "mapseq -otucounts <sample1.mseq>\n \nProvides you with summary counts of the MSEQ output files for each taxonomy and level. Example:\n\n#sample.mseq\t102301  \nTaxonomy\tTaxonomyLevel\tLabel\tCounts  \n0\t0\tBacteria\t102301  \n0\t1\tBacteria;Bacteroidetes\t7586  \n0\t1\tBacteria;Firmicutes\t2150  \n0\t1\tBacteria;Proteobacteria\t112  \n0\t1\tBacteria;PHY_Coriobacteriia\t7  \n0\t1\tBacteria;Actinobacteria\t4  \n0\t1\tBacteria;Fusobacteria\t1  \n0\t2\tBacteria;Bacteroidetes;Bacteroidia\t7585  \n0\t2\tBacteria;Firmicutes;Clostridia\t1330  \n  \n\n\n### d) OTU count table for multiple samples\n\nmapseq -otutable <sample1.mseq> <sample2.mseq> ...  \n\nGenerates a tab separated value (tsv) file with the counts for each sample (column wise) and OTU or taxonomic labels (row wise).\nWhich taxomy (OTU or NCBI taxonomy) and levels in the taxonomy can be specified using the -ti and -tl, respectively.  \n\n\nThe generated table can be imported into R with the following R command:\n\nmyotutable <- read.table(\"map.otutable\",sep=\"\\t\",header=TRUE)\n\n\n\n## 3. MSEQ FILE OUTPUT\n\nIn the results output, each line indicates a classification of the read. Two output formats can be chosen (\"simple\" or \"confidences\") using the --outfmt option.\n\nThe \"confidences\" format outputs the confidence values for each of the taxonomic levels. For example:\nSRR044946.347\tGQ156763:1..1446\t548\t0.91985428\t505\t22\t22\t1\t540\t263\t800\t0.99072355\t20\t\tBacteria\t1\t1\tFirmicutes\t0.55452305\t1\tClostridia\t0.55452305\t1\tClostridiales\t0.55452305\t1\tRuminococcaceae\t0.31190208\t0.3119020760059357\tRuminococcus\t0\t0.2104288786649704\tRuminococcus gnavus\t0\t0.0604640431702137\t\tBacteria\t0.58272612\t1\tF6159\t0.22964814\t1\tG35588\t0\t1\tS61033\t0\t0.7381679934055649\tSS52094\t0\t0.2980887881680916\n\nEach field is tab separated and indicates the following:  \nField  \n1\tQuery sequence id  \n2\tReference sequence id (highest alignment score)  \n3\tAlignment score  \n4\tPairwise identity  \n5\tMatches  \n6\tMismatches  \n7\tGaps  \n8\tQuery start pos  \n9\tQuery end pos  \n10\tReference start pos  \n11\tReference end pos  \n12      Strand (+/-)  \n13\t[empty]  \n\nAfter the first empty field the taxonomy classifications and confidences are shown, every taxonomy classification is separated by an empty field.\nAlthough different fasta reference and taxonomy databases can be specified by the user, by default mapseq maps reads to the NCBI taxonomy and to OTU taxonomies\n\nThe combined confidence is computed based on a score confidence, used to control misclassification errors, and a identity cutoff confidence, used to ensure that the query isnt misclassified due to the inexistence of a sequence representative in the database of the true classification. The score confidence is\ncalculated by comparing the identity of the assigned taxonomy to the identity of the first sequence not matching the assigned taxonomy.\nThe identity cutoff confidence uses preoptimized cutoffs at each taxonomic level to calculate the confidence that the query is not too divergent from the assigned taxonomy.\n\nWe recommend using a combined confidence cutoff of 0.4, or 0.5 as this value yielded the highest F1/2-score for MAPseq in our benchmarks. Please see our article for further information.\n\nThe \"simple\" format gives the alignment information plus the taxonomy assignment for which the combined confidence at least 0.5. For example:  \nquery1\tFJ560320:1..876\t301\t0.7369985\t301\t0\t0\t0\t301\t305\t606\t+\t\tArchaea\t\tArchaea;F94;G275  \n\n\n\n\n\n\n\n\n## 4. HISTORY\n1.2.6 (24 Mar 2020)\n- Fixed \"-otutable\" option using only counts from first sample.\n\n1.2.5 (12 Jul 2019)\n- Added \"-otucounts\" and \"-otutable\" options to generate count summary for single mapseq (.mseq) files or an otu/taxa table for multiple .mseq files\n\n1.2.4 (27 May 2019)\n- Added \"-ignoreEmptyTax\" option. Default is off until thorough benchmarks are performed.\n  Prevents second hits with missing taxonomic labels (uncertain annotation) from decreasing the confidence of the top hit assignment.\n\n1.2.3 (2 Oct 2018)\n- Fixed missing newline causing last sequence to be missed, added assert on empty sequences\n- Fixed double hits reported when classifying long queries (>1200bp)\n\n- Updated to mapref-2.2b:\n  Removed low quality reference sequences that would cause issues when classifying low quality query sequences.\n\n1.2.2 (30 Oct 2017)\n- Fixed multithreaded race condition causing issues on some systems.\n\n1.2.1 (23 Oct 2017)\n- Updated mapref to v2.2. Fixed several issues with v2.0.\n- Dropped LTP taxonomy due to low coverage.\n\n1.2 (16 July 2017)  \n- Updated mapref to v2.0, now includes 1.5 million sequences.  \n- Added assert checks.  \n\n1.1 (24 April 2017)  \n- Several improvements and bug fixes, updated to latest NCBI taxonomy.  \n\n1.0 (14 October 2016)  \n- First release of MAPseq.  \n\n"
+      },
+      "source": "https://raw.githubusercontent.com/jfmrod/mapseq/master/README",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 0.9739586266609765,
+      "result": {
+        "original_header": "MAPseq v1.2.6 (24 Mar 2020)",
+        "type": "Text_excerpt",
+        "value": "by Joao F. Matias Rodrigues, Thomas S.B. Schmidt, Janko Tackmann, and Christian von Mering  \nInstitute of Molecular Life Sciences, University of Zurich, Switzerland \n"
+      },
+      "source": "https://raw.githubusercontent.com/jfmrod/mapseq/master/README",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9077001982193402,
+      "result": {
+        "original_header": "Table of contents",
+        "type": "Text_excerpt",
+        "value": "MAPseq is a set of fast and accurate sequence read classification tools designed to assign taxonomy and\nOTU classifications to ribosomal RNA sequences. This is done by using a\nreference set of full-length ribosomal RNA sequences for which known taxonomies are known,\nand for which a set of high quality OTU clusters has been previously generated.\nFor each read, the best guess and correspoding confidence in the assignment is shown at\neach taxonomic and OTU level. \nFor bugs and more information contact: Joao F. Matias Rodrigues <jfmrod@gmail.com> \n"
+      },
+      "source": "https://raw.githubusercontent.com/jfmrod/mapseq/master/README",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9770928309928072,
+      "result": {
+        "original_header": "sample.mseq    102301",
+        "type": "Text_excerpt",
+        "value": "# MAPseq v1.2.6 (24 Mar 2020)\nby Joao F. Matias Rodrigues, Thomas S.B. Schmidt, Janko Tackmann, and Christian von Mering  \nInstitute of Molecular Life Sciences, University of Zurich, Switzerland \n---\n## Table of contents \n"
+      },
+      "source": "https://raw.githubusercontent.com/jfmrod/mapseq/master/README",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.8322429050374798,
+      "result": {
+        "original_header": "i) Installing the binary package",
+        "type": "Text_excerpt",
+        "value": "tar -xvzf mapseq-1.2-linux.tar.gz   # for the linux version  \nor  \ntar -xvzf mapseq-1.2-macosx.tar.gz  # for the MacOSX version   \n"
+      },
+      "source": "https://raw.githubusercontent.com/jfmrod/mapseq/master/README",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.8441269634191197,
+      "result": {
+        "original_header": "a) Default reference",
+        "type": "Text_excerpt",
+        "value": "MAPseq takes as input a fasta file with raw sequence data which should have been previously\ndemultiplexed and quality filtered usually from a fastq file produced by the sequencing machine. \n"
+      },
+      "source": "https://raw.githubusercontent.com/jfmrod/mapseq/master/README",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.8291486103561548,
+      "result": {
+        "original_header": "sample.mseq    102301",
+        "type": "Text_excerpt",
+        "value": "You can change the number of threads that MAPseq uses with the -nthreads <no_threads> argument. \n"
+      },
+      "source": "https://raw.githubusercontent.com/jfmrod/mapseq/master/README",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9463922872026957,
+      "result": {
+        "original_header": "b) Custom user-provided reference",
+        "type": "Text_excerpt",
+        "value": "You can use mapseq with your own fasta reference and taxonomy files with the following command: \nWhere customref.fasta is a nucleotide fasta file with your reference set and customref.tax, customref.tax2 are one or more taxonomic assignments for each sequence in the reference. \n"
+      },
+      "source": "https://raw.githubusercontent.com/jfmrod/mapseq/master/README",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9096670995057159,
+      "result": {
+        "original_header": "sample.mseq    102301",
+        "type": "Text_excerpt",
+        "value": "The taxonomy file should have a header (preceeded with the # character) with the identity cutoff parameters and description of the taxonomy followed by two tab-separated columns composed of the accession id and the taxonomy. For example: \n"
+      },
+      "source": "https://raw.githubusercontent.com/jfmrod/mapseq/master/README",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9501749917175756,
+      "result": {
+        "original_header": "c) Single sample counts summary",
+        "type": "Text_excerpt",
+        "value": "mapseq -otucounts <sample1.mseq>\n \nProvides you with summary counts of the MSEQ output files for each taxonomy and level. Example: \nGenerates a tab separated value (tsv) file with the counts for each sample (column wise) and OTU or taxonomic labels (row wise).\nWhich taxomy (OTU or NCBI taxonomy) and levels in the taxonomy can be specified using the -ti and -tl, respectively.   \nAfter the first empty field the taxonomy classifications and confidences are shown, every taxonomy classification is separated by an empty field.\nAlthough different fasta reference and taxonomy databases can be specified by the user, by default mapseq maps reads to the NCBI taxonomy and to OTU taxonomies \nThe combined confidence is computed based on a score confidence, used to control misclassification errors, and a identity cutoff confidence, used to ensure that the query isnt misclassified due to the inexistence of a sequence representative in the database of the true classification. The score confidence is\ncalculated by comparing the identity of the assigned taxonomy to the identity of the first sequence not matching the assigned taxonomy.\nThe identity cutoff confidence uses preoptimized cutoffs at each taxonomic level to calculate the confidence that the query is not too divergent from the assigned taxonomy. \nWe recommend using a combined confidence cutoff of 0.4, or 0.5 as this value yielded the highest F1/2-score for MAPseq in our benchmarks. Please see our article for further information. \n1.2.5 (12 Jul 2019)\n- Added \"-otucounts\" and \"-otutable\" options to generate count summary for single mapseq (.mseq) files or an otu/taxa table for multiple .mseq files \n"
+      },
+      "source": "https://raw.githubusercontent.com/jfmrod/mapseq/master/README",
+      "technique": "supervised_classification"
+    }
+  ],
+  "download_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/jfmrod/mapseq/releases"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 7
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/jfmrod/MAPseq/forks"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "jfmrod/MAPseq"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_title": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "MAPseq v1.2.6 (24 Mar 2020)"
+      },
+      "source": "https://raw.githubusercontent.com/jfmrod/mapseq/master/README",
+      "technique": "regular_expression"
+    }
+  ],
+  "has_script_file": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/jfmrod/mapseq/master/make-bin-package-osx.sh"
+      },
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/jfmrod/mapseq/master/make-bin-package.sh"
+      },
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/jfmrod/mapseq/master/setup.sh"
+      },
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/jfmrod/mapseq/master/data/make-transtable.sh"
+      },
+      "technique": "file_exploration"
+    }
+  ],
+  "installation": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "1. INSTALLATION",
+        "parent_header": [
+          "MAPseq v1.2.6 (24 Mar 2020)"
+        ],
+        "type": "Text_excerpt",
+        "value": "You can get the source code on github or binary packages at:\n\ngit clone https://github.com/jfmrod/MAPseq.git\n\nThe binary packages can be found in the \"Releases\" page on GitHub:\nhttps://github.com/jfmrod/MAPseq/releases\n\n"
+      },
+      "source": "https://raw.githubusercontent.com/jfmrod/mapseq/master/README",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "i) Installing the binary package",
+        "parent_header": [
+          "MAPseq v1.2.6 (24 Mar 2020)",
+          "1. INSTALLATION"
+        ],
+        "type": "Text_excerpt",
+        "value": "To install the binary package simply unpack the contents of the mapseq tar.gz file, e.g.:\n\ntar -xvzf mapseq-1.2-linux.tar.gz   # for the linux version  \nor  \ntar -xvzf mapseq-1.2-macosx.tar.gz  # for the MacOSX version  \n\nThe mapseq binary will be located in the created directory. You may move the whole directory to another location. Moving only the binary elsewhere will break the installation though, as the data files are searched for in relation to the binary's path.\n\n"
+      },
+      "source": "https://raw.githubusercontent.com/jfmrod/mapseq/master/README",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "ii) Installing from source",
+        "parent_header": [
+          "MAPseq v1.2.6 (24 Mar 2020)",
+          "1. INSTALLATION"
+        ],
+        "type": "Text_excerpt",
+        "value": "To compile from the github source you will need:\n- svn\n- autotools/autoconf\n- wget\n- git\n- libncurses5-dev\n- libtool\n\nOn Ubuntu systems you can install these with the command:\n\nsudo apt-get install build-essential wget subversion git libncurses5-dev libtool\n\n\nYou can then clone the mapseq repository with:\n\ngit clone https://github.com/jfmrod/MAPseq.git\n\n\nOnce you have cloned the repository you can type the following commands in the MAPseq directory\n\n\n./setup.sh      # downloads eutils and the reference data files  \n./bootstrap     # this step is only needed if you cloned the repository, you will also need to install autotools/autoconf packages  \n./configure  \nmake  \nmake install  \n\n\nIf you want to install MAPseq to your home directory instead of the default system wide /usr/local/ directory,\nyou can change the ./configure command to:\n\n./configure --prefix=$HOME/usr\n\nThis would install the program binaries to a directory usr/bin inside\nyour home directory (i.e.: $HOME/usr/bin/mapseq), after you type\nthe command \"make install\".\n\n"
+      },
+      "source": "https://raw.githubusercontent.com/jfmrod/mapseq/master/README",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 0.9850180307498947,
+      "result": {
+        "original_header": "Table of contents",
+        "type": "Text_excerpt",
+        "value": "1. Installation  \n2. MAPseq usage instructions\n a. Default reference  \n b. Custom user-provided reference  \n c. Single sample counts summar  \n d. OTU count table for multiple samples  \n3. File output  \n4. History   \n"
+      },
+      "source": "https://raw.githubusercontent.com/jfmrod/mapseq/master/README",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9253141517407325,
+      "result": {
+        "original_header": "sample.mseq    102301",
+        "type": "Text_excerpt",
+        "value": "\n## 1. INSTALLATION \n"
+      },
+      "source": "https://raw.githubusercontent.com/jfmrod/mapseq/master/README",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9997334939717305,
+      "result": {
+        "original_header": "1. INSTALLATION",
+        "type": "Text_excerpt",
+        "value": "You can get the source code on github or binary packages at: \ngit clone https://github.com/jfmrod/MAPseq.git \nThe binary packages can be found in the \"Releases\" page on GitHub:\nhttps://github.com/jfmrod/MAPseq/releases \n"
+      },
+      "source": "https://raw.githubusercontent.com/jfmrod/mapseq/master/README",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9975312597368073,
+      "result": {
+        "original_header": "sample.mseq    102301",
+        "type": "Text_excerpt",
+        "value": "\n### i) Installing the binary package \n"
+      },
+      "source": "https://raw.githubusercontent.com/jfmrod/mapseq/master/README",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.999927750302105,
+      "result": {
+        "original_header": "i) Installing the binary package",
+        "type": "Text_excerpt",
+        "value": "To install the binary package simply unpack the contents of the mapseq tar.gz file, e.g.: \ntar -xvzf mapseq-1.2-linux.tar.gz   # for the linux version  \nor  \ntar -xvzf mapseq-1.2-macosx.tar.gz  # for the MacOSX version   \nThe mapseq binary will be located in the created directory. You may move the whole directory to another location. Moving only the binary elsewhere will break the installation though, as the data files are searched for in relation to the binary's path. \n"
+      },
+      "source": "https://raw.githubusercontent.com/jfmrod/mapseq/master/README",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9930425655273752,
+      "result": {
+        "original_header": "sample.mseq    102301",
+        "type": "Text_excerpt",
+        "value": "\n### ii) Installing from source \n"
+      },
+      "source": "https://raw.githubusercontent.com/jfmrod/mapseq/master/README",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.998754180715035,
+      "result": {
+        "original_header": "ii) Installing from source",
+        "type": "Text_excerpt",
+        "value": "To compile from the github source you will need:\n- svn\n- autotools/autoconf\n- wget\n- git\n- libncurses5-dev\n- libtool \nOn Ubuntu systems you can install these with the command: \nsudo apt-get install build-essential wget subversion git libncurses5-dev libtool \n\nYou can then clone the mapseq repository with: \n\nOnce you have cloned the repository you can type the following commands in the MAPseq directory \n\n./setup.sh      # downloads eutils and the reference data files  \n./bootstrap     # this step is only needed if you cloned the repository, you will also need to install autotools/autoconf packages  \n./configure  \nmake  \nmake install   \n\nIf you want to install MAPseq to your home directory instead of the default system wide /usr/local/ directory,\nyou can change the ./configure command to: \n./configure --prefix=$HOME/usr \nThis would install the program binaries to a directory usr/bin inside\nyour home directory (i.e.: $HOME/usr/bin/mapseq), after you type\nthe command \"make install\". \n"
+      },
+      "source": "https://raw.githubusercontent.com/jfmrod/mapseq/master/README",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9121166218020887,
+      "result": {
+        "original_header": "sample.mseq    102301",
+        "type": "Text_excerpt",
+        "value": "\n## 2. MAPseq usage instructions \n"
+      },
+      "source": "https://raw.githubusercontent.com/jfmrod/mapseq/master/README",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.8460504561541448,
+      "result": {
+        "original_header": "a) Default reference",
+        "type": "Text_excerpt",
+        "value": "If the input sequences can be found in the file \"rawseqs.fa\". Then to classify the reads\none simply has to run the following command: \n"
+      },
+      "source": "https://raw.githubusercontent.com/jfmrod/mapseq/master/README",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.8639433158338136,
+      "result": {
+        "original_header": "sample.mseq    102301",
+        "type": "Text_excerpt",
+        "value": "### b) Custom user-provided reference \n"
+      },
+      "source": "https://raw.githubusercontent.com/jfmrod/mapseq/master/README",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9653449105677652,
+      "result": {
+        "original_header": "b) Custom user-provided reference",
+        "type": "Text_excerpt",
+        "value": "You can use mapseq with your own fasta reference and taxonomy files with the following command: \n"
+      },
+      "source": "https://raw.githubusercontent.com/jfmrod/mapseq/master/README",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9827499060141598,
+      "result": {
+        "original_header": "c) Single sample counts summary",
+        "type": "Text_excerpt",
+        "value": "\nThe generated table can be imported into R with the following R command: \n"
+      },
+      "source": "https://raw.githubusercontent.com/jfmrod/mapseq/master/README",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.802155641646516,
+      "result": {
+        "original_header": "4. HISTORY",
+        "type": "Text_excerpt",
+        "value": "1.2.6 (24 Mar 2020)\n- Fixed \"-otutable\" option using only counts from first sample. \n"
+      },
+      "source": "https://raw.githubusercontent.com/jfmrod/mapseq/master/README",
+      "technique": "supervised_classification"
+    }
+  ],
+  "invocation": [
+    {
+      "confidence": 0.8426453681350666,
+      "result": {
+        "original_header": "c) Single sample counts summary",
+        "type": "Text_excerpt",
+        "value": "myotutable <- read.table(\"map.otutable\",sep=\"\\t\",header=TRUE) \n"
+      },
+      "source": "https://raw.githubusercontent.com/jfmrod/mapseq/master/README",
+      "technique": "supervised_classification"
+    }
+  ],
+  "issue_tracker": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/jfmrod/MAPseq/issues"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "keywords": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": ""
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "license": [
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Other",
+        "spdx_id": "NOASSERTION",
+        "type": "License",
+        "url": null,
+        "value": null
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "MAPseq"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "owner": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "User",
+        "value": "jfmrod"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "programming_languages": [
+    {
+      "confidence": 1,
+      "result": {
+        "name": "C",
+        "size": 21273844,
+        "type": "Programming_language",
+        "value": "C"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "C++",
+        "size": 281635,
+        "type": "Programming_language",
+        "value": "C++"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "M4",
+        "size": 63392,
+        "type": "Programming_language",
+        "value": "M4"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "TeX",
+        "size": 6479,
+        "type": "Programming_language",
+        "value": "TeX"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Shell",
+        "size": 5229,
+        "type": "Programming_language",
+        "value": "Shell"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Makefile",
+        "size": 1797,
+        "type": "Programming_language",
+        "value": "Makefile"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "readme_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/jfmrod/mapseq/master/README"
+      },
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/jfmrod/mapseq/master/README.md"
+      },
+      "technique": "file_exploration"
+    }
+  ],
+  "releases": [
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "jfmrod",
+          "type": "User"
+        },
+        "date_created": "2020-05-11T15:40:45Z",
+        "date_published": "2023-01-20T12:28:50Z",
+        "description": "v2.1.1 update:\r\n- Added paired end analysis for FASTQ. The previous version (v2.1) only supported FASTA sequence data.\r\n\r\nv2.1 update:\r\n- Updated MAPref to v3.0 with new MAP OTU labels as used on the Microbe Atlas Project website (https://microbeatlas.org/)\r\n- Updated NCBI taxonomy (Feb 2021)\r\n- Added paired end analysis which automatically handles overlapping and non-overlapping paired end sequence mapping\r\n- Added a sensitive mode (-sens) for more accurate analysis needed in some applications\r\n- Added -asvotutable option to generate a merged count table with MAP OTU labels or NCBI taxonomy using as input one or more ASV count tables that may cover different 16S regions",
+        "html_url": "https://github.com/jfmrod/MAPseq/releases/tag/v2.1.1",
+        "name": "mapseq v2.1.1 - reference 3.0",
+        "release_id": 89691750,
+        "tag": "v2.1.1",
+        "tarball_url": "https://api.github.com/repos/jfmrod/MAPseq/tarball/v2.1.1",
+        "type": "Release",
+        "url": "https://api.github.com/repos/jfmrod/MAPseq/releases/89691750",
+        "value": "https://api.github.com/repos/jfmrod/MAPseq/releases/89691750",
+        "zipball_url": "https://api.github.com/repos/jfmrod/MAPseq/zipball/v2.1.1"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "jfmrod",
+          "type": "User"
+        },
+        "date_created": "2020-05-11T15:40:45Z",
+        "date_published": "2023-01-18T16:03:31Z",
+        "description": "- Updated MAPref to v3.0 with new MAP OTU labels as used on the Microbe Atlas Project website (https://microbeatlas.org/)\r\n- Updated NCBI taxonomy (Feb 2021)\r\n- Added paired end analysis which automatically handles overlapping and non-overlapping paired end sequence mapping\r\n- Added a sensitive mode for more accurate analysis needed in some applications\r\n- Added -asvotutable option to generate a merged count table from several ASV count tables",
+        "html_url": "https://github.com/jfmrod/MAPseq/releases/tag/v2.1",
+        "name": "mapseq v2.1 with updated reference 3.0",
+        "release_id": 89421433,
+        "tag": "v2.1",
+        "tarball_url": "https://api.github.com/repos/jfmrod/MAPseq/tarball/v2.1",
+        "type": "Release",
+        "url": "https://api.github.com/repos/jfmrod/MAPseq/releases/89421433",
+        "value": "https://api.github.com/repos/jfmrod/MAPseq/releases/89421433",
+        "zipball_url": "https://api.github.com/repos/jfmrod/MAPseq/zipball/v2.1"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "jfmrod",
+          "type": "User"
+        },
+        "date_created": "2020-03-24T10:24:24Z",
+        "date_published": "2020-03-24T11:10:11Z",
+        "description": "Fixed a bug in -otutables that populated the table with counts only from the first sample provided.\r\n\r\nmapseq-1.2.6-macosx.tar.gz - statically compiled binary on MacOSX (Mojave 10.14.6)\r\nmapseq-1.2.6-linux.tar.gz - statically compiled binary on a linux kernel v4.15 (ubuntu 18.04)\r\nmapseq-1.2.6-linux.kernel3.13.tar.gz - statically compiled binary on linux kernel 3.13 (ubuntu 14.04)",
+        "html_url": "https://github.com/jfmrod/MAPseq/releases/tag/v1.2.6",
+        "name": "Bug fix in -otutables option",
+        "release_id": 24805601,
+        "tag": "v1.2.6",
+        "tarball_url": "https://api.github.com/repos/jfmrod/MAPseq/tarball/v1.2.6",
+        "type": "Release",
+        "url": "https://api.github.com/repos/jfmrod/MAPseq/releases/24805601",
+        "value": "https://api.github.com/repos/jfmrod/MAPseq/releases/24805601",
+        "zipball_url": "https://api.github.com/repos/jfmrod/MAPseq/zipball/v1.2.6"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "jfmrod",
+          "type": "User"
+        },
+        "date_created": "2019-11-08T10:02:15Z",
+        "date_published": "2020-02-26T15:28:38Z",
+        "description": "Pre-release of version 2.0 with experimental paired end sequence mapping.\r\n\r\nPaired end sequencing can be mapped using the \"-paired\" option:\r\nmapseq -paired pairend1.fna pairend2.fna\r\n\r\nMAPseq will use both pair ends in the search and alignment to identify the taxonomy of the paired end reads. Both overlapping and non-overlapping paired ends are handled by mapseq automatically.\r\n",
+        "html_url": "https://github.com/jfmrod/MAPseq/releases/tag/v2.0alpha",
+        "name": "v2.0alpha pre-release with experimental paired end sequence mapping",
+        "release_id": 24006079,
+        "tag": "v2.0alpha",
+        "tarball_url": "https://api.github.com/repos/jfmrod/MAPseq/tarball/v2.0alpha",
+        "type": "Release",
+        "url": "https://api.github.com/repos/jfmrod/MAPseq/releases/24006079",
+        "value": "https://api.github.com/repos/jfmrod/MAPseq/releases/24006079",
+        "zipball_url": "https://api.github.com/repos/jfmrod/MAPseq/zipball/v2.0alpha"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "jfmrod",
+          "type": "User"
+        },
+        "date_created": "2019-10-29T14:03:54Z",
+        "date_published": "2019-10-29T15:32:24Z",
+        "description": "New features:\r\n- Added \"-otucounts\" and \"-otutable\" options to generate count summary for single mapseq (.mseq) files or an otu/taxa table for multiple .mseq files\r\n- Added \"-ignoreEmptyTax\" option. Default is off until thorough benchmarks are performed.\r\n  Prevents second hits with missing taxonomic labels (uncertain annotation) from decreasing the confidence of the top hit assignment.\r\n\r\nmapseq-1.2.5-macosx.tar.gz - statically compiled binary on MacOSX (Mojave 10.14.6)\r\nmapseq-1.2.5-linux.tar.gz - statically compiled binary on a linux kernel v4.15 (ubuntu 18.04)\r\nmapseq-1.2.5-linux.kernel3.13.tar.gz - statically compiled binary on linux kernel 3.13 (ubuntu 14.04)",
+        "html_url": "https://github.com/jfmrod/MAPseq/releases/tag/v1.2.5",
+        "name": "v1.2.5 - OTU counts and table generation from mseq files",
+        "release_id": 21058184,
+        "tag": "v1.2.5",
+        "tarball_url": "https://api.github.com/repos/jfmrod/MAPseq/tarball/v1.2.5",
+        "type": "Release",
+        "url": "https://api.github.com/repos/jfmrod/MAPseq/releases/21058184",
+        "value": "https://api.github.com/repos/jfmrod/MAPseq/releases/21058184",
+        "zipball_url": "https://api.github.com/repos/jfmrod/MAPseq/zipball/v1.2.5"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "jfmrod",
+          "type": "User"
+        },
+        "date_created": "2018-10-03T08:19:39Z",
+        "date_published": "2018-10-02T12:19:09Z",
+        "description": "Bug fixes:\r\nFixed missing newline causing last sequence to be missed, added assert on empty sequences\r\nFixed double hits reported when classifying long queries (>1200bp)\r\n\r\nUpdated to mapref-2.2b:\r\nRemoved low quality reference sequences that would cause issues when classifying low quality query sequences.\r\n\r\nmapseq-1.2.3-macosx.tar.gz - statically compiled binary on MacOSX (Sierra)\r\nmapseq-1.2.3-linux.tar.gz - statically compiled binary on a linux kernel v4.15 (ubuntu 18.04)\r\nmapseq-1.2.3-linux.kernel3.13.tar.gz - statically compiled binary on linux kernel 3.13 (ubuntu 14.04)",
+        "html_url": "https://github.com/jfmrod/MAPseq/releases/tag/v1.2.3",
+        "name": "Bug fixes and update to MAPref2.2b",
+        "release_id": 13199946,
+        "tag": "v1.2.3",
+        "tarball_url": "https://api.github.com/repos/jfmrod/MAPseq/tarball/v1.2.3",
+        "type": "Release",
+        "url": "https://api.github.com/repos/jfmrod/MAPseq/releases/13199946",
+        "value": "https://api.github.com/repos/jfmrod/MAPseq/releases/13199946",
+        "zipball_url": "https://api.github.com/repos/jfmrod/MAPseq/zipball/v1.2.3"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "jfmrod",
+          "type": "User"
+        },
+        "date_created": "2017-10-30T12:35:54Z",
+        "date_published": "2017-10-23T13:37:02Z",
+        "description": "Updated reference to MAPref v2.2:\r\n- fixed multithreaded race condition affecting occurring on some machines\r\n- v2.0 had an over-proportional increase in number of OTUs compared to v1.0 due to changes introduced in the alignment and trim settings. This has now been rectified and the increase is more inline with expectations.\r\n- Several sequences in v1.0 were missing in v2.0 and are now included in the new version.",
+        "html_url": "https://github.com/jfmrod/MAPseq/releases/tag/v1.2.2",
+        "name": "update to MAPref v2.2",
+        "release_id": 8220904,
+        "tag": "v1.2.2",
+        "tarball_url": "https://api.github.com/repos/jfmrod/MAPseq/tarball/v1.2.2",
+        "type": "Release",
+        "url": "https://api.github.com/repos/jfmrod/MAPseq/releases/8220904",
+        "value": "https://api.github.com/repos/jfmrod/MAPseq/releases/8220904",
+        "zipball_url": "https://api.github.com/repos/jfmrod/MAPseq/zipball/v1.2.2"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "jfmrod",
+          "type": "User"
+        },
+        "date_created": "2017-07-16T22:03:19Z",
+        "date_published": "2017-07-16T22:27:36Z",
+        "description": "The reference was updated to include many more sequences (now 1.5 million compared to almost 1 million in the previous version). Mitochondrial sequences that were not aligned to the 16S and 18S models used with infernal were now included in this version if they were found to be annotated as such in the NCBI RefSeq database. Mitochondrial 16S coverage should therefore be much improved in this release.",
+        "html_url": "https://github.com/jfmrod/MAPseq/releases/tag/v1.2",
+        "name": "linux binaries - updated mapseq reference 2.0",
+        "release_id": 7057645,
+        "tag": "v1.2",
+        "tarball_url": "https://api.github.com/repos/jfmrod/MAPseq/tarball/v1.2",
+        "type": "Release",
+        "url": "https://api.github.com/repos/jfmrod/MAPseq/releases/7057645",
+        "value": "https://api.github.com/repos/jfmrod/MAPseq/releases/7057645",
+        "zipball_url": "https://api.github.com/repos/jfmrod/MAPseq/zipball/v1.2"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "somef_missing_categories": [
+    "acknowledgement",
+    "run",
+    "download",
+    "requirements",
+    "contact",
+    "contributors",
+    "documentation",
+    "usage",
+    "faq",
+    "support",
+    "identifier",
+    "has_build_file",
+    "executable_example"
+  ],
+  "somef_provenance": {
+    "date": "2024-11-04 08:22:01",
+    "somef_schema_version": "1.0.0",
+    "somef_version": "0.9.5"
+  },
+  "stargazers_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 24
+      },
+      "technique": "GitHub_API"
+    }
+  ]
+}

@@ -1,0 +1,691 @@
+{
+  "citation": [
+    {
+      "confidence": 1,
+      "result": {
+        "author": "Wertenbroek, Rick and Rubinacci, Simone and Xenarios, Ioannis and Thoma, Yann and Delaneau, Olivier",
+        "format": "bibtex",
+        "title": "{XSI-A genotype compression tool for compressive genomics in large biobanks}",
+        "type": "Text_excerpt",
+        "value": "@article{wertenbroek2022xsi,\n    year = {2022},\n    journal = {Bioinformatics},\n    author = {Wertenbroek, Rick and Rubinacci, Simone and Xenarios, Ioannis and Thoma, Yann and Delaneau, Olivier},\n    title = {{XSI-A genotype compression tool for compressive genomics in large biobanks}},\n}"
+      },
+      "source": "https://raw.githubusercontent.com/rwk-unil/xSqueezeIt/master/README.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "code_repository": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/rwk-unil/xSqueezeIt"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_created": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2020-12-19T08:33:45Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_updated": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2024-09-04T07:52:13Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "description": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "xSqueezeIt VCF/BCF Genotype data compressor with extensible compute friendly format"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "File Format Description (internal version 4)",
+        "parent_header": [
+          "xSqueezeIt (XSI) - VCF / BCF Genotype Compressor"
+        ],
+        "type": "Text_excerpt",
+        "value": "The compressor takes an input BCF and output two files :\n1) A BCF file with the original variant info, with following fields (`CHROM POS ID REF ALT QUAL FILTER INFO FORMAT`). These fields are unaltered. And a single sample `BIN_MATRIX_POS` with `BM` format field which holds an index at each variant entry.\n2) A binary file `.xsi` with the compressed/encoded information (e.g., \"GT\" data).\n\n<img src=\"images/XSI_arch.png\" alt=\"XSI architecture\" width=\"1000\"/>\n"
+      },
+      "source": "https://raw.githubusercontent.com/rwk-unil/xSqueezeIt/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "BCF File contents",
+        "parent_header": [
+          "xSqueezeIt (XSI) - VCF / BCF Genotype Compressor",
+          "File Format Description (internal version 4)"
+        ],
+        "type": "Text_excerpt",
+        "value": "The BCF (named \"filename.xsi_var.bcf\") has the corresponding XSI file name in the header and the indices allow to query the data.\n\n```\n##FORMAT=<ID=BM,Number=1,Type=Integer,Description=\"Position in GT Binary Matrix\">\n##XSI=filename.xsi\n```\n\nThe `BM` index is a position, a 32-bit integer that can be decomposed as follows : The 15 upper bits represent the block where the data is stored, the 17 lower bits represent an index inside that block. This field is passed to an \"accessor\" to seek the block that holds the data and then seek inside the block itself.\n"
+      },
+      "source": "https://raw.githubusercontent.com/rwk-unil/xSqueezeIt/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "XSI File contents",
+        "parent_header": [
+          "xSqueezeIt (XSI) - VCF / BCF Genotype Compressor",
+          "File Format Description (internal version 4)"
+        ],
+        "type": "Text_excerpt",
+        "value": "The XSI File has the following organization :\n\n| Header                         |\n|--------------------------------|\n| Binary Data Blocks             |\n| Sample ID's                    |\n| Block indices for random access|\n\n- The header is a 256-byte header with version information, compression information, endianness info, and location of the following fields.\n- The binary data blocks as optionnaly zstd compressed blocks (the header will tell if they are zstd compressed or not).\n- The Sample ID's are a list of sample ID strings. These are the names (IDs) of the samples in the original BCF file.\n- Finally a list of indices of the (compressed) blocks, this index is queried to get the location of a binary block inside the file from a `BM` index.\n"
+      },
+      "source": "https://raw.githubusercontent.com/rwk-unil/xSqueezeIt/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "XSI Binary blocks",
+        "parent_header": [
+          "xSqueezeIt (XSI) - VCF / BCF Genotype Compressor",
+          "File Format Description (internal version 4)",
+          "XSI File contents"
+        ],
+        "type": "Text_excerpt",
+        "value": "If the binary blocks are zstd https://github.com/facebook/zstd compressed each block consists of :\n\n- A 32-bit number indicating the uncompressed block size.\n- Followed by the compressed data.\n\nThe 32-bit number allows to allocate the required memory before uncompressing the block.\n\nThe uncompressed binary blocks consist of :\n\n| Dictionnary               |\n|---------------------------|\n| GT Block                  |\n| Other data specific block |\n\nThe dictionnary is a 32-bit associative table (key-value, both 32-bit). The first key-value pair is -1 (key) and the dictionnary size (without this entry). Reading this first key-value pair allows to know the size of the dictionnary. Each subsequent entry represent a data specific block type (key) and location relative to the start of the current block (value).\n\nFor the moment only GT (genotype) data is stored in XSI, the key for this data is 256. 32-bit keys (with -1 being reserved) allow for more than 4 billion data specific types. Ranges of keys can be requested and allocated through a github issue / pull request if developers are interested in encoding other specifc blocks or encode existing data types with alternative compression schemes.\n\nThe binary blocks each encode a fixed number of BCF lines (8192 per default). This is an option the can be set during compression. Because for compression the `BM` index is used and this contains the block number and offset inside the block, the decompressor does not need to explicitely know how many BCF lines are in each block.\n"
+      },
+      "source": "https://raw.githubusercontent.com/rwk-unil/xSqueezeIt/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Genotype GT block",
+        "parent_header": [
+          "xSqueezeIt (XSI) - VCF / BCF Genotype Compressor",
+          "File Format Description (internal version 4)",
+          "XSI File contents"
+        ],
+        "type": "Text_excerpt",
+        "value": "The genotype GT blocks (`include/gt_block.hpp`) consist of :\n\n| Dictionnary                 |\n|-----------------------------|\n| Common variants (PBWT+WAH)  |\n| Rare variants (Sparse)      |\n| Metadata (missing, phasing) |\n\nAs for the binary blocks the dictionnary is a 32-bit (key-value associative table). The first key-value pais is -1 (key) and the dictionnary size (without this entry). The following entries can be found in the dictionnary :\n\nScalar key-values :\n\n- `0x0 KEY_BCF_LINES` : The number of BCF lines in the block.\n- `0x1 KEY_BINARY_LINES` : The number of binary lines in the block (sum of number of alt-alleles for all BCF lines in block for example, a BCF line with multiple alt alleles will be encoded on multiple binary lines (one alt allele per binary line)).\n- `0x2 KEY_MAX_LINE_PLOIDY` : The may ploidy encountered in all the lines in the block.\n- `0x3 KEY_DEFAULT_PHASING` : The default phase state of the majority of samples, either phased `0|1` or unphased `0/1`.\n- `0x4 KEY_WEIRDNESS_STRATEGY` : (For internal use), this desribes the strategy used to compress/encode the missing / end of vector / non default phase information.\n\nVector key-values : (values are location of the vector)\n\n- `0x10 KEY_LINE_SORT` : Binary vector that indicates if the corresponding binary line is used to sort the PBWT arrangement of subsequent common variant genotypes.\n- `0x11 KEY_LINE_SELECT` : Binary vector that indicates if the corresponding binary line is PBWT WAH encoded or sparse encoded.\n- `0x12 KEY_LINE_HAPLOID` : Optional binary vector that indicates if the corresponding binary line is haploid. (E.g., for handling chromosome X/Y where some lines can be totally haploid).\n- `0x15 KEY_VECTOR_LENGTH` : Unused vector, for future support of mixed ploidy or polyploidy > 2.\n- `0x16 KEY_LINE_MISSING` : Optional binary vector that indicates if the corresponding binary line has missing values.\n- `0x17 KEY_LINE_NON_UNIFORM_PHASING` : Optional binary vector that indicates if the corresponding binary line has non uniform phasing (mixed phased and unphased samples).\n- `0x18 KEY_LINE_END_OF_VECTORS` : Optional binary vector that indicates if the corresponding binary line has \"end of vectors\", BCF values the represent lower ploidy or lack of information compared to the biggest vector in the BCF line. (This allows support for mixed ploidy).\n\nMatrix key-values : (values are location of the matrix)\n\n- `0x20 KEY_MATRIX_WAH` : Matrix of WAH encoded binary lines\n- `0x21 KEY_MATRIX_SPARSE` : Matrix of sparse encoded binary lines\n- `0x26 KEY_MATRIX_MISSING` : Matrix of `strategy` encoded binary lines of missing values. Where `strategy` is given by `0x4 KEY_WEIRDNESS_STRATEGY`. Which consists of either (WAH, PBWT+WAH, or Sparse (in matrix below)). For performance the strategy is set to sparse for the moment (not possible to change this from command line). The choice intended for development and testing.\n- `0x27 KEY_MATRIX_NON_UNIFORM_PHASING`: Matrix of non uniformly phased positions.\n- `0x28 KEY_MATRIX_END_OF_VECTORS` : Same as missing but for \"end of vector\" BCF entries.\n- `0x36 KEY_MATRIX_MISSING_SPARSE` : Sparse matrix for missing values, (both missing matrices are used if the strategy is mixed...)\n- `0x38 KEY_MATRIX_END_OF_VECTOR_SPARSE` : Sparse matrix for \"end of vector\" values, (both end of vector matrices are used if the strategy is mixed...)\n\nDecoding the genotype block uses the vectors (lines) and matrices above to either recreate the original BCF data line or simply give access to the internal data structures.\n\nInternal data structures :\n\n- WAH lines : The WAH (Word Aligned Hybrid) lines are encoded using a 16-bit WAH scheme (see `include/wah.hpp`). If a line updates the PBWT sort all subsequent WAH lines are reordered given the PBWT order.\n- Sparse lines : Depending on the number of samples the sparse lines are either encoded on 16-bits (if less than 65536 samples) or 32-bits. Each sparse binary line starts by the number of sparse values followed by the indices of the samples (corresponding samples IDs strings are stored in the XSI file once). The sparse lines are not PBWT reordered because if makes no difference in compression.\n- `a` : The PBWT arrangement at the current posision as in the Durbin 2014 PBWT paper. This is not stored in the XSI file but created on the fly on traversal of the file. Binary lines that update this structure are marked by a set bit in the `LINE_SORT` vector.\n- Other data structures include the missing, end of vector, and phasing info.\n\nThe binary vector lines are themselves WAH encoded to save some space.\n"
+      },
+      "source": "https://raw.githubusercontent.com/rwk-unil/xSqueezeIt/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Sample ID's",
+        "parent_header": [
+          "xSqueezeIt (XSI) - VCF / BCF Genotype Compressor",
+          "File Format Description (internal version 4)",
+          "XSI File contents"
+        ],
+        "type": "Text_excerpt",
+        "value": "A sequence of null terminated strings corresponding to the sample ID's of the input BCF file.\n"
+      },
+      "source": "https://raw.githubusercontent.com/rwk-unil/xSqueezeIt/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 0.9903562442954672,
+      "result": {
+        "original_header": "xSqueezeIt (XSI) - VCF / BCF Genotype Compressor",
+        "type": "Text_excerpt",
+        "value": "VCF / BCF Genotype data compressor based on sparse representation for rare variants and positional Burrows-Wheeler transform (PBWT) followed by 16-bit Word Aligned Hybrid (WAH) encoding for common variants. (Minor Allele Frequency threshold is selectable for rare/common variants). \nVariant information is left in BCF format to remain compatible with HTSLIB / BCFTools, genotype data is custom encoded as described above. The encoded genotype data can then optionnaly be further compressed with zstd https://github.com/facebook/zstd/. \nThe compressor was realized with haploid/diploid genotype data in mind (human population genetics data). The compressor supports multi-allelic variant sites. Polyploid samples with ploidy > 2 are not supported yet, mixed ploidy samples are supported (e.g., chrX). The main goal is to provide an alternative file format for storing large human genotype datasets, to reduce loading times and speed-up computation (e.g., with computation on the encoded data directly). \n"
+      },
+      "source": "https://raw.githubusercontent.com/rwk-unil/xSqueezeIt/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9360142089994452,
+      "result": {
+        "original_header": "C API",
+        "type": "Text_excerpt",
+        "value": "The C API `include/c_api.h` provides a C compatible API for reading XSI files in a C program. The libxsqueezit library and C API can be exported with the command :\n```shell\nmake package-sources\n```\n \nwhich will create a directory `xsqueezeit_export` with a makefile that allows to build `libxsqueezeit.a`, the xsqueezeit library. Including `include/c_api.h` from the same folder and linking with `libxsqueezeit.a` allow for mixed XSI/VCF/BCF file reading from C programs. \n"
+      },
+      "source": "https://raw.githubusercontent.com/rwk-unil/xSqueezeIt/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9884909202292486,
+      "result": {
+        "original_header": "Dot products",
+        "type": "Text_excerpt",
+        "value": "See directory `dot_prod` which provides a benchmark that computes dot products between all bi-allelic sites and a random phenotype vector. The genotypes can be loaded from either a BCF or XSI files. Internal data structures and \"compressive acceleration\" is used when an XSI file is provided.\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/rwk-unil/xSqueezeIt/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9896420674615825,
+      "result": {
+        "original_header": "Loading time",
+        "type": "Text_excerpt",
+        "value": "Loads all genotypes of a file (either XSI or BCF) into memory, one line at the time, once every line has been loaded once the time is shown. This allows to benchmark data loading from either format. The HTSLIB is used in both cases, only the method `bcf_get_genotypes()` is replaced by our own decompression when an XSI file is used.\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/rwk-unil/xSqueezeIt/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9458973533100328,
+      "result": {
+        "original_header": "Lockstep loader",
+        "type": "Text_excerpt",
+        "value": "Load genotypes from two files and checks that the two files have the same genotypes for all variants they contain. This allows to check if an XSI file and a BCF file hold the same data. This also allows to compare XSI against XSI or BCF against BCF. \n"
+      },
+      "source": "https://raw.githubusercontent.com/rwk-unil/xSqueezeIt/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9379919237869405,
+      "result": {
+        "original_header": "Validation through integration testing",
+        "type": "Text_excerpt",
+        "value": "The tests rely on comparing the output of `bcftools view` of the XSI compressed-decompressed files through the utility `diff` against the reference input files, diff may run out of memory on big files (because the uncompressed textual result of bcftools is checked, i.e. plain VCF). These test allow to check that the files contain the same data. \nFor testing bigger files we recommend either using the lockstep loader above (for checking GT data) or bcftools to compare the rest of the data.\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/rwk-unil/xSqueezeIt/master/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "download_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/rwk-unil/xSqueezeIt/releases"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 1
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/rwk-unil/xSqueezeIt/forks"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "rwk-unil/xSqueezeIt"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_title": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "xSqueezeIt (XSI) - VCF / BCF Genotype Compressor"
+      },
+      "source": "https://raw.githubusercontent.com/rwk-unil/xSqueezeIt/master/README.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "has_build_file": [
+    {
+      "confidence": 1,
+      "result": {
+        "format": "dockerfile",
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/rwk-unil/xSqueezeIt/master/Dockerfile"
+      },
+      "source": "https://raw.githubusercontent.com/rwk-unil/xSqueezeIt/master/Dockerfile",
+      "technique": "file_exploration"
+    }
+  ],
+  "images": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/rwk-unil/xSqueezeIt/master/images/compression_rates.png"
+      },
+      "source": "https://raw.githubusercontent.com/rwk-unil/xSqueezeIt/master/README.md",
+      "technique": "regular_expression"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/rwk-unil/xSqueezeIt/master/images/loading_times.png"
+      },
+      "source": "https://raw.githubusercontent.com/rwk-unil/xSqueezeIt/master/README.md",
+      "technique": "regular_expression"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/rwk-unil/xSqueezeIt/master/images/XSI_arch.png"
+      },
+      "source": "https://raw.githubusercontent.com/rwk-unil/xSqueezeIt/master/README.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "installation": [
+    {
+      "confidence": 0.8959130096512679,
+      "result": {
+        "original_header": "xSqueezeIt (XSI) - VCF / BCF Genotype Compressor",
+        "type": "Text_excerpt",
+        "value": "Current version : 4\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/rwk-unil/xSqueezeIt/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9940613172045717,
+      "result": {
+        "original_header": "Dockerfile",
+        "type": "Text_excerpt",
+        "value": "```shell\n# Build\ndocker build -f Dockerfile -t xsi:xsi .\n# Run\ndocker run xsi:xsi xsqueezeit # arguments ...\n```\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/rwk-unil/xSqueezeIt/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 1.0,
+      "result": {
+        "original_header": "Building the xSqueezeIt command line tool",
+        "type": "Text_excerpt",
+        "value": "This build requires GCC 8+ because modern C++17 features are used.\n```shell\n# Clone\ngit clone https://github.com/rwk-unil/xSqueezeIt.git\ncd xSqueezeIt\n\n# Clone and build htslib (if you already have htslib set Makefile accordingly and skip)\ngit submodule update --init htslib\ncd htslib\nautoheader\nautoconf\nautomake --add-missing 2>/dev/null\n./configure\nmake\nsudo make install\nsudo ldconfig\ncd ..\n\n# Clone, build, and install zstd (if you already have zstd set Makefile accordingly and skip)\ngit clone https://github.com/facebook/zstd.git\ncd zstd\nmake\nsudo make install\nsudo ldconfig\ncd ..\n\n# Build application\nmake\n```\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/rwk-unil/xSqueezeIt/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.942880369333801,
+      "result": {
+        "original_header": "C API",
+        "type": "Text_excerpt",
+        "value": "which will create a directory `xsqueezeit_export` with a makefile that allows to build `libxsqueezeit.a`, the xsqueezeit library. Including `include/c_api.h` from the same folder and linking with `libxsqueezeit.a` allow for mixed XSI/VCF/BCF file reading from C programs. \nAnother example is the addition of XSI support in SHAPEIT4 https://github.com/rwk-unil/shapeit4/tree/dev. Specifically see : https://github.com/rwk-unil/shapeit4/blob/dev/src/io/genotype_reader2.cpp (`#ifdef __XSI__` for reference).\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/rwk-unil/xSqueezeIt/master/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "invocation": [
+    {
+      "confidence": 0.8320770061898121,
+      "result": {
+        "original_header": "Dockerfile",
+        "type": "Text_excerpt",
+        "value": "```shell\n# Build\ndocker build -f Dockerfile -t xsi:xsi .\n# Run\ndocker run xsi:xsi xsqueezeit # arguments ...\n```\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/rwk-unil/xSqueezeIt/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.8215318920348624,
+      "result": {
+        "original_header": "Lockstep loader",
+        "type": "Text_excerpt",
+        "value": "Example :\n```\nlockstep_loader % ./lockstep_loader --file1 ../../Data/1kgp3/chrX.bcf --file2 ../chrX/chrX.xsi\nLockstep loader test\next1 bcf ext2 xsi\nChecked 17368209744 GT entries\nFiles have the same GT data\n```\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/rwk-unil/xSqueezeIt/master/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "issue_tracker": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/rwk-unil/xSqueezeIt/issues"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "keywords": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": ""
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "license": [
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Other",
+        "spdx_id": "NOASSERTION",
+        "type": "License",
+        "url": null,
+        "value": null
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "File_dump",
+        "value": "MIT License\n\nCopyright (C) 2021 Rick Wertenbroek, University of Lausanne (UNIL),\nUniversity of Applied Sciences and Arts Western Switzerland (HES-SO),\nSchool of Management and Engineering Vaud (HEIG-VD).\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in\nall copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.\n"
+      },
+      "source": "https://raw.githubusercontent.com/rwk-unil/xSqueezeIt/master/LICENSE",
+      "technique": "file_exploration"
+    }
+  ],
+  "name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "xSqueezeIt"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "owner": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "User",
+        "value": "rwk-unil"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "programming_languages": [
+    {
+      "confidence": 1,
+      "result": {
+        "name": "C++",
+        "size": 766170,
+        "type": "Programming_language",
+        "value": "C++"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Shell",
+        "size": 9364,
+        "type": "Programming_language",
+        "value": "Shell"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Makefile",
+        "size": 8628,
+        "type": "Programming_language",
+        "value": "Makefile"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "C",
+        "size": 4779,
+        "type": "Programming_language",
+        "value": "C"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Dockerfile",
+        "size": 1410,
+        "type": "Programming_language",
+        "value": "Dockerfile"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "readme_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/rwk-unil/xSqueezeIt/master/README.md"
+      },
+      "technique": "file_exploration"
+    }
+  ],
+  "releases": [
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "rwk-unil",
+          "type": "User"
+        },
+        "date_created": "2022-08-12T13:30:25Z",
+        "date_published": "2022-11-11T14:45:26Z",
+        "description": "# xSqueezeIt and the XSI file format - version 4.0.0\r\n\r\nPublication : [XSI - A genotype compression tool for compressive genomics in large biobanks](https://doi.org/10.1093/bioinformatics/btac413)\r\n\r\nPlease cite this article if you use XSI in your research.\r\n```\r\nWertenbroek, R., Rubinacci, S., Xenarios, I., Thoma, Y., & Delaneau, O. (2022). XSI\u2014a genotype compression tool for compressive genomics in large biobanks. Bioinformatics, 38(15), 3778-3784.\r\n```\r\n\r\n```bibtex\r\n@article{wertenbroek2022xsi,\r\n  title={XSI\u2014a genotype compression tool for compressive genomics in large biobanks},\r\n  author={Wertenbroek, Rick and Rubinacci, Simone and Xenarios, Ioannis and Thoma, Yann and Delaneau, Olivier},\r\n  journal={Bioinformatics},\r\n  volume={38},\r\n  number={15},\r\n  pages={3778--3784},\r\n  year={2022},\r\n  publisher={Oxford University Press}\r\n}\r\n```\r\n\r\nVCF / BCF Genotype data compressor based on sparse representation for rare variants and positional Burrows-Wheeler transform (PBWT) followed by 16-bit Word Aligned Hybrid (WAH) encoding for common variants. (Minor Allele Frequency threshold is selectable for rare/common variants). XSI provides fast random access, is extensible, and allows for \"compressive acceleration\" to speed-up research.\r\n\r\nVariant information is left in BCF format to remain compatible with HTSLIB / BCFTools, genotype data is custom encoded as described above. The encoded genotype data can then optionally be further compressed with zstd https://github.com/facebook/zstd/.\r\n\r\n## Build\r\n\r\n### Dockerfile\r\n\r\n```shell\r\n# Build\r\ndocker build -f Dockerfile -t xsi:xsi .\r\n# Run\r\ndocker run xsi:xsi xsqueezeit # arguments ...\r\n```\r\n\r\n### Building the xSqueezeIt command line tool\r\n\r\nThis build requires GCC 8+ because modern C++17 features are used.\r\n\r\n```shell\r\n# Clone\r\ngit clone https://github.com/rwk-unil/xSqueezeIt.git --branch v4.0.0 --single-branch\r\ncd xSqueezeIt\r\n\r\n# Clone and build htslib (if you already have htslib set Makefile accordingly and skip)\r\ngit submodule update --init --recursive htslib\r\ncd htslib\r\nautoheader\r\nautoconf\r\nautomake --add-missing 2>/dev/null\r\n./configure\r\nmake\r\nsudo make install\r\nsudo ldconfig\r\ncd ..\r\n\r\n# Clone and build zstd (if you already have zstd set Makefile accordingly and skip)\r\ngit clone https://github.com/facebook/zstd.git\r\ncd zstd\r\nmake\r\ncd ..\r\n\r\n# Build application\r\nmake\r\n```",
+        "html_url": "https://github.com/rwk-unil/xSqueezeIt/releases/tag/v4.0.0",
+        "name": "v4.0.0 release",
+        "release_id": 82802754,
+        "tag": "v4.0.0",
+        "tarball_url": "https://api.github.com/repos/rwk-unil/xSqueezeIt/tarball/v4.0.0",
+        "type": "Release",
+        "url": "https://api.github.com/repos/rwk-unil/xSqueezeIt/releases/82802754",
+        "value": "https://api.github.com/repos/rwk-unil/xSqueezeIt/releases/82802754",
+        "zipball_url": "https://api.github.com/repos/rwk-unil/xSqueezeIt/zipball/v4.0.0"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "requirements": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Dependencies",
+        "parent_header": [
+          "xSqueezeIt (XSI) - VCF / BCF Genotype Compressor",
+          "Build"
+        ],
+        "type": "Text_excerpt",
+        "value": "This software depends on :\n- `htslib` https://github.com/samtools/htslib\n- `zstd` https://github.com/facebook/zstd/\n\n"
+      },
+      "source": "https://raw.githubusercontent.com/rwk-unil/xSqueezeIt/master/README.md",
+      "technique": "header_analysis"
+    }
+  ],
+  "run": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Compression",
+        "parent_header": [
+          "xSqueezeIt (XSI) - VCF / BCF Genotype Compressor",
+          "Run"
+        ],
+        "type": "Text_excerpt",
+        "value": "Compressing chromosomes 1-22 of 1000 Genomes Phase 3 (1KGP3) https://www.internationalgenome.org/category/phase-3/ (2504 samples, 5008 haplotypes, >88M variants) and chromosomes 1-22 of Haplotype Reference Consortium (HRC) https://www.nature.com/articles/ng.3643 (64976 haplotypes, >39M variants).\n\n<img src=\"images/compression_rates.png\" alt=\"compression rates\" width=\"600\"/>\n"
+      },
+      "source": "https://raw.githubusercontent.com/rwk-unil/xSqueezeIt/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Extraction",
+        "parent_header": [
+          "xSqueezeIt (XSI) - VCF / BCF Genotype Compressor",
+          "Run"
+        ],
+        "type": "Text_excerpt",
+        "value": "- `-x,--extract`\n\n```shell\n# Extraction (requires both files generated above) :\n./xsqueezeit -x -f output/chr20.xsi -o output/chr20.bcf # To compressed BCF\n./xsqueezeit -x -f output/chr20.xsi > output/chr20.bcf # Alternative command (uncompressed BCF)\n```\n"
+      },
+      "source": "https://raw.githubusercontent.com/rwk-unil/xSqueezeIt/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Region extraction",
+        "parent_header": [
+          "xSqueezeIt (XSI) - VCF / BCF Genotype Compressor",
+          "Run",
+          "Extraction"
+        ],
+        "type": "Text_excerpt",
+        "value": "- `-r,--regions <regions>`\n- `-R,--regions-file <filename>`\n\n```shell\n# Extraction (requires both files generated above) :\n./xsqueezeit -x -r \"20:200000-200100\" -f output/chr20.xsi -o output/chr20.bcf # To compressed BCF\n./xsqueezeit -x -r \"20:200000-200100\" -f output/chr20.xsi | bcftools view # Pipes uncompressed BCF\n# The above command is much faster than decompressing and using -r in bcftools\n# because only the chosen regions are decompressed, both generate the same result\n```\n"
+      },
+      "source": "https://raw.githubusercontent.com/rwk-unil/xSqueezeIt/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Sample extraction",
+        "parent_header": [
+          "xSqueezeIt (XSI) - VCF / BCF Genotype Compressor",
+          "Run",
+          "Extraction"
+        ],
+        "type": "Text_excerpt",
+        "value": "- `-s,--samples <samples>`\n- `-S,--samples-file <filename>`\n\n```shell\n# Extraction (requires both files generated above) :\n./xsqueezeit -x -s HG00101,NA12878 -f output/chr20.xsi -o output/chr20.bcf # To compressed BCF\n./xsqueezeit -x -s HG00101,NA12878 -f output/chr20.xsi | bcftools view # Pipes uncompressed BCF\n# List of samples in file\n./xsqueezeit -x -S samples.txt -f output/chr20.xsi -o output/chr20.bcf\n```\n"
+      },
+      "source": "https://raw.githubusercontent.com/rwk-unil/xSqueezeIt/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Pipe into bcftools",
+        "parent_header": [
+          "xSqueezeIt (XSI) - VCF / BCF Genotype Compressor",
+          "Run"
+        ],
+        "type": "Text_excerpt",
+        "value": "```shell\n# Or pipe directly into bcftools (some examples) :\n./xsqueezeit -x -f output/chr20.xsi | bcftools view | less\n./xsqueezeit -x -f output/chr20.xsi | bcftools view -s HG00111,NA12878 | less\n./xsqueezeit -x -f output/chr20.xsi | bcftools stats > output/chr20_stats.txt\n```\n\nThe default output of `xsqueezeit` on `stdout` is BCF, to output VCF and be human readable add `-Ov`, in order to make the above operations faster the `-p` or `-Ou` option can be passed to `xsqueezeit` in order to output uncompressed BCF which is the fastest to pipe into BCFTools as mentioned in their [documentation](https://samtools.github.io/bcftools/bcftools.html#common_options) :\n\n> \"Output compressed BCF (b), uncompressed BCF (u), compressed VCF (z), uncompressed VCF (v). Use the -Ou option when piping between bcftools subcommands to speed up performance by removing unnecessary compression/decompression and VCF\u2190\u2192BCF conversion.\"\n\nCombining this with sample extraction can even speed up analysis for examples running `bcftools roh` (run of homozigosity) :\n\nWith BCFTools :\n```shell\ntime bcftools roh -G30 --AF-dflt 0.4 chr1.bcf -s \"NA12878,HG00100,HG00101,HG00102,HG00103\" > results.txt\n# 3:28.22 total\n```\n\nxSqueezeIt with `-p` pipe into BCFTools :\n```shell\ntime xsqueezeit -d -f chr1.xsi -s \"NA12878,HG00100,HG00101,HG00102,HG00103\" -p | bcftools roh -G30 --AF-dflt 0.4 > results.txt\n# 1:16.78 total\n```\n\nRunning without the `-p` option will result in longer execution times because of the unnecessary xsi->VCF (in xSqueezeIt) and VCF->BCF conversions (in BCFTools). Compared to xsi->(uncompressed)BCF that can directly be processed by BCFTools.\n\nxSqueezeIt without `-p` pipe into BCFTools - (Do not do this, better to use `-p` when piping) :\n```shell\ntime xsqueezeit -d -f chr1.xsi -s \"NA12878,HG00100,HG00101,HG00102,HG00103\" | bcftools roh -G30 --AF-dflt 0.4 > results.txt\n# 8:42.54 total\n```"
+      },
+      "source": "https://raw.githubusercontent.com/rwk-unil/xSqueezeIt/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Explore the \"variant-only\" generated file",
+        "parent_header": [
+          "xSqueezeIt (XSI) - VCF / BCF Genotype Compressor",
+          "Run"
+        ],
+        "type": "Text_excerpt",
+        "value": "The compressor generates a BCF file without the GT data (so variants only) and a binary file with the compressed GT data. This way the BCF file for the variants can still be explored and used.\n```\n# ./xsqueezeit <-c|-x> -f <input file> -o <output file>\n\n#\u00a0Compression :\n./xsqueezeit -c -f /path/to/my/data/chr20.bcf -o chr20.xsi\n# This will output two files\n# chr20.xsi which is the samples and genotype data in binary encoded format (can still be compressed e.g., with gzip)\n# chr20.xsi_var.bcf which is the variant data, can be opened with bcftools\n\nbcftools view chr20.xsi_var.bcf | less\n##fileformat=VCFv4.1\n##FILTER=<ID=PASS,Description=\"All filters passed\">\n##fileDate=20150218\n...\n##FORMAT=<ID=BM,Number=1,Type=Integer,Description=\"Position in GT Binary Matrix\">\n##XSI=filename.xsi\n##bcftools_viewCommand=view tmp.xsi_var.bcf; Date=Tue Aug 17 16:06:34 2021\n#CHROM  POS     ID      REF     ALT     QUAL    FILTER  INFO    FORMAT  BIN_MATRIX_POS\n20      60343   rs527639301     G       A       100     PASS    AC=1;AF=0.000199681;AN=5008;NS=2504;DP=20377;EAS_AF=0;AMR_AF=0.0014;AFR_AF=0;EUR_AF=0;SAS_AF=0;AA=.|||;VT=SNP   BM      0\n20      60419   rs538242240     A       G       100     PASS    AC=1;AF=0.000199681;AN=5008;NS=2504;DP=19865;EAS_AF=0;AMR_AF=0;AFR_AF=0;EUR_AF=0;SAS_AF=0.001;AA=.|||;VT=SNP    BM      1\n20      60479   rs149529999     C       T       100     PASS    AC=17;AF=0.00339457;AN=5008;NS=2504;DP=20218;EAS_AF=0;AMR_AF=0.0043;AFR_AF=0.0106;EUR_AF=0;SAS_AF=0;AA=.|||;VT=SNP      BM      2\n```\n\nFor example here the AC, AF, AB, etc. entries have not been modified, so they can already be used for some computations, since the BCF file is much smaller than the original one it will faster to process.\n\nThis also shows that the compressor keeps all the information that is sometimes lost with other compressors.\n\nIn this snippet we can also see the single `BIN_MATRIX_POS` sample with a `BM` entry. This corresponds to the position of the variant(s) in the binary block that is encoded/compressed in the binary file. This allows for random access to the GT data from a given variant in this BCF file. This number is the block:offset (details in file format description). In the snippet above the block is 0 and it increases from 0 to 1 to 2 etc. Multi-allelic variant sites will increase this offset by the number of ALT_ALLELES. For example :\n\n```\n20      64139   rs186497980     G       A,T     100     PASS    AC=2,2;AF=0.000399361,0.000399361;AN=5008;NS=2504;DP=20791;EAS_AF=0,0;AMR_AF=0,0;AFR_AF=0,0.0008;EUR_AF=0,0.001;SAS_AF=0.002,0;AA=.|||;VT=SNP;MULTI_ALLELIC     BM      103\n20      64150   rs7274499       C       A       100     PASS    AC=102;AF=0.0203674;AN=5008;NS=2504;DP=20555;EAS_AF=0;AMR_AF=0.0058;AFR_AF=0.0741;EUR_AF=0;SAS_AF=0;AA=.|||;VT=SNP      BM      105\n```\n\nWhere BM increases from 103 to 105 because the previous variant has two ALT_ALLELES A and T. Because in the XSI file each alt allele is stored as a single (encoded) binary line.\n\nThe `BM` entry allows to extract GT data directly from a region query on the BCF, this is needed to achieve constant time random access. This also helps when because overlapping a region may not be contiguous (e.g., with indels).\n"
+      },
+      "source": "https://raw.githubusercontent.com/rwk-unil/xSqueezeIt/master/README.md",
+      "technique": "header_analysis"
+    }
+  ],
+  "somef_missing_categories": [
+    "acknowledgement",
+    "download",
+    "contact",
+    "contributors",
+    "documentation",
+    "faq",
+    "identifier",
+    "executable_example"
+  ],
+  "somef_provenance": {
+    "date": "2024-10-05 23:19:07",
+    "somef_schema_version": "1.0.0",
+    "somef_version": "0.9.5"
+  },
+  "stargazers_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 14
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "support": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Generating the xSqueezeIt support library",
+        "parent_header": [
+          "xSqueezeIt (XSI) - VCF / BCF Genotype Compressor",
+          "Build"
+        ],
+        "type": "Text_excerpt",
+        "value": "In order to add support for xSqueezeIt into other software it can be exported as sources to build a library.\n\n```shell\nmake package-sources\n```\n\nThis will generate a directory named `xsqueezeit_export` which provides a Makefile to build the `libxsqueezeit` library. The library is built with `g++` but provides a C API as well. To integrate into a C application include the file `include/c_api.h` in you sources and link with `libxsqueezeit.a` using `g++`.\n\nAn example is given in the `c_api_test` directory, where a simple C program (`main.c` file) is compiled with `cc` (`gcc`) and linked with the library using `g++`.\n\nIntegration into C++ software allows to access the C++ internal API, through any of the `.hpp` files. Since this is the internal API it is not necessarily the easiest to use, but C++ programs can use the C API as well, which is well suited if they use HTSLIB because it is very similar. For an example see : https://github.com/rwk-unil/shapeit4/blob/dev/src/io/genotype_reader2.cpp (which is the genotype reader source of SHAPEIT4 with optional support for xSqueezeIt (`#ifdef __XSI__`).\n"
+      },
+      "source": "https://raw.githubusercontent.com/rwk-unil/xSqueezeIt/master/README.md",
+      "technique": "header_analysis"
+    }
+  ],
+  "type": [
+    {
+      "confidence": 0.82,
+      "result": {
+        "type": "String",
+        "value": "commandline-application"
+      },
+      "technique": "software_type_heuristics"
+    }
+  ],
+  "usage": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "SHAPEIT4",
+        "parent_header": [
+          "xSqueezeIt (XSI) - VCF / BCF Genotype Compressor",
+          "Example results"
+        ],
+        "type": "Text_excerpt",
+        "value": "The `dev` branch on the repository https://github.com/rwk-unil/shapeit4/tree/dev illustrates integration of xSqueezeIt file format support in SHAPEIT4. This serves as an example of how to add xSqueezeIt support in existing tools.\n"
+      },
+      "source": "https://raw.githubusercontent.com/rwk-unil/xSqueezeIt/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Loading",
+        "parent_header": [
+          "xSqueezeIt (XSI) - VCF / BCF Genotype Compressor",
+          "Example results"
+        ],
+        "type": "Text_excerpt",
+        "value": "Loading of the data from file format (right CHR1 is vcf.gz) :\n\n<img src=\"images/loading_times.png\" alt=\"loading times\" width=\"600\"/>\n\nHTSlib is used to get the genotype data into an array for each variant entry (record). With xSqueezeIt the genotype data is extracted from the binary compressed file.\n\nNormal loading with HTSlib and traditional BCF :\n```C\nbcf_sr_add_reader(reader, \"chr20.bcf\");\n...\nwhile (bcf_sr_next_line (reader)) { // While there are records in the BCF\n    ...\n    bcf_get_genotypes(header, line, &genotype_array, &ngt); // HTSlib\n    ...\n}\n```\n\nLoading genotype data from xSqueezeIt binary file and associated BCF variant info file :\n```C\nAccessor accessor(\"chr20.xsi\"); // xSqueezeIt binary compressed file\nbcf_sr_add_reader(reader, accessor.get_variant_filename());\n...\nwhile (bcf_sr_next_line (reader)) { // While there are records in the BCF\n    ...\n    accessor->get_genotypes(header, line, &genotype_array, &ngt);\n    ...\n}\n```\n"
+      },
+      "source": "https://raw.githubusercontent.com/rwk-unil/xSqueezeIt/master/README.md",
+      "technique": "header_analysis"
+    }
+  ]
+}

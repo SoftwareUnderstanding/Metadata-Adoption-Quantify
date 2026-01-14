@@ -1,0 +1,888 @@
+{
+  "code_repository": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/Illumina/hap.py"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_created": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2015-04-28T12:43:18Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_updated": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2024-10-03T20:19:09Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "description": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "Haplotype VCF comparison tools"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 0.9210965180361329,
+      "result": {
+        "original_header": "Haplotype Comparison Tools",
+        "type": "Text_excerpt",
+        "value": "This is a set of programs based on [htslib](https://github.com/samtools/htslib)\nto benchmark variant calls against gold standard truth datasets. \nTo compare a VCF against a gold standard dataset, use the following commmand line\nto perform genotype-level haplotype comparison.\n```bash\nhap.py truth.vcf query.vcf -f confident.bed -o output_prefix -r reference.fa\n```\nWe also have a script to perform comparisons only based on chromosome, position,\nand allele identity. This comparison will not resolve haplotypes and only verify\nthat the same alleles were observed at the same positions (e.g. for comparison\nof somatic callsets).\n```bash\nsom.py truth.vcf query.vcf -f confident.bed -o output_prefix -r reference.fa\n```\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/Illumina/hap.py/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9730829292402481,
+      "result": {
+        "original_header": "Complex variant comparison",
+        "type": "Text_excerpt",
+        "value": "A major challenge when comparing VCF files for diploid samples is the handling\nof complex variant representations. In a VCF file, we describe two haplotype\nsequences by means of REF-ALT pairs and genotypes. These variant calls do not\nuniquely represent the haplotype sequences: since alignments are always not unique\neven when using a fixed set of gap and substitution scores,\ndifferent variant calling methods may produce different variant representations.\nWhile some of these representational differences can be handled using\npre-processing of VCF files (e.g. variant trimming and left-shifting), others\ncannot be fixed easily. \nIn addition to comparing VCF records individually, we produce a graph-based representation\nof the VCF alleles, create all possible haplotype sequences, and compare\nthese by alignment / exact matching. Here is an example where this is needed: \nBoth representations in this example are able to produce the same alt sequences,\nbut we are not able to match them up with standard VCF tools. In particular,\nwe can see from this example that the second representation actually may allow us\nto create two different sets of alt sequences if they are part of unphased\nheterozygous variant calls. When we don't know the phasing\nof our variants, the insertions could have occurred on different haplotypes when using\nrepresentation 2. \nWith this tool, we can produce all haplotypes sequences by enumerating paths\nthrough a reference graph. By finding the paths / alt alleles that are\nconsistent between two VCFs files we can produce accurate benchmarking\nnumbers for comparing a VCF to a gold standard truth set.\nSee [doc/spec.md](doc/spec.md) for more information. \nAn alternative method to compare  complex variant calls is implemented in\n[RTG vcfeval](https://github.com/RealTimeGenomics/rtg-tools). It is possible\nto use vcfeval with hap.py, and to use hap.py only for pre-processing,\nstratification and counting. \nThe comparison method in vcfeval is more sophisticated than ours and can\nresolve some corner cases more accurately.\nFor whole-genome comparisons, the difference between the two benchmarking\nmethods is small, but when focusing on difficult subsets of the genome or\nwhen using variant calling methods that produce many complex variant calls,\nthese corner cases can become relevant. Moreover, when benchmarking against\ngold-standard datasets that cover difficult regions of the genome (e.g.\n[Platinum Genomes](http://www.illumina.com/platinumgenomes/)), the more complicated\nsubsets of the genome will be responsible for most of the difference between\nmethods.\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/Illumina/hap.py/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9854952690297397,
+      "result": {
+        "original_header": "Variant preprocessing",
+        "type": "Text_excerpt",
+        "value": "Another component of hap.py is a variant pre-processing method which\ndeals with complex variant representations and MNPs. When different callers\nmay represent variants using a different number of VCF records, we should\nattempt to count these in a consistent fashion between methods. One example\nis the representation of MNVs as individual SNPs vs. as complex variants. \nIf this variant is a false-positive, the first representation would naively\ncontribute a single FP record. A variant caller that outputs the second\nrepresentation would instead receive a penalty of three FPs for making\nthe same variant call. Overall, the difference between the two representations\nmight show significantly when looking at precision levels or false-positive\nrates (since these are relative to the total number of query counts, which\nuse the same representations), but become important when we need to compare\nabsolute numbers of false-positives. For this case, hap.py can perform a re-alignment\nof REF and ALT alleles on the query VCF, and splits the records into atomic\nvariant alleles to produce more granular counts using [pre.py](doc/normalisation.md).\nLeft-shifting and trimming are also supported.\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/Illumina/hap.py/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9630609413262171,
+      "result": {
+        "original_header": "Variant counting",
+        "type": "Text_excerpt",
+        "value": "Hap.py includes a module to produce stratified variant counts. Variant types\nare determined using a re-alignment of REF and ALT alleles. This is more reliable\nthan only using allele lengths. Consider the following complex deletion.\n```\nchr1    201586350       .       CTCTCTCTCT      CA\n```\nThis complex variant call is equivalent to a deletion, followed by a SNP. Our\nquantification code will recognize this variant as a deletion and a SNP, and will\ncount it in both categories (so a TP call for this variant will contribute a\nSNP and an INDEL). This effectively deals with variant calling methods that\nprefer to combine local haplotypes in the same variant records\n(e.g. Freebayes / Platypus), which would otherwise fall into a hard-to-assess\n\"COMPLEX\" variant call category that varies substantially between\ndifferent variant calling methods.\n```\nchr1    201586350       .       CTCTCTCTC       C\nchr1    201586359       .       T               A\n```\nAnother feature of the quantification module in hap.py is stratification into\nvariant sub-types and into genomic regions. For example, precision and recall\ncan be computed at the same time for all\n[GA4GH stratification regions](https://github.com/ga4gh/benchmarking-tools/tree/master/resources/stratification-bed-files),\nand for different INDEL lengths (\\<5, 7-15, 16+). Hap.py also calculates\nhet-hom and Ti/Tv ratios for all subsets of benchmarked variants.\nNote that all region matching in hap.py is based on reference coordinates\nonly. One case where this can lead to counterintuitive results is when considering\nhompolymer insertions:\n```\nReference:\n\n>chrQ\nCAAAAA\n\nVCF:\nchrQ    1   C   CA  0/1\n\nBED for homopolymers:\n1   6\n```\n \nIn this example, the variant call given above would not be captured by the bed region for the\nhomopolymers because it is associated with the reference base just before. To account for this,\nthe bed intervals need to be expanded to include the padding base just before the regions. \nFinally, we produce input data for ROC and precision/recall curves. An\n[example](doc/microbench.md) is included.\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/Illumina/hap.py/master/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "documentation": [
+    {
+      "confidence": 1,
+      "result": {
+        "format": "wiki",
+        "type": "Url",
+        "value": "https://github.com/Illumina/hap.py/wiki"
+      },
+      "source": "https://raw.githubusercontent.com/Illumina/hap.py/master/README.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "download_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/Illumina/hap.py/releases"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 125
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/Illumina/hap.py/forks"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "Illumina/hap.py"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_title": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "Haplotype Comparison Tools"
+      },
+      "source": "https://raw.githubusercontent.com/Illumina/hap.py/master/README.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "has_build_file": [
+    {
+      "confidence": 1,
+      "result": {
+        "format": "dockerfile",
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/Illumina/hap.py/master/Dockerfile"
+      },
+      "source": "https://raw.githubusercontent.com/Illumina/hap.py/master/Dockerfile",
+      "technique": "file_exploration"
+    }
+  ],
+  "has_script_file": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/Illumina/hap.py/master/configure.sh"
+      },
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/Illumina/hap.py/master/src/sh/run_happy_pg_test.sh"
+      },
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/Illumina/hap.py/master/src/sh/run_blocksplit_test.sh"
+      },
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/Illumina/hap.py/master/src/sh/run_scmp_test.sh"
+      },
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/Illumina/hap.py/master/src/sh/run_quantify_stratification_test.sh"
+      },
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/Illumina/hap.py/master/src/sh/run_quantify_test.sh"
+      },
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/Illumina/hap.py/master/src/sh/run_pathtraversal_test.sh"
+      },
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/Illumina/hap.py/master/src/sh/make_hg19.sh"
+      },
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/Illumina/hap.py/master/src/sh/run_multimerge_test.sh"
+      },
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/Illumina/hap.py/master/src/sh/run_chrprefix_test.sh"
+      },
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/Illumina/hap.py/master/src/sh/run_decomp_test.sh"
+      },
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/Illumina/hap.py/master/src/sh/run_integration_test.sh"
+      },
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/Illumina/hap.py/master/src/sh/run_sompy_test.sh"
+      },
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/Illumina/hap.py/master/src/sh/run_gvcf_homref_test.sh"
+      },
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/Illumina/hap.py/master/src/sh/run_tests.sh"
+      },
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/Illumina/hap.py/master/src/sh/run_giab_test.sh"
+      },
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/Illumina/hap.py/master/src/sh/rtg-wrapper.sh"
+      },
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/Illumina/hap.py/master/src/sh/detect_vars.sh"
+      },
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/Illumina/hap.py/master/src/sh/run_hapenum_test.sh"
+      },
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/Illumina/hap.py/master/src/sh/run_hapcmp_test.sh"
+      },
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/Illumina/hap.py/master/src/sh/run_fp_accuracy_test.sh"
+      },
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/Illumina/hap.py/master/src/sh/run_performance_test.sh"
+      },
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/Illumina/hap.py/master/src/sh/run_faulty_variant_test.sh"
+      },
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/Illumina/hap.py/master/src/sh/illumina-setup.sh"
+      },
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/Illumina/hap.py/master/src/sh/run_other_vcf_tests.sh"
+      },
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/Illumina/hap.py/master/src/sh/run_sompy_fpregion_test.sh"
+      },
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/Illumina/hap.py/master/src/sh/run_leftshift_test.sh"
+      },
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/Illumina/hap.py/master/example/happy/microbenchmark.sh"
+      },
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/Illumina/hap.py/master/external/make_dependencies.sh"
+      },
+      "technique": "file_exploration"
+    }
+  ],
+  "images": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/Illumina/hap.py/master/doc/rep_ex.PNG"
+      },
+      "source": "https://raw.githubusercontent.com/Illumina/hap.py/master/README.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "installation": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Helper script",
+        "parent_header": [
+          "Haplotype Comparison Tools",
+          "Installation"
+        ],
+        "type": "Text_excerpt",
+        "value": "The simplest way to install hap.py is to use the helper script and your system Python install\n(requires these packages: Cython, Scipy, numpy, pandas, pybedtools, pysam, bx-python).\n\nThis command installs everything into ~/hap.py-install:\n\n```\npython install.py ~/hap.py-install\n```\n\nTo also download rtgtools during the installation process and deploy it with this version\nof hap.py, you can add the `--with-rtgtools` flag. For this to work, you must have a working\ninstallation of Java 1.8 and Apache Ant 1.9.x.\n\n```\npython install.py ~/hap.py-install --with-rtgtools\n```\n\nThe installer has an option `--boost-root` that allows us to use a specific installation of boost\n(see above for instructions):\n\n```\npython install.py ~/hap.py-install --boost-root $HOME/boost_1_55_0_install\n```\n\nTo use a special version of Python, run the installer with it:\n\n```\n$HOME/my-virtualenv/bin/python install.py ~/hap.py-install\n```\n\nTo create a virtualenv:\n\n```\npython install.py ~/workspace-is/hap.py-install --python=virtualenv --python-virtualenv-dir=$HOME/my-virtualenv/hc.ve\n```\n\nThere are various workaround / testing switches:\n\n* `--python-virtualenv-update`  updates an existing virtualenv\n* `--python-virtualenv-force`  overwrites the virtualenv if it exists\n* `--pip-fix-cert` works around outdated SSL certificates when using pip\n* `--no-tests` disables the unit/integration tests after installation\n* `--no-rebuild-external` don't rebuild the external dependencies (htslib, ...) unless necessary\n* `--sge-mode` require switch `--force-interactive` to run hap.py\n interactively (useful to prevent running on a head node when installing on\n systems with SGE)\n"
+      },
+      "source": "https://raw.githubusercontent.com/Illumina/hap.py/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Docker",
+        "parent_header": [
+          "Haplotype Comparison Tools",
+          "Installation"
+        ],
+        "type": "Text_excerpt",
+        "value": "Clone this repository and build a Docker image as follows.\n```\n$ sudo docker build .\n$ sudo docker images\nREPOSITORY     TAG            IMAGE ID            CREATED             VIRTUAL SIZE\n<...>          latest         3d03a99b3d81        1 second ago        <...>\n$ sudo docker run -ti --rm 3d03a99b3d81 bin/bash\n$/ /opt/hap.py/bin/hap.py\n```\nA pre-built docker image can be found here: [https://hub.docker.com/r/pkrusche/hap.py](https://hub.docker.com/r/pkrusche/hap.py). It can\nbe obtained by running:\n```bash\ndocker pull pkrusche/hap.py\n```\nIf the current directory contains a clone of the hap.py repository, hap.py can be run in Docker as follows:\n```bash\nsudo docker run -it -v `pwd`:/data pkrusche/hap.py /opt/hap.py/bin/hap.py /data/example/PG_performance.vcf.gz /data/example/performance.vcf.gz -o /data/test\n```\nThe `-v` argument mounts the current directory as `/data` in the Docker image. The output should also\nappear in the current directory.\n\nThe default Docker image is based on Ubuntu. To use a Centos6 image as a base, use [Dockerfile.centos6](Dockerfile.centos6).\n\n```\ndocker build -f Dockerfile.centos6 .\n```\n"
+      },
+      "source": "https://raw.githubusercontent.com/Illumina/hap.py/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Compiling from source with CMake",
+        "parent_header": [
+          "Haplotype Comparison Tools",
+          "Installation"
+        ],
+        "type": "Text_excerpt",
+        "value": "You will need these tools / libraries on your system to compile the code:\n\n* CMake &gt; 2.8\n* GCC/G++ 4.9.2+ for compiling\n* Boost 1.55+\n* Python 2, version 2.7.8 or greater\n* Python packages: Pandas, Numpy, Scipy, pysam, bx-python\n* Java 1.8 when using vcfeval.\n\nThen to compile:\n\n1.  Get a hap.py checkout:\n    ```bash\n    git clone https://github.com/sequencing/hap.py\n    ```\n2.  Make a build folder\n    ```bash\n    mkdir hap.py-build\n    cd hap.py-build\n    ```\n3.  Run CMake\n    ```bash\n    cmake ../hap.py\n    ```\n4.  Build\n    ```bash\n    make\n    ```\n\nIf this is successful, the bin subdirectory of your build folder will contain binaries and scripts:\n\n```bash\n$ python bin/hap.py --version\nHap.py v0.3.7\n```\n\nNote that hap.py will copy all Python source files to the build folder, so when making changes to\nany Python component, `make` must be run to make sure the scripts in the build folder are\nup-to-date.\n\nThe source for hap.py contains a script [configure.sh](configure.sh) which shows some basic additional\nconfiguration flags, and an automated way to pre-package CMake setups. Here is a list of additional flags for CMake to change compile options help it find dependencies:\n\n*  `-DCMAKE_BUILD_TYPE=Debug` -- set the build type, allowed values are `Debug` and `Release`\n*  `-DCMAKE_C_COMPILER=/usr/bin/gcc` and `-DCMAKE_CXX_COMPILER=/usr/bin/g++` -- change the compiler path\n*  `-DCMAKE_INSTALL_PREFIX=/usr/local` -- set an installation directory that will be used by make install.\n*  `-DBOOST_ROOT=$HOME/boost_1_55_0_install` -- set the path to Boost. Run the following commands to compile and install boost:\n```bash\ncd ~\nwget http://downloads.sourceforge.net/project/boost/boost/1.55.0/boost_1_55_0.tar.bz2\ntar xjf boost_1_55_0.tar.bz2\ncd boost_1_55_0\n./bootstrap.sh --with-libraries=filesystem,chrono,thread,iostreams,system,regex,test,program_options\n./b2 --prefix=$HOME/boost_1_55_0_install install\n```\n*  `-DUSE_SGE` -- enable the `--force-interactive` switch in hap.py.\n*  `-DBUILD_VCFEVAL=ON` -- Download and build rtgtools / vcfeval. This is a comparison engine that can be used\n   as an alternative to the built-in xcmp in hap.py. To successfully build and run vcfeval, you will need:\n   - A Java JRE, newer than 1.8.x\n   - ant > 1.9.2 (older versions of ant will not successfully build rtgtools)\n   See [src/sh/illumina-setup.sh]() for an example. If running Java requires any special setup\n   (or to configure any other environment variables), you can specify a wrapper script using\n   `-DVCFEVAL_WRAPPER={absolute_path_to_wrapper_script}`. See [src/sh/rtg-wrapper.sh]() for an\n   example.\n\n"
+      },
+      "source": "https://raw.githubusercontent.com/Illumina/hap.py/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 0.9063603109188699,
+      "result": {
+        "original_header": "Haplotype Comparison Tools",
+        "type": "Text_excerpt",
+        "value": "Peter Krusche <pkrusche@illumina.com> \n"
+      },
+      "source": "https://raw.githubusercontent.com/Illumina/hap.py/master/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "issue_tracker": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/Illumina/hap.py/issues"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "keywords": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "bioinformatics, genomics, vcf, vcf-comparison"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "license": [
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Other",
+        "spdx_id": "NOASSERTION",
+        "type": "License",
+        "url": null,
+        "value": null
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "hap.py"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "owner": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Organization",
+        "value": "Illumina"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "programming_languages": [
+    {
+      "confidence": 1,
+      "result": {
+        "name": "C++",
+        "size": 1112840,
+        "type": "Programming_language",
+        "value": "C++"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Python",
+        "size": 301801,
+        "type": "Programming_language",
+        "value": "Python"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Shell",
+        "size": 79570,
+        "type": "Programming_language",
+        "value": "Shell"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "CMake",
+        "size": 17812,
+        "type": "Programming_language",
+        "value": "CMake"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "R",
+        "size": 6785,
+        "type": "Programming_language",
+        "value": "R"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Dockerfile",
+        "size": 1535,
+        "type": "Programming_language",
+        "value": "Dockerfile"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "readme_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/Illumina/hap.py/master/README.md"
+      },
+      "technique": "file_exploration"
+    }
+  ],
+  "releases": [
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "sunnycxh",
+          "type": "User"
+        },
+        "date_created": "2021-12-04T00:31:12Z",
+        "date_published": "2021-12-04T00:32:19Z",
+        "description": "* Updated rtgtools to v3.12.1\r\n* Defect remains: https://jira.illumina.com/browse/HAP-373. Use stable som.py v0.3.10.",
+        "html_url": "https://github.com/Illumina/hap.py/releases/tag/v0.3.15",
+        "name": "v0.3.15",
+        "release_id": 54616398,
+        "tag": "v0.3.15",
+        "tarball_url": "https://api.github.com/repos/Illumina/hap.py/tarball/v0.3.15",
+        "type": "Release",
+        "url": "https://api.github.com/repos/Illumina/hap.py/releases/54616398",
+        "value": "https://api.github.com/repos/Illumina/hap.py/releases/54616398",
+        "zipball_url": "https://api.github.com/repos/Illumina/hap.py/zipball/v0.3.15"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "dskola",
+          "type": "User"
+        },
+        "date_created": "2021-03-18T01:04:53Z",
+        "date_published": "2021-03-18T01:06:20Z",
+        "description": "* Fixed issues created by previous change to `convert_gvcf` arguments",
+        "html_url": "https://github.com/Illumina/hap.py/releases/tag/v0.3.14",
+        "name": "v0.3.14",
+        "release_id": 39976706,
+        "tag": "v0.3.14",
+        "tarball_url": "https://api.github.com/repos/Illumina/hap.py/tarball/v0.3.14",
+        "type": "Release",
+        "url": "https://api.github.com/repos/Illumina/hap.py/releases/39976706",
+        "value": "https://api.github.com/repos/Illumina/hap.py/releases/39976706",
+        "zipball_url": "https://api.github.com/repos/Illumina/hap.py/zipball/v0.3.14"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "dskola",
+          "type": "User"
+        },
+        "date_created": "2021-03-01T18:27:06Z",
+        "date_published": "2021-03-02T19:11:55Z",
+        "description": "* Removed redundant truth and query gvcf parameters in pre.py.",
+        "html_url": "https://github.com/Illumina/hap.py/releases/tag/v0.3.13",
+        "name": "v0.3.13",
+        "release_id": 39137806,
+        "tag": "v0.3.13",
+        "tarball_url": "https://api.github.com/repos/Illumina/hap.py/tarball/v0.3.13",
+        "type": "Release",
+        "url": "https://api.github.com/repos/Illumina/hap.py/releases/39137806",
+        "value": "https://api.github.com/repos/Illumina/hap.py/releases/39137806",
+        "zipball_url": "https://api.github.com/repos/Illumina/hap.py/zipball/v0.3.13"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "dskola",
+          "type": "User"
+        },
+        "date_created": "2019-10-11T18:24:44Z",
+        "date_published": "2019-10-11T18:26:30Z",
+        "description": "* Added new command line options for dealing with problematic genome VCFs\r\n* Updates to build process and docker configuration\r\n* Cleaned up format of extended counts table",
+        "html_url": "https://github.com/Illumina/hap.py/releases/tag/v0.3.12",
+        "name": "v0.3.12",
+        "release_id": 20648642,
+        "tag": "v0.3.12",
+        "tarball_url": "https://api.github.com/repos/Illumina/hap.py/tarball/v0.3.12",
+        "type": "Release",
+        "url": "https://api.github.com/repos/Illumina/hap.py/releases/20648642",
+        "value": "https://api.github.com/repos/Illumina/hap.py/releases/20648642",
+        "zipball_url": "https://api.github.com/repos/Illumina/hap.py/zipball/v0.3.12"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "pkrusche",
+          "type": "User"
+        },
+        "date_created": "2017-06-03T17:29:34Z",
+        "date_published": "2017-06-05T13:34:02Z",
+        "description": "See [RELEASES.md](https://github.com/Illumina/hap.py/blob/master/RELEASES.md#v039) for details about this version.",
+        "html_url": "https://github.com/Illumina/hap.py/releases/tag/v0.3.9",
+        "name": "v0.3.9",
+        "release_id": 6604474,
+        "tag": "v0.3.9",
+        "tarball_url": "https://api.github.com/repos/Illumina/hap.py/tarball/v0.3.9",
+        "type": "Release",
+        "url": "https://api.github.com/repos/Illumina/hap.py/releases/6604474",
+        "value": "https://api.github.com/repos/Illumina/hap.py/releases/6604474",
+        "zipball_url": "https://api.github.com/repos/Illumina/hap.py/zipball/v0.3.9"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "pkrusche",
+          "type": "User"
+        },
+        "date_created": "2017-06-01T09:51:47Z",
+        "date_published": "2017-06-01T11:46:37Z",
+        "description": "See [RELEASES.md](https://github.com/Illumina/hap.py/blob/master/RELEASES.md#v038) for details about this version.",
+        "html_url": "https://github.com/Illumina/hap.py/releases/tag/v0.3.8",
+        "name": "v0.3.8",
+        "release_id": 6571168,
+        "tag": "v0.3.8",
+        "tarball_url": "https://api.github.com/repos/Illumina/hap.py/tarball/v0.3.8",
+        "type": "Release",
+        "url": "https://api.github.com/repos/Illumina/hap.py/releases/6571168",
+        "value": "https://api.github.com/repos/Illumina/hap.py/releases/6571168",
+        "zipball_url": "https://api.github.com/repos/Illumina/hap.py/zipball/v0.3.8"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "pkrusche",
+          "type": "User"
+        },
+        "date_created": "2017-03-03T15:13:45Z",
+        "date_published": "2017-05-12T18:35:11Z",
+        "description": "Docker images can be found on Docker hub with the v0.3.7 tag:\r\n\r\nhttps://hub.docker.com/r/pkrusche/hap.py/tags/\r\n\r\nThe attached binary is untested and provided for testing only. ",
+        "html_url": "https://github.com/Illumina/hap.py/releases/tag/v0.3.7",
+        "release_id": 6370288,
+        "tag": "v0.3.7",
+        "tarball_url": "https://api.github.com/repos/Illumina/hap.py/tarball/v0.3.7",
+        "type": "Release",
+        "url": "https://api.github.com/repos/Illumina/hap.py/releases/6370288",
+        "value": "https://api.github.com/repos/Illumina/hap.py/releases/6370288",
+        "zipball_url": "https://api.github.com/repos/Illumina/hap.py/zipball/v0.3.7"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "requirements": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Hardware",
+        "parent_header": [
+          "Haplotype Comparison Tools",
+          "System requirements"
+        ],
+        "type": "Text_excerpt",
+        "value": "Compiling and testing can be done on a standard desktop system with 8GB of RAM. Whole-genome\ncomparisons (e.g. comparing a gVCF file against the [Platinum Genomes truth dataset](http://www.illumina.com/platinumgenomes/))\ncan use up to 64GB of RAM (20GB typical, depending on the input VCF) and about 4-12 minutes\nusing 40 processor cores. Whole exome comparison (using an exome bed mask and the `-T` switch)\ncan be carried out on a desktop system.\n"
+      },
+      "source": "https://raw.githubusercontent.com/Illumina/hap.py/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Linux",
+        "parent_header": [
+          "Haplotype Comparison Tools",
+          "System requirements"
+        ],
+        "type": "Text_excerpt",
+        "value": "Hap.py is known to build and run on the following linux distributions (see also the [Dockerfile](Dockerfile)\nfor a list of required packages):\n\n    Ubuntu 12.04,14.04,16.04,18.04\n    CentOS 5,6,7\n\nHap.py must be compiled with g++ version 4.9.x or later, or with a recent version of Clang (testing is performed\nwith g++).\n"
+      },
+      "source": "https://raw.githubusercontent.com/Illumina/hap.py/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "OS X",
+        "parent_header": [
+          "Haplotype Comparison Tools",
+          "System requirements"
+        ],
+        "type": "Text_excerpt",
+        "value": "Hap.py builds and passes basic tests on OS X 10.9+, but full WGS analyses are not tested for this platform.\n"
+      },
+      "source": "https://raw.githubusercontent.com/Illumina/hap.py/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Windows",
+        "parent_header": [
+          "Haplotype Comparison Tools",
+          "System requirements"
+        ],
+        "type": "Text_excerpt",
+        "value": "Hap.py is not tested on Windows. The main dependency that fails compilation is htslib. Given a build\nof htslib and pysam, using hap.py on Windows should be possible.\n"
+      },
+      "source": "https://raw.githubusercontent.com/Illumina/hap.py/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Other requirements",
+        "parent_header": [
+          "Haplotype Comparison Tools",
+          "System requirements"
+        ],
+        "type": "Text_excerpt",
+        "value": "Hap.py requires a human genome reference sequence which contains at least\nchromosomes 1-22,X,Y,M. The chromosomes should be named chr1-chr22, chrX, chrY,\nchrM. there is a script  in [src/sh/make_hg19.sh](src/sh/make_hg19.sh) to create\nsuch a sequence, but you can also  specify your own. In order for the\nintegration tests to run successfully, it is necessary  to point hap.py to the\nreference sequence using\n\n```bash\nexport HGREF=<path-to-hg19.fa>\n```\n\nNote that, while the test cases are based on hg19, other reference sequences are\nusable as well  once the tool is installed.\n\nHap.py also requires a copy of the [Boost libraries](http://www.boost.org) to\nwork, with version >=  1.55. If compilation should fail using the included version\nof boost, you can compile a subset of boost like this:\n\n```bash\ncd ~\nwget http://downloads.sourceforge.net/project/boost/boost/1.55.0/boost_1_55_0.tar.bz2\ntar xjf boost_1_55_0.tar.bz2\ncd boost_1_55_0\n./bootstrap.sh --with-libraries=filesystem,chrono,thread,iostreams,system,regex,test,program_options\n./b2 --prefix=$HOME/boost_1_55_0_install install\n```\n\nYou can point Cmake to your version of boost as follows:\n\n```bash\nexport BOOST_ROOT=$HOME/boost_1_55_0_install\n```\n\nThe complete list of dependencies / packages to install beforehand can be found\nin the [Dockerfile](Dockerfile).\n\n"
+      },
+      "source": "https://raw.githubusercontent.com/Illumina/hap.py/master/README.md",
+      "technique": "header_analysis"
+    }
+  ],
+  "somef_missing_categories": [
+    "citation",
+    "acknowledgement",
+    "run",
+    "download",
+    "contact",
+    "contributors",
+    "faq",
+    "support",
+    "identifier",
+    "executable_example"
+  ],
+  "somef_provenance": {
+    "date": "2024-10-04 12:27:39",
+    "somef_schema_version": "1.0.0",
+    "somef_version": "0.9.5"
+  },
+  "stargazers_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 406
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "type": [
+    {
+      "confidence": 0.82,
+      "result": {
+        "type": "String",
+        "value": "commandline-application"
+      },
+      "technique": "software_type_heuristics"
+    }
+  ],
+  "usage": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Usage",
+        "parent_header": [
+          "Haplotype Comparison Tools"
+        ],
+        "type": "Text_excerpt",
+        "value": "The main two tools are hap.py (diploid precision/recall evaluation) and som.py\n(somatic precision/recall evaluation -- this ignores the GT and just checks for\npresence of alleles). Other tools are qfy.py (which just executes the quantification\nstep of the analysis pipeline, this requires a\n[GA4GH-intermediate](https://github.com/ga4gh/benchmarking-tools/) VCF file), and\n[pre.py](doc/normalisation.md), which is hap.py's input cleaning and\nvariant normalisation step.\n\nHere are some small example command lines. Advanced features like confident call\n / ambiguity / FP regions are also available, see the documentation for each\n tool for these.\n\nBelow, we assume that the code has been installed to the directory `${HAPPY}`.\n"
+      },
+      "source": "https://raw.githubusercontent.com/Illumina/hap.py/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "hap.py",
+        "parent_header": [
+          "Haplotype Comparison Tools",
+          "Usage"
+        ],
+        "type": "Text_excerpt",
+        "value": "See also [doc/happy.md](doc/happy.md).\n\n```bash\n$ ${HAPPY}/bin/hap.py  \\\n      example/happy/PG_NA12878_chr21.vcf.gz \\\n      example/happy/NA12878_chr21.vcf.gz \\\n      -f example/happy/PG_Conf_chr21.bed.gz \\\n      -o test\n$ ls test.*\ntest.metrics.json  test.summary.csv\n```\n\nThis example compares an example run of GATK 1.6 on NA12878 agains the Platinum\nGenomes reference dataset (***Note: this is a fairly old version of GATK, so\ndon't rely on these particular numbers for competitive comparisons!***).\n\nThe summary CSV file contains all high-level metrics:\n\n| Type          |  TRUTH.TOTAL|  QUERY.TOTAL | METRIC.Recall | METRIC.Precision | METRIC.Frac\\_NA | TRUTH.TOTAL.TiTv\\_ratio | QUERY.TOTAL.TiTv\\_ratio | TRUTH.TOTAL.het\\_hom\\_ratio | QUERY.TOTAL.het\\_hom\\_ratio|\n|---------------|-------------|--------------|---------------|------------------|-----------------|-------------------------|-------------------------|-----------------------------|----------------------------|\n|INDEL          |         9124|         9905 |      0.869406 |         0.978441 |        0.194548 |                     NaN |                     NaN |                    1.463852 |                    1.209105|\n|SNP            |        52520|        48078 |      0.894478 |         0.998258 |        0.021070 |                2.081002 |                2.082603 |                    1.595621 |                    1.487599|\n\nThese numbers tell us the SNP and indel recall of our query VCF against the\ntruth dataset. See [doc/happy.md](doc/happy.md) for more documentation and some\nadvice for their interpretation.\n"
+      },
+      "source": "https://raw.githubusercontent.com/Illumina/hap.py/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "som.py",
+        "parent_header": [
+          "Haplotype Comparison Tools",
+          "Usage"
+        ],
+        "type": "Text_excerpt",
+        "value": "Som.py is a simple comparison tool based on bcftools. It does not perform genotype or haplotype matching.\n\nSee [doc/sompy.md](doc/sompy.md) for more documentation.\n\n```\n${HAPPY}/bin/som.py example/sompy/PG_admix_truth_snvs.vcf.gz \\\n                    example/sompy/strelka_admix_snvs.vcf.gz \\\n                    -f example/sompy/FP_admix.bed.gz \\\n                    -o test\n[...]\n      type  total.truth  total.query     tp     fp   fn    unk  ambi    recall   recall2  precision        na  ambiguous\n1     SNVs        16235        47530  15573  14698  662  17259     0  0.959224  0.959224   0.514453  0.363118          0\n3  records        16235        47779  15573  14737  662  17469     0  0.959224  0.959224   0.513791  0.365621          0\n\nls test.*\ntest.stats.csv\n```\n\nThe most relevant metrics are recall and precision. UNK calls are the calls that are outside the\ncoverage of the truthset.\n"
+      },
+      "source": "https://raw.githubusercontent.com/Illumina/hap.py/master/README.md",
+      "technique": "header_analysis"
+    }
+  ]
+}

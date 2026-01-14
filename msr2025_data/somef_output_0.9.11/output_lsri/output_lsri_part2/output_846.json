@@ -1,0 +1,322 @@
+{
+  "code_repository": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/quansun98/MagicalRsq"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_created": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2022-01-27T18:26:13Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_updated": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2024-04-16T03:47:09Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "description": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "MagicalRsq: Machine-learning-based genotype imputation quality calibration"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Introduction",
+        "parent_header": [
+          "MagicalRsq package documentation"
+        ],
+        "type": "Text_excerpt",
+        "value": "MagicalRsq is a novel machine learning based method to obtain better calibrated imputation quality scores. \nFor training MagicalRsq, we need true imputation quality (true R2) in training samples at a reasonable number of markers (>10k is recommended). \nPlease check out the section **Calculate true R2 in training data** below for details. \nDuring training, XGBoost method is used to build models to predict true R2 with a number of variant-level features, \nincluding the standard quality metric (standard Rsq) and estimated minor allele frequency (MAF) among training samples, \nas well as various population genetics statistics (such as nucleotide diversity, Tajima\u2019s D, and haplotype homozygosity statistic) \nand allele frequencies of major continental populations from external sources (e.g., the 1000 Genomes Project or the TOPMed Project). \nUsers can also train MagicalRsq models themselves with other variant-level features as they view fit. \nDetails regarding the features we used are under section **Variant-level features** below and \nmodel training procedure via XGBoost is detailed under section **Train MagicalRsq models** below.\nWe release the models we trained using data from the Cystic Fibrosis Genome Project (CFGP) and UK Biobank (UKB) under folder `model/`. \nTo apply the pretrained model to target datasets, please refer to section **Obtain MagicalRsq in target data**. \n\nReference: [Sun Q, Yang Y, Rosen JD, et al. MagicalRsq: Machine-learning-based genotype imputation quality calibration. Am J Hum Genet. 2022;109(11):1986-1997. doi:10.1016/j.ajhg.2022.09.009](<https://www.cell.com/ajhg/fulltext/S0002-9297(22)00412-8>)\n "
+      },
+      "source": "https://raw.githubusercontent.com/quansun98/MagicalRsq/master/README.md",
+      "technique": "header_analysis"
+    }
+  ],
+  "documentation": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Data",
+        "parent_header": [
+          "MagicalRsq package documentation"
+        ],
+        "type": "Text_excerpt",
+        "value": "* Population genetics features summarized by the [S/HIC](https://journals.plos.org/plosgenetics/article?id=10.1371/journal.pgen.1005928) paper can be downloaded at: ftp://yunlianon:anon@rc-ns-ftp.its.unc.edu/MagicalRsq/SHIC/\n* [TOP-LD](<https://www.cell.com/ajhg/fulltext/S0002-9297(22)00154-9>) population specific allele frequencies can be downloaded at: ftp://yunlianon:anon@rc-ns-ftp.its.unc.edu/MagicalRsq/AF/\n "
+      },
+      "source": "https://raw.githubusercontent.com/quansun98/MagicalRsq/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Instructions",
+        "parent_header": [
+          "MagicalRsq package documentation"
+        ],
+        "type": "Text_excerpt",
+        "value": "Below are the steps to train MagicalRsq models in training data and apply to target data. Note that it is not necessary to have the same variants in training and target datasets.\n"
+      },
+      "source": "https://raw.githubusercontent.com/quansun98/MagicalRsq/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Integrate variant-level features",
+        "parent_header": [
+          "MagicalRsq package documentation",
+          "Instructions"
+        ],
+        "type": "Text_excerpt",
+        "value": "Follow the steps below if you want to integrate the same population genetics features we used. \nYou can skip these steps if your data already contains all the variant-level features you want to leverage.\nThe demonstration uses one chromosome (chr22) as an example. Note that:\n\n* All the positions are in hg38. You need to liftover if you are using reference panels in hg19, e.g. 1000G, HRC, etc..\n* If you choose to integrate the population genetic features we used, you need to run `data_integrate` function separately for each chromosome.\n* Training data and testing data must have the same features. No need to keep the features in the same order, since you can specify the feature column numbers when training and calculating MagicalRsq, in training and target data respectively. But we highly recommend you keep the same feature order in training and target data.\n\n\n1. Start from minimac output `.info.gz` file:\n\n\t\tzcat data/chr22.info.gz | sed '1d' | cut -f 1,5,7 | sed 's/:/\\t/g' | sed 's/^chr//g' | sed '1iCHR POS REF ALT MAF Rsq' | sed 's/ /\\t/g' | bgzip > chr22.imp.sumstat.txt.gz\n\nYou should also integrate true R2 information (detailed in the section **Calculate true R2 in training data** below) in this file if you want to use it for model training or evaluation purposes.\n\n2. Download S/HIC and allele frequency features.\n\n\t\twget -r ftp://yunlianon:anon@rc-ns-ftp.its.unc.edu/MagicalRsq/SHIC/\n\t\twget -r ftp://yunlianon:anon@rc-ns-ftp.its.unc.edu/MagicalRsq/AF/\n\n3. Run `data_integrate` function in R to integrate imputation summary statistics with other variant-level features.  \nHere we use both population genetics statistics summarized in the S/HIC paper and population specific allele frequencies as included features.\nYou can include them and other variant-level features at your own discretion.\n\n\t\tlibrary(MagicalRsq)\n\t\tchr22_for_MRsq = data_integrate(\"chr22.imp.sumstat.txt.gz\", chr = 22, pos_col = 2, SHIC_dir = \"../SHIC/\", AF_dir = \"../AF/\", outfile = \"test_chr22.txt.gz\")\n\nYou will get integrated data for chr22 written in the file `test_chr22.txt.gz`.\n"
+      },
+      "source": "https://raw.githubusercontent.com/quansun98/MagicalRsq/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Calculate true R2 in training data",
+        "parent_header": [
+          "MagicalRsq package documentation",
+          "Instructions"
+        ],
+        "type": "Text_excerpt",
+        "value": "True R2 is defined as the squared Pearson correlation between imputed dosages and true genotypes. \nIt can only be calculated if you have additional genotypes other than the array-genotype data that used as imputation target.\nYou can download the [script](https://yunliweb.its.unc.edu/software/doseR2_VCF.tar.gz) we used to calculate true R2.\nDetailed instructions of this script is included in the downloaded zip folder.\n\n"
+      },
+      "source": "https://raw.githubusercontent.com/quansun98/MagicalRsq/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Train MagicalRsq models",
+        "parent_header": [
+          "MagicalRsq package documentation",
+          "Instructions"
+        ],
+        "type": "Text_excerpt",
+        "value": "In order to train MagicalRsq models, you need true R2 (true imputation quality) for a reasonable number (again, >10k is recommended) of variants among training individuals. \nRefer to the section **Calculate true R2 in training data** above for obtaining true R2.\nNote that training individuals do not have to be independent of target individuals, if the variants used for training are independent of those imputed among target individuals.\nThe procedure will be demonstrated with the example data `toy_chr22_50k_integrated.txt.gz` in the `data/` folder.\n\n\n1. Similarly, you need to integrate imputation summary statistics with other variant-level features.\nNote that the input file should contain true R2 information.\n\n\t\tintegrated = data_integrate(\"data/toy_chr22_50k.txt.gz\", chr = 22, pos_col = 2, \n\t\t\tSHIC_dir = \"../SHIC/\", AF_dir = \"../AF/\", outfile = \"toy_chr22_50k_integrated.txt.gz\") \n\n2. Train MagicalRsq models with the integrated data. \nYou can choose how many variants you want to include in the training models. We recommend using 10k - 1million variants. \nToo many variants will increase computational burden, while leading to little performance gain.\n\n\t\ttoy_model = train_MagicalRsq(file = \"toy_chr22_50k_integrated.txt.gz\", outfile = \"toy_model\", nvar_use = 100000) \n\nNote that:\n\n(1) the input can contain markers across all chromosomes in *one* file (like the example above).\nAlternatively, the `train_MagicalRsq` function also accepts input in multiple files, one for each chromosome.\nIn the latter case, input files would be a vector of file names as in the sample command line below.\n\n\ttoy2_model = train_MagicalRsq(file = paste0(\"toy2_chr\",1:22,\".txt.gz\"), outfile = \"toy2\", nvar_use = 500000)\n\n(2) You can also specify MAF category (must be either \"common\", \"lowfreq\", or \"rare\") if providing the column number of MAF, to train models specific for one MAF category variants.\n\n\ttoy_model_common = train_MagicalRsq(file = \"toy_chr22_50k_integrated.txt.gz\", outfile = \"toy_model_common\", MAF_cate = 'common', MAFCol = 6, nvar_use = 100000)\n \nIf not specified, it will train one model with all (or randomly subsetted if specifying `nvar_use`) variants disregarding MAF information.\n\n"
+      },
+      "source": "https://raw.githubusercontent.com/quansun98/MagicalRsq/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Obtain MagicalRsq in target data",
+        "parent_header": [
+          "MagicalRsq package documentation",
+          "Instructions"
+        ],
+        "type": "Text_excerpt",
+        "value": "1. Similarly, you need to integrate imputation summary statistics with other variant-level features.\nDetailed in the section **Integrate variant-level features** above.\n\n2. After getting the integrated data, you can calculate MagicalRsq values for each variant in the integrated data file\n\n        chr22_MagicalRsq  = calc_MagicalRsq(file = \"test_chr22.txt.gz\", model = \"toy_model\",\n                FeatureCols = 6:84, keptCols = 1:7, outfile = \"test_MagicalRsq.txt.gz\")\n\nYou will get variant-level MagicalRsq values, together with the original Rsq and estimated MAF written in the file `test_MagicalRsq.txt.gz`\n\n"
+      },
+      "source": "https://raw.githubusercontent.com/quansun98/MagicalRsq/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Evaluate Rsq/MagicalRsq performance (true R2 required)",
+        "parent_header": [
+          "MagicalRsq package documentation",
+          "Instructions"
+        ],
+        "type": "Text_excerpt",
+        "value": "After calculation of MagicalRsq, you can evaluate the performance of Standard Rsq and/or MagicalRsq compared to true R2.\nYou should specify the column numbers of trueR2, Rsq and MagicalRsq (otherwise it will assume the same data format as the example data).\nYou can also choose to disregard extremely rare variants from evaluation by setting minimum MAF or (minimum MAC if you also specify the number of samples N).\nYou will need to specify the column number for MAF if you use this option.\n\n\tchr22_eval = eval_MagicalRsq(file = \"test_MagicalRsq.txt.gz\", minMAF = 0.001, trueR2Col = 8, MAFCol = 5, RsqCol = 6, MagicalRsqCol = 7)\n\nEquivalently you can have (suppose your sample size for the evaluation data is 1,000):\n\n\tchr22_eval = eval_MagicalRsq(file = \"test_MagicalRsq.txt.gz\", minMAC = 2, N = 1000, trueR2Col = 8, MAFCol = 5, RsqCol = 6, MagicalRsqCol = 7)\n\nAll 22 chromosomes can also be evaluated together:\n\n\tall_eval = eval_MagicalRsq(file = paste0(\"test2_chr\",1:22,\".txt.gz\"))\n\n\n\n"
+      },
+      "source": "https://raw.githubusercontent.com/quansun98/MagicalRsq/master/README.md",
+      "technique": "header_analysis"
+    }
+  ],
+  "download_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/quansun98/MagicalRsq/releases"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 0
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/quansun98/MagicalRsq/forks"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "quansun98/MagicalRsq"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_title": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "MagicalRsq package documentation"
+      },
+      "source": "https://raw.githubusercontent.com/quansun98/MagicalRsq/master/README.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "installation": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Installation",
+        "parent_header": [
+          "MagicalRsq package documentation"
+        ],
+        "type": "Text_excerpt",
+        "value": "1. First, install the `devtools` package if you haven't already. \n\n\t\tinstall.packages(\"devtools\")\n\n2. Load the devtools package and install through Github.\n\n\t\tlibrary(devtools)\n\t\tinstall_github(\"quansun98/MagicalRsq\")\n\n"
+      },
+      "source": "https://raw.githubusercontent.com/quansun98/MagicalRsq/master/README.md",
+      "technique": "header_analysis"
+    }
+  ],
+  "issue_tracker": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/quansun98/MagicalRsq/issues"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "keywords": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "genotype-imputation, machine-learning, quality-control"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "MagicalRsq"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "owner": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "User",
+        "value": "quansun98"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "programming_languages": [
+    {
+      "confidence": 1,
+      "result": {
+        "name": "R",
+        "size": 17371,
+        "type": "Programming_language",
+        "value": "R"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "readme_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/quansun98/MagicalRsq/master/README.md"
+      },
+      "technique": "file_exploration"
+    }
+  ],
+  "somef_missing_categories": [
+    "citation",
+    "acknowledgement",
+    "run",
+    "download",
+    "requirements",
+    "contact",
+    "contributors",
+    "license",
+    "usage",
+    "faq",
+    "support",
+    "identifier",
+    "has_build_file",
+    "executable_example"
+  ],
+  "somef_provenance": {
+    "date": "2024-10-04 12:13:36",
+    "somef_schema_version": "1.0.0",
+    "somef_version": "0.9.5"
+  },
+  "stargazers_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 4
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "type": [
+    {
+      "confidence": 0.82,
+      "result": {
+        "type": "String",
+        "value": "commandline-application"
+      },
+      "technique": "software_type_heuristics"
+    }
+  ]
+}

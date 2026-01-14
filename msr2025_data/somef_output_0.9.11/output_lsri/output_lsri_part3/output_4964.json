@@ -1,0 +1,325 @@
+{
+  "code_repository": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/yufree/mzrtsim"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_created": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2018-04-12T22:56:39Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_updated": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2024-09-02T12:34:25Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "description": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "Raw data and peaks list simulation for GC/LC-MS based data"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 0.9990987309427122,
+      "result": {
+        "original_header": "mzrtsim",
+        "type": "Text_excerpt",
+        "value": "\nThe goal of mzrtsim is to make raw data and features table simulation\nfor LC/GC-MS based data\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/yufree/mzrtsim/master/README.Rmd",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9967103133592322,
+      "result": {
+        "original_header": "Raw Data simulation",
+        "type": "Text_excerpt",
+        "value": "You will find `test.mzML` and corresponding `test.csv` with m/z,\nretention time and compound name of the peaks. Here the `monams1` and\n`monahrms1` is from the MS1 data of MassBank of North America (MoNA) and\ncould be downloaded from their\n[website](https://mona.fiehnlab.ucdavis.edu/downloads). You could also\nuse `hmdbcms` to simulate EI source data extracted from\n[HMDB](https://hmdb.ca/downloads). Here we only use the MS1 full scan\ndata for simulation.\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/yufree/mzrtsim/master/README.Rmd",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9092791479218264,
+      "result": {
+        "original_header": "Data extraction",
+        "type": "Text_excerpt",
+        "value": "For HMDB, you need to download their \u201cGC-MS Spectra Files (XML) -\nExperimental\u201d data [here](https://hmdb.ca/downloads). Then you need the\nfollowing R code to construct the database for this package.\n``` r\nxmlpath <- list.files('hmdb_experimental_cms_spectra/',full.names = T,recursive = T)\nlibrary(xml2)\ngetcms <- function(i){\n  tree = xml2::read_xml(xmlpath[i])\n  accession = xml_text(xml2::xml_find_all(tree,'/c-ms/database-id'))\n  rti = as.numeric(xml_text(xml2::xml_find_all(tree,'/c-ms/retention-index')))\n  prec = as.numeric(xml_text(xml2::xml_find_all(tree,'/c-ms/derivative-exact-mass')))\n  formula = xml_text(xml2::xml_find_all(tree,'/c-ms/derivative-formula'))\n  ins = xml_text(xml2::xml_find_all(tree,'/c-ms/notes'))\n  ins2 = xml_text(xml2::xml_find_all(tree,'/c-ms/instrument-type'))\n  mode = xml_text(xml2::xml_find_all(tree,'/c-ms/ionization-mode'))\n  idms = xml_text(xml2::xml_find_all(tree,'/c-ms/id'))\n  instr = xml_text(xml2::xml_find_all(tree,'instrument-type'))\n  masscharge = as.numeric(xml_text(xml2::xml_find_all(tree,'/c-ms/c-ms-peaks/c-ms-peak/mass-charge')))\n  intensity =  as.numeric(xml_text(xml2::xml_find_all(tree,'/c-ms/c-ms-peaks/c-ms-peak/intensity')))\n  idx <- intensity!=0\n  mz <- list(name=accession, idms=idms, ionmode=mode, prec = prec, formula = formula, np = length(masscharge[idx]), rti = rti, instr = ins2, msm = ins, spectra=cbind.data.frame(mz=masscharge[idx],ins=intensity[idx]))\n  return(mz)\n}\n\nlibrary(parallel)\nhmdbcms <- mcMap(getcms,1:length(xmlpath), mc.cores = 4)\nsaveRDS(hmdbcms,'hmdbcms.RDS')\n```\nFor MoNA, you can download the \u201cLC-MS Spectra\u201d data in format of \u201cmsp\u201d\nfrom this [website](https://mona.fiehnlab.ucdavis.edu/downloads). Then\nwe need to filter the MS1 data to generate database for LC-MS and subset\ndata base for LC-HRMS.\n``` r\n# you need to install enviGCMS package by 'install.packages(\"enviGCMS\")'.\nmsp <- enviGCMS::getMSP('MoNA-export-LC-MS_Spectra.msp')\nidx <- sapply(msp, function(x) grepl('MS1',x$msm))\nidx1 <- sapply(idx, function(x) length(x)>0)\nmonams1 <- msp[idx1]\nidx2 <- sapply(monams1, function(x) grepl('MS1',x$msm))\nmonams1 <- monams1[idx2]\n\nidx3 <- sapply(monams1, function(x) x$instr )\nidx4 <- sapply(idx3, function(x) length(x)>0)\nmonams12 <- monams1[idx4]\nsaveRDS(monams12,'monams1.RDS')\n\nidx5 <- sapply(monams12, function(x) x$instr )\nmonams13 <- monams12[grepl('FT|TOF',idx5)]\nidx5 <- sapply(monams13, function(x) x$instr )\n\nnn <- sapply(monams13,function(x) x$np)\nmedian(as.numeric(nn))\nmean(as.numeric(nn))\nsaveRDS(monams13,'monahrms1.RDS')\n```\nIf you have your own database in \u201cmsp\u201d format, you can generate the\ncustom database by the following code:\n``` r\nmsp <- enviGCMS::getMSP('MoNA-export-LC-MS_Spectra.msp')\nsaveRDS(msp,'custom.RDS')\n```\nTo use the \u201c\\*.RDS\u201d database, you need to load them and refer their name\nfor \u2018simmzml\u2019 function.\n``` r\ncustom <- readRDS('custom.RDS')\nsimmzml(db=custom, name = 'test')\n```\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/yufree/mzrtsim/master/README.Rmd",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9804724487357164,
+      "result": {
+        "original_header": "Multiple files with experiment design",
+        "type": "Text_excerpt",
+        "value": "You could stimulate two groups of raw data with different peak widths\nfor the same compounds. Retention time could follow a uniform\ndistribution. 100 compounds could be selected randomly and base peaks\u2019\nsignal to noise ratio could be sample from 100 to 1000. Each group\ncontain 10 samples and 30% compounds are changed between case and\ncontrol groups.\n``` r\ndir.create('case')\ndir.create('control')\n# set different peak width for 100 compounds\npw1 <- c(rep(5,30),rep(10,40),rep(15,30))\npw2 <- c(rep(5,20),rep(10,30),rep(15,50))\n# set retention time for 100 compounds. When the peak width is set as a single value, the simulated base peak width will be from a poisson distribution with this value as lambda. \nrt <- seq(10,590,length.out=100)\nset.seed(1)\n# select compounds from database\ncompound <- sample(c(1:4000),100)\nset.seed(2)\n# select signal to noise ration\nsn <- sample(c(100:10000),100)\nfor(i in c(1:10)){\n  simmzml(name=paste0('case/case',i),db=monahrms1,pwidth = pw1,compound=compound,rtime = rt, sn=sn)\n}\n\nfor(i in c(1:10)){\n  simmzml(name=paste0('control/control',i),db=monahrms1,pwidth = pw2,compound=compound,rtime = rt, sn=sn)\n}\n```\n \nThen you could find 10 mzML files in case sub folder and another 10 mzML\nfiles in control sub folder, as well as corresponding csv files with\nm/z, retention time and compound name of the peaks.\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/yufree/mzrtsim/master/README.Rmd",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.8359996591339104,
+      "result": {
+        "original_header": "matrix stimulation",
+        "type": "Text_excerpt",
+        "value": "You could also input a m/z vector as matrix masses. Those masses will\ngenerate background baseline signals. By default, the mass vector is\nfrom matrix samples previous\n[published](https://jcheminf.biomedcentral.com/articles/10.1186/s13321-022-00586-8).\n``` r\ndata(mzm)\nsimmzml(name='test',db=monahrms1,pwidth = 10,compound=1,rtime = 100, sn=10,matrixmz = mzm,matrix = TRUE)\n```\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/yufree/mzrtsim/master/README.Rmd",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9550820259633737,
+      "result": {
+        "original_header": "Peaks list simulation",
+        "type": "Text_excerpt",
+        "value": "You could also use `mzrtsim` to make simulation of peak list. \nHere we make a simulation of 100 compounds from selected database with\ntwo conditions and three batches. 5 percentage of the peaks were\ninfluenced by conditions and 10 percentage of the peaks were influenced\nby batch effects. Three different type could be simulated: monotonic,\nrandom and block. You could also bind batch type, for example, \u2018mb\u2019\nmeans the simulation would contain both monotonic and block batch\neffects. \u2018db\u2019 means the spectra database to be used for simulation as\nmetioned in raw data simulation section.\n``` r\nlibrary(mzrtsim)\ndata(\"monams1\")\nsimdata <- mzrtsim(ncomp = 100, ncond = 2, ncpeaks = 0.05,\n  nbatch = 3, nbpeaks = 0.1, npercond = 10, nperbatch = c(8, 5, 7), seed = 42, batchtype = 'mb', db=monams1)\n```\nYou could save the simulated data into multiple csv files by `simdata`\nfunction. `simraw.csv` could be used for metaboanalyst. `simraw2.csv`\nshow the raw peaks list. `simcon.csv` show peaks influenced by\nconditions only.`simbatchmatrix.csv` show peaks influnced by batch\neffects only. `simbat.csv` show peaks influenced by batch effects and\nconditions. `simcomp.csv` show independent peaks influenced by\nconditions and batch effects. `simcompchange.csv` show the conditions\nchanges of each groups. `simblockbatchange.csv` show the block batch\nchanges of each groups. `simmonobatchange.csv` show the monotonic batch\nchanges of each group.\n``` r\nsimdata(sim,name = \"sim\")\n```\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/yufree/mzrtsim/master/README.Rmd",
+      "technique": "supervised_classification"
+    }
+  ],
+  "documentation": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/yufree/mzrtsim/tree/master/docs"
+      },
+      "technique": "file_exploration"
+    }
+  ],
+  "download_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/yufree/mzrtsim/releases"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 1
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/yufree/mzrtsim/forks"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "yufree/mzrtsim"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_title": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "mzrtsim"
+      },
+      "source": "https://raw.githubusercontent.com/yufree/mzrtsim/master/README.Rmd",
+      "technique": "regular_expression"
+    }
+  ],
+  "installation": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Installation",
+        "parent_header": [
+          "mzrtsim"
+        ],
+        "type": "Text_excerpt",
+        "value": "You can install the development version from\n[GitHub](https://github.com/) with:\n\n``` r\n# install.packages(\"remotes\")\nremotes::install_github(\"yufree/mzrtsim\")\n```\n"
+      },
+      "source": "https://raw.githubusercontent.com/yufree/mzrtsim/master/README.Rmd",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 0.9999781913848478,
+      "result": {
+        "original_header": "mzrtsim",
+        "type": "Text_excerpt",
+        "value": "[![R-CMD-check](https://github.com/yufree/mzrtsim/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/yufree/mzrtsim/actions/workflows/R-CMD-check.yaml)\n[![Lifecycle:\nstable](https://img.shields.io/badge/lifecycle-stable-brightgreen.svg)](https://lifecycle.r-lib.org/articles/stages.html#stable) \n"
+      },
+      "source": "https://raw.githubusercontent.com/yufree/mzrtsim/master/README.Rmd",
+      "technique": "supervised_classification"
+    }
+  ],
+  "invocation": [
+    {
+      "confidence": 0.8749645365706512,
+      "result": {
+        "original_header": "Raw Data simulation",
+        "type": "Text_excerpt",
+        "value": "You could use `simmzml` to generate one mzML file.\n``` r\nlibrary(mzrtsim)\ndata(\"monams1\")\nsimmzml(db=monams1, name = 'test')\n```\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/yufree/mzrtsim/master/README.Rmd",
+      "technique": "supervised_classification"
+    }
+  ],
+  "issue_tracker": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/yufree/mzrtsim/issues"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "keywords": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "metabolomics, mzml, simulation"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "mzrtsim"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "owner": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "User",
+        "value": "yufree"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "programming_languages": [
+    {
+      "confidence": 1,
+      "result": {
+        "name": "R",
+        "size": 28060,
+        "type": "Programming_language",
+        "value": "R"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "readme_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/yufree/mzrtsim/master/README.Rmd"
+      },
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/yufree/mzrtsim/master/README.md"
+      },
+      "technique": "file_exploration"
+    }
+  ],
+  "releases": [
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "yufree",
+          "type": "User"
+        },
+        "date_created": "2019-11-08T19:45:18Z",
+        "date_published": "2021-08-30T15:51:54Z",
+        "description": "This release is just for preprint version 1 and simulation is based on predefined distribution.",
+        "html_url": "https://github.com/yufree/mzrtsim/releases/tag/0.1.0",
+        "name": "preprint version",
+        "release_id": 48684328,
+        "tag": "0.1.0",
+        "tarball_url": "https://api.github.com/repos/yufree/mzrtsim/tarball/0.1.0",
+        "type": "Release",
+        "url": "https://api.github.com/repos/yufree/mzrtsim/releases/48684328",
+        "value": "https://api.github.com/repos/yufree/mzrtsim/releases/48684328",
+        "zipball_url": "https://api.github.com/repos/yufree/mzrtsim/zipball/0.1.0"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "somef_missing_categories": [
+    "citation",
+    "acknowledgement",
+    "run",
+    "download",
+    "requirements",
+    "contact",
+    "contributors",
+    "license",
+    "usage",
+    "faq",
+    "support",
+    "identifier",
+    "has_build_file",
+    "executable_example"
+  ],
+  "somef_provenance": {
+    "date": "2024-10-06 18:14:30",
+    "somef_schema_version": "1.0.0",
+    "somef_version": "0.9.5"
+  },
+  "stargazers_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 3
+      },
+      "technique": "GitHub_API"
+    }
+  ]
+}

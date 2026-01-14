@@ -1,0 +1,284 @@
+{
+  "citation": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Cite",
+        "type": "Text_excerpt",
+        "value": "Li Z., Chen X., Shi S., Zhang H., Wang X., Chen H., Li W., and Li L. (2022). DeepBSA: A deep-learning algorithm improves bulked segregant analysis for dissecting complex traits. Mol. Plant. doi: https://doi.org/10.1016/j.molp.2022.08.004.\n\n"
+      },
+      "source": "https://raw.githubusercontent.com/lizhao007/DeepBSA/main/README.md",
+      "technique": "header_analysis"
+    }
+  ],
+  "code_repository": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/lizhao007/DeepBSA"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_created": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2022-04-14T14:32:28Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_updated": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2024-08-06T05:46:25Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "description": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "DeepBSA is a novel bulked segregant analysis (BSA) software for the dissection of complex traits."
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 0.9991102451735971,
+      "result": {
+        "original_header": "Background",
+        "type": "Text_excerpt",
+        "value": "DeepBSA is a novel bulked segregant analysis (BSA) software for the dissection of complex traits. Two brand-new algorithms are developed in DeepBSA, deep learning (DL) and k-value (K), which can be applied to different numbers (at least 2) of bulked pools. DeepBSA also integrates five widely used algorithms - ED4, delta SNP_index, G', Ridit, and SmoothLOD, and DL performs better than them with absolute bias and signal-to-noise ratio in our simulation. Overall, DeepBSA provides a user-friendly, OS-compatible, and all-in-one pipeline, which does not need sophisticated bioinformatics skills for BSA.\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/lizhao007/DeepBSA/main/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.8942435689650461,
+      "result": {
+        "original_header": "Input",
+        "type": "Text_excerpt",
+        "value": "The input file for DeepBSA is the VCF file, which contains genomic variants for all bulked pools. For the genomic variant calling, we'd love to recommend using GATK using the guided bioinformatic pipeline as follows:\n```\n***Taking two mixed pools as examples***\n##building reference index\nsamtools faidx Referencegenome.fa\nbwa index Referencegenome.fa\n\n##mapping\nbwa mem -t 8 -M -P Referencegenome.fa High_Forward.fastq High_Reverse.fastq >bsa_H.sam\nbwa mem -t 8 -M -P Referencegenome.fa Low_Forward.fastq Low_Reverse.fastq >bsa_L.sam\n\n##pretreatment for GATK SNP calling for hight pool\njava -jar ${EBROOTPICARD}/picard.jar CleanSam INPUT=bsa_H.sam OUTPUT=bsa_H_cleaned.sam\njava -jar ${EBROOTPICARD}/picard.jar FixMateInformation INPUT=bsa_H_cleaned.sam OUTPUT=bsa_H_cleaned_fixed.sam SO=coordinate\njava -jar ${EBROOTPICARD}/picard.jar AddOrReplaceReadGroups INPUT=bsa_H_cleaned_fixed.sam OUTPUT=bsa_H_cleaned_fixed_group.bam LB=bsa_H SO=coordinate RGPL=illumina PU=barcode SM=bsa_H\nsamtools index bsa_H_cleaned_fixed_group.bam\njava -jar ${EBROOTPICARD}/picard.jar MarkDuplicatesWithMateCigar INPUT=bsa_H_cleaned_fixed_group.bam OUTPUT=bsa_H_cleaned_fixed_group_DEDUP.bam M=bsa_H_cleaned_fixed_group_DEDUP.mx AS=true REMOVE_DUPLICATES=true MINIMUM_DISTANCE=500\nsamtools index bsa_H_cleaned_fixed_group_DEDUP.bam\n\n##same pretreatment for GATK SNP calling for low pool\n\n##genomic variant calling\njava -Xmx64g -jar $EBROOTGATK/GenomeAnalysisTK.jar -T HaplotypeCaller -R Referencegenome.fa -nct 8 -I bsa_H_cleaned_fixed_group_DEDUP.bam -I bsa_L_cleaned_fixed_group_DEDUP.bam -o bsa_H_L_snps_indels.vcf\n```\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/lizhao007/DeepBSA/main/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "download_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/lizhao007/DeepBSA/releases"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "faq": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "2024.5 version 1.6\uff1aThe flashback problem of the Windows version has been fixed, and the problem of data volume has been tested. VCF pretreatment of 100,000 SNP in two mixed pools takes about 3 minutes, and calculation and drawing take about 10 seconds. The pretreatment of a VCF file with 10 million SNP is about 80 minutes (same as CSV format), and the calculation and drawing are about 25 minutes.\uff08Windows \u7248\u672c\u7684\u95ea\u9000\u95ee\u9898\u5df2\u7ecf\u4fee\u590d\uff0c\u540c\u65f6\u6d4b\u8bd5\u4e86\u6570\u636e\u91cf\u7684\u95ee\u9898\u3002\u4e24\u4e2a\u6df7\u6c6010\u4e07SNP\u7684VCF\u9884\u5904\u7406\u7ea63\u5206\u949f\uff0c\u8ba1\u7b97\u53ca\u753b\u56fe\u7ea610\u79d2\uff1b1000\u4e07SNP\u7684VCF\u6587\u4ef6\u9884\u5904\u7406\u7ea680\u5206\u949f\uff08CSV\u683c\u5f0f\u76f8\u540c\uff09\uff0c\u8ba1\u7b97\u53ca\u753b\u56fe\u7ea625\u5206\u949f.\uff09",
+        "parent_header": [
+          "Update history"
+        ],
+        "type": "Text_excerpt",
+        "value": "2023.9 version 1.5\uff1aImproved drawing and fixed small bugs.\n\n2022.11.15 version 1.4: Improving the Simulator's function and offering the software for Linux.\n\n2022.08.30 version 1.3: Adding PDF file of mapping result and CSV file of algorithm value.\n\n2022.08.16 version 1.2\n\n2022.07.25 version 1.1\n"
+      },
+      "source": "https://raw.githubusercontent.com/lizhao007/DeepBSA/main/README.md",
+      "technique": "header_analysis"
+    }
+  ],
+  "forks_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 2
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/lizhao007/DeepBSA/forks"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "lizhao007/DeepBSA"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_title": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "Background"
+      },
+      "source": "https://raw.githubusercontent.com/lizhao007/DeepBSA/main/README.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "installation": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Installation",
+        "type": "Text_excerpt",
+        "value": "DeepBSA is available for both Windows and Linux, and the download link is http://zeasystemsbio.hzau.edu.cn/tools.html. The alternate cloud download link is:\n\u94fe\u63a5\uff1ahttps://pan.baidu.com/s/1PbqOu5fDXK2RU5Hi3G4p6A?pwd=c71e \n\u63d0\u53d6\u7801\uff1ac71e\n"
+      },
+      "source": "https://raw.githubusercontent.com/lizhao007/DeepBSA/main/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "2024.5 version 1.6\uff1aThe flashback problem of the Windows version has been fixed, and the problem of data volume has been tested. VCF pretreatment of 100,000 SNP in two mixed pools takes about 3 minutes, and calculation and drawing take about 10 seconds. The pretreatment of a VCF file with 10 million SNP is about 80 minutes (same as CSV format), and the calculation and drawing are about 25 minutes.\uff08Windows \u7248\u672c\u7684\u95ea\u9000\u95ee\u9898\u5df2\u7ecf\u4fee\u590d\uff0c\u540c\u65f6\u6d4b\u8bd5\u4e86\u6570\u636e\u91cf\u7684\u95ee\u9898\u3002\u4e24\u4e2a\u6df7\u6c6010\u4e07SNP\u7684VCF\u9884\u5904\u7406\u7ea63\u5206\u949f\uff0c\u8ba1\u7b97\u53ca\u753b\u56fe\u7ea610\u79d2\uff1b1000\u4e07SNP\u7684VCF\u6587\u4ef6\u9884\u5904\u7406\u7ea680\u5206\u949f\uff08CSV\u683c\u5f0f\u76f8\u540c\uff09\uff0c\u8ba1\u7b97\u53ca\u753b\u56fe\u7ea625\u5206\u949f.\uff09",
+        "parent_header": [
+          "Update history"
+        ],
+        "type": "Text_excerpt",
+        "value": "2023.9 version 1.5\uff1aImproved drawing and fixed small bugs.\n\n2022.11.15 version 1.4: Improving the Simulator's function and offering the software for Linux.\n\n2022.08.30 version 1.3: Adding PDF file of mapping result and CSV file of algorithm value.\n\n2022.08.16 version 1.2\n\n2022.07.25 version 1.1\n"
+      },
+      "source": "https://raw.githubusercontent.com/lizhao007/DeepBSA/main/README.md",
+      "technique": "header_analysis"
+    }
+  ],
+  "issue_tracker": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/lizhao007/DeepBSA/issues"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "keywords": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "bsa, deep-learning, qtl-mapping, software"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "DeepBSA"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "owner": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "User",
+        "value": "lizhao007"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "readme_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/lizhao007/DeepBSA/main/README.md"
+      },
+      "technique": "file_exploration"
+    }
+  ],
+  "requirements": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Requirement",
+        "parent_header": [
+          "Usage",
+          "For Linux"
+        ],
+        "type": "Text_excerpt",
+        "value": "R and Python 3.7(or greater) should be installed. Other required Python packages can be quickly installed by running \"./requirment.txt\" in the main directory as follows.\n```\n#Install\nwget http://zeasystemsbio.hzau.edu.cn/Tools/DeepBSA_linux_v1.4.tar.gz\ntar -xvzf DeepBSA_linux_v1.4.tar.gz\ncd DeepBSA_linux_v1.4/\n./requirment.txt\n\n#QTL mapping \ncd bin/\npython3 main.py -h\n\n#usage: main.py [-h] --i I [--m M] [--p P] [--p1 P1] [--p2 P2] [--p3 P3] [--s S] [--w W] [--t T]\n optional arguments:\n  -h, --help  show this help message and exit\n  --i I       The input file path(vcf/csv).\n  --m M       The algorithm(DL/K/ED4/SNP/SmoothG/SmoothLOD/Ridit) used. The default is DL.\n  --p P       Whether to pretreatment data(1[True] or 0[False]). The default is True.\n  --p1 P1     Pretreatment step 1: Number of read thread, the SNP whose number is lower than it will be filtered. The default is 0.\n  --p2 P2     Pretreatment step 2: Chi-square test(1[True] or 0[False]). The default is 1[True].\n  --p3 P3     Pretreatment step 3: Continuity test(1[True] or 0[False]). The default is 1[True].\n  --s S       The function to smooth the result(Tri-kernel-smooth\\LOWESS\\Moving Average). The default is LOWESS\n  --w W       Windows size of LOESS. The number ranges from 0-1. 0 presents the best size for minimum AICc. The default is 0(auto).\n  --t T       The threshold to find peaks(float). Default is 0(auto)\n\n#Data simulation\ncd DeepBSA_linux_v1.4/bin/\npython3 simulate_progress.py -h\n\n#usage: simulate_progress.py [-h] --i I --p P --r R --e E --s S\n optional arguments:\n  -h, --help  show this help message and exit\n  --i I       individual\n  --p P       pools\n  --r R       ratio\n  --e E       effective points\n  --s S       save path\n\n```\nMore parameters details can be found in the \u201cInstruction or Manual\u201d file.\n"
+      },
+      "source": "https://raw.githubusercontent.com/lizhao007/DeepBSA/main/README.md",
+      "technique": "header_analysis"
+    }
+  ],
+  "somef_missing_categories": [
+    "acknowledgement",
+    "run",
+    "download",
+    "contact",
+    "contributors",
+    "documentation",
+    "license",
+    "support",
+    "identifier",
+    "has_build_file",
+    "executable_example"
+  ],
+  "somef_provenance": {
+    "date": "2024-10-04 13:21:07",
+    "somef_schema_version": "1.0.0",
+    "somef_version": "0.9.5"
+  },
+  "stargazers_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 14
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "type": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "non-software"
+      },
+      "technique": "software_type_heuristics"
+    }
+  ],
+  "usage": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "For windows",
+        "parent_header": [
+          "Usage"
+        ],
+        "type": "Text_excerpt",
+        "value": "The \u201cInstruction or Manual\u201d file can be downloaded from GitHub and it is also packed into the DeepBSA_windows.zip."
+      },
+      "source": "https://raw.githubusercontent.com/lizhao007/DeepBSA/main/README.md",
+      "technique": "header_analysis"
+    }
+  ]
+}

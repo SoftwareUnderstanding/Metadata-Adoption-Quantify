@@ -1,0 +1,1162 @@
+{
+  "acknowledgement": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Acknowledgement",
+        "parent_header": [
+          "somalier: extract informative sites, evaluate relatedness, and perform quality-control on BAM/CRAM/BCF/VCF/GVCF"
+        ],
+        "type": "Text_excerpt",
+        "value": "This work was motivated by interaction and discussions with Preeti Aahir and several\nearly users who provided valuable feedback.\n"
+      },
+      "source": "https://raw.githubusercontent.com/brentp/somalier/master/README.md",
+      "technique": "header_analysis"
+    }
+  ],
+  "citation": [
+    {
+      "confidence": 1,
+      "result": {
+        "format": "cff",
+        "type": "File_dump",
+        "value": "cff-version: 1.2.0\nmessage: \"If you use this software, please cite the article as below.\"\nabstract: \"When interpreting sequencing data from multiple spatial or longitudinal biopsies, detecting sample mix-ups is essential, yet more difficult than in studies of germline variation. In most genomic studies of tumors, genetic variation is detected through pairwise comparisons of the tumor and a matched normal tissue from the sample donor. In many cases, only somatic variants are reported, which hinders the use of existing tools that detect sample swaps solely based on genotypes of inherited variants. To address this problem, we have developed Somalier, a tool that operates directly on alignments and does not require jointly called germline variants. Instead, Somalier extracts a small sketch of informative genetic variation for each sample. Sketches from hundreds of germline or somatic samples can then be compared in under a second, making Somalier a useful tool for measuring relatedness in large cohorts. Somalier produces both text output and an interactive visual report that facilitates the detection and correction of sample swaps using multiple relatedness metrics.\"\nauthors:\n    - \n      family-names: Pedersen\n      given-names: Brent S.\n      email: bpederse@gmail.com\ntitle: \"Somalier: rapid relatedness estimation for cancer and germline studies using efficient genome sketches\"\npreferred-citation:\n    authors:\n      - \n        family-names: Pedersen\n        given-names: Brent S.\n        email: bpederse@gmail.com\n      - \n        family-names: Bhetariya\n        given-names: Preetida J.\n      - \n        family-names: Brown\n        given-names: Joe M.\n      - \n        family-names: Kravitz\n        given-names: Stephanie N.\n      - \n        family-names: Marth\n        given-names: Gabor\n      - \n        family-names: Jensen\n        given-names: Randy L.\n      - \n        family-names: Bronner\n        given-names: Mary P.\n      - \n        family-names: Underhill\n        given-names: Hunder R.\n      - \n        family-names: Quinlan\n        given-names: Aaron R.\n    title: \"Somalier: rapid relatedness estimation for cancer and germline studies using efficient genome sketches\"\n    journal: Genome Medicine\n    issue: 12\n    number: 62\n    type: article\n    year: 2020\n    doi: 10.1186/s13073-020-00761-2\n\nversion: 0.2.14\ndate-released: 2022-01-01\nlicense: MIT\n"
+      },
+      "source": "https://raw.githubusercontent.com/brentp/somalier/master/CITATION.cff",
+      "technique": "file_exploration"
+    }
+  ],
+  "code_repository": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/brentp/somalier"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_created": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2018-08-07T14:52:04Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_updated": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2024-10-30T02:05:12Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "description": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "fast sample-swap and relatedness checks on BAMs/CRAMs/VCFs/GVCFs... \"like damn that is one smart wine guy\""
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 0.8146879142489644,
+      "result": {
+        "original_header": "Infer",
+        "type": "Text_excerpt",
+        "value": "`somalier` can also infer first-degree relationships (parent-child) when both-parents\nare present and can often build entire pedigrees on high-qualty data. To do this, use\n `somalier relate --infer ...` and the **samples.tsv** output will be a pedigree file\nindicating the inferred relationships. \n"
+      },
+      "source": "https://raw.githubusercontent.com/brentp/somalier/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9811690210830539,
+      "result": {
+        "original_header": "find-sites",
+        "type": "Text_excerpt",
+        "value": "To create a set of new sites, use `somalier find-sites` on a population VCF. More info on this tool is available in [the wiki](https://github.com/brentp/somalier/wiki/find-sites)\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/brentp/somalier/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9623292957712923,
+      "result": {
+        "original_header": "How it works",
+        "type": "Text_excerpt",
+        "value": "`somalier` takes a list of known polymorphic sites. Even a few hundred (or dozen) sites\ncan be a very good indicator of relatedness. The best sites are those with a population\nallele frequency close to 0.5 as that maximizes the probability that any 2 samples will differ.\nA list of such sites is provided in the [releases](https://github.com/brentp/somalier/releases)\nfor GRCh37 and hg38. \nIn order to quickly calculate genotypes at these sites, `somalier` assays the exact base.\nThe extraction step is done directly from the bam/cram files 1 sample at a time. \nThe `relate` step is run on the output of the `extract` commands. It runs extremely quickly\nso that new samples can be added and compared. It uses 3 bit-vectors per sample for hom-ref,\nhet, hom-alt. Each bitvector is a sequence of 64 bit integers where each bit is set if\nthe variant at that index in the sample is for example, heterozygous. With this setup,\nwe can use fast bitwise operations and [popcount](https://en.wikichip.org/wiki/population_count)\nhardware instructions to calculate relatedness extremely quickly. \nFor each sample-pair, it reports:\n1. IBS0 -- the number of sites where one sample is hom-ref and another is hom-alt\n2. IBS2 -- the number of sites where the samples have the same genotype\n3. shared-hets -- the number of sites where both samples are heterozygotes\n4. shared-hom-alts -- the number of sites where both samples are homozygous alternate \nThese are used to calculate [relatedness](https://en.wikipedia.org/wiki/Coefficient_of_relationship)\nand a measure of relatedness that is unaffected by loss-of-heterozygosity that is often seen in some \ncancers. The interactive output allows toggling between any of these measures. \nIt also reports depth information and the count of `HET`, `HOM_REF`, `HOM_ALT`, and `unknown` genotypes for each sample\nalong with a number of metrics that are useful for general QC.\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/brentp/somalier/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.909097046034336,
+      "result": {
+        "original_header": "Ancestry Estimate",
+        "type": "Text_excerpt",
+        "value": "`somalier` can predict ancestry on a set of query samples given a set of labelled samples. You can read more about this in [the wiki](https://github.com/brentp/somalier/wiki/ancestry) \nUsage is intentionally very simple and running `somalier extract` or `somalier relate` will give sufficient help for nearly\nall cases. \nBy default `somalier` will only consider variants that have a \"PASS\" or \"RefCall\" FILTER. To extend this list, set\nthe environment variable `SOMALIER_ALLOWED_FILTERS` to a comma-delimited list of additional filters to allow. \n"
+      },
+      "source": "https://raw.githubusercontent.com/brentp/somalier/master/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "documentation": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/brentp/somalier/tree/master/docs"
+      },
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "format": "wiki",
+        "type": "Url",
+        "value": "https://github.com/brentp/somalier/wiki/pedigree-inference"
+      },
+      "source": "https://raw.githubusercontent.com/brentp/somalier/master/README.md",
+      "technique": "regular_expression"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "format": "wiki",
+        "type": "Url",
+        "value": "https://github.com/brentp/somalier/wiki/find-sites"
+      },
+      "source": "https://raw.githubusercontent.com/brentp/somalier/master/README.md",
+      "technique": "regular_expression"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "format": "wiki",
+        "type": "Url",
+        "value": "https://github.com/brentp/somalier/wiki/ancestry"
+      },
+      "source": "https://raw.githubusercontent.com/brentp/somalier/master/README.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "download_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/brentp/somalier/releases"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 35
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/brentp/somalier/forks"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "brentp/somalier"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_title": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "somalier: extract informative sites, evaluate relatedness, and perform quality-control on BAM/CRAM/BCF/VCF/GVCF"
+      },
+      "source": "https://raw.githubusercontent.com/brentp/somalier/master/README.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "has_build_file": [
+    {
+      "confidence": 1,
+      "result": {
+        "format": "dockerfile",
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/brentp/somalier/master/docker/Dockerfile"
+      },
+      "source": "https://raw.githubusercontent.com/brentp/somalier/master/docker/Dockerfile",
+      "technique": "file_exploration"
+    }
+  ],
+  "has_script_file": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/brentp/somalier/master/paper-cmd.sh"
+      },
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/brentp/somalier/master/paper/king.sh"
+      },
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/brentp/somalier/master/paper/subset_sites.sh"
+      },
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/brentp/somalier/master/paper/gtex-methods/make-sites.sh"
+      },
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/brentp/somalier/master/scripts/build.sh"
+      },
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/brentp/somalier/master/scripts/find_sites.sh"
+      },
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/brentp/somalier/master/scripts/hbb.sh"
+      },
+      "technique": "file_exploration"
+    }
+  ],
+  "images": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://user-images.githubusercontent.com/1739/43783575-4863f13c-9a1f-11e8-9cf8-622f784edc69.png"
+      },
+      "source": "https://raw.githubusercontent.com/brentp/somalier/master/README.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "installation": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Install",
+        "parent_header": [
+          "somalier: extract informative sites, evaluate relatedness, and perform quality-control on BAM/CRAM/BCF/VCF/GVCF"
+        ],
+        "type": "Text_excerpt",
+        "value": "Somalier is available via bioconda, see [here](https://bioconda.github.io/recipes/somalier/README.html).\n\nAlternatively, you can get a static binary from [here](https://github.com/brentp/somalier/releases).\n\nUsers can also get a docker image [here](https://hub.docker.com/r/brentp/somalier/tags)\nwhich contains htslib and a somalier binary ready-for-use.\n"
+      },
+      "source": "https://raw.githubusercontent.com/brentp/somalier/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 0.875376858298567,
+      "result": {
+        "original_header": "Ancestry Estimate",
+        "type": "Text_excerpt",
+        "value": "By default `somalier` will only consider variants that have a \"PASS\" or \"RefCall\" FILTER. To extend this list, set\nthe environment variable `SOMALIER_ALLOWED_FILTERS` to a comma-delimited list of additional filters to allow. \nby default sites with an allele balance < 0.01 will be considered homozygous reference. To adjust this, use e.g. : \n`SOMALIER_AB_HOM_CUTOFF=0.04 somalier relate ...`\n  \n"
+      },
+      "source": "https://raw.githubusercontent.com/brentp/somalier/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9397821962285584,
+      "result": {
+        "original_header": "Other Work",
+        "type": "Text_excerpt",
+        "value": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5499645/ \nhttps://academic.oup.com/bioinformatics/article/33/4/596/2624551 \n"
+      },
+      "source": "https://raw.githubusercontent.com/brentp/somalier/master/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "issue_tracker": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/brentp/somalier/issues"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "keywords": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "bioinformatics, cancer-genomics, genomics"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "license": [
+    {
+      "confidence": 1,
+      "result": {
+        "name": "MIT License",
+        "spdx_id": "MIT",
+        "type": "License",
+        "url": "https://api.github.com/licenses/mit",
+        "value": "https://api.github.com/licenses/mit"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "File_dump",
+        "value": "MIT License\n\nCopyright (c) 2020 Brent Pedersen\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.\n"
+      },
+      "source": "https://raw.githubusercontent.com/brentp/somalier/master/LICENSE",
+      "technique": "file_exploration"
+    }
+  ],
+  "name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "somalier"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "owner": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "User",
+        "value": "brentp"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "programming_languages": [
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Nim",
+        "size": 104375,
+        "type": "Programming_language",
+        "value": "Nim"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "HTML",
+        "size": 58125,
+        "type": "Programming_language",
+        "value": "HTML"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "CSS",
+        "size": 12075,
+        "type": "Programming_language",
+        "value": "CSS"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Python",
+        "size": 11743,
+        "type": "Programming_language",
+        "value": "Python"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Shell",
+        "size": 7786,
+        "type": "Programming_language",
+        "value": "Shell"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Dockerfile",
+        "size": 563,
+        "type": "Programming_language",
+        "value": "Dockerfile"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "readme_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/brentp/somalier/master/README.md"
+      },
+      "technique": "file_exploration"
+    }
+  ],
+  "releases": [
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "brentp",
+          "type": "User"
+        },
+        "date_created": "2023-09-20T09:01:46Z",
+        "date_published": "2023-09-20T09:05:10Z",
+        "description": "v0.2.19\r\n=======\r\n+ [relate/infer] fix check that would prevent some inference (#123 thanks @equinne5 for reporting and providing test-case)\r\n\r\n\r\n\r\n## Installation\r\n\r\ngrab the [static binary](https://github.com/brentp/somalier/releases/download/v0.2.19/somalier) , or use docker via `brentp/somalier:v0.2.19`\r\n\r\n# sites files \r\n\r\na  T2T sites  by @kpalin \r\n[sites.chm13v2.T2T.vcf.gz](https://github.com/brentp/somalier/files/9954286/sites.chm13v2.T2T.vcf.gz)\r\n)\r\n\r\nThese sites files are build-specific, but as of this release, once the sites are extracted, the resulting somalier files can be used to compare samples even across genome builds.\r\n\r\n[sites.hg19.vcf.gz](https://github.com/brentp/somalier/files/3412453/sites.hg19.vcf.gz)\r\n[sites.hg38.nochr.vcf.gz](https://github.com/brentp/somalier/files/3412454/sites.hg38.nochr.vcf.gz)\r\n[sites.GRCh37.vcf.gz](https://github.com/brentp/somalier/files/3412455/sites.GRCh37.vcf.gz)\r\n[sites.hg38.vcf.gz](https://github.com/brentp/somalier/files/3412456/sites.hg38.vcf.gz)\r\n\r\n\r\n[**Different coordinates from above files**: sites.hg38.rna.vcf.gz only includes sites likely to be expressed in GTeX](https://github.com/brentp/somalier/files/4566475/sites.hg38.rna.vcf.gz)",
+        "html_url": "https://github.com/brentp/somalier/releases/tag/v0.2.19",
+        "release_id": 121832264,
+        "tag": "v0.2.19",
+        "tarball_url": "https://api.github.com/repos/brentp/somalier/tarball/v0.2.19",
+        "type": "Release",
+        "url": "https://api.github.com/repos/brentp/somalier/releases/121832264",
+        "value": "https://api.github.com/repos/brentp/somalier/releases/121832264",
+        "zipball_url": "https://api.github.com/repos/brentp/somalier/zipball/v0.2.19"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "brentp",
+          "type": "User"
+        },
+        "date_created": "2023-08-28T07:51:11Z",
+        "date_published": "2023-08-28T07:57:05Z",
+        "description": "v0.2.18\r\n=======\r\n+ [find_sites] handle empty alternate alleles (#121 thanks @johanneskoester for reporting)\r\n+ [find_sites] add --output-vcf option \r\n\r\n\r\n## Installation\r\n\r\ngrab the [static binary](https://github.com/brentp/somalier/releases/download/v0.2.18/somalier) , or use docker via `brentp/somalier:v0.2.18`\r\n\r\n# sites files \r\n\r\na  T2T sites  by @kpalin \r\n[sites.chm13v2.T2T.vcf.gz](https://github.com/brentp/somalier/files/9954286/sites.chm13v2.T2T.vcf.gz)\r\n)\r\n\r\nThese sites files are build-specific, but as of this release, once the sites are extracted, the resulting somalier files can be used to compare samples even across genome builds.\r\n\r\n[sites.hg19.vcf.gz](https://github.com/brentp/somalier/files/3412453/sites.hg19.vcf.gz)\r\n[sites.hg38.nochr.vcf.gz](https://github.com/brentp/somalier/files/3412454/sites.hg38.nochr.vcf.gz)\r\n[sites.GRCh37.vcf.gz](https://github.com/brentp/somalier/files/3412455/sites.GRCh37.vcf.gz)\r\n[sites.hg38.vcf.gz](https://github.com/brentp/somalier/files/3412456/sites.hg38.vcf.gz)\r\n\r\n\r\n[**Different coordinates from above files**: sites.hg38.rna.vcf.gz only includes sites likely to be expressed in GTeX](https://github.com/brentp/somalier/files/4566475/sites.hg38.rna.vcf.gz)",
+        "html_url": "https://github.com/brentp/somalier/releases/tag/v0.2.18",
+        "name": "find_sites fixes",
+        "release_id": 118887903,
+        "tag": "v0.2.18",
+        "tarball_url": "https://api.github.com/repos/brentp/somalier/tarball/v0.2.18",
+        "type": "Release",
+        "url": "https://api.github.com/repos/brentp/somalier/releases/118887903",
+        "value": "https://api.github.com/repos/brentp/somalier/releases/118887903",
+        "zipball_url": "https://api.github.com/repos/brentp/somalier/zipball/v0.2.18"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "brentp",
+          "type": "User"
+        },
+        "date_created": "2023-06-23T16:16:02Z",
+        "date_published": "2023-06-23T16:21:24Z",
+        "description": "+ allow setting bam sample name via ENV when RG is missing (#115)\r\n\r\n## Installation\r\n\r\ngrab the [static binary](https://github.com/brentp/somalier/releases/download/v0.2.17/somalier) , or use docker via `brentp/somalier:v0.2.17`\r\n\r\n# sites files \r\n\r\na  T2T sites  by @kpalin \r\n[sites.chm13v2.T2T.vcf.gz](https://github.com/brentp/somalier/files/9954286/sites.chm13v2.T2T.vcf.gz)\r\n)\r\n\r\nThese sites files are build-specific, but as of this release, once the sites are extracted, the resulting somalier files can be used to compare samples even across genome builds.\r\n\r\n[sites.hg19.vcf.gz](https://github.com/brentp/somalier/files/3412453/sites.hg19.vcf.gz)\r\n[sites.hg38.nochr.vcf.gz](https://github.com/brentp/somalier/files/3412454/sites.hg38.nochr.vcf.gz)\r\n[sites.GRCh37.vcf.gz](https://github.com/brentp/somalier/files/3412455/sites.GRCh37.vcf.gz)\r\n[sites.hg38.vcf.gz](https://github.com/brentp/somalier/files/3412456/sites.hg38.vcf.gz)\r\n\r\n\r\n[**Different coordinates from above files**: sites.hg38.rna.vcf.gz only includes sites likely to be expressed in GTeX](https://github.com/brentp/somalier/files/4566475/sites.hg38.rna.vcf.gz)",
+        "html_url": "https://github.com/brentp/somalier/releases/tag/v0.2.17",
+        "name": "missing RG",
+        "release_id": 109717015,
+        "tag": "v0.2.17",
+        "tarball_url": "https://api.github.com/repos/brentp/somalier/tarball/v0.2.17",
+        "type": "Release",
+        "url": "https://api.github.com/repos/brentp/somalier/releases/109717015",
+        "value": "https://api.github.com/repos/brentp/somalier/releases/109717015",
+        "zipball_url": "https://api.github.com/repos/brentp/somalier/zipball/v0.2.17"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "brentp",
+          "type": "User"
+        },
+        "date_created": "2022-09-20T23:00:51Z",
+        "date_published": "2022-10-31T21:28:11Z",
+        "description": "\r\nThis makes find-sites faster and less buggy (only needed if you wish to create your own sites files).\r\n\r\n## Installation\r\n\r\ngrab the [static binary](https://github.com/brentp/somalier/releases/download/v0.2.16/somalier) , or use docker via `brentp/somalier:v0.2.16`\r\n\r\n\r\n# sites files (unchanged from previous releases except for T2T)\r\n\r\na new T2T sites file matching those for hg38 and GRCh37 was created by @kpalin \r\n[sites.chm13v2.T2T.vcf.gz](https://github.com/brentp/somalier/files/9954286/sites.chm13v2.T2T.vcf.gz)\r\n)\r\n\r\nThese sites files are build-specific, but as of this release, once the sites are extracted, the resulting somalier files can be used to compare samples even across genome builds.\r\n\r\n[sites.hg19.vcf.gz](https://github.com/brentp/somalier/files/3412453/sites.hg19.vcf.gz)\r\n[sites.hg38.nochr.vcf.gz](https://github.com/brentp/somalier/files/3412454/sites.hg38.nochr.vcf.gz)\r\n[sites.GRCh37.vcf.gz](https://github.com/brentp/somalier/files/3412455/sites.GRCh37.vcf.gz)\r\n[sites.hg38.vcf.gz](https://github.com/brentp/somalier/files/3412456/sites.hg38.vcf.gz)\r\n\r\n\r\n[**Different coordinates from above files**: sites.hg38.rna.vcf.gz only includes sites likely to be expressed in GTeX](https://github.com/brentp/somalier/files/4566475/sites.hg38.rna.vcf.gz)",
+        "html_url": "https://github.com/brentp/somalier/releases/tag/v0.2.16",
+        "release_id": 81601215,
+        "tag": "v0.2.16",
+        "tarball_url": "https://api.github.com/repos/brentp/somalier/tarball/v0.2.16",
+        "type": "Release",
+        "url": "https://api.github.com/repos/brentp/somalier/releases/81601215",
+        "value": "https://api.github.com/repos/brentp/somalier/releases/81601215",
+        "zipball_url": "https://api.github.com/repos/brentp/somalier/zipball/v0.2.16"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "brentp",
+          "type": "User"
+        },
+        "date_created": "2022-01-11T09:57:25Z",
+        "date_published": "2022-01-11T10:05:07Z",
+        "description": "this is a minor release that fixes problems with previous binary.\r\n\r\n\r\n## Installation\r\n\r\ngrab the [static binary](https://github.com/brentp/somalier/releases/download/v0.2.15/somalier) , or use docker via `brentp/somalier:v0.2.15`\r\n\r\n\r\n# sites files (unchanged from previous releases)\r\n\r\nThese sites files are build-specific, but as of this release, once the sites are extracted, the resulting somalier files can be used to compare samples even across genome builds.\r\n\r\n[sites.hg19.vcf.gz](https://github.com/brentp/somalier/files/3412453/sites.hg19.vcf.gz)\r\n[sites.hg38.nochr.vcf.gz](https://github.com/brentp/somalier/files/3412454/sites.hg38.nochr.vcf.gz)\r\n[sites.GRCh37.vcf.gz](https://github.com/brentp/somalier/files/3412455/sites.GRCh37.vcf.gz)\r\n[sites.hg38.vcf.gz](https://github.com/brentp/somalier/files/3412456/sites.hg38.vcf.gz)\r\n\r\n[sites.hg38.rna.vcf.gz only includes sites likely to be expressed in GTeX](https://github.com/brentp/somalier/files/4566475/sites.hg38.rna.vcf.gz)\r\n\r\n",
+        "html_url": "https://github.com/brentp/somalier/releases/tag/v0.2.15",
+        "name": "minor find-sites fix",
+        "release_id": 56810947,
+        "tag": "v0.2.15",
+        "tarball_url": "https://api.github.com/repos/brentp/somalier/tarball/v0.2.15",
+        "type": "Release",
+        "url": "https://api.github.com/repos/brentp/somalier/releases/56810947",
+        "value": "https://api.github.com/repos/brentp/somalier/releases/56810947",
+        "zipball_url": "https://api.github.com/repos/brentp/somalier/zipball/v0.2.15"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "brentp",
+          "type": "User"
+        },
+        "date_created": "2022-01-09T13:54:49Z",
+        "date_published": "2022-01-09T14:23:56Z",
+        "description": "this is a minor release. with small usability improvements. see below for details:\r\n\r\n## changes\r\n\r\n+ minor fixes to find-sites\r\n+ allow setting env variable `SOMALIER_REPORT_ALL_PAIRS` to force reporting of all sample-pairs (#76)\r\n+ improve readme (via @zztin)\r\n\r\n\r\n\r\n## Installation\r\n\r\ngrab the [static binary](https://github.com/brentp/somalier/releases/download/v0.2.14/somalier) , or use docker via `brentp/somalier:v0.2.14`\r\n\r\n\r\n# sites files (unchanged from previous releases)\r\n\r\nThese sites files are build-specific, but as of this release, once the sites are extracted, the resulting somalier files can be used to compare samples even across genome builds.\r\n\r\n[sites.hg19.vcf.gz](https://github.com/brentp/somalier/files/3412453/sites.hg19.vcf.gz)\r\n[sites.hg38.nochr.vcf.gz](https://github.com/brentp/somalier/files/3412454/sites.hg38.nochr.vcf.gz)\r\n[sites.GRCh37.vcf.gz](https://github.com/brentp/somalier/files/3412455/sites.GRCh37.vcf.gz)\r\n[sites.hg38.vcf.gz](https://github.com/brentp/somalier/files/3412456/sites.hg38.vcf.gz)\r\n\r\n[sites.hg38.rna.vcf.gz only includes sites likely to be expressed in GTeX](https://github.com/brentp/somalier/files/4566475/sites.hg38.rna.vcf.gz)\r\n\r\n",
+        "html_url": "https://github.com/brentp/somalier/releases/tag/v0.2.14",
+        "release_id": 56689915,
+        "tag": "v0.2.14",
+        "tarball_url": "https://api.github.com/repos/brentp/somalier/tarball/v0.2.14",
+        "type": "Release",
+        "url": "https://api.github.com/repos/brentp/somalier/releases/56689915",
+        "value": "https://api.github.com/repos/brentp/somalier/releases/56689915",
+        "zipball_url": "https://api.github.com/repos/brentp/somalier/zipball/v0.2.14"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "brentp",
+          "type": "User"
+        },
+        "date_created": "2021-04-07T14:37:16Z",
+        "date_published": "2021-04-26T19:17:37Z",
+        "description": "\r\nv0.2.13\r\n=======\r\n+ add \"Heterozygosity rate\" as a per-sample metric to the html output. (Thanks Irenaeus and Kelly for the suggestion)\r\n+ fix inference for some cases. obvious parent-child pairs were sometimes missed.\r\n\r\n\r\n## Installation\r\n\r\ngrab the [static binary](https://github.com/brentp/somalier/releases/download/v0.2.13/somalier) , or use docker via `brentp/somalier:v0.2.13`\r\n\r\n\r\n# sites files (unchanged from previous releases)\r\n\r\nThese sites files are build-specific, but as of this release, once the sites are extracted, the resulting somalier files can be used to compare samples even across genome builds.\r\n\r\n[sites.hg19.vcf.gz](https://github.com/brentp/somalier/files/3412453/sites.hg19.vcf.gz)\r\n[sites.hg38.nochr.vcf.gz](https://github.com/brentp/somalier/files/3412454/sites.hg38.nochr.vcf.gz)\r\n[sites.GRCh37.vcf.gz](https://github.com/brentp/somalier/files/3412455/sites.GRCh37.vcf.gz)\r\n[sites.hg38.vcf.gz](https://github.com/brentp/somalier/files/3412456/sites.hg38.vcf.gz)\r\n\r\n[sites.hg38.rna.vcf.gz only includes sites likely to be expressed in GTeX](https://github.com/brentp/somalier/files/4566475/sites.hg38.rna.vcf.gz)\r\n\r\n",
+        "html_url": "https://github.com/brentp/somalier/releases/tag/v0.2.13",
+        "name": "trio inference fix",
+        "release_id": 42028594,
+        "tag": "v0.2.13",
+        "tarball_url": "https://api.github.com/repos/brentp/somalier/tarball/v0.2.13",
+        "type": "Release",
+        "url": "https://api.github.com/repos/brentp/somalier/releases/42028594",
+        "value": "https://api.github.com/repos/brentp/somalier/releases/42028594",
+        "zipball_url": "https://api.github.com/repos/brentp/somalier/zipball/v0.2.13"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "brentp",
+          "type": "User"
+        },
+        "date_created": "2020-09-11T16:01:25Z",
+        "date_published": "2020-09-11T16:20:31Z",
+        "description": "v0.2.12\r\n=======\r\n+ add checkbox to HTML to scale IBS0, IBS2, etc by number of sites shared by the samples. this almost always\r\n  results in a scaling that is better across (pairs of) samples.\r\n+ ancestry: allow globs for ancestry files (#59)\r\n\r\n\r\n\r\n## Installation\r\n\r\ngrab the [static binary](https://github.com/brentp/somalier/releases/download/v0.2.12/somalier) , or use docker via `brentp/somalier:v0.2.12`\r\n\r\n\r\n# sites files (unchanged from previous releases)\r\n\r\nThese sites files are build-specific, but as of this release, once the sites are extracted, the resulting somalier files can be used to compare samples even across genome builds.\r\n\r\n[sites.hg19.vcf.gz](https://github.com/brentp/somalier/files/3412453/sites.hg19.vcf.gz)\r\n[sites.hg38.nochr.vcf.gz](https://github.com/brentp/somalier/files/3412454/sites.hg38.nochr.vcf.gz)\r\n[sites.GRCh37.vcf.gz](https://github.com/brentp/somalier/files/3412455/sites.GRCh37.vcf.gz)\r\n[sites.hg38.vcf.gz](https://github.com/brentp/somalier/files/3412456/sites.hg38.vcf.gz)\r\n\r\n[sites.hg38.rna.vcf.gz only includes sites likely to be expressed in GTeX](https://github.com/brentp/somalier/files/4566475/sites.hg38.rna.vcf.gz)\r\n\r\n",
+        "html_url": "https://github.com/brentp/somalier/releases/tag/v0.2.12",
+        "name": "scaling IBS",
+        "release_id": 31138484,
+        "tag": "v0.2.12",
+        "tarball_url": "https://api.github.com/repos/brentp/somalier/tarball/v0.2.12",
+        "type": "Release",
+        "url": "https://api.github.com/repos/brentp/somalier/releases/31138484",
+        "value": "https://api.github.com/repos/brentp/somalier/releases/31138484",
+        "zipball_url": "https://api.github.com/repos/brentp/somalier/zipball/v0.2.12"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "brentp",
+          "type": "User"
+        },
+        "date_created": "2020-07-02T14:42:28Z",
+        "date_published": "2020-07-02T14:56:45Z",
+        "description": "This release adds small changes, except that the relatedness calculation has been corrected. It worked for most cases except when the number of sites was extremely low. It is now more accurate in more cases. This was reported by @fgvieira . See below for full release details.\r\n\r\nv0.2.11\r\n=======\r\n+ more informative error message on bad sample name (#53)\r\n+ allow setting SOMALIER_AB_HOM_CUTOFF to change which calls are considered hom-ref (#56)\r\n+ adjust (fix) relatedness calculation which was off when the number of shared sites was low (#55).\r\n  many thanks to @fgvieira who found and diagnosed this problem. This change adds a `hets_ab` column\r\n  which is the count of times sample `a` was het and `b` was **not** unknown + the times sample `b` was het\r\n  and `a` was not unknown; this is mostly not needed except to (re) calculate relatedness but is reported\r\n  in the text output for completeness.\r\n\r\n\r\n## Installation\r\n\r\ngrab the [static binary](https://github.com/brentp/somalier/releases/download/v0.2.11/somalier) , or use docker via `brentp/somalier:v0.2.11`\r\n\r\n\r\n# sites files (unchanged from previous releases)\r\n\r\nThese sites files are build-specific, but as of this release, once the sites are extracted, the resulting somalier files can be used to compare samples even across genome builds.\r\n\r\n[sites.hg19.vcf.gz](https://github.com/brentp/somalier/files/3412453/sites.hg19.vcf.gz)\r\n[sites.hg38.nochr.vcf.gz](https://github.com/brentp/somalier/files/3412454/sites.hg38.nochr.vcf.gz)\r\n[sites.GRCh37.vcf.gz](https://github.com/brentp/somalier/files/3412455/sites.GRCh37.vcf.gz)\r\n[sites.hg38.vcf.gz](https://github.com/brentp/somalier/files/3412456/sites.hg38.vcf.gz)\r\n\r\n[sites.hg38.rna.vcf.gz only includes sites likely to be expressed in GTeX](https://github.com/brentp/somalier/files/4566475/sites.hg38.rna.vcf.gz)\r\n\r\n",
+        "html_url": "https://github.com/brentp/somalier/releases/tag/v0.2.11",
+        "name": "v0.2.11",
+        "release_id": 28163152,
+        "tag": "v0.2.11",
+        "tarball_url": "https://api.github.com/repos/brentp/somalier/tarball/v0.2.11",
+        "type": "Release",
+        "url": "https://api.github.com/repos/brentp/somalier/releases/28163152",
+        "value": "https://api.github.com/repos/brentp/somalier/releases/28163152",
+        "zipball_url": "https://api.github.com/repos/brentp/somalier/zipball/v0.2.11"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "brentp",
+          "type": "User"
+        },
+        "date_created": "2020-05-01T22:09:41Z",
+        "date_published": "2020-05-01T22:24:37Z",
+        "description": "v0.2.10\r\n=======\r\n+ added a new sites file that includes sites likely to be expressed in GTeX to improve kinship estimation in RNA-Seq data (see below for link to new sites file).\r\n+ fix extra output column in pairs.tsv (#47)\r\n+ change output file name of ancestry to include \"somalier\"\r\n+ fix for gvcf with empty alts (#46)\r\n+ add include regions and exclude sites to find-sites\r\n+ add --min-ab option to somalier relate to limit het sites to `min_ab..(1-min_ab)`. default is 0.3\r\n+ html output for sample plot defaults to number of het sites on X (was hom-alt)\r\n+ better estimates in `somalier ancestry` when incoming samples are different ancestry from training (thousand genomes samples)\r\n\r\nexample output is now at: https://brentp.github.io/somalier/ex.html\r\nand: https://brentp.github.io/somalier/ex.somalier-ancestry.html\r\n\r\n## Installation\r\n\r\ngrab the [static binary](https://github.com/brentp/somalier/releases/download/v0.2.10/somalier) , or use docker via `brentp/somalier:v0.2.10`\r\n\r\n\r\n# sites files (unchanged from previous releases)\r\n\r\nThese sites files are build-specific, but as of this release, once the sites are extracted, the resulting somalier files can be used to compare samples even across genome builds.\r\n\r\n[sites.hg19.vcf.gz](https://github.com/brentp/somalier/files/3412453/sites.hg19.vcf.gz)\r\n[sites.hg38.nochr.vcf.gz](https://github.com/brentp/somalier/files/3412454/sites.hg38.nochr.vcf.gz)\r\n[sites.GRCh37.vcf.gz](https://github.com/brentp/somalier/files/3412455/sites.GRCh37.vcf.gz)\r\n[sites.hg38.vcf.gz](https://github.com/brentp/somalier/files/3412456/sites.hg38.vcf.gz)\r\n\r\n[sites.hg38.rna.vcf.gz only includes sites likely to be expressed in GTeX](https://github.com/brentp/somalier/files/4566475/sites.hg38.rna.vcf.gz)\r\n\r\n",
+        "html_url": "https://github.com/brentp/somalier/releases/tag/v0.2.10",
+        "name": "sites file optimized for RNA-Seq, bug-fixes and ancestry improvements",
+        "release_id": 26096899,
+        "tag": "v0.2.10",
+        "tarball_url": "https://api.github.com/repos/brentp/somalier/tarball/v0.2.10",
+        "type": "Release",
+        "url": "https://api.github.com/repos/brentp/somalier/releases/26096899",
+        "value": "https://api.github.com/repos/brentp/somalier/releases/26096899",
+        "zipball_url": "https://api.github.com/repos/brentp/somalier/zipball/v0.2.10"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "brentp",
+          "type": "User"
+        },
+        "date_created": "2020-03-05T18:52:00Z",
+        "date_published": "2020-03-05T18:56:23Z",
+        "description": "v0.2.9\r\n======\r\n+ support multi-sample GVCF and fix some GVCF cases (thanks @ameynert for implementing)\r\n+ also fixes some edge-cases with GVCFs\r\n\r\n## Installation\r\n\r\ngrab the [static binary](https://github.com/brentp/somalier/releases/download/v0.2.9/somalier) , or use docker via `brentp/somalier:v0.2.9`\r\n\r\n\r\n# sites files (unchanged from previous releases)\r\n\r\nThese sites files are build-specific, but as of this release, once the sites are extracted, the resulting somalier files can be used to compare samples even across genome builds.\r\n\r\n[sites.hg19.vcf.gz](https://github.com/brentp/somalier/files/3412453/sites.hg19.vcf.gz)\r\n[sites.hg38.nochr.vcf.gz](https://github.com/brentp/somalier/files/3412454/sites.hg38.nochr.vcf.gz)\r\n[sites.GRCh37.vcf.gz](https://github.com/brentp/somalier/files/3412455/sites.GRCh37.vcf.gz)\r\n[sites.hg38.vcf.gz](https://github.com/brentp/somalier/files/3412456/sites.hg38.vcf.gz)",
+        "html_url": "https://github.com/brentp/somalier/releases/tag/v0.2.9",
+        "name": "multi-sample GVCFs",
+        "release_id": 24264419,
+        "tag": "v0.2.9",
+        "tarball_url": "https://api.github.com/repos/brentp/somalier/tarball/v0.2.9",
+        "type": "Release",
+        "url": "https://api.github.com/repos/brentp/somalier/releases/24264419",
+        "value": "https://api.github.com/repos/brentp/somalier/releases/24264419",
+        "zipball_url": "https://api.github.com/repos/brentp/somalier/zipball/v0.2.9"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "brentp",
+          "type": "User"
+        },
+        "date_created": "2020-02-24T17:31:26Z",
+        "date_published": "2020-02-24T17:39:10Z",
+        "description": "v0.2.8\r\n======\r\n+ html output has a list of pre-sets to auto-select informative X, Y axes for the sample plot\r\n+ add --infer flag to somalier relate to allow inferring relatedness.\r\n  this accompanies a change in the .samples.tsv output so that it can be used as a pedigree file\r\n+ add --sample-prefix option to extract and corresponding (multi-)option to relate. So, given\r\n  a cohort with DNA and RNA where samples have identical IDs (SM tags) in the DNA and RNA, can use\r\n  somalier as:\r\n  ```\r\n  somalier extract -d DNA --sample-prefix DNA- ...\r\n  somalier extract -d RNA --sample-prefix RNA- ...\r\n\r\n  somalier relate --sample-prefix DNA- --sample-prefix RNA- DNA/*.somalier RNA/*.somalier ...\r\n  ```\r\n\r\n  and it will show the samples that have\r\n  matching IDs after stripping the prefixes as \"identical\".\r\n\r\n## Installation\r\n\r\ngrab the [static binary](https://github.com/brentp/somalier/releases/download/v0.2.8/somalier) , or use docker via `brentp/somalier:v0.2.8`\r\n\r\n\r\n# sites files (unchanged from previous releases)\r\n\r\nThese sites files are build-specific, but as of this release, once the sites are extracted, the resulting somalier files can be used to compare samples even across genome builds.\r\n\r\n[sites.hg19.vcf.gz](https://github.com/brentp/somalier/files/3412453/sites.hg19.vcf.gz)\r\n[sites.hg38.nochr.vcf.gz](https://github.com/brentp/somalier/files/3412454/sites.hg38.nochr.vcf.gz)\r\n[sites.GRCh37.vcf.gz](https://github.com/brentp/somalier/files/3412455/sites.GRCh37.vcf.gz)\r\n[sites.hg38.vcf.gz](https://github.com/brentp/somalier/files/3412456/sites.hg38.vcf.gz)",
+        "html_url": "https://github.com/brentp/somalier/releases/tag/v0.2.8",
+        "name": "pedigree inference and better handling of identical samples",
+        "release_id": 23938543,
+        "tag": "v0.2.8",
+        "tarball_url": "https://api.github.com/repos/brentp/somalier/tarball/v0.2.8",
+        "type": "Release",
+        "url": "https://api.github.com/repos/brentp/somalier/releases/23938543",
+        "value": "https://api.github.com/repos/brentp/somalier/releases/23938543",
+        "zipball_url": "https://api.github.com/repos/brentp/somalier/zipball/v0.2.8"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "brentp",
+          "type": "User"
+        },
+        "date_created": "2019-11-27T16:29:49Z",
+        "date_published": "2019-11-27T16:49:11Z",
+        "description": "this release adds an initial implementation of an `ancestry` sub-command that can use a set of labelled samples (with extracted somalier files) to train a small neural network which is then used to predict the ancestry of incoming samples.\r\nthe implementation is incomplete, but works for well-behaved data. Here is an example:\r\nhttp://home.chpc.utah.edu/~u6000771/somalier/somalier-ancestry.n.html\r\n\r\nThis is possible thanks to a very fast randmized PCA implementation (along with a neural network framework) from @mratsim in [Arraymancer](https://github.com/mratsim/arraymancer).\r\n\r\n There are also improvements for huge cohorts. See below for full change-set.\r\n\r\n## Installation\r\n\r\ngrab the static binary below, or use docker via `brentp/somalier:v0.2.7`\r\n\r\nv0.2.7\r\n======\r\n+ new subcommand `ancestry` to predict ancestry using a simple neural network on the somalier\r\n  sketches. creates an interactive html output and a text file\r\n+ fix for \"Argument list too long\" on huge cohorts (#37)\r\n+ sub-sample .pairs.tsv output for huge cohorts -- only for unrelated samples.\r\n+ better sub-sampling of html output\r\n\r\n# sites files (unchanged from previous releases)\r\n\r\nThese sites files are build-specific, but as of this release, once the sites are extracted, the resulting somalier files can be used to compare samples even across genome builds.\r\n\r\n[sites.hg19.vcf.gz](https://github.com/brentp/somalier/files/3412453/sites.hg19.vcf.gz)\r\n[sites.hg38.nochr.vcf.gz](https://github.com/brentp/somalier/files/3412454/sites.hg38.nochr.vcf.gz)\r\n[sites.GRCh37.vcf.gz](https://github.com/brentp/somalier/files/3412455/sites.GRCh37.vcf.gz)\r\n[sites.hg38.vcf.gz](https://github.com/brentp/somalier/files/3412456/sites.hg38.vcf.gz)\r\n",
+        "html_url": "https://github.com/brentp/somalier/releases/tag/v0.2.7",
+        "name": "ancestry",
+        "release_id": 21807426,
+        "tag": "v0.2.7",
+        "tarball_url": "https://api.github.com/repos/brentp/somalier/tarball/v0.2.7",
+        "type": "Release",
+        "url": "https://api.github.com/repos/brentp/somalier/releases/21807426",
+        "value": "https://api.github.com/repos/brentp/somalier/releases/21807426",
+        "zipball_url": "https://api.github.com/repos/brentp/somalier/zipball/v0.2.7"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "brentp",
+          "type": "User"
+        },
+        "date_created": "2019-10-29T20:15:50Z",
+        "date_published": "2019-10-29T20:19:45Z",
+        "description": "somalier was fast enough to use on large >5,000 sample cohorts, but the html output was not useful.\r\nthis fixes that by sub-sampling pairs of samples that are expected to be unrelated and also appear to be unrelated by the genotype information.\r\n\r\nv0.2.6\r\n======\r\n+ for large cohorts (>1K samples) the html output is now usable.\r\n  it randomly subsets samples that should be and are unrelated.\r\n+ better error messages for bad input\r\n+ inspect environment variable: `SOMALIER_ALLOWED_FILTERS` so that users can\r\n  give a comma-delimited list of FILTERs that should be allowed (by default only PASS and RefCall\r\n  variants are considered. This is useful for some GVCF formats. \r\n\r\n# sites files\r\n\r\nThese sites files are build-specific, but as of this release, once the sites are extracted, the resulting somalier files can be used to compare samples even across genome builds.\r\n\r\n[sites.hg19.vcf.gz](https://github.com/brentp/somalier/files/3412453/sites.hg19.vcf.gz)\r\n[sites.hg38.nochr.vcf.gz](https://github.com/brentp/somalier/files/3412454/sites.hg38.nochr.vcf.gz)\r\n[sites.GRCh37.vcf.gz](https://github.com/brentp/somalier/files/3412455/sites.GRCh37.vcf.gz)\r\n[sites.hg38.vcf.gz](https://github.com/brentp/somalier/files/3412456/sites.hg38.vcf.gz)\r\n",
+        "html_url": "https://github.com/brentp/somalier/releases/tag/v0.2.6",
+        "name": "html for huge cohorts",
+        "release_id": 21067137,
+        "tag": "v0.2.6",
+        "tarball_url": "https://api.github.com/repos/brentp/somalier/tarball/v0.2.6",
+        "type": "Release",
+        "url": "https://api.github.com/repos/brentp/somalier/releases/21067137",
+        "value": "https://api.github.com/repos/brentp/somalier/releases/21067137",
+        "zipball_url": "https://api.github.com/repos/brentp/somalier/zipball/v0.2.6"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "brentp",
+          "type": "User"
+        },
+        "date_created": "2019-10-24T13:21:50Z",
+        "date_published": "2019-10-24T13:44:16Z",
+        "description": "get started with a binary below, or with docker:brentp/somalier:v0.2.5\r\n\r\n\r\nv0.2.5\r\n======\r\n+ handle more types of GVCF (#27, thanks @holtjma)\r\n+ handle VCFs without depth (AD) information. this enables extracting VCFs with only genotypes such as\r\n  files converted from array information (#31, thanks @asazonov)\r\n\r\n\r\n# sites files\r\n\r\nThese sites files are build-specific, but as of this release, once the sites are extracted, the resulting somalier files can be used to compare samples even across genome builds.\r\n\r\n[sites.hg19.vcf.gz](https://github.com/brentp/somalier/files/3412453/sites.hg19.vcf.gz)\r\n[sites.hg38.nochr.vcf.gz](https://github.com/brentp/somalier/files/3412454/sites.hg38.nochr.vcf.gz)\r\n[sites.GRCh37.vcf.gz](https://github.com/brentp/somalier/files/3412455/sites.GRCh37.vcf.gz)\r\n[sites.hg38.vcf.gz](https://github.com/brentp/somalier/files/3412456/sites.hg38.vcf.gz)",
+        "html_url": "https://github.com/brentp/somalier/releases/tag/v0.2.5",
+        "name": "VCF+GVCF edge-cases",
+        "release_id": 20948981,
+        "tag": "v0.2.5",
+        "tarball_url": "https://api.github.com/repos/brentp/somalier/tarball/v0.2.5",
+        "type": "Release",
+        "url": "https://api.github.com/repos/brentp/somalier/releases/20948981",
+        "value": "https://api.github.com/repos/brentp/somalier/releases/20948981",
+        "zipball_url": "https://api.github.com/repos/brentp/somalier/zipball/v0.2.5"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "brentp",
+          "type": "User"
+        },
+        "date_created": "2019-10-21T18:21:36Z",
+        "date_published": "2019-10-21T19:02:05Z",
+        "description": "get started with a binary below, or with docker:brentp/somalier:v0.2.4\r\n\r\nv0.2.4\r\n=====\r\n+ unify genotyping between all code-paths (thanks Filipe)\r\n+ if both groups and pedigree information are specified, they correctly share information (#26)\r\n+ relax allele balance to hom-ref is < 0.04 and hom-alt > 0.96 (was 0.02 and 0.98 respectively).\r\n+ support for GVCF (#27)\r\n\r\n\r\n# sites files\r\n\r\nThese sites files are build-specific, but as of this release, once the sites are extracted, the resulting somalier files can be used to compare samples even across genome builds.\r\n\r\n[sites.hg19.vcf.gz](https://github.com/brentp/somalier/files/3412453/sites.hg19.vcf.gz)\r\n[sites.hg38.nochr.vcf.gz](https://github.com/brentp/somalier/files/3412454/sites.hg38.nochr.vcf.gz)\r\n[sites.GRCh37.vcf.gz](https://github.com/brentp/somalier/files/3412455/sites.GRCh37.vcf.gz)\r\n[sites.hg38.vcf.gz](https://github.com/brentp/somalier/files/3412456/sites.hg38.vcf.gz)\r\n\r\n",
+        "html_url": "https://github.com/brentp/somalier/releases/tag/v0.2.4",
+        "name": "GVCF support and parameter changes",
+        "release_id": 20861146,
+        "tag": "v0.2.4",
+        "tarball_url": "https://api.github.com/repos/brentp/somalier/tarball/v0.2.4",
+        "type": "Release",
+        "url": "https://api.github.com/repos/brentp/somalier/releases/20861146",
+        "value": "https://api.github.com/repos/brentp/somalier/releases/20861146",
+        "zipball_url": "https://api.github.com/repos/brentp/somalier/zipball/v0.2.4"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "brentp",
+          "type": "User"
+        },
+        "date_created": "2019-10-10T17:59:03Z",
+        "date_published": "2019-10-10T18:05:01Z",
+        "description": "The main change in this release is the use of bitvectors to calculate all-vs-all relatedness. This speeds up the relatedness step by about 100X such that we can calculate relatedness of all 4,825,171 possible pairwise combinations of the 2,504 thousand genomes samples in about 20 seconds.\r\nIt also fixes a bug in the a-allele/b-allele designation for VCF that caused problems when comparing samples extracted from VCF/BCF to those from CRAM/BAM. \r\n\r\nThe readme now includes instructions on how to estimate ancestry from somalier sketches.\r\n\r\nv0.2.3\r\n======\r\n+ calculate relatedness correctly for samples with parent-ids specified\r\n  when the parents are not actually in the pedigree file.\r\n+ use bit-vectors to calculate relatedness. this gives up to a 250X speedup.\r\n  with this code, I can now evaluate relatedness for 3756 in under 30 seconds on my laptop.\r\n+ better scaling of X and Y depth\r\n+ use final RG as the sample id in relate\r\n+ output expected relatedness in .pairs.tsv file\r\n+ fix ref/alt (a/b-allele ordering for VCF) this was a bug that caused problems when comparing\r\n  samples extracted from VCF files to other samples extracted from BAM/CRAM files. Thanks very\r\n  much to Filipe and Sergio for finding this issue and providing several test-cases. (if you\r\n  have previously downloaded the thousand genomes files from zenodo, please update to the latest).\r\n\r\n\r\n# sites files\r\n\r\nThese sites files are build-specific, but as of this release, once the sites are extracted, the resulting somalier files can be used to compare samples even across genome builds.\r\n\r\n[sites.hg19.vcf.gz](https://github.com/brentp/somalier/files/3412453/sites.hg19.vcf.gz)\r\n[sites.hg38.nochr.vcf.gz](https://github.com/brentp/somalier/files/3412454/sites.hg38.nochr.vcf.gz)\r\n[sites.GRCh37.vcf.gz](https://github.com/brentp/somalier/files/3412455/sites.GRCh37.vcf.gz)\r\n[sites.hg38.vcf.gz](https://github.com/brentp/somalier/files/3412456/sites.hg38.vcf.gz)\r\n\r\n",
+        "html_url": "https://github.com/brentp/somalier/releases/tag/v0.2.3",
+        "name": "major performance improvements, bugfixes",
+        "release_id": 20619433,
+        "tag": "v0.2.3",
+        "tarball_url": "https://api.github.com/repos/brentp/somalier/tarball/v0.2.3",
+        "type": "Release",
+        "url": "https://api.github.com/repos/brentp/somalier/releases/20619433",
+        "value": "https://api.github.com/repos/brentp/somalier/releases/20619433",
+        "zipball_url": "https://api.github.com/repos/brentp/somalier/zipball/v0.2.3"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "brentp",
+          "type": "User"
+        },
+        "date_created": "2019-07-20T02:14:00Z",
+        "date_published": "2019-07-20T02:25:27Z",
+        "description": "v0.2.2\r\n======\r\n+ add a default output directory. previously if not outputdir was specified, it would try to write to / and give a non-informative error.\r\n+ static build with libcurl. the static binary now supports bams/vcfs/crams over https/s3 etc.\r\n\r\n## Install\r\n\r\n+ [somalier_static](https://github.com/brentp/somalier/releases/download/v0.2.1/somalier_static) is a completely static binary and the recommended way to run somalier; just wget, chmod+x (get a sites file) and go.\r\n\r\n# sites files\r\n\r\nThese sites files are build-specific, but as of this release, once the sites are extracted, the resulting somalier files can be used to compare samples even across genome builds.\r\n\r\n[sites.hg19.vcf.gz](https://github.com/brentp/somalier/files/3412453/sites.hg19.vcf.gz)\r\n[sites.hg38.nochr.vcf.gz](https://github.com/brentp/somalier/files/3412454/sites.hg38.nochr.vcf.gz)\r\n[sites.GRCh37.vcf.gz](https://github.com/brentp/somalier/files/3412455/sites.GRCh37.vcf.gz)\r\n[sites.hg38.vcf.gz](https://github.com/brentp/somalier/files/3412456/sites.hg38.vcf.gz)\r\n\r\n",
+        "html_url": "https://github.com/brentp/somalier/releases/tag/v0.2.2",
+        "name": "static build with curl. default output dir",
+        "release_id": 18746416,
+        "tag": "v0.2.2",
+        "tarball_url": "https://api.github.com/repos/brentp/somalier/tarball/v0.2.2",
+        "type": "Release",
+        "url": "https://api.github.com/repos/brentp/somalier/releases/18746416",
+        "value": "https://api.github.com/repos/brentp/somalier/releases/18746416",
+        "zipball_url": "https://api.github.com/repos/brentp/somalier/zipball/v0.2.2"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "brentp",
+          "type": "User"
+        },
+        "date_created": "2019-07-19T19:12:33Z",
+        "date_published": "2019-07-19T19:25:07Z",
+        "description": "v0.2.1 \r\n======\r\n+ fix hover in html\r\n+ add --unknown flag for `somalier relate` to set unknown genotypes to hom-ref (useful when merging single-sample VCFs).\r\n+ change sites to be alphabetical by allele so that they are the same between genome builds\r\n+ add version to .somalier files created with extract -- these will not be compatible with those made with v0.2.0. I don't\r\n  forsee a backwards incompatible change like this one in the near future.\r\n+ sites files for hg38 and GRCh37 are compatible. That is, we can extract sites from bams or vcfs from samples aligned to GRCh37\r\n  reference and accurately calculate relatedness on files extracted from samples aligned to hg38.\r\n+ better HTML performance for large numbers of samples by sub-sampling individiuals that are expected to be unrelated and that \r\n  have a calculated relatedness < 0.09.\r\n+ add a `depthview` sub-command to plot the depth of each sample along each chromosome.\r\n+ much nicer html and several fixes thanks to Joe Brown\r\n\r\n\r\n\r\n## Install\r\n\r\nThis release comes with 2 linux binaries:\r\n+ [somalier_static](https://github.com/brentp/somalier/releases/download/v0.2.1/somalier_static) is a completely static binary and the recommended way to run somalier; just wget, chmod+x (get a sites file) and go.\r\n+ [somalier_shared](https://github.com/brentp/somalier/releases/download/v0.2.1/somalier_shared) requires htslib (and libhts.so). use this binary if you need to access S3 or https files.\r\n\r\n# sites files\r\n\r\nThese sites files are build-specific, but as of this release, once the sites are extracted, the resulting somalier files can be used to compare samples even across genome builds.\r\n\r\n[sites.hg19.vcf.gz](https://github.com/brentp/somalier/files/3412453/sites.hg19.vcf.gz)\r\n[sites.hg38.nochr.vcf.gz](https://github.com/brentp/somalier/files/3412454/sites.hg38.nochr.vcf.gz)\r\n[sites.GRCh37.vcf.gz](https://github.com/brentp/somalier/files/3412455/sites.GRCh37.vcf.gz)\r\n[sites.hg38.vcf.gz](https://github.com/brentp/somalier/files/3412456/sites.hg38.vcf.gz)\r\n\r\n\r\n\r\n)\r\n",
+        "html_url": "https://github.com/brentp/somalier/releases/tag/v0.2.1",
+        "release_id": 18741506,
+        "tag": "v0.2.1",
+        "tarball_url": "https://api.github.com/repos/brentp/somalier/tarball/v0.2.1",
+        "type": "Release",
+        "url": "https://api.github.com/repos/brentp/somalier/releases/18741506",
+        "value": "https://api.github.com/repos/brentp/somalier/releases/18741506",
+        "zipball_url": "https://api.github.com/repos/brentp/somalier/zipball/v0.2.1"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "brentp",
+          "type": "User"
+        },
+        "date_created": "2019-05-29T20:07:51Z",
+        "date_published": "2019-05-29T20:14:47Z",
+        "description": "v0.2.0\r\n======\r\nThis was a large re-write of `somalier`. The command-line usage is backwards incompatible (but\r\nshould not change moving forward). There is now a per-sample extract step:\r\n```\r\nsomalier extract -d extracted/ -s $sites_vcf -f $fasta $sample.cram\r\n```\r\n\r\nfollowed by a relate step:\r\n\r\n```\r\nsomalier relate --ped $ped extracted/*.somalier\r\n```\r\n\r\nThis enables parallelization by sample across nodes and the resulting, extracted, binary \"somalier\"\r\nfiles are only ~220KB per sample so reading them is nearly instant and the `relate` step\r\nruns in **10 seconds for my 603-sample test-case** which makes adjusting pedigree files or removing samples\r\nand re-running a much faster process.\r\nThis means we can add a single (n+1) sample and once it's `extract`ed, we can compare it to an entire cohort in a few seconds.\r\n\r\nsomalier extract can also take a (multi-sample) VCF and create an idential \"somalier\" file\r\nfor cases when a VCF is available. \r\n\r\nThe sites files (linked below) are also greatly improved (with fewer sites, better accuracy) in this release)\r\nFor example, here is the output from **previous version**:\r\n![somalier-before](https://user-images.githubusercontent.com/1739/58638145-4e8a0080-82b1-11e9-9df2-49a15466f70d.png)\r\ncompared to this version:\r\n![somalier-after](https://user-images.githubusercontent.com/1739/58638163-5ba6ef80-82b1-11e9-9abe-94bea9dd1ac6.png)\r\n\r\nNote how on the bottom figure for this version, like colors (relationships indicated from a pedigree file) cluster more tightly than in the previous version.\r\n\r\nThis release also reports values for X and Y chromosomes which help to evaluate observed vs expected sex, which can help resolve sample swaps.\r\n\r\n## Install\r\n\r\nThis release comes with 2 linux binaries:\r\n+ [somalier_static](https://github.com/brentp/somalier/releases/download/v0.1.5/somalier_static) is a completely static binary and the recommended way to run somalier; just wget, chmod+x (get a sites file) and go.\r\n+ [somalier_shared](https://github.com/brentp/somalier/releases/download/v0.1.5/somalier_shared) requires htslib (and libhts.so). use this binary if you need to access S3 or https files.\r\n\r\n# sites files\r\n\r\n[sites.hg38.vcf.gz](https://github.com/brentp/somalier/files/3234292/sites.hg38.vcf.gz)\r\n[sites.GRCh37.vcf.gz](https://github.com/brentp/somalier/files/3234293/sites.GRCh37.vcf.gz)\r\n\r\n",
+        "html_url": "https://github.com/brentp/somalier/releases/tag/v0.2.0",
+        "name": "major refactor for scalability",
+        "release_id": 17666280,
+        "tag": "v0.2.0",
+        "tarball_url": "https://api.github.com/repos/brentp/somalier/tarball/v0.2.0",
+        "type": "Release",
+        "url": "https://api.github.com/repos/brentp/somalier/releases/17666280",
+        "value": "https://api.github.com/repos/brentp/somalier/releases/17666280",
+        "zipball_url": "https://api.github.com/repos/brentp/somalier/zipball/v0.2.0"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "brentp",
+          "type": "User"
+        },
+        "date_created": "2019-03-28T02:11:26Z",
+        "date_published": "2019-04-19T20:36:48Z",
+        "description": "v0.1.5\r\n======\r\n+ add experimental contamination estimate. this simply prints to stderr the sample and\r\n  inferred source (another sample) of contamination along with the estimated level of \r\n  contamination and the number of sites used to estimate it.\r\n+ fix threading bug with large numbers of samples. \r\n+ more lenient ped file parsing (\"Female\" will be recognized in sex column and\r\n  \"Affected\" in phenotype column).\r\n+ the html output now allows selecting a single sample to be highlighted in the plot\r\n  this allows finding a sample of interest in a large cohort.\r\n+ the output now includes a new metric for proportion of sites with an allele balance\r\n  > 0.02 and < 0.2 or > 0.8 and < 0.98. this turns out to be a nice QC (high is bad)\r\n+ for low coverage or targetted sites, sometimes `nan` values would stop the entire \r\n  html page from working; this has been fixed.\r\n+ make sure all reported relationships are plotted in correct colors (#14)\r\n+ plotting fixes (#15)\r\n\r\n## Install\r\n\r\nThis release comes with 2 linux binaries:\r\n+ [somalier_static](https://github.com/brentp/somalier/releases/download/v0.1.5/somalier_static) is a completely static binary; just wget, chmod+x (get a sites file) and go.\r\n+ [somalier_shared](https://github.com/brentp/somalier/releases/download/v0.1.5/somalier_shared) requires htslib (and libhts.so). use this binary if you need to access S3 or https files.\r\n\r\n## Sites files\r\n\r\n### hg38:\r\n[sites.hg38.vcf.gz](https://github.com/brentp/somalier/files/2866407/sites.hg38.vcf.gz) \r\n[sites.chr.hg38.vcf.gz (for hg38 VCFs with \"chr\" prefix)](https://github.com/brentp/somalier/files/2866408/sites.chr.hg38.vcf.gz)\r\n\r\n## GRCh37\r\n\r\n [sites.vcf.gz](https://github.com/brentp/somalier/files/2774846/sites.vcf.gz)",
+        "html_url": "https://github.com/brentp/somalier/releases/tag/v0.1.5",
+        "release_id": 16875198,
+        "tag": "v0.1.5",
+        "tarball_url": "https://api.github.com/repos/brentp/somalier/tarball/v0.1.5",
+        "type": "Release",
+        "url": "https://api.github.com/repos/brentp/somalier/releases/16875198",
+        "value": "https://api.github.com/repos/brentp/somalier/releases/16875198",
+        "zipball_url": "https://api.github.com/repos/brentp/somalier/zipball/v0.1.5"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "brentp",
+          "type": "User"
+        },
+        "date_created": "2019-02-13T18:19:00Z",
+        "date_published": "2019-02-13T18:24:45Z",
+        "description": "\r\nv0.1.4\r\n======\r\n+ if a file ending with \".list\" is given as an argument (instead of .bam, .cram), it can contain\r\n  paths to the alignment files and optionally the indexes. e.g.\r\n```\r\nhttps://abc/path/to/aaa.bam https://abc/indexes/path/aaa.bam.bai\r\nhttps://abc/path/to/bbb.bam https://abc/indexes/path/bbb.bam.bai\r\n```\r\n  These can be space, comma, or tab-delimited.\r\n\r\nhere are the current best sites files for hg38:\r\n\r\n[sites.hg38.vcf.gz](https://github.com/brentp/somalier/files/2866407/sites.hg38.vcf.gz) \r\n[sites.chr.hg38.vcf.gz (for hg38 VCFs with \"chr\" prefix)](https://github.com/brentp/somalier/files/2866408/sites.chr.hg38.vcf.gz)\r\n\r\n",
+        "html_url": "https://github.com/brentp/somalier/releases/tag/v0.1.4",
+        "name": ".list to specify bam/cram and index paths.",
+        "release_id": 15541530,
+        "tag": "v0.1.4",
+        "tarball_url": "https://api.github.com/repos/brentp/somalier/tarball/v0.1.4",
+        "type": "Release",
+        "url": "https://api.github.com/repos/brentp/somalier/releases/15541530",
+        "value": "https://api.github.com/repos/brentp/somalier/releases/15541530",
+        "zipball_url": "https://api.github.com/repos/brentp/somalier/zipball/v0.1.4"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "brentp",
+          "type": "User"
+        },
+        "date_created": "2019-02-13T16:23:26Z",
+        "date_published": "2019-02-13T16:28:26Z",
+        "description": "v0.1.3\r\n======\r\n+ if a sample had > 1 allele that was neither REF nor ALT at a given site, it was assigned\r\n  an `unknown` genotype. This was too stringent for deep sequencing so it was changed to a\r\n  proportion (> 0.04 [or 1 in 25 alleles]) #7\r\n+ for samples with sparse coverage, e.g. from targeted sequencing projects, mean depth is\r\n  not very informative because it gets washed out by all the zero-depth sites. The new columns:\r\n  `gt_depth_mean`, `gt_depth_std`, gt_depth_skew` report the values for the depth at genotyped\r\n  sites--those meeting the depth requirement (default of 7).\r\n",
+        "html_url": "https://github.com/brentp/somalier/releases/tag/v0.1.3",
+        "name": "fixes for deep coverage and better QC metrics.",
+        "release_id": 15538868,
+        "tag": "v0.1.3",
+        "tarball_url": "https://api.github.com/repos/brentp/somalier/tarball/v0.1.3",
+        "type": "Release",
+        "url": "https://api.github.com/repos/brentp/somalier/releases/15538868",
+        "value": "https://api.github.com/repos/brentp/somalier/releases/15538868",
+        "zipball_url": "https://api.github.com/repos/brentp/somalier/zipball/v0.1.3"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "brentp",
+          "type": "User"
+        },
+        "date_created": "2019-02-06T16:24:45Z",
+        "date_published": "2019-02-07T19:11:55Z",
+        "description": "v0.1.2\r\n=====\r\n+ allow lower-case reference alleles in case of masked genomes (see #5)\r\n+ set relatedness values < -1.5 to -1.5 in the plot\r\n+ fix bug that affected relatedness calcs especially in RNA-Seq\r\n+ add more diagnostic values (allele-balance and number of non ref/alt bases)\r\n\r\nsee previous release for sites file. For hg38, it's possible to use: https://github.com/brentp/peddy/blob/master/peddy/GRCH38.sites\r\n(if your chromosomes have the 'chr' prefix, that must be added to this sites file).",
+        "html_url": "https://github.com/brentp/somalier/releases/tag/v0.1.2",
+        "name": "plot-aesthetics, fixes for RNA-Seq, more depth diagnostics",
+        "release_id": 15432169,
+        "tag": "v0.1.2",
+        "tarball_url": "https://api.github.com/repos/brentp/somalier/tarball/v0.1.2",
+        "type": "Release",
+        "url": "https://api.github.com/repos/brentp/somalier/releases/15432169",
+        "value": "https://api.github.com/repos/brentp/somalier/releases/15432169",
+        "zipball_url": "https://api.github.com/repos/brentp/somalier/zipball/v0.1.2"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "brentp",
+          "type": "User"
+        },
+        "date_created": "2019-01-26T18:12:39Z",
+        "date_published": "2019-01-26T18:14:57Z",
+        "description": "v0.1.1\r\n======\r\n+ fix bug in plot labels\r\n+ better inter-plot interaction in html\r\n\r\ncontinue to use [sites.vcf.gz](https://github.com/brentp/somalier/files/2774846/sites.vcf.gz) from previous release (GRCh37 only)",
+        "html_url": "https://github.com/brentp/somalier/releases/tag/v0.1.1",
+        "name": "bug-fixes and interaction in html output",
+        "release_id": 15198061,
+        "tag": "v0.1.1",
+        "tarball_url": "https://api.github.com/repos/brentp/somalier/tarball/v0.1.1",
+        "type": "Release",
+        "url": "https://api.github.com/repos/brentp/somalier/releases/15198061",
+        "value": "https://api.github.com/repos/brentp/somalier/releases/15198061",
+        "zipball_url": "https://api.github.com/repos/brentp/somalier/zipball/v0.1.1"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "brentp",
+          "type": "User"
+        },
+        "date_created": "2019-01-18T23:09:10Z",
+        "date_published": "2019-01-18T23:31:15Z",
+        "description": "this release improves the parallelization by sample and provides a better (GRCh37) sites file. It is recommended to use this file. It has fewer sites (23K) but they will work for BS-Seq data and should provide a slightly better relatedness estimate than the 37K from the previous release.\r\n\r\nIt also removed the heatmap plot in favor of a depth (diagnostic plot).\r\n\r\n[sites.vcf.gz](https://github.com/brentp/somalier/files/2774846/sites.vcf.gz)\r\n\r\n",
+        "html_url": "https://github.com/brentp/somalier/releases/tag/v0.1.0",
+        "name": "v0.1.0",
+        "release_id": 15065235,
+        "tag": "v0.1.0",
+        "tarball_url": "https://api.github.com/repos/brentp/somalier/tarball/v0.1.0",
+        "type": "Release",
+        "url": "https://api.github.com/repos/brentp/somalier/releases/15065235",
+        "value": "https://api.github.com/repos/brentp/somalier/releases/15065235",
+        "zipball_url": "https://api.github.com/repos/brentp/somalier/zipball/v0.1.0"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "brentp",
+          "type": "User"
+        },
+        "date_created": "2018-08-07T18:33:45Z",
+        "date_published": "2018-08-07T18:35:44Z",
+        "description": "see binary attached (built on oldish system so should avoid libc problems on most systems).\r\n\r\nthe sites.vcf.gz will work for hg37. the next release will provide one that works for hg38, but any set of common variants will work. \r\n[sites.vcf.gz](https://github.com/brentp/somalier/files/2267652/sites.vcf.gz)\r\n",
+        "html_url": "https://github.com/brentp/somalier/releases/tag/v0.0.1",
+        "name": "first release",
+        "release_id": 12295442,
+        "tag": "v0.0.1",
+        "tarball_url": "https://api.github.com/repos/brentp/somalier/tarball/v0.0.1",
+        "type": "Release",
+        "url": "https://api.github.com/repos/brentp/somalier/releases/12295442",
+        "value": "https://api.github.com/repos/brentp/somalier/releases/12295442",
+        "zipball_url": "https://api.github.com/repos/brentp/somalier/zipball/v0.0.1"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "somef_missing_categories": [
+    "run",
+    "download",
+    "requirements",
+    "contact",
+    "contributors",
+    "faq",
+    "support",
+    "identifier",
+    "executable_example"
+  ],
+  "somef_provenance": {
+    "date": "2024-11-04 02:18:48",
+    "somef_schema_version": "1.0.0",
+    "somef_version": "0.9.5"
+  },
+  "stargazers_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 266
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "usage": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Quick Start",
+        "parent_header": [
+          "somalier: extract informative sites, evaluate relatedness, and perform quality-control on BAM/CRAM/BCF/VCF/GVCF"
+        ],
+        "type": "Text_excerpt",
+        "value": "`somalier` makes checking any number of samples for identity easy **directly from the alignments** or from jointly-called VCFs:\n\nThe first step is to extract sites. For **VCF** just use:\n```\nsomalier extract -d extracted/ --sites sites.vcf.gz -f /data/human/g1k_v37_decoy.fa $cohort.vcf.gz\n```\n\nwith a sites file from [releases](https://github.com/brentp/somalier/releases/latest)\n\nFor **BAM** or **CRAM**, use:\nThis is parallelizable by sample via cluster or cloud, but here, using a for loop:\n```\nfor f in *.cram; do\n    somalier extract -d extracted/ --sites sites.vcf.gz -f /data/human/g1k_v37_decoy.fa $f\ndone\n```\n\n`--sites` is a VCF of known polymorphic sites in VCF format. A good set is provided in\nthe [releases](https://github.com/brentp/somalier/releases) but any set of common variants will work.\n\n\n> :warning: `somalier` can work on GVCF and individual VCFs, but it is\n> recommended to extract from bam/cram when possible. It is also good to\n> extract from a jointly-called VCF/BCF when only looking within that cohort.\n> While extracting from a single-sample VCF is possible (with --unknown) and\n> GVCF is also supported, these options are less accurate and more prone to\n> problems.\n\n\nThe next step is to calculate relatedness on the extracted data:\n\n```\nsomalier relate --ped $pedigree extracted/*.somalier\n```\nThis will create text and interactive HTML output\nthat makes it fast and easy to detect mismatched samples and sample-swaps.\nThe files created are:\n+ `{output_prefix}.samples.tsv # creates a .ped like file with extra QC columns\n+ `{output_prefix}.pairs.tsv # shows IBS for all possible sample pairs\n+ `{output_prefix}.groups.tsv # shows pairs of samples above a certain relatedness\n+ `{output_prefix}.html # interactive html\n\nExample html output is [here](https://brentp.github.io/somalier/ex.html)\n\nNote that the `somalier relate` command runs extremely quickly (< 2 seconds for 600 samples and ~1 minute for 4,500 samples) so it's possible\nto add/remove samples or adjust a pedigree file and re-run iteratively.\n\nFor example to add the **n + 1th** samples, just run `somalier extract` on the new sample and then re-use\nthe already extracted data from the `n` original samples.\n\nFor *huge* sample-sets, if you run into a bash error for *argument list too long*, you can pass the somalier files as quoted\nglob strings like:  `\"/path/to/set-a/*.somalier\" \"/path/to/set-b/*.somalier\"`.\n"
+      },
+      "source": "https://raw.githubusercontent.com/brentp/somalier/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Example Output",
+        "parent_header": [
+          "somalier: extract informative sites, evaluate relatedness, and perform quality-control on BAM/CRAM/BCF/VCF/GVCF"
+        ],
+        "type": "Text_excerpt",
+        "value": "+ Interactive output from `somalier relate` is [here](https://brentp.github.io/somalier/ex.html)\n+ Interactive output from `somalier ancestry` is [here](https://brentp.github.io/somalier/ex.somalier-ancestry.html)\n"
+      },
+      "source": "https://raw.githubusercontent.com/brentp/somalier/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Usage",
+        "parent_header": [
+          "somalier: extract informative sites, evaluate relatedness, and perform quality-control on BAM/CRAM/BCF/VCF/GVCF"
+        ],
+        "type": "Text_excerpt",
+        "value": "The usage is also described above. Briefly, after downloading the somalier binary and a sites vcf from the [releases](https://github.com/brentp/somalier/releases/latest) run:\n```\nsomalier extract -d cohort/ --sites sites.hg38.vcf.gz -f $reference $sample.bam\n```\nfor each sample to create a small binary file of the ref and alt counts for the variants listed\nin sites.hg38.vcf.gz.\n\nfor a vcf, run:\n```\nsomalier extract -d cohort/ --sites sites.hg38.vcf.gz -f $reference $cohort.bcf\n```\n\n`somalier` can `extract` from a multi or single-sample VCF or a GVCF. This will be much faster, in cases where it's available,\nthis would look like:\n\n```\nsomalier extract -d extracted/ --sites sites.vcf.gz -f /data/human/g1k_v37_decoy.fa joint.vcf.gz\n```\n\nfollowing this, there will be a `$sample.somalier` file for each sample in the `joint.vcf.gz`\n\nNote that `somalier` uses the `AD` field to extract depth information. If that FORMAT field is not present in the\nheader, then it will use the genotypes only and use a total depth of 20 (10,10 for heterozygote), etc.\n\n\nThen run:\n```\nsomalier relate --ped $pedigree_file cohort/*.somalier\n```\nThis will create an html file for QC in a few seconds. \n\nNote that if a new sample is added to the cohort, it's only necessary to perform\nthe `extract` step on that sample and then run the (fast) `relate` step again with all\nof the extracted files.\n"
+      },
+      "source": "https://raw.githubusercontent.com/brentp/somalier/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Extended Usage",
+        "parent_header": [
+          "somalier: extract informative sites, evaluate relatedness, and perform quality-control on BAM/CRAM/BCF/VCF/GVCF"
+        ],
+        "type": "Text_excerpt",
+        "value": "For each command of somalier, extended parameters are listed in `--help` of each subcommand.\n```\n$./somalier --help\nCommands:\n  extract      :   extract genotype-like information for a single sample from VCF/BAM/CRAM.\n  relate       :   aggregate `extract`ed information and calculate relatedness among samples.\n  ancestry     :   perform ancestry prediction on a set of samples, given a set of labeled samples\n  find-sites   :   create a new sites.vcf.gz file from a population VCF (this is rarely needed).\n```"
+      },
+      "source": "https://raw.githubusercontent.com/brentp/somalier/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "somalier extract",
+        "parent_header": [
+          "somalier: extract informative sites, evaluate relatedness, and perform quality-control on BAM/CRAM/BCF/VCF/GVCF",
+          "Extended Usage"
+        ],
+        "type": "Text_excerpt",
+        "value": "extract genotype-like information for a single-sample at selected sites\n\n```\nUsage:\n  somalier extract [options] sample_file\n\nArguments:\n  sample_file      single-sample CRAM/BAM/GVCF file or multi/single-sample VCF from which to extract\n\nOptions:\n  -s, --sites=SITES          sites vcf file of variants to extract\n  -f, --fasta=FASTA          path to reference fasta file\n  -d, --out-dir=OUT_DIR      path to output directory (default: .)\n  --sample-prefix=SAMPLE_PREFIX\n                             prefix for the sample name stored inside the digest\n```"
+      },
+      "source": "https://raw.githubusercontent.com/brentp/somalier/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "somalier relate",
+        "parent_header": [
+          "somalier: extract informative sites, evaluate relatedness, and perform quality-control on BAM/CRAM/BCF/VCF/GVCF",
+          "Extended Usage"
+        ],
+        "type": "Text_excerpt",
+        "value": "calculate relatedness among samples from extracted, genotype-like information\n\n```\nUsage:\n  somalier relate [options] [extracted ...]\n\nArguments:\n  [extracted ...]  $sample.somalier files for each sample. the first 10 are tested as a glob patterns\n\nOptions:\n  -g, --groups=GROUPS        optional path  to expected groups of samples (e.g. tumor normal pairs).\nspecified as comma-separated groups per line e.g.:\n    normal1,tumor1a,tumor1b\n    normal2,tumor2a\n  --sample-prefix=SAMPLE_PREFIX\n                             optional sample prefixes that can be removed to find identical samples. e.g. batch1-sampleA batch2-sampleA\n  -p, --ped=PED              optional path to a ped/fam file indicating the expected relationships among samples.\n  -d, --min-depth=MIN_DEPTH  only genotype sites with at least this depth. (default: 7)\n  --min-ab=MIN_AB            hets sites must be between min-ab and 1 - min_ab. set this to 0.2 for RNA-Seq data (default: 0.3)\n  -u, --unknown              set unknown genotypes to hom-ref. it is often preferable to use this with VCF samples that were not jointly called\n  -i, --infer                infer relationships (https://github.com/brentp/somalier/wiki/pedigree-inference)\n  -o, --output-prefix=OUTPUT_PREFIX\n                             output prefix for results. (default: somalier)\n```\n\nNote that for large cohorts, by default, `somalier relate` will subset to interesting sample-pairs so as not to\nballoon the size of the output. By default, pairs that are expected to be unrelated and have a relatedness <= 0.05.\nIf you wish to force all samples to be reported, then set the environment variable `SOMALIER_REPORT_ALL_PAIRS` to any non-empty\nvalue, e.g. `export SOMALIER_REPORT_ALL_PAIRS=1`\n"
+      },
+      "source": "https://raw.githubusercontent.com/brentp/somalier/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Example",
+        "parent_header": [
+          "somalier: extract informative sites, evaluate relatedness, and perform quality-control on BAM/CRAM/BCF/VCF/GVCF"
+        ],
+        "type": "Text_excerpt",
+        "value": "![example](https://user-images.githubusercontent.com/1739/43783575-4863f13c-9a1f-11e8-9cf8-622f784edc69.png)\n\nHere, each point is a pair of samples. We can see that the expected identical sample-pairs (e.g. tumor-normal pairs) specified by the user\nand drawn in red mostly cluster together on the right. Unrelateds cluster on the lower left. The sample-swaps are the blue points that cluster with\nthe red. In the somalier output, the user can **hover to see which sample-pairs are involved each point**\n\n"
+      },
+      "source": "https://raw.githubusercontent.com/brentp/somalier/master/README.md",
+      "technique": "header_analysis"
+    }
+  ]
+}

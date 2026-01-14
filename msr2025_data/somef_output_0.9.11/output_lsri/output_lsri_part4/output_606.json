@@ -1,0 +1,412 @@
+{
+  "citation": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Citing GASAL2",
+        "parent_header": [
+          "GASAL2 - GPU-accelerated DNA alignment library"
+        ],
+        "type": "Text_excerpt",
+        "value": "GASAL2 is published in BMC Bioinformatics:\n\nN. Ahmed, J. L\u00e9vy, S. Ren, H. Mushtaq, K. Bertels and Z. Al-ars, __GASAL2: a GPU accelerated sequence alignment library for high-throughput NGS data__, *BMC Bioinformatics* 20, 520 (2019) doi: [10.1186/s12859-019-3086-9](https://doi.org/10.1186/s12859-019-3086-9).\n"
+      },
+      "source": "https://raw.githubusercontent.com/nahmedraja/GASAL2/master/README.md",
+      "technique": "header_analysis"
+    }
+  ],
+  "code_repository": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/nahmedraja/GASAL2"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_created": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2018-02-22T17:35:43Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_updated": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2024-09-03T08:13:57Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "description": [
+    {
+      "confidence": 0.9927819517084162,
+      "result": {
+        "original_header": "GASAL2 - GPU-accelerated DNA alignment library",
+        "type": "Text_excerpt",
+        "value": "GASAL2 is an easy-to-use CUDA library for DNA/RNA sequence alignment algorithms. Currently it supports different kind of alignments:\n - local alignment\n - semi-global alignment\n - global alignment\n - tile-based banded alignment.\n \nIt can also reverse and, or complement any sequences independently before alignment, and report second-best scores for certain alignment types. \nIt is an extension of GASAL (https://github.com/nahmedraja/GASAL) and allows full overlapping of CPU and GPU execution. \n \n"
+      },
+      "source": "https://raw.githubusercontent.com/nahmedraja/GASAL2/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9326704369196694,
+      "result": {
+        "original_header": "List of new features:",
+        "type": "Text_excerpt",
+        "value": "- **Added traceback computation. The ouput is in CIGAR format**\n- **GASAL2 can now compute all types of semi-global alignments**\n- **Added expandable memory management on host side. The batches of query and target sequences are automatically enlarged if the required memory becomes larger than the allocated memory** \n- **Added kernel to reverse-complement sequences.**\n- **Cleaned up, inconsistencies fixed, and a small optimization has been added (around 9% speedup with exact same result)**  \n"
+      },
+      "source": "https://raw.githubusercontent.com/nahmedraja/GASAL2/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9319312403440093,
+      "result": {
+        "original_header": "Changes in user interface:",
+        "type": "Text_excerpt",
+        "value": "- Changed the interface of `gasal_init_streams()` function\n- The user now has to provide `MAX_QUERY_LEN` instead of `MAX_SEQ_LEN` during compilation\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/nahmedraja/GASAL2/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9865922262829353,
+      "result": {
+        "original_header": "Compiling GASAL2",
+        "type": "Text_excerpt",
+        "value": "`N_PENALTY` is optional and if it is not specified then GASAL2 considers \"N\" as an ordinary base having the same match/mismatch scores as for A, C, G or T. As a result of these commands, *include* and *lib* directories will be created containing various `.h` files and `libgasal.a`, respectively. The user needs to include `gasal_header.h` in the code and link it with `libgasal.a` during compilation. Also, the CUDA runtime library has to be linked by adding `-lcudart` flag. The path to the CUDA runtime library must also be specfied while linking as *-L <path to CUDA lib64 directory>*.\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/nahmedraja/GASAL2/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.944678740943909,
+      "result": {
+        "original_header": "Initialization",
+        "type": "Text_excerpt",
+        "value": "To use GASAL2  alignment functions, first the match/mismatach scores and gap open/extension penalties need to be passed on to the GPU. Assign the values match/mismatach scores and gap open/extension penalties to the members of `gasal_subst_scores` struct:\n```C\ntypedef struct{\n\tint32_t match;\n\tint32_t mismatch;\n\tint32_t gap_open;\n\tint32_t gap_extend;\n}gasal_subst_scores;\n```\nThe values are passed to the GPU by calling `gasal_copy_subst_scores()` function:\n```C\nvoid gasal_copy_subst_scores(gasal_subst_scores *subst);\n```\nA vector of `gasal_gpu_storage_t` is created a the following function:\n```C\ngasal_gpu_storage_v gasal_init_gpu_storage_v(int n_streams);\n```\nWith the help of `n_streams`, the user specifies the number of outstanding GPU alignment kernel launches to be performed. The return type is `gasal_gpu_storage_v`:\n```C\ntypedef struct{\n\tint n;\n\tgasal_gpu_storage_t *a;\n}gasal_gpu_storage_v;\n```\nwith `n = n_streams` and `a` being a pointer to the array. An element of the array holds the required data structurea of a stream. To destroy the vector the following function is used:\n```C\nvoid gasal_destroy_gpu_storage_v(gasal_gpu_storage_v *gpu_storage_vec);\n```\nThe streams in the vector are initialized by calling:\n```C\nvoid gasal_init_streams(gasal_gpu_storage_v *gpu_storage_vec,  int max_query_len, int max_target_len, int max_n_alns,  Parameters *params);\n```\n \nIn GASAL2, the sequences to be aligned are conatined in two batches. A sequence in query_batch is aligned to sequence in target_batch. A *batch* is a concatenation of sequences. *The length of a sequence must be a multiple of 8*. Hence, if a sequence is not a multiple of 8, `N's` are added at the end of sequence. We call these redundant bases as *Pad bases*. Note that the pad bases are always \"N's\" irrespective of whether `N_PENALTY` is defined or not. The `gasal_init_streams()` function alloctes the memory required by a stream. With the help of *max_batch_bytes*, the user specifies the expected maxumum size(in bytes) of sequences in the two batches. *host_max_batch_bytes* are pre-allocated on the CPU. Smilarly, *gpu_max_batch_bytes* are pre-allocated on the GPU. *max_n_alns* is the expected maximum number of sequences in a batch. If the actual required GPU memory is more than the pre-allocated memory, GASAL2 automatically allocates more memory.  \nMost GASAL2 functions operate with a Parameters object. This object holds all the informations about the alignment options selected. In particular, the alignment type, the default values when opening or extending gaps, etc. The Parameters object is filled like this:\n```C\nParameters *args;\nargs = new Parameters(0, NULL);\n\nargs->algo = <LOCAL|GLOBAL|SEMI_GLOBAL>; \nargs->start_pos = <WITHOUT_START|WITH_START|WITH_TB>; //`WITHOUT_START` computes only the score and end-position. `WITH_START` computes the start-position with score and end-position. `WITH_TB` computes the score, start-position, end-position and traceback in CIGAR format.\nargs->isReverseComplement = <TRUE|FALSE>; //whether to reverse-complement the query sequence.\nargs->semiglobal_skipping_head = <QUERY|TARGET|BOTH|NONE>; //ignore gaps at the begining of QUERY|TARGET|BOTH|NONE in semi alignment-global.\nargs->semiglobal_skipping_tail = <QUERY|TARGET|BOTH|NONE>; //ignore gaps at the end of QUERY|TARGET|BOTH|NONE in semi alignment-global.\nargs->secondBest = <TRUE|FALSE>; //whether to compute the second best score in local and semi-global algo. But the start-position(WITH_START) and traceback(WITH_TRACEBACK) is only computMarched with the best score.\n\n```\n\nTo free up the allocated memory the following function is used:\n```C\nvoid gasal_destroy_streams(gasal_gpu_storage_v *gpu_storage_vec, Parameters *params);\n```\n \nThe `gasal_init_streams()` and `gasal_destroy_streams()` internally use `cudaMalloc()`, `cudaMallocHost()`, `cudaFree()` and `cudaFreeHost()` functions. These CUDA API functions are time expensive. Therefore, `gasal_init_streams()` and `gasal_destroy_streams()` should be preferably called only once in the program. You will find all these functions in the file `ctors.cpp`. \n"
+      },
+      "source": "https://raw.githubusercontent.com/nahmedraja/GASAL2/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.8897074020849298,
+      "result": {
+        "original_header": "Alignment launching",
+        "type": "Text_excerpt",
+        "value": "The `actual_query_batch_bytes` and `actual_target_batch_bytes` specify the size of the two batches (in bytes) including the pad bases. `actual_n_alns` is the number of alignments to be performed. GASAL2 internally sets `is_free` to 0 after launching the alignment kernel on the GPU. From the performance prespective, if the average lengths of the sequences in *query_batch* and *target_batch* are not same, then the shorter sequences should be placed in *query_batch*. Fo rexample, in case of read mappers the read sequences are conatined in query_batch and the genome sequences in target_batch. \nIf the function returns 0 the alignment on the GPU is finished and the output arrays contain valid results. Moreover, `is_free` is set to 1 by GASAL2. Thus, the current stream can be used for the alignment of another batch of sequences. The function returns `-1` if the results are not ready. It returns `-2` if the function is called on a stream in which no alignment has been launced, i.e. `is_free == 1`. \n"
+      },
+      "source": "https://raw.githubusercontent.com/nahmedraja/GASAL2/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9163195440351064,
+      "result": {
+        "original_header": "Alignment results",
+        "type": "Text_excerpt",
+        "value": "The structure `gasal_res_t` holds the results of the alignment and can be accessed manually. Its fields are the following:\n```C\nstruct gasal_res{\n\tint32_t *aln_score;\n\tint32_t *query_batch_end;\n\tint32_t *target_batch_end;\n\tint32_t *query_batch_start;\n\tint32_t *target_batch_start;\n\tuint8_t *cigar;\n\tuint32_t *n_cigar_ops;\n};\ntypedef struct gasal_res gasal_res_t;\n```\nThe output of alignments are stored in `aln_score`, `query_batch_end`, `target_batch_end`, `query_batch_start`, and `target_batch_start`, `cigar` and `n_cigar_ops` arrays, within the `host_res` structure inside the `gasal_gpu_storage` structure. `cigar` is a byte array which contains the traceback information in CIGAR format of all the alignments performed . The lower 2 bits of a byte indicate the CIGAR operation:\n \n```\n0 = match\n1 = mismatch\n2 = deletion\n3 = insertion\n```\nThe upper 6 bits store the count of the operation in the lower two bits. The traceback information of an alignment in the `cigar` array is in the reverse direction. `host_query_batch_offsets` conatins the offset of an alignment in the `cigar` array. The `n_cigar_ops` contains number of bytes in the cigar array encoding the traceback information of an alignment. \nIn case of second-best result, the same applies with the fields in `host_res_secondbest`. But the start-position and traceback( is only computed with the best score. Therefore, only `host_res_secondbest->aln_score`, `host_res_secondbest->query_batch_end` and `host_res_secondbest->target_batch_end` are valid for second-best result.  \n"
+      },
+      "source": "https://raw.githubusercontent.com/nahmedraja/GASAL2/master/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "download_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/nahmedraja/GASAL2/releases"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "faq": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Problems and suggestions",
+        "parent_header": [
+          "GASAL2 - GPU-accelerated DNA alignment library"
+        ],
+        "type": "Text_excerpt",
+        "value": "For any issues and suugestions contact Nauman Ahmed at nahmed@uet.edu.pk.\n\n\n\n\n\n"
+      },
+      "source": "https://raw.githubusercontent.com/nahmedraja/GASAL2/master/README.md",
+      "technique": "header_analysis"
+    }
+  ],
+  "forks_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 12
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/nahmedraja/GASAL2/forks"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "nahmedraja/GASAL2"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_title": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "GASAL2 - GPU-accelerated DNA alignment library"
+      },
+      "source": "https://raw.githubusercontent.com/nahmedraja/GASAL2/master/README.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "has_script_file": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/nahmedraja/GASAL2/master/configure.sh"
+      },
+      "technique": "file_exploration"
+    }
+  ],
+  "installation": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Input data preparation",
+        "parent_header": [
+          "GASAL2 - GPU-accelerated DNA alignment library",
+          "Using GASAL2"
+        ],
+        "type": "Text_excerpt",
+        "value": "The `gasal_gpu_storage_t` in `gasal.h` holds the data structures for a stream. In the following we only show those members of `gasal_gpu_storage_t` which should be accessed by the user. Other fields should not be modified manually and the user should rely on dedicated functions for complex operations.\n\n```C\ntypedef struct{\n\t...\n\tuint8_t *host_query_op;\n\tuint8_t *host_target_op;\n\t...\n\tuint32_t *host_query_batch_offsets;\n\tuint32_t *host_target_batch_offsets;\n\tuint32_t *host_query_batch_lens;\n\tuint32_t *host_target_batch_lens;\n\tuint32_t host_max_query_batch_bytes;\n\tuint32_t host_max_target_batch_bytes;\n\tgasal_res_t *host_res;\n\tgasal_res_t *host_res_second; \n\tuint32_t host_max_n_alns;\n\tuint32_t current_n_alns;\n\tint is_free;\n\t...\n} gasal_gpu_storage_t;\n```\n\n\n\nTo align the sequences the user first need to check the availability of a stream. If `is_free` is  1, the user can use the current stream to perform the alignment on the GPU. \nTo do this, the user must fill the sequences with the following function.\n\n```C\nuint32_t gasal_host_batch_fill(gasal_gpu_storage_t *gpu_storage, uint32_t idx, const char* data, uint32_t size, data_source SRC);\n\n```\n\nThis function takes a sequence and its length, and append it in the data structure. It also adds the neccessary padding bases to ensure the sequence has a length which is a multiple of 8. Moreover, it takes care of allocating more memory if there is not enough room when adding the sequence. `SRC` is either `QUERY` or `TARGET`, depending upon which batch to fill. When executed, this function returns the offset to be filled by the user in `host_target_batch_offsets` or `host_query_batch_offsets`. The user also has to fill `host_target_batch_lens` or `host_query_batch_lens` with original length of sequences, i.e. length without pad bases. **The offset values include pad bases, whereas lengths are without pad bases**. The number of elements in offset and length arrays must be equal. The offset values allows the user to express the mode of pairwise alignment, i.e. one-to-one, one-to-all or one-to-many etc., between the query and traget sequences. The `current_n_alns` must appropriately be incremented to show the current number of alignments. `host_max_n_alns` is initially set equal to `max_n_alns` in `gasal_init_streams()` function. If the 'current_n_alns' exceeds `host_max_n_alns`, the user must call the following funnction to reallocate host offset, lengths and results arrays.March\n\n```C\nvoid gasal_host_alns_resize(gasal_gpu_storage_t *gpu_storage, int new_max_alns, Parameters *params); \n\n```\n\nwhere `new_max_alns` is the new value of `host_max_n_alns`.\n\n\nOne can also use the `gasal_host_batch_addbase` to add a single base to the sequence. This takes care of memory reallocation if needed, but does not take care of padding, so this has to be used carefully.\n\n\nThe the list of pre-processing operation (nothing, reverse, complement, reverse-complement) that has to be done on the batch of sequence can be loaded into the gpu_storage with the function `gasal_op_fill`. Its code is in `interfaces.cpp`. It fills `host_query_op` and `host_query_op` with an array of size `host_max_n_alns` where each value is the value of the enumeration of `operation_on_seq` (in gasal.h):\n```C\nenum operation_on_seq{\n\tFORWARD_NATURAL,\n\tREVERSE_NATURAL,\n\tFORWARD_COMPLEMENT,\n\tREVERSE_COMPLEMENT,\n};\n```\nBy default, no operations are done on the sequences (that is, the fields `host_query_op` and `host_target_op` arrays are initialized to 0, which is the value of FORWARD_NATURAL).\nMarch\n"
+      },
+      "source": "https://raw.githubusercontent.com/nahmedraja/GASAL2/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 0.9234002527347894,
+      "result": {
+        "original_header": "GASAL2 - GPU-accelerated DNA alignment library",
+        "type": "Text_excerpt",
+        "value": "It is an extension of GASAL (https://github.com/nahmedraja/GASAL) and allows full overlapping of CPU and GPU execution. \n \n"
+      },
+      "source": "https://raw.githubusercontent.com/nahmedraja/GASAL2/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9934760524583115,
+      "result": {
+        "original_header": "Compiling GASAL2",
+        "type": "Text_excerpt",
+        "value": "The library can be compiled with the following two commands:\n```bash\n$ ./configure.sh <path to cuda installation directory>\n$ make GPU_SM_ARCH=<GPU SM architecture> MAX_QUERY_LEN=<maximum query length> N_CODE=<code for \"N\", e.g. 0x4E if the bases are represented by ASCII characters> [N_PENALTY=<penalty for aligning \"N\" against any other base>]\n```\n \n`N_PENALTY` is optional and if it is not specified then GASAL2 considers \"N\" as an ordinary base having the same match/mismatch scores as for A, C, G or T. As a result of these commands, *include* and *lib* directories will be created containing various `.h` files and `libgasal.a`, respectively. The user needs to include `gasal_header.h` in the code and link it with `libgasal.a` during compilation. Also, the CUDA runtime library has to be linked by adding `-lcudart` flag. The path to the CUDA runtime library must also be specfied while linking as *-L <path to CUDA lib64 directory>*.\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/nahmedraja/GASAL2/master/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "issue_tracker": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/nahmedraja/GASAL2/issues"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "keywords": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "bioinfomatics, cuda-library, gpu-acceleration, sequence-alignment"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "license": [
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Apache License 2.0",
+        "spdx_id": "Apache-2.0",
+        "type": "License",
+        "url": "https://api.github.com/licenses/apache-2.0",
+        "value": "https://api.github.com/licenses/apache-2.0"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "File_dump",
+        "value": "                                 Apache License\n                           Version 2.0, January 2004\n                        http://www.apache.org/licenses/\n\n   TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION\n\n   1. Definitions.\n\n      \"License\" shall mean the terms and conditions for use, reproduction,\n      and distribution as defined by Sections 1 through 9 of this document.\n\n      \"Licensor\" shall mean the copyright owner or entity authorized by\n      the copyright owner that is granting the License.\n\n      \"Legal Entity\" shall mean the union of the acting entity and all\n      other entities that control, are controlled by, or are under common\n      control with that entity. For the purposes of this definition,\n      \"control\" means (i) the power, direct or indirect, to cause the\n      direction or management of such entity, whether by contract or\n      otherwise, or (ii) ownership of fifty percent (50%) or more of the\n      outstanding shares, or (iii) beneficial ownership of such entity.\n\n      \"You\" (or \"Your\") shall mean an individual or Legal Entity\n      exercising permissions granted by this License.\n\n      \"Source\" form shall mean the preferred form for making modifications,\n      including but not limited to software source code, documentation\n      source, and configuration files.\n\n      \"Object\" form shall mean any form resulting from mechanical\n      transformation or translation of a Source form, including but\n      not limited to compiled object code, generated documentation,\n      and conversions to other media types.\n\n      \"Work\" shall mean the work of authorship, whether in Source or\n      Object form, made available under the License, as indicated by a\n      copyright notice that is included in or attached to the work\n      (an example is provided in the Appendix below).\n\n      \"Derivative Works\" shall mean any work, whether in Source or Object\n      form, that is based on (or derived from) the Work and for which the\n      editorial revisions, annotations, elaborations, or other modifications\n      represent, as a whole, an original work of authorship. For the purposes\n      of this License, Derivative Works shall not include works that remain\n      separable from, or merely link (or bind by name) to the interfaces of,\n      the Work and Derivative Works thereof.\n\n      \"Contribution\" shall mean any work of authorship, including\n      the original version of the Work and any modifications or additions\n      to that Work or Derivative Works thereof, that is intentionally\n      submitted to Licensor for inclusion in the Work by the copyright owner\n      or by an individual or Legal Entity authorized to submit on behalf of\n      the copyright owner. For the purposes of this definition, \"submitted\"\n      means any form of electronic, verbal, or written communication sent\n      to the Licensor or its representatives, including but not limited to\n      communication on electronic mailing lists, source code control systems,\n      and issue tracking systems that are managed by, or on behalf of, the\n      Licensor for the purpose of discussing and improving the Work, but\n      excluding communication that is conspicuously marked or otherwise\n      designated in writing by the copyright owner as \"Not a Contribution.\"\n\n      \"Contributor\" shall mean Licensor and any individual or Legal Entity\n      on behalf of whom a Contribution has been received by Licensor and\n      subsequently incorporated within the Work.\n\n   2. Grant of Copyright License. Subject to the terms and conditions of\n      this License, each Contributor hereby grants to You a perpetual,\n      worldwide, non-exclusive, no-charge, royalty-free, irrevocable\n      copyright license to reproduce, prepare Derivative Works of,\n      publicly display, publicly perform, sublicense, and distribute the\n      Work and such Derivative Works in Source or Object form.\n\n   3. Grant of Patent License. Subject to the terms and conditions of\n      this License, each Contributor hereby grants to You a perpetual,\n      worldwide, non-exclusive, no-charge, royalty-free, irrevocable\n      (except as stated in this section) patent license to make, have made,\n      use, offer to sell, sell, import, and otherwise transfer the Work,\n      where such license applies only to those patent claims licensable\n      by such Contributor that are necessarily infringed by their\n      Contribution(s) alone or by combination of their Contribution(s)\n      with the Work to which such Contribution(s) was submitted. If You\n      institute patent litigation against any entity (including a\n      cross-claim or counterclaim in a lawsuit) alleging that the Work\n      or a Contribution incorporated within the Work constitutes direct\n      or contributory patent infringement, then any patent licenses\n      granted to You under this License for that Work shall terminate\n      as of the date such litigation is filed.\n\n   4. Redistribution. You may reproduce and distribute copies of the\n      Work or Derivative Works thereof in any medium, with or without\n      modifications, and in Source or Object form, provided that You\n      meet the following conditions:\n\n      (a) You must give any other recipients of the Work or\n          Derivative Works a copy of this License; and\n\n      (b) You must cause any modified files to carry prominent notices\n          stating that You changed the files; and\n\n      (c) You must retain, in the Source form of any Derivative Works\n          that You distribute, all copyright, patent, trademark, and\n          attribution notices from the Source form of the Work,\n          excluding those notices that do not pertain to any part of\n          the Derivative Works; and\n\n      (d) If the Work includes a \"NOTICE\" text file as part of its\n          distribution, then any Derivative Works that You distribute must\n          include a readable copy of the attribution notices contained\n          within such NOTICE file, excluding those notices that do not\n          pertain to any part of the Derivative Works, in at least one\n          of the following places: within a NOTICE text file distributed\n          as part of the Derivative Works; within the Source form or\n          documentation, if provided along with the Derivative Works; or,\n          within a display generated by the Derivative Works, if and\n          wherever such third-party notices normally appear. The contents\n          of the NOTICE file are for informational purposes only and\n          do not modify the License. You may add Your own attribution\n          notices within Derivative Works that You distribute, alongside\n          or as an addendum to the NOTICE text from the Work, provided\n          that such additional attribution notices cannot be construed\n          as modifying the License.\n\n      You may add Your own copyright statement to Your modifications and\n      may provide additional or different license terms and conditions\n      for use, reproduction, or distribution of Your modifications, or\n      for any such Derivative Works as a whole, provided Your use,\n      reproduction, and distribution of the Work otherwise complies with\n      the conditions stated in this License.\n\n   5. Submission of Contributions. Unless You explicitly state otherwise,\n      any Contribution intentionally submitted for inclusion in the Work\n      by You to the Licensor shall be under the terms and conditions of\n      this License, without any additional terms or conditions.\n      Notwithstanding the above, nothing herein shall supersede or modify\n      the terms of any separate license agreement you may have executed\n      with Licensor regarding such Contributions.\n\n   6. Trademarks. This License does not grant permission to use the trade\n      names, trademarks, service marks, or product names of the Licensor,\n      except as required for reasonable and customary use in describing the\n      origin of the Work and reproducing the content of the NOTICE file.\n\n   7. Disclaimer of Warranty. Unless required by applicable law or\n      agreed to in writing, Licensor provides the Work (and each\n      Contributor provides its Contributions) on an \"AS IS\" BASIS,\n      WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or\n      implied, including, without limitation, any warranties or conditions\n      of TITLE, NON-INFRINGEMENT, MERCHANTABILITY, or FITNESS FOR A\n      PARTICULAR PURPOSE. You are solely responsible for determining the\n      appropriateness of using or redistributing the Work and assume any\n      risks associated with Your exercise of permissions under this License.\n\n   8. Limitation of Liability. In no event and under no legal theory,\n      whether in tort (including negligence), contract, or otherwise,\n      unless required by applicable law (such as deliberate and grossly\n      negligent acts) or agreed to in writing, shall any Contributor be\n      liable to You for damages, including any direct, indirect, special,\n      incidental, or consequential damages of any character arising as a\n      result of this License or out of the use or inability to use the\n      Work (including but not limited to damages for loss of goodwill,\n      work stoppage, computer failure or malfunction, or any and all\n      other commercial damages or losses), even if such Contributor\n      has been advised of the possibility of such damages.\n\n   9. Accepting Warranty or Additional Liability. While redistributing\n      the Work or Derivative Works thereof, You may choose to offer,\n      and charge a fee for, acceptance of support, warranty, indemnity,\n      or other liability obligations and/or rights consistent with this\n      License. However, in accepting such obligations, You may act only\n      on Your own behalf and on Your sole responsibility, not on behalf\n      of any other Contributor, and only if You agree to indemnify,\n      defend, and hold each Contributor harmless for any liability\n      incurred by, or claims asserted against, such Contributor by reason\n      of your accepting any such warranty or additional liability.\n\n   END OF TERMS AND CONDITIONS\n\n   APPENDIX: How to apply the Apache License to your work.\n\n      To apply the Apache License to your work, attach the following\n      boilerplate notice, with the fields enclosed by brackets \"[]\"\n      replaced with your own identifying information. (Don't include\n      the brackets!)  The text should be enclosed in the appropriate\n      comment syntax for the file format. We also recommend that a\n      file or class name and description of purpose be included on the\n      same \"printed page\" as the copyright notice for easier\n      identification within third-party archives.\n\n   Copyright [yyyy] [name of copyright owner]\n\n   Licensed under the Apache License, Version 2.0 (the \"License\");\n   you may not use this file except in compliance with the License.\n   You may obtain a copy of the License at\n\n       http://www.apache.org/licenses/LICENSE-2.0\n\n   Unless required by applicable law or agreed to in writing, software\n   distributed under the License is distributed on an \"AS IS\" BASIS,\n   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n   See the License for the specific language governing permissions and\n   limitations under the License.\n"
+      },
+      "source": "https://raw.githubusercontent.com/nahmedraja/GASAL2/master/LICENSE",
+      "technique": "file_exploration"
+    }
+  ],
+  "name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "GASAL2"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "owner": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "User",
+        "value": "nahmedraja"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "programming_languages": [
+    {
+      "confidence": 1,
+      "result": {
+        "name": "C++",
+        "size": 158004,
+        "type": "Programming_language",
+        "value": "C++"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "C",
+        "size": 46787,
+        "type": "Programming_language",
+        "value": "C"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Cuda",
+        "size": 19856,
+        "type": "Programming_language",
+        "value": "Cuda"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Makefile",
+        "size": 5131,
+        "type": "Programming_language",
+        "value": "Makefile"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Shell",
+        "size": 1534,
+        "type": "Programming_language",
+        "value": "Shell"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "readme_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/nahmedraja/GASAL2/master/README.md"
+      },
+      "technique": "file_exploration"
+    }
+  ],
+  "requirements": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Requirements",
+        "parent_header": [
+          "GASAL2 - GPU-accelerated DNA alignment library"
+        ],
+        "type": "Text_excerpt",
+        "value": "A Linux platform with CUDA toolkit 8 or higher is required, along with usual build environment for C and C++ code. GASAL2 has been tested over NVIDIA GPUs with compute capabilities of 2.0, 3.5 and 5.0. Although lower versions of the CUDA framework might work, they have not been tested.\n"
+      },
+      "source": "https://raw.githubusercontent.com/nahmedraja/GASAL2/master/README.md",
+      "technique": "header_analysis"
+    }
+  ],
+  "somef_missing_categories": [
+    "acknowledgement",
+    "run",
+    "download",
+    "contact",
+    "contributors",
+    "documentation",
+    "support",
+    "identifier",
+    "has_build_file",
+    "executable_example"
+  ],
+  "somef_provenance": {
+    "date": "2024-11-04 04:08:46",
+    "somef_schema_version": "1.0.0",
+    "somef_version": "0.9.5"
+  },
+  "stargazers_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 41
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "usage": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Example",
+        "parent_header": [
+          "GASAL2 - GPU-accelerated DNA alignment library"
+        ],
+        "type": "Text_excerpt",
+        "value": "The `test_prog` directory conatins an example program which uses GASAL2 for sequence alignment on GPU. See the README in the directory for the instructions about running the program.\n"
+      },
+      "source": "https://raw.githubusercontent.com/nahmedraja/GASAL2/master/README.md",
+      "technique": "header_analysis"
+    }
+  ]
+}

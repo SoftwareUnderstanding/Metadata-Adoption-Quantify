@@ -1,0 +1,395 @@
+{
+  "code_repository": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/andrew84830813/selEnergyPermR"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_created": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2021-05-08T21:33:57Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_updated": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2022-09-24T22:57:01Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "description": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "Selection Energy Permuation"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 0.952096605832907,
+      "result": {
+        "original_header": "selEnergyPermR",
+        "type": "Text_excerpt",
+        "value": "The goal of selEnergyPermR package is to provide an easy to use set of\nreusable functions for performing the selEnergyPerm methods for sparse\nassociation testing in compositional data. \nThis Readme shows key steps required to perform and visualize a\nselEnergyPerm Analysis\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/andrew84830813/selEnergyPermR/master/README.Rmd",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9980727033552074,
+      "result": {
+        "original_header": "Pre-Process Sparisty and Impute Zeroes",
+        "type": "Text_excerpt",
+        "value": "``` r\n\n## Detect Cores and Start Cluster (optional)\n## ensure there is enough memory for parallel computing as multiple cores scales the amount of memory required\n# num_cores = parallel::detectCores()-2\n# clus <- parallel::makeCluster(10)\n# doParallel::registerDoParallel(clus)\n\n\n## Define Threshold for Sparisty (i.e. Taxa can be missing in up to [maxSparisty*100] percent of samples or present in at least 100 - [maxSparisty*100] percent of samples)\nmaxSparisty = .9\n\n## Remove sparse features from Count data\nmessage(\"Class Label Breakdown\")\n#> Class Label Breakdown\nprocData = selEnergyPermR::processCompData(Uguanda_PIH,minPrevalence = maxSparisty)\n#> \n#> neg pos \n#>  34  58\n\n## Extract processed data and zero impute factor for multiplicative replacement (See Hinton 2021)\ndat = procData$processedData\nimpFact = procData$impFactor\n\n## Remove any columns with all zero counts\ny = dat[,-1]\nbool = colSums(y)==0\ny = y[,!bool]\n\n## Close (Convert to relative abundance) and impute zeroes in OTU Table\ndat = data.frame(Status = dat[,1],fastImputeZeroes( compositions::clo(y),impFactor = impFact))\n#> Warning: executing %dopar% sequentially: no parallel backend registered\n\nmessage(\"\\n Number of OTUs remaining = \",ncol(y) )\n#> \n#>  Number of OTUs remaining = 63\n```\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/andrew84830813/selEnergyPermR/master/README.Rmd",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9939691134273424,
+      "result": {
+        "original_header": "Aggregate data to the Genus Level",
+        "type": "Text_excerpt",
+        "value": "This step is in general optional as any level can be tested\n(i.e.\u00a0Phylum,Class, Order, etc..) as well as the overall OTU\ncomposition. Here we test at the genus level which balances the\ntrade-off between interpretability and computational time.\n``` r\n## Aggregate to Genus\ndat = data.frame(id = 1:nrow(dat),dat)\ndat = tidyr::gather(dat,\"taxa\",\"count\", 3:ncol(dat))\ndat = tidyr::separate(dat,col = 3,into = c(\"p\",\"c\",\"o\",\"family\",\"genus\",\"s\"))\ndat[dat==\"null\"] = NA\ndat = dat %>%\n  dplyr::filter(!is.na(family)) %>%\n  dplyr::mutate(genus = if_else(is.na(genus),\"g.\",genus)) %>%\n  dplyr::mutate(family_genus = paste0(family,\"_\",genus)) %>%\n  dplyr::group_by(id,Status,family_genus) %>%\n  dplyr::summarise(count = sum(count)) %>%\n  tidyr::spread(\"family_genus\",\"count\") %>%\n  dplyr::ungroup() %>%\n  dplyr::select(-id)\n#> `summarise()` has grouped output by 'id', 'Status'. You can override using the `.groups` argument.\ndat = data.frame(dat)\n\nmessage(\"\\n Number of Unique Genera  = \",ncol(dat[,-1]) )\n#> \n#>  Number of Unique Genera  = 57\n```\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/andrew84830813/selEnergyPermR/master/README.Rmd",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9970281924195522,
+      "result": {
+        "original_header": "Compute Pairwise Logratios",
+        "type": "Text_excerpt",
+        "value": "This amount of time required for this step depends on number of cores\navailable and the dimensionality of the dataset (more taxa/OTU more\ntime). Usually computes in reasonable time for dimensions &lt;500 OTU\u2019s\nor taxa. Compute for a laptop with an 8th gen I9 with 32GB ram listed\nbelow for reference. Important to make sure all zeroes have been imputed\nand the data.frame is free of NA values or columns and/or rows that\ncontain all zeroes. Values do not necessarily need to be relative\nabundance for this function to work. Values *MUST* be positive if not\nusing relative abundance.\n``` r\n## Compute Ratios\nsystem.time({\nlrs = calcLogRatio(dat)\n})\n#> Joining, by = \"f\"\n#> Joining, by = \"f\"\n#>    user  system elapsed \n#>    0.14    0.01    0.25\n```\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/andrew84830813/selEnergyPermR/master/README.Rmd",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9674592239581898,
+      "result": {
+        "original_header": "Define Class Label Permutations for computing the null distribution",
+        "type": "Text_excerpt",
+        "value": "\\*\\* Note more restricted permutation design can be added here as\nrequired by the experimental design (e.g to use with strata for nested\ndesigns). Review the \u2018permute\u2019 R package documentation for more detail.\n``` r\n## Set seed for reproducibility\nset.seed(08272008)\n\n\n## Define Number of Permutations\npermRep = 150\nseeds = permute::shuffleSet(nrow(dat),nset = permRep)\nseeds = data.frame(t(seeds))\n```\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/andrew84830813/selEnergyPermR/master/README.Rmd",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9840374218410486,
+      "result": {
+        "original_header": "Apply SelEnergyPerm to compute test statistic and idenfity key taxa",
+        "type": "Text_excerpt",
+        "value": "*Note:* Since selEnergyPerm uses a forward greedy optimal feature\nselection approach there may be some variation in the exact logratios\nreturned between machines. This can be caused by an accumulation of\nnumerical errors and may vary from machine to machine.\n``` r\n## Run SelEnergyPerm\nsep.true = selEnergyPermR::selectionEnergy.scaled(inputData = dat,patience = 500,dcv_nfold = 1)\n### **Note here we set the number of cross-validation folds to one for the DCV scoring (dcv_nfold=1). \n###   This is done to improve reproducibility of results between machines. \n## Extract Results\nres = data.frame(i =1:nrow(sep.true$optimResult),sep.true$optimResult)\nggplot(res,aes(i,optF))+\n  geom_line(col = \"red\")+\n  geom_line(aes(i,Value))+\n  geom_text(aes(i,Value,label = numFeats))+\n  ggtitle(\"SelEnergyPerm Forward Selection Optimization Results\",subtitle = \"Number of Features retained at each step shown\")\n```\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/andrew84830813/selEnergyPermR/master/README.Rmd",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9963099912569834,
+      "result": {
+        "original_header": "Compute Null Distribution",
+        "type": "Text_excerpt",
+        "value": "Here we use Monte-Carlo sampling from the permutation distribution to\ntest significance of the sparse association. We recommend at least 150\npermutations. To start, you can estimate your machines computational\ntime by running 10 permutations and proceeding according. Computational\ntime will depend on processor speed and the number of core needed. The\ntotal time needed for 150 permutations on a laptop with and 8th gen I9\nprocessor with a single core and 32GB RAM is provided below for\nreference.\n``` r\n## Null Results ####\nseed_ = 08272208\nnullPerf = data.frame()\nnreps = 150\nnull.testStat = data.frame()\nsystem.time({\n  for(r in 1:nreps){\n\n    suppressMessages(suppressWarnings({\n\n      ## Run selection Energy Routine on permuted data\n      null_data = dat\n      null_data[,1] = null_data[seeds[,r],1]\n      sep.null = selEnergyPermR::selectionEnergy.scaled(inputData = null_data,dcv_nfold = 1,\n                                        targetFeats = targetRatios,\n                                        optimizationMetric = optMetric)\n\n      ## Compute Null Metrics\n      nullSubset = sep.null$finalSubset\n      spEPerf.null = featureSlectionPerformance(tbl = nullSubset,Method_Name = \"spE\",plot_ = F)\n      spEPerf.null.df = spEPerf.null$performance\n\n      #store results\n      nullPerf = rbind(nullPerf,spEPerf.null.df)\n\n      if(optMetric==\"combinedF\"){\n        null_tstat = spEPerf.null.df$combinedF\n      }else{\n        null_tstat = spEPerf.null.df$EnergyF\n      }\n\n      testStat.df = rbind(testStat.df,\n                          data.frame(Type = \"null\",\n                                     Seed = seed_,\n                                     Exp.Name =\"Tutorial\",rep = r,\n                                     num_ratios = ncol(nullSubset),\n                                     tstat =null_tstat,\n                                     optMetric)\n                          )\n\n    }))\n\n    message(\"selPermEnergy \",r,\" of \",permRep)\n\n  }\n})\n#>    user  system elapsed \n#>  423.50    3.86  416.38\n```\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/andrew84830813/selEnergyPermR/master/README.Rmd",
+      "technique": "supervised_classification"
+    }
+  ],
+  "download_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/andrew84830813/selEnergyPermR/releases"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 0
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/andrew84830813/selEnergyPermR/forks"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "andrew84830813/selEnergyPermR"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_title": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "selEnergyPermR"
+      },
+      "source": "https://raw.githubusercontent.com/andrew84830813/selEnergyPermR/master/README.Rmd",
+      "technique": "regular_expression"
+    }
+  ],
+  "images": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/andrew84830813/selEnergyPermR/master/man/figures/README-unnamed-chunk-5-1.png"
+      },
+      "source": "https://raw.githubusercontent.com/andrew84830813/selEnergyPermR/master/README.Rmd",
+      "technique": "regular_expression"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/andrew84830813/selEnergyPermR/master/man/figures/README-unnamed-chunk-7-1.png"
+      },
+      "source": "https://raw.githubusercontent.com/andrew84830813/selEnergyPermR/master/README.Rmd",
+      "technique": "regular_expression"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/andrew84830813/selEnergyPermR/master/man/figures/README-unnamed-chunk-10-1.png"
+      },
+      "source": "https://raw.githubusercontent.com/andrew84830813/selEnergyPermR/master/README.Rmd",
+      "technique": "regular_expression"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/andrew84830813/selEnergyPermR/master/man/figures/README-unnamed-chunk-11-1.png"
+      },
+      "source": "https://raw.githubusercontent.com/andrew84830813/selEnergyPermR/master/README.Rmd",
+      "technique": "regular_expression"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/andrew84830813/selEnergyPermR/master/man/figures/README-unnamed-chunk-12-1.png"
+      },
+      "source": "https://raw.githubusercontent.com/andrew84830813/selEnergyPermR/master/README.Rmd",
+      "technique": "regular_expression"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/andrew84830813/selEnergyPermR/master/man/figures/README-unnamed-chunk-13-1.png"
+      },
+      "source": "https://raw.githubusercontent.com/andrew84830813/selEnergyPermR/master/README.Rmd",
+      "technique": "regular_expression"
+    }
+  ],
+  "installation": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Installation",
+        "parent_header": [
+          "selEnergyPermR"
+        ],
+        "type": "Text_excerpt",
+        "value": "Next install the latest version of selEnergyPermR from github with:\n\n``` r\ndevtools::install_github(repo = \"andrew84830813/selEnergyPermR\",\n                         dependencies = T)\n```\n"
+      },
+      "source": "https://raw.githubusercontent.com/andrew84830813/selEnergyPermR/master/README.Rmd",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 0.9557436085192003,
+      "result": {
+        "original_header": "selEnergyPermR",
+        "type": "Text_excerpt",
+        "value": "This Readme shows key steps required to perform and visualize a\nselEnergyPerm Analysis\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/andrew84830813/selEnergyPermR/master/README.Rmd",
+      "technique": "supervised_classification"
+    }
+  ],
+  "issue_tracker": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/andrew84830813/selEnergyPermR/issues"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "keywords": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": ""
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "license": [
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Other",
+        "spdx_id": "NOASSERTION",
+        "type": "License",
+        "url": null,
+        "value": null
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "File_dump",
+        "value": "YEAR: 2021\nCOPYRIGHT HOLDER: selEnergyPermR authors\n"
+      },
+      "source": "https://raw.githubusercontent.com/andrew84830813/selEnergyPermR/master/LICENSE",
+      "technique": "file_exploration"
+    }
+  ],
+  "name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "selEnergyPermR"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "owner": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "User",
+        "value": "andrew84830813"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "programming_languages": [
+    {
+      "confidence": 1,
+      "result": {
+        "name": "R",
+        "size": 36545,
+        "type": "Programming_language",
+        "value": "R"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "readme_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/andrew84830813/selEnergyPermR/master/README.Rmd"
+      },
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/andrew84830813/selEnergyPermR/master/README.md"
+      },
+      "technique": "file_exploration"
+    }
+  ],
+  "requirements": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Prerequisites",
+        "parent_header": [
+          "selEnergyPermR"
+        ],
+        "type": "Text_excerpt",
+        "value": "In order to use the \u2018selEnergyPermR\u2019 package the \u2018diffCompVarRcpp\u2019\npackage must first be installed. This package contains the cpp\nimplementation of the differential compositonal variation scoring\nalgorithm required for efficiently ranking logratios.\n\n``` r\ninstall.packages(\"devtools\")\ninstall.packages(\"ggplot2\")\ninstall.packages(\"permute\")\ninstall.packages(\"ggthemes\")\ninstall.packages(\"rstatix\")   \n\ndevtools::install_github(repo = \"andrew84830813/diffCompVarRcpp\",\n                         dependencies = T)\n\n```\n"
+      },
+      "source": "https://raw.githubusercontent.com/andrew84830813/selEnergyPermR/master/README.Rmd",
+      "technique": "header_analysis"
+    }
+  ],
+  "somef_missing_categories": [
+    "citation",
+    "acknowledgement",
+    "run",
+    "download",
+    "contact",
+    "contributors",
+    "documentation",
+    "faq",
+    "support",
+    "identifier",
+    "has_build_file",
+    "executable_example"
+  ],
+  "somef_provenance": {
+    "date": "2024-10-05 23:59:34",
+    "somef_schema_version": "1.0.0",
+    "somef_version": "0.9.5"
+  },
+  "stargazers_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 4
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "usage": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Example",
+        "parent_header": [
+          "selEnergyPermR"
+        ],
+        "type": "Text_excerpt",
+        "value": "This is a basic example which demonstrate how to use \u2018selEnergyPermR\u2019\nfor testing associations in count compositional data:\n\n``` r\nlibrary(diffCompVarRcpp)\nlibrary(selEnergyPermR)\nlibrary(dplyr)\nlibrary(ggplot2)\nlibrary(permute)\nlibrary(ggthemes)\nlibrary(igraph)\n\n## basic example code\n```\n\nLoad the example dataset and view the first 5 rows and columns\n\n``` r\ndata(\"Uguanda_PIH\")\n\n\nmessage(\"Number of rows (samples) = \",dim(Uguanda_PIH)[1], \"\\nNumber of columns (Class Label Columns + OTU's) = \",dim(Uguanda_PIH)[2])\n#> Number of rows (samples) = 92\n#> Number of columns (Class Label Columns + OTU's) = 369\n```\n"
+      },
+      "source": "https://raw.githubusercontent.com/andrew84830813/selEnergyPermR/master/README.Rmd",
+      "technique": "header_analysis"
+    }
+  ]
+}

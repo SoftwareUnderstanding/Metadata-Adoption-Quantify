@@ -1,0 +1,348 @@
+{
+  "code_repository": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/rhysf/Synima"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_created": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2017-06-29T13:30:13Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_updated": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2024-08-26T20:47:46Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "description": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "Synteny Imager"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Introduction",
+        "type": "Text_excerpt",
+        "value": "Synima (Synteny Imager) is an orthology prediction pipeline and synteny viewer. The key features are:\n\n* Orthologous genes are infered by either reciprocal best hits (RBH) from BLAST, OrthoMCL or Orthofinder. \n* Synteny is determined using DAGchainer and plotted using R\n* All prerequisite programs are bundled with Synima, with wrapper scripts provided in /util/. \n* Several scripts can optionally launch in parallel  via LSF, GridEngine or UGER.\n"
+      },
+      "source": "https://raw.githubusercontent.com/rhysf/Synima/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Description of the pipeline (Creating a sequence database)",
+        "type": "Text_excerpt",
+        "value": "* Synima visualises the output files from DAGChainer (aligncoords and aligncoords.spans files), which are tab delimited text files detailing the coordinates of sub-genomic regions of \nsynteny between two or more genomes. \n* Having cloned a local copy of all the code using git clone, and navigated to the examples sub-folder, the first step is to create a 'repo sequence database'. \n* Create_full_repo_sequence_databases.pl reads in a Repository specification file (example Repo_spec file provided in examples) and outputs two fasta files \n(Repo_spec.txt.all.cds and Repo_spec.txt.all.pep) which are merged from \neach of the genome folders and used later.\n* This first step is the most tricky - requiring that IDs in the GFF match the FASTA files. Warnings will alert the user to what ID's are being matched, and how many are matching. This step may need to be re-run until the correct settings or formatted files have been used.\n\nThe Input Repo_spec files take the format of:\n\n    //  \n    Genome CNB2  \n    Annotation CNB2_FINAL_CALLGENES_1  \n    //  \n    Genome Cryp_gatt_IND107_V2  \n    Annotation Cryp_gatt_IND107_V2_FINAL_CALLGENES_1  \n    //\n\n* For each genome ID (E.g. CNB2) listed in the Repo_spec file, a corresponding \nsub-folder with the same name must be present in the same directory as the \nRepo_spec. \n* In each genome folder, a genome.fasta must be present, and named \n[genome-id].genome.fa E.g. CNB2/CNB2.genome.fa. \n* In each genome folder, annotation files should also be present, and named according to the details in the Data_repo. e.g., 3 additional files in each genome directory:\n\n    [annotation-id].annotation.gff3  \n    [annotation-id].annotation.cds  \n    [annotation-id].annotation.pep\n\n* The GFF should have gene or mRNA features, with identifiers that are also in the \n.cds and .pep FASTA files, which contain the Coding sequence (cds) and peptide \n(pep) sequences respectively. \n* GFF ID's can be listed as such (or any other way that is specified explicitly for Create_full_repo_sequence_databases.pl): \n\n    cgbd CNB_WM276_v2 mRNA 450360 453023 . + . ID=012346;Parent=012345;Name=actin\n\n\n* Gene ID's in the two FASTA files can be a single word i.e. >CBBG_0001 or they \ncan have multiple fields e.g. \n\n    >01 gene_id=02 locus=03 name=\"ATPS\" genome=Esch_coli analysisRun=Esch_coli_Augustus\n\n* If your files are downloaded from Ensembl, then utility scripts Ensembl_feature_table_to_gff.pl and Ensembl_reformat_fasta.pl may help parsing into the correct formats.\n\n* Note: Gene and contig names should be alphanumerical (i.e., avoid symbols such as '=').\n"
+      },
+      "source": "https://raw.githubusercontent.com/rhysf/Synima/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Description of the pipeline (Predicting orthologous genes)",
+        "type": "Text_excerpt",
+        "value": "* With the sequence database made, the second step is to run all vs all BLAST hits using Blast_grid_all_vs_all.pl.\n\n* Peptide or nucleotide alignments are possible, although peptide is generally recommended.\n\n* BLAST searches can take a long time (especially with many genomes, or many predicted gene or proteins. Therefore, the option of distributing jobs \nto a cluster via LSF, SGE and UGE is provided (if available). \n\n* This step will create folders in each of the genome folders called RBH_blast_[PEP/CDS]. This \nstep requires BLAST+ (makeblastdb and blastn/p) or BLAST legacy (formatdb and blastall) \nto be in $PATH.\n\n* Next run either OrthoMCL, ORthofinder or reciprocal best hits (RBH) on the BLAST output \nusing Blast_all_vs_all_repo_to_OrthoMCL.pl, Blast_all_vs_all_repo_to_Orthofinder.pl or Blast_all_vs_all_repo_to_RBH.pl,\nrespectively. \n\n* This will create an OMCL_outdir or RBH_outdir, containing all_orthomcl.out or PEP.RBH.OrthoClusters. \n\n* RBH will likely be less accurate than OrthoMCL or Orthofinder, but OrthoMCL at least has a limited number of genomes/genes that can be compared \ndue to memory constraints.\n\n* Next, summarise the OrthoMCL output (OMCL_outdir/all_orthomcl.out), \nor RBH output (RBH_outdir/PEP.RBH.OrthoClusters) or Orthofinder output (Orthofinder_outdir/\nOrthogroups.csv) using Orthologs_to_summary.pl. \n\n* This step will create ortholog predictions in the output folders GENE_CLUSTERS_SUMMARIES.OMCL or \nGENE_CLUSTERS_SUMMARIES.RBH or GENE_CLUSTERS_SUMMARIES.Orthofinder respectively.\n\n* The output of this step will also include some summary plots of the orthologs identified, and useful files for phylogenetics etc.\n"
+      },
+      "source": "https://raw.githubusercontent.com/rhysf/Synima/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Description of the pipeline (Visualising synteny)",
+        "type": "Text_excerpt",
+        "value": "* Run DAGChainer on the ortholog summary using DAGchainer_from_gene_clusters.pl.\n\n* The final step is to run SynIma.pl on the aligncoords and aligncoords.spans output from DAGChainer. \n"
+      },
+      "source": "https://raw.githubusercontent.com/rhysf/Synima/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Description of the pipeline (refining synteny plot)",
+        "type": "Text_excerpt",
+        "value": "* Once you have identified orthologs with the previous steps 1-5, you can re-run \nonly this step with updated parameters to generate new figures. \n\n* If Synima finds the config.txt file (generated from the first time run, and in the same folder as\nthe figure, by default SynIma-output/config.txt), it will run using the parameters \nspecified in this file (rather than use any updated parameters on the command \nline). \n\n* Config.txt includes a number of parameters that can change the appearance or layout\nof the figure. It is recommended plotting both chromosome/contig synteny (c) and gene synteny (g)\nseparately, as either can give greater clarity depending on the input. \n\n* By default, synteny is shown as a partially transparent (alpha factor 0.5) azure4, although this can be changed to \nany other R color (E.g. http://www.stat.columbia.edu/~tzheng/files/Rcolor.pdf). Due to the \ncolor transparency, overlapping synteny will appear shaded. \n"
+      },
+      "source": "https://raw.githubusercontent.com/rhysf/Synima/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 0.9427564530443127,
+      "result": {
+        "original_header": "Individual script details",
+        "type": "Text_excerpt",
+        "value": "    Parameters: -r ./Repo_spec.txt []  \n    Optional:   -f Feature wanted from GFF [mRNA]  \n    \t    \t-s Seperator in GFF description for gene names (\\\" ; etc) [;]  \n    \t    \t-d GFF description part number with the parent/gene info [0]  \n    \t    \t-m Remove additional comments in column [Parent=]  \n    \t    \t-v Verbose mode (report IDs missing) (y/n) [n]  \n    Notes:      Will copy all transcripts and specified features from GFF into primary fasta files   \n    Parameters: -r ./Repo_spec.txt []  \n    Optional:   -t Type of alignment. Can be either PEP (peptide) or CDS (Coding sequence) [PEP]  \n                -c Number of best matches to capture between species [5]  \n                -s Number of top hits to capture in self-searches for paralogs [1000]  \n                -e E-value cutoff [1e-20]  \n                -o Blast cmds outfile [blast.$type.cmds]  \n                -g Run commands on the grid (y/n) [n]  \n                -p Platform (UGER, LSF, GridEngine) [UGER]  \n                -q Queue name [short]  \n    Notes:      Blast needs to be in PATH.   \n                If BLAST+ (formatdb and blastn/p) is in PATH, that will be used.   \n                Otherwise, BLAST legacy (formatdb and blastall) needs to be in PATH.   \n    Parameters: -r ./Repo_spec.txt []  \n                -c Ortholog cluster data (E.g. ORTHOMCLBLASTFILE.clusters) []  \n    Optional:   -z File containing a list of genomes to restrict the analysis to []  \n                -i Minimum number of paired genes in a single dagchain [4]  \n                -o Cmds outdir [dagchainer_rundir]  \n                -l Cmds outfile [cluster_cmds]  \n                -g Run commands on the grid (y/n) [n]  \n                -p Platform (UGER, LSF, GridEngine) [UGER]  \n                -q Queue (hour, short, long) [short]  \n    \t    \t-v Verbose (y/n) [n]  \n    Notes:      GFF specifications (-f, -s, -d, -m) need to be the same as specified during   \n                Blast_all_vs_all_repo_to_OrthoMCL.pl or Blast_all_vs_all_repo_to_RBH.pl   \n    Parameters: -c\t./Config.txt [$cwd/SynIma-output/config.txt]  \n                -a\t./Aligncoords []  \n                -b\t./Aligncoords.spans []  \n    Optional:   -e\tGenome FASTA filename extension (e.g. ./SynIma/genome1/genome1.genome.fa etc.) [genome.fa]  \n                -t\tAligncoords.spans 2 []  \n    \t    \t-u\tAligncoords.spans 3 []  \n    \t    \t-k\tGene IDs 1 (1 per line) []  \n    \t    \t-l\tGene IDs 2 (1 per line) []  \n    \t    \t-o\tGene IDs 3 (1 per line) []  \n    \t    \t-r\tRun full program (y) or just create config (n) [y]  \n    \t    \t-v\tVerbose output (y/n) [n]  \n    Plot Opts:  -i\tWidth of figure in pixels [1100]  \n    \t    \t-j\tHeight of figure in pixels (num of genomes * 100)  \n                -g\tFill in chromosome/contig synteny (c) or gene synteny (g) [c]  \n    \t    \t-z\tPlot individual genes (y/n) [n]  \n                -x\tOrder of genomes from bottom to top seperated by comma  \n    \t    \t-n\tGenome labels from bottom to top seperated by comma  \n    \t    \t-w\tnumber of lines for left hand margin [12]  \n    Notes:      Config.txt will be made automatically if not present, and read automatically if it is.  \n                Config.txt specifies order of genomes, chromosomes, colours, and other plot options.   \n    \t    \tConfig.txt can be manually edited after creation.  \n    \t    \tDefault genome labels will be as they appear in aligncoords  \n    \t    \tOrder of genomes must have names as they appear in aligncoords  \n    \t    \tAligncoords.spans and Gene ID files will be highlighted according to the config   \n    Parameters: -r [cluster_dist_per_genome.txt]  \n    Optional: -c\tclusters_and_unique.wAnnots  \n              -l\tSeperate file with info to join []  \n    \t  \t  -d\tIf opt_l, then from which column do i look for id? [0]  \n              -p\tPrinting options (n=none, c=look up names in opt_c and print those lines, \n              \t\tl=get gene names from opt_c, then look up in opt_l and print those lines) [n]  \n    \t  \t  -z\tIf opt_p = c, then restrict to 1 description - E.g. missing_in_Fo5176_454 []  \n    Notes: Output files go to -c (wAnnots) directory. \n    \t\tSpecifically, this script divides orthogroups into categories of interest, \n    \t\tincluding single-copy orthologs, which can\n    be used to construct phylogenetic trees, or genes that are not found in 1+ genome assemblies.  \n \n"
+      },
+      "source": "https://raw.githubusercontent.com/rhysf/Synima/master/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "documentation": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Documentation",
+        "type": "Text_excerpt",
+        "value": "All documentation for Synima can be found at https://github.com/rhysf/Synima\n"
+      },
+      "source": "https://raw.githubusercontent.com/rhysf/Synima/master/README.md",
+      "technique": "header_analysis"
+    }
+  ],
+  "download_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/rhysf/Synima/releases"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 8
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/rhysf/Synima/forks"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "rhysf/Synima"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_title": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": ""
+      },
+      "source": "https://raw.githubusercontent.com/rhysf/Synima/master/README.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "installation": [
+    {
+      "confidence": 0.9786741259172378,
+      "result": {
+        "original_header": "Individual script details",
+        "type": "Text_excerpt",
+        "value": "    Parameters: -r ./Repo_spec.txt []  \n    Optional:   -t Type of alignment. Can be either PEP (peptide) or CDS (Coding sequence) [PEP]  \n                -o Out directory [OMCL_outdir]   \n    Parameters: -r ./Repo_spec.txt []  \n    Optional:   -t Type of alignment. Can be either PEP (peptide) or CDS (Coding sequence) [PEP]  \n                -o Out directory [Orthofinder_outdir]   \n    Parameters: -r ./Repo_spec.txt  \n    Optional:   -t Type of alignment. Can be either PEP (peptide) or CDS (Coding sequence) (PEP/CDS) [PEP]  \n    \t    \t-o Out directory [RBH_outdir]  \n    \t    \t-g Run commands on the grid (y/n) [n]  \n    \t    \t-p Platform (UGER, LSF, GridEngine) [UGER]  \n    \t    \t-q Queue name [short]   \n    Parameters: -o Ortholog file (E.g. PEP.RBH.OrthoClusters, all_orthomcl.out, Orthogroups.csv) []  \n    Optional:   -t Type of clustering (OMCL, RBH, Orthofinder) [OMCL]  \n                -d Outdir from Blast_all_vs_all_repo_to_OrthoMCL (if used) [OMCL_outdir]  \n    \t    \t-r Repo Spec [./Repo_spec.txt]  \n                -p Repo Spec Peptide file [./Repo_spec.txt.all.PEP]   \n"
+      },
+      "source": "https://raw.githubusercontent.com/rhysf/Synima/master/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "invocation": [
+    {
+      "confidence": 0.8402276314488998,
+      "result": {
+        "original_header": "Individual script details",
+        "type": "Text_excerpt",
+        "value": "    Parameters: -r ./Repo_spec.txt  \n    Optional:   -t Type of alignment. Can be either PEP (peptide) or CDS (Coding sequence) (PEP/CDS) [PEP]  \n    \t    \t-o Out directory [RBH_outdir]  \n    \t    \t-g Run commands on the grid (y/n) [n]  \n    \t    \t-p Platform (UGER, LSF, GridEngine) [UGER]  \n    \t    \t-q Queue name [short]   \n    Parameters: -o Ortholog file (E.g. PEP.RBH.OrthoClusters, all_orthomcl.out, Orthogroups.csv) []  \n    Optional:   -t Type of clustering (OMCL, RBH, Orthofinder) [OMCL]  \n                -d Outdir from Blast_all_vs_all_repo_to_OrthoMCL (if used) [OMCL_outdir]  \n    \t    \t-r Repo Spec [./Repo_spec.txt]  \n                -p Repo Spec Peptide file [./Repo_spec.txt.all.PEP]   \n"
+      },
+      "source": "https://raw.githubusercontent.com/rhysf/Synima/master/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "issue_tracker": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/rhysf/Synima/issues"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "keywords": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": ""
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "license": [
+    {
+      "confidence": 1,
+      "result": {
+        "name": "MIT License",
+        "spdx_id": "MIT",
+        "type": "License",
+        "url": "https://api.github.com/licenses/mit",
+        "value": "https://api.github.com/licenses/mit"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "logo": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/rhysf/Synima/master/resources/logo.jpg?raw=true"
+      },
+      "source": "https://raw.githubusercontent.com/rhysf/Synima/master/README.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "Synima"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "owner": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "User",
+        "value": "rhysf"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "programming_languages": [
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Perl",
+        "size": 259975,
+        "type": "Programming_language",
+        "value": "Perl"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Python",
+        "size": 17172,
+        "type": "Programming_language",
+        "value": "Python"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "readme_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/rhysf/Synima/master/README.md"
+      },
+      "technique": "file_exploration"
+    }
+  ],
+  "requirements": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Prerequisites",
+        "type": "Text_excerpt",
+        "value": "* Perl\n* Bio-Perl\n* Python\n* R\n* Legacy-BLAST or BLAST+\n"
+      },
+      "source": "https://raw.githubusercontent.com/rhysf/Synima/master/README.md",
+      "technique": "header_analysis"
+    }
+  ],
+  "somef_missing_categories": [
+    "citation",
+    "acknowledgement",
+    "run",
+    "download",
+    "contact",
+    "contributors",
+    "faq",
+    "identifier",
+    "has_build_file",
+    "executable_example"
+  ],
+  "somef_provenance": {
+    "date": "2024-11-04 08:02:40",
+    "somef_schema_version": "1.0.0",
+    "somef_version": "0.9.5"
+  },
+  "stargazers_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 60
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "support": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Support",
+        "type": "Text_excerpt",
+        "value": "For issues, questions, comments or feature requests, please check or post to the issues tab on github: https://github.com/rhysf/Synima/issues\n"
+      },
+      "source": "https://raw.githubusercontent.com/rhysf/Synima/master/README.md",
+      "technique": "header_analysis"
+    }
+  ],
+  "usage": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Getting started / examples",
+        "type": "Text_excerpt",
+        "value": "* Download software and run example Synima plot\n\n    git clone git@github.com:rhysf/Synima.git  \n    cd Synima/examples  \n    perl ../SynIma.pl -a Repo_spec.txt.dagchainer.aligncoords -b Repo_spec.txt.dagchainer.aligncoords.spans\n\n* Download software, run orthology pipeline and generate Synima plot\n\n    git clone https://github.com/rhysf/Synima.git  \n    cd Synima/examples  \n    perl ../util/Create_full_repo_sequence_databases.pl -r ./Repo_spec.txt  \n    perl ../util/Blast_grid_all_vs_all.pl -r ./Repo_spec.txt  \n    perl ../util/Blast_all_vs_all_repo_to_OrthoMCL.pl -r ./Repo_spec.txt  \n    ALTERNATIVELY 1: ../util/Blast_all_vs_all_repo_to_RBH.pl -r ./Repo_spec.txt  \n    ALTERNATIVELY 2: ../util/Blast_all_vs_all_repo_to_Orthofinder.pl -r ./Repo_spec.txt  \n    perl ../util/Orthologs_to_summary.pl -o all_orthomcl.out  \n    perl ../util/DAGchainer_from_gene_clusters.pl -r ./Repo_spec.txt -c GENE_CLUSTERS_SUMMARIES.OMCL/GENE_CLUSTERS_SUMMARIES.clusters  \n    perl ../SynIma.pl -a Repo_spec.txt.dagchainer.aligncoords -b Repo_spec.txt.dagchainer.aligncoords.spans``\n"
+      },
+      "source": "https://raw.githubusercontent.com/rhysf/Synima/master/README.md",
+      "technique": "header_analysis"
+    }
+  ]
+}

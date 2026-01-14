@@ -1,0 +1,426 @@
+{
+  "code_repository": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/EI-research-group/deep-ei"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "contributing_guidelines": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Contributing &amp; Questions:",
+        "type": "Text_excerpt",
+        "value": "We'd welcome feedback and contributions! Feel free to email me at `eric.michaud99@gmail.com` if you have questions about the code. \n\n\n\n\n"
+      },
+      "source": "https://raw.githubusercontent.com/EI-research-group/deep-ei/master/README.md",
+      "technique": "header_analysis"
+    }
+  ],
+  "date_created": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2020-04-21T18:35:41Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_updated": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2024-08-18T01:22:17Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "description": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "Tools for examining the causal structure of artificial neural networks with information theory"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 0.9842040056093028,
+      "result": {
+        "original_header": "What's here?",
+        "type": "Text_excerpt",
+        "value": "This repository contains all the code used in the paper (notebooks for creating figures, experiment scripts, etc) in the `experiments` directory, but most importantly holds the open-source `deep-ei` module. We encourage people to install `deep-ei` and perform their own experiments on new datasets, neural network architectures, etc. There are so many experiments we'd like to do, but haven't had time to yet! If you'd like to contribute to code, just submit a pull request! (note that all the code is currently structured as a single module, but may eventually be restructured as a package if that makes sense).  \n"
+      },
+      "source": "https://raw.githubusercontent.com/EI-research-group/deep-ei/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9858875784836082,
+      "result": {
+        "original_header": "Experiments",
+        "type": "Text_excerpt",
+        "value": "Code from the paper has been grouped into two directories:\n```\nexperiments/\n\u251c\u2500\u2500 notebooks\n\u2514\u2500\u2500 runs\n```\nWhere `notebooks` contains notebooks for making the figures and `runs` contains the code and resulting data from the experiments. **Note that all these files use a version of deep-ei before 0.7.0. So to run any of them yourself, install version 0.6.4 from commit 7d37642649594d14bc02590dc4edb5a1f858f501**. Note also that you will have to change the path to the experiment data in many of these notebooks. \n"
+      },
+      "source": "https://raw.githubusercontent.com/EI-research-group/deep-ei/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9571200983582605,
+      "result": {
+        "original_header": "Using `deep-ei`",
+        "type": "Text_excerpt",
+        "value": "The function ``topology_of`` creates a ``networkx`` graph representing the connectivity of the network. ``ei`` can infer argument values using this graph, such as the ranges of the inputs and outputs of the layer and its activation function:\n```python\nnetwork = nn.Sequential(\n    nn.Linear(20, 10, bias=False),\n    nn.Sigmoid(),\n    nn.Linear(10, 5, bias=False),\n    nn.Tanh()\n)\ntop = topology_of(network, input=torch.zeros((1, 20)).to(device))\n\nlayer1, _, layer2, _ = network\n\nEI_layer1 = ei(layer1, top,\n                    samples=int(1e5),\n                    batch_size=100, \n                    in_range=(0, 1),\n                    in_bins=8,\n                    out_bins=8, \n                    device=device)\n\nEI_layer2 = ei(layer2, top,\n                    samples=int(1e5),\n                    batch_size=100, \n                    in_bins=8,\n                    out_bins=8, \n                    device=device)\n```\nWhich will use an activation of `nn.Sigmoid` and an `out_range` of `(0, 1)` for the first layer and an activation of `nn.Tanh` and an `out_range` of `(-1, 1)` for the second layer. Note that we have to specify an `in_range` for the first layer. \nWith ``ei_parts``, you can specify a ``threshold`` instead of setting a manual number of ``samples`` (indeed this is the default behavior of ``ei_parts``, with default threshold of 0.05). The function will increase the number of samples it uses until EI_parts levels off (characterized by whether EI_parts will change by less than ``threshold`` of its current value even if we doubled the number of samples):\n```python\nnetwork = nn.Linear(10, 10, bias=False).to(device)\ntop = topology_of(network, input=torch.zeros((1, 10)).to(device))\n\nEI = ei_parts(network, top,\n                    threshold=0.05,\n                    batch_size=100, \n                    in_range=(0, 1),\n                    in_bins=64,\n                    out_range=(0, 1),\n                    out_bins=64,\n                    activation=nn.Sigmoid(), \n                    device=device)\n``` \nIf you want to compute the EI of each edge in a layer (giving you each term that is summed to get EI_parts), use the `ei_parts_matrix` function:\n```python\nnetwork = nn.Linear(20, 10, bias=False).to(device)\ntop = topology_of(network, input=torch.zeros((1, 20)).to(device))\n\nEI = ei_parts_matrix(network, top,\n                    samles=50000,\n                    batch_size=100, \n                    in_range=(0, 1),\n                    in_bins=64,\n                    out_range=(0, 1),\n                    out_bins=64,\n                    activation=nn.Sigmoid(), \n                    device=device)\n```\nWhich will return a `20 x 10` matrix where the rows correspond with in-neurons and the columns correspond with out-neurons. \n \n"
+      },
+      "source": "https://raw.githubusercontent.com/EI-research-group/deep-ei/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9880281683724808,
+      "result": {
+        "original_header": "Ideas for future experiments",
+        "type": "Text_excerpt",
+        "value": "We'd love for people to use and expand on this code to make new discoveries. Here are some questions we haven't looked into yet:\n* How does dropout effect the EI of a layer? In otherwise identical networks, does dropout increase or decrease the EI of the network layers?\n* What can EI tell us about generalization? Does EI evolve in the causal plane in different ways when a network is memorizing a dataset vs generalizing? To test this, train networks on some dataset as you would normally, but then randomize the labels in the training dataset and train new networks. This label randomization will force the network to memorize the dataset.\n* On harder tasks, where deep networks are required (in MNIST and Iris, which we studied, it is unnecessary that networks be deep for them to achieve good acuracy), do the hidden layers differentiate in the causal plane?\n* Can EI be measured in recurrent networks? How would this work?\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/EI-research-group/deep-ei/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9430325493447355,
+      "result": {
+        "type": "Text_excerpt",
+        "value": "\n    \n    \n    \n    \n    \n    This code accompanies the paper Examining the Causal Structures of Artificial Neural Networks Using Information Theory by Simon Mattsson, Eric J. Michaud, and Erik Hoel\n    Project videos can be found _here_ \n"
+      },
+      "source": "https://raw.githubusercontent.com/EI-research-group/deep-ei/master/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "documentation": [
+    {
+      "confidence": 1,
+      "result": {
+        "format": "readthedocs",
+        "type": "Url",
+        "value": "https://deep-ei.readthedocs.io/"
+      },
+      "source": "https://raw.githubusercontent.com/EI-research-group/deep-ei/master/README.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "download_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/EI-research-group/deep-ei/releases"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "executable_example": [
+    {
+      "confidence": 1,
+      "result": {
+        "format": "jupyter_notebook",
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/EI-research-group/deep-ei/master/experiments/notebooks/timeseries-plots-samesamples.ipynb"
+      },
+      "source": "https://raw.githubusercontent.com/EI-research-group/deep-ei/master/experiments/notebooks/timeseries-plots-samesamples.ipynb",
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "format": "jupyter_notebook",
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/EI-research-group/deep-ei/master/experiments/notebooks/plane-plots.ipynb"
+      },
+      "source": "https://raw.githubusercontent.com/EI-research-group/deep-ei/master/experiments/notebooks/plane-plots.ipynb",
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "format": "jupyter_notebook",
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/EI-research-group/deep-ei/master/experiments/notebooks/ei-whole-toy-network.ipynb"
+      },
+      "source": "https://raw.githubusercontent.com/EI-research-group/deep-ei/master/experiments/notebooks/ei-whole-toy-network.ipynb",
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "format": "jupyter_notebook",
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/EI-research-group/deep-ei/master/experiments/notebooks/ablation-eric.ipynb"
+      },
+      "source": "https://raw.githubusercontent.com/EI-research-group/deep-ei/master/experiments/notebooks/ablation-eric.ipynb",
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "format": "jupyter_notebook",
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/EI-research-group/deep-ei/master/experiments/notebooks/timeseries-plots-tanhrelu.ipynb"
+      },
+      "source": "https://raw.githubusercontent.com/EI-research-group/deep-ei/master/experiments/notebooks/timeseries-plots-tanhrelu.ipynb",
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "format": "jupyter_notebook",
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/EI-research-group/deep-ei/master/experiments/notebooks/sensitivity-degeneracy-toy-network.ipynb"
+      },
+      "source": "https://raw.githubusercontent.com/EI-research-group/deep-ei/master/experiments/notebooks/sensitivity-degeneracy-toy-network.ipynb",
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "format": "jupyter_notebook",
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/EI-research-group/deep-ei/master/experiments/notebooks/ei-parts-toy-network.ipynb"
+      },
+      "source": "https://raw.githubusercontent.com/EI-research-group/deep-ei/master/experiments/notebooks/ei-parts-toy-network.ipynb",
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "format": "jupyter_notebook",
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/EI-research-group/deep-ei/master/experiments/notebooks/convergence.ipynb"
+      },
+      "source": "https://raw.githubusercontent.com/EI-research-group/deep-ei/master/experiments/notebooks/convergence.ipynb",
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "format": "jupyter_notebook",
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/EI-research-group/deep-ei/master/experiments/notebooks/timeseries-plots.ipynb"
+      },
+      "source": "https://raw.githubusercontent.com/EI-research-group/deep-ei/master/experiments/notebooks/timeseries-plots.ipynb",
+      "technique": "file_exploration"
+    }
+  ],
+  "forks_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 2
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/EI-research-group/deep-ei/forks"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "EI-research-group/deep-ei"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_title": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": ""
+      },
+      "source": "https://raw.githubusercontent.com/EI-research-group/deep-ei/master/README.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "images": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/EI-research-group/deep-ei/master/docs/causal-plane.png"
+      },
+      "source": "https://raw.githubusercontent.com/EI-research-group/deep-ei/master/README.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "installation": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Installation:",
+        "type": "Text_excerpt",
+        "value": "The simplest way to install the `deep_ei` module is with:\n```\npip install deep-ei\n```\nBecaues `pytorch` can be fragile, it is recommended that you install and test `pytorch` before installing `deep-ei` (such as with `conda install pytorch -c pytorch`). To install `deep-ei` directly from this repository:\n```\ngit clone https://github.com/EI-research-group/deep-ei.git\ncd deep-ei\npip install .\n```\nBasic tests can be executed with:\n```\npython setup.py test\n```\nNote that we have also provided an anaconda environment file. You can use it to create a new environment with `deep-ei` and all its dependencies:\n```\nconda env create --file environment.yml\n```\n"
+      },
+      "source": "https://raw.githubusercontent.com/EI-research-group/deep-ei/master/README.md",
+      "technique": "header_analysis"
+    }
+  ],
+  "issue_tracker": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/EI-research-group/deep-ei/issues"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "keywords": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": ""
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "license": [
+    {
+      "confidence": 1,
+      "result": {
+        "name": "MIT License",
+        "spdx_id": "MIT",
+        "type": "License",
+        "url": "https://api.github.com/licenses/mit",
+        "value": "https://api.github.com/licenses/mit"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "File_dump",
+        "value": "MIT License\n\nCopyright (c) 2020 EI-research-group\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.\n"
+      },
+      "source": "https://raw.githubusercontent.com/EI-research-group/deep-ei/master/LICENSE",
+      "technique": "file_exploration"
+    }
+  ],
+  "logo": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "http://hits.dwyl.com/EI-research-group/deep-ei.svg"
+      },
+      "source": "https://raw.githubusercontent.com/EI-research-group/deep-ei/master/README.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "deep-ei"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "owner": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "User",
+        "value": "EI-research-group"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "programming_languages": [
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Jupyter Notebook",
+        "size": 1519227,
+        "type": "Programming_language",
+        "value": "Jupyter Notebook"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Python",
+        "size": 213978,
+        "type": "Programming_language",
+        "value": "Python"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "readme_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/EI-research-group/deep-ei/master/README.md"
+      },
+      "technique": "file_exploration"
+    }
+  ],
+  "related_papers": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://arxiv.org/abs/2010.13871\">Examining the Causal Structures of Artificial Neural Networks Using Information Theory</a></b> by Simon Mattsson, <a href=\"https://ericjmichaud.com\">Eric J. Michaud</a>, and <a href=\"https://www.erikphoel.com/\">Erik Hoel</a></p>\n    <p><b>Project videos can be found <a href=\"https://ei-research-group.github.io/deep-ei/\">_here_</a></b></p>\n</div>\n\n## What's here?\nThis repository contains all the code used in the paper (notebooks for creating figures, experiment scripts, etc"
+      },
+      "source": "https://raw.githubusercontent.com/EI-research-group/deep-ei/master/README.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "somef_missing_categories": [
+    "citation",
+    "acknowledgement",
+    "run",
+    "download",
+    "requirements",
+    "contact",
+    "contributors",
+    "usage",
+    "faq",
+    "support",
+    "identifier",
+    "has_build_file"
+  ],
+  "somef_provenance": {
+    "date": "2024-10-03 23:23:12",
+    "somef_schema_version": "1.0.0",
+    "somef_version": "0.9.5"
+  },
+  "stargazers_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 21
+      },
+      "technique": "GitHub_API"
+    }
+  ]
+}

@@ -1,0 +1,316 @@
+{
+  "code_repository": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/Lulab-IGDB/PAIso-seq_scripts"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_created": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2021-12-09T14:37:43Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_updated": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2024-05-15T10:09:17Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "description": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "Scripts to analyze PAIso-seq data."
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 0.8812715537346457,
+      "result": {
+        "original_header": "Output file</br>",
+        "type": "Text_excerpt",
+        "value": "Now you have the test.polyA_note.txt file containing the essential information for each of the sequenced poly(A) tail contains the following 13 columns of information for one read: contains the following 13 columns of information for one read: barcode, read_id, ensembl_id, pass_number, \u201c1\u201d, number_of_residue_A, number_of_residue_T, number_of_residue_C, number_of_residue_G, number_of_residue_T+C+G, \u201c0\u201d, poly(A)_tail_sequence and average_quality_value_of_poly(A)_tail_bases.\n### \n \n"
+      },
+      "source": "https://raw.githubusercontent.com/Lulab-IGDB/PAIso-seq_scripts/main/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "download_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/Lulab-IGDB/PAIso-seq_scripts/releases"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 1
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/Lulab-IGDB/PAIso-seq_scripts/forks"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "Lulab-IGDB/PAIso-seq_scripts"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_title": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "Scripts used for analyzing PAIso-Seq data"
+      },
+      "source": "https://raw.githubusercontent.com/Lulab-IGDB/PAIso-seq_scripts/main/README.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "installation": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Installation",
+        "parent_header": [
+          "Scripts used for analyzing PAIso-Seq data"
+        ],
+        "type": "Text_excerpt",
+        "value": "All the scripts we provided do not need installation and can be run directly in standard python3 enviroment.\n"
+      },
+      "source": "https://raw.githubusercontent.com/Lulab-IGDB/PAIso-seq_scripts/main/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1.0,
+      "result": {
+        "original_header": "Step1. Extract the clean reads containing the poly(A) inclusive full-length cDNA from the CCS reads based on the barcodes for each sample",
+        "type": "Text_excerpt",
+        "value": "```\ngunzip test.ccs.fastq.gz\nfastq-splitter.pl --n-parts 100 test.ccs.fastq\nfor i in {001..100}; do echo 'python CCS_split_clean_end_extension_v1.py test.ccs.part-'${i}'.fastq test.ccs.pass.txt barcode.fa 2 1> test.'${i}'.out.txt 2> test.'${i}'.err.txt'; done > split_clean.sh\nParaFly -c split_clean.sh -CPU 25\ncat *.out.txt > test.all.out.txt\ncat *.err.txt > test.all.err.txt\nawk '{print \"@\"$2\"\\n\"$6\"\\n+\\n\"$7}' test.all.out.txt | gzip -nc > test.clean.fastq.gz\nrm test.*.err.txt test.*.out.txt *fastq.log.txt test.ccs.part-*.fastq\n```\nNote: The parameter 2 in 'python CCS_split_clean_end_extension_v1.py test.ccs.part-*.fastq test.ccs.pass.txt barcode.fa 2 ' means number of mismatches allowed for matching barcodes in barcode.fa file with reads, which we recommend no more than 4.</br>\nBASH2*\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/Lulab-IGDB/PAIso-seq_scripts/main/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9999979154557777,
+      "result": {
+        "original_header": "Step2. Align the clean-reads to the genome",
+        "type": "Text_excerpt",
+        "value": "```\npaftools.js gff2bed ../genome/gencode.vM25.primary_assembly.annotation.gtf > gencode.vM25.primary_assembly.annotation.bed\nminimap2 -x splice -t 20 -d gencode.vM25.mmi ../genome/GRCm38.primary_assembly.genome.fa.gz\nminimap2 -ax splice -uf --secondary=no -t 40 -L --MD --cs --junc-bed gencode.vM25.primary_assembly.annotation.bed gencode.vM25.mmi test.clean.fastq.gz 2> align.log | samtools view -F 3844 -bS > test.clean.filter.bam\n```\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/Lulab-IGDB/PAIso-seq_scripts/main/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9999999922737288,
+      "result": {
+        "original_header": "Step3. Extract and annotate poly(A) tails from mapped clean-reads",
+        "type": "Text_excerpt",
+        "value": "```\npython PolyA_trim_V5.4.1.py test.clean.filter.bam > test.polyA_trim.out.txt\nfeatureCounts -L -g gene_id -t exon -s 1 -R CORE -a ../genome/gencode.vM25.primary_assembly.annotation.gtf -o test.featureCounts test.clean.filter.bam &> featureCounts.log\npython PolyA_note_V2.1.py test.polyA_trim.out.txt test.clean.filter.bam.featureCounts 1> test.polyA_note.txt 2> test.polyA_note.err.txt\n```\nBASH2*\nBASH3*\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/Lulab-IGDB/PAIso-seq_scripts/main/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9999982371127962,
+      "result": {
+        "type": "Text_excerpt",
+        "value": "```\npython DNA_spikein_extract_2019_NC_V1.3.py test_spikein.ccs.fastq test_spikein.ccs.pass.txt PSI-barcode.fa 2 1 1> test.PSI.out.txt 2> test.PSI.err.txt\n```\nNote: \n1. The ccs pass file for the polyA_spike-ins-1.ccs.fastq.gz and polyA_spike-ins-2.ccs.fastq.gz files referred in our manuscript are uploaded here in the folder: /polyA_spike-in_pass_file/ </br>\n2. The parameter 2 in 'python CCS_split_clean_end_extension_v1.py test.ccs.part-*.fastq test.ccs.pass.txt barcode.fa 2 ' means number of mismatches allowed for matching barcodes in barcode.fa file with reads, which we recommend no more than 4.</br>\nBASH2* \n"
+      },
+      "source": "https://raw.githubusercontent.com/Lulab-IGDB/PAIso-seq_scripts/main/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "invocation": [
+    {
+      "confidence": 0.9311180798636699,
+      "result": {
+        "original_header": "Generate CCS reads from sub reads</br>",
+        "type": "Text_excerpt",
+        "value": "**Input:** subreads.bam from a single SMRTcell run in PacBio BAM format. \"test.subreads.bam\" for example. </br>\n**Output:** Consensus reads in unaligned BAM (.bam) format.</br>\n```\n# Run ccs command\nccs test.subreads.bam test.ccs.bam -j 30 &> test.ccs.log \n\n# Convert bam format to fastq format\nbam2fastq -o test.ccs test.ccs.bam > test.ccs.bam2fastq.log\n\n# Extract the pass number of each CCS reads\nperl GetCCSpass.pl test.ccs.bam > test.ccs.pass.txt\n```\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/Lulab-IGDB/PAIso-seq_scripts/main/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.911295954551357,
+      "result": {
+        "original_header": "Step1. Extract the clean reads containing the poly(A) inclusive full-length cDNA from the CCS reads based on the barcodes for each sample",
+        "type": "Text_excerpt",
+        "value": "```\ngunzip test.ccs.fastq.gz\nfastq-splitter.pl --n-parts 100 test.ccs.fastq\nfor i in {001..100}; do echo 'python CCS_split_clean_end_extension_v1.py test.ccs.part-'${i}'.fastq test.ccs.pass.txt barcode.fa 2 1> test.'${i}'.out.txt 2> test.'${i}'.err.txt'; done > split_clean.sh\nParaFly -c split_clean.sh -CPU 25\ncat *.out.txt > test.all.out.txt\ncat *.err.txt > test.all.err.txt\nawk '{print \"@\"$2\"\\n\"$6\"\\n+\\n\"$7}' test.all.out.txt | gzip -nc > test.clean.fastq.gz\nrm test.*.err.txt test.*.out.txt *fastq.log.txt test.ccs.part-*.fastq\n```\nNote: The parameter 2 in 'python CCS_split_clean_end_extension_v1.py test.ccs.part-*.fastq test.ccs.pass.txt barcode.fa 2 ' means number of mismatches allowed for matching barcodes in barcode.fa file with reads, which we recommend no more than 4.</br>\nBASH2*\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/Lulab-IGDB/PAIso-seq_scripts/main/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.927326606976956,
+      "result": {
+        "original_header": "Step3. Extract and annotate poly(A) tails from mapped clean-reads",
+        "type": "Text_excerpt",
+        "value": "```\npython PolyA_trim_V5.4.1.py test.clean.filter.bam > test.polyA_trim.out.txt\nfeatureCounts -L -g gene_id -t exon -s 1 -R CORE -a ../genome/gencode.vM25.primary_assembly.annotation.gtf -o test.featureCounts test.clean.filter.bam &> featureCounts.log\npython PolyA_note_V2.1.py test.polyA_trim.out.txt test.clean.filter.bam.featureCounts 1> test.polyA_note.txt 2> test.polyA_note.err.txt\n```\nBASH2*\nBASH3*\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/Lulab-IGDB/PAIso-seq_scripts/main/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.843903541427828,
+      "result": {
+        "type": "Text_excerpt",
+        "value": "```\npython DNA_spikein_extract_2019_NC_V1.3.py test_spikein.ccs.fastq test_spikein.ccs.pass.txt PSI-barcode.fa 2 1 1> test.PSI.out.txt 2> test.PSI.err.txt\n```\nNote: \n1. The ccs pass file for the polyA_spike-ins-1.ccs.fastq.gz and polyA_spike-ins-2.ccs.fastq.gz files referred in our manuscript are uploaded here in the folder: /polyA_spike-in_pass_file/ </br>\n2. The parameter 2 in 'python CCS_split_clean_end_extension_v1.py test.ccs.part-*.fastq test.ccs.pass.txt barcode.fa 2 ' means number of mismatches allowed for matching barcodes in barcode.fa file with reads, which we recommend no more than 4.</br>\nBASH2* \n"
+      },
+      "source": "https://raw.githubusercontent.com/Lulab-IGDB/PAIso-seq_scripts/main/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "issue_tracker": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/Lulab-IGDB/PAIso-seq_scripts/issues"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "keywords": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": ""
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "PAIso-seq_scripts"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "owner": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "User",
+        "value": "Lulab-IGDB"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "programming_languages": [
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Python",
+        "size": 16276,
+        "type": "Programming_language",
+        "value": "Python"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Perl",
+        "size": 688,
+        "type": "Programming_language",
+        "value": "Perl"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "readme_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/Lulab-IGDB/PAIso-seq_scripts/main/README.md"
+      },
+      "technique": "file_exploration"
+    }
+  ],
+  "requirements": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Software Dependencies",
+        "parent_header": [
+          "Scripts used for analyzing PAIso-Seq data"
+        ],
+        "type": "Text_excerpt",
+        "value": "```\n# softwares\nccs (v5.0.0)\nbam2fastq (v1.3.0)\npbbam (v1.0.6)\npbmerge (v1.0.6)\nminimap2 (2.17-r941)\nbedtools (v2.29.2)\nsamtools (v1.9)\nsubread (V2.0.0)\nfeatureCounts (v2.0.0)\nfastq-splitter.pl (http://kirill-kryukov.com/study/tools/fastq-splitter)\nParaFly (http://parafly.sourceforge.net/)\n```\n```\n# python packages\npysam (https://github.com/pysam-developers/pysam)\nregex (https://bitbucket.org/mrabarnett/mrab-regex)\nparasail (https://github.com/jeffdaily/parasail-python)\nitertools (https://github.com/more-itertools/more-itertools)\nnumpy (https://numpy.org/)\nstatistics (https://pypi.python.org/pypi/statistics)\n```\n"
+      },
+      "source": "https://raw.githubusercontent.com/Lulab-IGDB/PAIso-seq_scripts/main/README.md",
+      "technique": "header_analysis"
+    }
+  ],
+  "somef_missing_categories": [
+    "citation",
+    "acknowledgement",
+    "run",
+    "download",
+    "contact",
+    "contributors",
+    "documentation",
+    "license",
+    "usage",
+    "faq",
+    "support",
+    "identifier",
+    "has_build_file",
+    "executable_example"
+  ],
+  "somef_provenance": {
+    "date": "2024-10-04 13:39:53",
+    "somef_schema_version": "1.0.0",
+    "somef_version": "0.9.5"
+  },
+  "stargazers_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 1
+      },
+      "technique": "GitHub_API"
+    }
+  ]
+}

@@ -1,0 +1,539 @@
+{
+  "code_repository": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/Fabioconti99/Different_Driving_modalities_of_a_Mobile_Robot"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_created": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2022-02-03T15:25:24Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_updated": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2023-06-24T09:23:14Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "description": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "This is the repository for the third and final assignment for the Research Track course: different driving modality for a mobile robot."
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 0.9338577856615107,
+      "result": {
+        "original_header": "Project objectives",
+        "type": "Text_excerpt",
+        "value": "--------------------\nThis project is about the development of a software architecture for the control of a mobile robot.\nThe architecture should be able to get the user request, and let the robot execute one of the following behaviors (depending on the user's input): \n* The `move_base` package will provide an implementation of an *action* that, given a goal in the world, the robot will attempt to reach it with a mobile base. (Actions are services which are notexecuted automatically, and thus may also offer some additional tools such as the possibility of cancelling the request. \n* The `gmapping` pakage contains the algorithm based on a *particle filter* (approach to estimate a probability density) needed for implementing Simultaneous Localization and Mapping (SLAM). Needed by the `gmapping` package.  \nThe package will be tested on a simulation of a mobile robot driving inside of a given environment. The simulation and visualization are run by the two following programs:  \n* **Rviz**: which is a tool for ROS Visualization. It's a 3-dimensional visualization tool for ROS. It allows the user to view the simulated robot model, log sensor information from the robot's sensors, and replay the logged sensor information. By visualizing what the robot is seeing, thinking, and doing, the user can debug a robot application from sensor inputs to planned (or unplanned) actions. \n* **Gazebo**: which is the 3D simulator for ROS.  \nPicture of the **Gazebo Enviroment**: \n"
+      },
+      "source": "https://raw.githubusercontent.com/Fabioconti99/RT1_Assignment_3/main/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.8940161920999203,
+      "result": {
+        "original_header": "Running the simulation",
+        "type": "Text_excerpt",
+        "value": "Thanks to the `launch_nodes.launch` launch file, I added **three parameters** to the project for managing the *different activation state* of all the nodes involved in the project.\nThe three parameters are: \n* **Active**: This parameter manages the current state of the project's ROS node chain. Once the program is launched, the parameter is set to be in *idle state* (0 states). In the beginning, one of the nodes will be in its active state. The UI node is capable of managing the change of the value of this parameter thanks to the retrieved user input. A simple legend will tell the user what button to press for running a certain driving modality. The user input will change the value of the parameter and all the nodes will either keep their current idle state or switch to a running state. An If-Statement inside every node manages this modality switch. \n* **Posion X and Position Y**: Also, these two parameters are retrieved by an input user managed in the UI node. Once the user selects the **first modality [1]** the UI interface will also ask for an X and Y coordinate. This data represents the position we want the robot to go. If the user wants to stop the robot's motion, it is sufficient to either input another driving modality or set the project idle state.\nThe UI node will also keep the user updated on the current modality thanks to the on-screen messages sent at every state switch. Some flags will keep track of the current modality based on the UI inputs. \nThis node implements the autonomous driving capability. The script exploits an **action client** (*actionlib* library) instance to establish direct communication with the mobile robot and set and cancel location goals. \nThe Action Client-Service communicate via a \"ROS Action Protocol\", which is built on top of ROS messages. The client and server then provide a simple API for users to request goals (on the client side) or to execute goals (on the server side) via function calls and callbacks. \nThrough out the coding of this node I implemented only the *Actionclient* side of the whole structure using the already existing server of the following action messages: \n* *goal*: used to send new goals to server\n* *cancel*: used to send cancel requests to server\n* *status*: used to notify clients on the current state of every goal in the system\n* *feedback*: used to send clients periodic auxiliary information for a goal\n* *result*:  used to send clients one-time auxiliary information about the completion of a goal \nFor the client and server to communicate, I should define a few messages on which they communicate. This defines the Goal, Feedback, and Result messages with which clients and servers communicate. throughout the coding, I only used the Goal message because that was the one message needed for fulfilling the project aim.  \nThanks to the Actionlib feature, an ActionServer receives the goal message from an ActionClient. In the case of my project, the goal is to move the robot's base position. The goal would be a MoveBaseGoal message that contains information about where the robot should move to in the world. For controlling all the robot positions in space, the goal would contain the *target_pose* parameters (stamp, orientation, target position, etc). \n ### Main functions used\n \nThe following function sets the standard instances of the position I want to achieve and it also initializes the client-side of the action:\n```python\ndef action_client_init():\n\n    global client \n    global goal \n    \n    client = actionlib.SimpleActionClient('move_base',MoveBaseAction) # Initialization of the action client.\n    client.wait_for_server()                            # Waiting for the server to get ready.\n    \n    goal = MoveBaseGoal()                         # Initialization of the goal message.\n    goal.target_pose.header.frame_id = \"map\"            # Setting up some parameters of the goal message.\n    goal.target_pose.header.stamp = rospy.Time.now()\n    goal.target_pose.pose.orientation.w = 1.0\n    \n# Call Back used for setting up a timeout to the robot's current task.\ndef my_callback_timeout(event):\n    if active_==1:\n        print (\"\\033[1;31;40m Goal time expired\\033[0;37;40m :\" + str(event.current_real)+st)\n        print(\"The robot didn't reach the desired position target within a 1min time span\\n\")\n        rospy.set_param('active', 0)\n```\nOnce the node gets to its active state, the retrieved info on the goal position will be retrieved from the newly set parameters and inserted inside the goal message structure. This operation is taken care of by the following \"set-goal\" function: \n```python\ndef action_client_set_goal():\n\n    goal.target_pose.pose.position.x = desired_position_x\n    goal.target_pose.pose.position.y = desired_position_y\n    print(\"\\033[1;33;40m START AUTONOMOUS DRIVE\"+st+\"\\033[0;37;40m \\n\")\n    client.send_goal(goal,done_cb)\n```\nThe following image shows the Rviz graphical interface once the goal is set:\n \nSince the server provides the output of this function, I choose to ignore any other given status because I wouldn't have any direct control over it. An example of this is \"the ending on a *timeout*\" feature. There exists a status for retrieving a *timeout* ending for the robot. I ignored it because the actual time is set directly by the server.\nThe following function sets a timer expiration goal that is locally set to 1 minute. Once it expires it will automatically cancel the goal. \n\nThe normal `cancel_goal` is activated once the robot gets back into its idle state. The cancel call is managed by all the flags that determine the current state of the process.\n```python\n# The active value is not set to 1\nelse:\n    # Initial idle state \n    if flag == 0 and flag_2==0:\n        \n        print(\"\\033[1;31;40m STOP MODALITY 1 \\033[0;37;40m \\n\")\n        flag = 1\n    \n    # Idle state the node will get to once the robot gets stopped by the user.\n    if flag == 0 and flag_2==1:\n        \n        # Flag needed to know if the goal is reached or not\n        if flag_goal==1:\n            # If the goal is reached I will not cancel the goal because. \n            print(\"\\033[1;31;40m STOP MODALITY 1 \"+st+\"\\033[0;37;40m\")\n            flag = 1\n            flag_2 = 0\n            flag_goal = 0\n    \n        else:\n            # If the goal is not reached once the user switches modality or the time expires with the time-out.\n            print(\"\\033[1;31;40m GOAL CANCELED, STOP MODALITY 1 \"+st+\"\\033[0;37;40m\")\n            client.cancel_goal()\n            flag = 1\n            flag_2 = 0\n    \n```\n \nThe script is based on the standard ROS teleop_twist_keyboard.py.\nThis node is constantly checking which keys are pressed on a PC keyboard and based on the pressed keys, publishes twist messages on the `/cmd_vel` topic. Twist message defines what should be the linear and rotational speeds of a mobile robot. \n ### Main functions used\n \nI added some functions and changes to the code to merge it with the `avoidence.py` publisher and to manage the alternity of the activation state.\nJust like all the other programs, I had to manage the alternity of the *idle* to the *active* state through the use of an If-statement. Since the node also includes the functionalities of the third modality, the statement will set the node to an active modality if the `active` param is either set to 3 or 2.\nI added a new function named `stop_motion` to the `PublishThread` class. This function will make the robot stop once the driving modality gets switched. The function will set the linear and angular velocity to 0 with the `twist` message through the `/cmd_vel` topic. \n```python\ndef stop_motion(self):\n    twist = Twist()\n    # Publish stop message when thread exits.\n    twist.linear.x = 0\n    twist.linear.y = 0\n    twist.linear.z = 0\n    twist.angular.x = 0\n    twist.angular.y = 0\n    twist.angular.z = 0\n            \n    self.publisher.publish(twist)\n```\nThe node **subscribes** to the custom topic `custom_controller` implemented for publishing the `Avoid. msg` message containing info about the walls surrounding the robot. The callback subscribed sets some local variables equal to the published fields of the custom message. The following uses these variables function to change some keyboards inputs to prevent the user to drive the robot into walls. \n```python\ndef new_dict(dictionary):\n\n    global ok_left\n    global ok_right\n    global ok_straight\n    \n    # If any of the flags for checking if the wall are turned on in any combinations, the function will disable the corrisponding directions command.\n    if not ok_straight == 1 and not ok_right == 1 and not ok_left == 1:\n        dictionary.pop('i')\n        dictionary.pop('j')\n        dictionary.pop('l')\n        \n    elif not ok_left == 1 and not ok_straight == 1 and ok_right == 1:\n        dictionary.pop('i')\n        dictionary.pop('j')\n        \n    elif ok_left == 1 and not ok_straight == 1 and not ok_right == 1:\n        dictionary.pop('i')\n        dictionary.pop('l')\n        \n    elif not ok_left == 1 and ok_straight == 1 and not ok_right == 1:\n        dictionary.pop('l')\n        dictionary.pop('j')\n        \n    elif ok_left == 1 and not ok_straight == 1 and ok_right == 1:\n        dictionary.pop('i')\n        \n    elif not ok_left == 1 and ok_straight == 1 and ok_right == 1:\n        dictionary.pop('j')\n        \n    elif ok_left == 1 and ok_straight == 1 and not ok_right == 1:\n        pdictionary.pop('l')\n```\nA **dictionary** m manages the keyboard input set by:\nA dictionary is *python* unordered and changeable collection of data values that holds key-value pairs. Each key-value pair in the dictionary maps the key to its associated value making it more optimized.\nIn the standard `teleop_twist_keyboard`, a dictionary is used to collect the buttons for all the possible robot's movements. In my version of the node, some of these keys are omitted to code an easier implementation of the avoidance feature. The following instance is the dictionary used in the node:\n```python\n# Dictionary for moving commands\nmoveBindings = {\n        'i':(1,0,0,0),\n        'j':(0,0,0,1),\n        'l':(0,0,0,-1),\n        'k':(-1,0,0,0),\n    }\n```\nThe associated values optimize the UI making it easier for the user to interact with the simulation. Thanks to these values, the node will public the right values to the `/cmd_vel` topic for making the robot move accordingly with the input.\n \n* `ok_right`:\n    * 1 = the wall is not close to the right of the robot. The user will be able to turn right. \n    * 0 = the wall is close to the right of the robot. The user will not be able to turn right.  \n* `ok_left`:\n    * 1 = the wall is not close to the left of the robot. The user will be able to turn left. \n    * 0 = the wall is close to the left of the robot. The user will not be able to turn right.\n    \n* `ok_straight`:\n    * 1 = the wall is not close to the front of the robot. The user will be able to drive straight. \n    * 0 = the wall is close to the front of the robot. The user will not be able to drive straight.\n    \nThe following scheme shows all the combinations that the program considers for the wall avoidence: \n"
+      },
+      "source": "https://raw.githubusercontent.com/Fabioconti99/RT1_Assignment_3/main/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.8586097174113275,
+      "result": {
+        "original_header": "Avoidence feature: avoidence.py",
+        "type": "Text_excerpt",
+        "value": "\nThis node aims to activate a security feature for driving with the teleop_key modality. Thanks to the **subscription** to the `/laser_scan` topic, the node will be able to get info about the robot's surroundings. The subscription to the topic will give back the `ranges[0,720]` array to the subscribed callback. This data structure contains the distance values between the robot and the surrounding walls for a span of 180\u00ba degrees in front of the robot. The array simulates the info that a set of lasers would retrieve in an actual environment.\nThe node will later elaborate the data acquired to publish it on the `custom_controller` custom topic through the `Avoid.msg` custom message.\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/Fabioconti99/RT1_Assignment_3/main/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.8889464594030247,
+      "result": {
+        "original_header": "Running the simulation",
+        "type": "Text_excerpt",
+        "value": "`cb_avoid(msg)` is the callback function used to acquire and manage the data from the `/lase_scan` subscription. Once the callback retrieves the `ranges[]` array, the following 3 sub-ranges divide the data structure  as follows:\n* From 0 to 143: which represents the right side of the scanned area.\n* From 288 to 431: which represents the front side of the scanned area.\n* From 576 to 719: which represents the left side of the scanned area. \nThe whole ROS nodes net is independent of this node. In case the node wouldn't start, the project would still execute fine. \n* As a future improvement, I'd like to implement a different interface between the *Action-client* and *Action-service* communication. The *Action-service* could receive the position in the environment through the use of **feedback** Callback. The **status** Callback could have distinguished more status values and it could have handled the different situations that could refine the autonomous driving capability.\n* It is also possible to implement a custom Action. I could use a different service to implement a finer control of the robot through clients' requests.\n* Avoidence should be written as \"avoidance\". \n"
+      },
+      "source": "https://raw.githubusercontent.com/Fabioconti99/RT1_Assignment_3/main/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9067470404607005,
+      "result": {
+        "original_header": "Conclusions",
+        "type": "Text_excerpt",
+        "value": "-----------------\nTo take care of all the project's requests, I choose to manage the code's structure with modular logic. Thanks to this approach, I was able to reach the end of the assignment with a schematic structure of the project concerning only 4 extra Ros nodes. Thanks to the parameters introduced by the launch file, the robot can easily change driving modalities and quickly switch between them. The whole implementation makes the robot capable of driving around the environment following the requested rules. \n"
+      },
+      "source": "https://raw.githubusercontent.com/Fabioconti99/RT1_Assignment_3/main/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9498354554797488,
+      "result": {
+        "original_header": "Running the simulation",
+        "type": "Text_excerpt",
+        "value": "This project was my second approach to the ROS1 workflow. Working on this assignment, I gained knowledge about the concepts of ROS launch files, ROS actions, managing ROS parameters and implementing *messages* and building a modular and organized *package* structure.  \n(**credit to:** Luca Predieri, Francesco Pagano, Alessandro Perri, Matteo Carlone for the implementetion of the dctionary pop function of the avoidance feature)\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/Fabioconti99/RT1_Assignment_3/main/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "documentation": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/Fabioconti99/RT1_Assignment_3/tree/main/docs"
+      },
+      "technique": "file_exploration"
+    }
+  ],
+  "download_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/Fabioconti99/RT1_Assignment_3/releases"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "executable_example": [
+    {
+      "confidence": 1,
+      "result": {
+        "format": "jupyter_notebook",
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/Fabioconti99/RT1_Assignment_3/main/notebooks/Hello%20jupyter.ipynb"
+      },
+      "source": "https://raw.githubusercontent.com/Fabioconti99/RT1_Assignment_3/main/notebooks/Hello%20jupyter.ipynb",
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "format": "jupyter_notebook",
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/Fabioconti99/RT1_Assignment_3/main/notebooks/Target.ipynb"
+      },
+      "source": "https://raw.githubusercontent.com/Fabioconti99/RT1_Assignment_3/main/notebooks/Target.ipynb",
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "format": "jupyter_notebook",
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/Fabioconti99/RT1_Assignment_3/main/notebooks/Bar_node.ipynb"
+      },
+      "source": "https://raw.githubusercontent.com/Fabioconti99/RT1_Assignment_3/main/notebooks/Bar_node.ipynb",
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "format": "jupyter_notebook",
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/Fabioconti99/RT1_Assignment_3/main/notebooks/Jupy_UI.ipynb"
+      },
+      "source": "https://raw.githubusercontent.com/Fabioconti99/RT1_Assignment_3/main/notebooks/Jupy_UI.ipynb",
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "format": "jupyter_notebook",
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/Fabioconti99/RT1_Assignment_3/main/notebooks/Data_visualization.ipynb"
+      },
+      "source": "https://raw.githubusercontent.com/Fabioconti99/RT1_Assignment_3/main/notebooks/Data_visualization.ipynb",
+      "technique": "file_exploration"
+    }
+  ],
+  "forks_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 0
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/Fabioconti99/Different_Driving_modalities_of_a_Mobile_Robot/forks"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "Fabioconti99/Different_Driving_modalities_of_a_Mobile_Robot"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_title": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "Research_Track_1 , Robotics Engineering (UNIGE) : Final assignement"
+      },
+      "source": "https://raw.githubusercontent.com/Fabioconti99/RT1_Assignment_3/main/README.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "images": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/Fabioconti99/RT1_Assignment_2/main/images/ros.png"
+      },
+      "source": "https://raw.githubusercontent.com/Fabioconti99/RT1_Assignment_3/main/README.md",
+      "technique": "regular_expression"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/Fabioconti99/RT1_Assignment_1/main/images/python.png"
+      },
+      "source": "https://raw.githubusercontent.com/Fabioconti99/RT1_Assignment_3/main/README.md",
+      "technique": "regular_expression"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://user-images.githubusercontent.com/91262561/153684461-be2e2074-d17e-4f01-acf0-dd8481ec07d5.png"
+      },
+      "source": "https://raw.githubusercontent.com/Fabioconti99/RT1_Assignment_3/main/README.md",
+      "technique": "regular_expression"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://user-images.githubusercontent.com/91262561/153683955-682e4ca8-9282-4c45-98f9-52ef0e3a186b.GIF"
+      },
+      "source": "https://raw.githubusercontent.com/Fabioconti99/RT1_Assignment_3/main/README.md",
+      "technique": "regular_expression"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://user-images.githubusercontent.com/91262561/153684103-0222448b-aeac-4925-bcea-8fbc7cdf96e8.png"
+      },
+      "source": "https://raw.githubusercontent.com/Fabioconti99/RT1_Assignment_3/main/README.md",
+      "technique": "regular_expression"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://user-images.githubusercontent.com/91262561/153684323-a75025f3-28f4-4ad2-82e6-bd0a057d9c3a.png"
+      },
+      "source": "https://raw.githubusercontent.com/Fabioconti99/RT1_Assignment_3/main/README.md",
+      "technique": "regular_expression"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://user-images.githubusercontent.com/91262561/153684513-037947ca-4470-48de-8319-53d2aab4cd07.png"
+      },
+      "source": "https://raw.githubusercontent.com/Fabioconti99/RT1_Assignment_3/main/README.md",
+      "technique": "regular_expression"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://user-images.githubusercontent.com/91262561/153687536-b5add6e5-5d3f-4e2a-8362-17928206ef0e.png"
+      },
+      "source": "https://raw.githubusercontent.com/Fabioconti99/RT1_Assignment_3/main/README.md",
+      "technique": "regular_expression"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://user-images.githubusercontent.com/91262561/153684181-01d41767-99be-40df-9fa0-67760e7d7c83.png"
+      },
+      "source": "https://raw.githubusercontent.com/Fabioconti99/RT1_Assignment_3/main/README.md",
+      "technique": "regular_expression"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://user-images.githubusercontent.com/91262561/153684224-6a05a9d8-8478-4a84-b2cf-31c374bfd92b.png"
+      },
+      "source": "https://raw.githubusercontent.com/Fabioconti99/RT1_Assignment_3/main/README.md",
+      "technique": "regular_expression"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://user-images.githubusercontent.com/91262561/153684283-7ee3d999-50b8-4779-b83c-d590a64a4b2b.png"
+      },
+      "source": "https://raw.githubusercontent.com/Fabioconti99/RT1_Assignment_3/main/README.md",
+      "technique": "regular_expression"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://user-images.githubusercontent.com/91262561/153687510-a76bef7d-8bf8-467a-bc9b-d5e7da678065.png"
+      },
+      "source": "https://raw.githubusercontent.com/Fabioconti99/RT1_Assignment_3/main/README.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "installation": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Installing and running",
+        "parent_header": [
+          "<a href=\"https://unige.it/en/off.f/2021/ins/51201.html?codcla=10635\">Research_Track_1</a> , <a href=\"https://courses.unige.it/10635\">Robotics Engineering</a> (<a href=\"https://unige.it/it/\">UNIGE</a>) : Final assignement"
+        ],
+        "type": "Text_excerpt",
+        "value": "----------------------\nThe simulation requires the following steps before running:\n\n* A [ROS Noetic](http://wiki.ros.org/noetic/Installation) installation,\n\n* The download of the `slam_gmapping` package form the *Noetic* branch of the [teacher's repository](https://github.com/CarmineD8/slam_gmapping.git )\n\nRun the following command from the shell:\n```bash\ngit clone https://github.com/CarmineD8/slam_gmapping.git\n```\n\n* The download of the **ROS navigation stack** (run the following command from the shell)\n\nRun the following command from the shell:\n```bash\nsudo Apt-get install ros-<your_ros_distro>-navigation\n```\n\n* And the and the clone of the [Current repository](https://github.com/Fabioconti99/RT1_Assignment_3 ). After downloading the repository, you should take the `final_assignment` directory included in the repo and place it inside the local workspace directory.\n\nRun the following command from the shell:\n```bash\ngit clone https://github.com/Fabioconti99/RT1_Assignment_3\n```\n\nThe *Python* scripts I developed define a **user interface** that will let the user switch between driving modalities.\nThe **four scripts** provided are the following: \n\n* UI.py: Which represents a kind of menu where the user can switch between driving modalities.\n\n* go_to_desired_pos: This script implements an *Action* client-service communication that will manage to drive the robot to a chosen position in the environment.\n\n* my_teleop_twist_keyboard: Which will let the user directly drive the robot using keyboard inputs.\n\n* teleop_avoid.py: Which will let the user directly drive the robot with keyboard inputs.\n\n* avoidence.py: The last modality adds an obstacle avoidance capability to the second modality thanks to the custom message `Avoid.msg`. This added feature will prevent the user to drive the robot into a wall.\n"
+      },
+      "source": "https://raw.githubusercontent.com/Fabioconti99/RT1_Assignment_3/main/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 0.9584688238177554,
+      "result": {
+        "original_header": "Running the simulation",
+        "type": "Text_excerpt",
+        "value": "The following picture shows a graphical rappresentation of the ROS-Action protocol:  \n\n<img width=\"674\" alt=\"Schermata 2022-02-11 alle 11 33 10\" src=\"https://user-images.githubusercontent.com/91262561/153684323-a75025f3-28f4-4ad2-82e6-bd0a057d9c3a.png\"> \n\n<img width=\"312\" alt=\"Schermata 2022-02-12 alle 01 01 07\" src=\"https://user-images.githubusercontent.com/91262561/153687536-b5add6e5-5d3f-4e2a-8362-17928206ef0e.png\"> \n\n<img width=\"521\" alt=\"Schermata 2022-02-11 alle 21 25 55\" src=\"https://user-images.githubusercontent.com/91262561/153684181-01d41767-99be-40df-9fa0-67760e7d7c83.png\"> \n\n<img width=\"851\" alt=\"Schermata 2022-02-12 alle 00 08 48\" src=\"https://user-images.githubusercontent.com/91262561/153684283-7ee3d999-50b8-4779-b83c-d590a64a4b2b.png\"> \n<img width=\"983\" alt=\"Schermata 2022-02-12 alle 00 47 12\" src=\"https://user-images.githubusercontent.com/91262561/153687510-a76bef7d-8bf8-467a-bc9b-d5e7da678065.png\"> \nThis project was my second approach to the ROS1 workflow. Working on this assignment, I gained knowledge about the concepts of ROS launch files, ROS actions, managing ROS parameters and implementing *messages* and building a modular and organized *package* structure.  \n"
+      },
+      "source": "https://raw.githubusercontent.com/Fabioconti99/RT1_Assignment_3/main/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "issue_tracker": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/Fabioconti99/Different_Driving_modalities_of_a_Mobile_Robot/issues"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "keywords": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "obstacle-avoidance, python, ros, ros1, slam-algorithms, slam-gmapping, teleop-twist-keyboard"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "Different_Driving_modalities_of_a_Mobile_Robot"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "owner": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "User",
+        "value": "Fabioconti99"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "programming_languages": [
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Jupyter Notebook",
+        "size": 1238839,
+        "type": "Programming_language",
+        "value": "Jupyter Notebook"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "HTML",
+        "size": 172574,
+        "type": "Programming_language",
+        "value": "HTML"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "JavaScript",
+        "size": 37758,
+        "type": "Programming_language",
+        "value": "JavaScript"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Python",
+        "size": 33910,
+        "type": "Programming_language",
+        "value": "Python"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "CSS",
+        "size": 19810,
+        "type": "Programming_language",
+        "value": "CSS"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "CMake",
+        "size": 7202,
+        "type": "Programming_language",
+        "value": "CMake"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Batchfile",
+        "size": 800,
+        "type": "Programming_language",
+        "value": "Batchfile"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Makefile",
+        "size": 634,
+        "type": "Programming_language",
+        "value": "Makefile"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "readme_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/Fabioconti99/RT1_Assignment_3/main/README.md"
+      },
+      "technique": "file_exploration"
+    }
+  ],
+  "run": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Installing and running",
+        "parent_header": [
+          "<a href=\"https://unige.it/en/off.f/2021/ins/51201.html?codcla=10635\">Research_Track_1</a> , <a href=\"https://courses.unige.it/10635\">Robotics Engineering</a> (<a href=\"https://unige.it/it/\">UNIGE</a>) : Final assignement"
+        ],
+        "type": "Text_excerpt",
+        "value": "----------------------\nThe simulation requires the following steps before running:\n\n* A [ROS Noetic](http://wiki.ros.org/noetic/Installation) installation,\n\n* The download of the `slam_gmapping` package form the *Noetic* branch of the [teacher's repository](https://github.com/CarmineD8/slam_gmapping.git )\n\nRun the following command from the shell:\n```bash\ngit clone https://github.com/CarmineD8/slam_gmapping.git\n```\n\n* The download of the **ROS navigation stack** (run the following command from the shell)\n\nRun the following command from the shell:\n```bash\nsudo Apt-get install ros-<your_ros_distro>-navigation\n```\n\n* And the and the clone of the [Current repository](https://github.com/Fabioconti99/RT1_Assignment_3 ). After downloading the repository, you should take the `final_assignment` directory included in the repo and place it inside the local workspace directory.\n\nRun the following command from the shell:\n```bash\ngit clone https://github.com/Fabioconti99/RT1_Assignment_3\n```\n\nThe *Python* scripts I developed define a **user interface** that will let the user switch between driving modalities.\nThe **four scripts** provided are the following: \n\n* UI.py: Which represents a kind of menu where the user can switch between driving modalities.\n\n* go_to_desired_pos: This script implements an *Action* client-service communication that will manage to drive the robot to a chosen position in the environment.\n\n* my_teleop_twist_keyboard: Which will let the user directly drive the robot using keyboard inputs.\n\n* teleop_avoid.py: Which will let the user directly drive the robot with keyboard inputs.\n\n* avoidence.py: The last modality adds an obstacle avoidance capability to the second modality thanks to the custom message `Avoid.msg`. This added feature will prevent the user to drive the robot into a wall.\n"
+      },
+      "source": "https://raw.githubusercontent.com/Fabioconti99/RT1_Assignment_3/main/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Running the simulation",
+        "parent_header": [
+          "<a href=\"https://unige.it/en/off.f/2021/ins/51201.html?codcla=10635\">Research_Track_1</a> , <a href=\"https://courses.unige.it/10635\">Robotics Engineering</a> (<a href=\"https://unige.it/it/\">UNIGE</a>) : Final assignement"
+        ],
+        "type": "Text_excerpt",
+        "value": "To Run the simulation easily I added two *launch files* to the package. \n\n* launch_nodes.launch: That will launch the previously mentioned nodes through the use of the *Xterm* terminal. It will also initialize some **parameters** that will be used by the nodes during execution.\n\n* launch_All.launch: that will *include* all the launch files needed for running the whole simulation all at once.\n\nRun the following command from the shell to activate all the nodes:\n```bash\nroslaunch final_assignment launchAll.launch\n```\n\nThis kind of execution needs the Xterm terminal to be installed. If it's not already installed you can download it with the following shell command:\n\n```bash\n\nsudo apt-get install -y xterm\n```\n------\nNODES Description\n-------------------\n\n## UI node: UI.py\n\nThis node controls the robot's driving capabilities inside the environment. The **UI function** will command the robot to drive with a certain **Modality** inside the Gazebo map. Thanks to this node, the User will interact with the simulation choosing the driving mode through certain keyboard inputs.\n\nDriving modalities related to their keyboard inputs:\n\n* The keyboard input **[0]** resets the current driving modality.\n* The keyboard input **[1]** will start the autonomous drive towards a certain location in the map chosen by the user.\n* The keyboard input **[2]** will start a simple teleop-key interface.\n* The keyboard input **[3]** will add to the previous interface an avoidance layer.\n\nThanks to the `launch_nodes.launch` launch file, I added **three parameters** to the project for managing the *different activation state* of all the nodes involved in the project.\nThe three parameters are:\n\n* **Active**: This parameter manages the current state of the project's ROS node chain. Once the program is launched, the parameter is set to be in *idle state* (0 states). In the beginning, one of the nodes will be in its active state. The UI node is capable of managing the change of the value of this parameter thanks to the retrieved user input. A simple legend will tell the user what button to press for running a certain driving modality. The user input will change the value of the parameter and all the nodes will either keep their current idle state or switch to a running state. An If-Statement inside every node manages this modality switch.\n\n* **Posion X and Position Y**: Also, these two parameters are retrieved by an input user managed in the UI node. Once the user selects the **first modality [1]** the UI interface will also ask for an X and Y coordinate. This data represents the position we want the robot to go. If the user wants to stop the robot's motion, it is sufficient to either input another driving modality or set the project idle state.\nThe UI node will also keep the user updated on the current modality thanks to the on-screen messages sent at every state switch. Some flags will keep track of the current modality based on the UI inputs.\n\nThe follwing graph rappresents the whole UI structure:\n\n![ Diagramma_vuoto](https://user-images.githubusercontent.com/91262561/153684103-0222448b-aeac-4925-bcea-8fbc7cdf96e8.png)\n\n\n\n------\n## Autonomous drive mode: go_to_desired_pos.py\n\nThis node implements the autonomous driving capability. The script exploits an **action client** (*actionlib* library) instance to establish direct communication with the mobile robot and set and cancel location goals.\n\nThe Action Client-Service communicate via a \"ROS Action Protocol\", which is built on top of ROS messages. The client and server then provide a simple API for users to request goals (on the client side) or to execute goals (on the server side) via function calls and callbacks. \nThrough out the coding of this node I implemented only the *Actionclient* side of the whole structure using the already existing server of the following action messages:\n\n* `MoveBaseAction`\n* ` MoveBaseGoal`\n\nThe following picture shows a graphical rappresentation of the ROS-Action protocol: \n\n\n<img width=\"674\" alt=\"Schermata 2022-02-11 alle 11 33 10\" src=\"https://user-images.githubusercontent.com/91262561/153684323-a75025f3-28f4-4ad2-82e6-bd0a057d9c3a.png\">\n\n\n\n* *goal*: used to send new goals to server\n* *cancel*: used to send cancel requests to server\n* *status*: used to notify clients on the current state of every goal in the system\n* *feedback*: used to send clients periodic auxiliary information for a goal\n* *result*:  used to send clients one-time auxiliary information about the completion of a goal\n\nFor the client and server to communicate, I should define a few messages on which they communicate. This defines the Goal, Feedback, and Result messages with which clients and servers communicate. throughout the coding, I only used the Goal message because that was the one message needed for fulfilling the project aim. \n\nThanks to the Actionlib feature, an ActionServer receives the goal message from an ActionClient. In the case of my project, the goal is to move the robot's base position. The goal would be a MoveBaseGoal message that contains information about where the robot should move to in the world. For controlling all the robot positions in space, the goal would contain the *target_pose* parameters (stamp, orientation, target position, etc).\n\n ### Main functions used\n \nThe following function sets the standard instances of the position I want to achieve and it also initializes the client-side of the action:\n\n```python\ndef action_client_init():\n\n    global client \n    global goal \n    \n    client = actionlib.SimpleActionClient('move_base',MoveBaseAction) # Initialization of the action client.\n    client.wait_for_server()                            # Waiting for the server to get ready.\n    \n    goal = MoveBaseGoal()                         # Initialization of the goal message.\n    goal.target_pose.header.frame_id = \"map\"            # Setting up some parameters of the goal message.\n    goal.target_pose.header.stamp = rospy.Time.now()\n    goal.target_pose.pose.orientation.w = 1.0\n    \n# Call Back used for setting up a timeout to the robot's current task.\ndef my_callback_timeout(event):\n    if active_==1:\n        print (\"\\033[1;31;40m Goal time expired\\033[0;37;40m :\" + str(event.current_real)+st)\n        print(\"The robot didn't reach the desired position target within a 1min time span\\n\")\n        rospy.set_param('active', 0)\n```\n\nOnce the node gets to its active state, the retrieved info on the goal position will be retrieved from the newly set parameters and inserted inside the goal message structure. This operation is taken care of by the following \"set-goal\" function: \n\n```python\ndef action_client_set_goal():\n\n    goal.target_pose.pose.position.x = desired_position_x\n    goal.target_pose.pose.position.y = desired_position_y\n    print(\"\\033[1;33;40m START AUTONOMOUS DRIVE\"+st+\"\\033[0;37;40m \\n\")\n    client.send_goal(goal,done_cb)\n```\nThe following image shows the Rviz graphical interface once the goal is set:\n\n\n\n![Schermata 2022-02-12 alle 00 31 15](https://user-images.githubusercontent.com/91262561/153684513-037947ca-4470-48de-8319-53d2aab4cd07.png)\n\n\nThe argument `done_cb` of the `send_goal` function is a special call-back function needed for retrieving info on the goal-reaching *status*. This function retrieves info directly from the server-side. There are many different values associated with the status parameter during the final portion of the execution. The only one used in the code is the *status 3* related to the goal achievement:\n\n```python\ndef done_cb(status,result):\n    \n    global flag_goal\n    \n    if status==3:\n        print(\"\\033[1;34;40m goal achived!\"+st+\"\\033[0;37;40m \\n\")\n        flag_goal = 1\n```\n\nSince the server provides the output of this function, I choose to ignore any other given status because I wouldn't have any direct control over it. An example of this is \"the ending on a *timeout*\" feature. There exists a status for retrieving a *timeout* ending for the robot. I ignored it because the actual time is set directly by the server.\nThe following function sets a timer expiration goal that is locally set to 1 minute. Once it expires it will automatically cancel the goal.\n\n\n```python\ndef my_callback_timeout(event):\n    if active_==1:\n        print (\"\\033[1;31;40m Goal time expired\\033[0;37;40m :\" + str(event.current_real)+st)\n        print(\"The robot didn't reach the desired position target within a 1min time span\\n\")\n        rospy.set_param('active', 0)\n        \n```\n\nThorough out the whole execution, thanks to the following callback, the program will print the actual position on screen with a 10hz rate. The actual position is not retrived by the *action feedback* but from a subscription to the odometry topic `/odom`. \n\n```python\ndef clbk_odom(msg): \n    global position_\n    position_ = msg.pose.pose.position\n    \n```\n\nPicture of the standard GUI window of the first modality:\n\n\n<img width=\"312\" alt=\"Schermata 2022-02-12 alle 01 01 07\" src=\"https://user-images.githubusercontent.com/91262561/153687536-b5add6e5-5d3f-4e2a-8362-17928206ef0e.png\">\n\n\nThe normal `cancel_goal` is activated once the robot gets back into its idle state. The cancel call is managed by all the flags that determine the current state of the process.\n\n```python\n# The active value is not set to 1\nelse:\n    # Initial idle state \n    if flag == 0 and flag_2==0:\n        \n        print(\"\\033[1;31;40m STOP MODALITY 1 \\033[0;37;40m \\n\")\n        flag = 1\n    \n    # Idle state the node will get to once the robot gets stopped by the user.\n    if flag == 0 and flag_2==1:\n        \n        # Flag needed to know if the goal is reached or not\n        if flag_goal==1:\n            # If the goal is reached I will not cancel the goal because. \n            print(\"\\033[1;31;40m STOP MODALITY 1 \"+st+\"\\033[0;37;40m\")\n            flag = 1\n            flag_2 = 0\n            flag_goal = 0\n    \n        else:\n            # If the goal is not reached once the user switches modality or the time expires with the time-out.\n            print(\"\\033[1;31;40m GOAL CANCELED, STOP MODALITY 1 \"+st+\"\\033[0;37;40m\")\n            client.cancel_goal()\n            flag = 1\n            flag_2 = 0\n    \n```\n\nIf the `active` param is set to a value different than 1, the program will at first execute one of the if-sections and it will later just idle waiting for `the active` param to get to 1. \n\n\n------\n## KeyBoard input drive mode: teleop_avoid.py\n\nThe script is based on the standard ROS teleop_twist_keyboard.py.\nThis node is constantly checking which keys are pressed on a PC keyboard and based on the pressed keys, publishes twist messages on the `/cmd_vel` topic. Twist message defines what should be the linear and rotational speeds of a mobile robot.\n\n ### Main functions used\n \nI added some functions and changes to the code to merge it with the `avoidence.py` publisher and to manage the alternity of the activation state.\nJust like all the other programs, I had to manage the alternity of the *idle* to the *active* state through the use of an If-statement. Since the node also includes the functionalities of the third modality, the statement will set the node to an active modality if the `active` param is either set to 3 or 2.\nI added a new function named `stop_motion` to the `PublishThread` class. This function will make the robot stop once the driving modality gets switched. The function will set the linear and angular velocity to 0 with the `twist` message through the `/cmd_vel` topic. \n\n```python\ndef stop_motion(self):\n    twist = Twist()\n    # Publish stop message when thread exits.\n    twist.linear.x = 0\n    twist.linear.y = 0\n    twist.linear.z = 0\n    twist.angular.x = 0\n    twist.angular.y = 0\n    twist.angular.z = 0\n            \n    self.publisher.publish(twist)\n```\n\nThe node **subscribes** to the custom topic `custom_controller` implemented for publishing the `Avoid. msg` message containing info about the walls surrounding the robot. The callback subscribed sets some local variables equal to the published fields of the custom message. The following uses these variables function to change some keyboards inputs to prevent the user to drive the robot into walls. \n\n```python\ndef new_dict(dictionary):\n\n    global ok_left\n    global ok_right\n    global ok_straight\n    \n    # If any of the flags for checking if the wall are turned on in any combinations, the function will disable the corrisponding directions command.\n    if not ok_straight == 1 and not ok_right == 1 and not ok_left == 1:\n        dictionary.pop('i')\n        dictionary.pop('j')\n        dictionary.pop('l')\n        \n    elif not ok_left == 1 and not ok_straight == 1 and ok_right == 1:\n        dictionary.pop('i')\n        dictionary.pop('j')\n        \n    elif ok_left == 1 and not ok_straight == 1 and not ok_right == 1:\n        dictionary.pop('i')\n        dictionary.pop('l')\n        \n    elif not ok_left == 1 and ok_straight == 1 and not ok_right == 1:\n        dictionary.pop('l')\n        dictionary.pop('j')\n        \n    elif ok_left == 1 and not ok_straight == 1 and ok_right == 1:\n        dictionary.pop('i')\n        \n    elif not ok_left == 1 and ok_straight == 1 and ok_right == 1:\n        dictionary.pop('j')\n        \n    elif ok_left == 1 and ok_straight == 1 and not ok_right == 1:\n        pdictionary.pop('l')\n```\n\nA **dictionary** m manages the keyboard input set by:\nA dictionary is *python* unordered and changeable collection of data values that holds key-value pairs. Each key-value pair in the dictionary maps the key to its associated value making it more optimized.\nIn the standard `teleop_twist_keyboard`, a dictionary is used to collect the buttons for all the possible robot's movements. In my version of the node, some of these keys are omitted to code an easier implementation of the avoidance feature. The following instance is the dictionary used in the node:\n\n```python\n# Dictionary for moving commands\nmoveBindings = {\n        'i':(1,0,0,0),\n        'j':(0,0,0,1),\n        'l':(0,0,0,-1),\n        'k':(-1,0,0,0),\n    }\n```\nThe associated values optimize the UI making it easier for the user to interact with the simulation. Thanks to these values, the node will public the right values to the `/cmd_vel` topic for making the robot move accordingly with the input.\n\nThe following table shows the commands related to each keyboard input:\n\n\n<img width=\"521\" alt=\"Schermata 2022-02-11 alle 21 25 55\" src=\"https://user-images.githubusercontent.com/91262561/153684181-01d41767-99be-40df-9fa0-67760e7d7c83.png\">\n\n\nThe `new_dict()` function uses the `pop` command to directly remove some keys from the dictionary. The removal will happen accordingly to the values retrieved by the previously mentioned callback to the `custom_controller` topic. The values retrieved by the teleop node are relocated in the following local variables:\n\n* `ok_right`:\n    * 1 = the wall is not close to the right of the robot. The user will be able to turn right. \n    * 0 = the wall is close to the right of the robot. The user will not be able to turn right. \n\n* `ok_left`:\n    * 1 = the wall is not close to the left of the robot. The user will be able to turn left. \n    * 0 = the wall is close to the left of the robot. The user will not be able to turn right.\n    \n* `ok_straight`:\n    * 1 = the wall is not close to the front of the robot. The user will be able to drive straight. \n    * 0 = the wall is close to the front of the robot. The user will not be able to drive straight.\n    \nThe following scheme shows all the combinations that the program considers for the wall avoidence:\n\n\n![Schermata 2022-02-11 alle 21 07 11](https://user-images.githubusercontent.com/91262561/153684224-6a05a9d8-8478-4a84-b2cf-31c374bfd92b.png)\n\n\n\nAt every cycle, the dictionary will switch to a temporary one that will consider the just \"popped\" commands.\n\n------\n## Avoidence feature: avoidence.py\n\n\nThis node aims to activate a security feature for driving with the teleop_key modality. Thanks to the **subscription** to the `/laser_scan` topic, the node will be able to get info about the robot's surroundings. The subscription to the topic will give back the `ranges[0,720]` array to the subscribed callback. This data structure contains the distance values between the robot and the surrounding walls for a span of 180\u00ba degrees in front of the robot. The array simulates the info that a set of lasers would retrieve in an actual environment.\nThe node will later elaborate the data acquired to publish it on the `custom_controller` custom topic through the `Avoid.msg` custom message.\n\n### Main functions used\n\n`cb_avoid(msg)` is the callback function used to acquire and manage the data from the `/lase_scan` subscription. Once the callback retrieves the `ranges[]` array, the following 3 sub-ranges divide the data structure  as follows:\n* From 0 to 143: which represents the right side of the scanned area.\n* From 288 to 431: which represents the front side of the scanned area.\n* From 576 to 719: which represents the left side of the scanned area.\n\nthe following picture gives a graphical rappresentation of the 3 sub arrays:\n\n\n<img width=\"851\" alt=\"Schermata 2022-02-12 alle 00 08 48\" src=\"https://user-images.githubusercontent.com/91262561/153684283-7ee3d999-50b8-4779-b83c-d590a64a4b2b.png\">\n\n\n\nTo the local variables `right`, `front`, and `left` are assigned the smaller value retrieved by their correspondent array. If one of these values is smaller than 1 an if-statement will set the correspondent `ok_(right, front, left)` global variable to 0. the `custom_controller` custom topic will later receive these variables through the `Avoid. msg` custom message by the `main` function.\nIf the `active` parameter is not set to 3, the node will just publish the values 1 to simulate the idle state of the modality.\n\n```python\ndef cb_avoid(msg):\n\n    global ok_left\n    global ok_right\n    global ok_straight\n    \n    active_=rospy.get_param(\"/active\")        # Assignment of the active param value to a local variable.\n    if active_ == 3:\n        \n        right = min(msg.ranges[0:143])      # right checking laser span.\n        front = min(msg.ranges[288:431])    # front checking laser span.\n        left = min(msg.ranges[576:719])     # left checking laser span.\n        \n        if right < 1.0:         # If the robot is close to the right of the robot.\n            ok_right = 0\n        else:\n            ok_right = 1\n        if front < 1.0:         # If the robot is close to the front of the robot.\n            ok_straight = 0\n        else:\n            ok_straight = 1\n        if left < 1.0:          # If the robot is close to the left of the robot.\n            ok_left = 0\n        else:\n            ok_left = 1\n    else:                       # Let all the direction good to go if the modality 3 is turned off.\n        ok_right = 1\n        ok_straight = 1\n        ok_left = 1\n```\n\nThe `main` function is used only to initialize the publisher and the subscriber's instances and publish the avoidance message on the `custom_contrller` topic. The while loop will spin at a 10hz rate thanks to the `sleep` function. \n\n```python\ndef main():\n\n    global ok_left\n    global ok_right\n    global ok_straight\n    \n    pub = rospy.Publisher('custom_controller', Avoid, queue_size=10)    # Publisher.\n    rospy.init_node('avoidence')                                        # Initialization of the node.\n    sub = rospy.Subscriber('/scan', LaserScan, cb_avoid)                # Sub to the '/scan' topic.\n    rate = rospy.Rate(5)                                                #10hz\n    \n    pub_msg = Avoid()\n    while not rospy.is_shutdown():\n        pub_msg.left = ok_left          # Assigning the messages fields\n        pub_msg.right = ok_right        # Assigning the messages fields\n        pub_msg.front = ok_straight     # Assigning the messages fields\n        \n        pub.publish(pub_msg)        # publishing the messages fields\n        rate.sleep()                # 10hz delay.\n\n```\n\nThe whole ROS nodes net is independent of this node. In case the node wouldn't start, the project would still execute fine.\n\n\n\nRQT-Graph\n--------------------\n\n<img width=\"983\" alt=\"Schermata 2022-02-12 alle 00 47 12\" src=\"https://user-images.githubusercontent.com/91262561/153687510-a76bef7d-8bf8-467a-bc9b-d5e7da678065.png\">\n\n\n\nPossible improvements\n-----------------\n\n* As a future improvement, I'd like to implement a different interface between the *Action-client* and *Action-service* communication. The *Action-service* could receive the position in the environment through the use of **feedback** Callback. The **status** Callback could have distinguished more status values and it could have handled the different situations that could refine the autonomous driving capability.\n* It is also possible to implement a custom Action. I could use a different service to implement a finer control of the robot through clients' requests.\n* Avoidence should be written as \"avoidance\".\n\n\nConclusions\n-----------------\nTo take care of all the project's requests, I choose to manage the code's structure with modular logic. Thanks to this approach, I was able to reach the end of the assignment with a schematic structure of the project concerning only 4 extra Ros nodes. Thanks to the parameters introduced by the launch file, the robot can easily change driving modalities and quickly switch between them. The whole implementation makes the robot capable of driving around the environment following the requested rules.\n\nThis project was my second approach to the ROS1 workflow. Working on this assignment, I gained knowledge about the concepts of ROS launch files, ROS actions, managing ROS parameters and implementing *messages* and building a modular and organized *package* structure. \n\n(**credit to:** Luca Predieri, Francesco Pagano, Alessandro Perri, Matteo Carlone for the implementetion of the dctionary pop function of the avoidance feature)\n"
+      },
+      "source": "https://raw.githubusercontent.com/Fabioconti99/RT1_Assignment_3/main/README.md",
+      "technique": "header_analysis"
+    }
+  ],
+  "somef_missing_categories": [
+    "citation",
+    "acknowledgement",
+    "download",
+    "requirements",
+    "contact",
+    "contributors",
+    "license",
+    "usage",
+    "faq",
+    "support",
+    "identifier",
+    "has_build_file"
+  ],
+  "somef_provenance": {
+    "date": "2024-10-04 00:40:11",
+    "somef_schema_version": "1.0.0",
+    "somef_version": "0.9.5"
+  },
+  "stargazers_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 1
+      },
+      "technique": "GitHub_API"
+    }
+  ]
+}

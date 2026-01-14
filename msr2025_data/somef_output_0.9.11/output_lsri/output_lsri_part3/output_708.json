@@ -1,0 +1,535 @@
+{
+  "citation": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Citation",
+        "type": "Text_excerpt",
+        "value": "pair-based classifier_. Bioinformatics. doi: 10.1093/bioinformatics/btab088 (URL:\nhttps://doi.org/10.1093/bioinformatics/btab088).\n"
+      },
+      "source": "https://raw.githubusercontent.com/NourMarzouka/multiclassPairs/master/README.md",
+      "technique": "header_analysis"
+    }
+  ],
+  "code_repository": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/NourMarzouka/multiclassPairs"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_created": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2020-08-18T14:07:36Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_updated": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2023-05-01T13:48:44Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "description": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "Build single sample pair-based (rule-based) classifiers using top-score pairs or random forest for multi-class problems."
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 0.9290046989941707,
+      "result": {
+        "original_header": "Workflow",
+        "type": "Text_excerpt",
+        "value": "The workflow in `multiclassPairs` is summarized in the next figure: \n<img src=\"images/workflow_v0_3.png\" alt=\"Workflow in multiclassPairs R package: Functions are colored in green.\" width=\"1565\" />\n<p class=\"caption\">\nWorkflow in multiclassPairs R package: Functions are colored in green.\n</p> \n-   First option is a one-vs-rest scheme that assemble one-vs-rest\n    binary classifiers built by \u2018switchBox\u2019 package which uses Top-score\n    pairs (TSP) algorithm.\n-   The second option is a scheme based on a novel implementation of the\n    random forest (RF) algorithm. \nFor more complex predictions, RF performs better. For less complex\npredictions, we recommend to use one-vs-rest due to its straightforward\napplication and interpretation. \nBoth workflows begin by filtering the features, then combining the\nfiltered features to make the list of all the possible rules\n(i.e.\u00a0rule1: feature1 &lt; feature2, rule2: feature1 &lt; feature3,\netc\u2026). Then the list of rules will be filtered and the most important\nand informative rules will be kept. The informative rules will be\nassembled in an one-vs-rest model or in an RF model. We provide a\ndetailed description for the methodologies for each step in the help\nfiles in the package.\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/NourMarzouka/multiclassPairs/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9732010349471362,
+      "result": {
+        "original_header": "Create data object",
+        "type": "Text_excerpt",
+        "value": "`ReadData` takes the data (data.frame/matrix/ExpressionSet) and class\nlabels for the samples, then generates a data object to be used in the\ndownstream steps, such as genes filtering, training, and visualization. \nOptionally, `ReadData` accepts additional platform/study labels and\nincludes it in the data object when more than one platform/study are\ninvolved, this helps in performing the downstream steps in\nplatform/study wise manner, where the filtering of the genes/rules is\nperformed in the samples of each platform/study separately, then the top\ngenes/rules in all of the platforms/studies are selected. \nHere is an example of creating data object using a matrix:\n``` r\nlibrary(multiclassPairs)\n\n# example of creating data object from matrix\n# we will generate fake data in this example\n# matrix with random values\nData <- matrix(runif(10000), \n               nrow=100, \n               ncol=100, \n               dimnames = list(paste0(\"G\",1:100), \n                               paste0(\"S\",1:100)))\n# class labels\nL1 <- sample(x = c(\"A\",\"B\",\"C\"), size = 100, replace = TRUE)\n\n# platform/study labels\nP1 <- sample(x = c(\"P1\",\"P2\"), size = 100, replace = TRUE)\n\n# create the data object\nobject <- ReadData(Data = Data,\n                   Labels = L1,\n                   Platform = P1,\n                   verbose = FALSE)\nobject\n```\n \n    ## multiclassPairs object\n    ## *Data:\n    ##    Number of samples: 100 \n    ##    Number of genes/features: 100 \n    ## *Labels and Platforms:\n    ##    Classes: A C B \n    ##    Platforms/studies: P2 P1 \n    ## *Samples count table:    \n    ##       A  B  C\n    ##   P1 21 10 13\n    ##   P2 19 16 21 \nHere is an example using\n[`leukemiasEset`](https://bioconductor.org/packages/release/data/experiment/html/leukemiasEset.html)\ndata from Bioconductor packages, which is an `Expressionset` containing\ngene expression data from 60 bone marrow samples of patients with one of\nthe four main types of leukemia (ALL, AML, CLL, CML) or non-leukemia.\nNote that this example is just to show the functions and the options in\nthe `multiclassPairs` package. For a better comparison between the\nworkflows and other tools see the comparison session in the end of this\ntutorial.\n``` r\nlibrary(multiclassPairs, quietly = TRUE)\n\n# install Leukemia cancers data\nif (!requireNamespace(\"BiocManager\", quietly = TRUE)){\n  install.packages(\"BiocManager\")\n}\nif (!requireNamespace(\"leukemiasEset\", quietly = TRUE)){\n  BiocManager::install(\"leukemiasEset\")\n}\n\n# load the data package\nlibrary(leukemiasEset, quietly = TRUE)\ndata(leukemiasEset)\n```\n \n    ## ExpressionSet (storageMode: lockedEnvironment)\n    ## assayData: 20172 features, 60 samples \n    ##   element names: exprs, se.exprs \n    ## protocolData\n    ##   sampleNames: GSM330151.CEL GSM330153.CEL ... GSM331677.CEL (60 total)\n    ##   varLabels: ScanDate\n    ##   varMetadata: labelDescription\n    ## phenoData\n    ##   sampleNames: GSM330151.CEL GSM330153.CEL ... GSM331677.CEL (60 total)\n    ##   varLabels: Project Tissue ... Subtype (5 total)\n    ##   varMetadata: labelDescription\n    ## featureData: none\n    ## experimentData: use 'experimentData(object)'\n    ## Annotation: genemapperhgu133plus2\n``` r\n# explore the phenotypes data\nknitr::kable(head(pData(leukemiasEset)))\n```\n|               | Project | Tissue     | LeukemiaType | LeukemiaTypeFullName         | Subtype                            |\n|:--------------|:--------|:-----------|:-------------|:-----------------------------|:-----------------------------------|\n| GSM330151.CEL | Mile1   | BoneMarrow | ALL          | Acute Lymphoblastic Leukemia | c\\_ALL/Pre\\_B\\_ALL without t(9 22) |\n| GSM330153.CEL | Mile1   | BoneMarrow | ALL          | Acute Lymphoblastic Leukemia | c\\_ALL/Pre\\_B\\_ALL without t(9 22) |\n| GSM330154.CEL | Mile1   | BoneMarrow | ALL          | Acute Lymphoblastic Leukemia | c\\_ALL/Pre\\_B\\_ALL without t(9 22) |\n| GSM330157.CEL | Mile1   | BoneMarrow | ALL          | Acute Lymphoblastic Leukemia | c\\_ALL/Pre\\_B\\_ALL without t(9 22) |\n| GSM330171.CEL | Mile1   | BoneMarrow | ALL          | Acute Lymphoblastic Leukemia | c\\_ALL/Pre\\_B\\_ALL without t(9 22) |\n| GSM330174.CEL | Mile1   | BoneMarrow | ALL          | Acute Lymphoblastic Leukemia | c\\_ALL/Pre\\_B\\_ALL without t(9 22) |\n``` r\n# We are interested in LeukemiaType\nknitr::kable(table(pData(leukemiasEset)[,\"LeukemiaType\"]))\n```\n| Var1 | Freq |\n|:-----|-----:|\n| ALL  |   12 |\n| AML  |   12 |\n| CLL  |   12 |\n| CML  |   12 |\n| NoL  |   12 |\n``` r\n# split the data\n# 60% as training data and 40% as testing data\nn <- ncol(leukemiasEset)\nset.seed(1234)\ntraining_samples <- sample(1:n,size = n*0.6)\n\ntrain <- leukemiasEset[1:1000,training_samples]\ntest  <- leukemiasEset[1:1000,-training_samples]\n\n# just to be sure there are no shared samples between the training and testing data\nsum(sampleNames(test) %in% sampleNames(train)) == 0\n```\n    ## [1] TRUE\n``` r\n# create the data object\n# when we use Expressionset we can use the name of the phenotypes variable \n# ReadData will automatically extract the phenotype variable and use it as class labels\n# the same can be used with the Platform/study labels\n# in this example we are not using any platform labels, so leave it NULL\nobject <- ReadData(Data = train, \n                   Labels = \"LeukemiaType\", \n                   Platform = NULL, \n                   verbose = FALSE)\nobject\n```\n \n    ## multiclassPairs object\n    ## *Data:\n    ##    Number of samples: 36 \n    ##    Number of genes/features: 1000 \n    ## *Labels and Platforms:\n    ##    Classes: CLL AML NoL CML ALL \n    ##    Platforms/studies: NULL\n    ## *Samples count table:\n    ## ALL AML CLL CML NoL \n    ##   8   6   7   8   7\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/NourMarzouka/multiclassPairs/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9553482805014867,
+      "result": {
+        "original_header": "One-vs-rest scheme",
+        "type": "Text_excerpt",
+        "value": "One-vs-rest scheme is composed from binary individual classifiers for\neach class (i.e.\u00a0each class versus others). Each binary classifier votes\n(i.e.\u00a0give a score) for the predicted sample, and the sample\u2019s class is\npredicted based on the highest score. \n"
+      },
+      "source": "https://raw.githubusercontent.com/NourMarzouka/multiclassPairs/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9446472646280946,
+      "result": {
+        "original_header": "Gene filtering",
+        "type": "Text_excerpt",
+        "value": "For building a pair-based classifier with a one-vs-rest scheme, we start\nby selecting top differentially expressed genes using the\n`filter_genes_TSP` function. This reduces the number of gene\ncombinations (rules) in the next steps. This function can perform the\nfiltering in different ways and return the top differential expressed\ngenes for each class. \n`filter_genes_TSP` function provides two options for gene filtering.\nBoth options begins by ranking the data (i.e.\u00a0in-sample ranking). The\nfirst option performs one-vs-rest comparison using Wilcoxon test and\nthen selects a number of the top genes. Wilcoxon test is done separately\nfor each class. The second option performs one-vs-one comparison using\nDunn\u2019s test, and then selects a number of the top genes. Dunn\u2019s test is\nperformed for all classes together. \nThe reason for using one-vs-one gene filtering is to give more weight to\nsmall classes. The reason for using platform-wise gene filtering is to\ngive more weight to platforms with small sample size, and to select\ngenes that are important in all platforms/studies. However, one-vs-one\nand platform-wise options does not guarantee better results but they are\nvalid options to be considered during the training process. \nMore details about the filtering process is mentioned in the\ndocumentation of `filter_genes_TSP` function. \nHere we will run a simple gene filtering example on the\n[`leukemiasEset`](https://bioconductor.org/packages/release/data/experiment/html/leukemiasEset.html)\ndata.\n``` r\n# let's go with gene filtering using one_vs_one option\n# for featureNo argument, a sufficient number of returned features is \n# recommended if large number of rules is used in the downstream training steps.\nfiltered_genes <- filter_genes_TSP(data_object = object,\n                                   filter = \"one_vs_one\",\n                                   platform_wise = FALSE,\n                                   featureNo = 1000,\n                                   UpDown = TRUE,\n                                   verbose = TRUE)\nfiltered_genes\n```\n \nWe asked for 1000 filtered genes per class (i.e.\u00a0`featureNo` argument)\nbut the filtered genes object has less than 1000 genes per class. This\nis because the function did not find enough genes matching the top genes\ncriteria (i.e.\u00a0high/low in the class and the opposite in the other\nclasses). \nTo skip the step of filtering genes, one can create the filtering genes\nobject with all available genes as in the next chunk. However, this\nsignificantly increases the training time.\n``` r\n# using the object that is generated by ReadData\n# we can create genes object with all genes to skip filtering step\n\n# Get the class names\nclasses <- unique(object$data$Labels)\n\n# create empty genes object\ngenes_all <- list(OnevsrestScheme = list(filtered_genes = NULL,\n                                         calls = c()))\nclass(genes_all) <- \"OnevsrestScheme_genes_TSP\"\n\n# prepare the slots for each class\ntmp <- vector(\"list\", length(classes))\nnames(tmp) <- classes\n\ngenes_all$OnevsrestScheme$filtered_genes <- tmp\ngenes_all$OnevsrestScheme$calls <- c()\ngenes_all\n\n# fill the gene object in each slot\nfor (i in classes) {\n  genes_all$OnevsrestScheme$filtered_genes[[i]] <- rownames(object$data$Data)\n}\n\n# This is the gene object with all genes\ngenes_all\n```\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/NourMarzouka/multiclassPairs/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9286547105884918,
+      "result": {
+        "original_header": "Model training",
+        "type": "Text_excerpt",
+        "value": "After filtering the genes, we can train our model using\n`train_one_vs_rest_TSP` function. This function combines the filtered\ngenes as binary rules (GeneA &lt; GeneB, GeneA &lt; GeneC, etc.) then\nrules are sorted based on their score, and the optimal number of rules\namong the input range (i.e.\u00a0`k_range` argument) is selected. The optimal\nnumber of rules is determined internally through the `SWAP.Train.KTSP`\nfunction from `switchBox` which uses Variance Optimization (VO) method\nas in (Afsari et al.\u00a02014). \nRules scoring is performed by the traditional scoring method [(Geman et\nal.\u00a02004)](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC1989150/).\nBriefly, the score for a given rule equals the percentage of samples\nthose are TRUE for the rule in the class minus the percentage of the\nsamples those are TRUE for the rule in another group(s).\n`train_one_vs_rest_TSP` function gives two scoring options: one-vs-rest\nand one-vs-one. In one-vs-rest scoring option, all the rest classes are\ngrouped in one \u2018rest\u2019 group. In one-vs-one scoring option, the score is\ncalculated as the mean of one-vs-one rule scores. The reason for using\none-vs-one option is to give more weight to small classes. \nScores can also be calculated in a platform-wise manner where the score\nis calculated in each platform/study separately, then the mean of these\nscores will be the final score for the rule. \nThe `k_range` argument defining the candidate number of top rules from\nwhich the algorithm chooses to build the binary classifier for each\nclass. Note that during prediction process (i.e.\u00a0class voting) binary\nclassifiers with low number of rules tie more than binary classifiers\nwith higher number of rules. Because of that, it is recommended to use\nsufficient number of rules to avoid the score ties. Sufficient number of\nrules depends on how many classes we have and on how much these classes\nare distinct from each other. \nRules have two sides (i.e.\u00a0GeneA &lt; GeneB), usually rules are composed\nfrom two differently expressed genes (i.e.\u00a0filtered genes). However,\ninvariant genes (called pivot genes) can be involved in the rules\nthrough `include_pivot` argument. If `include_pivot` argument is TRUE,\nthen the filtered genes will be combined with all genes in the data\nallowing rules in form of \u2018filtered genes &lt; pivot gene\u2019 and \u2018pivot\ngene &lt; filtered genes\u2019. This may increase the training time due to\nincrease the number of the possible rules.\n``` r\n# Let's train our model\nclassifier <- train_one_vs_rest_TSP(data_object = object,\n                                    filtered_genes = filtered_genes,\n                                    k_range = 5:50,\n                                    include_pivot = FALSE,\n                                    one_vs_one_scores = TRUE,\n                                    platform_wise_scores = FALSE,\n                                    seed = 1234,\n                                    verbose = FALSE)\nclassifier\n```\n \nSo, in our trained model we have 5 binary classifiers for the classes:\nCLL, AML, NoL, CML, ALL, with 24,8,5,5,7 rules, respectively.\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/NourMarzouka/multiclassPairs/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9507169549575968,
+      "result": {
+        "original_header": "Prediction",
+        "type": "Text_excerpt",
+        "value": "Now, let\u2019s apply our trained model on the training and testing data to\nassess its performance. We can do that through `predict_one_vs_rest_TSP`\nfunction. \nNote that, in some cases the testing data miss some features or genes,\n`predict_one_vs_rest_TSP` can deal with this through ignoring the rules\nwith missed genes. However, if a lot of rules are ignored the prediction\nmay be affected to large extend. \n`predict_one_vs_rest_TSP` returns a data.frame with class scores, score\nties, and final prediction based on the max score.\n``` r\n# apply on the training data\n# To have the classes in output in specific order, we can use classes argument\nresults_train <- predict_one_vs_rest_TSP(classifier = classifier,\n                                         Data = object,\n                                         tolerate_missed_genes = TRUE,\n                                         weighted_votes = TRUE,\n                                         classes = c(\"ALL\",\"AML\",\"CLL\",\"CML\",\"NoL\"),\n                                         verbose = TRUE)\n\n# apply on the testing data\nresults_test <- predict_one_vs_rest_TSP(classifier = classifier,\n                                        Data = test,\n                                        tolerate_missed_genes = TRUE,\n                                        weighted_votes = TRUE,\n                                        classes=c(\"ALL\",\"AML\",\"CLL\",\"CML\",\"NoL\"),\n                                        verbose = TRUE)\n# get a look over the scores in the testing data\nknitr::kable(head(results_test))\n```\n \nLet\u2019s check the accuracy in the training and testing data.\n``` r\n# Confusion Matrix and Statistics on training data\ncaret::confusionMatrix(data = factor(results_train$max_score, \n                                     levels = unique(object$data$Labels)),\n                       reference = factor(object$data$Labels, \n                                          levels = unique(object$data$Labels)),\n                       mode=\"everything\")\n```\n    ## Confusion Matrix and Statistics\n    ## \n    ##           Reference\n    ## Prediction CLL AML NoL CML ALL\n    ##        CLL   7   0   0   0   0\n    ##        AML   0   6   0   0   0\n    ##        NoL   0   0   7   0   0\n    ##        CML   0   0   0   8   0\n    ##        ALL   0   0   0   0   8\n    ## \n    ## Overall Statistics\n    ##                                      \n    ##                Accuracy : 1          \n    ##                  95% CI : (0.9026, 1)\n    ##     No Information Rate : 0.2222     \n    ##     P-Value [Acc > NIR] : < 2.2e-16  \n    ##                                      \n    ##                   Kappa : 1          \n    ##                                      \n    ##  Mcnemar's Test P-Value : NA         \n    ## \n    ## Statistics by Class:\n    ## \n    ##                      Class: CLL Class: AML Class: NoL Class: CML Class: ALL\n    ## Sensitivity              1.0000     1.0000     1.0000     1.0000     1.0000\n    ## Specificity              1.0000     1.0000     1.0000     1.0000     1.0000\n    ## Pos Pred Value           1.0000     1.0000     1.0000     1.0000     1.0000\n    ## Neg Pred Value           1.0000     1.0000     1.0000     1.0000     1.0000\n    ## Precision                1.0000     1.0000     1.0000     1.0000     1.0000\n    ## Recall                   1.0000     1.0000     1.0000     1.0000     1.0000\n    ## F1                       1.0000     1.0000     1.0000     1.0000     1.0000\n    ## Prevalence               0.1944     0.1667     0.1944     0.2222     0.2222\n    ## Detection Rate           0.1944     0.1667     0.1944     0.2222     0.2222\n    ## Detection Prevalence     0.1944     0.1667     0.1944     0.2222     0.2222\n    ## Balanced Accuracy        1.0000     1.0000     1.0000     1.0000     1.0000\n``` r\n# Confusion Matrix and Statistics on testing data\ncaret::confusionMatrix(data = factor(results_test$max_score, \n                                     levels = unique(object$data$Labels)),\n                       reference = factor(pData(test)[,\"LeukemiaType\"], \n                                          levels = unique(object$data$Labels)),\n                       mode=\"everything\")\n```\n \nSo we got 100% overall accuracy in the training data and 92% overall\naccuracy in the testing data.\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/NourMarzouka/multiclassPairs/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9263076287173818,
+      "result": {
+        "original_header": "Visualization",
+        "type": "Text_excerpt",
+        "value": "Finally it is recommended to visualize the rules in the training and\ntesting data. This will give you an idea to which level the rules and\npredictions are good. \nWe can plot binary heatmap plots through `plot_binary_TSP` function as\nfollows:\n``` r\n# plot for the rules and scores in the training data\nplot_binary_TSP(Data = object, # we are using the data object here\n                classifier = classifier, \n                prediction = results_train, \n                classes = c(\"ALL\",\"AML\",\"CLL\",\"CML\",\"NoL\"),\n                #margin = c(0,5,0,10),\n                title = \"Training data\")\n```\n \n``` r\n# plot for the rules and scores in the testing data\nplot_binary_TSP(Data = test, # ExpressionSet\n                ref = \"LeukemiaType\", # ref label names in pData\n                classifier = classifier, \n                prediction = results_test, \n                classes = c(\"ALL\",\"AML\",\"CLL\",\"CML\",\"NoL\"),\n                title = \"Testing data\"#, \n                #margin = c(0,5,0,10)\n                )\n``` \n"
+      },
+      "source": "https://raw.githubusercontent.com/NourMarzouka/multiclassPairs/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.931384473055439,
+      "result": {
+        "original_header": "Random Forest scheme",
+        "type": "Text_excerpt",
+        "value": "In Random Forest (RF) scheme, all steps of gene filtering/sorting, rule\nfiltering/sorting, and final model training are performed using the RF\nalgorithm. \nThe `ranger` package is used to run the RF algorithm, and arguments can\nbe passed to `ranger` function if any changes are needed. For example,\nincreasing the number of trees. Check the documentation of\n`multiclassPairs` for more details.\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/NourMarzouka/multiclassPairs/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9522658335515043,
+      "result": {
+        "original_header": "Gene sorting",
+        "type": "Text_excerpt",
+        "value": "To reduce the number of the genes, `sort_genes_RF` function sorts the\ngenes based on their importance and take the top important genes. Gene\nimportance is determined based on the ability of the gene to split the\nclasses better than other genes. Check\n[`ranger`](https://cran.r-project.org/package=ranger) package for more\ndetails. \nTo get the important (i.e.\u00a0informative) genes `sort_genes_RF` function\nperforms two types of sorting genes, first type is \u201caltogether\u201d which\nruns the RF algorithm to sort the genes based on their importance in all\nclasses from each other, this generates one list of sorted genes for the\nwhole data. The second type is \u201cone\\_vs\\_rest\u201d which runs the RF\nalgorithm to sort the genes based on their importance in splitting one\nclass from the rest, this generates sorted list of genes for each class.\nIt is recommended (default) to run both, particularly in case of class\nimbalance in the training data. \nBy default, all genes are sorted and returned, and the user can specify\nhow many top genes will be used in the downstream functions. However,\nthe user can specify how many genes should be returned using\n`featureNo_altogether` and `featureNo_one_vs_rest` arguments, and if one\nof these arguments is 0, then that sorting type will be skipped. \nLike One-vs-rest scheme, platform-wise option is available for the\nRandom Forest scheme where the genes and rules can be sorted in each\nplatform/study individually then the top genes in all of them will be\ntaken. This gives more weight to small platforms/studies and try to get\ngenes that function equally well in all platforms/studies. \nIt is recommended to run all function in the RF scheme with seeds to get\nreproducible results each time. \nLet us run gene sorting function for the previous leukemia training\ndata. Note that the data is not ranked by default here, but you can rank\nthe data (ex. in case you are using non-normalized data) before sorting\nthe genes using `rank_data`, the genes then will be ranked within each\nsample.\n``` r\n# (500 trees here just for fast example)\ngenes_RF <- sort_genes_RF(data_object = object,\n                          # featureNo_altogether, it is better not to specify a number here\n                          # featureNo_one_vs_rest, it is better not to specify a number here\n                          rank_data = TRUE,\n                          platform_wise = FALSE,\n                          num.trees = 500, # more features, more tress are recommended\n                          seed=123456, # for reproducibility\n                          verbose = TRUE)\ngenes_RF # sorted genes object\n```\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/NourMarzouka/multiclassPairs/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9499784126457449,
+      "result": {
+        "original_header": "Rule sorting",
+        "type": "Text_excerpt",
+        "value": "After we sorted the genes, we need to take the top genes and combine\nthem as binary rules and then sort these rules. This can be performed\nusing `sort_rules_RF` function. Here, we need to determine how many top\ngenes to use. \n**Parameter optimization:** \nThe `summary_genes_RF` function is an optional function in the workflow.\n`summary_genes_RF` function gives an idea of how many genes you need to\nuse to generate a specific number of rules. \nThe `summary_genes_RF` function checks different values of\n`genes_altogether` and `genes_one_vs_rest` arguments in `sort_rules_RF`\nfunction. `summary_genes_RF` works as follows: take the first element in\n`genes_altogether` and `genes_one_vs_rest` arguments, then bring this\nnumber of top genes from altogether slot and one\\_vs\\_rest slots (this\nnumber of genes will be taken from each class), respectively, from the\nsorted\\_genes\\_RF object. Then pool the extracted genes and take the\nunique genes. Then calculate the number of the possible combinations.\nStore the number of unique genes and rules in first row in the output\ndata.frame then pick the second element from the `genes_altogether` and\n`genes_one_vs_rest` and repeat the steps again. NOTE: gene replication\nin rules is not considered, because the rules are not sorted yet in the\nsorted\\_genes\\_RF object. \nAnother way, but computationally more extensive, is to use large and\nsufficient number of genes, this will produce large number of rules,\nthen we can use `run_boruta=TRUE` argument in the training function\n(i.e.\u00a0`train_RF` function), this will remove the uninformative rules\nbefore training the final model. \nNow, we have the rules sorted based on their importance. Now we can\ntrain our final RF model. We can go with the default settings in the\n`train_RF` function directly or we can check some different parameters\nto optimize the training process by running `optimize_RF` as in the next\nexample:\n``` r\n# prepare the simple data.frame for the parameters I want to test\n# names of arguments as column names\n# this df has three sets (3 rows) of parameters\nparameters <- data.frame(\n  gene_repetition=c(3,2,1),\n  rules_one_vs_rest=c(2,3,10),\n  rules_altogether=c(2,3,10),\n  run_boruta=c(FALSE,\"make_error\",TRUE), # I want to produce error in the 2nd trial\n  plot_boruta = FALSE,\n  num.trees=c(100,200,300),\n  stringsAsFactors = FALSE)\n\n# parameters\n# for overall and byclass possible options, check the help files\npara_opt <- optimize_RF(data_object = object,\n                        sorted_rules_RF = rules_RF,\n                        parameters = parameters,\n                        test_object = NULL,\n                        overall = c(\"Accuracy\",\"Kappa\"), # wanted overall measurements \n                        byclass = c(\"F1\"), # wanted measurements per class\n                        verbose = TRUE)\n\npara_opt # results object\n# para_opt$summary # the df of with summarized information\nknitr::kable(para_opt$summary)\n```\n \nIt is recommend to run Boruta option (`run_boruta=TRUE`) to remove the\nuniformative rules, thus use less genes and rules in the model. Note:\nWhen `run_boruta=TRUE` the training process may take long time if the\nnumber of rules is large. \nIt is recommended to train the final model with `probability=TRUE`, this\nwill allow the model to give additional scores for each class instead of\nclass prediction without scores. \nWe recommend that you visit the documentation of `train_RF` and `ranger`\nfunctions and to take a look over the different arguments and options\nthere.\n``` r\n# train the final model\n# it is preferred to increase the number of trees and rules in case you have\n# large number of samples and features\n# for quick example, we have small number of trees and rules here\n# based on the optimize_RF results we will select the parameters\nRF_classifier <- train_RF(data_object = object,\n                          sorted_rules_RF = rules_RF,\n                          gene_repetition = 1,\n                          rules_altogether = 10,\n                          rules_one_vs_rest = 10,\n                          run_boruta = TRUE, \n                          plot_boruta = FALSE,\n                          probability = TRUE,\n                          num.trees = 300,\n                          boruta_args = list(),\n                          verbose = TRUE)\n```\n \n**Training data - quality check:** From the trained model we can extract\na proximity matrix which is based on the fraction of times any two given\nout-of-bag samples receive the same predicted label in each tree. This\ngives us a better overview of the predictor performance in the training\ndata, and the behavior of our reference labels. We can generate heatmap\nfor the proximity matrix by `proximity_matrix_RF` function as follows:\n``` r\n# plot proximity matrix of the out-of-bag samples\n# Note: this takes a lot of time if the data is big\nproximity_matrix_RF(object = object,\n             classifier = RF_classifier, \n             plot = TRUE,\n             return_matrix = FALSE, # if we need to get the matrix itself\n             title = \"Leukemias\",\n             cluster_cols = TRUE)\n```\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/NourMarzouka/multiclassPairs/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9464673809928655,
+      "result": {
+        "original_header": "Training Accuracy",
+        "type": "Text_excerpt",
+        "value": "For the training accuracy, we do not apply the RF model on the training\ndata, because this gives 100% accuracy (almost always) which is not\nreliable. Instead we use the out-of-bag predictions, which can be\nobtained as follows:\n``` r\n# training accuracy\n# get the prediction labels from the trained model\n# if the classifier trained using probability   = FALSE\ntraining_pred <- RF_classifier$RF_scheme$RF_classifier$predictions\nif (is.factor(training_pred)) {\n  x <- as.character(training_pred)\n}\n\n# if the classifier trained using probability   = TRUE\nif (is.matrix(training_pred)) {\n  x <- colnames(training_pred)[max.col(training_pred)]\n}\n\n# training accuracy\ncaret::confusionMatrix(data =factor(x),\n                       reference = factor(object$data$Labels),\n                       mode = \"everything\")\n```\n \nWe predict the class in the test samples by running the `predict_RF`\nfunction. Note that you can use `impute = TRUE` to handle missed genes\nin the test data. This is done by filling the missed rule values based\non the closest samples in the training data. RF models are good enough\nto handle large percent of missed rules (up to 50% in some cases)\nwithout large effect on the accuracy of the prediction.\n``` r\n# apply on test data\nresults <- predict_RF(classifier = RF_classifier, \n                      Data = test,\n                      impute = TRUE) # can handle missed genes by imputation\n\n# get the prediction labels\n# if the classifier trained using probability   = FALSE\ntest_pred <- results$predictions\nif (is.factor(test_pred)) {\n  x <- as.character(test_pred)\n}\n\n# if the classifier trained using probability   = TRUE\nif (is.matrix(test_pred)) {\n  x <- colnames(test_pred)[max.col(test_pred)]\n}\n\n# training accuracy\ncaret::confusionMatrix(data = factor(x),\n                       reference = factor(pData(test)[,\"LeukemiaType\"]),\n                       mode = \"everything\")\n```\n \nSo we got 100% overall accuracy in the training data and 88% overall\naccuracy in the testing data. \n`plot_binary_RF` can be used to plot binary heatmaps for the rules in\ntraining and testing datasets, as follow:\n``` r\n#visualize the binary rules in training dataset\nplot_binary_RF(Data = object,\n               classifier = RF_classifier,\n               prediction = NULL, \n               as_training = TRUE, # to extract the scores from the model\n               show_scores = TRUE,\n               top_anno = \"ref\",\n               show_predictions = TRUE, \n               #margin = c(0,5,0,8),\n               title = \"Training data\")\n```\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/NourMarzouka/multiclassPairs/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.896709969114975,
+      "result": {
+        "original_header": "Disjoint rules",
+        "type": "Text_excerpt",
+        "value": "`multiclassPairs` allows the user to select if the rules should be\ndisjoint or not in the final model. This means if the gene is allowed to\nbe repeated in the rules or not. For the one-vs-rest scheme, we pass the\n`disjoint` argument to switchBox package to allow/prevent the gene\nrepetition in the rules. In the random forest scheme, we give the user\nmore control over the gene repetition where the `gene_repetition`\nargument in the `train_RF` function allows the user to determine how\nmany times the gene is allowed to be repeated in the rules. When\n`gene_repetition` = 1 the produced classifier will have disjointed\nrules.\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/NourMarzouka/multiclassPairs/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9739877614925702,
+      "result": {
+        "original_header": "Comparison",
+        "type": "Text_excerpt",
+        "value": "Here, we compare the runtime and accuracy of the two schemes in\n`multiclassPairs` (one-vs-rest and random forest) with the multiclass\npair-based decision tree (DT) implementation in `Rgtsp` package\n(Popovici et al., 2011). \nWe used the breast cancer training data ran the three approaches\nsubsetting different training cohort sizes: 50, 100, 200, 500, 1000, and\n1500 samples. The used settings in the three approaches are shown in the\nnext chunk. We repeated the training process 5 times and recorded the\ntraining time for the full pipeline (i.e.\u00a0gene and rule filtering and\nmodel training) and the accuracy. We used two different computational\nsettings: 4 cores/64GB of RAMs and 24 cores/128GB of RAMs. The used test\ndata contained (n=1634 samples). \nWe found that the DT models had the lowest accuracy and the highest\ntraining time regardless of the training dataset size (Figure 5). RF\nmodels with training sample sizes above 50 outperformed both one-vs-rest\nand the DT models (Figure 5). One-vs-rest models showed the lowest\ntraining time with the small training datasets, while RF approach showed\nthe lowest training time in the model with 1500 training samples (Figure\n6).\n``` r\n# For one-vs-rest scheme settings: \n# one_vs_rest gene filtering with k_range of 10:50\nobject <- ReadData(Data = training_data, \n                   Labels = Train_Classes)\n\nfiltered_genes <- filter_genes_TSP(data_object = object,\n                                   featureNo = 1000, UpDown = TRUE,\n                                   filter = \"one_vs_rest\")\n\nclassifier_1_vs_r <- train_one_vs_rest_TSP(data_object = object, \n                                           filtered_genes = filtered_genes,\n                                           k_range = 10:50, disjoint = TRUE,\n                                           include_pivot = FALSE, \n                                           platform_wise_scores = FALSE,\n                                           one_vs_one_scores = FALSE)                                          \n\n# For RF scheme settings: \n# Settings represents a large model to show calculation time with high number of genes/rules\nobject <- ReadData(Data = training_data, \n                   Labels = Train_Classes)\n\nsorted_genes  <- sort_genes_RF(object)\n\nsorted_rules  <- sort_rules_RF(data_object = object, \n                               sorted_genes_RF = sorted_genes, \n                               genes_altogether = 200, \n                               genes_one_vs_rest = 200)\n\nclassifier_RF <- train_RF(data_object = object, \n                          sorted_rules_RF = sorted_rules, \n                          rules_one_vs_rest = 200,\n                          rules_altogether = 200, \n                          run_boruta = FALSE, gene_repetition = 1)\n\n# For DT scheme from Rgtsp package: \n# default settings with min.score=0.6 (to avoid running out of rules with the default setting 0.75)\n#devtools::install_github(\"bioinfo-recetox/Rgtsp\")\nlibrary(Rgtsp)\nclassifier_DT <- mtsp(X = t(as.matrix(training_data)),\n                      y = Train_Classes,\n                      min.score=0.60)\n```\n \n<img src=\"vignettes/figure/Accuracy_final.png\" alt=\"Overall accuracy for the three pair-based approaches. X-axis show the performance of different models trained on training datasets with different sizes.\" width=\"5729\" />\n<p class=\"caption\">\nOverall accuracy for the three pair-based approaches. X-axis show the\nperformance of different models trained on training datasets with\ndifferent sizes.\n</p> \n<img src=\"vignettes/figure/Both_CPUs.png\" alt=\"Average of the overall training time including the gene and rules filtering and model training. Training repeated 5 times for each model and the bars show the average time.\" width=\"6929\" height=\"90%\" />\n<p class=\"caption\">\nAverage of the overall training time including the gene and rules\nfiltering and model training. Training repeated 5 times for each model\nand the bars show the average time.\n</p> \n"
+      },
+      "source": "https://raw.githubusercontent.com/NourMarzouka/multiclassPairs/master/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "download_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/NourMarzouka/multiclassPairs/releases"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 3
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/NourMarzouka/multiclassPairs/forks"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "NourMarzouka/multiclassPairs"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_title": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "Tutorial for multiclassPairs R package"
+      },
+      "source": "https://raw.githubusercontent.com/NourMarzouka/multiclassPairs/master/README.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "images": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/NourMarzouka/multiclassPairs/master/images/workflow_v0_3.png"
+      },
+      "source": "https://raw.githubusercontent.com/NourMarzouka/multiclassPairs/master/README.md",
+      "technique": "regular_expression"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/NourMarzouka/multiclassPairs/master/images/one_vs_rest_scheme.png"
+      },
+      "source": "https://raw.githubusercontent.com/NourMarzouka/multiclassPairs/master/README.md",
+      "technique": "regular_expression"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/NourMarzouka/multiclassPairs/master/images/gene_filtering_TSP.png"
+      },
+      "source": "https://raw.githubusercontent.com/NourMarzouka/multiclassPairs/master/README.md",
+      "technique": "regular_expression"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/NourMarzouka/multiclassPairs/master/images/platform_wise_gene_filtering_TSP.png"
+      },
+      "source": "https://raw.githubusercontent.com/NourMarzouka/multiclassPairs/master/README.md",
+      "technique": "regular_expression"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/NourMarzouka/multiclassPairs/master/vignettes/figure/unnamed-chunk-15-1.png"
+      },
+      "source": "https://raw.githubusercontent.com/NourMarzouka/multiclassPairs/master/README.md",
+      "technique": "regular_expression"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/NourMarzouka/multiclassPairs/master/vignettes/figure/unnamed-chunk-15-2.png"
+      },
+      "source": "https://raw.githubusercontent.com/NourMarzouka/multiclassPairs/master/README.md",
+      "technique": "regular_expression"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/NourMarzouka/multiclassPairs/master/vignettes/figure/unnamed-chunk-20-1.png"
+      },
+      "source": "https://raw.githubusercontent.com/NourMarzouka/multiclassPairs/master/README.md",
+      "technique": "regular_expression"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/NourMarzouka/multiclassPairs/master/vignettes/figure/unnamed-chunk-25-1.png"
+      },
+      "source": "https://raw.githubusercontent.com/NourMarzouka/multiclassPairs/master/README.md",
+      "technique": "regular_expression"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/NourMarzouka/multiclassPairs/master/vignettes/figure/unnamed-chunk-25-2.png"
+      },
+      "source": "https://raw.githubusercontent.com/NourMarzouka/multiclassPairs/master/README.md",
+      "technique": "regular_expression"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/NourMarzouka/multiclassPairs/master/vignettes/figure/Accuracy_final.png"
+      },
+      "source": "https://raw.githubusercontent.com/NourMarzouka/multiclassPairs/master/README.md",
+      "technique": "regular_expression"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/NourMarzouka/multiclassPairs/master/vignettes/figure/Both_CPUs.png"
+      },
+      "source": "https://raw.githubusercontent.com/NourMarzouka/multiclassPairs/master/README.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "installation": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Installation",
+        "type": "Text_excerpt",
+        "value": "`multiclassPairs` package is available on\n[CRAN](https://cran.r-project.org/package=multiclassPairs) and\n[GitHub](https://github.com/NourMarzouka/multiclassPairs). You can use\nthe following code to install `multiclassPairs` package from\n[CRAN](https://cran.r-project.org/package=multiclassPairs) and\n[GitHub](https://github.com/NourMarzouka/multiclassPairs) and its\ndependencies from Bioconductor.\n\n``` r\n# Install the released version from CRAN using\nif (!requireNamespace(\"multiclassPairs\", quietly = TRUE)) {\n  install.packages(\"multiclassPairs\")\n}\n\n# Or install the dev version from GitHub using\n# if (!requireNamespace(\"multiclassPairs\", quietly = TRUE)) {\n#  if (!requireNamespace(\"devtools\", quietly = TRUE)) {\n#    install.packages(\"devtools\")\n#  }\n#  library(devtools) # this package is needed to install from GitHub\n#  install_github(\"NourMarzouka/multiclassPairs\", build_vignettes = TRUE)\n#}\n\n# Install the dependencies from Bioconductor\n# BiocManager, Biobase, and switchBox packages from Bioconductor are needed\nif (!requireNamespace(\"BiocManager\", quietly = TRUE)) {\n  install.packages(\"BiocManager\")\n}\nif (!requireNamespace(\"Biobase\", quietly = TRUE)) {\n  BiocManager::install(\"Biobase\")\n}\nif (!requireNamespace(\"switchBox\", quietly = TRUE)) {\n  BiocManager::install(\"switchBox\")\n}\n\n# load multiclassPairs library\nlibrary(multiclassPairs)\n```\n"
+      },
+      "source": "https://raw.githubusercontent.com/NourMarzouka/multiclassPairs/master/README.md",
+      "technique": "header_analysis"
+    }
+  ],
+  "invocation": [
+    {
+      "confidence": 0.8355584334579089,
+      "result": {
+        "original_header": "Gene filtering",
+        "type": "Text_excerpt",
+        "value": "<img src=\"images/gene_filtering_TSP.png\" alt=\"Gene filtering options\" width=\"1962\" />\n<p class=\"caption\">\nGene filtering options\n</p> \n"
+      },
+      "source": "https://raw.githubusercontent.com/NourMarzouka/multiclassPairs/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.855657235689786,
+      "result": {
+        "original_header": "Visualization",
+        "type": "Text_excerpt",
+        "value": "<img src=\"vignettes/figure/unnamed-chunk-15-1.png\" style=\"display: block; margin: auto;\" /> \n<img src=\"vignettes/figure/unnamed-chunk-15-2.png\" style=\"display: block; margin: auto;\" />\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/NourMarzouka/multiclassPairs/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.8295760498140727,
+      "result": {
+        "original_header": "Rule sorting",
+        "type": "Text_excerpt",
+        "value": "## Model training \n<img src=\"vignettes/figure/unnamed-chunk-20-1.png\" style=\"display: block; margin: auto;\" />\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/NourMarzouka/multiclassPairs/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.8423161388494994,
+      "result": {
+        "original_header": "Training Accuracy",
+        "type": "Text_excerpt",
+        "value": "<img src=\"vignettes/figure/unnamed-chunk-25-1.png\" style=\"display: block; margin: auto;\" /> \n``` r\n# visualize the binary rules in testing dataset\nplot_binary_RF(Data = test,\n               ref = \"LeukemiaType\", # Get ref labels from the test ExpressionSet\n               classifier = RF_classifier,\n               prediction = results, \n               as_training = FALSE, \n               show_scores = TRUE,\n               top_anno = \"ref\",\n               show_predictions = TRUE,\n               title = \"Testing data\")\n``` \n<img src=\"vignettes/figure/unnamed-chunk-25-2.png\" style=\"display: block; margin: auto;\" />\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/NourMarzouka/multiclassPairs/master/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "issue_tracker": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/NourMarzouka/multiclassPairs/issues"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "keywords": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": ""
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "license": [
+    {
+      "confidence": 1,
+      "result": {
+        "name": "GNU General Public License v2.0",
+        "spdx_id": "GPL-2.0",
+        "type": "License",
+        "url": "https://api.github.com/licenses/gpl-2.0",
+        "value": "https://api.github.com/licenses/gpl-2.0"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "File_dump",
+        "value": "GNU GENERAL PUBLIC LICENSE\n                       Version 2, June 1991\n\n Copyright (C) 1989, 1991 Free Software Foundation, Inc.,\n 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA\n Everyone is permitted to copy and distribute verbatim copies\n of this license document, but changing it is not allowed.\n\n                            Preamble\n\n  The licenses for most software are designed to take away your\nfreedom to share and change it.  By contrast, the GNU General Public\nLicense is intended to guarantee your freedom to share and change free\nsoftware--to make sure the software is free for all its users.  This\nGeneral Public License applies to most of the Free Software\nFoundation's software and to any other program whose authors commit to\nusing it.  (Some other Free Software Foundation software is covered by\nthe GNU Lesser General Public License instead.)  You can apply it to\nyour programs, too.\n\n  When we speak of free software, we are referring to freedom, not\nprice.  Our General Public Licenses are designed to make sure that you\nhave the freedom to distribute copies of free software (and charge for\nthis service if you wish), that you receive source code or can get it\nif you want it, that you can change the software or use pieces of it\nin new free programs; and that you know you can do these things.\n\n  To protect your rights, we need to make restrictions that forbid\nanyone to deny you these rights or to ask you to surrender the rights.\nThese restrictions translate to certain responsibilities for you if you\ndistribute copies of the software, or if you modify it.\n\n  For example, if you distribute copies of such a program, whether\ngratis or for a fee, you must give the recipients all the rights that\nyou have.  You must make sure that they, too, receive or can get the\nsource code.  And you must show them these terms so they know their\nrights.\n\n  We protect your rights with two steps: (1) copyright the software, and\n(2) offer you this license which gives you legal permission to copy,\ndistribute and/or modify the software.\n\n  Also, for each author's protection and ours, we want to make certain\nthat everyone understands that there is no warranty for this free\nsoftware.  If the software is modified by someone else and passed on, we\nwant its recipients to know that what they have is not the original, so\nthat any problems introduced by others will not reflect on the original\nauthors' reputations.\n\n  Finally, any free program is threatened constantly by software\npatents.  We wish to avoid the danger that redistributors of a free\nprogram will individually obtain patent licenses, in effect making the\nprogram proprietary.  To prevent this, we have made it clear that any\npatent must be licensed for everyone's free use or not licensed at all.\n\n  The precise terms and conditions for copying, distribution and\nmodification follow.\n\n                    GNU GENERAL PUBLIC LICENSE\n   TERMS AND CONDITIONS FOR COPYING, DISTRIBUTION AND MODIFICATION\n\n  0. This License applies to any program or other work which contains\na notice placed by the copyright holder saying it may be distributed\nunder the terms of this General Public License.  The \"Program\", below,\nrefers to any such program or work, and a \"work based on the Program\"\nmeans either the Program or any derivative work under copyright law:\nthat is to say, a work containing the Program or a portion of it,\neither verbatim or with modifications and/or translated into another\nlanguage.  (Hereinafter, translation is included without limitation in\nthe term \"modification\".)  Each licensee is addressed as \"you\".\n\nActivities other than copying, distribution and modification are not\ncovered by this License; they are outside its scope.  The act of\nrunning the Program is not restricted, and the output from the Program\nis covered only if its contents constitute a work based on the\nProgram (independent of having been made by running the Program).\nWhether that is true depends on what the Program does.\n\n  1. You may copy and distribute verbatim copies of the Program's\nsource code as you receive it, in any medium, provided that you\nconspicuously and appropriately publish on each copy an appropriate\ncopyright notice and disclaimer of warranty; keep intact all the\nnotices that refer to this License and to the absence of any warranty;\nand give any other recipients of the Program a copy of this License\nalong with the Program.\n\nYou may charge a fee for the physical act of transferring a copy, and\nyou may at your option offer warranty protection in exchange for a fee.\n\n  2. You may modify your copy or copies of the Program or any portion\nof it, thus forming a work based on the Program, and copy and\ndistribute such modifications or work under the terms of Section 1\nabove, provided that you also meet all of these conditions:\n\n    a) You must cause the modified files to carry prominent notices\n    stating that you changed the files and the date of any change.\n\n    b) You must cause any work that you distribute or publish, that in\n    whole or in part contains or is derived from the Program or any\n    part thereof, to be licensed as a whole at no charge to all third\n    parties under the terms of this License.\n\n    c) If the modified program normally reads commands interactively\n    when run, you must cause it, when started running for such\n    interactive use in the most ordinary way, to print or display an\n    announcement including an appropriate copyright notice and a\n    notice that there is no warranty (or else, saying that you provide\n    a warranty) and that users may redistribute the program under\n    these conditions, and telling the user how to view a copy of this\n    License.  (Exception: if the Program itself is interactive but\n    does not normally print such an announcement, your work based on\n    the Program is not required to print an announcement.)\n\nThese requirements apply to the modified work as a whole.  If\nidentifiable sections of that work are not derived from the Program,\nand can be reasonably considered independent and separate works in\nthemselves, then this License, and its terms, do not apply to those\nsections when you distribute them as separate works.  But when you\ndistribute the same sections as part of a whole which is a work based\non the Program, the distribution of the whole must be on the terms of\nthis License, whose permissions for other licensees extend to the\nentire whole, and thus to each and every part regardless of who wrote it.\n\nThus, it is not the intent of this section to claim rights or contest\nyour rights to work written entirely by you; rather, the intent is to\nexercise the right to control the distribution of derivative or\ncollective works based on the Program.\n\nIn addition, mere aggregation of another work not based on the Program\nwith the Program (or with a work based on the Program) on a volume of\na storage or distribution medium does not bring the other work under\nthe scope of this License.\n\n  3. You may copy and distribute the Program (or a work based on it,\nunder Section 2) in object code or executable form under the terms of\nSections 1 and 2 above provided that you also do one of the following:\n\n    a) Accompany it with the complete corresponding machine-readable\n    source code, which must be distributed under the terms of Sections\n    1 and 2 above on a medium customarily used for software interchange; or,\n\n    b) Accompany it with a written offer, valid for at least three\n    years, to give any third party, for a charge no more than your\n    cost of physically performing source distribution, a complete\n    machine-readable copy of the corresponding source code, to be\n    distributed under the terms of Sections 1 and 2 above on a medium\n    customarily used for software interchange; or,\n\n    c) Accompany it with the information you received as to the offer\n    to distribute corresponding source code.  (This alternative is\n    allowed only for noncommercial distribution and only if you\n    received the program in object code or executable form with such\n    an offer, in accord with Subsection b above.)\n\nThe source code for a work means the preferred form of the work for\nmaking modifications to it.  For an executable work, complete source\ncode means all the source code for all modules it contains, plus any\nassociated interface definition files, plus the scripts used to\ncontrol compilation and installation of the executable.  However, as a\nspecial exception, the source code distributed need not include\nanything that is normally distributed (in either source or binary\nform) with the major components (compiler, kernel, and so on) of the\noperating system on which the executable runs, unless that component\nitself accompanies the executable.\n\nIf distribution of executable or object code is made by offering\naccess to copy from a designated place, then offering equivalent\naccess to copy the source code from the same place counts as\ndistribution of the source code, even though third parties are not\ncompelled to copy the source along with the object code.\n\n  4. You may not copy, modify, sublicense, or distribute the Program\nexcept as expressly provided under this License.  Any attempt\notherwise to copy, modify, sublicense or distribute the Program is\nvoid, and will automatically terminate your rights under this License.\nHowever, parties who have received copies, or rights, from you under\nthis License will not have their licenses terminated so long as such\nparties remain in full compliance.\n\n  5. You are not required to accept this License, since you have not\nsigned it.  However, nothing else grants you permission to modify or\ndistribute the Program or its derivative works.  These actions are\nprohibited by law if you do not accept this License.  Therefore, by\nmodifying or distributing the Program (or any work based on the\nProgram), you indicate your acceptance of this License to do so, and\nall its terms and conditions for copying, distributing or modifying\nthe Program or works based on it.\n\n  6. Each time you redistribute the Program (or any work based on the\nProgram), the recipient automatically receives a license from the\noriginal licensor to copy, distribute or modify the Program subject to\nthese terms and conditions.  You may not impose any further\nrestrictions on the recipients' exercise of the rights granted herein.\nYou are not responsible for enforcing compliance by third parties to\nthis License.\n\n  7. If, as a consequence of a court judgment or allegation of patent\ninfringement or for any other reason (not limited to patent issues),\nconditions are imposed on you (whether by court order, agreement or\notherwise) that contradict the conditions of this License, they do not\nexcuse you from the conditions of this License.  If you cannot\ndistribute so as to satisfy simultaneously your obligations under this\nLicense and any other pertinent obligations, then as a consequence you\nmay not distribute the Program at all.  For example, if a patent\nlicense would not permit royalty-free redistribution of the Program by\nall those who receive copies directly or indirectly through you, then\nthe only way you could satisfy both it and this License would be to\nrefrain entirely from distribution of the Program.\n\nIf any portion of this section is held invalid or unenforceable under\nany particular circumstance, the balance of the section is intended to\napply and the section as a whole is intended to apply in other\ncircumstances.\n\nIt is not the purpose of this section to induce you to infringe any\npatents or other property right claims or to contest validity of any\nsuch claims; this section has the sole purpose of protecting the\nintegrity of the free software distribution system, which is\nimplemented by public license practices.  Many people have made\ngenerous contributions to the wide range of software distributed\nthrough that system in reliance on consistent application of that\nsystem; it is up to the author/donor to decide if he or she is willing\nto distribute software through any other system and a licensee cannot\nimpose that choice.\n\nThis section is intended to make thoroughly clear what is believed to\nbe a consequence of the rest of this License.\n\n  8. If the distribution and/or use of the Program is restricted in\ncertain countries either by patents or by copyrighted interfaces, the\noriginal copyright holder who places the Program under this License\nmay add an explicit geographical distribution limitation excluding\nthose countries, so that distribution is permitted only in or among\ncountries not thus excluded.  In such case, this License incorporates\nthe limitation as if written in the body of this License.\n\n  9. The Free Software Foundation may publish revised and/or new versions\nof the General Public License from time to time.  Such new versions will\nbe similar in spirit to the present version, but may differ in detail to\naddress new problems or concerns.\n\nEach version is given a distinguishing version number.  If the Program\nspecifies a version number of this License which applies to it and \"any\nlater version\", you have the option of following the terms and conditions\neither of that version or of any later version published by the Free\nSoftware Foundation.  If the Program does not specify a version number of\nthis License, you may choose any version ever published by the Free Software\nFoundation.\n\n  10. If you wish to incorporate parts of the Program into other free\nprograms whose distribution conditions are different, write to the author\nto ask for permission.  For software which is copyrighted by the Free\nSoftware Foundation, write to the Free Software Foundation; we sometimes\nmake exceptions for this.  Our decision will be guided by the two goals\nof preserving the free status of all derivatives of our free software and\nof promoting the sharing and reuse of software generally.\n\n                            NO WARRANTY\n\n  11. BECAUSE THE PROGRAM IS LICENSED FREE OF CHARGE, THERE IS NO WARRANTY\nFOR THE PROGRAM, TO THE EXTENT PERMITTED BY APPLICABLE LAW.  EXCEPT WHEN\nOTHERWISE STATED IN WRITING THE COPYRIGHT HOLDERS AND/OR OTHER PARTIES\nPROVIDE THE PROGRAM \"AS IS\" WITHOUT WARRANTY OF ANY KIND, EITHER EXPRESSED\nOR IMPLIED, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF\nMERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.  THE ENTIRE RISK AS\nTO THE QUALITY AND PERFORMANCE OF THE PROGRAM IS WITH YOU.  SHOULD THE\nPROGRAM PROVE DEFECTIVE, YOU ASSUME THE COST OF ALL NECESSARY SERVICING,\nREPAIR OR CORRECTION.\n\n  12. IN NO EVENT UNLESS REQUIRED BY APPLICABLE LAW OR AGREED TO IN WRITING\nWILL ANY COPYRIGHT HOLDER, OR ANY OTHER PARTY WHO MAY MODIFY AND/OR\nREDISTRIBUTE THE PROGRAM AS PERMITTED ABOVE, BE LIABLE TO YOU FOR DAMAGES,\nINCLUDING ANY GENERAL, SPECIAL, INCIDENTAL OR CONSEQUENTIAL DAMAGES ARISING\nOUT OF THE USE OR INABILITY TO USE THE PROGRAM (INCLUDING BUT NOT LIMITED\nTO LOSS OF DATA OR DATA BEING RENDERED INACCURATE OR LOSSES SUSTAINED BY\nYOU OR THIRD PARTIES OR A FAILURE OF THE PROGRAM TO OPERATE WITH ANY OTHER\nPROGRAMS), EVEN IF SUCH HOLDER OR OTHER PARTY HAS BEEN ADVISED OF THE\nPOSSIBILITY OF SUCH DAMAGES.\n\n                     END OF TERMS AND CONDITIONS\n\n            How to Apply These Terms to Your New Programs\n\n  If you develop a new program, and you want it to be of the greatest\npossible use to the public, the best way to achieve this is to make it\nfree software which everyone can redistribute and change under these terms.\n\n  To do so, attach the following notices to the program.  It is safest\nto attach them to the start of each source file to most effectively\nconvey the exclusion of warranty; and each file should have at least\nthe \"copyright\" line and a pointer to where the full notice is found.\n\n    <one line to give the program's name and a brief idea of what it does.>\n    Copyright (C) <year>  <name of author>\n\n    This program is free software; you can redistribute it and/or modify\n    it under the terms of the GNU General Public License as published by\n    the Free Software Foundation; either version 2 of the License, or\n    (at your option) any later version.\n\n    This program is distributed in the hope that it will be useful,\n    but WITHOUT ANY WARRANTY; without even the implied warranty of\n    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the\n    GNU General Public License for more details.\n\n    You should have received a copy of the GNU General Public License along\n    with this program; if not, write to the Free Software Foundation, Inc.,\n    51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.\n\nAlso add information on how to contact you by electronic and paper mail.\n\nIf the program is interactive, make it output a short notice like this\nwhen it starts in an interactive mode:\n\n    Gnomovision version 69, Copyright (C) year name of author\n    Gnomovision comes with ABSOLUTELY NO WARRANTY; for details type `show w'.\n    This is free software, and you are welcome to redistribute it\n    under certain conditions; type `show c' for details.\n\nThe hypothetical commands `show w' and `show c' should show the appropriate\nparts of the General Public License.  Of course, the commands you use may\nbe called something other than `show w' and `show c'; they could even be\nmouse-clicks or menu items--whatever suits your program.\n\nYou should also get your employer (if you work as a programmer) or your\nschool, if any, to sign a \"copyright disclaimer\" for the program, if\nnecessary.  Here is a sample; alter the names:\n\n  Yoyodyne, Inc., hereby disclaims all copyright interest in the program\n  `Gnomovision' (which makes passes at compilers) written by James Hacker.\n\n  <signature of Ty Coon>, 1 April 1989\n  Ty Coon, President of Vice\n\nThis General Public License does not permit incorporating your program into\nproprietary programs.  If your program is a subroutine library, you may\nconsider it more useful to permit linking proprietary applications with the\nlibrary.  If this is what you want to do, use the GNU Lesser General\nPublic License instead of this License.\n"
+      },
+      "source": "https://raw.githubusercontent.com/NourMarzouka/multiclassPairs/master/LICENSE",
+      "technique": "file_exploration"
+    }
+  ],
+  "name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "multiclassPairs"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "owner": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "User",
+        "value": "NourMarzouka"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "programming_languages": [
+    {
+      "confidence": 1,
+      "result": {
+        "name": "R",
+        "size": 181022,
+        "type": "Programming_language",
+        "value": "R"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "readme_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/NourMarzouka/multiclassPairs/master/README.md"
+      },
+      "technique": "file_exploration"
+    }
+  ],
+  "somef_missing_categories": [
+    "acknowledgement",
+    "run",
+    "download",
+    "requirements",
+    "contact",
+    "contributors",
+    "documentation",
+    "faq",
+    "support",
+    "identifier",
+    "has_build_file",
+    "executable_example"
+  ],
+  "somef_provenance": {
+    "date": "2024-10-06 02:03:07",
+    "somef_schema_version": "1.0.0",
+    "somef_version": "0.9.5"
+  },
+  "stargazers_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 11
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "type": [
+    {
+      "confidence": 0.82,
+      "result": {
+        "type": "String",
+        "value": "commandline-application"
+      },
+      "technique": "software_type_heuristics"
+    }
+  ],
+  "usage": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Tutorial for multiclassPairs R package",
+        "type": "Text_excerpt",
+        "value": "Created: 16/05/2021\n\n\n[![CRAN\nstatus](https://www.r-pkg.org/badges/version/multiclassPairs)](https://www.r-pkg.org/badges/version/multiclassPairs)\n[![Lifecycle:\nstable](https://img.shields.io/badge/lifecycle-stable-brightgreen.svg)](https://www.tidyverse.org/lifecycle/#stable)\n[![CRAN RStudio mirror\ndownloads](https://cranlogs.r-pkg.org/badges/multiclassPairs)](https://cran.r-project.org/package=multiclassPairs)\n\nBuild single sample pairs-based (rule-based) classifiers using top-score pairs or random forest for multi-class problems.\n\nDescription: A toolbox to train a single sample classifier that uses in-sample feature relationships. The relationships are represented as feature1 < feature2 (e.g. gene1 < gene2). We provide two options to go with. The first is based on 'switchBox' package which uses Top-score pairs algorithm. Second is a novel implementation based on random forest algorithm. For simple problems, we recommend to use one-vs-rest using TSP option due to its simplicity and for being easy to interpret.  For complex problems, RF performs better.  Both lines filter the features first then combine the filtered features to make the list of all the possible rules (i.e. rule1: feature1 < feature2, rule2: feature1 < feature3, etc...).  Then the list of rules will be filtered and the most important and informative rules will be kept. The informative rules will be assembled in a one-vs-rest model or an RF model.  We provide a detailed description with each function in this package to explain the filtration and training methodology in each line. \n\nAuthors:\n  - \"Nour-al-dain Marzouka and Pontus Eriksson\"    \n  \nMaintainer:\n  - \"Nour-al-dain Marzouka\"\n    email: \"nour.marzouka@ku.ac.ae\"\n  "
+      },
+      "source": "https://raw.githubusercontent.com/NourMarzouka/multiclassPairs/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Tutorial",
+        "type": "Text_excerpt",
+        "value": "in `multiclassPairs` package (v0.4.1), including training a pair-based\nclassifier, predict classes in test data, and visualize the prediction\nscores and rules.\n"
+      },
+      "source": "https://raw.githubusercontent.com/NourMarzouka/multiclassPairs/master/README.md",
+      "technique": "header_analysis"
+    }
+  ]
+}

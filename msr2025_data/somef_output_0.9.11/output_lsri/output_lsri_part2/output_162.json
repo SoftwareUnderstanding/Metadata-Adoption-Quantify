@@ -1,0 +1,487 @@
+{
+  "citation": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Citation",
+        "parent_header": [
+          "<ins>P</ins>opulation <ins>S</ins>tructure and <ins>Rel</ins>atedness <ins>i</ins>ntegrated <ins>P</ins>ipeline (PSReliP)"
+        ],
+        "type": "Text_excerpt",
+        "value": "**Solovieva, E., Sakai, H. PSReliP: an integrated pipeline for analysis and visualization of population structure and relatedness based on genome-wide genetic variant data. BMC Bioinformatics 24, 135 (2023). https://doi.org/10.1186/s12859-023-05169-4.**<br>\n\n"
+      },
+      "source": "https://raw.githubusercontent.com/solelena/PSReliP/main/README.md",
+      "technique": "header_analysis"
+    }
+  ],
+  "code_repository": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/solelena/PSReliP"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_created": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2022-03-17T05:16:15Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_updated": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2024-07-20T15:12:58Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "description": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "An integrated pipeline for analysis and visualization of Population Structure and Relatedness based on genome-wide genetic variant data"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 0.9959145397964596,
+      "result": {
+        "original_header": "***PSReliP: an integrated pipeline for analysis and visualization of Population Structure and Relatedness based on genome-wide genetic variant data***",
+        "type": "Text_excerpt",
+        "value": "\u2002\u2002The PSReliP pipeline allows users to quickly analyze genetic variants such as single nucleotide polymorphisms and small insertions or deletions at the genome level to estimate population structure and cryptic relatedness using PLINK software and to visualize the analysis results in interactive tables, plots, and charts using Shiny technology. The analysis and assessment of population stratification and genetic relatedness can aid in choosing an appropriate approach for the statistical analysis of GWAS data and predictions in genomic selection. The various outputs from PLINK can be used for further downstream analysis.<br> \n"
+      },
+      "source": "https://raw.githubusercontent.com/solelena/PSReliP/main/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9964318955912007,
+      "result": {
+        "original_header": "Features",
+        "type": "Text_excerpt",
+        "value": "- QC and  and filtering of samples and variants;\n- calculation of basic sample statistics, such as the types of observed variants, inbreeding coefficients, etc., and performing the before and after data filtering;\n- analysis of PS using PCA and MDS, and complete-linkage hierarchical clustering of samples based on the IBS distance matrix, if selected;\n- calculation of Wright's FST;\n- calculation of the IBS distance matrix and analysis of genetic relatedness by estimating the KING kinship coefficient matrix and GRM;\n- interactive visualization of the analysis results using Shiny technology;\n- ability for users to download analysis results and all plotted graphs using the web interface. \n"
+      },
+      "source": "https://raw.githubusercontent.com/solelena/PSReliP/main/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9951993730248483,
+      "result": {
+        "original_header": "Implementation",
+        "type": "Text_excerpt",
+        "value": "- **Analysis stage**  \n\u2002\u2002The analysis stage, which includes the pre-analysis step, is performed by two bash shell scripts that contained PLINK command lines, Linux commands and invoked in-house [Perl programs](./psrelip_pipeline/program_files/perl_programs). These bash shell scripts are executed from the command line on Linux-based operating systems and take several arguments from the [configuration file](./psrelip_pipeline/psrelip.config). The configuration file is located in the PSReliP installation directory and contains information about the paths to the PLINK executables (1.9 and 2.0), pipeline installation directory, working directory, input files, and parameter values used in the analysis and visualization processes. Users must edit the configuration file before executing the bash shell scripts. The details of the setting parameters are described in the configuration file.<br>\n\u2002\u2002PLINK (1.9 and 2.0) is the main software used in all the analysis steps in PSReliP. We used PLINK 2.0 in all cases; however, there are certain commands, such as --ibc, --cluster, --mds-plot, and --distance, that have not yet been implemented in PLINK 2.0; in such a case, we used version 1.9 of the PLINK software.<br>\n\u2002\u2002In the pre-analysis step of PSReliP, the VCF or BCF files areconverted into PLINK format files. This step is performed by running the [first shell script](./psrelip_pipeline/pre_analysis_first_script.sh) that takes VCF (possibly gzipped) and BCF files as inputs, which can be either uncompressed or BGZF-compressed (supported by htslib). The main outputs of this step are PLINK 2 binary files in the following formats: PGEN, binary genotype file format; PSAM, format in which sample information is stored; and PVAR, format in which variant information is stored. The newly created PLINK 2 binary files are used as inputs for the following analysis steps. Only one filter, such as \u2018--max-alleles 2\u2019, is applied in this pre-analysis processing step. It is sufficient to run the first shell script only once for a given set of genetic variants for one specified working directory to prepare the input files for the following analysis. When changing the working directory, it is necessary to start the analysis stage from the beginning and run the first shell script again.<br>\n\u2002\u2002The analysis stage is performed by running the [second shell script](./psrelip_pipeline/analysis_second_script.sh), which executes all the analysis steps carried out by this pipeline. As mentioned above, during the analysis stage, the following processes are performed:\n - QC and filtering of samples and variants;\n - calculation of basic sample statistics;\n - analysis of PS using PCA, MDS, and clustering;\n - calculation of Wright's FST;\n - calculation of the IBS, GRM, and KING kinship coefficient matrices.<br>\n\u2002\u2002All analyses were carried out using PLINK 1.9 and 2.0 software. While running the second shell script, PLINK and Linux bash commands are executed sequentially, and many of these commands take input from the previous command and produce output for the next command. Users can alter multiple parameters used in the analysis steps by appropriately changing their values in the [configuration file](./psrelip_pipeline/psrelip.config) before running the shell script. Users can run the second shell script multiple times on the given genetic variant dataset using different parameter values and perform the analysis that best matches their data.\n- **Visualization component**  \n\u2002\u2002To visualize the results of the analysis, we created a web-based visualization stage for PSReliP. We implemented this stage using [Shiny technology](https://github.com/rstudio/shiny), which provides a dynamic and interactive UI, and developed the Shiny application, an interactive R-based web application.<br>\n\u2002\u2002We used the Shiny package in combination with [Plotly's R graphing library](https://github.com/plotly/plotly.R), which allows the creation of interactive graphs and provides basic interactivity, such as zooming in and out, panning graphs, point value display, etc. Using the Plotly R library for basic charts, we created grouped and stacked bar charts and line plots as well as a combination of these for basic sample statistics, including GCTA inbreeding coefficient report and scatter plot for the results of PS analysis (PCA plot). In the scatter plot for PCA (bubble chart), marker sizes are variable and marker colors are mapped to a categorical variable.<br>\n\u2002\u2002Using Plotly in conjunction with the [\u2018manhattanly\u2019 R package](https://github.com/sahirbhatnagar/manhattanly/), Manhattan plots for Wright's FST analysis results are created. In Manhattan plots, the genetic variants are plotted with per-variant FST values against their genomic positions. Manhattan plots implemented with the \u2018manhattanly\u2019 package have the advantage of adding extra annotation information to each point in these plots.<br>\n\u2002\u2002Heatmaps of IBS distances, genetic relationships, and kinship coefficients across all individuals (samples) are created using Plotly in conjunction with the [\u2018heatmaply\u2019 R package](https://github.com/talgalili/heatmaply/). Interactive heatmaps can zoom into a region of interest and allow the checking of values by hovering the mouse over a cell.<br>\n\u2002\u2002To visualize the basic statistics of the samples, in addition to charts, tables are created with the [\u2018DT\u2019 (DataTables) R package](https://github.com/rstudio/DT/), which allows users to display their data as tables in the HTML pages and provides filtering, sorting, searching, and other features in the tables. \n"
+      },
+      "source": "https://raw.githubusercontent.com/solelena/PSReliP/main/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "download_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/solelena/PSReliP/releases"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 2
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/solelena/PSReliP/forks"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "solelena/PSReliP"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_title": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "Population Structure and Relatedness integrated Pipeline (PSReliP)"
+      },
+      "source": "https://raw.githubusercontent.com/solelena/PSReliP/main/README.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "has_script_file": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/solelena/PSReliP/main/psrelip_pipeline/pre_analysis_first_script.sh"
+      },
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/solelena/PSReliP/main/psrelip_pipeline/analysis_second_script.sh"
+      },
+      "technique": "file_exploration"
+    }
+  ],
+  "images": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/solelena/PSReliP/main/./Images/overview_pipeline_structure.png"
+      },
+      "source": "https://raw.githubusercontent.com/solelena/PSReliP/main/README.md",
+      "technique": "regular_expression"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/solelena/PSReliP/main/Images/pipeline_implementation.png"
+      },
+      "source": "https://raw.githubusercontent.com/solelena/PSReliP/main/README.md",
+      "technique": "regular_expression"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/solelena/PSReliP/main/Images/dir_files_structure.png"
+      },
+      "source": "https://raw.githubusercontent.com/solelena/PSReliP/main/README.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "installation": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Installation of the PSReliP pipeline",
+        "parent_header": [
+          "<ins>P</ins>opulation <ins>S</ins>tructure and <ins>Rel</ins>atedness <ins>i</ins>ntegrated <ins>P</ins>ipeline (PSReliP)"
+        ],
+        "type": "Text_excerpt",
+        "value": "- Install PLINK ([1.9](https://www.cog-genomics.org/plink/1.9/) and [2.0](https://www.cog-genomics.org/plink/2.0/)) from binary distributions on Linux-based operating systems. \n  - Download the latest stable version of PLINK 1.9 and the latest version of PLINK 2.0 from the binary downloads section from the official website (select the appropriate operating system in which you want to use it).\n  - Unpack the zip file on your computer.\n  - Specify the path to the PLINK executables (plink and plink2 executable files) in the \"PLINK_HOME\" and \"PLINK2_HOME\" parameters in the [configuration file](./psrelip_pipeline/psrelip.config).\n- Create a directory in the home directory where you want to install the PSReliP pipeline.\n- Install the PSReliP pipeline.\n  - Download the PSReliP pipeline source code [latest release](https://github.com/solelena/PSReliP/releases/download/v1.1.0/v1.1.tar.gz) in the istalation directory. Unzip the [latest release].tar.gz file with 'tar -xvzf'. The **[user-created directory]/psrelip** directory will be the pipeline installation directory.<br>\n  - Another way to install the PSReliP pipeline: copy the files and the 'program_files' folder contained in the [PSReliP pipeline](./psrelip_pipeline) folder, which includes the two shell scripts, configuration file, Perl programs and Shiny app.R files into the directory you created. The **[user-created directory]** directory will be the installation directory for the pipeline.<br>\n\n\u2002\u2002The installation directory of the pipeline must be specified in the \"TOOL_INSTALL_DIR\" parameter in the [configuration file](./psrelip_pipeline/psrelip.config). It is important to leave the names and structure of the 'program_files' folder in this directory. The two shell scripts and the configuration file can be renamed and placed in any directory. The path to the configuration file must be specified in both shell scripts.\n- Create a working directory.<br>\n\n\u2002\u2002The working directory in which the analysis results and log files will be stored must be specified in the \"WD\" parameter in the [configuration file](./psrelip_pipeline/psrelip.config). It is sufficient to run the first shell script only once for a given set of genetic variants for one specified working directory to prepare the input files for the following analysis. When changing the working directory, it is necessary to start the analysis stage from the beginning and run the first shell script again.\n- Edit the configuration file.<br>\n\n\u2002\u2002Edit the [configuration file](./psrelip_pipeline/psrelip.config) and specify the path to the PLINK executables (1.9 and 2.0), the pipeline installation directory and the working directory as described above, and specify the path to the input files and set the parameter values used in the analysis and visualisation processes."
+      },
+      "source": "https://raw.githubusercontent.com/solelena/PSReliP/main/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Preparing to run the Shiny app",
+        "parent_header": [
+          "<ins>P</ins>opulation <ins>S</ins>tructure and <ins>Rel</ins>atedness <ins>i</ins>ntegrated <ins>P</ins>ipeline (PSReliP)"
+        ],
+        "type": "Text_excerpt",
+        "value": "- Install the required R packages in Linux-based operating systems if you want to run the Shiny application on the [Linux Shiny Server](https://github.com/rstudio/shiny-server), or in [RStudio](https://www.rstudio.com/products/rstudio) if you want to run the Shiny application in the RStudio Desktop. Installing the Shiny package and the Shiny Server on a Linux-based OS normally requires root privileges. RStudio Desktop is a regular desktop application running on Windows, MacOS, or Linux that can be downloaded from the ['Download RStudio Desktop'](https://rstudio.com/products/rstudio/download/) website. Installation of RStudio Desktop is easier if you have root (or administrator privileges), but you can also do it without these privileges.\n- Your Shiny app can also be hosted and deployed to a web page using Shinyapps.io, which is RStudio\u2019s hosting service for Shiny apps. Shinyapps.io is an easy-to-use, secure, and scalable service with free and paid options available."
+      },
+      "source": "https://raw.githubusercontent.com/solelena/PSReliP/main/README.md",
+      "technique": "header_analysis"
+    }
+  ],
+  "issue_tracker": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/solelena/PSReliP/issues"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "keywords": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "data-visualization, genome-analysis, plink, plink2, population-structure, relatedness, shiny-apps"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "license": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "License",
+        "parent_header": [
+          "<ins>P</ins>opulation <ins>S</ins>tructure and <ins>Rel</ins>atedness <ins>i</ins>ntegrated <ins>P</ins>ipeline (PSReliP)"
+        ],
+        "type": "Text_excerpt",
+        "value": "This pipeline is released under the GNU General Public License version 3 (GPL v3.0).<br>\n"
+      },
+      "source": "https://raw.githubusercontent.com/solelena/PSReliP/main/README.md",
+      "technique": "header_analysis"
+    }
+  ],
+  "name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "PSReliP"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "owner": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "User",
+        "value": "solelena"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "programming_languages": [
+    {
+      "confidence": 1,
+      "result": {
+        "name": "R",
+        "size": 501068,
+        "type": "Programming_language",
+        "value": "R"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Shell",
+        "size": 58990,
+        "type": "Programming_language",
+        "value": "Shell"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Perl",
+        "size": 29171,
+        "type": "Programming_language",
+        "value": "Perl"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "readme_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/solelena/PSReliP/main/README.md"
+      },
+      "technique": "file_exploration"
+    }
+  ],
+  "releases": [
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "solelena",
+          "type": "User"
+        },
+        "date_created": "2022-12-21T02:01:18Z",
+        "date_published": "2022-12-21T02:24:50Z",
+        "description": "In previous releases, a combination of the chromosome name and the position at which the variant is located was used as the variant identifier. In this release, we kept it in case the variant ID is not in the VCF/BCF file. If the variant ID is listed in the VCF/BCF file, we saved it for further analysis. To do this, changes were made to the ps_pl2_pvar_edit.pl program, which is executed in the first script (pre_analysis_first_script.sh).",
+        "html_url": "https://github.com/solelena/PSReliP/releases/tag/v1.1.1",
+        "name": "PSReliP 1.1.1 The release with the changes made for the variants ID.",
+        "release_id": 86725958,
+        "tag": "v1.1.1",
+        "tarball_url": "https://api.github.com/repos/solelena/PSReliP/tarball/v1.1.1",
+        "type": "Release",
+        "url": "https://api.github.com/repos/solelena/PSReliP/releases/86725958",
+        "value": "https://api.github.com/repos/solelena/PSReliP/releases/86725958",
+        "zipball_url": "https://api.github.com/repos/solelena/PSReliP/zipball/v1.1.1"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "solelena",
+          "type": "User"
+        },
+        "date_created": "2022-12-19T02:57:05Z",
+        "date_published": "2022-12-19T05:14:41Z",
+        "description": "- A filter by the number of samples has been added to the analysis_second_script.sh file to decide whether heatmaps of the IBS, GRM and kinship matrices will be built. If the number of samples is \u2264 400, heatmaps will be plotted.\r\n- Two app.R files have been added for the case where the number of samples is > 400 and no heatmap is generated.\r\n- At the end of the PSReliP analysis stage, the second shell script (analysis_second_script.sh) compresses the resulting Shiny application directory into a single zip file with the same name as this directory.",
+        "html_url": "https://github.com/solelena/PSReliP/releases/tag/v1.1",
+        "name": "PSReliP 1.1 Release with the addition of a filter on the number of samples that are plotted on the heatmaps. ",
+        "release_id": 86487515,
+        "tag": "v1.1",
+        "tarball_url": "https://api.github.com/repos/solelena/PSReliP/tarball/v1.1",
+        "type": "Release",
+        "url": "https://api.github.com/repos/solelena/PSReliP/releases/86487515",
+        "value": "https://api.github.com/repos/solelena/PSReliP/releases/86487515",
+        "zipball_url": "https://api.github.com/repos/solelena/PSReliP/zipball/v1.1"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "solelena",
+          "type": "User"
+        },
+        "date_created": "2022-09-27T06:42:54Z",
+        "date_published": "2022-09-27T06:49:26Z",
+        "description": "## ***This is the first version of PSReliP***\r\n\r\n### Features\r\n- QC and  and filtering of samples and variants;\r\n- calculation of basic sample statistics, such as the types of observed variants, inbreeding coefficients, etc., and performing the before and after data filtering;\r\n- analysis of PS using PCA and MDS, and complete-linkage hierarchical clustering of samples based on the IBS distance matrix, if selected;\r\n- calculation of Wright's FST;\r\n- calculation of the IBS distance matrix and analysis of genetic relatedness by estimating the KING kinship coefficient matrix and GRM;\r\n- interactive visualization of the analysis results using Shiny technology;\r\n- ability for users to download analysis results and all plotted graphs using the web interface.",
+        "html_url": "https://github.com/solelena/PSReliP/releases/tag/v1.0.0",
+        "name": "First version of PSReliP",
+        "release_id": 78240893,
+        "tag": "v1.0.0",
+        "tarball_url": "https://api.github.com/repos/solelena/PSReliP/tarball/v1.0.0",
+        "type": "Release",
+        "url": "https://api.github.com/repos/solelena/PSReliP/releases/78240893",
+        "value": "https://api.github.com/repos/solelena/PSReliP/releases/78240893",
+        "zipball_url": "https://api.github.com/repos/solelena/PSReliP/zipball/v1.0.0"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "requirements": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Version Requirements",
+        "parent_header": [
+          "<ins>P</ins>opulation <ins>S</ins>tructure and <ins>Rel</ins>atedness <ins>i</ins>ntegrated <ins>P</ins>ipeline (PSReliP)"
+        ],
+        "type": "Text_excerpt",
+        "value": "- For analysis stage of pipeline:\n  - PLINK 1.9: 2 Apr 2022 or later.\n  - PLINK 2.0: 24 Oct 2022 or later.\n- For visualization component:\n  - R and R packages: R (3.6+), shiny (1.4.0.2+), plotly (4.9.2.1+), manhattanly (0.2.0+), heatmaply (1.1.0+), ggplot2 (3.3.0+), DT (0.16+), stringr (1.4.0)."
+      },
+      "source": "https://raw.githubusercontent.com/solelena/PSReliP/main/README.md",
+      "technique": "header_analysis"
+    }
+  ],
+  "run": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Preparing to run the Shiny app",
+        "parent_header": [
+          "<ins>P</ins>opulation <ins>S</ins>tructure and <ins>Rel</ins>atedness <ins>i</ins>ntegrated <ins>P</ins>ipeline (PSReliP)"
+        ],
+        "type": "Text_excerpt",
+        "value": "- Install the required R packages in Linux-based operating systems if you want to run the Shiny application on the [Linux Shiny Server](https://github.com/rstudio/shiny-server), or in [RStudio](https://www.rstudio.com/products/rstudio) if you want to run the Shiny application in the RStudio Desktop. Installing the Shiny package and the Shiny Server on a Linux-based OS normally requires root privileges. RStudio Desktop is a regular desktop application running on Windows, MacOS, or Linux that can be downloaded from the ['Download RStudio Desktop'](https://rstudio.com/products/rstudio/download/) website. Installation of RStudio Desktop is easier if you have root (or administrator privileges), but you can also do it without these privileges.\n- Your Shiny app can also be hosted and deployed to a web page using Shinyapps.io, which is RStudio\u2019s hosting service for Shiny apps. Shinyapps.io is an easy-to-use, secure, and scalable service with free and paid options available."
+      },
+      "source": "https://raw.githubusercontent.com/solelena/PSReliP/main/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Running the Shiny app",
+        "parent_header": [
+          "<ins>P</ins>opulation <ins>S</ins>tructure and <ins>Rel</ins>atedness <ins>i</ins>ntegrated <ins>P</ins>ipeline (PSReliP)"
+        ],
+        "type": "Text_excerpt",
+        "value": "* To run the newly created Shiny app locally, use RStudio to open the app.R file in the Shiny app folder and click on \"Run App\" in the upper right corner of the source panel. The Shiny app can also be deployed to [ShinyApps.io](https://www.shinyapps.io/) or hosted on the [Shiny Server](https://www.rstudio.com/products/shiny/shiny-server/).\n* We created the Shiny app for the Case Study dataset, which we placed in the [Case_study_datasets](./Case_study_datasets) folder to illustrate the capabilities of our pipeline and the features of its user interface. Details of this case study can be found in the [README.md](./Case_study_datasets/README.md) file located in that folder. Screenshots of the user interface of this Shiny app can be found in the [Images](./Images/case_study_UI_screenshots) folder.<br>\n\n\u2002\u2002**If all required R packages (see above) are installed in your R environment, run the following lines in interactive R sessions to launch this Shiny app for the Case Study dataset from the GitHub repository. The application files will be stored in a temporary directory and removed when the app exits.**<br>\n\n > `> library(shiny)`<br>\n > `> runGitHub(\"PSReliP\", \"solelena\", subdir = \"Case_study_datasets/rapdb_30depth_5gr_ld_pr\")`<br>\n\n\u2002\u2002**To launch this Shiny app for the Case Study dataset and save the downloaded application files, run the following lines in interactive R sessions (destdir: directory to store the downloaded application files).**<br>\n  \n > `> library(shiny)`<br>\n > `> runGitHub(\"PSReliP\", \"solelena\", subdir = \"Case_study_datasets/rapdb_30depth_5gr_ld_pr\", destdir = \"C:/Users/User_name/Directory_name\")`<br>\n  "
+      },
+      "source": "https://raw.githubusercontent.com/solelena/PSReliP/main/README.md",
+      "technique": "header_analysis"
+    }
+  ],
+  "somef_missing_categories": [
+    "acknowledgement",
+    "download",
+    "contact",
+    "contributors",
+    "documentation",
+    "faq",
+    "support",
+    "identifier",
+    "has_build_file",
+    "executable_example"
+  ],
+  "somef_provenance": {
+    "date": "2024-10-04 09:37:20",
+    "somef_schema_version": "1.0.0",
+    "somef_version": "0.9.5"
+  },
+  "stargazers_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 7
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "type": [
+    {
+      "confidence": 0.82,
+      "result": {
+        "type": "String",
+        "value": "commandline-application"
+      },
+      "technique": "software_type_heuristics"
+    }
+  ],
+  "usage": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Getting Started",
+        "parent_header": [
+          "<ins>P</ins>opulation <ins>S</ins>tructure and <ins>Rel</ins>atedness <ins>i</ins>ntegrated <ins>P</ins>ipeline (PSReliP)"
+        ],
+        "type": "Text_excerpt",
+        "value": "* In the configuration file, specify the path to the input genotype file in the '.vcf/.vcf.gz/.bcf/.bcf.gz' format in the 'VCF_FILE_NAME' parameter.\n* In the configuration file, in the \"WD\" parameter, specify the path to the working directory in which all analysis output files will be saved (there can be one working directory for each Variant Call Format file).\n* To convert VCF/BCF file to PLINK format, specify the path to the edited configuration file in the first shell script ([pre_analysis_first_script.sh](./psrelip_pipeline/pre_analysis_first_script.sh)) and run this shell script. A set of PLINK 2 binary files will be created and saved in the 'bed_files' subdirectory in the working directory. This shell script uses only one filter such as '--max-alleles 2' (excludes variants with more than 2 alleles). In addition, this script runs the PLINK command line to generate an allele count report, which is a valid input for the --read-freq flag to be used in further analysis. This allele count report will be saved in the same 'bed_files' subdirectory.\n* To perform the analysis stage, specify the path to the edited configuration file in the second shell script ([analysis_second_script.sh](./psrelip_pipeline/analysis_second_script.sh)) that executes all the analysis steps carried out by this pipeline and run that shell script. The analysis stage is responsible for performing all the filtering and analysis steps and contains an ordered sequence of PLINK commands along with in-house shell scripts and PERL programs that support data pipelining. You can run the second shell script several times on a given genetic variant dataset and, using different parameter values, perform the analysis that best matches your data. The PSReliP implementation, especially the PLINK command lines with flags and parameters, is described in detail in the README.md file in the [psrelip_pipeline](./psrelip_pipeline) folder.\n* At the end of the PSRelIP analysis stage, the second shell script creates a subdirectory in the directory specified in the \"SHINY_APP_DIR\" parameter of the configuration file with the name specified in the \"OUTPUT_PREFIX\" parameter, and copies our developed Shiny app (app.R) into that directory. The results of the analysis as well as the argument file for the Shiny app are also copied into this directory, namely its 'data' subdirectory. The second shell script (analysis_second_script.sh) then compresses the resulting Shiny application directory into a single zip file with the same name as this directory."
+      },
+      "source": "https://raw.githubusercontent.com/solelena/PSReliP/main/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "***Structure of directories and files created in the PSRelIP pipeline***",
+        "parent_header": [
+          "<ins>P</ins>opulation <ins>S</ins>tructure and <ins>Rel</ins>atedness <ins>i</ins>ntegrated <ins>P</ins>ipeline (PSReliP)",
+          "Getting Started"
+        ],
+        "type": "Text_excerpt",
+        "value": "<img src=\"https://github.com/solelena/PSReliP/blob/main/Images/dir_files_structure.png\" width=100% height=100%>\n\n**Note** that some temporarily created files are deleted during the execution of both shell scripts to reduce disk space usage.<br>"
+      },
+      "source": "https://raw.githubusercontent.com/solelena/PSReliP/main/README.md",
+      "technique": "header_analysis"
+    }
+  ]
+}

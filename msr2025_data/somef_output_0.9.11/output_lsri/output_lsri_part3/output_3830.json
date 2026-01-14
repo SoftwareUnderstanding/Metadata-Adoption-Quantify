@@ -1,0 +1,471 @@
+{
+  "acknowledgement": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Acknowledgements",
+        "parent_header": [
+          "scclusteval"
+        ],
+        "type": "Text_excerpt",
+        "value": "Thanks to Tim Sackton and Catherine Dulac for their supervision and\nsupport.  \nThanks to Yasin Kaymaz in Sackton group for fruitful discussion.  \nThanks to Stephen Eichhorn in Xiaowei Zhuang lab for the idea and\nsharing the python code working on\n[Scanpy](https://github.com/theislab/scanpy) object.  \nThanks to Sophia(Zhengzheng) Liang and Brandon Logeman in Dulac lab for\nsharing data and giving feedbacks.  \nThanks [David Robinson](https://twitter.com/drob)\u2019s `geomflatviolin`\nfunction which was used in the `raincloudplot`.\n"
+      },
+      "source": "https://raw.githubusercontent.com/crazyhottommy/scclusteval/master/README.Rmd",
+      "technique": "header_analysis"
+    }
+  ],
+  "application_domain": [
+    {
+      "confidence": 50.78,
+      "result": {
+        "type": "String",
+        "value": "Computer Vision"
+      },
+      "technique": "supervised_classification"
+    }
+  ],
+  "citation": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Citation",
+        "parent_header": [
+          "scclusteval"
+        ],
+        "type": "Text_excerpt",
+        "value": "Ming Tang, Yasin Kaymaz,Brandon L. Logeman, Stephen Eichhorn, Zhengzheng\nS. Liang, Catherine Dulac and Timothy B. Sackton. Evaluating single-cell\ncluster stability using the Jaccard similarity index (2020)\n*Bioinformatics*  btaa956, https://doi.org/10.1093/bioinformatics/btaa956.\n"
+      },
+      "source": "https://raw.githubusercontent.com/crazyhottommy/scclusteval/master/README.Rmd",
+      "technique": "header_analysis"
+    }
+  ],
+  "code_repository": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/crazyhottommy/scclusteval"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_created": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2018-11-30T22:10:26Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_updated": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2024-09-24T01:47:53Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "description": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "Single Cell Cluster Evaluation"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 0.9539013205243653,
+      "result": {
+        "original_header": "scclusteval",
+        "type": "Text_excerpt",
+        "value": "The goal of scclusteval(Single Cell Cluster Evaluation) is to evaluate\nthe single cell clustering stability by subsampling the cells and\nprovide many visualization methods for comparing clusters. \nFor Theory behind the method, see Christian Henning, \u201cCluster-wise\nassessment of cluster stability,\u201d Research Report 271, Dept. of\nStatistical Science, University College London, December 2006)\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/crazyhottommy/scclusteval/master/README.Rmd",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9728192715606012,
+      "result": {
+        "original_header": "Parameters that affect the clustering",
+        "type": "Text_excerpt",
+        "value": "The most popular clustering method for single cell RNAseq is shared\nnearest neighbor (SNN) followed by Louvain community detection algorithm \nwhich is implemented in `{Seurat::FindClusters}`.\nSee a paper by Mark Robinson group for comparing single cell RNAseq\nclustering methods:[A systematic performance evaluation of clustering\nmethods for single-cell RNA-seq\ndata](https://f1000research.com/articles/7-1141/v1) SNN in Seurat is the\nmost accurate and fast one. \nThe parameter `k.param` which specifies the number of nearest neighbors\nhas a great effect on the number of clusters. Other Parameters such as\nthe number of PCs and the resolution can affect the number of clusters\nas well. \nThe process is as follows. \nTo assess which k is best to use by subsampling the original data: \n2.  We then sample without replacement a subset of the data set\n    (e.g.\u00a080% of the cells in the full data set), and then repeat the\n    clustering procedure on just this subset of data (so repeating all\n    aspects of clustering, including calling variable genes, calculating\n    PCs, building the neighbor graph, etc), and we do this n times. \n3.  So for each K value, we have 1 clustering outcome for the full data\n    set, and 20 clustering outcomes for subsampled portions of the data\n    set. From this we identify the cluster in the first subsample\n    clustering that is most similar to the full cluster 1 cells (the one\n    that gives the maximum Jaccard coefficient) and record that value.\n    If this maximum Jaccard coefficient is less than 0.6 (this is quite\n    subjective), the original cluster is considered to be dissolved-it\n    didn\u2019t show up in the new clustering. A cluster that\u2019s dissolved too\n    often is probably not a \u201creal\u201d cluster. \n> As a rule of thumb, clusters with a stability value less than 0.6\n> should be considered unstable. Values between 0.6 and 0.75 indicate\n> that the cluster is measuring a pattern in the data, but there isn\u2019t\n> high certainty about which points should be clustered together.\n> Clusters with stability values above about 0.85 can be considered\n> highly stable (they\u2019re likely to be real clusters). \n4.  Repeat this for all subsample clustering outcomes, and then the\n    stability value of a cluster is the median or mean Jaccard\n    coefficient. If it\u2019s greater than 0.6 (or a cutoff you set) we say\n    it\u2019s stable, otherwise it\u2019s unstable. So for a given K value this\n    gives you a stable/unstable assignment for each cluster. We choose\n    the k value to select for clustering the data by looking at which k\n    value yielded the largest number of stable clusters while still\n    having most of the cells from the data set in a stable cluster. \nWe can repeat the 1-4 for different resolution and number of PCs and the\ncombination of all different parameters. \nThe workflow is: \n"
+      },
+      "source": "https://raw.githubusercontent.com/crazyhottommy/scclusteval/master/README.Rmd",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9187884902278366,
+      "result": {
+        "original_header": "The subsampling process is implemented in a Snakemake workflow",
+        "type": "Text_excerpt",
+        "value": "Because for each subsampling, one has to re-run the whole process of\n`FindVariableGenes`, `ScaleData`, `RunPCA`, `JackStraw` and\n`FindClusters` and for large data set, it can take very long time to\nrun. \nE.g. if you test 5 different K, and for each K you subsample the full\ndataset 100 times. that\u2019s 500 runs. \nSnakemake will take advantage of the HPC cluster with large number of\nCPUs avaiable. \n"
+      },
+      "source": "https://raw.githubusercontent.com/crazyhottommy/scclusteval/master/README.Rmd",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.8269888994606054,
+      "result": {
+        "original_header": "Useful functions",
+        "type": "Text_excerpt",
+        "value": "``` r\nlibrary(scclusteval)\n#> Loading required package: Seurat\n?RandomSubsetData\n?MergeMultipleSeuratObjects\n?PreprocessSubsetData\n?PairWiseJaccardSets\n\n## in Rstudio type below and tab to see all avaiable functions\n## scclusteval::\n```\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/crazyhottommy/scclusteval/master/README.Rmd",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9626984138060155,
+      "result": {
+        "original_header": "Why this package?",
+        "type": "Text_excerpt",
+        "value": "I saw `{fpc}` package has a function `clusterboot`. However, this\nfunction does not support SNN clustering. Although one can write a\ncustomer clustering function to feed into clusterboot, I need to build\nthings upon `Seurat` package and those two can not be easilily\nintegrated. In addition, `clusterboot` is not parallelized, I have to\nimplement the `snakemake` workflow for faster processing. \nread this blog post\n<http://www.win-vector.com/blog/2015/09/bootstrap-evaluation-of-clusters/>\nand <https://www.czasopisma.uni.lodz.pl/foe/article/view/983>\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/crazyhottommy/scclusteval/master/README.Rmd",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9963739578784226,
+      "result": {
+        "original_header": "To do list",
+        "type": "Text_excerpt",
+        "value": "  - \\[x\\] implement more visualization functions.\n  - \\[ \\] plot number of cells subsampled for each cluster in each\n    iteration in raincloudplot.\n  - \\[ \\] impurity metric for assessing cluster stability.\n  - \\[ \\] read this post from Jean Fan from Xiaowei Zhuang\u2019s lab\n    <https://jef.works/blog/2018/02/28/stability-testing/>\n    `getComMembership` function works on raw data matrix. It can be used\n    independent of Seurat\u2019s `FindClusters`. chat with Jean for more\n    details.\n  - \\[ \\] gene sets enrichment for each cluster.\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/crazyhottommy/scclusteval/master/README.Rmd",
+      "technique": "supervised_classification"
+    }
+  ],
+  "download_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/crazyhottommy/scclusteval/releases"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 12
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/crazyhottommy/scclusteval/forks"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "crazyhottommy/scclusteval"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_title": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "scclusteval"
+      },
+      "source": "https://raw.githubusercontent.com/crazyhottommy/scclusteval/master/README.Rmd",
+      "technique": "regular_expression"
+    }
+  ],
+  "images": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/crazyhottommy/scclusteval/master/man/figures/workflow.png"
+      },
+      "source": "https://raw.githubusercontent.com/crazyhottommy/scclusteval/master/README.Rmd",
+      "technique": "regular_expression"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/crazyhottommy/scclusteval/master/man/figures/README-unnamed-chunk-1-1.png"
+      },
+      "source": "https://raw.githubusercontent.com/crazyhottommy/scclusteval/master/README.Rmd",
+      "technique": "regular_expression"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/crazyhottommy/scclusteval/master/man/figures/jaccard_raincloud.png"
+      },
+      "source": "https://raw.githubusercontent.com/crazyhottommy/scclusteval/master/README.Rmd",
+      "technique": "regular_expression"
+    }
+  ],
+  "installation": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Installation",
+        "parent_header": [
+          "scclusteval",
+          "The scclusteval R package is for downstream analysis"
+        ],
+        "type": "Text_excerpt",
+        "value": "You can install the scclusteval from github:\n\n``` r\ndevtools::install_github(\"crazyhottommy/scclusteval\")\n```\n"
+      },
+      "source": "https://raw.githubusercontent.com/crazyhottommy/scclusteval/master/README.Rmd",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 0.967580236713339,
+      "result": {
+        "original_header": "Useful functions",
+        "type": "Text_excerpt",
+        "value": "``` r\nlibrary(scclusteval)\n#> Loading required package: Seurat\n?RandomSubsetData\n?MergeMultipleSeuratObjects\n?PreprocessSubsetData\n?PairWiseJaccardSets\n\n## in Rstudio type below and tab to see all avaiable functions\n## scclusteval::\n```\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/crazyhottommy/scclusteval/master/README.Rmd",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9999999703718179,
+      "result": {
+        "type": "Text_excerpt",
+        "value": "[![Build\nStatus](https://travis-ci.com/crazyhottommy/scclusteval.svg?branch=master)](https://travis-ci.com/crazyhottommy/scclusteval) \n"
+      },
+      "source": "https://raw.githubusercontent.com/crazyhottommy/scclusteval/master/README.Rmd",
+      "technique": "supervised_classification"
+    }
+  ],
+  "issue_tracker": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/crazyhottommy/scclusteval/issues"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "keywords": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "clustering, ggplot2, rstats, scrnaseq"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "license": [
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Other",
+        "spdx_id": "NOASSERTION",
+        "type": "License",
+        "url": null,
+        "value": null
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "File_dump",
+        "value": "YEAR: 2018\nCOPYRIGHT HOLDER: Ming Tang\n"
+      },
+      "source": "https://raw.githubusercontent.com/crazyhottommy/scclusteval/master/LICENSE",
+      "technique": "file_exploration"
+    }
+  ],
+  "logo": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/crazyhottommy/scclusteval/master/man/figures/scclusteval.png"
+      },
+      "source": "https://raw.githubusercontent.com/crazyhottommy/scclusteval/master/README.Rmd",
+      "technique": "regular_expression"
+    }
+  ],
+  "name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "scclusteval"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "owner": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "User",
+        "value": "crazyhottommy"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "programming_languages": [
+    {
+      "confidence": 1,
+      "result": {
+        "name": "R",
+        "size": 44249,
+        "type": "Programming_language",
+        "value": "R"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "readme_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/crazyhottommy/scclusteval/master/README.Rmd"
+      },
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/crazyhottommy/scclusteval/master/README.md"
+      },
+      "technique": "file_exploration"
+    }
+  ],
+  "releases": [
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "crazyhottommy",
+          "type": "User"
+        },
+        "date_created": "2021-04-26T03:10:37Z",
+        "date_published": "2021-04-26T03:11:29Z",
+        "description": "support for Seurat V4",
+        "html_url": "https://github.com/crazyhottommy/scclusteval/releases/tag/v1.0",
+        "name": "Release v1.0",
+        "release_id": 41980830,
+        "tag": "v1.0",
+        "tarball_url": "https://api.github.com/repos/crazyhottommy/scclusteval/tarball/v1.0",
+        "type": "Release",
+        "url": "https://api.github.com/repos/crazyhottommy/scclusteval/releases/41980830",
+        "value": "https://api.github.com/repos/crazyhottommy/scclusteval/releases/41980830",
+        "zipball_url": "https://api.github.com/repos/crazyhottommy/scclusteval/zipball/v1.0"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "crazyhottommy",
+          "type": "User"
+        },
+        "date_created": "2019-09-18T15:13:33Z",
+        "date_published": "2020-02-18T03:08:27Z",
+        "description": "second release for citing",
+        "html_url": "https://github.com/crazyhottommy/scclusteval/releases/tag/v0.1.1",
+        "name": "second release for citing",
+        "release_id": 23752285,
+        "tag": "v0.1.1",
+        "tarball_url": "https://api.github.com/repos/crazyhottommy/scclusteval/tarball/v0.1.1",
+        "type": "Release",
+        "url": "https://api.github.com/repos/crazyhottommy/scclusteval/releases/23752285",
+        "value": "https://api.github.com/repos/crazyhottommy/scclusteval/releases/23752285",
+        "zipball_url": "https://api.github.com/repos/crazyhottommy/scclusteval/zipball/v0.1.1"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "crazyhottommy",
+          "type": "User"
+        },
+        "date_created": "2019-09-18T15:13:33Z",
+        "date_published": "2020-02-18T03:04:10Z",
+        "description": "first release for citing",
+        "html_url": "https://github.com/crazyhottommy/scclusteval/releases/tag/v0.1",
+        "name": "first release for citing",
+        "release_id": 23752233,
+        "tag": "v0.1",
+        "tarball_url": "https://api.github.com/repos/crazyhottommy/scclusteval/tarball/v0.1",
+        "type": "Release",
+        "url": "https://api.github.com/repos/crazyhottommy/scclusteval/releases/23752233",
+        "value": "https://api.github.com/repos/crazyhottommy/scclusteval/releases/23752233",
+        "zipball_url": "https://api.github.com/repos/crazyhottommy/scclusteval/zipball/v0.1"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "somef_missing_categories": [
+    "run",
+    "download",
+    "requirements",
+    "contact",
+    "contributors",
+    "documentation",
+    "faq",
+    "support",
+    "identifier",
+    "has_build_file",
+    "executable_example"
+  ],
+  "somef_provenance": {
+    "date": "2024-10-06 14:13:18",
+    "somef_schema_version": "1.0.0",
+    "somef_version": "0.9.5"
+  },
+  "stargazers_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 86
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "usage": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Examples",
+        "parent_header": [
+          "scclusteval"
+        ],
+        "type": "Text_excerpt",
+        "value": "Examples to use the `scclusteval` package can be found at\n<https://crazyhottommy.github.io/EvaluateSingleCellClustering/>\n\n![](man/figures/README-unnamed-chunk-1-1.png)\n\n![](man/figures/jaccard_raincloud.png)\n"
+      },
+      "source": "https://raw.githubusercontent.com/crazyhottommy/scclusteval/master/README.Rmd",
+      "technique": "header_analysis"
+    }
+  ]
+}

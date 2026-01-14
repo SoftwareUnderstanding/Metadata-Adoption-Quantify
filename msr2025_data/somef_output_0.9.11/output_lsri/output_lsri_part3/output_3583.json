@@ -1,0 +1,401 @@
+{
+  "citation": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Citation",
+        "parent_header": [
+          "CUE"
+        ],
+        "type": "Text_excerpt",
+        "value": "Li G, Raffield L, Logue M, Miller MW, Santos HP Jr, O'Shea TM, Fry RC, Li Y. CUE: CpG impUtation ensemble for DNA methylation levels across the human methylation450 (HM450) and EPIC (HM850) BeadChip platforms. Epigenetics. 2021 Aug;16(8):851-861. doi: 10.1080/15592294.2020.1827716. Epub 2020 Oct 4. PMID: 33016200; PMCID: PMC8330997.\n\n"
+      },
+      "source": "https://raw.githubusercontent.com/GangLiTarheel/CUE/master/README.md",
+      "technique": "header_analysis"
+    }
+  ],
+  "code_repository": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/GangLiTarheel/CUE"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_created": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2020-03-09T17:50:35Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_updated": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2024-03-13T05:35:20Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "description": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "CUE: CpG impUtation Ensemble for DNA Methylation Levels Across the HumanMethylation450 (HM450) BeadChip and HumanMethylation EPIC (HM850) BeadChip Platforms"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Brief introduction",
+        "parent_header": [
+          "CUE"
+        ],
+        "type": "Text_excerpt",
+        "value": "From this study, we provide two sets of imputation models: one for whole blood and the other for placenta. \nInvestigators can therefore complete their own imputation of placental or whole blood HM850 CpG sites using their own HM450 data, without access to their own reference panel. \nOur method is also applicable to imputation in other tissues, provided the user can provide a reference dataset assayed on both HM450 and HM850.\n"
+      },
+      "source": "https://raw.githubusercontent.com/GangLiTarheel/CUE/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 0.9206329376827982,
+      "result": {
+        "original_header": "CpG impUtation Ensemble for DNA Methylation Levels Across the HumanMethylation450 (HM450) BeadChip and HumanMethylation EPIC (HM850) BeadChip Platforms",
+        "type": "Text_excerpt",
+        "value": "DNA methylation at CpG dinucleotides is one of the most extensively studied epigenetic marks. \nWith technological advancements, geneticists can profile DNA methylation with multiple reliable approaches. \nHowever, different profiling platforms can differ substantially in the CpGs they assess, consequently hindering integrated analysis across platforms. \nHere, we present CpG impUtation Ensemble (CUE), which leverages multiple classical statistical and modern machine learning methods, to impute from the Illumina HumanMethylation450 (HM450) BeadChip to the Illumina HumanMethylationEPIC (HM850) BeadChip.  \nCUE is maintained by Gang Li [franklee@live.unc.edu] and Laura Raffield [laura_raffield@unc.edu].\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/GangLiTarheel/CUE/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9850361590492951,
+      "result": {
+        "original_header": "CUE imputation",
+        "type": "Text_excerpt",
+        "value": "Here we show the imputation for a toy dataset with three samples, 248K HM450K probes. \nThe reason we use only 248K probes is that when we trained models, we only retain the 248,421 HM450 CpG sites (sites overlapping between ELGAN and PTSD, and without missingness in our samples) to train since we don't want the incompleteness or the pre-imputation on HM450 affects our evaluations on HM850 imputation.\nThe full list of 248K HM450K probes can be found in Probes.RData. \n"
+      },
+      "source": "https://raw.githubusercontent.com/GangLiTarheel/CUE/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9175321063885967,
+      "result": {
+        "original_header": "The input dataset X should have row as probes, columns as samples.",
+        "type": "Text_excerpt",
+        "value": "```{r perform imputation}\n## Set the working directory\nsetwd(\u201c/YOUR_DIRECTORY/CUE\u201d)\n# Replace YOUR_DIRECTORY with your directory where you downloaded CUE.\n\nroot_dir = getwd()\n\n\n## load sample dataset\nload(\"PTSD/Sample_Dataset.RData\")\nX<-sample_data                            # Input HM450\nm<-dim(X)[2] # number of samples          # Number of smaples\n\n## load required datasets \nload(\"PTSD/Annotations.RData\")                # load Annotation data\nload(\"Data/PTSD.neighbors.RData\")             # load All neighbors\nload(\"Data/Probes.RData\")                     # load All probes' names\n\n## load required datasets for PTSD imputation\nload(\"Data/PTSD_CpG_Best_method_list.RData\")  # load the best method list \nload(\"PTSD/RF/best_RF.RData\")                 # load neighbors for RF\nload(\"PTSD/XGB/best_XGB.RData\")               # load neighbors for XGB\nload(\"PTSD/KNN/best_KNN.RData\")               # load neighbors for KNN\nload(\"PTSD/TCR/best_TCR.RData\")               # load neighbors for PFR\n\n## load all the required packages\nlibrary(randomForest)\nlibrary(xgboost)\nlibrary(xgboost)\nsource(\"R/refund_lib.R\")\n\n## load the CUE imputation function\nsource(\"R/impute.R\")\n\n## Check the input\nCUE_check(X)                        # check if the inuput X match the requirements\n\n## TCR required input\t\ntemp <- TCR.input(X)\nX_logit = temp[[1]]                 # Logit transformation make it better follows Gaussian distribution\ntest.funcs <- temp[[2]]             # Pre-calculated sample-specific density function\n\n## Imputation (Single CPU might takes 4-5 days to imputation for a middle sized methylation dataset (n=~100 samples).)\nm.imputed<-CUE.impute(X,m,\"PTSD\")\n\n## Save the imputed probes as y_impute.RData\nsetwd(root_dir)\nsave(m.imputed,file=\"y_impute.RData\")\n\n\n``` \nNote: (a) we impute all 339K HM850 specific probes which had complete data in our reference whole blood and placenta datasets. Users of CUE must use the following quality control steps to retain the well imputed probes only for use in subsequent analysis (such as epigenome wide association studies). \n(b) we provided the corresponding annotation files within PTSD datasets (\"PTSD/Annotations.RData\") for building funtional predicitors for penalized function regression models. The annntation files can also be downloaded from the Illumina website. \n"
+      },
+      "source": "https://raw.githubusercontent.com/GangLiTarheel/CUE/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9217540269604376,
+      "result": {
+        "original_header": "Quality Control",
+        "type": "Text_excerpt",
+        "value": "We provdies two sets of QC+ probes list for two datsets with the following thresholds: \nQC for ELGAN: RMSE<0.1 and Accruracy > 90%;  \nQC for PTSD: RMSE<0.05 and Accruracy > 95%.\n```{r subset}\nQC_probes<-read.csv(\"Placenta (ELGAN)QC_probe_list.csv\") # for Placenta\n#QC_probes<-read.csv(\"Whole Blood (PTSD)QC_probe_list\") # for whole blood\nload(\"y_impute.RData\")\nQC_probes<-unlist(QC_probes)\nm.QC <- m.imputed[,paste(QC_probes)]\nsave(m.QC, file=\"m.imputed.QC.RData\")\n``` \n(Optional): We also provide an shiny app, CUE_QC.R, an visualization tool to select the QC+ probe list.\n```{r CUE_QC}\nrunApp('CUE_QC.R')\n```\nThe shiny app will save the list of well imputed probes. Users can use the previous code to subset the output probes.  \n"
+      },
+      "source": "https://raw.githubusercontent.com/GangLiTarheel/CUE/master/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "download": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Download the pretrained imputation models",
+        "parent_header": [
+          "CUE"
+        ],
+        "type": "Text_excerpt",
+        "value": "Note: The compressed pre-trained models need around ~ 58 GB (ELGAN ~36 GB; and PTSD ~21 GB) memory of storage.\n\n\nPlease save the above pretrained models (tar.gz files) in the same directory of your CUE packages.\n\nTo extract the pre-trained models:\n\nMake two directories for two sets of pre-trained models:\n```\npwd # this should be your root directory of CUE\nmkdir PTSD\nmkdir ELGAN\n```\n\nDownload the pre-trained models amd move the PTSD and ELGAN pretrained models to the corresponding folder."
+      },
+      "source": "https://raw.githubusercontent.com/GangLiTarheel/CUE/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Whole blood (PTSD):",
+        "parent_header": [
+          "CUE",
+          "Download the pretrained imputation models"
+        ],
+        "type": "Text_excerpt",
+        "value": "ftp://yunlianon:anon@rc-ns-ftp.its.unc.edu/CUE/PTSD_model.tar.gz"
+      },
+      "source": "https://raw.githubusercontent.com/GangLiTarheel/CUE/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Placenta (ELGAN):",
+        "parent_header": [
+          "CUE",
+          "Download the pretrained imputation models"
+        ],
+        "type": "Text_excerpt",
+        "value": "ftp://yunlianon:anon@rc-ns-ftp.its.unc.edu/CUE/ELGAN_model.tar.gz\n\n"
+      },
+      "source": "https://raw.githubusercontent.com/GangLiTarheel/CUE/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "then decompress.",
+        "parent_header": [
+          "CUE",
+          "Download the pretrained imputation models"
+        ],
+        "type": "Text_excerpt",
+        "value": "```\ncd PTSD\ntar -xf PTSD_model.tar.gz\ncd ../\n\ncd ELGAN\ntar -xf ELGAN_model.tar.gz\ncd ../\n```\n"
+      },
+      "source": "https://raw.githubusercontent.com/GangLiTarheel/CUE/master/README.md",
+      "technique": "header_analysis"
+    }
+  ],
+  "download_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/GangLiTarheel/CUE/releases"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 0
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/GangLiTarheel/CUE/forks"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "GangLiTarheel/CUE"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_title": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "CUE"
+      },
+      "source": "https://raw.githubusercontent.com/GangLiTarheel/CUE/master/README.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "installation": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Installation",
+        "parent_header": [
+          "CUE"
+        ],
+        "type": "Text_excerpt",
+        "value": "CUE package can be directly installed as following:\n```\ngit clone https://github.com/GangLiTarheel/CUE.git\ncd CUE\n```\n\n\n"
+      },
+      "source": "https://raw.githubusercontent.com/GangLiTarheel/CUE/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Required library for imputation.",
+        "parent_header": [
+          "CUE",
+          "Installation"
+        ],
+        "type": "Text_excerpt",
+        "value": "Please install the following version of R and R packages before performing imputation.\n\n\n\n* R version 3.6.0 (2019-04-26)\n\n* class_7.3-15        \n* xgboost_0.82.1      \n* randomForest_4.6-14\n* parallel\n\nNote: to install an R packages, simply run install.packages(\"Name_of_package\"). For example,\n```\ninstall.packages(\"xgboost\")\n```\n\nNote: you can also install the version of xgboost we used from the source code:\nhttps://cran.r-project.org/src/contrib/Archive/xgboost/xgboost_0.82.1.tar.gz\n\n\n```{r init, message=TRUE}\nlibrary(randomForest) # RF\nlibrary(xgboost) # XGBoost\nlibrary(\"class\") # KNN\nsource(\"R/refund_lib.R\")\n\nlibrary(parallel) # Use this package if you need parallel computing to accelerate computation speed\n\n```\n"
+      },
+      "source": "https://raw.githubusercontent.com/GangLiTarheel/CUE/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 0.953826910216826,
+      "result": {
+        "original_header": "News and Updates",
+        "type": "Text_excerpt",
+        "value": "* Version 0.8.9 released\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/GangLiTarheel/CUE/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.948343437784465,
+      "result": {
+        "original_header": "The input dataset X should have row as probes, columns as samples.",
+        "type": "Text_excerpt",
+        "value": "```{r perform imputation}\n## Set the working directory\nsetwd(\u201c/YOUR_DIRECTORY/CUE\u201d)\n# Replace YOUR_DIRECTORY with your directory where you downloaded CUE.\n\nroot_dir = getwd()\n\n\n## load sample dataset\nload(\"PTSD/Sample_Dataset.RData\")\nX<-sample_data                            # Input HM450\nm<-dim(X)[2] # number of samples          # Number of smaples\n\n## load required datasets \nload(\"PTSD/Annotations.RData\")                # load Annotation data\nload(\"Data/PTSD.neighbors.RData\")             # load All neighbors\nload(\"Data/Probes.RData\")                     # load All probes' names\n\n## load required datasets for PTSD imputation\nload(\"Data/PTSD_CpG_Best_method_list.RData\")  # load the best method list \nload(\"PTSD/RF/best_RF.RData\")                 # load neighbors for RF\nload(\"PTSD/XGB/best_XGB.RData\")               # load neighbors for XGB\nload(\"PTSD/KNN/best_KNN.RData\")               # load neighbors for KNN\nload(\"PTSD/TCR/best_TCR.RData\")               # load neighbors for PFR\n\n## load all the required packages\nlibrary(randomForest)\nlibrary(xgboost)\nlibrary(xgboost)\nsource(\"R/refund_lib.R\")\n\n## load the CUE imputation function\nsource(\"R/impute.R\")\n\n## Check the input\nCUE_check(X)                        # check if the inuput X match the requirements\n\n## TCR required input\t\ntemp <- TCR.input(X)\nX_logit = temp[[1]]                 # Logit transformation make it better follows Gaussian distribution\ntest.funcs <- temp[[2]]             # Pre-calculated sample-specific density function\n\n## Imputation (Single CPU might takes 4-5 days to imputation for a middle sized methylation dataset (n=~100 samples).)\nm.imputed<-CUE.impute(X,m,\"PTSD\")\n\n## Save the imputed probes as y_impute.RData\nsetwd(root_dir)\nsave(m.imputed,file=\"y_impute.RData\")\n\n\n``` \n(b) we provided the corresponding annotation files within PTSD datasets (\"PTSD/Annotations.RData\") for building funtional predicitors for penalized function regression models. The annntation files can also be downloaded from the Illumina website. \nftp://webdata2:webdata2@ussd-ftp.illumina.com/downloads/productfiles/methylationEPIC/infinium-methylationepic-v-1-0-b4-manifest-file-csv.zip \n"
+      },
+      "source": "https://raw.githubusercontent.com/GangLiTarheel/CUE/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.985756007505931,
+      "result": {
+        "original_header": "Quality Control",
+        "type": "Text_excerpt",
+        "value": "(Optional): We also provide an shiny app, CUE_QC.R, an visualization tool to select the QC+ probe list.\n```{r CUE_QC}\nrunApp('CUE_QC.R')\n```\nThe shiny app will save the list of well imputed probes. Users can use the previous code to subset the output probes.  \n"
+      },
+      "source": "https://raw.githubusercontent.com/GangLiTarheel/CUE/master/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "invocation": [
+    {
+      "confidence": 0.8613176242192946,
+      "result": {
+        "original_header": "The input dataset X should have row as probes, columns as samples.",
+        "type": "Text_excerpt",
+        "value": "File link:\n[HM850](https://support.illumina.com/array/array_kits/infinium-methylationepic-beadchip-kit/downloads.html) \nftp://webdata2:webdata2@ussd-ftp.illumina.com/downloads/productfiles/methylationEPIC/infinium-methylationepic-v-1-0-b4-manifest-file-csv.zip \n"
+      },
+      "source": "https://raw.githubusercontent.com/GangLiTarheel/CUE/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.8459210872028561,
+      "result": {
+        "original_header": "Quality Control",
+        "type": "Text_excerpt",
+        "value": "QC for PTSD: RMSE<0.05 and Accruracy > 95%.\n```{r subset}\nQC_probes<-read.csv(\"Placenta (ELGAN)QC_probe_list.csv\") # for Placenta\n#QC_probes<-read.csv(\"Whole Blood (PTSD)QC_probe_list\") # for whole blood\nload(\"y_impute.RData\")\nQC_probes<-unlist(QC_probes)\nm.QC <- m.imputed[,paste(QC_probes)]\nsave(m.QC, file=\"m.imputed.QC.RData\")\n``` \n"
+      },
+      "source": "https://raw.githubusercontent.com/GangLiTarheel/CUE/master/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "issue_tracker": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/GangLiTarheel/CUE/issues"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "keywords": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "cue, dna-methylation, ensemble-learning, functional-regression, hm450k, hm850k, impuation, machine-learning, r"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "CUE"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "owner": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "User",
+        "value": "GangLiTarheel"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "programming_languages": [
+    {
+      "confidence": 1,
+      "result": {
+        "name": "HTML",
+        "size": 634145,
+        "type": "Programming_language",
+        "value": "HTML"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "R",
+        "size": 21517,
+        "type": "Programming_language",
+        "value": "R"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "readme_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/GangLiTarheel/CUE/master/README.md"
+      },
+      "technique": "file_exploration"
+    }
+  ],
+  "somef_missing_categories": [
+    "acknowledgement",
+    "run",
+    "requirements",
+    "contact",
+    "contributors",
+    "documentation",
+    "license",
+    "usage",
+    "faq",
+    "support",
+    "identifier",
+    "has_build_file",
+    "executable_example"
+  ],
+  "somef_provenance": {
+    "date": "2024-10-06 13:17:34",
+    "somef_schema_version": "1.0.0",
+    "somef_version": "0.9.5"
+  },
+  "stargazers_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 1
+      },
+      "technique": "GitHub_API"
+    }
+  ]
+}

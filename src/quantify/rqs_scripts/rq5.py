@@ -5,11 +5,11 @@ import json
 This script is for answering RQ5
 """
 
-result = {
-    "citation": {"bib": 0, "cff": 0, "readme": 0}
-}
-
 def rq5(directory, missing_key, output_file, output_directory):
+    result = {
+        "citation": {"bib": 0, "cff": 0, "readme": 0},
+        "None": {"count": 0}
+    }
 
     for file_name in os.listdir(directory):
         
@@ -42,8 +42,8 @@ def rq5(directory, missing_key, output_file, output_directory):
                         result["None"]["count"] += 1
 
     os.makedirs(output_directory, exist_ok=True)
-    output_file = os.path.join(output_directory, output_file)
-    with open(output_file, 'w') as outfile:
+    output_file_path = os.path.join(output_directory, output_file)
+    with open(output_file_path, 'w') as outfile:
         json.dump(result, outfile, indent=4)
     
     print("Successfully extracted the necessary information!")

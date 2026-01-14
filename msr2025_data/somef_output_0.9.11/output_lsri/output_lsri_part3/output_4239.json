@@ -1,0 +1,626 @@
+{
+  "code_repository": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/kircherlab/hemoMIPs"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_created": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2018-07-18T11:11:16Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_updated": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2024-06-27T09:42:02Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "description": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "Automated analysis and result reporting for targeted sequencing data"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Primary sequence processing",
+        "parent_header": [
+          "hemoMIPs",
+          "Pipeline description"
+        ],
+        "type": "Text_excerpt",
+        "value": "\r\nThe primary inputs are raw FastQ files from the sequencing run as well as a sample-to-barcode assignment. In primary processing, reads are converted to BAM format, demultiplexed (storing sample information as read group information), and overlapping paired-end reads are merged and consensus called (Kircher, 2012).\r\n\r"
+      },
+      "source": "https://raw.githubusercontent.com/kircherlab/hemoMIPs/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Alignment and MIP arm trimming",
+        "parent_header": [
+          "hemoMIPs",
+          "Pipeline description"
+        ],
+        "type": "Text_excerpt",
+        "value": "\r\nProcessed reads are aligned to the reference genome (here GRCh37 build from the 1000 Genomes Project Phase II release) using Burrows-Wheeler Alignment (BWA) 0.7.5 mem (Li and Durbin, 2010). As MIP arm sequence can result in incorrect variant identification (by hiding existing variation below primer sequence), MIP arm sequences are trimmed based on alignment coordinates and new BAM files are created. In this step, we are using MIP design files from MIPgen (Boyle et al., 2014) by default. MIP representation statistics (text output file) are calculated from the aligned files. Further, reads aligning to Y-chromosome-unique probes (SRY) are counted for each sample and reported (text output file). In a separate alignment step, all reads are aligned to a reference sequence file describing only the structural sequence variants as mutant and reference sequences. Results are summarized over all samples with the number of reads aligning to each sequence contig in a text report.\r\n\r"
+      },
+      "source": "https://raw.githubusercontent.com/kircherlab/hemoMIPs/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Coverage analysis and variant calling",
+        "parent_header": [
+          "hemoMIPs",
+          "Pipeline description"
+        ],
+        "type": "Text_excerpt",
+        "value": "\r\nCoverage differences between MIPs are handled by down sampling regions of excessive coverage. Variants are genotyped using GATK (McKenna et al., 2010) UnifiedGenotyper (v3.4-46) in combination with IndelRealigner (v3.2-2). Alternatively, GATK v4.0.4.0 HaplotypeCaller is used in gVCF mode in combination with CombineGVCFs and GenotypeGVCFs. The gvcf output files are provided in the `output/dataset/mapping/gatk4/gvcf/` output folder for further sample specific information.\r\n\r\nThe hemophilia datasets perform similar when run either with the GATK3 or GATK4 workflow. However, in low quality genotype calls the performance might vary and a different call set might be obtained. In a reanalysis performed on one of the hemophilia sequencing experiments, the sample specific genotype agreement is above 0.99 (36 different out of 64,308 genotype calls) between the two GATK versions, with high agreement in associated genotype qualities. We therefore choose GATK4 as the standard setting for the workflow as this versions maintains support, is 50x faster and easier to upgrade.\r\n\r\nVariant annotations of the called variants, including variant effect predictions and HGVS variant descriptions are obtained from Ensembl Variant Effect Predictor (McLaren et al., 2016).\r\n\r"
+      },
+      "source": "https://raw.githubusercontent.com/kircherlab/hemoMIPs/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 0.9962410984674357,
+      "result": {
+        "original_header": "hemoMIPs",
+        "type": "Text_excerpt",
+        "value": "\r\nThe hemoMIPs pipeline is a fast and efficient analysis pipeline for the analysis of multiplexed and targeted NGS datasets created from Molecular Inversion Probes (MIPs). It runs highly automated using conda und snakemake and can be set to use GATK v4 or GATK v3 for variant calling. It reports benign and likely pathogenic variants in a userfriendly HTML report that shows detailed performance statistics and results.\r\n\r \n"
+      },
+      "source": "https://raw.githubusercontent.com/kircherlab/hemoMIPs/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9511828968408154,
+      "result": {
+        "original_header": "Other required genome annotations",
+        "type": "Text_excerpt",
+        "value": "\r\nIn the following steps, we are preparing the alignment and variant calling index of the reference genome as well as a VCF with known variants. We are using the above created `prepTools` environment:\r\n\r\n```bash\r\nconda activate prepTools\r\n```\r\n\r\nFor alignment, we use the 1000 Genomes phase 2 build of the human reference `hs37d5.fa.gz`, which includes decoy sequences for sequences missing from the assembly. We will need the bwa index and picard/GATK dictionary index of this file.\r\n\r\nBASH2*\r\n\r\nHemoMIPs uses known variants reported by the 1000 Genomes project. To extract known variants for your target region, run the following command using your `target_coords.bed`. Here, we are using the file from the example project:\r\n\r\nBASH3*\r\n\r\nIf you decided to include MIPs to capture specific inversion alleles, you will also need to provide a BWA index for the inversion MIPs as well as the logic of evaluating those in `scripts/processing/summary_report.py` (lines 138-169). If you do not have inversion probes in your design, set the respective parameter (`Inv`) in the config file to \"no\". In the following, we will assume that you are using the pipeline for the analysis of the hemophilia MIP design and provide the relevant files with your input folder.\r\n\r\nThe environments needed to prepare the workflow can be removed at this step. Snakemake will install packages required for the workflow  automatically during the first run of the pipeline. Do not remove the `hemoMIPs` environment as this is needed to invoke snakemake.\r\n\r\nBASH4*\r\n\r \n"
+      },
+      "source": "https://raw.githubusercontent.com/kircherlab/hemoMIPs/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.990241193953614,
+      "result": {
+        "original_header": "Config",
+        "type": "Text_excerpt",
+        "value": "\r\nAlmost ready to go. After you prepared the files above, you may need to adjust locations and names of these files in the `config.yml`. Further, you need to specify your run type, i.e. whether you want to analyze paired-end read or single-end read data as well as your index design (single or double index) in the `config.yml`. The original workflow was developed for paired-end 2 x 120bp with one sample index read. The workflow however allows the analysis of single-end reads and up to two index reads/technical reads. If you have other read layouts, you might be able to reorganize your sequence data to match our workflow. For this purpose, see the section on 'Alternative Read Layouts' below. \r\n\r\nTo adjust single vs. paired-end, type of indexing or to deactivate inversion analysis, set the following parameters in the config file accordingly: \r\n\r\n```\r\nparameters:\r\n   inv: \"yes\" #set to \"no\" when no inversion design is provided\r\n   paired_end_reads: \"yes\" #set to \"no\" when single-read sequencing is applied\r\n   double_index: \"no\" #set to yes when double indexing is applied or a second technical read available \r\n```\r\n\r\nPlease note that the workflow supports double indexing, i.e. sequence combinations between the two technical reads identify a specific sample, or the provision of a second technical read (e.g. for unique molecular identifiers, UMIs) which is not used for sample assignment but propagated in a separate BAM field for each read. If you are using double indexing set `double_index` to \"yes\" and provide a three column `sample_index.lst` file (see below). If sequence information from a technical read should be included, also set `double_index` to \"yes\", but provide a two column `sample_index.lst` file (see below). In this case, the first index read will be used to assign samples, and the sequence of the second read will be included in the BAM files, but will not be evaluated.\r\n\r\nAn example config can be found in `example_config.yml`. If you would like to run the example data set, please copy it to `config.yml`:\r\n\r\nBASH2*\r\n\r \n"
+      },
+      "source": "https://raw.githubusercontent.com/kircherlab/hemoMIPs/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9869192385764242,
+      "result": {
+        "original_header": "List of required input files",
+        "type": "Text_excerpt",
+        "value": "\r\nYou need your NGS fastq files, information about your MIP design and the targeted regions. An example dataset is available with all relevant files in `input/example_dataset`. The required fastq input files should be created using the Illumina `bcl2fastq` tool (without using the tools' demultiplexing functionality). The pipeline can handle paired-end and single-end reads with up to two technical reads/index reads (i.e. `Undetermined_S0_L00{lane}_R1_001.fastq.gz`, `Undetermined_S0_L00{lane}_I1_001.fastq.gz`, additional for paired end read data: `Undetermined_S0_L00{lane}_R2_001.fastq.gz`, in case of a second index read: `Undetermined_S0_L00{lane}_I2_001.fastq.gz`). For instance, a paired-end single index dataset could be created by `bcl2fastq --create-fastq-for-index-reads --use-bases-mask 'Y*,I*,Y*'`.\r\n\r\nPut your NGS fastq files in input/ together with:\r\n- MIP design file as generated by `https://github.com/shendurelab/MIPGEN` named `hemomips_design.txt`\r\n- Named target regions (coordinates) of your MIP experiment named `target_coords.bed`\r\n- A file containing known benign variants (can be left blank) named `benignVars.txt`. \r\n- A barcode sample assignment file named `sample_index.lst`\r\n\r\nExamples and further information about these files is provided below.\r\n\r \n"
+      },
+      "source": "https://raw.githubusercontent.com/kircherlab/hemoMIPs/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9549933649089389,
+      "result": {
+        "original_header": "MIP probe design information",
+        "type": "Text_excerpt",
+        "value": "\r\nInformation about the designed MIP probes and their location in the reference genome is needed as a tab-separated text file for the script `TrimMIParms.py`. The default input file has the following columns: index, score, chr, ext_probe_start, ext_probe_stop, ext_probe_copy, ext_probe_sequence, lig_probe_start, lig_probe_stop, lig_probe_copy, lig_probe_sequence, mip_scan_start_position, mip_scan_stop_position, scan_target_sequence, mip_sequence, feature_start_position, feature_stop_position, probe_strand, failure_flags, gene_name, mip_name. This format is obtained from MIP designs generated by MIPGEN (Boyle et al., 2014), a tool for MIP probe design available on GitHub (https://github.com/shendurelab/MIPGEN). Alternatively, files containing at least the following named columns can be used: chr, ext_probe_start, ext_probe_stop, lig_probe_start, lig_probe_stop, probe_strand, and mip_name. It is critical, that the reported coordinates and chromosome names match the reference genome used in alignment. \r\n\r\nWe used Y-chromosome specific targets (SRY) to detect the sex of the samples (see chromosome `Y` in `hemomips_design.txt`). Different Y chromosome targets can be designed for sex determination as the workflow simply counts Y-aligned reads. The pipeline also runs without Y-specific MIPs for sex determination, but in this case will output all samples to be female in the final report.\r\n\r \n"
+      },
+      "source": "https://raw.githubusercontent.com/kircherlab/hemoMIPs/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9705437596750486,
+      "result": {
+        "original_header": "Named target regions in BED format",
+        "type": "Text_excerpt",
+        "value": "\r\nPlease describe the target regions of your MIP experiments in a BED file. These regions and names will be used in the HTML report. An example of this BED file is provided below (see also `input/example_dataset/target_coords.bed`):\r\n\r\n```\r\nX       154250998       154251277       F8/upstream                             \r\nX       154250827       154250998       F8/5-UTR                                \r\nX       154250674       154250827       F8/1                            \r\nX       154227743       154227906       F8/2                            \r\n...\r\nX       154088696       154088893       F8/25                           \r\nX       154065871       154066037       F8/26                           \r\nX       154064063       154065871       F8/3-UTR                                \r\nX       154064033       154064063       F8/downstream                           \r\nX       138612623       138612894       F9/upstream                             \r\nX       138612894       138612923       F9/5-UTR                                \r\nX       138612923       138613021       F9/1                            \r\nX       138619158       138619342       F9/2                            \r\n...\r\nX       138642889       138643024       F9/7                            \r\nX       138643672       138644230       F9/8                            \r\nX       138644230       138645617       F9/3-UTR                                \r\nX       138645617       138645647       F9/downstream\r\n```\r\n\r \n"
+      },
+      "source": "https://raw.githubusercontent.com/kircherlab/hemoMIPs/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9526310088769512,
+      "result": {
+        "original_header": "Known benign variants",
+        "type": "Text_excerpt",
+        "value": "\r\nA `benignVars.txt` can be used to describe known benign variants. If no such variants are available, an empty file with this name needs to be provided. If variants are provided in this file, these will be printed in gray font in the HTML report and separated in the CSV output files. An example of the format is provided below. The full file for the hemophilia project is available as `input/example_dataset/benignVars.txt`.\r\n\r\n```\r\nX_138633280_A/G\r\nX_154065069_T/G\r\nX_138644836_G/A\r\nX_138645058_GT/-\r\nX_138645060_-/GT\r\nX_138645149_T/C\r\n```\r\n\r \n"
+      },
+      "source": "https://raw.githubusercontent.com/kircherlab/hemoMIPs/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.8656622219095507,
+      "result": {
+        "original_header": "Barcode to sample assignment",
+        "type": "Text_excerpt",
+        "value": "\r\nA two or three column tab-separated file is required with the sequencing barcode information. The sample name will be used throughout the processing and reporting. If a two colum tab-separated file is provided, the sample barcode sequence is assumed to be in the first index read of the Illumina sequencing run (I1 FastQ read file). The pipeline can also handle double index designs where sequence combinations in the I1 and I2 files identify a specific sample. An example for the sample assignment files is provided below:\r\n\r\nSingle Index\r\n```\r\n#Seq\tName\r\nACTGGTAGG\tPlate_001_01B.2\r\nGCTCCAACG\tPlate_001_01C.3\r\nGCGTAAGAT\tPlate_001_01D.4\r\nTGACCATCA\tPlate_001_01E.5\r\nGGATTCTCG\tPlate_001_01F.6\r\n```\r\n\r\nDouble Index\r\nBASH2*\r\n\r \n"
+      },
+      "source": "https://raw.githubusercontent.com/kircherlab/hemoMIPs/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9611317206585737,
+      "result": {
+        "original_header": "Output files",
+        "type": "Text_excerpt",
+        "value": "\r\nThe pipeline outputs varies files in intermediate steps as well as final analysis tables for the user to look at.\r\nHere, we describe the output folder structure. For further information about the various analysis steps, see _Pipeline description_ below.\r\n\r\nIn the `output/` folder `dataset/` folders (named after your individual datasets) will be generated containing all output files.\r\nWithin this folder all processed files can be found in `mapping`, with genotyping files stored in `mapping/gatk4` or `mapping/gatk3`, respectively. The analysis tables and html report files can be found in `report`.\r\n\r \n"
+      },
+      "source": "https://raw.githubusercontent.com/kircherlab/hemoMIPs/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9899093243528521,
+      "result": {
+        "original_header": "Mapping",
+        "type": "Text_excerpt",
+        "value": "`/output/dataset/mapping/` \r\n\r\nThe reads from the primary input fastq files are converted to BAM format (e.g. `mapping/sample.bam`). In case of multiple lanes, these are split into `mapping/sample_lX.bam` files. In these files, overlapping paired-end reads are merged (overlap consensus) and reads are assigned to samples using read groups. Information from the technical reads (I1/I2) is stored in `XI` and `YI` fields for the sequence and `XJ` and `YJ` fields for quality scores. \r\n\r\nIndividual (i.e. demultiplexed) sample.bams can be found in `mapping/by_sample/`.\r\n\r\nAligned and MIP arm trimmed files for each sample can be found in BAM format in `mapping/aligned/`. This folder also contains BAM index files. These are index files are for example required to visualize alignments in IGV.\r\n\r\nPer sample information about reads aligning to the inversion MIP design (if provided) are stored in `mapping/inversion_mips` as individual BAM files and counts are summarized in `mapping/inversion_mips/inversion_summary_counts.txt`.\r\n\r \n"
+      },
+      "source": "https://raw.githubusercontent.com/kircherlab/hemoMIPs/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9730700943384323,
+      "result": {
+        "original_header": "Genotyping using GATK4",
+        "type": "Text_excerpt",
+        "value": "`/output/dataset/mapping/gatk4`\r\n\r\nOutput files generated by GATK4 HaplotypeCaller (emitting all sites) can be found as `realign_all_samples.bam` and `bam.vcf.gz`. \\\r\nGenomic Variant Call Format (GVCF) files for each sample are available in `gatk4/gvcf/` as `SAMPLE.g.vcf.gz` files. \\\r\n`realign_all_samples.all_sites.vcf.gz` is the combined VCF generated by GATK4 CombineGVCFs. \\\r\nThe final genotyped VCF is called `realign_all_samples.vcf.gz`. \\\r\nMIP performance statistics can be found in `realign_all_samples.MIPstats.tsv`. \\\r\nVariant Effect Predictions are stored in `realign_all_samples.vep.tsv.gz`.\r\n\r \n"
+      },
+      "source": "https://raw.githubusercontent.com/kircherlab/hemoMIPs/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9311049316575241,
+      "result": {
+        "original_header": "Genotyping using GATK3",
+        "type": "Text_excerpt",
+        "value": "`/output/dataset/mapping/gatk3`\r\n\r\nThis folder contains: \\\r\nA realigned BAM generated by GATK3 IndelRealigner: `realign_all_samples.bam`. \\\r\nA VCF containing genotypes for all sites generated by GATK3 UnifiedGenotyper: `realign_all_samples.all_sites.vcf.gz`. \\\r\nThe final VCF with non-homozygote reference alleles: `realign_all_samples.vcf.gz`. \\\r\nA filtered list of InDels: `realign_all_samples.indel_check.txt`. \\\r\nMIP performance statistics: `realign_all_samples.MIPstats.tsv`. \\\r\nVariant Effect Predictions: `realign_all_samples.vep.tsv.gz`.\r\n\r \n"
+      },
+      "source": "https://raw.githubusercontent.com/kircherlab/hemoMIPs/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9504556319809765,
+      "result": {
+        "original_header": "GATK v3",
+        "type": "Text_excerpt",
+        "value": "\r\nGATK v4 is included as a conda environment which automatically installs GATK v4.0.4.0 and all its dependencies.\r\nIf you prefer to run the original pipeline using GATK v3 (i.e. GATK 3.2.2 and GATK 3.4-46) you need to change `config.yml` to additionaly include \"gatk3\" or replace the gatk4 entry. Note that GATK 3.2.2 and 3.4-46 are no longer available for download from the BROAD websites. We therefore provide the required JAR files with this repository rather than obtaining them through Conda. \r\n\r \n"
+      },
+      "source": "https://raw.githubusercontent.com/kircherlab/hemoMIPs/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.8341744162730886,
+      "result": {
+        "original_header": "Shed Skin",
+        "type": "Text_excerpt",
+        "value": "\r\nShed Skin is an experimental compiler, that can translate pure, but implicitly statically typed Python (2.4-2.6) programs into optimized C++. To fasten (~5x) the read overlapping process one of our python scripts can be translated to C++ with Shed Skin and cross-compiled. This will speed up the analysis but is not crucial for its implementation.\r\n\r\nWe are providing an example how we were able to cross-compile using shedskin. Please note that this example assumes that miniconda was installed. If you are using another source for Conda, you might need to adjust paths. Further, we need an environment with python v2.6 and the requirements for Shed Skin, which we provide as `envs/shedskin.yml`. Be sure that you are in your root hemoMIPs pipeline folder when executing the following commands.\r\n\r\n```bash\r\n# create a new environment\r\nconda env create -f envs/shedskin.yml -n shedskin\r\n\r\nmkdir -p ~/miniconda3/envs/shedskin/etc/conda/activate.d\r\nmkdir -p ~/miniconda3/envs/shedskin/etc/conda/deactivate.d\r\n\r\necho '#!/bin/sh\r\nexport LD_LIBRARY_PATH=\"$HOME/miniconda3/envs/shedskin/lib:$LD_LIBRARY_PATH\"' > ~/miniconda3/envs/shedskin/etc/conda/activate.d/env_vars.sh\r\n\r\necho '#!/bin/sh\r\nunset LD_LIBRARY_PATH' > ~/miniconda3/envs/shedskin/etc/conda/deactivate.d/env_vars.sh\r\n\r\nconda activate shedskin\r\n```\r\nThen download and install Shed Skin v0.9.4 into the bin directory of the hemoMIPs pipeline.\r\n\r\nBASH2*\r\nNow we can test the shed Skin installation. We have to modify the `Makefile` to point to the GC library.\r\nBASH3*\r\nThe result should look similar to:\r\nBASH4*\r\nIf the installation or test fails please have a look a the [Shed Skin Dokumentation](https://shedskin.readthedocs.io/en/latest/).\r\n\r \n"
+      },
+      "source": "https://raw.githubusercontent.com/kircherlab/hemoMIPs/master/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "download_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/kircherlab/hemoMIPs/releases"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 3
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/kircherlab/hemoMIPs/forks"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "kircherlab/hemoMIPs"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_title": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "hemoMIPs"
+      },
+      "source": "https://raw.githubusercontent.com/kircherlab/hemoMIPs/master/README.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "installation": [
+    {
+      "confidence": 1.0,
+      "result": {
+        "original_header": "Conda",
+        "type": "Text_excerpt",
+        "value": "\r\nThe pipeline depends on [Snakemake](https://snakemake.readthedocs.io/en/stable/), a workflow management system that wraps up all scripts and runs them highly automated, in various environments (workstations, clusters, grid, or cloud). Further, we use Conda as software/dependency managment tool. Conda can install snakemake and all neccessary software with its dependencies automatically. Conda installation guidlines can be found here:\r\n\r\nhttps://conda.io/projects/conda/en/latest/user-guide/install/index.html\r\n\r \n"
+      },
+      "source": "https://raw.githubusercontent.com/kircherlab/hemoMIPs/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 1.0,
+      "result": {
+        "original_header": "Snakemake",
+        "type": "Text_excerpt",
+        "value": "\r\nAfter installing Conda, you install Snakemake using Conda and the `environment.yaml` provided in this repository. For this purpose, please clone or download and uncompress the repository first. Then change into the root folder of the local repository. \r\n\r\n```bash\r\ngit clone https://github.com/kircherlab/hemoMIPs\r\ncd hemoMIPs\r\n```\r\n\r\nWe will now initiate three Conda environments, which we will need for some preparations as well as getting the Snakemake workflow invoked. The first environment (`hemoMIPs`) will contain only snakemake, the second (`ensemblVEP`) contains Ensembl VEP and htslib, the third (`prepTools`) contains some basic tools for preparing annotations (e.g. bedtools, samtools, htslib, bwa, picard):\r\n\r\nBASH2*\r\n\r\nThe `ensemblVEP` and `prepTools` environments are only needed for the initial setup and can be deleted afterwards. In case you are having difficulties installing the `hemoMIPs` environment (i.e. snakemake) using the yaml file, please try the following work-a-round:\r\n\r\nBASH3*\r\n\r \n"
+      },
+      "source": "https://raw.githubusercontent.com/kircherlab/hemoMIPs/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 1.0,
+      "result": {
+        "original_header": "Annotations of Ensembl VEP",
+        "type": "Text_excerpt",
+        "value": "\r\nWe use [Ensembl Variant Effect Predictor (VEP)](https://www.ensembl.org/info/docs/tools/vep/index.html) to predict variant effects. You will need to install the annotation caches for VEP before you can run the snakmake workflow. For this purpose, you will need to run a tool from the `ensemblVEP` environment that we created above. Please adjust the path to your location in the command line below (`-c vep_cache/`). \r\n\r\nNote that `snakemake` will later install a separate instance of VEP for running the pipeline and that we are only using the above environment to install the caches. Also note, that due to version conflicts with other software, VEP is not included in environments with other software.  If you already have the VEP database, simply adjust the path to your database in the config.yml. We run the pipeline using VEP v98. If you wish to use another version or cache, you should up- or downgrade your specific version of VEP and make sure that the other VEP version is correctly referenced in the workflow.\r\n  \r\nThe following commands will download the human VEP cache (approx. 14G), which may take a while. \r\n\r\n```bash\r\nconda activate ensemblVEP\r\nmkdir vep_cache\r\nvep_install -n -a cf -s homo_sapiens -y GRCh37 -c vep_cache/ \u2013CONVERT\r\nconda deactivate\r\n```\r\n\r \n"
+      },
+      "source": "https://raw.githubusercontent.com/kircherlab/hemoMIPs/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9999999999911324,
+      "result": {
+        "original_header": "Other required genome annotations",
+        "type": "Text_excerpt",
+        "value": "\r\nIn the following steps, we are preparing the alignment and variant calling index of the reference genome as well as a VCF with known variants. We are using the above created `prepTools` environment:\r\n\r\n```bash\r\nconda activate prepTools\r\n```\r\n\r\nFor alignment, we use the 1000 Genomes phase 2 build of the human reference `hs37d5.fa.gz`, which includes decoy sequences for sequences missing from the assembly. We will need the bwa index and picard/GATK dictionary index of this file.\r\n\r\nBASH2*\r\n\r\nHemoMIPs uses known variants reported by the 1000 Genomes project. To extract known variants for your target region, run the following command using your `target_coords.bed`. Here, we are using the file from the example project:\r\n\r\nBASH3*\r\n\r\nIf you decided to include MIPs to capture specific inversion alleles, you will also need to provide a BWA index for the inversion MIPs as well as the logic of evaluating those in `scripts/processing/summary_report.py` (lines 138-169). If you do not have inversion probes in your design, set the respective parameter (`Inv`) in the config file to \"no\". In the following, we will assume that you are using the pipeline for the analysis of the hemophilia MIP design and provide the relevant files with your input folder.\r\n\r\nThe environments needed to prepare the workflow can be removed at this step. Snakemake will install packages required for the workflow  automatically during the first run of the pipeline. Do not remove the `hemoMIPs` environment as this is needed to invoke snakemake.\r\n\r\nBASH4*\r\n\r \n"
+      },
+      "source": "https://raw.githubusercontent.com/kircherlab/hemoMIPs/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9556689808094795,
+      "result": {
+        "original_header": "Known benign variants",
+        "type": "Text_excerpt",
+        "value": "\r\nA `benignVars.txt` can be used to describe known benign variants. If no such variants are available, an empty file with this name needs to be provided. If variants are provided in this file, these will be printed in gray font in the HTML report and separated in the CSV output files. An example of the format is provided below. The full file for the hemophilia project is available as `input/example_dataset/benignVars.txt`.\r\n\r\n```\r\nX_138633280_A/G\r\nX_154065069_T/G\r\nX_138644836_G/A\r\nX_138645058_GT/-\r\nX_138645060_-/GT\r\nX_138645149_T/C\r\n```\r\n\r \n"
+      },
+      "source": "https://raw.githubusercontent.com/kircherlab/hemoMIPs/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.932975823554118,
+      "result": {
+        "original_header": "Genotyping using GATK3",
+        "type": "Text_excerpt",
+        "value": "`/output/dataset/mapping/gatk3`\r\n\r\nThis folder contains: \\\r\nA realigned BAM generated by GATK3 IndelRealigner: `realign_all_samples.bam`. \\\r\nA VCF containing genotypes for all sites generated by GATK3 UnifiedGenotyper: `realign_all_samples.all_sites.vcf.gz`. \\\r\nThe final VCF with non-homozygote reference alleles: `realign_all_samples.vcf.gz`. \\\r\nA filtered list of InDels: `realign_all_samples.indel_check.txt`. \\\r\nMIP performance statistics: `realign_all_samples.MIPstats.tsv`. \\\r\nVariant Effect Predictions: `realign_all_samples.vep.tsv.gz`.\r\n\r \n"
+      },
+      "source": "https://raw.githubusercontent.com/kircherlab/hemoMIPs/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9999999966818223,
+      "result": {
+        "original_header": "GATK v3",
+        "type": "Text_excerpt",
+        "value": "\r\nGATK v4 is included as a conda environment which automatically installs GATK v4.0.4.0 and all its dependencies.\r\nIf you prefer to run the original pipeline using GATK v3 (i.e. GATK 3.2.2 and GATK 3.4-46) you need to change `config.yml` to additionaly include \"gatk3\" or replace the gatk4 entry. Note that GATK 3.2.2 and 3.4-46 are no longer available for download from the BROAD websites. We therefore provide the required JAR files with this repository rather than obtaining them through Conda. \r\n\r \n"
+      },
+      "source": "https://raw.githubusercontent.com/kircherlab/hemoMIPs/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 1.0,
+      "result": {
+        "original_header": "Shed Skin",
+        "type": "Text_excerpt",
+        "value": "\r\nShed Skin is an experimental compiler, that can translate pure, but implicitly statically typed Python (2.4-2.6) programs into optimized C++. To fasten (~5x) the read overlapping process one of our python scripts can be translated to C++ with Shed Skin and cross-compiled. This will speed up the analysis but is not crucial for its implementation.\r\n\r\nWe are providing an example how we were able to cross-compile using shedskin. Please note that this example assumes that miniconda was installed. If you are using another source for Conda, you might need to adjust paths. Further, we need an environment with python v2.6 and the requirements for Shed Skin, which we provide as `envs/shedskin.yml`. Be sure that you are in your root hemoMIPs pipeline folder when executing the following commands.\r\n\r\n```bash\r\n# create a new environment\r\nconda env create -f envs/shedskin.yml -n shedskin\r\n\r\nmkdir -p ~/miniconda3/envs/shedskin/etc/conda/activate.d\r\nmkdir -p ~/miniconda3/envs/shedskin/etc/conda/deactivate.d\r\n\r\necho '#!/bin/sh\r\nexport LD_LIBRARY_PATH=\"$HOME/miniconda3/envs/shedskin/lib:$LD_LIBRARY_PATH\"' > ~/miniconda3/envs/shedskin/etc/conda/activate.d/env_vars.sh\r\n\r\necho '#!/bin/sh\r\nunset LD_LIBRARY_PATH' > ~/miniconda3/envs/shedskin/etc/conda/deactivate.d/env_vars.sh\r\n\r\nconda activate shedskin\r\n```\r\nThen download and install Shed Skin v0.9.4 into the bin directory of the hemoMIPs pipeline.\r\n\r\nBASH2*\r\nNow we can test the shed Skin installation. We have to modify the `Makefile` to point to the GC library.\r\nBASH3*\r\nThe result should look similar to:\r\nBASH4*\r\nIf the installation or test fails please have a look a the [Shed Skin Dokumentation](https://shedskin.readthedocs.io/en/latest/).\r\n\r \n"
+      },
+      "source": "https://raw.githubusercontent.com/kircherlab/hemoMIPs/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9999999972355909,
+      "result": {
+        "original_header": "Compiling MergeTrimReads.py script",
+        "type": "Text_excerpt",
+        "value": "\r\nNow we need to compile the `MergeTrimReads.py` script as an extension module using Shed Skin:\r\n\r\n```bash\r\n# Go to the script folder\r\ncd scripts/pipeline2.0\r\n# create Makefile and edit it\r\nshedskin -e -L ~/miniconda3/envs/shedskin/include MergeTrimReads\r\nsed -i '3s|$| -L ~/miniconda3/envs/shedskin/lib|' Makefile\r\n# Compile!\r\nmake\r\ncd ../../\r\n```\r\n\r\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/kircherlab/hemoMIPs/master/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "issue_tracker": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/kircherlab/hemoMIPs/issues"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "keywords": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": ""
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "license": [
+    {
+      "confidence": 1,
+      "result": {
+        "name": "MIT License",
+        "spdx_id": "MIT",
+        "type": "License",
+        "url": "https://api.github.com/licenses/mit",
+        "value": "https://api.github.com/licenses/mit"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "File_dump",
+        "value": "#Copyright for hemoMIPs under MIT License\n\nCopyright 2014-2020 University of Washington/ Berlin Institute of Health\n\nPermission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the \"Software\"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.\n"
+      },
+      "source": "https://raw.githubusercontent.com/kircherlab/hemoMIPs/master/LICENSE",
+      "technique": "file_exploration"
+    }
+  ],
+  "name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "hemoMIPs"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "owner": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Organization",
+        "value": "kircherlab"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "programming_languages": [
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Python",
+        "size": 217517,
+        "type": "Programming_language",
+        "value": "Python"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "HTML",
+        "size": 23244,
+        "type": "Programming_language",
+        "value": "HTML"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "readme_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/kircherlab/hemoMIPs/master/README.md"
+      },
+      "technique": "file_exploration"
+    }
+  ],
+  "related_documentation": [
+    {
+      "confidence": 1,
+      "result": {
+        "format": "readthedocs",
+        "type": "Url",
+        "value": "https://snakemake.readthedocs.io/"
+      },
+      "source": "https://raw.githubusercontent.com/kircherlab/hemoMIPs/master/README.md",
+      "technique": "regular_expression"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "format": "readthedocs",
+        "type": "Url",
+        "value": "https://shedskin.readthedocs.io/"
+      },
+      "source": "https://raw.githubusercontent.com/kircherlab/hemoMIPs/master/README.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "releases": [
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "makirc",
+          "type": "User"
+        },
+        "date_created": "2020-03-30T19:24:29Z",
+        "date_published": "2020-03-30T19:34:47Z",
+        "description": "Workflow revision to allow Single Ended Illumina sequencing data as well as data sets using two index reads (either for double indexing or with an additional technical read that should be propagated with each molecule like UMIs).",
+        "html_url": "https://github.com/kircherlab/hemoMIPs/releases/tag/v1.1",
+        "name": "hemoMIPs v1.1",
+        "release_id": 25018999,
+        "tag": "v1.1",
+        "tarball_url": "https://api.github.com/repos/kircherlab/hemoMIPs/tarball/v1.1",
+        "type": "Release",
+        "url": "https://api.github.com/repos/kircherlab/hemoMIPs/releases/25018999",
+        "value": "https://api.github.com/repos/kircherlab/hemoMIPs/releases/25018999",
+        "zipball_url": "https://api.github.com/repos/kircherlab/hemoMIPs/zipball/v1.1"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "kleinertp",
+          "type": "User"
+        },
+        "date_created": "2020-01-21T14:33:22Z",
+        "date_published": "2020-01-22T13:21:10Z",
+        "description": "22.1.2020\r\nReleasing hemoMIPs v1.0\r\nAuthors\r\nPhilip Kleinert\r\nMartin Kircher",
+        "html_url": "https://github.com/kircherlab/hemoMIPs/releases/tag/v1.0",
+        "name": "hemoMIPs v1.0",
+        "release_id": 23038272,
+        "tag": "v1.0",
+        "tarball_url": "https://api.github.com/repos/kircherlab/hemoMIPs/tarball/v1.0",
+        "type": "Release",
+        "url": "https://api.github.com/repos/kircherlab/hemoMIPs/releases/23038272",
+        "value": "https://api.github.com/repos/kircherlab/hemoMIPs/releases/23038272",
+        "zipball_url": "https://api.github.com/repos/kircherlab/hemoMIPs/zipball/v1.0"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "run": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Run pipeline",
+        "parent_header": [
+          "hemoMIPs"
+        ],
+        "type": "Text_excerpt",
+        "value": "\r\nReady to go! If you run the pipeline on a cluster see the `cluster.json` for an estimate of minimum requirements for the individual jobs. Note that this depends on your dataset size so you may have to adjust this.\r\nTo start the pipeline:\r\n\r\n```bash\r\nconda activate hemoMIPs\r\n# dry run to see if everything works\r\nsnakemake  --use-conda --configfile config.yml -n\r\n# run the pipeline\r\nsnakemake  --use-conda --configfile config.yml\r\n```\r\n\r\nWe added an example_results folder to the repository to enable users to compare the output of the example_dataset analysis to our results.\r\n\r"
+      },
+      "source": "https://raw.githubusercontent.com/kircherlab/hemoMIPs/master/README.md",
+      "technique": "header_analysis"
+    }
+  ],
+  "somef_missing_categories": [
+    "citation",
+    "acknowledgement",
+    "download",
+    "requirements",
+    "contact",
+    "contributors",
+    "documentation",
+    "usage",
+    "faq",
+    "identifier",
+    "has_build_file",
+    "executable_example"
+  ],
+  "somef_provenance": {
+    "date": "2024-10-06 15:42:29",
+    "somef_schema_version": "1.0.0",
+    "somef_version": "0.9.5"
+  },
+  "stargazers_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 7
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "support": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Report",
+        "parent_header": [
+          "hemoMIPs"
+        ],
+        "type": "Text_excerpt",
+        "value": "`/output/dataset/report`\r\n\r\nFinal analysis tables and html files are stored in the `/report/gatk4` or `/report/gatk3` folder depending on which GATK version is used. A description of output files is available in the sections _Report generation_ and _Report tables in text format_ below.\r\n\r"
+      },
+      "source": "https://raw.githubusercontent.com/kircherlab/hemoMIPs/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Report generation",
+        "parent_header": [
+          "hemoMIPs",
+          "Pipeline description"
+        ],
+        "type": "Text_excerpt",
+        "value": "\r\nDifferent HTML reports are generated for visualization, interpretation and better access to all information collected in previous steps. There are two entry points to this information, organized as two different HTML reports \u2013 one summarizing all variant calls and MIP performance across samples and the other summarizing per-sample results in an overview table. The first report (`summary.html`) provides a more technical sample and variant summary, per region coverage and MIP performance statistics. This report across all samples can be used to assess assay performance (e.g. underperforming MIPs could be redesigned in future assays) and allows identification of suspiciously frequent variants (common variants or systematic errors).\r\n\r\nThe second report (`report.html`) provides an overview of results for each sample, highlighting putative deleterious variants and taking previously defined common/known benign variants out of focus (gray font). Additional information is provided about potential structural variants and incompletely covered regions. This table also provides an overall sample status field with information about passing and failing samples, as well as flags indicating outlier MIP performances.\r\n\r\nBoth reports provide links to individual report pages of each sample. The individual reports (`ind_SAMPLENAME.html`), provide quality measures like overall coverage, target region coverage, read counts underlying the inferred sample sex (counting Y aligned reads) and MIP performance statistics (over- or underperforming MIPs in this sample), but most importantly provide detailed information on the identified variants, structural variant call results and regions without coverage (potential deletions). \r\n\r"
+      },
+      "source": "https://raw.githubusercontent.com/kircherlab/hemoMIPs/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Report tables in text format",
+        "parent_header": [
+          "hemoMIPs",
+          "Pipeline description"
+        ],
+        "type": "Text_excerpt",
+        "value": "\r\nIn additional to the HTML output files for visualization, results are also presented in computer readable CSV format (comma separated) files. These CSV files can be joined by either the variant or sample specific identifier columns. The following results are summarized in the respective table files:\r\n\r\n- `ind_status.csv` outputs the sample sex inferred from SRY counts, reports outlier MIP performance, number of genotype (GT) calls, covered sites within the MIP design regions, average coverage, heterozygous sites, incompletely covered regions, deletions as well as a textual summary in a sample quality flag (e.g. OK, Failed Inversions, Check MIPs). \r\n- `variant_calls.csv` and `variant_calls_benign.csv` contain all or just benign variants, respectively, with location, genotype, quality scores, allelic depth, coverage and status information. \r\n- `variant_annotation.csv` provides additional annotations to called variants based on reference and alternative allele information. These annotations include gene name, exonic location, cDNA and CDS position, HGVS Transcript and Protein information, variant rsID, and 1000G allele frequency. \r\n- `inversion_calls.csv` contains count results for MIPs targeting predefined structural variants. \r\n\r\n\r"
+      },
+      "source": "https://raw.githubusercontent.com/kircherlab/hemoMIPs/master/README.md",
+      "technique": "header_analysis"
+    }
+  ],
+  "type": [
+    {
+      "confidence": 0.82,
+      "result": {
+        "type": "String",
+        "value": "commandline-application"
+      },
+      "technique": "software_type_heuristics"
+    }
+  ]
+}

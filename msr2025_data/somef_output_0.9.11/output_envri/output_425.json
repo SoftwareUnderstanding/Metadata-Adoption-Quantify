@@ -1,0 +1,328 @@
+{
+  "application_domain": [
+    {
+      "confidence": 17.34,
+      "result": {
+        "type": "String",
+        "value": "Computer Vision"
+      },
+      "technique": "supervised_classification"
+    }
+  ],
+  "code_repository": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/idanhoro/NASA-Heat-Maps-Prediction"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_created": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2021-02-20T22:00:03Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_updated": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2022-05-01T14:56:36Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "description": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "In this project we research the correlations between different weather conditions and try to predict future scenarios by using image processing and traditional machine learning algorithms"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Description",
+        "parent_header": [
+          "NASA Heat Maps Prediction"
+        ],
+        "type": "Text_excerpt",
+        "value": "In this project we research the correlations between different weather conditions and try to predict future scenarios by\nusing image processing and traditional machine learning algorithms.\n"
+      },
+      "source": "https://raw.githubusercontent.com/idanhoro/NASA-Heat-Maps-Prediction/main/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 0.8950054506154549,
+      "result": {
+        "original_header": "Data Collection",
+        "type": "Text_excerpt",
+        "value": "Using the libraries `requests` and `BeautifulSoup4` we crawl NASA's website searching for heat maps, and their scale\naccording to the categories which were noted in the `env.toml` file.\n```toml\n[maps]\ntypes = [\n    \"Vegetation\",\n    \"Net Primary Productivity\",\n    \"Land Surface Temperature\",\n    \"Snow Cover\",\n    \"Fire\",\n    \"Land Surface Temperature Anomaly\",\n]\n```\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/idanhoro/NASA-Heat-Maps-Prediction/main/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9980920456357536,
+      "result": {
+        "original_header": "Scraping",
+        "type": "Text_excerpt",
+        "value": "Now that we have a scale and a list of maps for each category, we are able to iterate over all of those, which allows us\nto continue to the next step - image analysis.\n```python\nfor map_category in maps:\n    scale_url, url_arr = maps[map_category]\n    scale_arr: np.array = color_mapper(scale_url)\n    for map_url in url_arr:\n        ...\n```\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/idanhoro/NASA-Heat-Maps-Prediction/main/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.993019596471215,
+      "result": {
+        "original_header": "Image Analysis",
+        "type": "Text_excerpt",
+        "value": "For each of those image URLs, we call our `map_analyzer()` function which is responsible to the following parts:\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/idanhoro/NASA-Heat-Maps-Prediction/main/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9964892969767848,
+      "result": {
+        "original_header": "Clean Pixel Removal",
+        "type": "Text_excerpt",
+        "value": "As you can see, instead of iterating over the pixels of the heatmap `(350,700,3)*2`\nwe decided to use a vectorized version of this algorithm which saved us a lot of time per heatmap -- it allowed us to\ncalculate a single map in ~1.5 seconds instead of ~450 seconds.\n```py\ndifference_array: np.ndarray = np.sqrt(np.sum((img_arr - clean_img_arr) ** 2, axis=2))\nmask_array: np.ndarray = difference_array != 0\nimg_arr_subset: np.ndarray = img_arr[mask_array]\n```\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/idanhoro/NASA-Heat-Maps-Prediction/main/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.8745946214692766,
+      "result": {
+        "original_header": "Scale Index Calculation",
+        "type": "Text_excerpt",
+        "value": "Using the aforementioned differences helped us find where a pixel is placed on the scale. For each pixel which we've\ndeemed \"not clean\" (AKA potentially valuable) we compared between the differences to the clean map and the differences to\nthe map by using`scipy.spatial.distance_matrix()`\nand adding to it the differences to the scale. We then found out the position of the pixel to the scale, either by an\nexact match or by finding the closest color.\n```python\ndist_matrix: np.ndarray = np.c_[difference_array[mask_array], distance_matrix(img_arr_subset, scale_arr)]\nmin_dist_indices: np.ndarray = (dist_matrix.argmin(axis=-1) - 1)  # Shift the values (scale indices) by -1\nscale_pixels_final: np.ndarray = np.full(shape=(350, 700), fill_value=-1)  # (350,700) index matrix\nscale_pixels_final[mask_array] = min_dist_indices\nscale_pixels_final_reshaped: np.ndarray = scale_pixels_final.reshape(-1)\n```\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/idanhoro/NASA-Heat-Maps-Prediction/main/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.976986699728114,
+      "result": {
+        "original_header": "Data Categorization",
+        "type": "Text_excerpt",
+        "value": "Using the amazing `Pandas` library we were able to easily collect the data in a DataFrame on which we ran multiple other\nsteps.\n```python\n    for cat in categories_by_month_dict:\n        category_df: pd.DataFrame = pd.DataFrame()\n        for date in categories_by_month_dict[cat]:\n            mdf = create_monthly_df(cat, date, categories_by_month_dict[cat][date])\n            bool_col_list.append(mdf.columns[-1])\n\n            category_df = pd.concat([category_df, mdf], ignore_index=True)\n\n        cat_df_list.append(category_df)\n```\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/idanhoro/NASA-Heat-Maps-Prediction/main/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9531065802241753,
+      "result": {
+        "original_header": "Data Prediction",
+        "type": "Text_excerpt",
+        "value": "We ran multiple traditional machine learning algorithms against our data. We found that using the `Linear Pipeline`\nmethod gave us the best results for the `Land Surface Temperature` heatmap standing at about `~90%` accuracy. \nWe noticed that using algorithms such as `Naive Bayes` or `MLP` didn't work out so well generally, but since our data is\nnot uniform, it performed best on the `Fire` dataset. \nAs a result, we can conclude that linear algorithms worked best for our data type.\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/idanhoro/NASA-Heat-Maps-Prediction/main/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "download_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/idanhoro/NASA-Heat-Maps-Prediction/releases"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "executable_example": [
+    {
+      "confidence": 1,
+      "result": {
+        "format": "jupyter_notebook",
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/idanhoro/NASA-Heat-Maps-Prediction/main/Visualization.ipynb"
+      },
+      "source": "https://raw.githubusercontent.com/idanhoro/NASA-Heat-Maps-Prediction/main/Visualization.ipynb",
+      "technique": "file_exploration"
+    }
+  ],
+  "forks_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 0
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/idanhoro/NASA-Heat-Maps-Prediction/forks"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "idanhoro/NASA-Heat-Maps-Prediction"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_title": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "NASA Heat Maps Prediction"
+      },
+      "source": "https://raw.githubusercontent.com/idanhoro/NASA-Heat-Maps-Prediction/main/README.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "images": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://wikimedia.org/api/rest_v1/media/math/render/svg/06cdd86ced397bbf6fad505b4c4d91fa2438b567"
+      },
+      "source": "https://raw.githubusercontent.com/idanhoro/NASA-Heat-Maps-Prediction/main/README.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "installation": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Preparation",
+        "parent_header": [
+          "NASA Heat Maps Prediction",
+          "Data Collection"
+        ],
+        "type": "Text_excerpt",
+        "value": "The URLs of the scale and images we found are then inserted into NumPy arrays for each map category which is found in a\ndictionary structured likewise:\n\n```python\nmaps = {\n    \"vegetation\": tuple([scale_url, np.array([map_url1, map_url2, ..., map_url252])]),\n    \"land surface temperature\": tuple([scale_url, np.array([map_url1, map_url3, ..., map_url252])])\n}\n```\n\n```python\nmap_names = {cat: np.array([]) for cat in CONFIG[\"maps\"][\"types\"]}\n\nfor map_name in map_names.keys():\n    req = get_by_url(\"{}global-maps/{}\".format(BASE_URL, map_dict[map_name]))\n    html = BeautifulSoup(req.text, \"lxml\")\n\n    maps_player = html.find(\"div\", class_=\"panel-slideshow panel-slideshow-primary\")\n    urls_arr = np.array([img[\"src\"] for img in maps_player.find_all(\"img\", class_=\"panel-slideshow-image\", src=True)])\n    scale_url = \"{}{}\".format(BASE_URL, html.find(\"img\", class_=\"panel-slideshow-scale-image\", src=True)[\"src\"])\n\n    for idx, img_url in enumerate(urls_arr):\n        if r\"no_data_available\" in img_url:\n            # Remove \"Missing Data\" heatmaps.\n            urls_arr = np.delete(urls_arr, idx)\n\n    map_names[map_name] = (scale_url, urls_arr)\n```\n\n--------\n"
+      },
+      "source": "https://raw.githubusercontent.com/idanhoro/NASA-Heat-Maps-Prediction/main/README.md",
+      "technique": "header_analysis"
+    }
+  ],
+  "issue_tracker": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/idanhoro/NASA-Heat-Maps-Prediction/issues"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "keywords": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "beautifulsoup, crawler, machine-learning, pillow, prediction, python, sklearn"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "NASA-Heat-Maps-Prediction"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "owner": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "User",
+        "value": "idanhoro"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "programming_languages": [
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Jupyter Notebook",
+        "size": 980655,
+        "type": "Programming_language",
+        "value": "Jupyter Notebook"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Python",
+        "size": 17098,
+        "type": "Programming_language",
+        "value": "Python"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "readme_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/idanhoro/NASA-Heat-Maps-Prediction/main/README.md"
+      },
+      "technique": "file_exploration"
+    }
+  ],
+  "somef_missing_categories": [
+    "citation",
+    "acknowledgement",
+    "run",
+    "download",
+    "requirements",
+    "contact",
+    "contributors",
+    "documentation",
+    "license",
+    "usage",
+    "faq",
+    "support",
+    "identifier",
+    "has_build_file"
+  ],
+  "somef_provenance": {
+    "date": "2024-10-04 00:45:34",
+    "somef_schema_version": "1.0.0",
+    "somef_version": "0.9.5"
+  },
+  "stargazers_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 2
+      },
+      "technique": "GitHub_API"
+    }
+  ]
+}

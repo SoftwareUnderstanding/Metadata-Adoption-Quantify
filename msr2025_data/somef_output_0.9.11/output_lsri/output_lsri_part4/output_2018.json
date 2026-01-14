@@ -1,0 +1,273 @@
+{
+  "code_repository": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/ridgelab/SA-SSR"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "contact": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "V. Contact",
+        "parent_header": [
+          "README"
+        ],
+        "type": "Text_excerpt",
+        "value": "I. Introduction\n---------------\nSA-SSR is a software tool developed to find Simple Sequence Repeats (SSRs) in\na sequence (presumably of DNA or RNA). SSRs are sometimes referred to as Short\nTandem Repeats (STRs) or microsatellites. SSRs are genetic markers with several\ninteresting and meaningful biological implications. For example, SSRs can play\nsignificant roles in species identification and in genome alignment against a\nreference and species identification.\n\nMany software tools exist for this purpose, but vary widely in utility. Some\nkey features of our tool are as follows:\n\n    - Fast run time (linear, O(n), time complexity)\n    - Memory efficient (linear, O(n), space complexity)\n    - Finds all perfect repeats\n    - Simple command-line interface, convenient for scripting and when running\n      on High-Performance Computing (HPC) systems (note: no GUI provided)\n    - Easily parsed, tab-delimited output\n    - Runs on Linux (not Windows or Mac OS X)\n\nSee our paper in Bioinformatics for further information:\n    http://bioinformatics.oxfordjournals.org/content/early/2016/05/11/bioinformatics.btw298\n\n\nII. Installation Instructions\n-----------------------------\nTo compile SA-SSR, simply type `make'. The binary will be in the `bin'\ndirectory. Your compiler must support C++11.\n\nTo compile and install, type `make' followed by `make install'.  The binary\nwill be in both the `bin' and `/usr/local/bin' directories (to change this,\nchange the `PREFIX' variable in `Makefile').  \n\nTo uninstall, type `make clean'.\n\nSee `INSTALL' for further instructions.\n\n\nIII. Usage Instructions and Examples\n-------------------------------------\nPlease run the software with the `--help' option for complete usage instructions\n(i.e., type `sa-ssr -h' or `sa-ssr --help'). The format of the input and\noutput files is described below; followed by usage examples.\n\nInput File Format:\n\n    Description:\n\n        The input file must be in Fasta format. The sequences may be on a single\n        line or multiple lines. The header and sequence lines must not contain\n        any leading or trailing whitespace. The header line must not contain any\n        tabs. The sequence lines must not contain whitespace between\n        nucleotides. Mixed-case nucleotides are acceptable; they will be\n        replaced with uppercase nucleotides for finding SSRs.\n\n    Good Example:\n\n        >sequence 1\n        AGCGTGTCGTGTACACGTGTACGTACGTACGATCGATGCTACGTAGCATCGATCGACGTATCGTATCGATC\n        CACGTGTACGTACGTACGATCGATGCTACGTAGCATCGATCGACGTATCGTATCGATCAGCGTGTCGTGTA\n        .\n        .\n        .\n        >sequence 2\n        cgtacgatcgatgctacgtagcatcgatcgacgtatcgtatcgatcagcgtgtcgtgtacacgtgtacgta\n        gatcgacgtatcgtatcgatcagcgtgtcgtgtacacgtgtacgtacgtacgatcgatgctacgtagcatc\n        .\n        .\n        .\n        >sequence 3\n        taTCgATCAGCGtGTCGTGTAcACGTGTACGTAcgtaCGAtCgATGCTACGTagcatCGATCGACGTATCG\n        cgtacgtacgATCGATGCTACGTaGCATCGaTCGaCGTAtCGTAtcgatcaGCGTGTCGTGTAcacgtgta\n        .\n        .\n        .\n\nOutput File Format:\n\n    Description:\n\n        The output file is tab-delimited. Each row is a separate record. By\n        default, if no SSRs are found in a fasta sequence, no output record\n        will be present in the output file for that fasta sequence. When SSRs\n        are found, one output record will be present in the output file for\n        each SSR in that sequence. Each column contains a separate piece of\n        information for the output record. The default columns (in order) are:\n\n            Sequence_Name, SSR, Repeats, Position (zero-based)\n\n        By using the correct command-line options, an additional column may be\n        added between `Sequence_Name' and `SSR' containing the entire sequence\n        associated with the `Sequence_Name'. The columns would then become:\n\n            Sequence_Name, Sequence, SSR, Repeats, Position (zero-based)\n\n        Each of the columns are described below:\n\n        Sequence_Name: The entire header line from the fasta file (excluding the\n                       leading `>' character) from which the SSR in the given\n                       output record is found.\n\n             Sequence: The entire sequence from the fasta file in which the\n                       SSR in the given output record is found. The sequence\n                       will be uppercase. If taken from a multi-line sequence\n                       in the fasta file, it will be joined into one continuous\n                       sequence. Note, this column will only be added if\n                       requested by command-line option.\n\n                  SSR: The repeating unit of an SSR. For example, `ACACAC' is\n                       an SSR with a repeating unit of `AC'.\n\n              Repeats: The number of times the repeating unit of an SSR repeats.\n                       For example, the repeating unit of `AC' from SSR `ACACAC'\n                       repeats 3 times.\n\n             Position: The zero-based position in the original fasta sequence\n                       where the SSR begins. For example, `ACACAC' begins at\n                       position 2 in the sequence `TGACACACGT'.\n\n        If desired, the output file may also contain an output record for the\n        fasta sequences where no SSRs were found. Consult the command-line\n        options to see how to do this.\n\n        As a simple illustration of the output file, consider the following\n        input file and its respective output file:\n\n        Input:\n\n            >seq 1\n            TGACACACGT\n            >seq 2\n            acgtg\n            tgtca\n            cagtc\n\n        Output (formatted here for readability):\n\n            Sequence_Name   SSR   Repeats   Position (zero-based)\n            seq 1           AC    3         2\n            seq 2           GT    3         2\n            seq 2           CA    2         8\n\n\nUsage Examples:\n\n    Basic Usage Examples:\n\n        Example 1:\n        \n            sa-ssr input.fasta output.tsv\n\n            Run SA-SSR on fasta sequences in `input.fasta' and write results to\n            `output.tsv'. This will use the default parameters; run the software\n            with `--help' to see the defaults and check if they meet your needs.\n        \n        Example 2:\n            \n            sa-ssr -l 50 -L 200 input.fasta output.tsv\n\n            Run SA-SSR on fasta sequences in `input.fasta' that are between\n            50 and 200 base pairs long; i.e., do not search for SSRs in fasta\n            sequences shorter than 50 or longer than 200 bps. All results\n            will be in `output.tsv'.\n        \n        Example 3:\n            \n            sa-ssr -m 2 -M 9 -r 3 -R 20 input.fasta output.tsv\n            \n            Run SA-SSR on fasta sequences in `input.fasta' and write results to\n            `output.tsv'.  Only SSRs meeting the parameters provided will be\n            included.  The meaning of each option is as follows:\n\n                -m, -M    The min (-m) and max (-M) length of the repeating unit.\n                          As examples: `AAAAAA...' and `ACGCAGTTGCACGCAGTTGC...'\n                          would not make the cutoff because `A' is shorter than\n                          2 nucleotides (-m 2) and `ACGCAGTTGC' is longer than 9\n                          nucleotides (-M 9). However, `ACACAC...' and\n                          `AATCCTGGTAATCCTGGT...' would be included.\n                \n                -r, -R    The min (-r) and max (-R) times the repeating unit\n                          repeats.  As examples: `ACAC' and `ACACACACACACACACACACAC\n                          ACACACACACACACACACAC' (21 `AC' units) would not make the\n                          cutoff. However, `ACACAC' and `ACACACACACACACACACACACACAC\n                          ACACACACACACAC' (20 `AC' units) would be included.\n        \n        Example 4:\n\n            sa-ssr -t 4 input.fasta output.tsv\n\n            Run SA-SSR on fasta sequences in `input.fasta' and write results to\n            `output.tsv'.  Use 4 threads of execution, instead of the default 1.\n\n        Example 5:\n\n            sa-ssr -l 50 -L 200 -m 2 -M 9 -r 3 -R 20 -t 4 input.fasta output.tsv\n\n            Run SA-SSR on fasta sequences in `input.fasta' and write results to\n            `output.tsv'. This is a combination of examples 2, 3, and 4.\n\n\n    Extended Example:\n\n        The data for this extended example can be found in the `examples'\n        directory. The input fasta file is `input.fasta'. The output files are\n        `output_default.tsv' and `output.tsv'. The data and example are\n        fictitious, but was modified from real sequences. The numbers used for\n        min/max sequence length or any other parameter may not be biologically\n        realistic; however, they do conceptually represent a realistic\n        situation.\n\n        input.fasta: Each fasta sequence is a contig generated from a de novo\n                     assembly of whole exome sequencing reads. The file has 16\n                     fasta sequences.\n\n         output*.tsv: The output files from running SA-SSR as shown below.\n\n        One could just run SA-SSR with the defaults:\n\n            sa-ssr input.fasta output_default.tsv\n\n        However, the defaults may not be the best parameters for your data.\n        Below is a reasonable command to use with this example data. Each\n        alteration from the default is explained and justified based on the\n        data in this example.\n\n            sa-ssr -l 70 -L 300 -m 2 -M 9 -r 2 -t 4 -f input.fasta output.tsv\n\n        -l 70    Do not search for SSRs in fasta sequences less than 70 bps in\n                 length. For sake of the example, we assume based on our reads\n                 and the assembler's parameters and intricacies that the\n                 resulting contigs should be equal to or longer than 70 bps.\n                 Anything shorter would be erroneous and not worth searching for\n                 SSRs.\n\n        -L 300   Do not search for SSRs in fasta sequences more than 300 bps in\n                 length. For sake of the example, we assume based on our reads\n                 and the assembler's parameters and intricacies that the\n                 resulting contigs should be equal to or shorter than 300 bps.\n                 Anything longer would be erroneous and not worth searching for\n                 SSRs.\n\n        -m 2     Do not report SSRs where the base unit is less than 2 bps\n                 in length. This decision must be made based on your research\n                 question(s) and what you deem biologically interesting.\n\n        -M 9     Do not report SSRs where the base unit is more than 9 bps\n                 in length. This decision must be made based on your research\n                 question(s) and what you deem biologically interesting.\n\n        -r 2     Do not report SSRs where the base unit repeats less than 2\n                 times. This decision must be made based on your research\n                 question(s) and what you deem biologically interesting.\n\n        -t 4     Use 4 threads of execution instead of the default 1. This must\n                 be based on the machine you run SA-SSR on. Obviously, it\n                 doesn't make sense to run with 9 threads on an 8 thread\n                 machine.\n\n        -f       Output the full sequence from the fasta file from which an SSR\n                 in a particular output record was found. This may be desirable\n                 if your downstream analysis requires knowing the full sequence\n                 from which the SSR was found. This option is intended to ease\n                 downstream analysis by removing the requirement to parse the\n                 original fasta file and the output file simultaneously. If you\n                 do not need this, do not use this option as it will radically\n                 increase the size of the output file.\n\n        If you inspect these two output files, you'll observe 12 output records\n        in `output_default.tsv' and 7 output records in `output.tsv'. Using the\n        custom parameters removed 6 output records; each were theoretically\n        erroneous results (the SSRs really were there in the fasta sequence,\n        but the fasta sequence wasn't valid). 1 additional output record was\n        added by using the custom parameters because the fasta sequence was\n        below the minimum length for processing under the default parameters.\n\n\nIV. Funding and Acknowledgements\n-------------------------------\nFunding for the research and production of this software was provided by\nstartup funds to Dr. Perry Ridge.\n\n\nV. Contact\n-----------\nFor questions, comments, concerns, feature requests, suggestions, etc., please\ncontact:\n\nPery Ridge, Ph.D. -- perry.ridge@byu.edu\n\nNote: For usage questions, please consult section `III. Usage Instructions and\nExamples' first.\n"
+      },
+      "source": "https://raw.githubusercontent.com/ridgelab/SA-SSR/master/README",
+      "technique": "header_analysis"
+    }
+  ],
+  "date_created": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2015-08-27T18:54:24Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_updated": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2024-09-11T17:42:53Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "description": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "A Novel Algorithm for SSR Discovery in Genetic Sequences"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "I. Introduction",
+        "parent_header": [
+          "README"
+        ],
+        "type": "Text_excerpt",
+        "value": "III. Usage Instructions and Examples"
+      },
+      "source": "https://raw.githubusercontent.com/ridgelab/SA-SSR/master/README",
+      "technique": "header_analysis"
+    }
+  ],
+  "download_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/ridgelab/SA-SSR/releases"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 4
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/ridgelab/SA-SSR/forks"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "ridgelab/SA-SSR"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_title": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "README"
+      },
+      "source": "https://raw.githubusercontent.com/ridgelab/SA-SSR/master/README",
+      "technique": "regular_expression"
+    }
+  ],
+  "installation": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "II. Installation Instructions",
+        "parent_header": [
+          "README"
+        ],
+        "type": "Text_excerpt",
+        "value": " IV. Funding and Acknowledgements"
+      },
+      "source": "https://raw.githubusercontent.com/ridgelab/SA-SSR/master/README",
+      "technique": "header_analysis"
+    }
+  ],
+  "issue_tracker": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/ridgelab/SA-SSR/issues"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "keywords": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": ""
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "SA-SSR"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "owner": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "User",
+        "value": "ridgelab"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "programming_languages": [
+    {
+      "confidence": 1,
+      "result": {
+        "name": "C++",
+        "size": 92661,
+        "type": "Programming_language",
+        "value": "C++"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "C",
+        "size": 44741,
+        "type": "Programming_language",
+        "value": "C"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Makefile",
+        "size": 2628,
+        "type": "Programming_language",
+        "value": "Makefile"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "readme_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/ridgelab/SA-SSR/master/README"
+      },
+      "technique": "file_exploration"
+    }
+  ],
+  "somef_missing_categories": [
+    "citation",
+    "acknowledgement",
+    "run",
+    "download",
+    "requirements",
+    "contributors",
+    "documentation",
+    "license",
+    "faq",
+    "support",
+    "identifier",
+    "has_build_file",
+    "executable_example"
+  ],
+  "somef_provenance": {
+    "date": "2024-11-04 09:04:23",
+    "somef_schema_version": "1.0.0",
+    "somef_version": "0.9.5"
+  },
+  "stargazers_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 9
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "type": [
+    {
+      "confidence": 0.82,
+      "result": {
+        "type": "String",
+        "value": "commandline-application"
+      },
+      "technique": "software_type_heuristics"
+    }
+  ],
+  "usage": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "III. Usage Instructions and Examples",
+        "parent_header": [
+          "README"
+        ],
+        "type": "Text_excerpt",
+        "value": "  V. Contact"
+      },
+      "source": "https://raw.githubusercontent.com/ridgelab/SA-SSR/master/README",
+      "technique": "header_analysis"
+    }
+  ]
+}

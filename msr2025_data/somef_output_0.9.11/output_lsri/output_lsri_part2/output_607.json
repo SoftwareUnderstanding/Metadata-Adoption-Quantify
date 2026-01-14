@@ -1,0 +1,501 @@
+{
+  "citation": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "**Citation**",
+        "type": "Text_excerpt",
+        "value": "If you used AnnotPipeline in your research, please cite us\n\n[AnnotaPipeline: An integrated tool to annotate eukaryotic proteins using multi-omics data](https://doi.org/10.3389/fgene.2022.1020100)\n\n...And the following papers:\n\n- AUGUSTUS: [Stanke M. et al., 2003](https://doi.org/10.1093/bioinformatics/btg1080)\n- BLAST+: [Camacho C. et al., 2008](https://doi.org/10.1186/1471-2105-10-421)\n- HMMER: follow [HMMER user guide](http://eddylab.org/software/hmmer/Userguide.pdf)\n- InterProScan: [Jones et al., 2014](https://doi.org/10.1093/bioinformatics/btu031)\n\nIf you used Transcriptomics module, please also cite:\n\n- Kallisto: [Bray, N. L. et al., 2016](https://doi.org/10.1038/nbt.3519)\n\nIf you used Proteomics module, please also cite:\n\n- COMET MS/MS: [Eng, J. K., et al., 2012](https://doi.org/10.1002/pmic.201200439)\n- percolator: [The, M. et al., 2016](https://doi.org/10.1007/s13361-016-1460-7)\n"
+      },
+      "source": "https://raw.githubusercontent.com/bioinformatics-ufsc/AnnotaPipeline/v1.0/README.md",
+      "technique": "header_analysis"
+    }
+  ],
+  "code_repository": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/bioinformatics-ufsc/AnnotaPipeline"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_created": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2020-05-18T19:29:15Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_updated": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2024-04-16T12:21:55Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "description": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "Genome annotation pipeline"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "**Analysis description**",
+        "type": "Text_excerpt",
+        "value": "> `AnnotaPipeline.py` checks all required parameters in `AnnotaPipeline.yaml` before execution\n"
+      },
+      "source": "https://raw.githubusercontent.com/bioinformatics-ufsc/AnnotaPipeline/v1.0/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "**1. Gene prediction**",
+        "parent_header": [
+          "**Analysis description**"
+        ],
+        "type": "Text_excerpt",
+        "value": "Run AUGUSTUS for gene prediction, using these required arguments:\n\n- strand\n- genemodel\n- species\n- protein\n- introns\n- start\n- stop\n- cds\n\nYou can also use these optional arguments:\n\n> Or add augustus argument below `augustus-optional:` (as described in example config file)\n\n- hintsfile\n- extrinsicCfgFile\n- UTR\n\nAfter gene prediction, sequences are \"cleaned\" based on minimal sequence size from `seq-cleaner` on `AnnotaPipeline.yaml`.\n\n`.aa`, `.cdsexon` and `.codingseq` sequences are extracted from GFF output using `getAnnoFasta.pl` (AUGUSTUS script).\n\n`.aa` sequences are used for subsequent analysis. `.codingseq` sequences are used for transcriptomics analysis (optional).\n"
+      },
+      "source": "https://raw.githubusercontent.com/bioinformatics-ufsc/AnnotaPipeline/v1.0/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "**2. Similarity analysis**",
+        "parent_header": [
+          "**Analysis description**"
+        ],
+        "type": "Text_excerpt",
+        "value": "Similarity analysis run through `blastp_parser.py`, which executes `blastp` with format 6 output (parsed after run) on predicted proteins (cleaned) against SwissProt:\n\n- qseqid\n- sseqid\n- sacc\n- bitscore\n- evalue\n- ppos\n- pident\n- qcovs\n- stitle\n  > `evalue` and `max_target_seqs` given by user\n\nThis output is parsed to find annotations in the secondary database. The keyword list in `AnnotaPipeline.yaml` is used to exclude potential hypothetical annotations.\n\nHits are classified &ndash; as a potential annotation &ndash; if: (i) it doesn't have any words in the keyword list, and (ii) passed value thresholds for identity, positivity and coverage. All potential annotations &ndash; hits that passed all criteria &ndash; are present in `BASENAME_SwissProt_annotations.txt` for manual check.\n\nPotential annotations are ranked by `bitscore` and the best hit is assigned to the corresponding protein. Proteins that aren't annotated based on SwissProt annotations, are separated in `BASENAME_BLASTp_AA_SwissProted.fasta` and `blastp` is rerun against the secondary database (selected in `AnnotaPipeline.yaml`).\n\nFollowing the same process, `BASENAME_SpecifiedDB_annotations.txt` classifies potential annotations.\n\nAnnotation files:\n\n- `BASENAME_annotated_products.txt` contains all annotations\n- `BASENAME_hypothetical_products.txt` contains hypothetical proteins with no hits that passed all criteria(which doesn't have a single hit that passes all criteria) are present in `BASENAME_hypothetical_products.txt`\n- `BASENAME_no_hit_products.txt` contains proteins with no hits &ndash; against SwissProt and the secondary database &ndash; that are treated as hypothetical for subsequent analysis\n"
+      },
+      "source": "https://raw.githubusercontent.com/bioinformatics-ufsc/AnnotaPipeline/v1.0/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "**3. Functional annotation**",
+        "parent_header": [
+          "**Analysis description**"
+        ],
+        "type": "Text_excerpt",
+        "value": "**Functional analysis runs in two different ways:**\n\n- For annotated proteins:\n  - InterProScan is used (with configured databases) to get ontology and IPR terms\n- For hypothetical proteins (which includes no_hit_products):\n  - InterProScan, RPS-BLAST and HMMER are used to find hits of possible functions of predicted proteins\n\n**Software arguments:**\n\n> Optional arguments can be given in `AnnotaPipeline.yaml` for InterProScan, HMMER and RPS-BLAST (not tested)\n\n- InterProScan &ndash; for annotated and hypothetical proteins &ndash; uses `-goterms` and `-iprlookup` arguments.\n- `hmmscan` runs with `--noali` argument and user values for `evalue` and `domE`. It also uses Pfam database.\n- RPS-BLAST runs with `evalue` and `max_target_seqs` arguments given in `AnnotaPipeline.yaml` and `-outfmt 6 \"qseqid sseqid sacc bitscore evalue ppos pident qcovs stitle\"`. RPS-BLAST uses CDD database.\n\n**Parsing:**\n\n- `functional_annotation_parser.py` join outputs for both InterProScan runs in a single file called `InterProScan_Out_BASENAME.txt`. This file summarizes outputs for each predicted protein.\n  - Coils, Gene3D and MobiDBLite databases are structural databases and are excluded from this output.\n- RPS-BLAST information for hypothetical proteins are summarized in `BASENAME_Grouped_Hypothetical_Information.txt` as it gives long descriptions. It may be helpful to find functional hints for proteins.\n- `info_parser.py` uses InterProScan results with parsed files from BLAST results to generate `All_annotated_products.txt`. This file joins gene annotation (from BLAST) with functional annotation (from InterProScan) using GOs and IPR values. This file is used to annotate sequences (aminoacid and nucleotide) in FASTA and GFF files.\n"
+      },
+      "source": "https://raw.githubusercontent.com/bioinformatics-ufsc/AnnotaPipeline/v1.0/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "**4. Optional: Transcript quantification**",
+        "parent_header": [
+          "**Analysis description**"
+        ],
+        "type": "Text_excerpt",
+        "value": "Transcript quantification uses Kallisto and transcripts (`.codingseq` provided by AUGUSTUS) with RNA-seq data given by user.\n\nAnalysis starts with `kallisto index` and is followed by `kallisto quant`:\n\n> Both methods uses `bootstrap` value provided by user\n\n- 1 &ndash; paired-end data &ndash; using estimated average fragment length (`l`) and estimated standard deviation of fragment length (`s`)\n\n  - Optional arguments for paired-end data if given by user in `AnnotaPipeline.yaml`\n\n  OR\n\n- 2 &ndash; single-end data &ndash; using **REQUIRED** arguments estimated average fragment length (`l`) and estimated standard deviation of fragment length (`s`) given by user in `AnnotaPipeline.yaml`\n\n**Parsing:**\n\n- `kallisto_parser.py` removes hits &ndash; by TPM value &ndash; below the `threshold` parameter from `proteomics` section. Possible thresholds are:\n  - Median\n  - Mean\n  - Float value (user input)\n- Parsed output file is called `BASENAME_Transcript_Quantification.tsv` and contains a simplified result of Kallisto output (`abundance.tsv`) with target_id and TPM value\n"
+      },
+      "source": "https://raw.githubusercontent.com/bioinformatics-ufsc/AnnotaPipeline/v1.0/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "**5. Optional: Peptide identification**",
+        "parent_header": [
+          "**Analysis description**"
+        ],
+        "type": "Text_excerpt",
+        "value": "> **WARNING 1:** Faild runs for Comet MS/MS don't crash AnnotaPipeline, so check AnnotaPipeline_Log.log to assure all spectrometry files produced outputs\n\n> **WARNING 2:** Before run, check if your comet.params file is compatible with installed comet version\n\nProteomics analysis uses Comet MS/MS with `comet.params` config given by user. In this file, our script overwrite values for following parameters:\n\n- `decoy_search = 1`\n- `output_pepxmlfile = 0`\n- `output_percolatorfile = 1`\n- `decoy_prefix = DECOY_`\n\nComet MS/MS runs with:\n\n- _Modified_ `comet.params`\n- Annotated protein file\n- Path containing mass spectrometry files (`comet-spectrometry` param) and extension (`comet-ext` param)\n  - Extension can be _mzXML, mzML, Thermo raw, mgf, and ms2 variants (cms2, bms2, ms2)_\n- Optional arguments `first` and `last` are used, if given, and overwrite cutoff values defined in `comet.params`\n\nComet MS/MS outputs (files with `.pin` extension) and raw files are moved to current directory.\n\nPercolator runs for each `.pin` file with default parameters.\n\nPercolator outputs are parsed by `percolator_parser.py` using `percolator-qvalue` (`AnnotaPipeline.yaml`). Raw files are maintained. `quantitative_proteomics` function uses parsed Percolator files to create `BASENAME_Total_Proteomics_Quantification.tsv`.\n\nThis output quantifies (all spectometry outputs):\n\n- Unique Peptide &ndash; number of unique peptides found across the entire dataset\n- Total Peptide &ndash; number of total peptides found across the entire dataset\n- Unique Spectrum &ndash; number of unique spectrum found across the entire dataset\n- Total Spectrum &ndash; number of unique spectrum found across the entire dataset\n"
+      },
+      "source": "https://raw.githubusercontent.com/bioinformatics-ufsc/AnnotaPipeline/v1.0/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "**Last but not least**",
+        "parent_header": [
+          "**Analysis description**"
+        ],
+        "type": "Text_excerpt",
+        "value": "`summary_parser.py` integrates all outputs (in a single file summarizing all annotations found for each protein) from:\n\n- Prediction and similarity analysis\n- Functional annotation\n- Transcriptomic (if used)\n- Peptide identification (if used)\n"
+      },
+      "source": "https://raw.githubusercontent.com/bioinformatics-ufsc/AnnotaPipeline/v1.0/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 0.8986456043919473,
+      "result": {
+        "original_header": "**Output**",
+        "type": "Text_excerpt",
+        "value": "- `All_Annotated_Products.txt` contains all unique sequence identifiers and their respective annotations (with functional annotations &ndash; when present).\n- ` Annota_BASENAME.fasta` contains all sequences and their annotations (with functional annotations &ndash; when present) in FASTA format.\n- `BASENAME_Annotated_GFF.gff` contains all sequences and their annotations (with functional annotations &ndash; when present) in GFF3 format.\n  > This file is absent in [**Protein file as input**](#protein-file-as-input) run mode\n- `AnnotaPipeline_BASENAME_transcripts.fasta` contains nucleotide sequences for predicted proteins, with the same features present in the protein file.\n- `AnnotaPipeline_BASENAME_Summary.tsv` summarizes hits for each protein in similarity, functional, transcriptomics (if used) and proteomics analysis (if used). \n- `1_GenePrediction_BASENAME` &ndash; AUGUSTUS files\n- `2_SimilarityAnalysis_BASENAME` &ndash; BLASTP analysis\n- `3_FunctionalAnnotation_BASENAME` &ndash; InterProScan/HMMER/RPS-BLAST analysis\n- `4_TranscriptQuantification_BASENAME` &ndash; Kallisto analysis\n- `5_PeptideIdentification_BASENAME` &ndash; Comet MS/MS and Percolator analysis \n"
+      },
+      "source": "https://raw.githubusercontent.com/bioinformatics-ufsc/AnnotaPipeline/v1.0/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "download": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "**Download databases**",
+        "parent_header": [
+          "**How to setup**"
+        ],
+        "type": "Text_excerpt",
+        "value": "**Required:**\n\n- SwissProt (available at <https://ftp.uniprot.org/pub/databases/uniprot/current_release/knowledgebase/complete/uniprot_sprot.fasta.gz>)\n- Pfam (available at <http://pfam.xfam.org>)\n- CDD (available at <https://www.ncbi.nlm.nih.gov/cdd>)\n\n**Choose one secondary database:**\n\n- TrEMBL (available at <https://ftp.uniprot.org/pub/databases/uniprot/current_release/knowledgebase/complete/uniprot_trembl.fasta.gz>)\n\n- EuPathDB (available at <https://veupathdb.org/veupathdb/app>):\n\n  - AmoebaDB\n  - CryptoDB\n  - FungiDB\n  - GiardiaDB\n  - HostDB\n  - MicrosporidiaDB\n  - PiroplasmaDB\n  - PlasmoDB\n  - ToxoDB (tested)\n  - TrichDB\n  - TriTrypDB (tested)\n\n- NCBI | NR Database (available at <https://ftp.ncbi.nlm.nih.gov/blast/db>)\n\n  > **TIP:** You can use a subset of the NR Database\n\n- Custom Database: You can set a custom database if you provide the pattern to get descriptions in the fasta file.\n\n  Example:\n\n  Sequences from the Arabidopsis database ([ArabdopsisDB Tair10](https://www.arabidopsis.org/download_files/Sequences/TAIR10_blastsets/TAIR10_pep_20101214)) are separated by pipes (\"`|`\") with protein descriptions in the 3th field.\n\n  ```\n  >AT1G51370.2 | Symbols:  | F-box/RNI-like/FBD-like domains-containing protein | chr1:19045615-19046748 FORWARD LENGTH=346\n  ```\n\n  It is possible to use AnnotaPipeline with the Tair10DB changing the following parameters:\n\n  - `secondary-format` set to `custom`\n  - `customsep` set to `\"|\"`\n  - `customcolumn` set to `2`\n\n  > **NOTE:** `customcolumn` is set to `2` because indexing starts at 0.\n"
+      },
+      "source": "https://raw.githubusercontent.com/bioinformatics-ufsc/AnnotaPipeline/v1.0/README.md",
+      "technique": "header_analysis"
+    }
+  ],
+  "download_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/bioinformatics-ufsc/AnnotaPipeline/releases"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 2
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/bioinformatics-ufsc/AnnotaPipeline/forks"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "bioinformatics-ufsc/AnnotaPipeline"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_title": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "About AnnotaPipeline"
+      },
+      "source": "https://raw.githubusercontent.com/bioinformatics-ufsc/AnnotaPipeline/v1.0/README.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "installation": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "**How to setup**",
+        "type": "Text_excerpt",
+        "value": "AnnotaPipeline requires the following software to run properly:\n\n- BLAST+ and RPS-BLAST (available at <https://ftp.ncbi.nih.gov/blast/executables/blast+/LATEST>)\n- InterProScan (available at <https://interproscan-docs.readthedocs.io/en/latest/HowToDownload.html>)\n- HMMER (available at <http://hmmer.org/download.html>)\n\nYou will also need to install [AUGUSTUS](https://doi.org/10.1093/bioinformatics/btr010) (available at <https://github.com/Gaius-Augustus/Augustus>) if you want to run this pipeline starting with gene/protein prediction.\n\nBefore executing, please modify the necessary fields in the configuration file (`AnnotaPipeline.yaml`).\n"
+      },
+      "source": "https://raw.githubusercontent.com/bioinformatics-ufsc/AnnotaPipeline/v1.0/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "**InterProScan: Tested databases**",
+        "parent_header": [
+          "**How to setup**"
+        ],
+        "type": "Text_excerpt",
+        "value": "> WARNING: Installation through conda/mamba requires manual download and configuration of InterProScan databases\n\n- CDD\n- Gene3D\n- Hamap\n- Panther\n- Pfam\n- Pirsf\n- Pirsr\n- Prints\n- PrositePatterns\n- PrositeProfiles\n- Sfld\n- Smart (unlicenced)\n- Superfamily\n- Tigrfam\n- Coils\n- MobiDBLite\n"
+      },
+      "source": "https://raw.githubusercontent.com/bioinformatics-ufsc/AnnotaPipeline/v1.0/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "**Using conda**",
+        "parent_header": [
+          "**How to setup**"
+        ],
+        "type": "Text_excerpt",
+        "value": "1. Download `Annota_environment.yaml` file\n\n2. Create environment\n\n   2.1 with _default_ conda\n\n   ```bash\n   conda env create -n <desired_name> -f Annota_environment.yaml\n   ```\n\n   2.2 with [mamba](https://github.com/mamba-org/mamba) (speedup installation)\n\n   ```bash\n   conda update -n base conda\n\n   conda install -n base -c conda-forge mamba\n\n   mamba env create -n <desired_name> -f Annota_environment.yaml\n   ```\n\n3. Activate environment\n\n```bash\n    conda activate <desired_name>\n```\n\n4. [**Download databases**](#download-databases)\n\n5. Configure [**InterProScan databases**](#interproscan-tested-databases) and `AnnotaPipeline.yaml`\n"
+      },
+      "source": "https://raw.githubusercontent.com/bioinformatics-ufsc/AnnotaPipeline/v1.0/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "**Setup AUGUSTUS species for personalized predictions**",
+        "parent_header": [
+          "**How to setup**",
+          "**Using conda**"
+        ],
+        "type": "Text_excerpt",
+        "value": "1. Locate AnnotaPipeline environment home\n\n```bash\n    echo $CONDA_PREFIX\n```\n\n2. Go to `$CONDA_PREFIX/config/species`\n\n```bash\n    cd $CONDA_PREFIX/config/species\n```\n\n3. Add custom species folder (trained results)\n"
+      },
+      "source": "https://raw.githubusercontent.com/bioinformatics-ufsc/AnnotaPipeline/v1.0/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "**Manual install**",
+        "parent_header": [
+          "**How to setup**"
+        ],
+        "type": "Text_excerpt",
+        "value": "1. Clone repository\n\n```bash\n   git clone https://github.com/bioinformatics-ufsc/AnnotaPipeline.git\n```\n\n2. Run `setup.py` (Scripts will be available at `$PATH`)\n\n```bash\n   python3 setup.py\n```\n\n3. Install required softwares:\n\n   - BLAST+ and RPS-BLAST (available at <https://ftp.ncbi.nih.gov/blast/executables/blast+/LATEST>)\n   - InterProScan (available at <https://interproscan-docs.readthedocs.io/en/latest/HowToDownload.html>)\n   - HMMER (available at <http://hmmer.org/download.html>)\n\n4. Optional softwares\n\n   - Kallisto (available at <https://pachterlab.github.io/kallisto/download.html>)\n   - Comet MS/MS (available at <https://github.com/UWPR/Comet/releases/latest>)\n     - Requires Percolator (available at <https://github.com/percolator/percolator>)\n\n5. [**Download databases**](#download-databases)\n\n6. Configure `AnnotaPipeline.yaml`\n"
+      },
+      "source": "https://raw.githubusercontent.com/bioinformatics-ufsc/AnnotaPipeline/v1.0/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "**Setup `AnnotaPipeline.yaml`**",
+        "parent_header": [
+          "**How to setup**"
+        ],
+        "type": "Text_excerpt",
+        "value": "> **TIP:** If you already have InterProScan locally installed and configured, use it instead (as an alternative to conda installation &ndash; interpro vanilla)\n\nWe recommend using our example configuration file as a guide (`config_example.yaml`).\n"
+      },
+      "source": "https://raw.githubusercontent.com/bioinformatics-ufsc/AnnotaPipeline/v1.0/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 0.9514210573223623,
+      "result": {
+        "original_header": "**About AnnotaPipeline**",
+        "type": "Text_excerpt",
+        "value": "AnnotaPipeline was tested in Unix-based systems. We strongly recommend to use Unix-based systems or Mac. AnnotaPipeline was not tested in Windows. \nIf you have questions, suggestions or difficulties regarding the pipeline, please do not hesitate to contact our team here on GitHub or by email: <labioinfo.genome@gmail.com>.\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/bioinformatics-ufsc/AnnotaPipeline/v1.0/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.82022743984065,
+      "result": {
+        "original_header": "**Output**",
+        "type": "Text_excerpt",
+        "value": "Raw outputs are listed inside output folders: \n"
+      },
+      "source": "https://raw.githubusercontent.com/bioinformatics-ufsc/AnnotaPipeline/v1.0/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "issue_tracker": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/bioinformatics-ufsc/AnnotaPipeline/issues"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "keywords": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": ""
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "license": [
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Apache License 2.0",
+        "spdx_id": "Apache-2.0",
+        "type": "License",
+        "url": "https://api.github.com/licenses/apache-2.0",
+        "value": "https://api.github.com/licenses/apache-2.0"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "File_dump",
+        "value": "                                 Apache License\n                           Version 2.0, January 2004\n                        http://www.apache.org/licenses/\n\n   TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION\n\n   1. Definitions.\n\n      \"License\" shall mean the terms and conditions for use, reproduction,\n      and distribution as defined by Sections 1 through 9 of this document.\n\n      \"Licensor\" shall mean the copyright owner or entity authorized by\n      the copyright owner that is granting the License.\n\n      \"Legal Entity\" shall mean the union of the acting entity and all\n      other entities that control, are controlled by, or are under common\n      control with that entity. For the purposes of this definition,\n      \"control\" means (i) the power, direct or indirect, to cause the\n      direction or management of such entity, whether by contract or\n      otherwise, or (ii) ownership of fifty percent (50%) or more of the\n      outstanding shares, or (iii) beneficial ownership of such entity.\n\n      \"You\" (or \"Your\") shall mean an individual or Legal Entity\n      exercising permissions granted by this License.\n\n      \"Source\" form shall mean the preferred form for making modifications,\n      including but not limited to software source code, documentation\n      source, and configuration files.\n\n      \"Object\" form shall mean any form resulting from mechanical\n      transformation or translation of a Source form, including but\n      not limited to compiled object code, generated documentation,\n      and conversions to other media types.\n\n      \"Work\" shall mean the work of authorship, whether in Source or\n      Object form, made available under the License, as indicated by a\n      copyright notice that is included in or attached to the work\n      (an example is provided in the Appendix below).\n\n      \"Derivative Works\" shall mean any work, whether in Source or Object\n      form, that is based on (or derived from) the Work and for which the\n      editorial revisions, annotations, elaborations, or other modifications\n      represent, as a whole, an original work of authorship. For the purposes\n      of this License, Derivative Works shall not include works that remain\n      separable from, or merely link (or bind by name) to the interfaces of,\n      the Work and Derivative Works thereof.\n\n      \"Contribution\" shall mean any work of authorship, including\n      the original version of the Work and any modifications or additions\n      to that Work or Derivative Works thereof, that is intentionally\n      submitted to Licensor for inclusion in the Work by the copyright owner\n      or by an individual or Legal Entity authorized to submit on behalf of\n      the copyright owner. For the purposes of this definition, \"submitted\"\n      means any form of electronic, verbal, or written communication sent\n      to the Licensor or its representatives, including but not limited to\n      communication on electronic mailing lists, source code control systems,\n      and issue tracking systems that are managed by, or on behalf of, the\n      Licensor for the purpose of discussing and improving the Work, but\n      excluding communication that is conspicuously marked or otherwise\n      designated in writing by the copyright owner as \"Not a Contribution.\"\n\n      \"Contributor\" shall mean Licensor and any individual or Legal Entity\n      on behalf of whom a Contribution has been received by Licensor and\n      subsequently incorporated within the Work.\n\n   2. Grant of Copyright License. Subject to the terms and conditions of\n      this License, each Contributor hereby grants to You a perpetual,\n      worldwide, non-exclusive, no-charge, royalty-free, irrevocable\n      copyright license to reproduce, prepare Derivative Works of,\n      publicly display, publicly perform, sublicense, and distribute the\n      Work and such Derivative Works in Source or Object form.\n\n   3. Grant of Patent License. Subject to the terms and conditions of\n      this License, each Contributor hereby grants to You a perpetual,\n      worldwide, non-exclusive, no-charge, royalty-free, irrevocable\n      (except as stated in this section) patent license to make, have made,\n      use, offer to sell, sell, import, and otherwise transfer the Work,\n      where such license applies only to those patent claims licensable\n      by such Contributor that are necessarily infringed by their\n      Contribution(s) alone or by combination of their Contribution(s)\n      with the Work to which such Contribution(s) was submitted. If You\n      institute patent litigation against any entity (including a\n      cross-claim or counterclaim in a lawsuit) alleging that the Work\n      or a Contribution incorporated within the Work constitutes direct\n      or contributory patent infringement, then any patent licenses\n      granted to You under this License for that Work shall terminate\n      as of the date such litigation is filed.\n\n   4. Redistribution. You may reproduce and distribute copies of the\n      Work or Derivative Works thereof in any medium, with or without\n      modifications, and in Source or Object form, provided that You\n      meet the following conditions:\n\n      (a) You must give any other recipients of the Work or\n          Derivative Works a copy of this License; and\n\n      (b) You must cause any modified files to carry prominent notices\n          stating that You changed the files; and\n\n      (c) You must retain, in the Source form of any Derivative Works\n          that You distribute, all copyright, patent, trademark, and\n          attribution notices from the Source form of the Work,\n          excluding those notices that do not pertain to any part of\n          the Derivative Works; and\n\n      (d) If the Work includes a \"NOTICE\" text file as part of its\n          distribution, then any Derivative Works that You distribute must\n          include a readable copy of the attribution notices contained\n          within such NOTICE file, excluding those notices that do not\n          pertain to any part of the Derivative Works, in at least one\n          of the following places: within a NOTICE text file distributed\n          as part of the Derivative Works; within the Source form or\n          documentation, if provided along with the Derivative Works; or,\n          within a display generated by the Derivative Works, if and\n          wherever such third-party notices normally appear. The contents\n          of the NOTICE file are for informational purposes only and\n          do not modify the License. You may add Your own attribution\n          notices within Derivative Works that You distribute, alongside\n          or as an addendum to the NOTICE text from the Work, provided\n          that such additional attribution notices cannot be construed\n          as modifying the License.\n\n      You may add Your own copyright statement to Your modifications and\n      may provide additional or different license terms and conditions\n      for use, reproduction, or distribution of Your modifications, or\n      for any such Derivative Works as a whole, provided Your use,\n      reproduction, and distribution of the Work otherwise complies with\n      the conditions stated in this License.\n\n   5. Submission of Contributions. Unless You explicitly state otherwise,\n      any Contribution intentionally submitted for inclusion in the Work\n      by You to the Licensor shall be under the terms and conditions of\n      this License, without any additional terms or conditions.\n      Notwithstanding the above, nothing herein shall supersede or modify\n      the terms of any separate license agreement you may have executed\n      with Licensor regarding such Contributions.\n\n   6. Trademarks. This License does not grant permission to use the trade\n      names, trademarks, service marks, or product names of the Licensor,\n      except as required for reasonable and customary use in describing the\n      origin of the Work and reproducing the content of the NOTICE file.\n\n   7. Disclaimer of Warranty. Unless required by applicable law or\n      agreed to in writing, Licensor provides the Work (and each\n      Contributor provides its Contributions) on an \"AS IS\" BASIS,\n      WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or\n      implied, including, without limitation, any warranties or conditions\n      of TITLE, NON-INFRINGEMENT, MERCHANTABILITY, or FITNESS FOR A\n      PARTICULAR PURPOSE. You are solely responsible for determining the\n      appropriateness of using or redistributing the Work and assume any\n      risks associated with Your exercise of permissions under this License.\n\n   8. Limitation of Liability. In no event and under no legal theory,\n      whether in tort (including negligence), contract, or otherwise,\n      unless required by applicable law (such as deliberate and grossly\n      negligent acts) or agreed to in writing, shall any Contributor be\n      liable to You for damages, including any direct, indirect, special,\n      incidental, or consequential damages of any character arising as a\n      result of this License or out of the use or inability to use the\n      Work (including but not limited to damages for loss of goodwill,\n      work stoppage, computer failure or malfunction, or any and all\n      other commercial damages or losses), even if such Contributor\n      has been advised of the possibility of such damages.\n\n   9. Accepting Warranty or Additional Liability. While redistributing\n      the Work or Derivative Works thereof, You may choose to offer,\n      and charge a fee for, acceptance of support, warranty, indemnity,\n      or other liability obligations and/or rights consistent with this\n      License. However, in accepting such obligations, You may act only\n      on Your own behalf and on Your sole responsibility, not on behalf\n      of any other Contributor, and only if You agree to indemnify,\n      defend, and hold each Contributor harmless for any liability\n      incurred by, or claims asserted against, such Contributor by reason\n      of your accepting any such warranty or additional liability.\n\n   END OF TERMS AND CONDITIONS\n\n   Copyright 2022 Guilherme Augusto Maia\n\n   Licensed under the Apache License, Version 2.0 (the \"License\");\n   you may not use this file except in compliance with the License.\n   You may obtain a copy of the License at\n\n       http://www.apache.org/licenses/LICENSE-2.0\n\n   Unless required by applicable law or agreed to in writing, software\n   distributed under the License is distributed on an \"AS IS\" BASIS,\n   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n   See the License for the specific language governing permissions and\n   limitations under the License.\n"
+      },
+      "source": "https://raw.githubusercontent.com/bioinformatics-ufsc/AnnotaPipeline/v1.0/LICENSE",
+      "technique": "file_exploration"
+    }
+  ],
+  "name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "AnnotaPipeline"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "owner": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Organization",
+        "value": "bioinformatics-ufsc"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "programming_languages": [
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Python",
+        "size": 121706,
+        "type": "Programming_language",
+        "value": "Python"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "readme_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/bioinformatics-ufsc/AnnotaPipeline/v1.0/README.md"
+      },
+      "technique": "file_exploration"
+    }
+  ],
+  "related_documentation": [
+    {
+      "confidence": 1,
+      "result": {
+        "format": "readthedocs",
+        "type": "Url",
+        "value": "https://interproscan-docs.readthedocs.io/"
+      },
+      "source": "https://raw.githubusercontent.com/bioinformatics-ufsc/AnnotaPipeline/v1.0/README.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "run": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "**How to run**",
+        "type": "Text_excerpt",
+        "value": "`AnnotaPipeline.py` can run with three different options:\n\n- [**Protein file as input**](#protein-file-as-input)\n- [**Genome file as input**](#genome-file-as-input)\n- [**Protein and GFF files as input**](#protein-and-gff-files-as-input)\n"
+      },
+      "source": "https://raw.githubusercontent.com/bioinformatics-ufsc/AnnotaPipeline/v1.0/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "**Protein file as input**",
+        "parent_header": [
+          "**How to run**"
+        ],
+        "type": "Text_excerpt",
+        "value": "```bash\nAnnotaPipeline.py -c AnnotaPipeline.yaml -p protein_sequences.fasta\n```\n\nThis is the simplest execution of AnnotaPipeline.\n\nThe annotation process will begin with the submitted `protein_sequences.fasta` and will contain a simplified version of header.\n\nAlso, this way to run **will not produce** and annotated GFF output.\n"
+      },
+      "source": "https://raw.githubusercontent.com/bioinformatics-ufsc/AnnotaPipeline/v1.0/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "**Genome file as input**",
+        "parent_header": [
+          "**How to run**"
+        ],
+        "type": "Text_excerpt",
+        "value": "```bash\nAnnotaPipeline.py -c AnnotaPipeline.yaml -s genomic_data.fasta\n```\n\nThis is the complete execution of AnnotaPipeline.\n\nIt will execute gene/protein prediction based on `genomic_data.fasta` utilizing AUGUSTUS and the predicted proteins will initiate the annotation process.\n\nGiven the prediction process, it is important to use a trained AUGUSTUS model for your species before executing AnnotaPipeline.\n"
+      },
+      "source": "https://raw.githubusercontent.com/bioinformatics-ufsc/AnnotaPipeline/v1.0/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "**Protein and GFF files as input**",
+        "parent_header": [
+          "**How to run**"
+        ],
+        "type": "Text_excerpt",
+        "value": "```bash\nAnnotaPipeline.py -c AnnotaPipeline.yaml -p protein_sequences.fasta -gff gff_file.gff\n```\n\nYou can execute AnnotaPipeline with this command line if you already have `.aa` and `.gff` files from previous **AUGUSTUS predictions**. The submitted `.gff` needs to be in GFF3 format.\n\nThe annotation process is the same as the genomic data input, the difference being you will skip gene prediction and start with similarity analysis.\n"
+      },
+      "source": "https://raw.githubusercontent.com/bioinformatics-ufsc/AnnotaPipeline/v1.0/README.md",
+      "technique": "header_analysis"
+    }
+  ],
+  "somef_missing_categories": [
+    "acknowledgement",
+    "requirements",
+    "contact",
+    "contributors",
+    "documentation",
+    "usage",
+    "faq",
+    "support",
+    "identifier",
+    "has_build_file",
+    "executable_example"
+  ],
+  "somef_provenance": {
+    "date": "2024-10-04 11:20:39",
+    "somef_schema_version": "1.0.0",
+    "somef_version": "0.9.5"
+  },
+  "stargazers_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 8
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "type": [
+    {
+      "confidence": 0.82,
+      "result": {
+        "type": "String",
+        "value": "commandline-application"
+      },
+      "technique": "software_type_heuristics"
+    }
+  ]
+}

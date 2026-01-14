@@ -1,0 +1,531 @@
+{
+  "application_domain": [
+    {
+      "confidence": 21.2,
+      "result": {
+        "type": "String",
+        "value": "Computer Vision"
+      },
+      "technique": "supervised_classification"
+    }
+  ],
+  "code_repository": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/harbourlab/SparK"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_created": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2019-11-14T23:31:14Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_updated": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2024-11-01T19:21:05Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "description": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "Publication quality NGS track plotting"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 0.9381002997883356,
+      "result": {
+        "original_header": "SparK - Publication quality and pipeline integratable NGS data plotting (Version 2.6.2)",
+        "type": "Text_excerpt",
+        "value": "\nPlease cite our article in bioRxiv, a citation can be downloaded here and imported in Endnote or such:\nhttps://www.biorxiv.org/content/10.1101/845529v1.full\nFeature requests are welcome! For help, bug reports, and to request features please open a issue here on GitHub. \n\nPlot NGS bedgraph tracks including replicates, averaging of replicates, track overlay, standard deviations, and a smart scale bar. Output files are true high-resolution vector graphics (.svg), for easy editing and customization. \nThis tool uses bedgraph files to generate the figures. To convert BAM files to bedgraph files, you can use deeptools, with \"bamCoverage -b bamfile.bam -o outputfilename.bdg -bs 1 -of bedgraph\". Make sure to use the \"-bs 1\" option. This should not be done for ChIP-seq data! For ChIP-seq, use the bedgraphs from the MACS2 output (or any other ChIP-seq pipeline). To convert bigwig (bw) files to bedgraph files you can use for instance the USCS bigWigToBedGraph tool (https://genome.ucsc.edu/goldenpath/help/bigWig.html). \nFor faster retrieval of data from regions of a bedgraph, compress your bedgraph files with [bgzip](http://www.htslib.org/doc/bgzip.html) and index them with [tabix](http://www.htslib.org/doc/tabix.html) using the command `tabix -p bed <filename>`.\n<pre>\nRequirements:\n  - Python 3\n  - numpy \n\nOptions (Not required):\n-pt      plot type. Choices: \"STD\", \"sine\"\n-cg      control groups. Defines which plot nr to place the files in\n-tg      treatment groups. Defines which plot nr to place the files in\nBoth, the -cg and -tg option define in which plot number the list of files defined in -cf and -tf will\nbe in. E.g., for a list of 5 files, say 2 replicates of RNAseq, and 3 replicates of ChIPseq,\n\"-cg 1 1 2 2 2\" and \"-tg 1 1 2 2 2\" will generate 2 plots, where plot 1 includes the first two files of\nboth, treatment and control as listed in \"-cf\" \"-tf\". The latter 3 files of both will be in plot 2. See\nexamples below. \n-gl      Label the groups defined in -cg and -tg. e.g. \"-gl RNAseq H3K4me3\" will label group 1 with\n         RNAseq, and group 2 with H3K4me3\n-tf      treatment bedgraph files seperated by space\n-l       labels for control and treatment groups. defined above. e.g. \"-l brain_cells tumor_cells\".\n         1st is controls, second entry treatment group\n-ps      Set to \"averages\" if replicates of control and treatment tracks should be averaged for all groups. \ny-axis scaling options:\nBy default, sparc will automatically pick y-axis for all groups.\n-gs      group autoscale. usage: \"-gs yes\". This will autoscale all groups to the same y-axis.\n-es      exclude groups from autoscaling. e.g. \"-es 1\"\n-cs      custom scaling. This can be used together with -gs and -es. Enter values for y-axis of groups.\n         use \"D\" to not change settings of y-axis. E.g, if you plot 4 groups, \"-cs 1.2 12 D 100\" will\n         scale y-axis of group 1 to 1.2, group 2 to 12, not change settings for group 3, and scale\n         group 4 to 100. \n-dc      this setting can be used to change how the chromosome location is plotted. Options:\n         top_left (default), top_right, bottom_left, bottom_right. Set to \"no\" to not plot the\n         chromosomal location.\n-f       fill colors for the tracks. One or two hex colors can be entered. In case two colors are\n         entered, the first one is used for the treatment group, the right one for the control group.\n         Examples\" \"-f blue/grey\", \"-f 00FF12 848484\", \"-f #000000\". The presets \"blue/red\" (default),\n         \"blue/grey\", \"all_grey\", or \"blue/green\" can be entered alternatively.\n-sp      add significant differences in tracks aka \"sparks\". Usage: \"-sp yes\". Significant areas\n         are defined as areas where the delta of the means is greater than the sum of standard\n         deviations of controls and treatment files.\n-sc      spark color. Enter two colors in hex format for significantly increase and decreased areas.\n         Example \"-sc 00FF12 848484\".\n-sm      smoothen tracks. Integer value. (plots are 2000 data points wide. \"-sm 10\" will smoothen\n         with a window of 10.\n-o       output filename. Usage: \"-o Experiment1\".\n-bed     Add bed files to plot here. Usage: \"-bed bedfile1.bed bedfile2.bed\"...\n-bedcol  choose colors for bed tracks (in hex). Default is blue. Choose either one color, or same\n         amount as bed tracks given. If tracks are overlayed, SparK will add transparancy to the color,\n         leading to a less intense color than anticipated. Transparency is required to see all\n         overlayed tracks, but can be changed with any SVG editor if desired.\n-bedlab  labels for bed tracks. Usage: \"-bedlab bed_track1 bed_track2\".\n-gtf     link gtf file to show genes. Get here: https://www.gencodegenes.org/human/ Please read the section\n         on gtf files below if you encounter errors or want to use a custom gtf file.\n-dg      in case not all genes in the region should be plotted, enter the genes to plot here.\n         Usage: \"-dg GAPDH RS1\" Without this option all genes will be shown.\n-dt      Display transcripts. By default, all available transcripts for a gene will be merged and\n         plotted as one. If all annotated transcripts should be plotted, set this to \"all\".\n         Alternatively, transcript IDs can be listed to plot only certain transcripts\n-wg      If all or individual transcripts are beeing plotted (-dt function) instead of the merged\n         default, then \"-wg yes\" can be used to plot gene name instead of transcript ID.\n-tss     set to \"no\" to avoid start_codons and direction of transcription being indicated with arrows.\n-scale   Plot scalebar. Set to \"no\" if no scalebar should be plotted.\n-w       Define plot width. Default is 150. \nPlotting multiple NGS tracks. Example of a plot of 4 ChIP-seq tracks with standard settings. \nNote: The -dg option is optional and was used to plot only the five major genes in this area, to avoid having\ntoo many genes displayed here. To display all genes, run this without \"-dg\" \n\nExample of plotting the comparison of ChIP-seq data of two cell lines (HepG2 and K562). \n\nExample comparing histone acetylation with RNA-seq. Of note! The overlap label will only be plotted when averages are plotted.\nElse, due to transparency issues, the overlap plotting multiple tracks is not clearly visible. \n\nExaple of custom coloring tracks, and adding bed files with custom colors. \n\nExample of different smoothing windows, applied with \"-sm\". \nExample of sparks (significant changes) beeing added to a plot with grey color scheme. \n\nOther plot types:\nSpark allows to plot the standard deviation of NGS replicates: \nA: Standard plot settings, all transcript IDs in the gtf file will be merged for each gene, and the\nfirst start_codon is annotated \n"
+      },
+      "source": "https://raw.githubusercontent.com/harbourlab/SparK/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9988182138102445,
+      "result": {
+        "original_header": "Dealing with methylation data/my data has the wrong y-Axis/looks different than in IGV:",
+        "type": "Text_excerpt",
+        "value": "If you are working with data that has very sharp and narrow peaks, like methylation data, or plotting larger regions with data that has sharp peaks you might encounter the following: The y-axis indicates lower values for your data than what you expected, and your data looks different from what you have seen in IGV. If you plot a large region like 100 kb, then you have more data points than pixels in your plot. There are different ways of dealing with this, and SparK will calculate the average signal for each pixel of the plot. Say you have to squeeze 10 data points into each pixel of the plot, and you only have one methylation site (one single base) with a value of 1.0 for a stretch of 10 bases, then you will end up with an average value of 0.1 for that one pixel in the SparK plot. IGV will show you a peak with 1.0. when in default setting. See the attached example. I have plotted a larger region of methylation data with IGV, you can see that the data ranges to 1.0, which is what you were expecting. However, the data is so highly clustered that it really doesn't tell you anything. See for instance the red square (1). If we zoom in once, we can notice that what looked as one massive block of methylation is actually two distinct sites (2). Further, both sites seem to have the same amount of methylation. If we zoom in again, we can see that those two sites are not the same at all, but in fact very different in amount of methylation that is present (3). So even zooming in once doesn't give us meaningful data in IGV yet. In SparK plots the values don't go up to 1, but SparK plots depict a meaningful representation of the data, even in the most zoomed out version.\n<img src=\"https://github.com/harbourlab/SparK/blob/master/methylation_example.png\" width=\"900\">\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/harbourlab/SparK/master/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "documentation": [
+    {
+      "confidence": 1,
+      "result": {
+        "format": "wiki",
+        "type": "Url",
+        "value": "https://github.com/harbourlab/SparK/wiki"
+      },
+      "source": "https://raw.githubusercontent.com/harbourlab/SparK/master/README.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "download_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/harbourlab/SparK/releases"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "faq": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Problems with gtf files/use of custom gtf files:",
+        "parent_header": [
+          "SparK - Publication quality and pipeline integratable NGS data plotting (Version 2.6.2)"
+        ],
+        "type": "Text_excerpt",
+        "value": "SparK will exctract gene and transcript information from column 3 of the gtf file. In particular, from rows which have \"gene\", \"CDS\", \"exon\", \"transcript\", and \"start_codon\" in column 2. Check if your gtf file labels these entries like that if some are missing or problems are encountert; e.g. your gtf file doesn't use for instance \"mRNA\" instead of \"transcript\". In the latter \"mRNA\" should be replaced with \"transcript\".\nFurther, SparK expects the gene name, and transcript name to be in column 9 of the gtf file. It will try extract the information from ... ; gene_name \"XXX\"; ... and ... ; transcript_id \"XXX\"; ... . You can download a standard gtf file from the link mentioned above and have a look at how these gtf files are built. If encountering problems with your gtf file please check if those two entries are present in the same format. If not, download an updated version of your gtf files that includes these entries in the same format. If this is not available, e.g. when working with custom genomes, then there are two options: Either those entries need to be added to the file (e.g. with Excel), or, the SparK pyhton file can be easily modified to recognize other formats. Where Python extracts the gene name and transcript ID's is specified in the \"get_gene_name\" and \"get_transcript_name\" functions at the beginning of the script. Of note, the  entry transcript_ID is only neccecary if individual transcripts were to be plotted. If only genes are plotted, then a \"gene_name\" entry is enough in the gtf file.\n\n\n"
+      },
+      "source": "https://raw.githubusercontent.com/harbourlab/SparK/master/README.md",
+      "technique": "header_analysis"
+    }
+  ],
+  "forks_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 20
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/harbourlab/SparK/forks"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "harbourlab/SparK"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_title": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "SparK - Publication quality and pipeline integratable NGS data plotting (Version 2.6.2)"
+      },
+      "source": "https://raw.githubusercontent.com/harbourlab/SparK/master/README.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "images": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/harbourlab/SparK/master/Summary.png"
+      },
+      "source": "https://raw.githubusercontent.com/harbourlab/SparK/master/README.md",
+      "technique": "regular_expression"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/harbourlab/SparK/master/Screen%20Shot%202020-01-23%20at%2010.32.30%20PM.png"
+      },
+      "source": "https://raw.githubusercontent.com/harbourlab/SparK/master/README.md",
+      "technique": "regular_expression"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/harbourlab/SparK/master/FigureA.png"
+      },
+      "source": "https://raw.githubusercontent.com/harbourlab/SparK/master/README.md",
+      "technique": "regular_expression"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/harbourlab/SparK/master/FigureB.png"
+      },
+      "source": "https://raw.githubusercontent.com/harbourlab/SparK/master/README.md",
+      "technique": "regular_expression"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/harbourlab/SparK/master/FigureE.png"
+      },
+      "source": "https://raw.githubusercontent.com/harbourlab/SparK/master/README.md",
+      "technique": "regular_expression"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/harbourlab/SparK/master/FigureC.png"
+      },
+      "source": "https://raw.githubusercontent.com/harbourlab/SparK/master/README.md",
+      "technique": "regular_expression"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/harbourlab/SparK/master/smoothing2.png"
+      },
+      "source": "https://raw.githubusercontent.com/harbourlab/SparK/master/README.md",
+      "technique": "regular_expression"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/harbourlab/SparK/master/FigureD.png"
+      },
+      "source": "https://raw.githubusercontent.com/harbourlab/SparK/master/README.md",
+      "technique": "regular_expression"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/harbourlab/SparK/master/FigureF.png"
+      },
+      "source": "https://raw.githubusercontent.com/harbourlab/SparK/master/README.md",
+      "technique": "regular_expression"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/harbourlab/SparK/master/FigureG.png"
+      },
+      "source": "https://raw.githubusercontent.com/harbourlab/SparK/master/README.md",
+      "technique": "regular_expression"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/harbourlab/SparK/master/summary_genes.png"
+      },
+      "source": "https://raw.githubusercontent.com/harbourlab/SparK/master/README.md",
+      "technique": "regular_expression"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/harbourlab/SparK/master/methylation_example.png"
+      },
+      "source": "https://raw.githubusercontent.com/harbourlab/SparK/master/README.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "installation": [
+    {
+      "confidence": 0.9606042394835113,
+      "result": {
+        "original_header": "SparK - Publication quality and pipeline integratable NGS data plotting (Version 2.6.2)",
+        "type": "Text_excerpt",
+        "value": "\n<img src=\"https://github.com/harbourlab/SparK/blob/master/Summary.png\" width=\"900\"> \nComing soon... interaction arcs for e.g. Hi-C, ChIA-PET, Hi-ChIP or any other interaction data! Preview:\n<img src=\"https://github.com/harbourlab/SparK/blob/master/Screen%20Shot%202020-01-23%20at%2010.32.30%20PM.png\" width=\"300\"> \nThis tool uses bedgraph files to generate the figures. To convert BAM files to bedgraph files, you can use deeptools, with \"bamCoverage -b bamfile.bam -o outputfilename.bdg -bs 1 -of bedgraph\". Make sure to use the \"-bs 1\" option. This should not be done for ChIP-seq data! For ChIP-seq, use the bedgraphs from the MACS2 output (or any other ChIP-seq pipeline). To convert bigwig (bw) files to bedgraph files you can use for instance the USCS bigWigToBedGraph tool (https://genome.ucsc.edu/goldenpath/help/bigWig.html). \nFor faster retrieval of data from regions of a bedgraph, compress your bedgraph files with [bgzip](http://www.htslib.org/doc/bgzip.html) and index them with [tabix](http://www.htslib.org/doc/tabix.html) using the command `tabix -p bed <filename>`.\n<pre>\nRequirements:\n  - Python 3\n  - numpy \n<img src=\"https://github.com/harbourlab/SparK/blob/master/FigureA.png\" width=\"400\"> \n<img src=\"https://github.com/harbourlab/SparK/blob/master/FigureB.png\" width=\"400\"> \nCode used to generate this plot:\npython SparK.py \\\n-pr chr12:6527512-6550512 \\\n-tf K562_H3K27AC_1_ENCFF779QTH.bigWig.bdg K562_H3K27AC_2_ENCFF945XHA.bigWig.bdg K562_H3K4me3_1_ENCFF804OLI.bigWig.bdg K562_H3K4me3_2_ENCFF352VRB.bigWig.bdg \\\n-cf HepG2_H3K27AC_1_ENCFF495QSO.bigWig.bdg HepG2_H3K27AC_2_ENCFF348RLL.bigWig.bdg HepG2_H3K4me3_1_ENCFF699DRO.bigWig.bdg HepG2_H3K4me3_2_ENCFF400FYO.bigWig.bdg \\\n-tg 1 1 2 2 \\\n-cg 1 1 2 2 \\\n-gl H3K27AC H3K4me3 \\\n-l HepG2_cells K562_cells \\\n-gtf gencode.v24.primary_assembly.annotation.txt \\\n-ps averages \\\n-dg GAPDH \n<img src=\"https://github.com/harbourlab/SparK/blob/master/FigureE.png\" width=\"400\"> \nCode:\npython SparK.py \\\n-pr chr12:6533612-6539012 \\\n-tf K562_H3K27AC_1_ENCFF779QTH.bigWig.bdg K562_H3K27AC_2_ENCFF945XHA.bigWig.bdg K562_RNAseq_plus_1_ENCFF682BLJ.bigWig.bdg K562_RNAseq_plus_2_ENCFF745PIR.bigWig.bdg \\\n-cf HepG2_H3K27AC_1_ENCFF495QSO.bigWig.bdg HepG2_H3K27AC_2_ENCFF348RLL.bigWig.bdg HepG2_RNAseq_plus_1_ENCFF576COO.bigWig.bdg HepG2_RNAseq_plus_2_ENCFF599HGT.bigWig.bdg \\\n-tg 1 1 2 2 \\\n-cg 1 1 2 2 \\\n-gl H3K27AC RNA-seq \\\n-l HepG2_cells K562_cells \\\n-gtf gencode.v24.primary_assembly.annotation.txt \\\n-dg GAPDH \n<img src=\"https://github.com/harbourlab/SparK/blob/master/FigureC.png\" width=\"400\"> \nCode used to generate this plot:\npython SparK.py \\\n-pr chr12:6527512-6550512 \\\n-tf K562_H3K27AC_1_ENCFF779QTH.bigWig.bdg K562_H3K27AC_2_ENCFF945XHA.bigWig.bdg K562_H3K4me3_1_ENCFF804OLI.bigWig.bdg K562_H3K4me3_2_ENCFF352VRB.bigWig.bdg \\\n-cf HepG2_H3K27AC_1_ENCFF495QSO.bigWig.bdg HepG2_H3K27AC_2_ENCFF348RLL.bigWig.bdg HepG2_H3K4me3_1_ENCFF699DRO.bigWig.bdg HepG2_H3K4me3_2_ENCFF400FYO.bigWig.bdg \\\n-tg 1 1 2 2 \\\n-cg 1 1 2 2 \\\n-gl H3K27AC RNA-seq \\\n-l HepG2_cells K562_cells \\\n-gtf gencode.v24.primary_assembly.annotation.txt \\\n-ps averages \\\n-f CE358B 005CFF \\\n-bed bedfile1.bed bedfile2.bed \\\n-bedcol EF1414 FFBC00 \n<img src=\"https://github.com/harbourlab/SparK/blob/master/smoothing2.png\" width=\"400\"> \n<img src=\"https://github.com/harbourlab/SparK/blob/master/FigureD.png\" width=\"400\"> \nCode used to generate this figure:\npython SparK.py \\\n-pr chr12:6527512-6550512 \\\n-tf K562_H3K27AC_1_ENCFF779QTH.bigWig.bdg K562_H3K27AC_2_ENCFF945XHA.bigWig.bdg K562_H3K4me3_1_ENCFF804OLI.bigWig.bdg K562_H3K4me3_2_ENCFF352VRB.bigWig.bdg \\\n-cf HepG2_H3K27AC_1_ENCFF495QSO.bigWig.bdg HepG2_H3K27AC_2_ENCFF348RLL.bigWig.bdg HepG2_H3K4me3_1_ENCFF699DRO.bigWig.bdg HepG2_H3K4me3_2_ENCFF400FYO.bigWig.bdg \\\n-tg 1 1 2 2 \\\n-cg 1 1 2 2 \\\n-gl H3K27AC H3K4me3 \\\n-l HepG2_cells K562_cells \\\n-gtf gencode.v24.primary_assembly.annotation.txt \\\n-f all_grey \\\n-sp yes \n<img src=\"https://github.com/harbourlab/SparK/blob/master/FigureF.png\" width=\"400\"> \nCode used:\npython SparK.py \\\n-pr chr12:6540512-6545512 \\\n-tf K562_H3K27AC_1_ENCFF779QTH.bigWig.bdg K562_H3K27AC_2_ENCFF945XHA.bigWig.bdg K562_H3K4me3_1_ENCFF804OLI.bigWig.bdg K562_H3K4me3_2_ENCFF352VRB.bigWig.bdg \\\n-cf HepG2_H3K27AC_1_ENCFF495QSO.bigWig.bdg HepG2_H3K27AC_2_ENCFF348RLL.bigWig.bdg HepG2_H3K4me3_1_ENCFF699DRO.bigWig.bdg HepG2_H3K4me3_2_ENCFF400FYO.bigWig.bdg \\\n-tg 1 1 2 2 \\\n-cg 1 1 2 2 \\\n-gl H3K27AC H3K4me3 \\\n-l HepG2_cells K562_cells \\\n-gtf gencode.v24.primary_assembly.annotation.txt \\\n-pt STD \n<img src=\"https://github.com/harbourlab/SparK/blob/master/FigureG.png\" width=\"400\"> \npython SparK.py \\\n-pr chr12:6533612-6539012 \\\n-tf K562_H3K27AC_1_ENCFF779QTH.bigWig.bdg K562_H3K27AC_2_ENCFF945XHA.bigWig.bdg K562_H3K4me3_1_ENCFF804OLI.bigWig.bdg K562_H3K4me3_2_ENCFF352VRB.bigWig.bdg \\\n-cf HepG2_H3K27AC_1_ENCFF495QSO.bigWig.bdg HepG2_H3K27AC_2_ENCFF348RLL.bigWig.bdg HepG2_H3K4me3_1_ENCFF699DRO.bigWig.bdg HepG2_H3K4me3_2_ENCFF400FYO.bigWig.bdg \\\n-tg 1 1 2 \\\n-cg 1 1 2 \\\n-gl H3K27AC H3K4me3 \\\n-l HepG2_cells K562_cells \\\n-gtf gencode.v24.primary_assembly.annotation.txt \\\n-pt sine \\\n-o 10_sine \nModify gene annotations: \n<img src=\"https://github.com/harbourlab/SparK/blob/master/summary_genes.png\" width=\"900\"> \n"
+      },
+      "source": "https://raw.githubusercontent.com/harbourlab/SparK/master/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "invocation": [
+    {
+      "confidence": 0.9032168655247771,
+      "result": {
+        "original_header": "SparK - Publication quality and pipeline integratable NGS data plotting (Version 2.6.2)",
+        "type": "Text_excerpt",
+        "value": "Example usage:\npython SparK -cf mybedgraphfile.bdg -pr chr1:10000-200000 \nCode used to generate this plot:\npython SparK.py \\\n-pr chr12:6520512-6640512 \\\n-cf HepG2_H3K27AC_1_ENCFF495QSO.bigWig.bdg HepG2_H3K27AC_2_ENCFF348RLL.bigWig.bdg HepG2_H3K4me3_1_ENCFF699DRO.bigWig.bdg HepG2_H3K4me3_2_ENCFF400FYO.bigWig.bdg \\\n-gtf gencode.v24.primary_assembly.annotation.txt \\\n-gl H3K27AC H3K4me3 H3K27AC-2 H3K4me3-2 \\\n-dg GAPDH IFFO1 NOP2 CHD4 LPAR5 \nCode used to generate this plot:\npython SparK.py \\\n-pr chr12:6527512-6550512 \\\n-tf K562_H3K27AC_1_ENCFF779QTH.bigWig.bdg K562_H3K27AC_2_ENCFF945XHA.bigWig.bdg K562_H3K4me3_1_ENCFF804OLI.bigWig.bdg K562_H3K4me3_2_ENCFF352VRB.bigWig.bdg \\\n-cf HepG2_H3K27AC_1_ENCFF495QSO.bigWig.bdg HepG2_H3K27AC_2_ENCFF348RLL.bigWig.bdg HepG2_H3K4me3_1_ENCFF699DRO.bigWig.bdg HepG2_H3K4me3_2_ENCFF400FYO.bigWig.bdg \\\n-tg 1 1 2 2 \\\n-cg 1 1 2 2 \\\n-gl H3K27AC H3K4me3 \\\n-l HepG2_cells K562_cells \\\n-gtf gencode.v24.primary_assembly.annotation.txt \\\n-ps averages \\\n-dg GAPDH \nCode:\npython SparK.py \\\n-pr chr12:6533612-6539012 \\\n-tf K562_H3K27AC_1_ENCFF779QTH.bigWig.bdg K562_H3K27AC_2_ENCFF945XHA.bigWig.bdg K562_RNAseq_plus_1_ENCFF682BLJ.bigWig.bdg K562_RNAseq_plus_2_ENCFF745PIR.bigWig.bdg \\\n-cf HepG2_H3K27AC_1_ENCFF495QSO.bigWig.bdg HepG2_H3K27AC_2_ENCFF348RLL.bigWig.bdg HepG2_RNAseq_plus_1_ENCFF576COO.bigWig.bdg HepG2_RNAseq_plus_2_ENCFF599HGT.bigWig.bdg \\\n-tg 1 1 2 2 \\\n-cg 1 1 2 2 \\\n-gl H3K27AC RNA-seq \\\n-l HepG2_cells K562_cells \\\n-gtf gencode.v24.primary_assembly.annotation.txt \\\n-dg GAPDH \nCode used to generate this plot:\npython SparK.py \\\n-pr chr12:6527512-6550512 \\\n-tf K562_H3K27AC_1_ENCFF779QTH.bigWig.bdg K562_H3K27AC_2_ENCFF945XHA.bigWig.bdg K562_H3K4me3_1_ENCFF804OLI.bigWig.bdg K562_H3K4me3_2_ENCFF352VRB.bigWig.bdg \\\n-cf HepG2_H3K27AC_1_ENCFF495QSO.bigWig.bdg HepG2_H3K27AC_2_ENCFF348RLL.bigWig.bdg HepG2_H3K4me3_1_ENCFF699DRO.bigWig.bdg HepG2_H3K4me3_2_ENCFF400FYO.bigWig.bdg \\\n-tg 1 1 2 2 \\\n-cg 1 1 2 2 \\\n-gl H3K27AC RNA-seq \\\n-l HepG2_cells K562_cells \\\n-gtf gencode.v24.primary_assembly.annotation.txt \\\n-ps averages \\\n-f CE358B 005CFF \\\n-bed bedfile1.bed bedfile2.bed \\\n-bedcol EF1414 FFBC00 \nCode used to generate this figure:\npython SparK.py \\\n-pr chr12:6527512-6550512 \\\n-tf K562_H3K27AC_1_ENCFF779QTH.bigWig.bdg K562_H3K27AC_2_ENCFF945XHA.bigWig.bdg K562_H3K4me3_1_ENCFF804OLI.bigWig.bdg K562_H3K4me3_2_ENCFF352VRB.bigWig.bdg \\\n-cf HepG2_H3K27AC_1_ENCFF495QSO.bigWig.bdg HepG2_H3K27AC_2_ENCFF348RLL.bigWig.bdg HepG2_H3K4me3_1_ENCFF699DRO.bigWig.bdg HepG2_H3K4me3_2_ENCFF400FYO.bigWig.bdg \\\n-tg 1 1 2 2 \\\n-cg 1 1 2 2 \\\n-gl H3K27AC H3K4me3 \\\n-l HepG2_cells K562_cells \\\n-gtf gencode.v24.primary_assembly.annotation.txt \\\n-f all_grey \\\n-sp yes \nCode used:\npython SparK.py \\\n-pr chr12:6540512-6545512 \\\n-tf K562_H3K27AC_1_ENCFF779QTH.bigWig.bdg K562_H3K27AC_2_ENCFF945XHA.bigWig.bdg K562_H3K4me3_1_ENCFF804OLI.bigWig.bdg K562_H3K4me3_2_ENCFF352VRB.bigWig.bdg \\\n-cf HepG2_H3K27AC_1_ENCFF495QSO.bigWig.bdg HepG2_H3K27AC_2_ENCFF348RLL.bigWig.bdg HepG2_H3K4me3_1_ENCFF699DRO.bigWig.bdg HepG2_H3K4me3_2_ENCFF400FYO.bigWig.bdg \\\n-tg 1 1 2 2 \\\n-cg 1 1 2 2 \\\n-gl H3K27AC H3K4me3 \\\n-l HepG2_cells K562_cells \\\n-gtf gencode.v24.primary_assembly.annotation.txt \\\n-pt STD \nSine plot (experimental). \npython SparK.py \\\n-pr chr12:6533612-6539012 \\\n-tf K562_H3K27AC_1_ENCFF779QTH.bigWig.bdg K562_H3K27AC_2_ENCFF945XHA.bigWig.bdg K562_H3K4me3_1_ENCFF804OLI.bigWig.bdg K562_H3K4me3_2_ENCFF352VRB.bigWig.bdg \\\n-cf HepG2_H3K27AC_1_ENCFF495QSO.bigWig.bdg HepG2_H3K27AC_2_ENCFF348RLL.bigWig.bdg HepG2_H3K4me3_1_ENCFF699DRO.bigWig.bdg HepG2_H3K4me3_2_ENCFF400FYO.bigWig.bdg \\\n-tg 1 1 2 \\\n-cg 1 1 2 \\\n-gl H3K27AC H3K4me3 \\\n-l HepG2_cells K562_cells \\\n-gtf gencode.v24.primary_assembly.annotation.txt \\\n-pt sine \\\n-o 10_sine \n"
+      },
+      "source": "https://raw.githubusercontent.com/harbourlab/SparK/master/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "issue_tracker": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/harbourlab/SparK/issues"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "keywords": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "bedgraph-files, chip-seq, igv, ngs, ngs-analysis, plotting, rna-seq"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "SparK"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "owner": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "User",
+        "value": "harbourlab"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "programming_languages": [
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Python",
+        "size": 55587,
+        "type": "Programming_language",
+        "value": "Python"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "readme_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/harbourlab/SparK/master/README.md"
+      },
+      "technique": "file_exploration"
+    }
+  ],
+  "releases": [
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "harbourlab",
+          "type": "User"
+        },
+        "date_created": "2022-06-02T15:32:11Z",
+        "date_published": "2022-06-27T15:43:28Z",
+        "description": "Made this for Zendoo link",
+        "html_url": "https://github.com/harbourlab/SparK/releases/tag/v2.6.2_1",
+        "name": "Stable",
+        "release_id": 70658198,
+        "tag": "v2.6.2_1",
+        "tarball_url": "https://api.github.com/repos/harbourlab/SparK/tarball/v2.6.2_1",
+        "type": "Release",
+        "url": "https://api.github.com/repos/harbourlab/SparK/releases/70658198",
+        "value": "https://api.github.com/repos/harbourlab/SparK/releases/70658198",
+        "zipball_url": "https://api.github.com/repos/harbourlab/SparK/zipball/v2.6.2_1"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "harbourlab",
+          "type": "User"
+        },
+        "date_created": "2020-06-06T15:54:38Z",
+        "date_published": "2020-06-08T02:28:18Z",
+        "description": "Couple minor issues resolved.",
+        "html_url": "https://github.com/harbourlab/SparK/releases/tag/v2.6.2",
+        "name": "v2.6.2",
+        "release_id": 27309731,
+        "tag": "v2.6.2",
+        "tarball_url": "https://api.github.com/repos/harbourlab/SparK/tarball/v2.6.2",
+        "type": "Release",
+        "url": "https://api.github.com/repos/harbourlab/SparK/releases/27309731",
+        "value": "https://api.github.com/repos/harbourlab/SparK/releases/27309731",
+        "zipball_url": "https://api.github.com/repos/harbourlab/SparK/zipball/v2.6.2"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "harbourlab",
+          "type": "User"
+        },
+        "date_created": "2020-04-09T02:17:58Z",
+        "date_published": "2020-04-11T01:52:08Z",
+        "description": "Further improvements",
+        "html_url": "https://github.com/harbourlab/SparK/releases/tag/v2.5.1",
+        "name": "v2.5.1",
+        "release_id": 25409238,
+        "tag": "v2.5.1",
+        "tarball_url": "https://api.github.com/repos/harbourlab/SparK/tarball/v2.5.1",
+        "type": "Release",
+        "url": "https://api.github.com/repos/harbourlab/SparK/releases/25409238",
+        "value": "https://api.github.com/repos/harbourlab/SparK/releases/25409238",
+        "zipball_url": "https://api.github.com/repos/harbourlab/SparK/zipball/v2.5.1"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "harbourlab",
+          "type": "User"
+        },
+        "date_created": "2020-01-29T03:01:56Z",
+        "date_published": "2020-01-30T20:30:24Z",
+        "description": "Added function to choose color if only on group is plotted",
+        "html_url": "https://github.com/harbourlab/SparK/releases/tag/2.4.2",
+        "name": "Version 2.4.2",
+        "release_id": 23268958,
+        "tag": "2.4.2",
+        "tarball_url": "https://api.github.com/repos/harbourlab/SparK/tarball/2.4.2",
+        "type": "Release",
+        "url": "https://api.github.com/repos/harbourlab/SparK/releases/23268958",
+        "value": "https://api.github.com/repos/harbourlab/SparK/releases/23268958",
+        "zipball_url": "https://api.github.com/repos/harbourlab/SparK/zipball/2.4.2"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "harbourlab",
+          "type": "User"
+        },
+        "date_created": "2019-11-26T15:06:02Z",
+        "date_published": "2019-11-26T16:50:44Z",
+        "description": "Some minor things were polished.",
+        "html_url": "https://github.com/harbourlab/SparK/releases/tag/2.4.1",
+        "name": "Second stable release.",
+        "release_id": 21774245,
+        "tag": "2.4.1",
+        "tarball_url": "https://api.github.com/repos/harbourlab/SparK/tarball/2.4.1",
+        "type": "Release",
+        "url": "https://api.github.com/repos/harbourlab/SparK/releases/21774245",
+        "value": "https://api.github.com/repos/harbourlab/SparK/releases/21774245",
+        "zipball_url": "https://api.github.com/repos/harbourlab/SparK/zipball/2.4.1"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "harbourlab",
+          "type": "User"
+        },
+        "date_created": "2019-11-26T04:31:56Z",
+        "date_published": "2019-11-26T04:32:47Z",
+        "description": "Fixed some bugs after user feedback.",
+        "html_url": "https://github.com/harbourlab/SparK/releases/tag/2.4",
+        "name": "Bug fixes",
+        "release_id": 21754441,
+        "tag": "2.4",
+        "tarball_url": "https://api.github.com/repos/harbourlab/SparK/tarball/2.4",
+        "type": "Release",
+        "url": "https://api.github.com/repos/harbourlab/SparK/releases/21754441",
+        "value": "https://api.github.com/repos/harbourlab/SparK/releases/21754441",
+        "zipball_url": "https://api.github.com/repos/harbourlab/SparK/zipball/2.4"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "harbourlab",
+          "type": "User"
+        },
+        "date_created": "2019-11-19T12:44:41Z",
+        "date_published": "2019-11-20T03:35:19Z",
+        "html_url": "https://github.com/harbourlab/SparK/releases/tag/v2.2",
+        "name": "First stable release",
+        "release_id": 21607409,
+        "tag": "v2.2",
+        "tarball_url": "https://api.github.com/repos/harbourlab/SparK/tarball/v2.2",
+        "type": "Release",
+        "url": "https://api.github.com/repos/harbourlab/SparK/releases/21607409",
+        "value": "https://api.github.com/repos/harbourlab/SparK/releases/21607409",
+        "zipball_url": "https://api.github.com/repos/harbourlab/SparK/zipball/v2.2"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "somef_missing_categories": [
+    "citation",
+    "acknowledgement",
+    "run",
+    "download",
+    "requirements",
+    "contact",
+    "contributors",
+    "license",
+    "usage",
+    "support",
+    "identifier",
+    "has_build_file",
+    "executable_example"
+  ],
+  "somef_provenance": {
+    "date": "2024-11-04 01:39:55",
+    "somef_schema_version": "1.0.0",
+    "somef_version": "0.9.5"
+  },
+  "stargazers_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 106
+      },
+      "technique": "GitHub_API"
+    }
+  ]
+}

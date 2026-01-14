@@ -1,0 +1,487 @@
+{
+  "citation": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Application of quadratic programming on reference and sample single-cell dataset using a bulk reference",
+        "parent_header": [
+          "R Package - Capybara <img src=\"/examples/Monocle_hat_colin.png\" height=\"30\" width=\"25\">",
+          "Step 1: Tissue-Level Classification"
+        ],
+        "type": "Text_excerpt",
+        "value": "Bulk transcriptome profiles of all tissues are mined from ARCHS4, a platform that contains most published RNA-seq and ChiP-seq datasets (Lachmann et al.,  2018). ARCHS4 obtains raw datasets from the Gene Expression Omnibus (GEO), realigned and processed through a uniform pipeline. We filtered to contain only poly-A and total RNA-seq data from C57BL/6 mice. With further filtering and preprocessing (details can be found in the method section of the paper), we landed with a reference of a total of 30 tissues. We provide our mined bulk references, including a matrix in raw counts and a matrix in reads per kilobase per million (RPKM), as a part of the Capybara package. Selection of your preferred normalization method can be applied to raw counts. Here, we will demonstrate the usage of the bulk raw counts in the pipeline.\n\n**1. Load the bulk reference**\n```r\n# File path\nbulk.raw.path <- system.file(\"extdata\", \"Bulk Reference Raw.Rds\", package = \"Capybara\")\nbulk.rpkm.path <- system.file(\"extdata\", \"Bulk Reference RPKM.Rds\", package = \"Capybara\")\n# Read the matrices\nbulk.raw <- readRDS(bulk.raw.path)\nbulk.rpkm <- readRDS(bulk.rpkm.path)\n```\n\nWith the bulk reference, we next load the single-cell reference, such as a cell atlas, and the single-cell sample to be used. The datasets to be used should be in a matrix form with each row representing a gene and each column representing a cell. Here, we use the Mouse Cell Atlas (MCA) as background and single-cell RNA-seq data of mouse pancreatic cells (Baron et al., 2016) as examples for demonstration. MCA can be obtained from https://figshare.com/articles/MCA_DGE_Data/5435866. We included the mouse pancreatic dataset in the package.\n\n**2.Load the single-cell sample dataset and the corresponding meta data**\n\n*Note: The meta data of this file contains 2 columns, where the first column represents cell.type and the second column represents barcode.*\n\n```r\n# Read in the pancreatic data file that come with the package\nfpath <- system.file(\"extdata\", \"baron_dataset.zip\", package = \"Capybara\")\nextract.dir <- \".\"\n# Extract the dataset\nunzip(fpath, overwrite = FALSE, exdir = \".\")\n# Identify the full path\nfull.fpath.meta <- paste0(extract.dir, \"/\", \"baron_et_al_pancreatic_meta.csv\")\nfull.fpath.raw <- paste0(extract.dir, \"/\", \"baron_et_al_pancreatic.csv\")\n# Load the count matrix and the meta data\nbaron.expr <- read.csv(full.fpath.raw, header = T, row.names = 1, stringsAsFactors = F)\nbaron.meta <- read.csv(full.fpath.meta, header = T, row.names = 1, stringsAsFactors = F)\n```\n\n**3. Application of QP on the sample single-cell data**\n\nNotice: For Windows users, please set unix.par=F and n.cores=1\n\n```r\nsingle.round.QP.analysis(bulk.raw, baron.expr, scale.bulk.sc = \"scale\", unix.par = TRUE, \n                         force.eq = 1, n.cores = 4, save.to.path = \"./\", \n                         save.to.filename = \"baron_bulk_classification_qp\")\n```\n\n**4. Load the single-cell reference meta data**\n\n*Note: The meta data of Mouse Cell Atlas contains 6 columns, including Cell.name, ClusterID, Tissue, Batch, Cell.Barcode, and Annotation. The annotation is what we used for high-resolution reference construction. We've included the version of meta data we used along with the package.*\n\n```r\n# Read the meta data\nmca.meta.fpath <- system.file(\"extdata\", \"MCA_CellAssignments.csv\", package = \"Capybara\")\nmca <- read.csv(mca.meta.fpath, row.names = 1, header = T, stringsAsFactors = F)\n# Clean up the meta data\nmca.meta <- data.frame(row.names = mca$Cell.name, \n                       tissue = mca$Tissue,\n                       cell.type = mca$Annotation,\n                       stringsAsFactors = F)\n```\n\n**5. Load the single-cell reference atlas and apply QP tissue-by-tissue**\n\n*Due to the large size of MCA count data, we did* ***NOT*** *include the counts along with the package. We further separated MCA into fetal/neonatal/embryonic and adult categories. The counts data were organized in the following manner.*\n\n> Folder: MCA Counts\n\n>> Tissue_1 Folder\n\n>>> count.csv\n\n>> Tissue_2 Folder\n\n>>> count.csv\n\n>> ...\n\n```r\n# List all possible files and tissues in the Mouse Cell Atlas\nfile.ls <- list.files(\"./MCA_Counts/\", full.names = T)\nbase.nms <- basename(file.ls)\n\n# Identify the tissues\nunq.tissue <- unique(base.nms)\n\n# Set a path to save all QP files for all tissues\ngeneral.path.to.save <- \"./MCA_All_Tissue_QP/\"\nfor (k in 1:length(unq.tissue)) {\n  curr.tissue <- unq.tissue[k]\n  curr.filename <- paste0(\"0\", k, \"_\", curr.tissue, \"_Bulk_ARCHS4\")\n  \n  file.base.name <- base.nms[which(startsWith(base.nms, curr.tissue))][1]\n  file.full <- file.ls[which(startsWith(base.nms, curr.tissue))][1]\n  \n  print(curr.tissue)\n  \n  sc.data <- read.csv(paste0(file.full, \"/count.csv\"), header = T, row.names = 1, stringsAsFactors = F)\n  \n  if (all(is.na(sc.data))) {\n    print(\"There is no data in this counting matrix!\")\n  } else {\n    single.round.QP.analysis(bulk.raw, sc.data, scale.bulk.sc = \"scale\", unix.par = TRUE, \n                             force.eq = 1, n.cores = 4, save.to.path = general.path.to.save, \n                             save.to.filename = curr.filename)\n  }\n}\n```\n\n**6. Selection of 90 cells from each tissue to construct a QP background**\n\nWith all QP scores calculated on the bulk transcriptome profiles of all tissues, we select 90 most relevant cells of each tissue in the MCA (90 highest scored cells in the MCA to each bulk tissue) as a QP background. We use this QP background further to map our sample single-cell data. Assuming that each cell in each cell type of the MCA takes a unique combination of QP scores to each tissue in ARCHS4, cells in the sample that share similar combination to those in MCA are marked to relate to the corresponding tissue in the MCA. Here, we demonstrate how we constructed the backgrounds as following. We included the background matrices along with the packages such that it can be directly used for convenience.\n\n**(a) Get QP scores for all annotated cells**\n```r\n# Read the QP files from the directory\nqp.files.to.read.clean <- list.files(\"./MCA_All_Tissue_QP/\", full.names = T)\n\nfull.qp.mtx.known.annotation <- data.frame()\nfull.qp.mtx.unknown.annotation <- data.frame()\nfor (i in 1:length(qp.files.to.read.clean)) {\n  curr.file <- qp.files.to.read.clean[i]\n  curr.qp.rslt <- read.csv(curr.file, header = T, row.names = 1, stringsAsFactors = F)\n  \n  cells.to.keep <- intersect(rownames(mca.meta), rownames(curr.qp.rslt))\n  cells.unlabel <- setdiff(rownames(curr.qp.rslt), cells.to.keep)\n  \n  curr.sub.mtx.to.keep <- curr.qp.rslt[cells.to.keep, ]\n  curr.sub.mtx.unlabel <- curr.qp.rslt[cells.unlabel, ]\n  \n  if (nrow(full.qp.mtx.known.annotation) <= 0) {\n    full.qp.mtx.known.annotation <- curr.sub.mtx.to.keep\n    full.qp.mtx.unknown.annotation <- curr.sub.mtx.unlabel\n  } else {\n    full.qp.mtx.known.annotation <- rbind(full.qp.mtx.known.annotation, curr.sub.mtx.to.keep)\n    full.qp.mtx.unknown.annotation <- rbind(full.qp.mtx.unknown.annotation, curr.sub.mtx.unlabel)\n  }\n}\n\nfull.qp.mtx.known.annotation.qp.score.only <- full.qp.mtx.known.annotation[,c(1:(ncol(full.qp.mtx.known.annotation) - 2))]\n```\n\n**(b) Selection of 90 cells**\n```r\n# Create a map between MCA and ARCHS4\nmap.df <- data.frame(mca.tissue = c(\"Embryonic-Mesenchyme\", \"Embryonic-Stem-Cell\", \"Trophoblast-Stem-Cell\", \"Fetal_Brain\",\n                                   \"Neonatal-Calvaria\",\"Fetal_Intestine\", \"Fetal-Liver\", \"Fetal_Lung\", \"Fetal_Stomache\",\n                                   \"Neonatal-Heart\", \"Neonatal-Muscle\",\n                                   \"Neonatal-Rib\", \"Neonatal-Skin\",  \"NeonatalPancreas\"),\n                     corresponding = c(\"frxn_embryo\", \"frxn_embryo\", \"frxn_embryo\", \"frxn_brain\",\"frxn_brain\",\n                                       \"frxn_small.intestine\", \"frxn_liver\", \n                                       \"frxn_lung\", \"frxn_stomach\",  \"frxn_heart\", \"frxn_muscle\", \"frxn_muscle\", \n                                       \"frxn_skin\", \"frxn_pancreas\"),\n                     stringsAsFactors = F)\n\n# Identify top 90 cells for each tissue\ntm.tissue <- unique(map.df$tm.tissue)\ncell.selector <- c()\nn.sample <- 90\nfor (i in 1:length(tm.tissue)) {\n  curr.tissue <- tm.tissue[i]\n  cell.names <- rownames(mca.meta)[which(mca.meta$tissue == curr.tissue)]\n  curr.qp.subset <- full.qp.mtx.known.annotation.qp.score.only[cell.names, ]\n  curr.map <- map.df$corresponding[which(map.df$tm.tissue == curr.tissue)]\n  if (length(curr.map) <= 1){\n    curr.qp.subset.sub <- data.frame(score = curr.qp.subset[,curr.map], cell.name = cell.names, stringsAsFactors = F)\n  } else {\n    curr.qp.subset.sub <- data.frame(score = rowSums(curr.qp.subset[,curr.map]), cell.name = cell.names, stringsAsFactors = F)\n  }\n  curr.qp.subset.sub.sort <- curr.qp.subset.sub[order(-curr.qp.subset.sub$score), ]\n  cells.to.incl <- curr.qp.subset.sub.sort$cell.name[1:n.sample]\n  \n  cell.selector <- c(cell.selector, cells.to.incl)\n}\nsaveRDS(full.qp.mtx.known.annotation.qp.score.only[cell.selector, ], \"./MCA_embryonic_background.RDS\")\n```\n\n*Note: This constructed QP background can be saved and reused and does not need to be reconstructed every time.*\n"
+      },
+      "source": "https://raw.githubusercontent.com/morris-lab/Capybara/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Identification of tissue correlate in the reference to the sample single-cell dataset",
+        "parent_header": [
+          "R Package - Capybara <img src=\"/examples/Monocle_hat_colin.png\" height=\"30\" width=\"25\">",
+          "Step 1: Tissue-Level Classification"
+        ],
+        "type": "Text_excerpt",
+        "value": "To find the correlated tissue in the reference to the sample single-cell dataset, we use a correlation based method. In brief, we calculate Pearson's correlation of the QP scores in a pairwise manner between each cell in the sample and each cell in the reference. Recall the assumption that cells in the sample that share similar combination of QP scores to those in MCA are marked to relate to the corresponding tissue in the MCA. If there is a significant percentage of reference cells of a tissue (over 70%) mapped to a cell, we record the tissue label. Then the frequency of each tissue label is calculated. Tissues with a frequency at least 0.5% (for cell number > 10,000) or at least 100 cells will be selected for further analysis. \n\n**1. Load the QP background matrix**\n```r\nbackground.qp.fpath <- system.file(\"extdata\", \"MCA Adult Background.Rds\", package = \"Capybara\")\nbackground.mtx <- readRDS(background.qp.fpath)\n```\n\n**2. Load the QP scores of the sample**\n\n```r\n## Load QP results\nqp.rslt <- read.csv(\"./baron_bulk_classification_qp_scale.csv\", row.names = 1, header = T, stringsAsFactors = F)\n\n## Reshape the data\nqp.rslt.sub <- qp.rslt[,c(1:(ncol(qp.rslt) - 2))]\n```\n\n**3. Correlation calculation**\n\n*Note: we use WGCNA to calculate the correlation*\n\n```r\nmtx.test <- t(qp.rslt.sub[, colnames(background.mtx)])\nref.test <- t(background.mtx)\n\n# Pearson's Correlation Calculation\ncorr.mtx <- WGCNA::cor(ref.test, mtx.test)\n```\n\n**4. Binarization based on correlation**\n\nWe perform binarization based on the correlation estimates.\n\n```r\n# Setup a correlation cutoff to the 90th quantile of the correlation matrix\ncorrelation.cutoff <- quantile(corr.mtx, 0.90)\n\n# Binarization based on the correlation\nnew.corr.bin <- corr.mtx\nnew.corr.bin[which(new.corr.bin >= correlation.cutoff)] <- 1\nnew.corr.bin[which(new.corr.bin < correlation.cutoff)] <- 0\nnew.corr.bin <- as.data.frame(new.corr.bin)\n```\n\n**5. Counting the tissues and select the final tissue types**\n\nCount the frequency of occurrence of each tissue in the tissue list.\n\n```r\n# Count\ncount.in.cat <- c()\nunique.cat <- unique(unlist(lapply(strsplit(rownames(new.corr.bin), \"_\"), function(x) x[1])))\nfor (uc in unique.cat) {\n  curr.subset <- new.corr.bin[which(startsWith(rownames(new.corr.bin), uc)), c(1:1886)]\n  count.in.cat[uc] <- sum(colSums(curr.subset) >= nrow(curr.subset) * 0.7)\n}\n\ncount.in.cat <- as.data.frame(count.in.cat)\ncount.in.cat$perc <- round(count.in.cat$count.in.cat *100/sum(count.in.cat$count.in.cat), digits = 3)\n\n# Check frequency\nfinal.cell.types.adult <- rownames(count.in.cat)[which(count.in.cat$count.in.cat > 100)]\n```\n\nBelow is a composition example for this pancreatic dataset, where we identify 3 major tissues, including stomach, pancreas, and small instestine.\n<p align=\"center\">\n    <img src=\"/examples/bulk class mca pancreatic.png\" height=\"800\" width=\"400\">\n</p>\n\n"
+      },
+      "source": "https://raw.githubusercontent.com/morris-lab/Capybara/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Step 2: Generation of a High-Resolution Custom Reference, and Continuous Identity Measurement",
+        "parent_header": [
+          "R Package - Capybara <img src=\"/examples/Monocle_hat_colin.png\" height=\"30\" width=\"25\">"
+        ],
+        "type": "Text_excerpt",
+        "value": "After tissue-level classification, relevant cell types are selected from cell atlas and built as a single cell reference dataset. As an alternative, users could also use their own single-cell reference dataset to benchmark their samples.\n"
+      },
+      "source": "https://raw.githubusercontent.com/morris-lab/Capybara/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Systematic construction of a high-resolution reference",
+        "parent_header": [
+          "R Package - Capybara <img src=\"/examples/Monocle_hat_colin.png\" height=\"30\" width=\"25\">",
+          "Step 2: Generation of a High-Resolution Custom Reference, and Continuous Identity Measurement"
+        ],
+        "type": "Text_excerpt",
+        "value": "To alleviate the effect of technical variations, we construct pseudo-bulk references for each reference cell type. By default, 90 cells of each cell type would be used to build the reference. The construct.high.res.reference function returns a list containing expression matrix and meta data of cells used to build the reference, as well as the constructed pseudo-bulk reference.\n\n**Get the counts of the cell types involved in the tissues selected**\n\nTo obtain the exact same structure of the MCA data, please download the data here (https://wustl.box.com/s/z46vm5yq7r1lw3353o8ttz1xo8pu3dvw).\n\n```r\nmca.meta$cell.bc.tissue <- unlist(lapply(strsplit(rownames(mca.meta), \"_\"), function(x) x[1]))\npancreatic.all.meta <- mca.meta[which(mca.meta$cell.bc.tissue %in% final.cell.types.adult), ]\n\nmca.counts.all.involved <- NULL\ntissues.to.read <- unique(pancreatic.all.meta$tissue)\ngeneral.path <- \"~/Box/Morris Lab/Classifier Analysis/Reference datasets/MCA/MCA_Counts/\"\nfor (i in 1:length(tissues.to.read)) {\n  curr.t <- tissues.to.read[i]\n  curr.path.to.read <- paste0(general.path, curr.t, \"/count.csv\")\n  curr.count <- read.csv(curr.path.to.read, header = T, row.names = 1, stringsAsFactors = F)\n  if (is.null(mca.counts.all.involved)) {\n    mca.counts.all.involved <- curr.count\n  } else {\n    mca.counts.all.involved <- cbind(mca.counts.all.involved, curr.count)\n  }\n}\n\n## Meta data filtering\npancreatic.all.meta$cell.type <- gsub(\"Dendrtic cell\", \"Dendritic cell\", pancreatic.all.meta$cell.type)\npancreatic.all.meta$cell.type.1 <- gsub(\"\\\\([^)]*\\\\)\", \"\", pancreatic.all.meta$cell.type)\npancreatic.all.meta$cell.type.alone <- unlist(lapply(strsplit(pancreatic.all.meta$cell.type.1, \"_\"), function(x) x[1]))\n\n## Filter out cell types with less than 30 cells\ncell.type.alone.freq <- as.data.frame(table(pancreatic.all.meta$cell.type.alone))\ncell.type.over.30 <- cell.type.alone.freq$Var1[which(cell.type.alone.freq$Freq >= 30)]\npancreatic.sub.meta <- pancreatic.all.meta[which(pancreatic.all.meta$cell.type.alone %in% as.character(cell.type.over.30)),]\ncoldata.df <- pancreatic.sub.meta\n```\n\nIf the data is obtained from MCA website (https://figshare.com/articles/MCA_DGE_Data/5435866), please download the compressed file with rmbatch_dge. The extraction of the compressed file will provide a folder contains space-delimited text files, containing the single-cell matrices for each tissue in the MCA from different animals. Please follow the next few lines for the processing of such files. Special thanks to Danyi_ZHENG for sharing the tutorial with these MCA files (Detailed tutorial can be found here - https://github.com/Danyi-ZHENG/Capybara_MCA_tutorial/blob/main/Capybara_tutorial_MCA_220415.R)\n\n```r\nmca.meta$cell.bc.tissue <- unlist(lapply(strsplit(rownames(mca.meta), \"_\"), function(x) x[1]))\npancreatic.all.meta <- mca.meta[which(mca.meta$cell.bc.tissue %in% final.cell.types.adult), ]\n\nmca.counts.all.involved <- NULL\ntissues.to.read <- unique(pancreatic.all.meta$tissue)\n\ncurr.dir <- \"../rmbatch_dge/\"\ncurr.dir.files <- list.files(curr.dir)\ncurr.dir.files.sub <- unlist(lapply(strsplit(curr.dir.files, \"_\"), function(x) x[1]))\n\nfor (i in 1:length(tissues.to.read)) {\n\n  print(i)\n\n  curr.t <- tissues.to.read[i]\n  acceptable.files.starts <- c(curr.t, paste0(curr.t, seq(1,10)))\n  file.index <- which(curr.dir.files.sub %in% acceptable.files.starts)\n\n  curr.files.to.read <- curr.dir.files[file.index]\n  curr.path.to.read <- paste0(curr.dir, \"/\", curr.files.to.read)\n\n  curr.tissue.count.mtx <- NULL\n\n  for (curr.f in curr.path.to.read) {\n  \tcurr.count <- read.table(curr.f, header = T, row.names = 1, stringsAsFactors = F)\n  \tif (is.null(curr.tissue.count.mtx)) {\n  \t\tcurr.tissue.count.mtx <- curr.count\n  \t} else {\n  \t\tgene.intersect <- intersect(rownames(curr.tissue.count.mtx), rownames(curr.count))\n  \t\tcurr.tissue.count.mtx <- cbind(curr.tissue.count.mtx[gene.intersect,], curr.count[gene.intersect,])\n  \t}\n  }\n\n  \n  if (is.null(mca.counts.all.involved)) {\n    mca.counts.all.involved <- curr.tissue.count.mtx\n  } else {\n    gene.intersect <- intersect(rownames(mca.counts.all.involved), rownames(curr.tissue.count.mtx))\n    mca.counts.all.involved <- cbind(mca.counts.all.involved[gene.intersect,], curr.tissue.count.mtx[gene.intersect,])\n  }\n}\n\n## Meta data filtering\npancreatic.all.meta$cell.type <- gsub(\"Dendrtic cell\", \"Dendritic cell\", pancreatic.all.meta$cell.type)\npancreatic.all.meta$cell.type.1 <- gsub(\"\\\\([^)]*\\\\)\", \"\", pancreatic.all.meta$cell.type)\npancreatic.all.meta$cell.type.alone <- unlist(lapply(strsplit(pancreatic.all.meta$cell.type.1, \"_\"), function(x) x[1]))\n\n## Filter out cell types with less than 30 cells\ncell.type.alone.freq <- as.data.frame(table(pancreatic.all.meta$cell.type.alone))\ncell.type.over.30 <- cell.type.alone.freq$Var1[which(cell.type.alone.freq$Freq >= 30)]\npancreatic.sub.meta <- pancreatic.all.meta[which(pancreatic.all.meta$cell.type.alone %in% as.character(cell.type.over.30)),]\ncoldata.df <- pancreatic.sub.meta\n```\n\n**Construction**\n\n``` r\n# Construction of a high-resolution reference\nref.list <- construct.high.res.reference(mca.counts.all.involved, coldata.df = coldata.df, criteria = \"cell.type.alone\")\n# Get expression matrix and meta data of cells used to build the reference, as well as the constructed pseudo-bulk reference\nref.df <- ref.list[[3]]\nref.meta <- ref.list[[2]]\nref.sc <- ref.list[[1]]\n```\n"
+      },
+      "source": "https://raw.githubusercontent.com/morris-lab/Capybara/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Application of quadratic programming on the self-established reference with the sample",
+        "parent_header": [
+          "R Package - Capybara <img src=\"/examples/Monocle_hat_colin.png\" height=\"30\" width=\"25\">",
+          "Step 2: Generation of a High-Resolution Custom Reference, and Continuous Identity Measurement"
+        ],
+        "type": "Text_excerpt",
+        "value": "``` r\n# Measure cell identity in the reference dataset as a background \nsingle.round.QP.analysis(ref.df, ref.list[[1]], n.cores = 4, save.to.path = \"./\", save.to.filename = \"01_MCA_Based_scClassifier_reference_mix90_normalize_select\", unix.par = TRUE)\n\n# Measure cell identity in the query dataset \nsingle.round.QP.analysis(ref.df, baron.expr, n.cores = 4, save.to.path = \"./\", save.to.filename = \"02_MCA_Based_scClassifier_reference_mix90_test_normalize_select\", unix.par = TRUE)\n```\n"
+      },
+      "source": "https://raw.githubusercontent.com/morris-lab/Capybara/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Step 2. Construction of Reference at High-Resolution and Continuous Identity Measurements",
+        "parent_header": [
+          "R Package - Capybara <img src=\"/examples/Monocle_hat_colin.png\" height=\"30\" width=\"25\">",
+          "Analysis of Cells with Multiple Identities",
+          "3. Classification"
+        ],
+        "type": "Text_excerpt",
+        "value": "***Get the counts of cell types in the selected tissues from MCA***\n\n```r\n# Background cells\nmca <- read.csv(\"~/Box/Morris Lab/Classifier Analysis/Reference datasets/MCA/MCA_CellAssignments.csv\",\n                row.names = 1, header = T, stringsAsFactors = F)\nmca.meta <- data.frame(row.names = mca$Cell.name, \n                       tissue = mca$Tissue,\n                       cell.bc.tissue = unlist(lapply(strsplit(mca$Cell.name, \"_\"), function(x) x[1])),\n                       cell.type = mca$Annotation,\n                       stringsAsFactors = F)\n\ncardiac.rp.all.meta <- mca.meta[which(mca.meta$cell.bc.tissue %in% final.cell.types.fetal), ]\n\nmca.counts.all.involved <- NULL\ntissues.to.read <- unique(cardiac.rp.all.meta$tissue)\ngeneral.path <- \"~/Box/Morris Lab/Classifier Analysis/Reference datasets/MCA/MCA_Counts/\"\nfor (i in 1:length(tissues.to.read)) {\n  curr.t <- tissues.to.read[i]\n  curr.path.to.read <- paste0(general.path, curr.t, \"/count.csv\")\n  curr.count <- read.csv(curr.path.to.read, header = T, row.names = 1, stringsAsFactors = F)\n  if (is.null(mca.counts.all.involved)) {\n    mca.counts.all.involved <- curr.count\n  } else {\n    mca.counts.all.involved <- cbind(mca.counts.all.involved, curr.count)\n  }\n}\n\n## meta data cleaning\ncardiac.rp.all.meta$cell.type.1 <- gsub(\"\\\\([^)]*\\\\)\", \"\", cardiac.rp.all.meta$cell.type)\ncardiac.rp.all.meta$cell.type.alone <- unlist(lapply(strsplit(cardiac.rp.all.meta$cell.type.1, \"_\"), function(x) x[1]))\n\ncardiac.rp.all.meta$cell.type.1 <- tolower(cardiac.rp.all.meta$cell.type.1)\ncoldata.df <- cardiac.rp.all.meta\n```\n\n***Construction***\n```r\n# Construction of a high-resolution reference\nref.list <- construct.high.res.reference(mca.counts.all.involved, coldata.df = coldata.df, criteria = \"cell.type.1\")\n# Get expression matrix and meta data of cells used to build the reference, as well as the constructed pseudo-bulk reference\nref.df <- ref.construction(ref.list[[1]], ref.list[[2]], \"cell.type\")\n```\n\n***Application of Quadratic Programming***\n```r\nsingle.round.QP.analysis(ref.df, ref.list[[1]], n.cores = 4, save.to.path = \"./\", save.to.filename = \"stone_et_al_reference_MCA\", unix.par = TRUE)\nsingle.round.QP.analysis(ref.df, stone.et.al, n.cores = 4, save.to.path = \"./\", save.to.filename = \"stone_et_al_test_MCA\", unix.par = TRUE)\n```\n"
+      },
+      "source": "https://raw.githubusercontent.com/morris-lab/Capybara/master/README.md",
+      "technique": "header_analysis"
+    }
+  ],
+  "code_repository": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/morris-lab/Capybara"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_created": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2019-11-05T18:19:55Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_updated": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2024-09-08T18:13:34Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "description": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "Capybara: A computational tool to measure cell identity and fate transitions"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 0.9945874333258766,
+      "result": {
+        "original_header": "R Package - Capybara <img src=\"/examples/Monocle_hat_colin.png\" height=\"30\" width=\"25\">",
+        "type": "Text_excerpt",
+        "value": "\nCapybara is a tool to measure cell identity and fate transitions. This approach is designed to measure cell identity as a continuum, at a single-cell resolution. Capybara enables classification of discrete identities as well as cells with multiple identities. This package has a dependency on R version (R >= 3.5.0). In addition to the following tutorial, we provide the notebooks for production of figures in the morris-lab/Capybara_reproducibility (https://github.com/morris-lab/Capybara_reproducibility) repository. There could exist some variations due to difference in threshold selections. For details regarding the methods, usage and application, please refer to the following paper: Kong et al., Cell Stem Cell, 2022 (https://www.sciencedirect.com/science/article/pii/S1934590922000996?dgcid=coauthor)\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/morris-lab/Capybara/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9845941134528171,
+      "result": {
+        "original_header": "Empirical p-value calculation",
+        "type": "Text_excerpt",
+        "value": "With the constructed single-cell reference, we apply QP to both the sample and reference single-cell datasets to generate continuous measurements of cell identity. The result of this step includes two lists of p-value matrices: one for the reference and the other for the sample. For each cell, each column of the p-value matrix denotes a cell type, while each row describes each round of 50 (default).\n``` r\n# Read in background and testing identity scores\nbackground.mtx <- read.csv(\"./01_MCA_Based_scClassifier_reference_mix90_normalize_select_scale.csv\", header = T, row.names = 1, stringsAsFactors = F)\nmtx.test <- read.csv(\"./02_MCA_Based_scClassifier_reference_mix90_test_normalize_select_scale.csv\", header = T, row.names = 1, stringsAsFactors = F)\n\ncol.sub <- ncol(background.mtx) - 2\n\n# Conduct reference randomization to get empirical p-value matrix\nref.perc.list <- percentage.calc(background.mtx[,c(1:col.sub)], background.mtx[,c(1:col.sub)])\n\n# Conduct test randomization to get empirical p-value matrix\nperc.list <- percentage.calc(as.matrix(mtx.test[,c(1:col.sub)]), as.matrix(background.mtx[,c(1:col.sub)]))\n```\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/morris-lab/Capybara/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9785177747645197,
+      "result": {
+        "original_header": "Binarization with Mann-Whitney",
+        "type": "Text_excerpt",
+        "value": "A randomized test is performed using the background distributions as null to compute the occurrence probability or empirical p-values of each identity score. This test shapes the likelihood identity score occurrence as a continuous distribution, in which the cell type with the lowest likelihood rank is the classified identity. Capybara is also able to identify cells that harbor multiple identities, potentially representing cells transitioning between defined cell identities. To capture multiple cell identities, we use a Mann-Whitney (MW) test to compare the occurrence probabilities of the cell type with the lowest likelihood rank to that of other cell types, following the order from the second-lowest to the highest rank-sum. From this test, we calculate a p-value to determine whether two identities are equally likely to represent the identity of a specific cell. We stop our comparison when we identify the first cell type that is significantly (p-value < 0.05) less likely to represent one of the cell identities. A binarized matrix will be returned with each row representing a query cell and each column representing a possible cell type. 1 means inferred cell type in the matrix. \n``` r\n# Binarization of inference results\nbin.count <- binarization.mann.whitney(mtx = mtx.test[,c(1:col.sub)], ref.perc.ls = ref.perc.list, ref.meta = ref.list[[2]], perc.ls = perc.list)\n```\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/morris-lab/Capybara/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.865196278337987,
+      "result": {
+        "original_header": "Classification",
+        "type": "Text_excerpt",
+        "value": "Finally, we return a classification table of each query cell and its inferred cell type. Cells with multiple inferred identities are marked as \"Multi_ID\". Cells with no significant inferred identity are marked as \"unassigned\".\n``` r\nclassification <- binary.to.classification(bin.count[,c(1:col.sub)])\nrownames(classification) <- classification$barcode\n```\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/morris-lab/Capybara/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.8606840445337438,
+      "result": {
+        "original_header": "Check the Classification Result",
+        "type": "Text_excerpt",
+        "value": "Below is a dot plot example for this pancreatic dataset to show agreement.\n<p align=\"center\">\n    <img src=\"/examples/pancreatic dot plot.png\" height=\"450\" width=\"400\">\n</p>\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/morris-lab/Capybara/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9975942824086336,
+      "result": {
+        "original_header": "Analysis of Cells with Multiple Identities",
+        "type": "Text_excerpt",
+        "value": "A unique aspect of Capybara is the classificaiton of cells with multiple identities, which are key to characterize cell fate transitions in a continuous process. Cells with multiple identities label transition harbors, while the discrete cell identities that connect these cells mark potential pivotal states/hallmarks during the continuous processes. In Capybara, we further develop a 'transition metric', a transition score, to measure the flux through the mixed cell identities. It is worth noting that the intention of this score is not to measure potential of each identity but to measure the dynamics going through each discrete state. For details, please refer to the paper. Here, we use an example of cardiomyocyte reprogramming (Stone et al., 2019) to demonstrate the preprocessing of data, classification, analysis of cells with multiple identities and calculation of transition scores.\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/morris-lab/Capybara/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9879760307162546,
+      "result": {
+        "original_header": "2. Preprocessing of the data with Seurat",
+        "type": "Text_excerpt",
+        "value": "In this step, we preprocess the data with Seurat to filter the data and obtain a UMAP embedding of the data. For details of Seurat processing, please refer to the instructions or vignettes here - https://satijalab.org/seurat/vignettes.html.\n```r\n# Read in the file path for all features and genes\nfeature.file.path <- system.file(\"extdata\", \"features.tsv\", package = \"Capybara\")\n\n# Load the data\nstone.et.al <- read.csv(\"./cardiomyocyte_reprogramming_m1_14p.csv\", row.names = 1, header = T, stringsAsFactors = F)\nfeature.df <- read.table(feature.file.path, header = F, row.names = 1, stringsAsFactors = F)\n\n# Map the gene names fr\ngene.name.subset <- feature.df[intersect(stone.et.al$X, rownames(feature.df)), ]\nstone.et.al.subset <- stone.et.al[which(stone.et.al$X %in% rownames(feature.df)), ]\nstone.et.al.subset$gene.name <- gene.name.subset[stone.et.al.subset$X, \"V2\"]\nstone.et.al.subset <- stone.et.al.subset[-which(duplicated(stone.et.al.subset$gene.name)), ]\nrnm <- stone.et.al.subset$gene.name\nstone.et.al.final <- stone.et.al.subset[, -c(1,ncol(stone.et.al.subset))]\nrownames(stone.et.al.final) <- rnm\n\n# Create Seurat object\nsc.data.stone <- CreateSeuratObject(counts = stone.et.al.final, project = \"cardiac.reprog\", min.cells = 3, min.features = 200)\n\n# Calculate mitochondria content\nsc.data.stone[[\"percent.mt\"]] <- PercentageFeatureSet(sc.data.stone, pattern = \"mt-\")\n\n# Visualize QC metrics as a violin plot and scatter plot\nVlnPlot(sc.data.stone, features = c(\"nFeature_RNA\", \"nCount_RNA\", \"percent.mt\"), ncol = 3)\n\nplot1 <- FeatureScatter(sc.data.stone, feature1 = \"nCount_RNA\", feature2 = \"percent.mt\")\nplot2 <- FeatureScatter(sc.data.stone, feature1 = \"nCount_RNA\", feature2 = \"nFeature_RNA\")\nCombinePlots(plots = list(plot1, plot2))\n\n# Filter the dataset based on number of features\nsc.data.stone <- subset(sc.data.stone, subset = nFeature_RNA > 200 & nFeature_RNA < 5500)\n\n# Log normalize the data\nsc.data.stone <- NormalizeData(sc.data.stone, normalization.method = \"LogNormalize\", scale.factor = 10000)\n\n# Variable gene identification\nsc.data.stone <- FindVariableFeatures(sc.data.stone, selection.method = \"vst\", nfeatures = 2000)\n\n# Scale the data\nall.genes <- rownames(sc.data.stone)\nsc.data.stone <- ScaleData(sc.data.stone, features = all.genes)\n\n# PCA\nsc.data.stone <- RunPCA(sc.data.stone, features = VariableFeatures(object = sc.data.stone))\n\n# JackStraw procedure and Elbow plot to select number of PCs\nsc.data.stone <- JackStraw(sc.data.stone, num.replicate = 100)\nsc.data.stone <- ScoreJackStraw(sc.data.stone, dims = 1:20)\n\nJackStrawPlot(sc.data.stone, dims = 1:20)\nElbowPlot(sc.data.stone)\n\n# Identify neighbors and clusters\nsc.data.stone <- FindNeighbors(sc.data.stone, dims = 1:18)\nsc.data.stone <- FindClusters(sc.data.stone, resolution = 0.8)\n\n# UMAP embedding\nsc.data.stone <- RunUMAP(sc.data.stone, dims = 1:18)\n```\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/morris-lab/Capybara/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9017210444565389,
+      "result": {
+        "original_header": "Step 1. Tissue Classification",
+        "type": "Text_excerpt",
+        "value": "***Load the bulk data***\n```r\n# File path\nbulk.raw.path <- system.file(\"extdata\", \"Bulk Reference Raw.Rds\", package = \"Capybara\")\nbulk.rpkm.path <- system.file(\"extdata\", \"Bulk Reference RPKM.Rds\", package = \"Capybara\")\n# Read the matrices\nbulk.raw <- readRDS(bulk.raw.path)\nbulk.rpkm <- readRDS(bulk.rpkm.path)\n```\n***Application of Quadratic Programming using Bulk***\n```r\nsingle.round.QP.analysis(bulk.raw, stone.et.al, scale.bulk.sc = \"scale\", unix.par = TRUE, \n                         force.eq = 1, n.cores = 4, save.to.path = \"./\", \n                         save.to.filename = \"stone_bulk_classification_qp\")\n```\n***Correlation Analysist***\n```r\n## Load QP results\nqp.rslt <- read.csv(\"./stone_bulk_classification_qp_scale.csv\", row.names = 1, header = T, stringsAsFactors = F)\n\n## Reshape the data\nqp.rslt.sub <- qp.rslt[,c(1:(ncol(qp.rslt) - 2))]\n\n## Background matrix\nbackground.qp.fpath <- system.file(\"extdata\", \"MCA Embryonic Background.Rds\", package = \"Capybara\")\nbackground.mca <- readRDS(background.qp.fpath)\nbackground.mtx <- background.mca[[2]]\n\n## Correlation Analysis\nmtx.test <- t(qp.rslt.sub[, colnames(background.mtx)])\nref.test <- t(background.mtx)\n\n## Pearson's Correlation Calculation\ncorr.mtx <- WGCNA::cor(ref.test, mtx.test)\n\n## Setup a correlation cutoff to the 90th quantile of the correlation matrix\ncorrelation.cutoff <- quantile(corr.mtx, 0.90)\n\n## Binarization based on the correlation\nnew.corr.bin <- corr.mtx\nnew.corr.bin[which(new.corr.bin >= correlation.cutoff)] <- 1\nnew.corr.bin[which(new.corr.bin < correlation.cutoff)] <- 0\nnew.corr.bin <- as.data.frame(new.corr.bin)\n```\n***Mapping to Tissues in Mouse Cell Atlas (MCA)***\n```r\n# Count\ncount.in.cat <- c()\nunique.cat <- unique(unlist(lapply(strsplit(rownames(new.corr.bin), \"_\"), function(x) x[1])))\nfor (uc in unique.cat) {\n  curr.subset <- new.corr.bin[which(startsWith(rownames(new.corr.bin), uc)), c(1:30729)]\n  count.in.cat[uc] <- sum(colSums(curr.subset) >= nrow(curr.subset) * 0.80)\n}\n\ncount.in.cat <- as.data.frame(count.in.cat)\ncount.in.cat$perc <- round(count.in.cat$count.in.cat *100/sum(count.in.cat$count.in.cat), digits = 3)\n\nfinal.cell.types.fetal <- rownames(count.in.cat)[which(count.in.cat$count.in.cat > 100)]\n```\n \nBelow is the composition for this cardiac reprogramming dataset, where we identify 4 major tissues.\n<p align=\"center\">\n    <img src=\"/examples/cardiac_bulk_v2.png\" height=\"800\" width=\"400\">\n</p>\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/morris-lab/Capybara/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9948639787080429,
+      "result": {
+        "original_header": "4. Filter Cells with Multiple Identities based on the QP scores",
+        "type": "Text_excerpt",
+        "value": "Different interpretations can be taken on the cells with multiple identities. Here, we interpret these cells as in transition. However, some cells with multiple identities may be incorrectly labelled, which is represented by close to zero (we defined as <10E-3, this threshold can be modified as an input parameter of the function) QP score for one of the labelled identities. Hence, we first filter the cells with multiple identities such that each cell receives relative significant QP scores for each shared identity. This function will return a list where \\[\\[1\\]\\] represents a data frame of actual multiple identity cells and \\[\\[2\\]\\] represents an updated classification data frame. In the data frame of actual multiple identity cells, the QP measurements for each identity are also included for calculation of transition scores.\n```r\nmulti.classification.list <- multi.id.curate.qp(binary.counts = bin.count, classification = classification, qp.matrix = mtx.test)\n# Reassign variables\nactual.multi <- multi.classification.list[[1]]\nnew.classification <- multi.classification.list[[2]]\n```\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/morris-lab/Capybara/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9681376526538772,
+      "result": {
+        "original_header": "5. Calculate Transition Scores",
+        "type": "Text_excerpt",
+        "value": "Cells with multiple identities label critical transition states in different trajectories. Building on this concept, we also measure the strength and frequency of connections to the \"hub\" identities, i.e. discrete identities where the multiple identity cells are connected to. This provides a metric that we define as a \"transition score\". The calculation of transition scores only involves cells with multiple identities. In brief, we interpret QP scores as probabilities of the cell transitioning to each discrete cell identity, which  we further use as a measure of transition probability. Using this measurement of transition probability, we calculate the amount of information that the terminal cell state has received based on information theory. For detailed methods, please refer to the paper. Here, we demonstrate the calculation of transition scores for discrete cell identity states that are involved in cells with multiple identities in this cardiomyocyte reprogramming process. This function takes an input of the multiple identity data frame calculated from above and outputs a data frame with each cell state to their scores. \nHere, we visualize the transition scores on the UMAP, comparing to their time points of collection. Additionally, we compared the scores between time points using box plots. Other visualization methods, such as violin plots, can also be adapted. \nBelow is visualization results of cardiac reprogramming process.\n<p align=\"center\">\n    <img src=\"/examples/cardiac_TS_plots.png\" height=\"365\" width=\"905\">\n</p> \n"
+      },
+      "source": "https://raw.githubusercontent.com/morris-lab/Capybara/master/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "download": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "1. Download the data",
+        "parent_header": [
+          "R Package - Capybara <img src=\"/examples/Monocle_hat_colin.png\" height=\"30\" width=\"25\">",
+          "Analysis of Cells with Multiple Identities"
+        ],
+        "type": "Text_excerpt",
+        "value": "The dataset for the cardiomyocyte reprogramming can be found here under GEO: GSE131328. This dataset contains 6 timepoints of this reprogramming process, Day -1, 1, 2, 3, 7, and 14, where Day -1 marks the day of transduction of three transcription factors and Day 14 cells were sorted using a-MHC reporter (Stone et al., 2019). The data can be downloaded in terminal as well as in R.\n\n```\nwget https://www.ncbi.nlm.nih.gov/geo/download/acc=GSE133452&format=file&file=GSE133452%5Fm1%5F1%5F2%5F3%5F7%5F14P%5Fpaper%2Ecsv%2Egz\n```\n\nor\n\n```r\ndownload.file(\"https://www.ncbi.nlm.nih.gov/geo/download/?acc=GSE133452&format=file&file=GSE133452%5Fm1%5F1%5F2%5F3%5F7%5F14P%5Fpaper%2Ecsv%2Egz\", \"./cardiomyocyte_reprogramming_m1_14p.csv.gz\")\nunzip(\"./cardiomyocyte_reprogramming_m1_14p.csv.gz\", overwrite = FALSE, exdir = \".\")\n```\n"
+      },
+      "source": "https://raw.githubusercontent.com/morris-lab/Capybara/master/README.md",
+      "technique": "header_analysis"
+    }
+  ],
+  "download_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/morris-lab/Capybara/releases"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 8
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/morris-lab/Capybara/forks"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "morris-lab/Capybara"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_title": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "R Package - Capybara "
+      },
+      "source": "https://raw.githubusercontent.com/morris-lab/Capybara/master/README.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "images": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/morris-lab/Capybara/master//examples/Monocle_hat_colin.png"
+      },
+      "source": "https://raw.githubusercontent.com/morris-lab/Capybara/master/README.md",
+      "technique": "regular_expression"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/morris-lab/Capybara/master//examples/bulk class mca pancreatic.png"
+      },
+      "source": "https://raw.githubusercontent.com/morris-lab/Capybara/master/README.md",
+      "technique": "regular_expression"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/morris-lab/Capybara/master//examples/pancreatic dot plot.png"
+      },
+      "source": "https://raw.githubusercontent.com/morris-lab/Capybara/master/README.md",
+      "technique": "regular_expression"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/morris-lab/Capybara/master//examples/cardiac_bulk_v2.png"
+      },
+      "source": "https://raw.githubusercontent.com/morris-lab/Capybara/master/README.md",
+      "technique": "regular_expression"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/morris-lab/Capybara/master//examples/cardiac_TS_plots.png"
+      },
+      "source": "https://raw.githubusercontent.com/morris-lab/Capybara/master/README.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "installation": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Install the package",
+        "parent_header": [
+          "R Package - Capybara <img src=\"/examples/Monocle_hat_colin.png\" height=\"30\" width=\"25\">",
+          "Installation"
+        ],
+        "type": "Text_excerpt",
+        "value": "Install devtools\n```r\ninstall.packages(\"devtools\")\n```\nInstall the package from GitHub.\n```r\nlibrary(\"devtools\")\ndevtools::install_github(\"morris-lab/Capybara\")\n```\nLoad the package\n```r\nlibrary(\"Capybara\")\n```\n"
+      },
+      "source": "https://raw.githubusercontent.com/morris-lab/Capybara/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 0.8541164815923047,
+      "result": {
+        "original_header": "5. Calculate Transition Scores",
+        "type": "Text_excerpt",
+        "value": "\n*Note: this will be continuously updating*\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/morris-lab/Capybara/master/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "invocation": [
+    {
+      "confidence": 0.9283351326890715,
+      "result": {
+        "original_header": "Check the Classification Result",
+        "type": "Text_excerpt",
+        "value": "Below is a dot plot example for this pancreatic dataset to show agreement.\n<p align=\"center\">\n    <img src=\"/examples/pancreatic dot plot.png\" height=\"450\" width=\"400\">\n</p>\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/morris-lab/Capybara/master/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "issue_tracker": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/morris-lab/Capybara/issues"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "keywords": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": ""
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "Capybara"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "owner": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Organization",
+        "value": "morris-lab"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "programming_languages": [
+    {
+      "confidence": 1,
+      "result": {
+        "name": "R",
+        "size": 36834,
+        "type": "Programming_language",
+        "value": "R"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "readme_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/morris-lab/Capybara/master/README.md"
+      },
+      "technique": "file_exploration"
+    }
+  ],
+  "requirements": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Dependencies",
+        "parent_header": [
+          "R Package - Capybara <img src=\"/examples/Monocle_hat_colin.png\" height=\"30\" width=\"25\">",
+          "Installation"
+        ],
+        "type": "Text_excerpt",
+        "value": "Most dependencies can be installed along with Capybara through CRAN. The following dependencies may need to be installed manually through BioConductor (Instructions can also be found here: https://bioconductor.org/).\n\nInstall BiocManager\n```r\ninstall.packages(\"BiocManager\")\n```\nInstall Bioconductor dependency packages\n```r\nBiocManager::install(c(\"limma\",\"impute\", \"AnnotationDbi\",\"GO.db\", \"preprocessCore\"))\n```\n"
+      },
+      "source": "https://raw.githubusercontent.com/morris-lab/Capybara/master/README.md",
+      "technique": "header_analysis"
+    }
+  ],
+  "somef_missing_categories": [
+    "acknowledgement",
+    "run",
+    "contact",
+    "contributors",
+    "documentation",
+    "license",
+    "usage",
+    "faq",
+    "support",
+    "identifier",
+    "has_build_file",
+    "executable_example"
+  ],
+  "somef_provenance": {
+    "date": "2024-10-06 14:41:40",
+    "somef_schema_version": "1.0.0",
+    "somef_version": "0.9.5"
+  },
+  "stargazers_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 56
+      },
+      "technique": "GitHub_API"
+    }
+  ]
+}

@@ -1,0 +1,319 @@
+{
+  "citation": [
+    {
+      "confidence": 1,
+      "result": {
+        "format": "bibtex",
+        "type": "File_dump",
+        "value": "citEntry(entry=\"article\",\n         title = \"chromVAR: inferring transcription-factor-associated accessibility from single-cell epigenomic data\",\n         author = personList( as.person(\"Alicia N Schep\"),\n                              as.person(\"Beijing Wu\"),\n                              as.person(\"Jason D Buenrostro\"),\n                              as.person(\"William J Greenleaf\")),\n         year = 2017,\n         journal = \"Nature Methods\",\n         doi = \"10.1038/nmeth.4401\",\n         textVersion = \n         paste(\"Schep, A.N., Wu, B., Buenrostro, J.D., Greenleaf W.J.\", \n               \"chromVAR: inferring transcription-factor-associated accessibility from single-cell epigenomic data\",\n                \"Nature Methods (2017)\" ) )"
+      },
+      "source": "https://raw.githubusercontent.com/GreenleafLab/chromVAR/master/inst/CITATION",
+      "technique": "file_exploration"
+    }
+  ],
+  "code_repository": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/GreenleafLab/chromVAR"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_created": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2015-11-21T00:04:25Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_updated": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2024-10-30T00:21:39Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "description": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "chromatin Variability Across Regions (of the genome!)"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 0.993059135322564,
+      "result": {
+        "original_header": "chromVAR",
+        "type": "Text_excerpt",
+        "value": "chromVAR is an R package for the analysis of sparse chromatin accessibility data from single cell or bulk ATAC or DNAse-seq data. The package aims to identify motifs or other genomic annotations associated with variability in chromatin accessibility between individual cells or samples.  For a more detail overview of the method, please see the [publication](https://www.nature.com/nmeth/journal/vaop/ncurrent/full/nmeth.4401.html) ([pdf](http://greenleaf.stanford.edu/assets/pdf/nmeth.4401.pdf), [supplement](https://drive.google.com/file/d/0B8eUn6ZURmqvUjBCbE5Hc0p4UFU/view?usp=sharing)).  \nFor a paper evaluating chromVAR and other methods as a method for enabling clustering of single cells, see [the preprint from Huidong Chen et al](https://www.biorxiv.org/content/10.1101/739011v1). Using kmers + PCA appears to be the best variant of chromVAR for clustering, but newer methods such as [SnapATAC](https://github.com/r3fang/SnapATAC) outperform chromVAR for the clustering tasks evaluated in the paper. chromVAR may be complementary to some other methods, as a way of annotating TF motif usage in cells & clusters rather than cluster identification or embedding.\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/GreenleafLab/chromVAR/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9037942121996301,
+      "result": {
+        "original_header": "Parallelization",
+        "type": "Text_excerpt",
+        "value": "Before running chromVAR functions, it is advisable to use the `register` function from BiocParallel to specify your preferred method of parallelization.  For unix systems, \n```r\nlibrary(BiocParallel)\nregister(MulticoreParam(8)) # Use 8 cores\n```\nFor Windows, `MulticoreParam` will not work, but you can use SnowParam:\n```r\nregister(SnowParam(SnowParam(workers=1, type = \"SOCK\")))\n```\nEven if you don't want to use more than one core, it is recommended to explicitly register that choice using SerialParam:\n```r\nregister(SerialParam())\n```\n \nPlease see the documentation for [BiocParallel](https://bioconductor.org/packages/release/bioc/html/BiocParallel.html) for more information about the `register` function and the various options for multi-processing.  \n"
+      },
+      "source": "https://raw.githubusercontent.com/GreenleafLab/chromVAR/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9734507685779938,
+      "result": {
+        "original_header": "Quickstart",
+        "type": "Text_excerpt",
+        "value": "``` r\nlibrary(chromVAR)\nlibrary(motifmatchr)\nlibrary(BSgenome.Hsapiens.UCSC.hg19)\n\n### Example of how to read in counts -------------------------------------------\n\n# Caution: FAKE FILENAMES -- Replace with real as appropriate! If you want to \n# run on example data in package, start at next section with example_counts data\n\npeakfile <- \"mypeaks.bed\"\npeaks <- getPeaks(peakfile)\n\nbamfiles <- c(\"mybam1.bam\",\"mybam2.bam\")\nfragment_counts <- getCounts(bamfiles, peaks, \n                              paired =  TRUE, \n                              by_rg = TRUE, \n                              format = \"bam\", \n                              colData = DataFrame(celltype = c(\"GM\",\"K562\")))\n\n### ----------------------------------------------------------------------------\n\n### Using example counts from package ------------------------------------------\n\ndata(example_counts, package = \"chromVAR\")\nexample_counts <- addGCBias(example_counts, \n                              genome = BSgenome.Hsapiens.UCSC.hg19)\ncounts_filtered <- filterSamples(example_counts, min_depth = 1500,\n                                  min_in_peaks = 0.15)\ncounts_filtered <- filterPeaks(counts_filtered)\nmotifs <- getJasparMotifs()\nmotif_ix <- matchMotifs(motifs, counts_filtered,\n                         genome = BSgenome.Hsapiens.UCSC.hg19)\n\n# computing deviations\ndev <- computeDeviations(object = counts_filtered, \n                                 annotations = motif_ix)\n\n``` \n"
+      },
+      "source": "https://raw.githubusercontent.com/GreenleafLab/chromVAR/master/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "documentation": [
+    {
+      "confidence": 1,
+      "result": {
+        "format": "wiki",
+        "type": "Url",
+        "value": "https://github.com/GreenleafLab/chromVAR/wiki"
+      },
+      "source": "https://raw.githubusercontent.com/GreenleafLab/chromVAR/master/README.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "download_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/GreenleafLab/chromVAR/releases"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 38
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/GreenleafLab/chromVAR/forks"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "GreenleafLab/chromVAR"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_title": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": ""
+      },
+      "source": "https://raw.githubusercontent.com/GreenleafLab/chromVAR/master/README.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "installation": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Installation",
+        "parent_header": [
+          "chromVAR"
+        ],
+        "type": "Text_excerpt",
+        "value": "The recommended installation method for `chromVAR` is using BiocManager. You will first have to have installed the [BiocManager package\n](https://cran.r-project.org/package=BiocManager).\n\n```r\nif (!requireNamespace(\"BiocManager\", quietly = TRUE))\n    install.packages(\"BiocManager\")\nBiocManager::install(\"chromVAR\")\n```\n\nA number of needed packages are installed in this process. One of the dependencies has a system requirement for the gsl library, so if this is not installed already it may need to be installed separately. Several people have reported issues with the GO.db package (a dependency of one of the dependencies) not being installed automatically -- if you see an error relating to that package, try installing it separately first (`BiocManager::install(\"GO.db\")`).\n\nFor Windows users, some have reported that the S4Vector dependency does not currently function on windows R 3.3.3, but that installation was successful on R 3.3.2.\n\nFor Mac users, some have encountered installation difficulties relating to compiling the C++ code. If you encounter problems, please see the threads and advice in Issues [11](https://github.com/GreenleafLab/chromVAR/issues/11) and [20](https://github.com/GreenleafLab/chromVAR/issues/20).  \n\nTwo additional packages that are recommended and used in the vignettes:\n\n* motifmatchr - available on [GitHub](https://github.com/GreenleafLab/motifmatchr) or [development version of Bioconductor](https://bioconductor.org/packages/devel/bioc/html/motifmatchr.html)\n* JASPAR2016  - available from Bioconductor\n\nAdditionally, the package chromVARmotifs can be useful for loading additional motif collections:\n\n* chromVARmotifs -  available on [GitHub](https://github.com/GreenleafLab/chromVARmotifs)\n"
+      },
+      "source": "https://raw.githubusercontent.com/GreenleafLab/chromVAR/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 0.996869388645881,
+      "result": {
+        "original_header": "Parallelization",
+        "type": "Text_excerpt",
+        "value": "Before running chromVAR functions, it is advisable to use the `register` function from BiocParallel to specify your preferred method of parallelization.  For unix systems, \n```r\nlibrary(BiocParallel)\nregister(MulticoreParam(8)) # Use 8 cores\n```\nFor Windows, `MulticoreParam` will not work, but you can use SnowParam:\n```r\nregister(SnowParam(SnowParam(workers=1, type = \"SOCK\")))\n```\nEven if you don't want to use more than one core, it is recommended to explicitly register that choice using SerialParam:\n```r\nregister(SerialParam())\n```\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/GreenleafLab/chromVAR/master/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "issue_tracker": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/GreenleafLab/chromVAR/issues"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "keywords": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "atac-seq, bioinformatics, dnase-seq, r"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "license": [
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Other",
+        "spdx_id": "NOASSERTION",
+        "type": "License",
+        "url": null,
+        "value": null
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "File_dump",
+        "value": "YEAR: 2017\nCOPYRIGHT: Stanford University"
+      },
+      "source": "https://raw.githubusercontent.com/GreenleafLab/chromVAR/master/LICENSE",
+      "technique": "file_exploration"
+    }
+  ],
+  "name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "chromVAR"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "owner": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Organization",
+        "value": "GreenleafLab"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "programming_languages": [
+    {
+      "confidence": 1,
+      "result": {
+        "name": "R",
+        "size": 199822,
+        "type": "Programming_language",
+        "value": "R"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "C++",
+        "size": 12913,
+        "type": "Programming_language",
+        "value": "C++"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "readme_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/GreenleafLab/chromVAR/master/README.md"
+      },
+      "technique": "file_exploration"
+    }
+  ],
+  "releases": [
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "AliciaSchep",
+          "type": "User"
+        },
+        "date_created": "2017-01-27T05:44:26Z",
+        "date_published": "2017-02-03T01:20:12Z",
+        "description": "Preliminary release\n",
+        "html_url": "https://github.com/GreenleafLab/chromVAR/releases/tag/0.3",
+        "name": "Alpha Version 0.3",
+        "release_id": 5347264,
+        "tag": "0.3",
+        "tarball_url": "https://api.github.com/repos/GreenleafLab/chromVAR/tarball/0.3",
+        "type": "Release",
+        "url": "https://api.github.com/repos/GreenleafLab/chromVAR/releases/5347264",
+        "value": "https://api.github.com/repos/GreenleafLab/chromVAR/releases/5347264",
+        "zipball_url": "https://api.github.com/repos/GreenleafLab/chromVAR/zipball/0.3"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "somef_missing_categories": [
+    "acknowledgement",
+    "run",
+    "download",
+    "requirements",
+    "contact",
+    "contributors",
+    "usage",
+    "faq",
+    "support",
+    "identifier",
+    "has_build_file",
+    "executable_example"
+  ],
+  "somef_provenance": {
+    "date": "2024-11-04 08:44:06",
+    "somef_schema_version": "1.0.0",
+    "somef_version": "0.9.5"
+  },
+  "stargazers_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 158
+      },
+      "technique": "GitHub_API"
+    }
+  ]
+}

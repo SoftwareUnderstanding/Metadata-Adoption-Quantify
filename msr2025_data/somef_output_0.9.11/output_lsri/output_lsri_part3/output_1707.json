@@ -1,0 +1,699 @@
+{
+  "citation": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "4. Aligning to reference genome",
+        "parent_header": [
+          "Prediction of bioactive micropeptides in the immune system",
+          "Pipeline explained",
+          "Ribo-Seq data processing"
+        ],
+        "type": "Text_excerpt",
+        "value": "   We use START aligner. Firstly, we build STAR index for the genome.\n   \n   ```bash\n   # sjdbOverhang is the longest read length - 1\n   \n   STAR --runThreadN <threads> --runMode genomeGenerate --genomeDir <star_ribo_dir> --genomeFastaFiles <ref_genome.fa> --sjdbGTFfile <annotation.gtf> --sjdbOverhang <sjdbOverhang>\n   ```\n   \n   Then align to the reference genome, for example:\n   \n   ```bash\n   SAM_ATTR=\"NH HI NM MD AS\"\n   ALIGNINTRON_MIN=20\n   ALIGNINTRON_MAX=10000\n   MISMATCH_MAX=1\n   MISMATCH_NOVERL_MAX=0.04\n   FILTER_TYPE=BySJout\n   \n   STAR --runThreadN <threads> --genomeDir <star_ribo_dir> \\\n        --readFilesIn <trimmed_unfiltered.fq.gz> --readFilesCommand zcat \\\n        --outReadsUnmapped Fastx --outFileNamePrefix <prefix> \\\n        --alignIntronMin <alignIntronMin> --alignIntronMax <alignIntronMax> --alignEndsType EndToEnd \\\n        --outFilterMismatchNmax <mismatch_max> --outFilterMismatchNoverLmax <mismatch_noverl_max>\\\n        --outFilterType <filter_type> --outFilterIntronMotifs RemoveNoncanonicalUnannotated \\\n        --outSAMattributes <sam_attr> --outSAMtype BAM SortedByCoordinate --outBAMsortingThreadN <threads>\n        \n   # Only uniquely mapped reads are kept for ORF calling\n   \n   samtools view -b -q 255 <Aligned.sortedByCoord.out.bam> > <sample_q255.bam>\n   samtools index <sample_q255.bam>\n   ```\n"
+      },
+      "source": "https://raw.githubusercontent.com/boboppie/ORFLine/master/README.md",
+      "technique": "header_analysis"
+    }
+  ],
+  "code_repository": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/boboppie/ORFLine"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_created": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2016-01-08T09:56:16Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_updated": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2023-03-20T08:56:27Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "description": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "A project to discover novel open reading frames in immune system "
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 0.9753663261665677,
+      "result": {
+        "original_header": "Prediction of bioactive micropeptides in the immune system",
+        "type": "Text_excerpt",
+        "value": "This repository holds the pipeline for prediction of actively translated small open reading frames (smORFs) in the immune system. \nThe software was created at [Martin Turner's lab at the Babraham Institute](https://www.babraham.ac.uk/our-research/immunology/martin-turner) and is described in [Hu, et al., \"ORFLine: a bioinformatic pipeline to prioritise small open reading frames identifies candidate secreted small proteins from lymphocytes\", <em>BioRxiv</em> (2021): 2021.01.21.426789.](https://www.biorxiv.org/content/10.1101/2021.01.21.426789v2)\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/boboppie/ORFLine/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.915273704907671,
+      "result": {
+        "original_header": "Annotation",
+        "type": "Text_excerpt",
+        "value": "We recommend to use [GENCODE](https://www.gencodegenes.org/) annotation (GTF/GFF3 files) and genome and transcript sequences (Fasta files) for Human and Mouse. For other species, we have used [Ensembl](https://www.ensembl.org/info/data/ftp/index.html) annotation for Zebrafish. tRNA sequences can be downloaded from UCSC Table Browser. \nFor example, we have downloaded the following public sequences and annotation files for Mouse: \nFile | Type | Region | Source\n---- | ---- | ------ | ------\nGenome sequence, primary assembly | Nucleotide sequence of the GRCm38 primary genome assembly (Fasta format) | PRI (reference chromosomes and scaffolds) | GENCODE\nTranscript sequences | Nucleotide sequences of all transcripts (Fasta format) | CHR (reference chromosomes only) | GENCODE\nProtein-coding transcript sequences | Nucleotide sequences of coding transcripts (Fasta format) | CHR | GENCODE\nLncRNA transcript sequences | Nucleotide sequences of lncRNA transcripts (Fasta format) | CHR | GENCODE\nComprehensive gene annotation | The main annotation file (GTF and GFF3 format) | CHR | GENCODE\nLncRNA gene annotation | comprehensive gene annotation of lncRNA genes (GTF and GFF3 format) | CHR | GENCODE\ntRNA sequences | Nucleotide sequences of tRNA genes predicted by UCSC using tRNAscan-SE (Fasta format) | CHR | UCSC Table Browser \n"
+      },
+      "source": "https://raw.githubusercontent.com/boboppie/ORFLine/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9290168308795387,
+      "result": {
+        "original_header": "Defining ORFs",
+        "type": "Text_excerpt",
+        "value": "Given transcriptome sequences, we exhaustively searched for putative ORFs beginning with a start codon (\u201cATG\u201d, \u201cTTG\u201d, \u201cCTG\u201d, \u201cGTG\u201d) and ending with a stop codon (\"TAG\", \"TAA\", \"TGA\") without an intervening stop codon in between in each of the three reading frames. \nCode to generate putative ORFs:\n```bash\n# Arguments:\n# START_CODON - start codon, can be \u201cATG\u201d, \u201cTTG\u201d, \u201cCTG\u201d, \u201cGTG\u201d  \n# TRANSCRIPTOME_FASTA - transcriptome file location, assume is it in ~/ref/GENCODE/mouse/M13/fasta/transcriptome\n# GTF - gene annotation file, assume it is in ~ref/GENCODE/mouse/M13/annotation/CHR/comprehensive/, and named gencode.vM13.annotation.gtf\n# ORGANISM - scientific name, e.g. Mus musculus\n# NCORE - number of computing cores if you want the process to be multi-threading, default 1\n#\n# for example, they can be assigned as: \n# START_CODON=ATG\n# TRANSCRIPTOME_FASTA=~/ref/GENCODE/mouse/M13/fasta/transcriptome/transcripts_biotype_filtered.fa\n# GTF=~ref/GENCODE/mouse/M13/annotation/CHR/comprehensive/gencode.vM13.annotation.gtf\n# ORGANISM=\"Mus musculus\"\n# NCORE=8 \n#\n# Output:\n# The output file is in BED12 format (https://genome.ucsc.edu/FAQ/FAQformat#format1) and named orf_$START_CODON.bed \n\nRscript util/orf-to-bed.R <organism_scientific_name> <start_codon> <transcriptome.fa> <annotation.gtf> <threads> \n```\n \nIn the output file, a unique ID is given for each ORF, for example: \nUser can ran the R script for each start codon and keep them in the same directory. \nWe are interesed in smORFs (less than 100 codons). In order to filter for them, firstly, we calculate the length of ORFs, for example:\n```bash\ncut -f11 <orfs_ATG.bed> | sed -e 's/,/\\t/g' | awk '{for(i=t=0;i<NF;) t+=$++i; $0=t}1' > <orfs_ATG.width>\n```\nThen, we only keep the smORFs:\n```bash\npaste -d'\\t' <orfs_ATG.bed> <orfs_ATG.width> | awk '$13 <= 303' | cut -f1-12 | sort -k4 > <orfs_ATG.smORFs_100.bed>\n```\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/boboppie/ORFLine/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.8264587739980686,
+      "result": {
+        "original_header": "Ribo-Seq data processing",
+        "type": "Text_excerpt",
+        "value": "Ribo-Seq libraries are in general single-end and reads are 50bp long. We have the following steps to process the raw sequencing data (Fastq format):\n     \n"
+      },
+      "source": "https://raw.githubusercontent.com/boboppie/ORFLine/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9470704603141554,
+      "result": {
+        "original_header": "3. Contaimination removing",
+        "type": "Text_excerpt",
+        "value": "   In order to remove rRNA/tRNA content or other contaminants in the sample, we used Bowtie (version 1) to align the trimmed  reads against specific contaminant sequences assembled from a collection of rRNA, Mt_rRNA, Mt_tRNA, snRNA, snoRNA, misc_RNA, miRNA (from GENCODE) and tRNA (from UCSC) sequences, we also include the following sequences from NCBI:  \n    \n       TPA_exp: Mus musculus ribosomal DNA, complete repeating unit\n       http://www.ncbi.nlm.nih.gov/nuccore/511668571?report=fasta \n"
+      },
+      "source": "https://raw.githubusercontent.com/boboppie/ORFLine/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.955122307253344,
+      "result": {
+        "original_header": "5. P-site calling",
+        "type": "Text_excerpt",
+        "value": "   P-site offset is the distance from the 5\u2019 or 3\u2019 end of a ribosome-protected footprint (RPF) to the P-site of the ribosome that generated the footprint. Because the P-site is the site where peptidyl elongation occurs, read alignments from ribosome profiling are frequently mapped to their P-sites. We use plastid Python package to estimate it from Ribo-Seq data. \n   Secondly, we run psite estimation and phasing estimation:\n   \n   ```bash\n   metagene generate <metagene_analysis_dir> \\\n                     --landmark cds_start \\\n                     --annotation_files <protein_coding.gtf.gz>\n   \n   psite <metagene_analysis_dir>/protein_coding_rois.txt <psite_dir> \\\n         --min_length 25 \\\n         --max_length 35 \\\n         --require_upstream \\\n         --count_files <sample_q255.bam>\n\n   phase_by_size <metagene_analysis_dir>/protein_coding_rois.txt <phasing_dir> \\\n                 --count_files <sample_q255.bam> \\\n                 --fiveprime_variable \\\n                 --offset <psite_dir>/p_offsets.txt \\\n                 --codon_buffer 5\n   ```\n   \n   The output of for psite offset estimation is like: \n   \n       length  p_offset\n       25      7\n       26      8\n       27      9\n       28      12\n       29      12\n       30      12\n       31      12\n       32      13\n       33      13\n       34      13\n       35      13\n       default 13\n       \n   The output of phasing is like:\n   \n       read_length     reads_counted   fraction_reads_counted  phase0  phase1  phase2\n       25      19781   0.015942        0.332946        0.443304        0.223750\n       26      26675   0.021498        0.331621        0.264105        0.404274\n       27      47856   0.038568        0.588829        0.177094        0.234077\n       28      97003   0.078176        0.461099        0.166923        0.371978\n       29      216829  0.174745        0.607806        0.175069        0.217125 \n       30      374353  0.301695        0.699292        0.086186        0.214522\n       31      298826  0.240827        0.534723        0.052951        0.412327\n       32      121240  0.097709        0.592610        0.329627        0.077763\n       33      30141   0.024291        0.567732        0.313991        0.118277\n       34      6519    0.005254        0.557908        0.312931        0.129161\n       35      1609    0.001297        0.517091        0.324425        0.158484\n       \n   We can see that read length 29-31 have strong biased for phase0 or reading frame 1 (triplet periodicity, a feature of Ribo-Seq data)    \n \n"
+      },
+      "source": "https://raw.githubusercontent.com/boboppie/ORFLine/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.917649637645318,
+      "result": {
+        "original_header": "RNA-Seq data processing",
+        "type": "Text_excerpt",
+        "value": "QC and adapter trimming are similar to Ribo-Seq data. RNA-seq data can be longer than 50bp (e.g. 75bp/100bp) and paired-end, when making STAR index, the sjdbOverhang needs to change accordingly (e.g. if the library is 100bp, the sjdbOverhang should be 100-1). One example to align paired-end RNA-seq using STAR:\n```bash\nnice -5 STAR --runThreadN <threads> --genomeDir <star_rna_100_pe_dir> \\\n                       --readFilesIn <R1_trimmed.fq.gz> <R2_trimmed.fq.gz> --readFilesCommand zcat \\\n                       --alignEndsType EndToEnd \\\n                       --outFilterMismatchNmax <mismatch_max> \\\n                       --outReadsUnmapped Fastx --outFileNamePrefix <prefix> \\\n                       --outSAMattributes <sam_attr> --outSAMunmapped Within --outSAMtype BAM SortedByCoordinate \\\n                       --outBAMsortingThreadN <threads>\n```\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/boboppie/ORFLine/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.8860350233835657,
+      "result": {
+        "original_header": "Transcript expression estimation",
+        "type": "Text_excerpt",
+        "value": "One additional step is to estimate transcript expression value (FPKM or TPM), only expressed transcripts (FPKM > 0.5) will be considered for ORF calling. We use StringTie to estimate FPKM values, for example:  \n```bash\nstringtie <sample_q255.bam>  -p <threads> -G <protein_coding.gtf> -eB -o expressed.gtf -A gene_abund.tab -C cov_refs.gtf\n```\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/boboppie/ORFLine/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9667389705380215,
+      "result": {
+        "original_header": "5. Label filter",
+        "type": "Text_excerpt",
+        "value": "Class | Description\n----- | -----------\ncanonical | an ORF which exactly coincides with an annotated CDS\ncanonical_extended or extended | an ORF starts upstream of an annotated CDS and has the same stop codon as the CDS\ncanonical_truncated or truncated | an ORF starts downstream of an annotated CDS, have the same stop codon as CDS\nfive_prime or uORF | an ORF which is completely in the annotated 5\u2019UTR of a protein-coding transcript and does not overlap the annotated CDS\nfive_prime_overlap or ouORF | an ORF in the annotated 5\u2019UTR of a protein-coding transcript but which overlaps the annotated CDS\nthree_prime or dORF | an ORF in the annotated 3\u2019UTR of a protein-coding transcript and does not overlap the annotated CDS\nthree_prime_overlap or odORF | an ORF in the annotated 3\u2019UTR of a protein-coding transcript but which overlaps the annotated CDS\nwithin or internal | an ORF in the interior of an annotated CDS, but in a different frame relative the CDS\nnoncoding or ncORF| an ORF from a transcript annotated as noncoding, such as a lncRNA or pseudogene\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/boboppie/ORFLine/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9487719867749307,
+      "result": {
+        "original_header": "7. Region filter",
+        "type": "Text_excerpt",
+        "value": "If a smORF region is overlapping with annotated coding seqeunces (CDSs), estimate the propotion of signal (RPF_CDS/RPF_smORF) it obsorbs from the CDS, if it is greater than 1, the smORF is inside the CDSs and will be filtered out, for example:\n```bash\nRscript util/RegionFilter.R . <cds.gtf> <filtered.bam> <threads>\n```\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/boboppie/ORFLine/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9173606798683541,
+      "result": {
+        "original_header": "10. FDR filter",
+        "type": "Text_excerpt",
+        "value": "ORFscore p-vals will be adjusted (q-val), and we set 0.01 as cutoff. In the meantime, we'd like keep the smORFs longer than 10 codons. A stringent constraint is that we expect to see RPFs covering codon 1 and 2, so the mean of RPF is greater than 0. For example:\n```bash\nRscript util/ORFScore_padj.R <ORFScore_merged_PT_filtered.tsv> <all_withQval>\n\nawk '($4+0) < 0.01' <ORFScore_all_withQval.tsv> > <ORFScore_fdr_filtered.tsv>\n\n# Length filter >= 11aa including stop codon\ncat <ORFScore_fdr_filtered.tsv> | cut -f1 | cut -f4,5 -d: | tr \":\" \"\\t\" | awk '{print ($2-$1+1)/3}' > <ORFScore_fdr_filtered_len.txt>\npaste <ORFScore_fdr_filtered.tsv> <ORFScore_fdr_filtered_len.txt> | awk '$17 >= 11' | cut -f1-16 > <ORFScore_length_filtered.tsv>\n\n# codon_1_2 mean should be greater than 0\nawk '$10 > 0' ORFScore_length_filtered.tsv >ORFScore_codon_filtered.tsv\n```\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/boboppie/ORFLine/master/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "download_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/boboppie/ORFLine/releases"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 1
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/boboppie/ORFLine/forks"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "boboppie/ORFLine"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_title": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "Prediction of bioactive micropeptides in the immune system"
+      },
+      "source": "https://raw.githubusercontent.com/boboppie/ORFLine/master/README.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "has_script_file": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/boboppie/ORFLine/master/main.sh"
+      },
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/boboppie/ORFLine/master/module-check.sh"
+      },
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/boboppie/ORFLine/master/rnaseq-process.sh"
+      },
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/boboppie/ORFLine/master/riboseq-process.sh"
+      },
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/boboppie/ORFLine/master/orf-prediction.sh"
+      },
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/boboppie/ORFLine/master/ref-download.sh"
+      },
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/boboppie/ORFLine/master/data-download.sh"
+      },
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/boboppie/ORFLine/master/orf-calling.sh"
+      },
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/boboppie/ORFLine/master/util/fastagrep.sh"
+      },
+      "technique": "file_exploration"
+    }
+  ],
+  "installation": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Defining transcript sets",
+        "parent_header": [
+          "Prediction of bioactive micropeptides in the immune system",
+          "Pipeline explained"
+        ],
+        "type": "Text_excerpt",
+        "value": "We combined GENCODE protein-coding transcripts and LncRNA transcripts to form reference transcriptome. Users can potentially assemble the transcriptome using RNA-seq data (e.g. [Cufflinks](http://cole-trapnell-lab.github.io/cufflinks/)), however, Studies have shown that computational approaches produce a large number of artefacts (false positives), which absorbed a substantial proportion of the reads from truly expressed transcripts and were assigned large expression estimates.\n\nWe do not consider the following [biotypes](https://www.gencodegenes.org/pages/biotypes.html):\n* IG_* and TR_* (Immunoglobulin variable chain and T-cell receptor genes)\n* miRNA\n* misc_RNA\n* Mt_rRNA and Mt_tRNA\n* rRNA and ribozyme\n* scaRNA, scRNA, snoRNA, snRNA and sRNA\n* nonsense_mediated_decay\n* non_stop_decay\n\n\nFor example, transcriptome can be generated by:\n\n```bash\n# Assume the source code is in ~/code/github/ORFLine/\n# Mouse GENCODE M13 reference files are in ~/ref/GENCODE/mouse/M13/\n# Transcript sequence file downloaded from GENCODE is named gencode.vM13.transcripts.fa.gz, and placed in ~/ref/GENCODE/mouse/M13/fasta/transcriptome/\n# The newly generated transcript sequence file name is transcripts_biotype_filtered.fa\n\ncd ~/ref/GENCODE/mouse/M13/fasta/transcriptome/\n\n~/code/github/ORFLine/script/fastagrep.sh -v 'IG_*|TR_*|miRNA|misc_RNA|Mt_*|rRNA|scaRNA|scRNA|snoRNA|snRNA|sRNA|ribozyme|nonsense_mediated_decay|non_stop_decay' <(gzip -dc <gencode_transcripts.fa.gz>) > <transcriptome.fa>\n```\n"
+      },
+      "source": "https://raw.githubusercontent.com/boboppie/ORFLine/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 0.9998086721681458,
+      "result": {
+        "original_header": "Obtaining",
+        "type": "Text_excerpt",
+        "value": "To download the source code, please use git to download the most recent development\ntree.  Currently, the tree is hosted on github, and can be obtained via: \n    git clone git://github.com/boboppie/ORFLine.git\n     \n"
+      },
+      "source": "https://raw.githubusercontent.com/boboppie/ORFLine/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.8321595379257682,
+      "result": {
+        "original_header": "Annotation",
+        "type": "Text_excerpt",
+        "value": "For example, we have downloaded the following public sequences and annotation files for Mouse: \n"
+      },
+      "source": "https://raw.githubusercontent.com/boboppie/ORFLine/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9678633829716307,
+      "result": {
+        "original_header": "3. Contaimination removing",
+        "type": "Text_excerpt",
+        "value": "   In order to remove rRNA/tRNA content or other contaminants in the sample, we used Bowtie (version 1) to align the trimmed  reads against specific contaminant sequences assembled from a collection of rRNA, Mt_rRNA, Mt_tRNA, snRNA, snoRNA, misc_RNA, miRNA (from GENCODE) and tRNA (from UCSC) sequences, we also include the following sequences from NCBI:  \n    \n       TPA_exp: Mus musculus ribosomal DNA, complete repeating unit\n       http://www.ncbi.nlm.nih.gov/nuccore/511668571?report=fasta \n       Mus musculus 45S pre-ribosomal RNA (Rn45s), ribosomal RNA\n       http://www.ncbi.nlm.nih.gov/nuccore/577019615?report=fasta \n       Mus musculus 28S ribosomal RNA (Rn28s1), ribosomal RNA\n       http://www.ncbi.nlm.nih.gov/nuccore/120444900?report=fasta \n       Mus musculus strain BALB/c 45S ribosomal RNA region genomic sequence\n       http://www.ncbi.nlm.nih.gov/nuccore/307829144?report=fasta \n       Mus musculus 4.5s RNA, pseudogene 1 (Rn4.5s-ps1) on chromosome 1\n       http://www.ncbi.nlm.nih.gov/nuccore/693074770?report=fasta \n       Microarray spike-in control plasmid pNIAysic-5, complete sequence\n       http://www.ncbi.nlm.nih.gov/nuccore/70672673?report=fasta \n       Human 28S ribosomal RNA gene\n       http://www.ncbi.nlm.nih.gov/nuccore/337381?report=fasta \n       Human 28S ribosomal RNA gene, complete cds\n       http://www.ncbi.nlm.nih.gov/nuccore/337384?report=fasta \n       Human ribosomal DNA complete repeating unit\n       http://www.ncbi.nlm.nih.gov/nuccore/555853?report=fasta \n       Homo sapiens RNA, 45S pre-ribosomal 5 (RNA45S5), ribosomal RNA\n       http://www.ncbi.nlm.nih.gov/nuccore/374429547?report=fasta \n       Chain 5, Structure Of The H. Sapiens 60s Rrna\n       http://www.ncbi.nlm.nih.gov/nuccore/485601478?report=fasta \n"
+      },
+      "source": "https://raw.githubusercontent.com/boboppie/ORFLine/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9889030313947289,
+      "result": {
+        "original_header": "5. P-site calling",
+        "type": "Text_excerpt",
+        "value": "   Firstly, we create a protein coding gene annotation file (GTF format):\n    \n   ```bash\n   # We keep protein coding leve 1 and 2, not seleno proteins\n   \n   cat <gencode_annotation.gtf> | awk '{if($18==\"\\\"protein_coding\\\";\" && $0~\"level (1|2);\" && $0!~\"tag \\\"seleno\\\";\" && $0!~\"cds_end_NF\" && $0!~\"cds_start_NF\"){print $0}}' | sort -k1,1 -k4,4n | bgzip > <protein_coding.gtf.gz>\n   \n   tabix -p gff <protein_coding.gtf.gz>\n   ``` \n"
+      },
+      "source": "https://raw.githubusercontent.com/boboppie/ORFLine/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9665053298563998,
+      "result": {
+        "original_header": "ORF calling",
+        "type": "Text_excerpt",
+        "value": "The ORF calling workflow has the following steps:\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/boboppie/ORFLine/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9986864561715983,
+      "result": {
+        "original_header": "4. Transcript expression filter",
+        "type": "Text_excerpt",
+        "value": "We will only consider those smORFs whose host transcripts are expressed (by stringtie estimation). \n```bash\nparallel \"LC_ALL=C fgrep -f <stringytie_active_transcript_Ids.txt> <plastid_ORFs_{}_translated.txt> > <ORFs_{}_translated_expressed.txt>\" ::: ATG CTG TTG GTG\n```\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/boboppie/ORFLine/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9707556513485627,
+      "result": {
+        "original_header": "5. Label filter",
+        "type": "Text_excerpt",
+        "value": "According to their location on host transcript, smORFs will be classified as following: \n"
+      },
+      "source": "https://raw.githubusercontent.com/boboppie/ORFLine/master/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "invocation": [
+    {
+      "confidence": 0.8450397082743497,
+      "result": {
+        "original_header": "Annotation",
+        "type": "Text_excerpt",
+        "value": "Example options to download mouse tRNA sequences from [UCSC table brower](https://genome.ucsc.edu/cgi-bin/hgTables):\n* clade:  Mammal     \n* genome: Mouse\n* assembly:   Dec 2011. (GRCm38/mm10)\n* group:  All Tracks\n* track:  tRNA Genes\n* table:  tRNAs\n* output format:  sequence\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/boboppie/ORFLine/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.8012558893297907,
+      "result": {
+        "original_header": "3. RPF count filter",
+        "type": "Text_excerpt",
+        "value": "Not all reads are RPFs, plastid will extract all RPFs given p-site offset information, for example:\n```bash\nparallel \"python util/get_count_vectors.py --annotation_files <orfs_{}.smORFs.bedtools.greaterThanZeroReads.bed> --annotation_format BED --count_files <filtered.bam> --min_length <min_len> --max_length <max_len> --fiveprime_variable --offset <psite_offset_file> --out_prefix {} .\" ::: ATG CTG TTG GTG\n```\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/boboppie/ORFLine/master/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "issue_tracker": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/boboppie/ORFLine/issues"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "keywords": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": ""
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "ORFLine"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "owner": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "User",
+        "value": "boboppie"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "programming_languages": [
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Shell",
+        "size": 97428,
+        "type": "Programming_language",
+        "value": "Shell"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "R",
+        "size": 60679,
+        "type": "Programming_language",
+        "value": "R"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Perl",
+        "size": 47241,
+        "type": "Programming_language",
+        "value": "Perl"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Python",
+        "size": 11131,
+        "type": "Programming_language",
+        "value": "Python"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "readme_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/boboppie/ORFLine/master/README.md"
+      },
+      "technique": "file_exploration"
+    }
+  ],
+  "related_documentation": [
+    {
+      "confidence": 1,
+      "result": {
+        "format": "readthedocs",
+        "type": "Url",
+        "value": "https://bedtools.readthedocs.io/"
+      },
+      "source": "https://raw.githubusercontent.com/boboppie/ORFLine/master/README.md",
+      "technique": "regular_expression"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "format": "readthedocs",
+        "type": "Url",
+        "value": "https://bedops.readthedocs.io/"
+      },
+      "source": "https://raw.githubusercontent.com/boboppie/ORFLine/master/README.md",
+      "technique": "regular_expression"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "format": "readthedocs",
+        "type": "Url",
+        "value": "https://plastid.readthedocs.io/"
+      },
+      "source": "https://raw.githubusercontent.com/boboppie/ORFLine/master/README.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "requirements": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Dependencies",
+        "parent_header": [
+          "Prediction of bioactive micropeptides in the immune system",
+          "Usage"
+        ],
+        "type": "Text_excerpt",
+        "value": "* [Samtools and HTSlib](http://www.htslib.org/)\n* [bedtools](https://bedtools.readthedocs.io/en/latest/)\n* [BEDOPS](https://bedops.readthedocs.io/en/latest/)\n* [Bowtie](http://bowtie-bio.sourceforge.net/index.shtml)\n* [STAR](https://github.com/alexdobin/STAR)\n* [FastQC](https://www.bioinformatics.babraham.ac.uk/projects/fastqc/)\n* [Trim Galore](https://www.bioinformatics.babraham.ac.uk/projects/trim_galore/)\n* [plastid](https://plastid.readthedocs.io/en/latest/index.html)\n* [StringTie](https://ccb.jhu.edu/software/stringtie/)\n* [EMBOSS](http://emboss.sourceforge.net/)\n* [GNU Parallel](https://www.gnu.org/software/parallel/) (recommended)\n* [R](https://www.r-project.org/)\n* [Bioconductor](http://bioconductor.org/)\n\nR/Bioconductor packages:\n* [riboSeqR](http://bioconductor.org/packages/release/bioc/html/riboSeqR.html)\n* [GenomicFeatures](http://bioconductor.org/packages/release/bioc/html/GenomicFeatures.html)\n* [rtracklayer](http://bioconductor.org/packages/release/bioc/html/rtracklayer.html)\n"
+      },
+      "source": "https://raw.githubusercontent.com/boboppie/ORFLine/master/README.md",
+      "technique": "header_analysis"
+    }
+  ],
+  "run": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Run the pipeline",
+        "parent_header": [
+          "Prediction of bioactive micropeptides in the immune system",
+          "Usage"
+        ],
+        "type": "Text_excerpt",
+        "value": "We recommand to run a test on a virtual machine, e.g. [VirtualBox](https://www.virtualbox.org/wiki/Downloads) with a minimal ISO (e.g. [CentOS 7 minimal](http://isoredirect.centos.org/centos/7/isos/x86_64/CentOS-7-x86_64-Minimal-1810.iso)). Users can install all dependencies via [miniconda](https://docs.conda.io/en/latest/miniconda.html), for example:\n\n```bash\n# Tools to install on CentOS before miniconda\nyum -y install gcc tar bzip2 git which\n\ncurl -fsSL https://repo.anaconda.com/miniconda/Miniconda2-latest-Linux-x86_64.sh -o miniconda2.sh\n\n# assume miniconda is installed in the home directory\nbash miniconda2.sh -b -p ~/miniconda2\n\nexport PATH=~/miniconda2/bin:$PATH\nexport PYTHONPATH=~/miniconda2/lib/python2.7/site-packages\n\nconda install -y -c conda-forge wget \nconda install -y -c conda-forge parallel\nconda install -y -c bioconda samtools\nconda install -y -c bioconda htslib \nconda install -y -c bioconda bedtools \nconda install -y -c bioconda bedops \nconda install -y -c bioconda bowtie \nconda install -y -c bioconda fastqc\nconda install -y -c bioconda cutadapt \nconda install -y -c bioconda trim-galore \nconda install -y -c bioconda star \nconda install -y -c bioconda stringtie \nconda install -y -c bioconda sra-tools\nconda install -y -c bioconda emboss \nconda install -y -c bioconda plastid\nconda install -y -c bioconda bioconductor-rhtslib\nRscript -e 'install.packages(\"BiocManager\", repos=\"http://cran.us.r-project.org\"); BiocManager::install(c(\"riboSeqR\", \"GenomicFeatures\", \"rtracklayer\"))'\n```\n\nWe have a main.sh script to run all the steps mentioned above, you can simply pull the source code and run it as:\n\n```bash\ngit clone https://github.com/boboppie/ORFLine.git\ncd ORFLine\nchmod +x *.sh\n  \nbash ./main.sh\n```\n"
+      },
+      "source": "https://raw.githubusercontent.com/boboppie/ORFLine/master/README.md",
+      "technique": "header_analysis"
+    }
+  ],
+  "somef_missing_categories": [
+    "acknowledgement",
+    "download",
+    "contact",
+    "contributors",
+    "documentation",
+    "license",
+    "faq",
+    "identifier",
+    "has_build_file",
+    "executable_example"
+  ],
+  "somef_provenance": {
+    "date": "2024-10-06 05:58:15",
+    "somef_schema_version": "1.0.0",
+    "somef_version": "0.9.5"
+  },
+  "stargazers_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 3
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "support": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "email",
+        "parent_header": [
+          "Prediction of bioactive micropeptides in the immune system",
+          "Support"
+        ],
+        "type": "Text_excerpt",
+        "value": "Please report any issues or questions by creating a ticket, or by email to \n<fengyuan.huu@gmail.com>.\n"
+      },
+      "source": "https://raw.githubusercontent.com/boboppie/ORFLine/master/README.md",
+      "technique": "header_analysis"
+    }
+  ],
+  "type": [
+    {
+      "confidence": 0.82,
+      "result": {
+        "type": "String",
+        "value": "commandline-application"
+      },
+      "technique": "software_type_heuristics"
+    }
+  ],
+  "usage": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Dataset",
+        "parent_header": [
+          "Prediction of bioactive micropeptides in the immune system",
+          "Usage"
+        ],
+        "type": "Text_excerpt",
+        "value": "We will use [*Diaz-Mu\u00f1oz et al, 2015*](https://www.nature.com/articles/ni.3115) LPS activated B cell dataset as an example to demonstrate typical workflow. \n\nDownload raw sequencing data from EBI:\n\n    RNA-Seq  -  ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR160/001/SRR1605271/SRR1605271.fastq.gz\n    Ribo-Seq -  ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR160/004/SRR1605304/SRR1605304.fastq.gz\n"
+      },
+      "source": "https://raw.githubusercontent.com/boboppie/ORFLine/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Workflow",
+        "parent_header": [
+          "Prediction of bioactive micropeptides in the immune system",
+          "Usage"
+        ],
+        "type": "Text_excerpt",
+        "value": "1. Check if all the dependencies are isntalled\n\n```bash\nbash ./module-check.sh\n```\n\n2. Download and generate files that are used in the pipeline\n\n```bash\nbash ./ref-download.sh -o mouse -r M22 -t 4\n```\n\n3. Generate putative ORFs\n\n```bash\nbash ./orf-prediction.sh -o \\\"Mus musculus\\\" -t 8\n```\n\n4. Ribosome profiling (Ribo-Seq) data processing\n\n```bash\nbash ./riboseq-process.sh -f ./out/data/ribo-seq/ribo.fastq.gz -a AAAAAAAAAAA -t 4\n```\n\n5. RNA-Seq data processing\n\n```bash\nbash ./rnaseq-process.sh -f ./out/data/rna-seq/rna.fastq.gz -t 4\n```\n\n6. ORF calling\n\n```bash\nbash ./orf-calling.sh -o mouse -x 10090 -m 32 -n 28 -t 8\n```\n"
+      },
+      "source": "https://raw.githubusercontent.com/boboppie/ORFLine/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Output",
+        "parent_header": [
+          "Prediction of bioactive micropeptides in the immune system",
+          "Usage"
+        ],
+        "type": "Text_excerpt",
+        "value": "The final output file in info_table directory is in BED12 format with extension.\n\ncolumn | Description\n------ | -----------\n1 - 12 | See [BED format definition](https://genome.ucsc.edu/FAQ/FAQformat.html#format1). Col 4 is the ORFId\n13 | smORF class, e.g. canonical, five_prime.\n14 | Peptide length (AA)\n15 | RegionId, it is possible muliple ORFIds (transcript-based) map to a unique regionId (genomic-based)\n16 | Ensembl transcript Id\n17 | Gene symbol\n18 | Gene description\n19 | ORF score\n20 | Ribosome release score\n21 | Ribo FPFM\n22 | RNA FPKM\n23 | Translation efficiency (TE)\n24 | CDS TE (NA if host transcript is noncoding)\n25 | AA sequence\n\n"
+      },
+      "source": "https://raw.githubusercontent.com/boboppie/ORFLine/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Singularity Container",
+        "parent_header": [
+          "Prediction of bioactive micropeptides in the immune system",
+          "Usage"
+        ],
+        "type": "Text_excerpt",
+        "value": "We have created a [Singularity](https://singularity-hub.org) image, the repository is [here](https://github.com/boboppie/ORFLine-singularity), users can pull and run a test as:\n\n```bash\nsingularity pull shub://boboppie/ORFLine-singularity # the default name of the image is ORFLine-singularity_latest.sif\n\nsingularity run ORFLine-singularity_latest.sif\n```\n"
+      },
+      "source": "https://raw.githubusercontent.com/boboppie/ORFLine/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "1. Quality control. We use FastQC, for example:",
+        "parent_header": [
+          "Prediction of bioactive micropeptides in the immune system",
+          "Pipeline explained",
+          "Ribo-Seq data processing"
+        ],
+        "type": "Text_excerpt",
+        "value": "   ```bash\n   fastqc -t <threads> -o <fastqc_dir> <sample.fastq.gz>\n   ```\n"
+      },
+      "source": "https://raw.githubusercontent.com/boboppie/ORFLine/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "2. Adapter and quality trimming. We use Trim Galore (<a href=\"https://github.com/FelixKrueger/TrimGalore/blob/master/Docs/Trim_Galore_User_Guide.md\">user guide</a>), for example:",
+        "parent_header": [
+          "Prediction of bioactive micropeptides in the immune system",
+          "Pipeline explained",
+          "Ribo-Seq data processing"
+        ],
+        "type": "Text_excerpt",
+        "value": "   ```bash\n   # User can give a customized adapter by flag -a, or trim_galore will automatically detect the adapter if it's standard\n   # To filter for read length, user can use flags such as --length 25 --max_length 35 for min and max length\n\n   trim_galore -q 33 --fastqc --trim-n -e 0.1 --stringency 3 <sample.fastq.gz> -o <trim_galore_dir>\n   ```\n"
+      },
+      "source": "https://raw.githubusercontent.com/boboppie/ORFLine/master/README.md",
+      "technique": "header_analysis"
+    }
+  ]
+}

@@ -1,0 +1,294 @@
+{
+  "code_repository": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/agnesnoy/SerraNA"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_created": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2020-03-23T18:11:54Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_updated": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2024-08-09T04:36:56Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "description": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "SerraNA: a program to determine nucleic acids elasticity from simulation data"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 0.9338942599050699,
+      "result": {
+        "type": "Text_excerpt",
+        "value": "___________________________________________________________________\n                        \\       _\n\t\t\t'       '\n                \\       ---------        /\n\t\t|--------SERRANA--------|\n                        ---------\n                        |       |\n                        -       -\n     by Victor Velasco with the guidance of Agnes Noy\n___________________________________________________________________\n___________________________________________________________________\n                       OVERVIEW\n                       -------- \nSerraNA is composed by three executables: SerraNA, Analysis and Extract \nThe methodology implemented, allows to study how global elastic\nproperties arise from the base-pair (bp) level, and to infer elastic\nconstants that describe the fragment's overall flexibility.\nThese elastic constants correspond to torsional, stretch modulus,\nand the persistence length. \nVelasco, Burman, Shepherd, Leake, Golestanian and Noy (2020), biorxiv:\n\"SerraNA: a program to infer elastic constants from local to global nucleic acids simulation data\"\nThis is the paper to cite! :). For more information, please visit:\nhttps://agnesnoylab.wordpress.com/ \nFirst main process that carries the calculation of structural and \nflexible parameters flexibility for every possible pair of bp.\nFor running SerraNA type: \n./SerraNA < s_NA.in \nA trajectory file and a topology file in AMBER style format is needed \n(10F8.3 for the trajectory). The files can contain ions or other residues \nand SerraNA will ignore them. \ns_NA.in is the input file that indicates: \n  1.- The path for topology and trajectory\n  2.- If the structure is double-stranded (\"2\") or if it is \n      single-stranded (\"1\").\n  3.- If the structure is linear (\"1\") or closed (\"2\"). \n      For linear NA, SerraNA ignores the two base-pairs at each end for\n      avoiding end effects. \n- structural_parameters.out which have variables describing the geometry of the\n  DNA molecule for all possible sub-fragments:\n  1.- Added-rise, added-slide, added-rise, roll, tilt and twist as an extension\n      of CEHS algorithm to sequences > 2 bp.\n  2.- End-to-end distance and contour length\n  3.- Bending, bending**2, and directional correlation (D correlation) \n  4.- From averaged structure: Bending (AVSTR B), bending**2 (AVSTR B**2) \n      and directional correlation (AVSTR D C)  \n- elastic_parameters.out have elastic constants for Stretch (pN), Twist (nm), \n  Roll (nm), Tilt (nm), as well as their couplings (nm), together with the\n  variance and partial variance  of the end-to-end distance (angstroms). \nSecond main process which analyze the parameters calculated by SerraNA \nand estimates global elastic constants. For running Analysis type: \n./Analysis < ov_NA.in \nov_NA.in is the input file that indicates:\n   1.- The path to elastic_parameters.out and structural_parameters.out \n   2.- The part of the molecule that will be used to calculate global elastic\n       constants. Two ranges should be provided:\n       (i) The first one defines the region of the molecule used (from bp \"a\" \n           to bp \"b\"). \n       (ii) The second indicates the sub-lengths considered, being from number \n            of bp-steps \"c\" to number of bp-steps \"d\". Note that c > 0 and d <= b-a.\n       DEFAULT OPTION, which is specified by a=b=c=d=0, uses the whole fragment\n       and applies the recommended methodology described on the paper and the manual. \nThe Extract program process SerraNA ouputs, elastic_parameters.out and \nstructural_parameters.out, creating simple files ready to plot. \nYou can filter a particular sublength or you can extract averages \nand standard deviations as a function of length from a particular region \n to obtain plots similar to Figure 3 of Velaco et al. Extract also can \nprocess BPP.out and BSP.out for easier plotting. For running Analysis type: \nex_NA.in is the input file that indicates:\n   1.- Path to either BPP, BSP, structural or elastic parameters file.\n       If you selected to extract BPP or BSP, then all other inputs will be ignored.\n   2.- Type \"0\" for extracting a sub-length or \"1\" for getting avg+-sd as \n       a function of length.\n   3.- (i) If you type 0, then indicate the length (l) you want to process,\n           which should be 0 < l < N, where N is the number of bp-steps.\n       (ii) If you typed 1, then indicate the region (a,b) from which you want\n            to extract avg+-sd as a function of length.\n            If it is linear DNA, then 0 < a < b < N\n            If it is circular DNA, then both a < b or b < a, are valid\n            DEFAULT OPTION, a=b=0, consider all possible lengths in the whole \n            fragment. \n- BPP_plot.out, if BPP.out is processed\n- BSP_plot.out, if BSP.out is processed\n- structural_lmer.out, if structural_parameters.out is processed to extract a \n  particular sub-length l\n- structural_[a:b].out, if structural_parameters.out is processed to extract a \n  length-dependence for a particular sub-fragment\n- structural_plot.out, if a=b=0\n- elastic_lmer.out, if elastic_parameters.out  is processed to extract a \n  particular sub-length l\n- elastic_[a:b].out, if elastic_parameters.out is processed to extract a\n  length-dependence for a particular sub-fragment\n- elastic_plot.out, if a=b=0 \n\nAll formats can be modified in parms.f90, in section INPUT/OUTPUT FORMATS,\nwhere for BPP, BSP, structural and elastic, _2 corresponds to parameters\nby sublength and _3 correspond to overalls. \nWe provide an example/test with topology and trajectory files corresponding\nto the 32-mer from Velasco et al. \nYou can edit ov_NA.in and run the Analysis for experimenting different results. \nOnce the structural and elastic parameters are calculated, one can use the\nExtract process to extract the data that one is interested in or to filter\na particular length (l) or a region [a,b]. \nThe bash script run-example.sh runs and edits ex_NA.in multiple times to extract\nstructural_parameters.out at the lengths of 2, 12 and 22 bp, and the avg-std\nof elastic_parameters.out at regions [1,6], [7,12], [13,18] and [19,24], and\nfinally, the overalls for the elastic parameters. Then it executes a python script\nplot-example.py to plot 1) bending angles for 2mer, 12mer and 22mer.\n                        2) Twist elastic constant for the 4 regions as a \n                           function of length.\n                        3) Stretch modulus as a function of length for the \n                           whole fragment. \nThis produces a pdf image (my_first_result.pdf) with the 3 subplots.\n___________________________________________________________________ \n    SerraNA is free software: you can redistribute it and/or modify\n    it under the terms of the GNU Lesser General Public License as published \n    by the Free Software Foundation, either version 3 of the License, or\n    any later version. \n    SerraNA is distributed in the hope that it will be useful,\n    but WITHOUT ANY WARRANTY; without even the implied warranty of\n    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the\n    GNU General Public License for more details. \n    You should have received a copy of the GNU General Public License\n    along with this program.  If not, see <https://www.gnu.org/licenses/>. \n"
+      },
+      "source": "https://raw.githubusercontent.com/agnesnoy/SerraNA/master/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "download_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/agnesnoy/SerraNA/releases"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 0
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/agnesnoy/SerraNA/forks"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "agnesnoy/SerraNA"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_title": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": ""
+      },
+      "source": "https://raw.githubusercontent.com/agnesnoy/SerraNA/master/README.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "has_script_file": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/agnesnoy/SerraNA/master/run-example.sh"
+      },
+      "technique": "file_exploration"
+    }
+  ],
+  "installation": [
+    {
+      "confidence": 0.9813872457293288,
+      "result": {
+        "type": "Text_excerpt",
+        "value": "___________________________________________________________________\n                       REQUIREMENTS\n                       ------------ \nYou only need a fortran compiler (gfortran), that's it. \nType make SerraNA for compiling SerraNA.\n     make Analysis to compile Analysis section.\n     make Extract for compiling the extraction program.\n     or \n     make all for all of them. \nThe first step is to compile the programs by typing \"make\" and then\nrun the main code (SerraNA.f90) by typing: \n    You should have received a copy of the GNU General Public License\n    along with this program.  If not, see <https://www.gnu.org/licenses/>. \n"
+      },
+      "source": "https://raw.githubusercontent.com/agnesnoy/SerraNA/master/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "invocation": [
+    {
+      "confidence": 0.8723760468018666,
+      "result": {
+        "type": "Text_excerpt",
+        "value": "                         TEST\n                       ------- \n"
+      },
+      "source": "https://raw.githubusercontent.com/agnesnoy/SerraNA/master/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "issue_tracker": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/agnesnoy/SerraNA/issues"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "keywords": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": ""
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "license": [
+    {
+      "confidence": 1,
+      "result": {
+        "name": "GNU Lesser General Public License v3.0",
+        "spdx_id": "LGPL-3.0",
+        "type": "License",
+        "url": "https://api.github.com/licenses/lgpl-3.0",
+        "value": "https://api.github.com/licenses/lgpl-3.0"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "SerraNA"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "owner": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "User",
+        "value": "agnesnoy"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "programming_languages": [
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Fortran",
+        "size": 198428,
+        "type": "Programming_language",
+        "value": "Fortran"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Python",
+        "size": 3819,
+        "type": "Programming_language",
+        "value": "Python"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Shell",
+        "size": 1864,
+        "type": "Programming_language",
+        "value": "Shell"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Makefile",
+        "size": 781,
+        "type": "Programming_language",
+        "value": "Makefile"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "readme_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/agnesnoy/SerraNA/master/README.md"
+      },
+      "technique": "file_exploration"
+    }
+  ],
+  "releases": [
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "agnesnoy",
+          "type": "User"
+        },
+        "date_created": "2020-03-23T19:51:16Z",
+        "date_published": "2020-10-19T07:40:47Z",
+        "description": "By Victor Velasco-Berrelleza and Agnes Noy\r\nPublished at:\r\nV Velasco-Berrelleza, M Burmann, JW Shepherd, MC Leake, R Golestanian, A Noy (2020). \u201cSerraNA: a program to determine nucleic acids elasticity from simulation data\u201d Phys Chem Chem Phys, 22, 19254-19266 https://doi.org/10.1039/D0CP02713H",
+        "html_url": "https://github.com/agnesnoy/SerraNA/releases/tag/v1.0",
+        "name": "SerraNA v1.0",
+        "release_id": 32739566,
+        "tag": "v1.0",
+        "tarball_url": "https://api.github.com/repos/agnesnoy/SerraNA/tarball/v1.0",
+        "type": "Release",
+        "url": "https://api.github.com/repos/agnesnoy/SerraNA/releases/32739566",
+        "value": "https://api.github.com/repos/agnesnoy/SerraNA/releases/32739566",
+        "zipball_url": "https://api.github.com/repos/agnesnoy/SerraNA/zipball/v1.0"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "somef_missing_categories": [
+    "citation",
+    "acknowledgement",
+    "run",
+    "download",
+    "requirements",
+    "contact",
+    "contributors",
+    "documentation",
+    "usage",
+    "faq",
+    "support",
+    "identifier",
+    "has_build_file",
+    "executable_example"
+  ],
+  "somef_provenance": {
+    "date": "2024-10-06 13:35:57",
+    "somef_schema_version": "1.0.0",
+    "somef_version": "0.9.5"
+  },
+  "stargazers_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 3
+      },
+      "technique": "GitHub_API"
+    }
+  ]
+}

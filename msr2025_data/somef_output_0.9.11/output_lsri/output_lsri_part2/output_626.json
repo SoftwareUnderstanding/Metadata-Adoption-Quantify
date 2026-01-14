@@ -1,0 +1,346 @@
+{
+  "citation": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Cite IMMerge",
+        "parent_header": [
+          "IMMerge: Merging imputation data at scale"
+        ],
+        "type": "Text_excerpt",
+        "value": "Zhu W, Chen HH, Petty AS, Petty LE, Polikowsky HG, Gamazon ER, Below JE, Highland HM. *IMMerge: merging imputation data at scale*. Bioinformatics. 2023 Jan 1;39(1):btac750. doi: 10.1093/bioinformatics/btac750. PMID: 36413071; PMCID: PMC9805583.\n"
+      },
+      "source": "https://raw.githubusercontent.com/belowlab/IMMerge/main/README.md",
+      "technique": "header_analysis"
+    }
+  ],
+  "code_repository": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/belowlab/IMMerge"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_created": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2021-09-17T14:19:37Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_updated": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2024-09-06T19:05:59Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "description": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "Tool to merge VCF genotype files at scale"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 0.9981798888198955,
+      "result": {
+        "original_header": "About",
+        "type": "Text_excerpt",
+        "value": "Genomic data is often processed in batches and analyzed together to save time. However, it is challenging to combine multiple large VCFs and properly handle imputation quality and missing variants due to limitations of available tools. To address these concerns, we developed IMMerge, a Python-based tool that takes advantage of multiprocessing to reduce running time. For the first time in a publicly available tool, imputation quality scores are correctly combined with Fisher\u2019s z transformation. \n"
+      },
+      "source": "https://raw.githubusercontent.com/belowlab/IMMerge/main/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9909859401200016,
+      "result": {
+        "original_header": "Command line arguments",
+        "type": "Text_excerpt",
+        "value": "1. User input flags and values are used in the command line version of IMMerge\n2. For merging multiple vcf files (```merge_files.py```), valid flags are:\n\t* BASH2*: (Required) files to be merged, multiple files are allowed\n\t* BASH3*:  (Optional) Directory/name to info files. Default path is the same directory as corresponding input file, default info file share the same name as input file, except for suffix (.info.gz)\n\t* BASH4*: (Optional) Default is merged.vcf.gz and saved at current working directory. Output file name without suffix.\n    * BASH5*: (Optional) Default is None. In case user needs to use modified retained SNP list instead of the file created by IMMerge. The program will not create a new *variants_retained.info.txt if this option is provided. Must have these columns: SNP (the first column), ALT_Frq_combined, MAF_combined, Rsq_combined, Genotyped\n\t* BASH6*: (Optional) Defines how many threads to use in multiprocessing.\n\t\t* Default value is 1.\n\t\t* Valid values are integers. If number of threads <0, will use 1 instead of user supplied value\n\t* BASH7*: (Optional, default is 0) Defines number of missing values allowed for each variant.\n\t\t* Cannot exceed total number of files to be merged.\n\t\t* If a variant is missing for some individuals, the values will be \".|.\" (or other user supplied value with --na_rep as \"na_rep|na_rep\") in merged output file.\n\t\t* If --missing is 0, only variants shared by all input files will be saved in merged result.\n\t* BASH8*: (Optional) Defines what symbol to use for missing values. Default is \".\". This flag is ignored if --missing is 0.\n\t* BASH9*: (Optional, default is 0, ie. no filtering) Only variants with combined imputation quality score r2_combined\u2265r2_threshold will be saved in the merged file\n\t* BASH10*: Default is \"z_transformation\". Defines how imputation quality score is calculated in the output file. Valid values are:\n\t\t* z_transformation **(recommended)**: Fisher z-transformation\n\t\t* weighted_average: calculated weighted average of r2. Weight is determined by number of individuals of each file.\n\t\t* mean, min, max: Mean, min or max of r2, ignore missing values.\n\t\t* first: output imputation quality score r2 from the first file. In order to use this setting and avoid missing r2, \"--missing\" must be 0.\n\t* BASH11*: (Optional) Default is 0.001. Adjust imputation quality score r2 by --r2_offset if imputation quality score=1. Only valid for z transformation to avoid infinity\n\t* BASH12*: (Optional, default is 0) Defines number of duplicate individuals in each input file (usually as a sanity check of imputation in subsiles). Duplicate IDs should be the first N columns in each file and not mixed with unique IDs.\n\t\t* For example, the first 100 individuals in each input file are duplicated on purpose. Set --duplicated_id to 100 so that only the first set of these IDs will be saved in output file.\n\t\t* (ie. starting from the second input file, data of the first 100 individuals will be skipped in the merged output)\n\t* BASH13*: (Optional) Default is False. Check if there are duplicate IDs, then rename non-first IDs to ID:2, ID:3, ..., ID:index_of_input_file+1.\n\t* BASH14*: (Optional) Default is bgzip. Write to bgziped file with bgzip. User can supply specific path to bgzip such as BASH15*.\n\t* BASH16*: (Optional) Valid values are {index of input file (1-based), 'none', 'all'}. Indicates what meta information (lines start with '##') to include in output file. Default is 1 (meta information from the first input file).\n\t* BASH17*: (Optional) Default is False. Valid values are (not case-sensitive): {0|1|True|False}.\n\t  Whether some variants have more than one genotype status (True) or not (False) in input files. \n\t  Use together with arguments --genotyped_label and --imputed_label.\n\t  If False then output genotype status of each variant is the genotype status in the first input file, or the first file a given SNP is found.\n\t  If True then output genotype status will be: ALL=all genotyped, SOME=at least one genotyped, NONE=no genotyped. \n\t  If some *.info.gz files contain ALL/SOME/NONE while others use GENOTYPED/TYPED, final genotype status will be mixed of ALL/SOME/NONE/GENOTYPED/TYPED.\n\t* BASH18*: (Optional) Default is TYPED/TYPED_ONLY in concordance with TOPMed output. Label for genotyped variants.\n\t  Multiple values can be supplied in one string separated by /. Only evaluated when --mixed_genotype_status is True. \n\t* BASH19*: (Optional) Default is IMPUTED in concordance with TOPMed output. Label for genotyped variants.\n\t  Multiple values can be supplied in one string separated by /. Only evaluated when --mixed_genotype_status is True. \n\t* BASH20*: (Optional) Default is False. If input VCFs use rsID instead of chr:pos:ref:alt, set this option to True to avoid duplicate IDs (rsID may not be unique).\n                    New IDs in chr:pos:ref:alt format instead of rsID will be used to merge.\n                    Use make_info.py to make info files, or follow the required format.\n\t* BASH21*: (Optional) Exit program after printing out help info, ignore any other flags and values provided.\n3. For generating info files (BASH22*), if *.info.gz files are missing\n\t* Valid flags:\n\t\t* BASH2*: (Required) Multiple input files are allowed. Must in gzipped or bgziped VCF format. \n\t\t* BASH23*: (Optional) Directory for output files. Default is current working directory.\n        * BASH24*: (Optional) Default is input file name with suffix replaced by \".info.gz\".\n        * BASH25*: (Optional) Default is ['AF', 'MAF', 'R2', 'IMPUTED/TYPED/TYPED_ONLY'].\n                    Column names of alt frequency, MAF, imputation quality score, genotyped. Separated by space.\n        * BASH6*: (Optional) Default is 1. Defines how many thread to use in multiprocessing.\n                If number of threads <0, will use 1 instead of user supplied value.')\n        * BASH14*: (Optional) Default is bgzip, but gzip is also valid. User specified program to write compressed file.\n        * BASH20*: (Optional) Default is False.\n                    If input VCFs use rsID instead of chr:pos:ref:alt, set this option to True to avoid duplicate IDs (rsID may not be unique).\n                    New IDs in chr:pos:ref:alt format will be created. Also need to use the same setting in merging step.\n\t\t* BASH17*: (Optional) Default is False. Valid values are (not case-sensitive): {0|1|True|False}.\n\t\t  Whether some variants have more than one genotype status (True) or not (False).\n\t\t  Use together with arguments BASH26* and BASH27*.\n\t\t  If False then output genotype status of each variant is the last genotype status in its INFO column.\n\t\t  If True then output genotype status fo reach variant will be: ALL=all genotyped, SOME=at least one genotyped, NONE=no genotyped.\n        * BASH18*: (Optional) Default is TYPED/TYPED_ONLY in concordance to TOPMed output. Label for genotyped variants. Multiple values can be supplied in one string separated by /\n\t\t* BASH19*: (Optional) Default is IMPUTED in concordance to TOPMed output. Label for imputed variants. Multiple values can be supplied in one string separated by /\n\t\t* BASH28*: (Optional) Print help message if True. Default is False. Valid values are (not case-sensitive): {0|1|True|False}\n\t\t* BASH21*: Check available arguments and descriptions.\n    * Information files of corresponding VCFs are required in order to merge efficiently. These are files with **.info.gz** suffix if your files are directly downloaded from TOPmed imputation server.\nOtherwise, users should manually create info files follow the format of TOPmed imputation server. Examples can be found in BASH29* in this repo.\n   * Example info file:  \n\t \n\t\t| SNP                | REF(0) | ALT(1) | ALT_Frq | MAF | Rsq | Genotyped |\n\t\t| ------------------ | ------ | ------ | ------- | --- | --- | --------- |\n\t\t| chr21:10000777:C:A | C | A | 0.00003 | 0.00003 | 0.44840 | IMPUTED |\n\t\t| chr21:10000931:T:G | T | G | 0.00004 | 0.00004 | 0.46070 | TYPED |\n\t\t| chr21:10001844:A:G | A | G | 0.00002 | 0.00002 | 0.65686 | IMPUTED |\n\t\t| chr21:10001985:C:T | C | T | 0.00001 | 0.00001 | 0.18849 | IMPUTED |\n\t* SNP, REF(0), ALT(1), ALT_Frq, MAF, Rsq and Genotyped are required and fixed columns. Columns with other names are ignored.\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/belowlab/IMMerge/main/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9286224386144698,
+      "result": {
+        "original_header": "Calculation of combined imputation quality, AF and MAF",
+        "type": "Text_excerpt",
+        "value": "1. Imputation quality (R2)\n   \t\n\t1. Fisher z-transformation ([reference](https://doi.org/10.1037/0021-9010.72.1.146)):\n\t\t* Adjust imputation quality score as $r^2 = r^2 - r^2_{offset}$\n\t\t* z-transformation: $z = \\frac{1}{2}ln\\frac{1+r}{1-r}$\n\t\t* Take weighted average of z\n\t\t* Convert z back to r using tanh function: $r= \\frac{e^z - e^{-z}}{e^z + e^{-z}}$\n\t\t* Square r to get combined imputation quality\n\t2. Mean: ignore missing values in calculation\n\t3. Weighted average, ignore missing values in calculation\n\t\t* $$R^2_{combined} = \\left( \\sum_{i=1}^{n}\\ R_i^2 * N_i \\right) / \\sum_{i=1}^{n}N_i$$\n\t\t* $R^2_i$: Imputation quality r squared (Rsq) of the i-th input file\n\t\t* $N_i$: Number of individuals in the N-th input file\n\t\t* Ignore missing values. For example a variant has below R2 in each input file:\n\t\t\t* File #1: Rsq=0.3, number of individuals = 1000\n\t\t\t* File #2: Missing, number of individuals = 2000 (\u2190 Ignore this file then)\n\t\t\t* File #3: Rsq=0.2, number of individuals = 3000\n\t\t\t* Weighted Rsq = (0.3*1000 + 0.2*3000)/(1000 + 3000) = 0.225\n\t\n2. Minor allele frequency (MAF): weighted average, ignore missing values: Use the same equation as weighted Rsq\n\t* $$MAF_{combined} = \\left( \\sum_{i=1}^{n}MAF_i * N_i \\right) / \\sum_{i=1}^{n}N_i $$\n\t* $MAF_i$: Minor allele frequency of the i-th input file\n\t* $N_i$: Number of individuals in the N-th input file\n3. Alt allele frequency (AF): the same as MAF\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/belowlab/IMMerge/main/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.8865077839362492,
+      "result": {
+        "original_header": "File format and special notes:",
+        "type": "Text_excerpt",
+        "value": "1. All input files should be compressed (gzip or bgzip). File format should follow post-imputation VCF file from TOMed.\n2. Variants in input vcf.gz files should be sorted by position (TOPMed output is already sorted).\n3. Corresponding compressed info files should be stored in the same directory as [file_name].info.gz, unless individually specified using ```--info``` flag.\n4. Use BASH2* script if .info.gz files are missing. Input VCFs must at leat have these four fields in the INFO column: AF (alt allele frequency), MAF (Minor allele frequency), imputation quality score (such as R2), Genotyped (such as IMPUTED/TYPED/TYPED_ONLY)\n5. Do not move or modify variants_retained.info.txt and variants_excluded.info.txt until current run is completed.\n6. Output files will be overwritten if another run saves output in the same directory with the same file name.\n7. Value smaller than 0.000001 (6 digits of precision) will be rounded to 0 when outputting ALT_frq, MAF and R2 into variant_kept.txt and variant_excluded.txt. These values will also be used to replace INFO column in merged .vcf.gz file. Precision can be changed with float_format parameter in get_SNP_list.py.\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/belowlab/IMMerge/main/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "documentation": [
+    {
+      "confidence": 1,
+      "result": {
+        "format": "wiki",
+        "type": "Url",
+        "value": "https://github.com/belowlab/IMMerge/wiki"
+      },
+      "source": "https://raw.githubusercontent.com/belowlab/IMMerge/main/README.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "download_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/belowlab/IMMerge/releases"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 5
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/belowlab/IMMerge/forks"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "belowlab/IMMerge"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_title": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "IMMerge: Merging imputation data at scale"
+      },
+      "source": "https://raw.githubusercontent.com/belowlab/IMMerge/main/README.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "images": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/belowlab/IMMerge/main/output_sample/benchmark.png?raw=true"
+      },
+      "source": "https://raw.githubusercontent.com/belowlab/IMMerge/main/README.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "installation": [
+    {
+      "confidence": 0.9986911088832022,
+      "result": {
+        "original_header": "File format and special notes:",
+        "type": "Text_excerpt",
+        "value": "1. All input files should be compressed (gzip or bgzip). File format should follow post-imputation VCF file from TOMed.\n2. Variants in input vcf.gz files should be sorted by position (TOPMed output is already sorted).\n3. Corresponding compressed info files should be stored in the same directory as [file_name].info.gz, unless individually specified using ```--info``` flag.\n4. Use BASH2* script if .info.gz files are missing. Input VCFs must at leat have these four fields in the INFO column: AF (alt allele frequency), MAF (Minor allele frequency), imputation quality score (such as R2), Genotyped (such as IMPUTED/TYPED/TYPED_ONLY)\n5. Do not move or modify variants_retained.info.txt and variants_excluded.info.txt until current run is completed.\n6. Output files will be overwritten if another run saves output in the same directory with the same file name.\n7. Value smaller than 0.000001 (6 digits of precision) will be rounded to 0 when outputting ALT_frq, MAF and R2 into variant_kept.txt and variant_excluded.txt. These values will also be used to replace INFO column in merged .vcf.gz file. Precision can be changed with float_format parameter in get_SNP_list.py.\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/belowlab/IMMerge/main/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "invocation": [
+    {
+      "confidence": 0.8321552570452848,
+      "result": {
+        "original_header": "File format and special notes:",
+        "type": "Text_excerpt",
+        "value": "1. All input files should be compressed (gzip or bgzip). File format should follow post-imputation VCF file from TOMed.\n2. Variants in input vcf.gz files should be sorted by position (TOPMed output is already sorted).\n3. Corresponding compressed info files should be stored in the same directory as [file_name].info.gz, unless individually specified using ```--info``` flag.\n4. Use BASH2* script if .info.gz files are missing. Input VCFs must at leat have these four fields in the INFO column: AF (alt allele frequency), MAF (Minor allele frequency), imputation quality score (such as R2), Genotyped (such as IMPUTED/TYPED/TYPED_ONLY)\n5. Do not move or modify variants_retained.info.txt and variants_excluded.info.txt until current run is completed.\n6. Output files will be overwritten if another run saves output in the same directory with the same file name.\n7. Value smaller than 0.000001 (6 digits of precision) will be rounded to 0 when outputting ALT_frq, MAF and R2 into variant_kept.txt and variant_excluded.txt. These values will also be used to replace INFO column in merged .vcf.gz file. Precision can be changed with float_format parameter in get_SNP_list.py.\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/belowlab/IMMerge/main/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "issue_tracker": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/belowlab/IMMerge/issues"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "keywords": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": ""
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "license": [
+    {
+      "confidence": 1,
+      "result": {
+        "name": "MIT License",
+        "spdx_id": "MIT",
+        "type": "License",
+        "url": "https://api.github.com/licenses/mit",
+        "value": "https://api.github.com/licenses/mit"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "File_dump",
+        "value": "MIT License\n\n\nCopyright (c) 2021 Wanying Zhu <wanying.zhu.1@vanderbilt.edu>\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.\n"
+      },
+      "source": "https://raw.githubusercontent.com/belowlab/IMMerge/main/LICENSE",
+      "technique": "file_exploration"
+    }
+  ],
+  "name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "IMMerge"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "owner": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Organization",
+        "value": "belowlab"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "programming_languages": [
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Python",
+        "size": 78716,
+        "type": "Programming_language",
+        "value": "Python"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "readme_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/belowlab/IMMerge/main/README.md"
+      },
+      "technique": "file_exploration"
+    }
+  ],
+  "run": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "(Beta) Run IMMerge as a python module (available on <a href=\"https://pypi.org/project/IMMerge/\">PyPI</a>)",
+        "parent_header": [
+          "IMMerge: Merging imputation data at scale"
+        ],
+        "type": "Text_excerpt",
+        "value": "Install IMMerge with ```pip install IMMerge```.\nArguments should be passed to IMMerge functions in a dictionary and follow the same rules as in command line calls.\nThe command line examples above can be executed with below python code:\n1. Python code to make info.gz file from input vcf.gz files. Outputs are saved in the same directory as input VCFs.\n```bash\nimport IMMerge\nargs = {'--input': ['data_sample/sample_group1.dose.vcf.gz', 'data_sample/sample_group2.dose.vcf.gz', 'data_sample/sample_group3.dose.vcf.gz']}\nIMMerge.write_info(args)\n```\n\n2. Python code to merge sample data in ```./data_sample/```, output files are saved in ```./output_sample/```.\n```bash\nimport IMMerge\nargs = {'--input': ['data_sample/sample_group1.dose.vcf.gz', 'data_sample/sample_group2.dose.vcf.gz','data_sample/sample_group3.dose.vcf.gz'],\n\t\t'--output': 'output_sample/merged_sample', '--check_duplicate_id': True, '--missing': 1}\nIMMerge.run_merge_files(args)\n```\n\n\n"
+      },
+      "source": "https://raw.githubusercontent.com/belowlab/IMMerge/main/README.md",
+      "technique": "header_analysis"
+    }
+  ],
+  "somef_missing_categories": [
+    "acknowledgement",
+    "download",
+    "requirements",
+    "contact",
+    "contributors",
+    "faq",
+    "support",
+    "identifier",
+    "has_build_file",
+    "executable_example"
+  ],
+  "somef_provenance": {
+    "date": "2024-10-04 11:24:26",
+    "somef_schema_version": "1.0.0",
+    "somef_version": "0.9.5"
+  },
+  "stargazers_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 8
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "type": [
+    {
+      "confidence": 0.82,
+      "result": {
+        "type": "String",
+        "value": "commandline-application"
+      },
+      "technique": "software_type_heuristics"
+    }
+  ],
+  "usage": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Command line examples",
+        "parent_header": [
+          "IMMerge: Merging imputation data at scale"
+        ],
+        "type": "Text_excerpt",
+        "value": "1. Example making info.gz file from input vcf.gz files. Outputs are saved in the same directory as input VCFs.\n```bash\ncd IMMerge\npython src/IMMerge/make_info.py \\\n\t--input data_sample/sample_group1.dose.vcf.gz data_sample/sample_group2.dose.vcf.gz data_sample/sample_group3.dose.vcf.gz\n```\n\n2. Example merging sample data in ```./data_sample/```, output files are saved in ```./output_sample/```.\n```bash\ncd IMMerge\npython src/IMMerge/merge_files.py \\\n\t--input data_sample/sample_group1.dose.vcf.gz data_sample/sample_group2.dose.vcf.gz data_sample/sample_group3.dose.vcf.gz \\\n\t--output output_sample/merged_sample \\\n\t--check_duplicate_id true \\\n\t--missing 1\n```\n\n3. Example merging sample data using user supplied retained SNP list ```./data_sample/modified_merged_sample_variants_retained.info.txt```, output files are saved in ```./output_sample/```.\n```bash\ncd IMMerge\npython src/IMMerge/merge_files.py \\\n\t--input data_sample/sample_group1.dose.vcf.gz data_sample/sample_group2.dose.vcf.gz data_sample/sample_group3.dose.vcf.gz \\\n\t--output output_sample/modified_merged_sample \\\n\t--retained_snp_list data_sample/modified_merged_sample_variants_retained.info.txt \\\n\t--check_duplicate_id true \\\n\t--missing 1\n```\n"
+      },
+      "source": "https://raw.githubusercontent.com/belowlab/IMMerge/main/README.md",
+      "technique": "header_analysis"
+    }
+  ]
+}

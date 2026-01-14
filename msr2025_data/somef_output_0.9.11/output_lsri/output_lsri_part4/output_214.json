@@ -1,0 +1,458 @@
+{
+  "citation": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "How to cite seqQscorer",
+        "parent_header": [
+          "Machine Learning Quality Assessment of NGS Data"
+        ],
+        "type": "Text_excerpt",
+        "value": "If you use seqQscorer for your studies, research, analyses, or investigations, please cite the associated [article in Genome Biology](https://genomebiology.biomedcentral.com/articles/10.1186/s13059-021-02294-2). The article also provides detailed descriptions about the software, comprehensive validation analyses, and insights into the underlying dataset.\n\nAPA:\nAlbrecht, S., Sprang, M., Andrade-Navarro, M. A., & Fontaine, J. F. (2021). seqQscorer: automated quality control of next-generation sequencing data using machine learning. *Genome Biology*, 22(1), 1-20. \n\nBibTeX:\n@article{albrecht2021seqqscorer,\n  title={seqQscorer: automated quality control of next-generation sequencing data using machine learning},\n  author={Albrecht, Steffen and Sprang, Maximilian and Andrade-Navarro, Miguel A and Fontaine, Jean-Fred},\n  journal={Genome biology},\n  volume={22},\n  number={1},\n  pages={1--20},\n  year={2021},\n  publisher={BioMed Central}\n}\n\n\n\n"
+      },
+      "source": "https://raw.githubusercontent.com/salbrec/seqQscorer/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": "Albrecht, Steffen and Sprang, Maximilian and Andrade-Navarro, Miguel A and Fontaine, Jean-Fred",
+        "format": "bibtex",
+        "title": "seqQscorer: automated quality control of next-generation sequencing data using machine learning",
+        "type": "Text_excerpt",
+        "value": "@article{albrecht2021seqqscorer,\n    publisher = {BioMed Central},\n    year = {2021},\n    pages = {1--20},\n    number = {1},\n    volume = {22},\n    journal = {Genome biology},\n    author = {Albrecht, Steffen and Sprang, Maximilian and Andrade-Navarro, Miguel A and Fontaine, Jean-Fred},\n    title = {seqQscorer: automated quality control of next-generation sequencing data using machine learning},\n}"
+      },
+      "source": "https://raw.githubusercontent.com/salbrec/seqQscorer/master/README.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "code_repository": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/salbrec/seqQscorer"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_created": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2020-02-01T08:52:22Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_updated": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2024-08-26T19:03:30Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "description": [
+    {
+      "confidence": 0.9852468423473064,
+      "result": {
+        "original_header": "Machine Learning Quality Assessment of NGS Data",
+        "type": "Text_excerpt",
+        "value": "seqQscorer is a python implementation that takes quality statistics or report summaries (quality features) as input to calculate a probability of an input NGS sample to be of low quality. This probability is calculated with classification models from supervised machine learning. The quality features are derived from FastQ and BAM files as shown in the Figure below and described in detail in our [article in Genome Biology](https://genomebiology.biomedcentral.com/articles/10.1186/s13059-021-02294-2).  \nThe following figure describes the workflow implemented to receive and preprocess NGS data from ENCODE and applying a grid-search to find the optimal classification model. The optimization depends on the experimental context (species or assay) and the quality features that are provided by the user. Already computed classification models are not available in the github repository. However, the software contains settings for an over all well-performing generic model and multiple more specialized models, that can be trained with the ENCODE data given or new data. The first time a model is needed, it is trained and serialized into the folder `models`. Note, the model training is done within seconds and afterwards it is not necessary to train again. The models are trained on the preprocessed ENCODE data (in utils) as described in the article. \nFor more details we refer to our research article, however, this paragraph provides a brief description for the feature sets. The *RAW* features are derived with FastQC and contain essentially its report summary. The *MAP* features are the mapping statistics from a Bowtie2 alignment. From this alignment, the feature sets *LOC* and *TSS* are derived that describe the distribution of reads in genomic regions with certain functionalities respectively the distribution of reads close to TSS positions. For the latter feature sets the Bioconductor packages ChIPseeker and ChIPpeakAnno are used. \nAdditionally the script `deriveFeatureSets.py` is available in this repository. It allows the user to preprocess all quality feature sets that are needed to properly run seqQscorer and provides the results in an already readable way for seqQscorer. An example for its usage is provided below.  \n"
+      },
+      "source": "https://raw.githubusercontent.com/salbrec/seqQscorer/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.8891823675026226,
+      "result": {
+        "original_header": "Preprocessing for fastq files",
+        "type": "Text_excerpt",
+        "value": "To produce the features, a bowtie index is needed that matches the assembly used for your data. You can obtain it from the official Bowtie2 webpage as follows, the human GRCh38 is used as an example (more examples are described in this [README](utils/genome_index/README.md))\n```\n# change directory to utils and genome_index\ncd ./utils/genome_index\n\nwget https://genome-idx.s3.amazonaws.com/bt/GRCh38_noalt_as.zip     # for downloading\nunzip GRCh38_noalt_as.zip                                           # for unzipping\n```\n \nIf you would like to test the `deriveFeatureSets.py` for a small example file right away, there is one in the docker: `/var/examples/single/ENCFF165NJF.fastq.gz`. Files for a paired-end test can be found here: `/var/examples/paired/`. Note, these are examples just for testing the installation, the files were reduced to randomly picked reads. Especially the paired-end example has only ~100k reads which is far less than a real NGS sample. \nAll seqQscorer feature sets can be derived by using the provided python script applied on an input fastq file or a pair of fastq files in case of paired-end sequencing. \n```\npython deriveFeatureSets.py --fastq1 /var/examples/single/ENCFF165NJF.fastq.gz --btidx ./utils/genome_index/GRCh38_noalt_as/GRCh38_noalt_as --assembly GRCh38\n```\nThe results will be in the default output folder `./feature_sets/`, use `--outdir` to specify the destination of the feature sets.\nThe following run represents a paired-end example using the genome index for *Mus musculus*. The parameter `--cores` allows the usage of multiple CPUs to accelarate computation, especially the mapping. In this example the feature set files are written to this folder: `./mouse_pe/`.\n```\npython deriveFeatureSets.py --fastq1 /var/examples/paired/ENCFF310LVJ.fastq.gz --fastq2 /var/examples/paired/ENCFF410LTA_r2.fastq.gz --cores 4 --btidx ./utils/genome_index/mm10/mm10 --assembly GRCm38 --outdir ./mouse_pe/\n```\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/salbrec/seqQscorer/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9225675784940033,
+      "result": {
+        "original_header": "Preprocessing with own gene structure files",
+        "type": "Text_excerpt",
+        "value": "The preprocessing procedure runs for the genome assemblies GRCh38 and GRCm38 which were used within the study. In case you would like to run everything with your own data for another species or an older human or mouse genome assembly, it is possible to use gtf files for the Bioconductor packages that derive the LOC and TSS features.  \nSince we ran into compatibility problems while implementing this option, we recommend to use an **NCBI** genome index for Bowtie2, downloaded from this website: [http://bowtie-bio.sourceforge.net/bowtie2/index.shtml](http://bowtie-bio.sourceforge.net/bowtie2/index.shtml).  \nOf course, the Bowtie2 index and the gtf file have to represent data from the same genome assembly. \nThe easiest is to have everything within this repository folder. We suggest to download the required gtf file into the gene structure folder in utils. Execute the following lines to download and properly extract the gtf files from the Ensembl FTP server.  The first example is for a human gtf file, the second is for a rat gtf file, also used in the next example run.\n```\n# change directory to utils and gene_structure\ncd ./utils/gene_structure\n\n# for human\nwget ftp://ftp.ensembl.org/pub/release-101/gtf/homo_sapiens/Homo_sapiens.GRCh38.101.gtf.gz \ngunzip Homo_sapiens.GRCh38.101.gtf.gz\n\n# for rat (Rattus norvegicus)\nwget ftp://ftp.ensembl.org/pub/release-101/gtf/rattus_norvegicus/Rattus_norvegicus.Rnor_6.0.101.gtf.gz\ngunzip Rattus_norvegicus.Rnor_6.0.101.gtf.gz\n```\nHaving the index and gtf, it is straight forward to preprocess fastq files for other organisms. An example for *Rattus norvegicus*:\n```\npython deriveFeatureSets.py --fastq1 /var/examples/single/ENCFF165NJF.fastq.gz --btidx ./utils/genome_index/Rnor_6.0/Rnor_6.0 --outdir ./rat_data/ --gtf ./utils/gene_structure/Rattus_norvegicus.Rnor_6.0.101.gtf -c 4 \n```\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/salbrec/seqQscorer/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9538774080470492,
+      "result": {
+        "original_header": "Applying seqQscorer on preprocessed data",
+        "type": "Text_excerpt",
+        "value": "After deriving the feature sets the application of seqQscorer can be as simple as the following line. Check out the parameters that allow you to specify the feature sets used and especially the classification model that is applied.\n```\npython seqQscorer.py --indir ./feature_set_examples/\n```\n \nBy default the generic classification model is (trained and) used to calculate the quality probabilities. According to our analyses, its performance is comparable to the more specialized models. Furthermore the generic model is the most reliable one as it was trained on the largest dataset. However, depending on the data that was available for our investigations, some specialized models are available. You can specify the model with the parameters `--species`, `--assay`, and `--runtype`. seqQscorer will then automatically select the model that achieved the highest auROC (area under ROC curve) for this subset. Besides the generic model, specialized models are available for all feature set combinations out of RAW, MAP, LOC, and TSS and for these specifications: (human, ChIP-seq, single-ended), (mouse, ChIP-seq, single-ended), (human, ChIP-seq, paired-ended), (human, DNase-seq, paired-ended), (mouse, DNase-seq, paired-ended), (human, RNA-seq, single-ended). \nseqQscorer prints some interesting information to the console. With options such as `--probOut` and `--compOut` it is possible to save your results to a given file name. \nFrom our preprocessed grid search, we already defined algorithms and parameter settings that performed well on the different datasets. Some of them achieved the best performance when applied together with a feature selection method. By default a preprocessed feature selection is applied when it was shown in the grid search that it improves the predictive performance. However, if you want to switch off the feature selection, use `--noFS`.  \nDuring our investigations we also analyzed the impact of peak-type specification. When seqQscorer is applied to ChIP-seq data homogeneous for narrow or broad peaks, we recommend to use the corresponding ChIP-seq model. For broad-peak data from human biosamples we recommend to further specify the model by peak-type. This can be done with the `--peaktype` option, e.g. `--peaktype narrow`. \nThe following example demonstrates the usage of all these parameters. It uses the optimal model for human, paired-end ChIP-seq for narrow peak-type without feature selection and the model is selected by best calibration. The LOC and TSS feature sets are ignored and the model is trained with selected seed. Furthermore, output files are defined to save both the probabilities and the comprehensive output. In this example seqQscorer runs without verboseness and only for the sample ENCFF137DWP in the folder `./feature_set_examples/`.\n```\npython seqQscorer.py --indir ./feature_set_examples/ --species human --assay ChIP-seq --runtype single-end --peaktype narrow --noLOC --noTSS --bestCalib --noFS --probOut ./the_probability.tsv --compOut ./comprehensive_output.txt --seed 42 -nv --sampleID ENCFF137DWP\n```\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/salbrec/seqQscorer/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9466458512474355,
+      "result": {
+        "original_header": "Training a new model on your labeled data",
+        "type": "Text_excerpt",
+        "value": "The basic idea of our machine learning approach can also be used on new data, of course. The most critical information needed are the quality labels. Having these, in best case manually curated, a supervised classification algorithm can train a model on this labeled data. This model can then be applied on new data in order to perform automatic quality control as demonstrated in our research article.  \nBased on your own data you can use the script `trainNewModel.py` to train and serialize a model that is afterwards applied on new samples to compute a quality probability (automatic quality control). The script does not run the whole grid search as we did for our investigations (it would require a lot of resources and time), but it uses classifier configurations that trained highly accurate models in our study. \nThe requirements are essentially:\n* a folder containing the feature sets for the training samples (as preprocessed by the `deriveFeatureSets.py` script)\n* a tab-separated table that links the sample IDs (file names of the feature sets files) to a quality label 1 (low-quality) or 0 (high-quality). By default the column \u201cquality\u201d is used. However, if the column you created is not called \u201cquality\u201d, use the option `--column` to specify the name of the column that contains the labels. Note, the sample ID column has to be named \"sampleID\".\n* an output path to specify where to save the model \nHere we provide an use case from the ATAC-seq cistrome data for human biosamples that was also part of the external validation within our study. This use case contains 90 samples for training and 6 samples for the application of the model. As we use the cistrome flags for labeling, the data had to be anonymized.\n```\npython trainNewModel.py --training ./cistrome_ATAC_seq_use_case/training/ --labels ./cistrome_ATAC_seq_use_case/labels.tsv --column thresh3 --model ./model_ATAC_seq.model\n```\n \nThe resulting model is trained on all samples within the directory given by `--training`. Before this model is trained and serialized, a 10-fold cross-validation is performed on the same input data and the same classifier specification. During the cross-validation useful information about the model performance and different metrics are derived for a varying decision threshold. This information is printed to the console to give more information to the user about the model performance.  \nThe serialized model, trained on your data, can then be applied on new data. This is done again with the `seqQscorer.py` script and the `--model` option: \n```\npython seqQscorer.py --indir ./cistrome_ATAC_seq_use_case/application/ --model model_ATAC_seq.model -nv\n```\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/salbrec/seqQscorer/master/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "download_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/salbrec/seqQscorer/releases"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 9
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/salbrec/seqQscorer/forks"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "salbrec/seqQscorer"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_title": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "Machine Learning Quality Assessment of NGS Data"
+      },
+      "source": "https://raw.githubusercontent.com/salbrec/seqQscorer/master/README.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "images": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/salbrec/seqQscorer/master/figures/workflow.png"
+      },
+      "source": "https://raw.githubusercontent.com/salbrec/seqQscorer/master/README.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "installation": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Software installation",
+        "parent_header": [
+          "Machine Learning Quality Assessment of NGS Data"
+        ],
+        "type": "Text_excerpt",
+        "value": "Especially the preprocessing requires several bioinformatic tools and software packages. The easiest and fastest way to get ready for seqQscorer is pulling the docker and running the scripts inside the docker. The following descriptions explain how to get started with docker. However, it is also possible to install everything manually (see further installation guides at the bottom of this README). \n\nTo start with docker, please open a Linux terminal and run the following commands to first install docker, then pull, and finally run the image.\n\n```\nsudo apt-get install docker\nsudo apt-get install docker.io \n\nsudo docker login\n\nsudo docker pull salbrec/seqqdocker\nsudo docker run -i -t -v \"/home/:/home/\" salbrec/seqqdocker /bin/bash\n\n```\n\nWhen using the docker you\u2019ll be directly within the right directory and able to use the scripts right away. Note, that you might save the output to your project directories and you might also prefer to use the updated github repository. Simply type `git pull` to update the repository within the docker.\n\nWe recommend to clone the git repository outside the docker. Especially the seqQscorer script does not require non-standard python packages and some users might prefer to work without the docker or even use an own installation. To clone the repository into your desired destination, change directory with `cd` and run:\n\n```\ngit clone https://github.com/salbrec/seqQscorer.git\n```\n"
+      },
+      "source": "https://raw.githubusercontent.com/salbrec/seqQscorer/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Getting the first information from the software within your installation",
+        "parent_header": [
+          "Machine Learning Quality Assessment of NGS Data"
+        ],
+        "type": "Text_excerpt",
+        "value": "Change directory into the seqQscorer repository and run the usage information:\n\n```\npython deriveFeatureSets.py --help\npython seqQscorer.py --help\n```\n\nThe expected output looks like this, for `python deriveFeatureSets.py --help`:\n\n```\n\nusage: deriveFeatureSets.py [-h] --fastq1 FASTQ1 [--fastq2 FASTQ2] --btidx\n                            BTIDX [--outdir OUTDIR] [--cores CORES]\n                            [--fastqc {1,2}] [--assembly {GRCh38,GRCm38}]\n                            [--gtf GTF] [--name NAME]\n\nseqQscorer Preprocessing - derives feature sets needed leveraged by seqQscorer\n\noptional arguments:\n  -h, --help            show this help message and exit\n  --fastq1 FASTQ1, -f1 FASTQ1\n                        Input fastq file. Either the fastq file for a single-\n                        end sample or the fastq file for read 1 of a paired-\n                        end sample. Using this default destination\n                        \"./feature_sets/\", all feature sets are computed and\n                        saved. The file names define the sampleID while the\n                        file endings define the feature sets RAW, MAP, LOC and\n                        TSS.\n  --fastq2 FASTQ2, -f2 FASTQ2\n                        In case of a paired-end sample, the fastq file for\n                        read 2. When the preprocessing is applied on paired-\n                        end samples, FastQC is applied to the read 1 by\n                        default. Also the sampleID for the output files are\n                        named by the file name of read1. These two aspects can\n                        be cahnged by using --fastqc respectively --name.\n  --btidx BTIDX, -ix BTIDX\n                        Filename prefix for Bowtie2 Genome Index (minus\n                        trailing .X.bt2).\n  --outdir OUTDIR, -o OUTDIR\n                        Output directory. Default: \"./feature_sets/\"\n  --cores CORES, -c CORES\n                        Defines the number of processors (CPUs) to be used by\n                        bowtie2 and samtools. (decreases runtime)\n  --fastqc {1,2}, -f {1,2}\n                        The fastq on which FastQC is applied on. Can\n                        optionally be selected for paired-end samples.\n  --assembly {GRCh38,GRCm38}, -a {GRCh38,GRCm38}\n                        Species assembly needed to define the gene structure /\n                        annotation used by the bioconductor functions. (has to\n                        be consistent with the species used in for Bowtie2)\n  --gtf GTF, -g GTF     File path for a gtf file to be used to get the LOC and\n                        TSS features. (--assembly will be ignored then)\n  --name NAME, -n NAME  By default the output files are named by the file name\n                        of --fastq1. In order to change this to a custom name,\n                        use this option.\n\n\n```\n\nExpected output for `python seqQscorer.py --help`:\n\n```\n\nusage: seqQscorer.py [-h] --indir INDIR [--species {generic,human,mouse}]\n                     [--assay {generic,ChIP-seq,DNase-seq,RNA-seq}]\n                     [--runtype {generic,single-end,paired-end}]\n                     [--model MODEL] [--noRAW] [--noMAP] [--noLOC] [--noTSS]\n                     [--noFS] [--bestCalib] [--peaktype {narrow,broad}]\n                     [--probOut PROBOUT] [--compOut COMPOUT]\n                     [--inputOut INPUTOUT] [--noVerbose] [--seed SEED]\n                     [--sampleID SAMPLEID]\n\nseqQscorer - A machine learning application for quality assessment of NGS data\n\noptional arguments:\n  -h, --help            show this help message and exit\n  --indir INDIR, -i INDIR\n                        Input directory containing the feature set files. The\n                        feature set files are perfectly fomated by the script\n                        \"deriveFeatures.py\": the file names (until the \".\")\n                        define the sample ID while the file endings define the\n                        corresponding feature set RAW, MAP, LOC, and TSS. By\n                        default seqQscorer applies the machine learning model\n                        to all samples from the given directory within\n                        milliseconds. However, it can be restricted to one\n                        sample using --sampleID.\n  --species {generic,human,mouse}, -s {generic,human,mouse}\n                        Species specifying the model used.\n  --assay {generic,ChIP-seq,DNase-seq,RNA-seq}, -a {generic,ChIP-seq,DNase-seq,RNA-seq}\n                        Assay specifying the model used.\n  --runtype {generic,single-end,paired-end}, -r {generic,single-end,paired-end}\n                        Run-Type specifying the model used.\n  --model MODEL, -m MODEL\n                        Path to a serialized model, trained on own data. If\n                        used, the parameters --species, --assay, and --runtype\n                        have no impact on the classification model.\n  --noRAW               Ignore all RAW features.\n  --noMAP               Ignore all MAP features.\n  --noLOC               Ignore all LOC features.\n  --noTSS               Ignore all TSS features.\n  --noFS                Switch off feature selection. (has only an impact if\n                        the best performance was achieved with chi2 or RFE)\n  --bestCalib           Classifier setting is used that achieved the lowest\n                        brier score, hence the best calibration of the\n                        probabilities.\n  --peaktype {narrow,broad}, -pt {narrow,broad}\n                        Optionally specify the peak-type for ChIP-seq data.\n  --probOut PROBOUT, -po PROBOUT\n                        To specify an output file for the probabilities.\n                        Output will be tab-separated.\n  --compOut COMPOUT, -co COMPOUT\n                        To specify an out file for the comprehensive output.\n                        Output will be kind of tab-separated.\n  --inputOut INPUTOUT, -io INPUTOUT\n                        To specify an out file that will contain the parsed\n                        input. Output will be tab-separated.\n  --noVerbose, -nv      Turn off verboseness, without being quiet.\n  --seed SEED, -rs SEED\n                        Some classifiers apply randomization. Use --seed to\n                        make results reproducible. By default the seed 1 is\n                        used, set it to -1 if using a seed is not desired. For\n                        K-nearest neighbor and Naive Bayes the seed has no\n                        impact.\n  --sampleID SAMPLEID, -id SAMPLEID\n                        Restrict application of seqQscorer to only one sample\n                        defined by the ID.\n\n\n\n```\n"
+      },
+      "source": "https://raw.githubusercontent.com/salbrec/seqQscorer/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Installation with Docker Desktop on Windows",
+        "parent_header": [
+          "Machine Learning Quality Assessment of NGS Data",
+          "Further installation guides"
+        ],
+        "type": "Text_excerpt",
+        "value": "To install Docker Desktop follow the instructions on their website:\nhttps://docs.docker.com/docker-for-windows/install/\n\nUse git from powershell to clone seqQscorer\n```\ngit clone https://github.com/salbrec/seqQscorer.git\n\n```\nTo get the image and activate it is similar to Linux. \nHowever it is advisable to only link the SeqQscorer folder.\nDocker mentions that binding Windows Volumes can lead to performance drops and suggest to bind mounted folders from the linux filesystem in wsl rather than a folder on the windows file system.\nBoth work fine and can be accessed via powershell from the windows side or from the bash from the Linux/WSL side.\n\nBelow is an example from powershell, for linux just add sudo in front.\n```\ndocker pull salbrec/seqqdocker\ndocker run -i -t --name seqQscorer -v \"C:/Users/User/seqQscorer:/seqQscorer\" salbrec/seqqdocker \n```\nNow you can just change to the newqscorer folder and start using the software!\n```\n(SeqQscorer) root@ xxx : cd seqQscorer\n```\nIn this example the SeqQscorer folder that is on windows is to find in the root of the docker image.\nThe docker image is named SeqQscorer and can be invoked by this name in the future.\nYou can copy files from the windows side (like your fastq's) and compute from the docker side.\n\nDocker advises to use WSL, the mounted Linux System for Windows. If you want to use this, the installation and handling would be similar to the normal Linux installation, but the Installation of Docker Desktop for Windows also needs to be done.\n"
+      },
+      "source": "https://raw.githubusercontent.com/salbrec/seqQscorer/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Installation with ANACONDA",
+        "parent_header": [
+          "Machine Learning Quality Assessment of NGS Data",
+          "Further installation guides"
+        ],
+        "type": "Text_excerpt",
+        "value": "First, install anaconda in case you do not have it in your linux machine. We recommend to use the one that is suggested here. For the installation of Anaconda run the following two lines in your terminal.\n\n```\nwget https://repo.anaconda.com/archive/Anaconda3-2020.11-Linux-x86_64.sh\nbash Anaconda3-2020.11-Linux-x86_64.sh\n\n```\nAccept licence and installation requirements with \"return\" and \"yes\", but follow the instructions, you might like to change the directory for anaconda. After installation it is necessary to initialize conda and add the channels needed:\n```\nsource ~/.bashrc\n\nconda config --add channels conda-forge\nconda config --add channels bioconda\n\n```\n\nNow use the yml file `conda_env.yml` to create the conda environment and activate it.\n\n```\nconda env create -f conda_env.yml\nconda activate seqQscorer\n```\n\nFor the installation of the Bioconductor packages we made the experience that the best way is to install them separately within R using the BiocManager. This procedure successfully installed all dependencies in several tests.\n\n```\nR\n\n# Within R run the following lines to install the R packages needed:\ninstall.packages(\"BiocManager\")\nBiocManager::install(\"ChIPpeakAnno\")\nBiocManager::install(\"ChIPseeker\")\nBiocManager::install(\"diffloop\")\nBiocManager::install(\"TxDb.Hsapiens.UCSC.hg38.knownGene\")\nBiocManager::install(\"TxDb.Mmusculus.UCSC.mm10.knownGene\")\n\n```\n"
+      },
+      "source": "https://raw.githubusercontent.com/salbrec/seqQscorer/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 0.9836208763608282,
+      "result": {
+        "original_header": "Preprocessing with own gene structure files",
+        "type": "Text_excerpt",
+        "value": "Since we ran into compatibility problems while implementing this option, we recommend to use an **NCBI** genome index for Bowtie2, downloaded from this website: [http://bowtie-bio.sourceforge.net/bowtie2/index.shtml](http://bowtie-bio.sourceforge.net/bowtie2/index.shtml).  \nThe gtf file should be downloaded from Ensembl via their FTP Download website: [https://www.ensembl.org/info/data/ftp/index.html](https://www.ensembl.org/info/data/ftp/index.html). \nThe easiest is to have everything within this repository folder. We suggest to download the required gtf file into the gene structure folder in utils. Execute the following lines to download and properly extract the gtf files from the Ensembl FTP server.  The first example is for a human gtf file, the second is for a rat gtf file, also used in the next example run.\n```\n# change directory to utils and gene_structure\ncd ./utils/gene_structure\n\n# for human\nwget ftp://ftp.ensembl.org/pub/release-101/gtf/homo_sapiens/Homo_sapiens.GRCh38.101.gtf.gz \ngunzip Homo_sapiens.GRCh38.101.gtf.gz\n\n# for rat (Rattus norvegicus)\nwget ftp://ftp.ensembl.org/pub/release-101/gtf/rattus_norvegicus/Rattus_norvegicus.Rnor_6.0.101.gtf.gz\ngunzip Rattus_norvegicus.Rnor_6.0.101.gtf.gz\n```\nHaving the index and gtf, it is straight forward to preprocess fastq files for other organisms. An example for *Rattus norvegicus*:\n```\npython deriveFeatureSets.py --fastq1 /var/examples/single/ENCFF165NJF.fastq.gz --btidx ./utils/genome_index/Rnor_6.0/Rnor_6.0 --outdir ./rat_data/ --gtf ./utils/gene_structure/Rattus_norvegicus.Rnor_6.0.101.gtf -c 4 \n```\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/salbrec/seqQscorer/master/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "invocation": [
+    {
+      "confidence": 0.8221476545312201,
+      "result": {
+        "original_header": "Preprocessing for fastq files",
+        "type": "Text_excerpt",
+        "value": "If you would like to test the `deriveFeatureSets.py` for a small example file right away, there is one in the docker: `/var/examples/single/ENCFF165NJF.fastq.gz`. Files for a paired-end test can be found here: `/var/examples/paired/`. Note, these are examples just for testing the installation, the files were reduced to randomly picked reads. Especially the paired-end example has only ~100k reads which is far less than a real NGS sample. \nAll seqQscorer feature sets can be derived by using the provided python script applied on an input fastq file or a pair of fastq files in case of paired-end sequencing. \n```\npython deriveFeatureSets.py --fastq1 /var/examples/single/ENCFF165NJF.fastq.gz --btidx ./utils/genome_index/GRCh38_noalt_as/GRCh38_noalt_as --assembly GRCh38\n```\nThe results will be in the default output folder `./feature_sets/`, use `--outdir` to specify the destination of the feature sets.\nThe following run represents a paired-end example using the genome index for *Mus musculus*. The parameter `--cores` allows the usage of multiple CPUs to accelarate computation, especially the mapping. In this example the feature set files are written to this folder: `./mouse_pe/`.\n```\npython deriveFeatureSets.py --fastq1 /var/examples/paired/ENCFF310LVJ.fastq.gz --fastq2 /var/examples/paired/ENCFF410LTA_r2.fastq.gz --cores 4 --btidx ./utils/genome_index/mm10/mm10 --assembly GRCm38 --outdir ./mouse_pe/\n```\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/salbrec/seqQscorer/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.8265766052216157,
+      "result": {
+        "original_header": "Preprocessing with own gene structure files",
+        "type": "Text_excerpt",
+        "value": "The easiest is to have everything within this repository folder. We suggest to download the required gtf file into the gene structure folder in utils. Execute the following lines to download and properly extract the gtf files from the Ensembl FTP server.  The first example is for a human gtf file, the second is for a rat gtf file, also used in the next example run.\n```\n# change directory to utils and gene_structure\ncd ./utils/gene_structure\n\n# for human\nwget ftp://ftp.ensembl.org/pub/release-101/gtf/homo_sapiens/Homo_sapiens.GRCh38.101.gtf.gz \ngunzip Homo_sapiens.GRCh38.101.gtf.gz\n\n# for rat (Rattus norvegicus)\nwget ftp://ftp.ensembl.org/pub/release-101/gtf/rattus_norvegicus/Rattus_norvegicus.Rnor_6.0.101.gtf.gz\ngunzip Rattus_norvegicus.Rnor_6.0.101.gtf.gz\n```\nHaving the index and gtf, it is straight forward to preprocess fastq files for other organisms. An example for *Rattus norvegicus*:\n```\npython deriveFeatureSets.py --fastq1 /var/examples/single/ENCFF165NJF.fastq.gz --btidx ./utils/genome_index/Rnor_6.0/Rnor_6.0 --outdir ./rat_data/ --gtf ./utils/gene_structure/Rattus_norvegicus.Rnor_6.0.101.gtf -c 4 \n```\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/salbrec/seqQscorer/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.8689381700430326,
+      "result": {
+        "original_header": "Training a new model on your labeled data",
+        "type": "Text_excerpt",
+        "value": "The serialized model, trained on your data, can then be applied on new data. This is done again with the `seqQscorer.py` script and the `--model` option: \n```\npython seqQscorer.py --indir ./cistrome_ATAC_seq_use_case/application/ --model model_ATAC_seq.model -nv\n```\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/salbrec/seqQscorer/master/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "issue_tracker": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/salbrec/seqQscorer/issues"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "keywords": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": ""
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "license": [
+    {
+      "confidence": 1,
+      "result": {
+        "name": "MIT License",
+        "spdx_id": "MIT",
+        "type": "License",
+        "url": "https://api.github.com/licenses/mit",
+        "value": "https://api.github.com/licenses/mit"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "seqQscorer"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "owner": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "User",
+        "value": "salbrec"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "programming_languages": [
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Python",
+        "size": 108065,
+        "type": "Programming_language",
+        "value": "Python"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "R",
+        "size": 2592,
+        "type": "Programming_language",
+        "value": "R"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "readme_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/salbrec/seqQscorer/master/README.md"
+      },
+      "technique": "file_exploration"
+    }
+  ],
+  "releases": [
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "salbrec",
+          "type": "User"
+        },
+        "date_created": "2020-12-15T15:15:05Z",
+        "date_published": "2020-12-15T15:33:46Z",
+        "html_url": "https://github.com/salbrec/seqQscorer/releases/tag/2.0",
+        "name": "Second official release (revised)",
+        "release_id": 35298261,
+        "tag": "2.0",
+        "tarball_url": "https://api.github.com/repos/salbrec/seqQscorer/tarball/2.0",
+        "type": "Release",
+        "url": "https://api.github.com/repos/salbrec/seqQscorer/releases/35298261",
+        "value": "https://api.github.com/repos/salbrec/seqQscorer/releases/35298261",
+        "zipball_url": "https://api.github.com/repos/salbrec/seqQscorer/zipball/2.0"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "salbrec",
+          "type": "User"
+        },
+        "date_created": "2020-02-12T11:46:15Z",
+        "date_published": "2020-02-13T16:16:54Z",
+        "html_url": "https://github.com/salbrec/seqQscorer/releases/tag/v1.0",
+        "name": "First official release",
+        "release_id": 23650216,
+        "tag": "v1.0",
+        "tarball_url": "https://api.github.com/repos/salbrec/seqQscorer/tarball/v1.0",
+        "type": "Release",
+        "url": "https://api.github.com/repos/salbrec/seqQscorer/releases/23650216",
+        "value": "https://api.github.com/repos/salbrec/seqQscorer/releases/23650216",
+        "zipball_url": "https://api.github.com/repos/salbrec/seqQscorer/zipball/v1.0"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "somef_missing_categories": [
+    "acknowledgement",
+    "run",
+    "download",
+    "requirements",
+    "contact",
+    "contributors",
+    "documentation",
+    "faq",
+    "identifier",
+    "has_build_file",
+    "executable_example"
+  ],
+  "somef_provenance": {
+    "date": "2024-11-04 02:30:19",
+    "somef_schema_version": "1.0.0",
+    "somef_version": "0.9.5"
+  },
+  "stargazers_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 22
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "support": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Guideline Reports",
+        "parent_header": [
+          "Machine Learning Quality Assessment of NGS Data"
+        ],
+        "type": "Text_excerpt",
+        "value": "For our study we derived different types of features used for quality prediction as described above and more comprehensively in our research article. These features were shown to be very informative for automatic quality control and we derived these features for a large dataset containing more than 2000 NGS samples from ENCODE. In addition to seqQscorer, that applies machine learning models to derive a single value describing the samples probability of being of low quality, we found it very interesting to have an opportunity to manually inspect NGS samples in comparison to this precious reference ENCODE dataset. \n\nIn order to address this we provide the script `guidelineReports.py` that creates a single report showing the distribution of all quality feature values from the ENCODE samples together with the feature values from a given sample. These reports serve as guidelines to support manual NGS quality control of single samples of interest or even for a set of samples.\n\nHaving all feature sets for several samples in one folder as it is done by the `deriveFeatureSets.py` script, the guideline reports can be created in this way:\n\n```\npython guidelineReports.py --indir ./feature_set_examples/\n```\n\nSimilar to seqQscorer the application can be restricted to a single sampleID with `--sampleID`. The reference ENCODE data can also be specified using `--species`, `--assay`, and `--runtype`. For example, when `--species human` is used, the reference dataset will contain a mix of assays and runtypes but only for human samples. Or with `--assay ChIP-seq` the reference plots are created only for ChIP-seq samples. By default the reports are written into this folder `./guideline_reports/` in `PDF` format. The destination can be changed with`--outdir` and also the file format can be changed to `PNG` or `SVG` by using the `--format` parameter (e.g. `--format png`).\n\nThe following example demonstrates the usage of all these parameters. It specifies the reference samples for human, paired-end ChIP-seq and creates the report only for ENCFF165NJF in the folder `./feature_set_examples/`. The output directory is changed to `./svg_report/` and the report file format will be `svg`.\n\n```\npython guidelineReports.py --indir ./feature_set_examples/ --species human --assay ChIP-seq --runtype single-end --outdir ./svg_report/ --format svg --sampleID ENCFF165NJF\n```\n"
+      },
+      "source": "https://raw.githubusercontent.com/salbrec/seqQscorer/master/README.md",
+      "technique": "header_analysis"
+    }
+  ],
+  "usage": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Getting the first information from the software within your installation",
+        "parent_header": [
+          "Machine Learning Quality Assessment of NGS Data"
+        ],
+        "type": "Text_excerpt",
+        "value": "Change directory into the seqQscorer repository and run the usage information:\n\n```\npython deriveFeatureSets.py --help\npython seqQscorer.py --help\n```\n\nThe expected output looks like this, for `python deriveFeatureSets.py --help`:\n\n```\n\nusage: deriveFeatureSets.py [-h] --fastq1 FASTQ1 [--fastq2 FASTQ2] --btidx\n                            BTIDX [--outdir OUTDIR] [--cores CORES]\n                            [--fastqc {1,2}] [--assembly {GRCh38,GRCm38}]\n                            [--gtf GTF] [--name NAME]\n\nseqQscorer Preprocessing - derives feature sets needed leveraged by seqQscorer\n\noptional arguments:\n  -h, --help            show this help message and exit\n  --fastq1 FASTQ1, -f1 FASTQ1\n                        Input fastq file. Either the fastq file for a single-\n                        end sample or the fastq file for read 1 of a paired-\n                        end sample. Using this default destination\n                        \"./feature_sets/\", all feature sets are computed and\n                        saved. The file names define the sampleID while the\n                        file endings define the feature sets RAW, MAP, LOC and\n                        TSS.\n  --fastq2 FASTQ2, -f2 FASTQ2\n                        In case of a paired-end sample, the fastq file for\n                        read 2. When the preprocessing is applied on paired-\n                        end samples, FastQC is applied to the read 1 by\n                        default. Also the sampleID for the output files are\n                        named by the file name of read1. These two aspects can\n                        be cahnged by using --fastqc respectively --name.\n  --btidx BTIDX, -ix BTIDX\n                        Filename prefix for Bowtie2 Genome Index (minus\n                        trailing .X.bt2).\n  --outdir OUTDIR, -o OUTDIR\n                        Output directory. Default: \"./feature_sets/\"\n  --cores CORES, -c CORES\n                        Defines the number of processors (CPUs) to be used by\n                        bowtie2 and samtools. (decreases runtime)\n  --fastqc {1,2}, -f {1,2}\n                        The fastq on which FastQC is applied on. Can\n                        optionally be selected for paired-end samples.\n  --assembly {GRCh38,GRCm38}, -a {GRCh38,GRCm38}\n                        Species assembly needed to define the gene structure /\n                        annotation used by the bioconductor functions. (has to\n                        be consistent with the species used in for Bowtie2)\n  --gtf GTF, -g GTF     File path for a gtf file to be used to get the LOC and\n                        TSS features. (--assembly will be ignored then)\n  --name NAME, -n NAME  By default the output files are named by the file name\n                        of --fastq1. In order to change this to a custom name,\n                        use this option.\n\n\n```\n\nExpected output for `python seqQscorer.py --help`:\n\n```\n\nusage: seqQscorer.py [-h] --indir INDIR [--species {generic,human,mouse}]\n                     [--assay {generic,ChIP-seq,DNase-seq,RNA-seq}]\n                     [--runtype {generic,single-end,paired-end}]\n                     [--model MODEL] [--noRAW] [--noMAP] [--noLOC] [--noTSS]\n                     [--noFS] [--bestCalib] [--peaktype {narrow,broad}]\n                     [--probOut PROBOUT] [--compOut COMPOUT]\n                     [--inputOut INPUTOUT] [--noVerbose] [--seed SEED]\n                     [--sampleID SAMPLEID]\n\nseqQscorer - A machine learning application for quality assessment of NGS data\n\noptional arguments:\n  -h, --help            show this help message and exit\n  --indir INDIR, -i INDIR\n                        Input directory containing the feature set files. The\n                        feature set files are perfectly fomated by the script\n                        \"deriveFeatures.py\": the file names (until the \".\")\n                        define the sample ID while the file endings define the\n                        corresponding feature set RAW, MAP, LOC, and TSS. By\n                        default seqQscorer applies the machine learning model\n                        to all samples from the given directory within\n                        milliseconds. However, it can be restricted to one\n                        sample using --sampleID.\n  --species {generic,human,mouse}, -s {generic,human,mouse}\n                        Species specifying the model used.\n  --assay {generic,ChIP-seq,DNase-seq,RNA-seq}, -a {generic,ChIP-seq,DNase-seq,RNA-seq}\n                        Assay specifying the model used.\n  --runtype {generic,single-end,paired-end}, -r {generic,single-end,paired-end}\n                        Run-Type specifying the model used.\n  --model MODEL, -m MODEL\n                        Path to a serialized model, trained on own data. If\n                        used, the parameters --species, --assay, and --runtype\n                        have no impact on the classification model.\n  --noRAW               Ignore all RAW features.\n  --noMAP               Ignore all MAP features.\n  --noLOC               Ignore all LOC features.\n  --noTSS               Ignore all TSS features.\n  --noFS                Switch off feature selection. (has only an impact if\n                        the best performance was achieved with chi2 or RFE)\n  --bestCalib           Classifier setting is used that achieved the lowest\n                        brier score, hence the best calibration of the\n                        probabilities.\n  --peaktype {narrow,broad}, -pt {narrow,broad}\n                        Optionally specify the peak-type for ChIP-seq data.\n  --probOut PROBOUT, -po PROBOUT\n                        To specify an output file for the probabilities.\n                        Output will be tab-separated.\n  --compOut COMPOUT, -co COMPOUT\n                        To specify an out file for the comprehensive output.\n                        Output will be kind of tab-separated.\n  --inputOut INPUTOUT, -io INPUTOUT\n                        To specify an out file that will contain the parsed\n                        input. Output will be tab-separated.\n  --noVerbose, -nv      Turn off verboseness, without being quiet.\n  --seed SEED, -rs SEED\n                        Some classifiers apply randomization. Use --seed to\n                        make results reproducible. By default the seed 1 is\n                        used, set it to -1 if using a seed is not desired. For\n                        K-nearest neighbor and Naive Bayes the seed has no\n                        impact.\n  --sampleID SAMPLEID, -id SAMPLEID\n                        Restrict application of seqQscorer to only one sample\n                        defined by the ID.\n\n\n\n```\n"
+      },
+      "source": "https://raw.githubusercontent.com/salbrec/seqQscorer/master/README.md",
+      "technique": "header_analysis"
+    }
+  ]
+}

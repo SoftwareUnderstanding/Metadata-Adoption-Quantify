@@ -1,0 +1,407 @@
+{
+  "application_domain": [
+    {
+      "confidence": 12.98,
+      "result": {
+        "type": "String",
+        "value": "Computer Vision"
+      },
+      "technique": "supervised_classification"
+    }
+  ],
+  "code_repository": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/kostkalab/scds_manuscript"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_created": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2019-02-28T15:56:53Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_updated": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2019-08-16T19:51:26Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "description": [
+    {
+      "confidence": 0.9249436571619368,
+      "result": {
+        "original_header": "Step 1: Envrionment",
+        "type": "Text_excerpt",
+        "value": "We provide a docker container that contains all dependencies (python modules and R packages) necessary. \n"
+      },
+      "source": "https://raw.githubusercontent.com/kostkalab/scds_manuscript/master/readme.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9515032421748325,
+      "result": {
+        "original_header": "Step 3: Computational doublet annotation",
+        "type": "Text_excerpt",
+        "value": "In this step we run ten doublet annotation methods on each of the four data sets.\nFor each method, we have a corresponding ```R``` script named BASH2* in the BASH3* subfolder.\nSo, BASH4* will be for running BASH5*, etc. There is also an BASH6* script that takes two command line argumets - one providing the name of the method to use, the other the name of the data set to run the method on. So,\n```{bash}\n$ R --vanilla -f ./R/apply_method.R  --args --data=hgmm --method=scrublet\n```\n \nwill run ```scrublet``` on the BASH8* data, and\n```{bash}\n$ for method in {bcds,cxds,hybrid,scrublet,dblFinder,dblDetection,dblDecon,dblCells}; do\n      for data in {chcl,chpb,demu,hgmm}; do\n        R --vanilla -f ./R/apply_method.R  --args --data=$data --method=$method\n    done\n  done\n```\n \nResults are written out in text files named according to ```./results/tmp/[dataset]_[method].txt```, which contain one line for each cell and three columns. The first\ncolumn contains the cell's barcode, the second the doublet score of the method, and the third column doublet calls (BASH11*/BASH12*, with BASH11* indicating called doublets).\nHigher scores indicate more confidence in annotating a doublet. For methods without calls (BASH13*) or without scores (BASH14*) the respective entries are BASH15*. \nEach data set now contains doublet annotations in the ```colData``` as columns with the following\nnames:\n```{$method}_{score,call}```\n \nwhere ```$method``` is one of BASH26*. The last two are baseline methods and have no associated calls. For example in BASH1*:\n```{R}\n> sce.hgmm = readRDS(\"./results/sce_chpb.rds\")\n> sce.hgmm$hybrid_score  #- <<- hybrid scores\n> sce.hgmm$scrublet_call #- <<- scrublet calls\n```\n \nThis concludes doublet annotation.\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/kostkalab/scds_manuscript/master/readme.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9431183484175188,
+      "result": {
+        "original_header": "Step 4: Analyzing doublet annotation results",
+        "type": "Text_excerpt",
+        "value": "We analyze computational doublet annoations in four ```SingleCellExperiment``` objects, one for each data set (see Step 3 above).\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/kostkalab/scds_manuscript/master/readme.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.8352137065125935,
+      "result": {
+        "original_header": "Generate figures:",
+        "type": "Text_excerpt",
+        "value": " The figures generated are also written to the ```./results/``` directory. The following list of figures is produced: \n"
+      },
+      "source": "https://raw.githubusercontent.com/kostkalab/scds_manuscript/master/readme.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "download": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Step 2: Downloading and processing the data",
+        "parent_header": [
+          "scds_manuscript"
+        ],
+        "type": "Text_excerpt",
+        "value": "The ```scds_manuscript/data``` folder contains directories for each of the four data\nsets. Each directory contains two files, ```getRawData.sh``` and ```processRawData.R```.\n```getRawData.sh``` downloads the data sets (or contains instructions on how to do so),\nwhile ```processRawData.R``` can be run to process the input data and generate\n```SingleCellExperiments``` that contain experimental doublet annotations. For each\ndata set, these annotations are stored in the ```colData``` slot.\n\nFor example, can  download the ```demuxlet``` data via\n\n```{bash}\n$ ./data/demu/getRawData.sh\n```\n\nThe other data sets require human interaction (see the respective ```getRawData.sh``` files.\n\nAfter downloading, the following generates the processed ```hgmm```\ndata:\n\n```{bash}\n$ [[ ! -d ./data/hgmm/proc ]] && mkdir ./data/hgmm/proc\n$ R --vanilla < ./data/hgmm/processRawData.R\n```\nAnd analogous commands work for the other three data sets. Overall, this step generates four files containing processed data:\n\n* ```./data/chcl/proc/sce_chcl.rds```\n* ```./data/chpb/proc/sce_chpb.rds```\n* ```./data/demu/proc/sce_demu.rds```\n* ```./data/hgmm/proc/sce_hgmm.rds```\n\nThat all contain single cell experiments with experimental doublet annotations:\n\n* ```colData(sce)$dbl_anno_lab``` Of type ```character``` for the experimental doublet annotation.\n* ```colData(sce)$dbl_anno``` Of type ```logical``` for the experimental doublet annotation.\n\nTo process all data sets (after manual downloads where necessary) you can do:\n\n```{bash}\nfor dat in {chcl,chpb,demu,hgmm}; do\n  ./data/$dat/getRawData.sh\n  [[ ! -d ./data/$dat/proc ]] && mkdir ./data/$dat/proc\n  R --vanilla < ./data/$dat/processRawData.R\ndone\n```\n\n"
+      },
+      "source": "https://raw.githubusercontent.com/kostkalab/scds_manuscript/master/readme.md",
+      "technique": "header_analysis"
+    }
+  ],
+  "download_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/kostkalab/scds_manuscript/releases"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 0
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/kostkalab/scds_manuscript/forks"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "kostkalab/scds_manuscript"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_title": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "scds_manuscript"
+      },
+      "source": "https://raw.githubusercontent.com/kostkalab/scds_manuscript/master/readme.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "has_build_file": [
+    {
+      "confidence": 1,
+      "result": {
+        "format": "dockerfile",
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/kostkalab/scds_manuscript/master/docker/Dockerfile"
+      },
+      "source": "https://raw.githubusercontent.com/kostkalab/scds_manuscript/master/docker/Dockerfile",
+      "technique": "file_exploration"
+    }
+  ],
+  "has_script_file": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/kostkalab/scds_manuscript/master/misc/negCtrl_data/micm/getRawData.sh"
+      },
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/kostkalab/scds_manuscript/master/misc/negCtrl_data/bmpr/script_alignSingle.sh"
+      },
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/kostkalab/scds_manuscript/master/misc/negCtrl_data/bmpr/runAlignAll.sh"
+      },
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/kostkalab/scds_manuscript/master/docker/update_image.sh"
+      },
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/kostkalab/scds_manuscript/master/data/hgmm/getRawData.sh"
+      },
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/kostkalab/scds_manuscript/master/data/chcl/getRawData.sh"
+      },
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/kostkalab/scds_manuscript/master/data/chpb/getRawData.sh"
+      },
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/kostkalab/scds_manuscript/master/data/demu/getRawData.sh"
+      },
+      "technique": "file_exploration"
+    }
+  ],
+  "installation": [
+    {
+      "confidence": 0.9580363256026101,
+      "result": {
+        "original_header": "scds_manuscript",
+        "type": "Text_excerpt",
+        "value": "Instructions to create figures / tables from the [scds manuscript]().\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/kostkalab/scds_manuscript/master/readme.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9901315246292655,
+      "result": {
+        "original_header": "Step 1: Envrionment",
+        "type": "Text_excerpt",
+        "value": "We provide a docker container that contains all dependencies (python modules and R packages) necessary. \nThe following will set up the environment:\n```{bash}\n#- get docker image\n$ docker pull kostkalab/scds:v2.0\n\n#- run interactive session (bash), for instance:\n$ docker run -it --name scds_tab_fig                                  \\\n                 --net=host                                           \\\n                 --env DISPLAY=$DISPLAY                               \\\n                 --volume $HOME/.Xauthority:/home/rstudio/.Xauthority \\\n                 kostkalab/scds:v2.0                                  \\\n                 /bin/bash\n```\nIn the shell from above, get the code from github\n```{bash}\n$ cd\n$ git clone https://github.com/kostkalab/scds_manuscript.git\n$ cd scds_manuscript\n```\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/kostkalab/scds_manuscript/master/readme.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.8282849379624988,
+      "result": {
+        "original_header": "Generate figures:",
+        "type": "Text_excerpt",
+        "value": "Figures are generated by the ```mk_figs.R``` script, analogously to the tables above:\n```{bashr}\n$ R --vanilla < ./R/mk_figs.R\n```\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/kostkalab/scds_manuscript/master/readme.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "issue_tracker": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/kostkalab/scds_manuscript/issues"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "keywords": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": ""
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "scds_manuscript"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "owner": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "User",
+        "value": "kostkalab"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "programming_languages": [
+    {
+      "confidence": 1,
+      "result": {
+        "name": "R",
+        "size": 117438,
+        "type": "Programming_language",
+        "value": "R"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Shell",
+        "size": 8338,
+        "type": "Programming_language",
+        "value": "Shell"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Dockerfile",
+        "size": 3981,
+        "type": "Programming_language",
+        "value": "Dockerfile"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Python",
+        "size": 1345,
+        "type": "Programming_language",
+        "value": "Python"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "readme_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/kostkalab/scds_manuscript/master/readme.md"
+      },
+      "technique": "file_exploration"
+    }
+  ],
+  "run": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Assess running time:",
+        "parent_header": [
+          "scds_manuscript",
+          "Step 4: Analyzing doublet annotation results"
+        ],
+        "type": "Text_excerpt",
+        "value": "To assess running time we limited resources with the following command:\n\n```{bash}\n$ cd /home/rstudio/scds_manuscript\n$ taskset --cpu-list 2,3,19,20 R --vanilla < ./R/mk_running-times_python.R\n$ cat ./results/tab_running-times.tex\n```"
+      },
+      "source": "https://raw.githubusercontent.com/kostkalab/scds_manuscript/master/readme.md",
+      "technique": "header_analysis"
+    }
+  ],
+  "somef_missing_categories": [
+    "citation",
+    "acknowledgement",
+    "requirements",
+    "contact",
+    "contributors",
+    "documentation",
+    "license",
+    "usage",
+    "faq",
+    "support",
+    "identifier",
+    "executable_example"
+  ],
+  "somef_provenance": {
+    "date": "2024-11-04 02:42:37",
+    "somef_schema_version": "1.0.0",
+    "somef_version": "0.9.5"
+  },
+  "stargazers_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 1
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "type": [
+    {
+      "confidence": 0.82,
+      "result": {
+        "type": "String",
+        "value": "commandline-application"
+      },
+      "technique": "software_type_heuristics"
+    }
+  ]
+}

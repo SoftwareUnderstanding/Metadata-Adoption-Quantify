@@ -1,0 +1,469 @@
+{
+  "application_domain": [
+    {
+      "confidence": 49.99,
+      "result": {
+        "type": "String",
+        "value": "Natural Language Processing"
+      },
+      "technique": "supervised_classification"
+    }
+  ],
+  "citation": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Citation",
+        "parent_header": [
+          "Languse of Genome (LOGO)"
+        ],
+        "type": "Text_excerpt",
+        "value": "```\n@article{Licko2022language,\n  title={Integrating convolution and self-attention improves language model of human genome for interpreting non-coding regions at base-resolution},\n  author={Meng Yang, Lichao Huang, Haiping Huang, Hui Tang, Nan Zhang, Huanming Yang, Jihong Wu, Feng Mu},\n  journal={Nucleic Acid Research},\n  doi={10.1093/nar/gkac326},\n  url={https://doi.org/10.1093/nar/gkac326},\n  year={2022},\n  publisher={Oxford University Press}\n}\n```\n"
+      },
+      "source": "https://raw.githubusercontent.com/melobio/LOGO/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": "Meng Yang, Lichao Huang, Haiping Huang, Hui Tang, Nan Zhang, Huanming Yang, Jihong Wu, Feng Mu",
+        "doi": "10.1093/nar/gkac326",
+        "format": "bibtex",
+        "title": "Integrating convolution and self-attention improves language model of human genome for interpreting non-coding regions at base-resolution",
+        "type": "Text_excerpt",
+        "url": "https://doi.org/10.1093/nar/gkac326",
+        "value": "@article{Licko2022language,\n    publisher = {Oxford University Press},\n    year = {2022},\n    url = {https://doi.org/10.1093/nar/gkac326},\n    doi = {10.1093/nar/gkac326},\n    journal = {Nucleic Acid Research},\n    author = {Meng Yang, Lichao Huang, Haiping Huang, Hui Tang, Nan Zhang, Huanming Yang, Jihong Wu, Feng Mu},\n    title = {Integrating convolution and self-attention improves language model of human genome for interpreting non-coding regions at base-resolution},\n}"
+      },
+      "source": "https://raw.githubusercontent.com/melobio/LOGO/master/README.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "code_repository": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/melobio/LOGO"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_created": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2021-04-30T00:43:29Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_updated": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2024-05-06T04:33:34Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "description": [
+    {
+      "confidence": 0.9859512303990069,
+      "result": {
+        "original_header": "Languse of Genome (LOGO)",
+        "type": "Text_excerpt",
+        "value": "This repository contains code and pre-trained weights for ALBERT genome language models from MGI, ALBERT genome language models were introduced in our paper, [Integrating convolution and self-attention improves language model of human genome for interpreting non-coding regions at base-resolution, ***Nucleic Acids Research*** (Meng Y, Lichao H, et al. 2022)](https://doi.org/10.1093/nar/gkac326). \n"
+      },
+      "source": "https://raw.githubusercontent.com/melobio/LOGO/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9451243377980479,
+      "result": {
+        "original_header": "Pre-training model",
+        "type": "Text_excerpt",
+        "value": "Check out the file \u201c01_Pre-training_Model/README.txt\u201d\n```shell\n1. Download fasta file\nFrom https://ftp.ncbi.nlm.nih.gov/genomes/all/GCF/000/001/405/GCF_000001405.25_GRCh37.p13/ Download GCF_000001405.25_GRCh37.p13_genomic.fna.gz. And then unzip to ./data/hg19/GCF_000001405.25_GRCh37.p13_genomic.fna\n\n2. To generate ref sequence, about 15G of space is required:\npython 00_generate_refseq_sequence.py \\\n  --data ../data/hg19/GCF_000001405.25_GRCh37.p13_genomic.fna \\\n  --output ../data/hg19/train_5_gram \\\n  --chunk-size 10000 \\\n  --seq-size 1000 \\\n  --seq-stride 100 \\\n  --ngram 5 \\\n  --stride 1 \\\n  --slice-size 100000 \\\n  --hg-name hg19 \\\n  --pool-size 32\n\n3. To generate tfrecord, about 237G of space is required (different kmer requires slightly different storage space, kmer=3, 4, 5, 6):\npython 01_generate_DNA_refseq_tfrecord.py \\\n  --output /data/hg19/train_5_gram \\\n  --output /data/hg19/train_5_gram_tfrecord \\\n  --chunk-size 10000 \\\n  --seq-size 1000 \\\n  --seq-stride 100 \\\n  --ngram 5 \\\n  --stride 1 \\\n  --slice-size 100000 \\\n  --hg-name hg19 \\\n  --pool-size 32\n\n4. Perform DNA sequence pre-training, respectively (kmer=3,4,5,6, perform training):\nCUDA_VISIBLE_DEVICES=0,1,2,3 python 02_train_gene_transformer_lm_hg_bert4keras_tfrecord.py \\\n  --save ../data \\\n  --train-data ../data/hg19/train_5_gram_tfrecord \\\n  --seq-len 1000 \\\n  --model-dim 256 \\\n  --transformer-depth 2 \\\n  --num-heads 8 \\\n  --batch-size 256 \\\n  --ngram 5 \\\n  --stride 5 \\\n  --model-name genebert_5_gram_2_layer_8_heads_256_dim \\\n  --steps-per-epoch 4000 \\\n  --shuffle-size 4000\n```\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/melobio/LOGO/master/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "download_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/melobio/LOGO/releases"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "executable_example": [
+    {
+      "confidence": 1,
+      "result": {
+        "format": "jupyter_notebook",
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/melobio/LOGO/master/05_LOGO_Variant_Prioritization/1.%20script/05_LOGO-C2P/Clinvar_C2P/GBERT-C2P/Clinvar_354.ipynb"
+      },
+      "source": "https://raw.githubusercontent.com/melobio/LOGO/master/05_LOGO_Variant_Prioritization/1.%20script/05_LOGO-C2P/Clinvar_C2P/GBERT-C2P/Clinvar_354.ipynb",
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "format": "jupyter_notebook",
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/melobio/LOGO/master/05_LOGO_Variant_Prioritization/1.%20script/05_LOGO-C2P/GWAS_C2P/GWAS_1408.ipynb"
+      },
+      "source": "https://raw.githubusercontent.com/melobio/LOGO/master/05_LOGO_Variant_Prioritization/1.%20script/05_LOGO-C2P/GWAS_C2P/GWAS_1408.ipynb",
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "format": "jupyter_notebook",
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/melobio/LOGO/master/04_LOGO_Chromatin_Feature/1.%20script/04_LOGO_Chrom_predict/predict_chrom_feature_demo.ipynb"
+      },
+      "source": "https://raw.githubusercontent.com/melobio/LOGO/master/04_LOGO_Chromatin_Feature/1.%20script/04_LOGO_Chrom_predict/predict_chrom_feature_demo.ipynb",
+      "technique": "file_exploration"
+    }
+  ],
+  "forks_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 3
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/melobio/LOGO/forks"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "melobio/LOGO"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_title": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "Languse of Genome (LOGO)"
+      },
+      "source": "https://raw.githubusercontent.com/melobio/LOGO/master/README.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "has_build_file": [
+    {
+      "confidence": 1,
+      "result": {
+        "format": "dockerfile",
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/melobio/LOGO/master/docker/Dockerfile"
+      },
+      "source": "https://raw.githubusercontent.com/melobio/LOGO/master/docker/Dockerfile",
+      "technique": "file_exploration"
+    }
+  ],
+  "has_script_file": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/melobio/LOGO/master/05_LOGO_Variant_Prioritization/1.%20script/05_LOGO-C2P/run_evo.sh"
+      },
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/melobio/LOGO/master/01_Pre-training_Model/02_run_genebert_bert4keras_tfrecord_train.sh"
+      },
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/melobio/LOGO/master/01_Pre-training_Model/01_generate_DNA_refseq_tfrecord.sh"
+      },
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/melobio/LOGO/master/01_Pre-training_Model/00_generate_refseq_sequence.sh"
+      },
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/melobio/LOGO/master/04_LOGO_Chromatin_Feature/1.%20script/04_LOGO_Chrom_919/01_run_deepsea_tfrecord_utils.sh"
+      },
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/melobio/LOGO/master/04_LOGO_Chromatin_Feature/1.%20script/04_LOGO_Chrom_919/00_run_deepsea_data_loader.sh"
+      },
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/melobio/LOGO/master/04_LOGO_Chromatin_Feature/1.%20script/04_LOGO_Chrom_919/02_run_deepsea_classification_train.sh"
+      },
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/melobio/LOGO/master/04_LOGO_Chromatin_Feature/1.%20script/04_LOGO_Chrom_predict/run_GeneBert_919_2002_3357_3540.sh"
+      },
+      "technique": "file_exploration"
+    }
+  ],
+  "installation": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Installation",
+        "parent_header": [
+          "Languse of Genome (LOGO)",
+          "Usage"
+        ],
+        "type": "Text_excerpt",
+        "value": "As a prerequisite, you must have Tensorfolw-gpu 2.0.0 installed to use this repository.\n\nYou can use this three-liner for installation:\n\n```shell\nconda create --name logo python==3.6.9 tensorflow-gpu==2.0 keras==2.3.1 numpy pandas tqdm scipy scikit-learn matplotlib jupyter notebook nb_conda\nsource activate logo\npip install biopython==1.68\n```\n\n\n"
+      },
+      "source": "https://raw.githubusercontent.com/melobio/LOGO/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 0.9990688846455051,
+      "result": {
+        "original_header": "Promoter Prediction",
+        "type": "Text_excerpt",
+        "value": "Check out the file \u201c02_LOGO_Promoter/README.txt\u201d\n```shell\n1. Data preparation\n- Download GCF_000001405.39_GRCh38.p13_genomic.gff from https://ftp.ncbi.nlm.nih.gov/genomes/all/GCF/000/001/405/GCF_000001405.39_GRCh38.p13/GCF_000001405.39_GRCh38.p13_genomic.gff.gz\n  And unzip it to /data/hg38/GCF_000001405.39_GRCh38.p13_genomic.gff\n\n- Download the file epdnew from https://epd.epfl.ch/EPD_download.php, which are BOTH, TATA_BOX, NO_TATA_BOX, and generate tfrecord,\n  python 00_EPDnew_data_prepare.py\n\n2. Make Promoter predictions\n- python 01_PromID_trainer.py\n\n3. Make Promoter + knowledge prediction\n- python 02_PromID_trainer_knowledge.py\n\n4. Promoter prediction results\n- 03_LOGO_Promoter_Prediction_Result.xlsx\n```\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/melobio/LOGO/master/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "invocation": [
+    {
+      "confidence": 0.9059155776836354,
+      "result": {
+        "original_header": "Pre-training model",
+        "type": "Text_excerpt",
+        "value": "Check out the file \u201c01_Pre-training_Model/README.txt\u201d\n```shell\n1. Download fasta file\nFrom https://ftp.ncbi.nlm.nih.gov/genomes/all/GCF/000/001/405/GCF_000001405.25_GRCh37.p13/ Download GCF_000001405.25_GRCh37.p13_genomic.fna.gz. And then unzip to ./data/hg19/GCF_000001405.25_GRCh37.p13_genomic.fna\n\n2. To generate ref sequence, about 15G of space is required:\npython 00_generate_refseq_sequence.py \\\n  --data ../data/hg19/GCF_000001405.25_GRCh37.p13_genomic.fna \\\n  --output ../data/hg19/train_5_gram \\\n  --chunk-size 10000 \\\n  --seq-size 1000 \\\n  --seq-stride 100 \\\n  --ngram 5 \\\n  --stride 1 \\\n  --slice-size 100000 \\\n  --hg-name hg19 \\\n  --pool-size 32\n\n3. To generate tfrecord, about 237G of space is required (different kmer requires slightly different storage space, kmer=3, 4, 5, 6):\npython 01_generate_DNA_refseq_tfrecord.py \\\n  --output /data/hg19/train_5_gram \\\n  --output /data/hg19/train_5_gram_tfrecord \\\n  --chunk-size 10000 \\\n  --seq-size 1000 \\\n  --seq-stride 100 \\\n  --ngram 5 \\\n  --stride 1 \\\n  --slice-size 100000 \\\n  --hg-name hg19 \\\n  --pool-size 32\n\n4. Perform DNA sequence pre-training, respectively (kmer=3,4,5,6, perform training):\nCUDA_VISIBLE_DEVICES=0,1,2,3 python 02_train_gene_transformer_lm_hg_bert4keras_tfrecord.py \\\n  --save ../data \\\n  --train-data ../data/hg19/train_5_gram_tfrecord \\\n  --seq-len 1000 \\\n  --model-dim 256 \\\n  --transformer-depth 2 \\\n  --num-heads 8 \\\n  --batch-size 256 \\\n  --ngram 5 \\\n  --stride 5 \\\n  --model-name genebert_5_gram_2_layer_8_heads_256_dim \\\n  --steps-per-epoch 4000 \\\n  --shuffle-size 4000\n```\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/melobio/LOGO/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9004772780540435,
+      "result": {
+        "original_header": "Promoter Prediction",
+        "type": "Text_excerpt",
+        "value": "Check out the file \u201c02_LOGO_Promoter/README.txt\u201d\n```shell\n1. Data preparation\n- Download GCF_000001405.39_GRCh38.p13_genomic.gff from https://ftp.ncbi.nlm.nih.gov/genomes/all/GCF/000/001/405/GCF_000001405.39_GRCh38.p13/GCF_000001405.39_GRCh38.p13_genomic.gff.gz\n  And unzip it to /data/hg38/GCF_000001405.39_GRCh38.p13_genomic.gff\n\n- Download the file epdnew from https://epd.epfl.ch/EPD_download.php, which are BOTH, TATA_BOX, NO_TATA_BOX, and generate tfrecord,\n  python 00_EPDnew_data_prepare.py\n\n2. Make Promoter predictions\n- python 01_PromID_trainer.py\n\n3. Make Promoter + knowledge prediction\n- python 02_PromID_trainer_knowledge.py\n\n4. Promoter prediction results\n- 03_LOGO_Promoter_Prediction_Result.xlsx\n```\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/melobio/LOGO/master/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "issue_tracker": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/melobio/LOGO/issues"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "keywords": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": ""
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "license": [
+    {
+      "confidence": 1,
+      "result": {
+        "name": "MIT License",
+        "spdx_id": "MIT",
+        "type": "License",
+        "url": "https://api.github.com/licenses/mit",
+        "value": "https://api.github.com/licenses/mit"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "File_dump",
+        "value": "MIT License\n\nCopyright (c) 2022 melobio\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE."
+      },
+      "source": "https://raw.githubusercontent.com/melobio/LOGO/master/LICENSE",
+      "technique": "file_exploration"
+    }
+  ],
+  "name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "LOGO"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "owner": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "User",
+        "value": "melobio"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "programming_languages": [
+    {
+      "confidence": 1,
+      "result": {
+        "name": "HTML",
+        "size": 1584099,
+        "type": "Programming_language",
+        "value": "HTML"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Python",
+        "size": 889785,
+        "type": "Programming_language",
+        "value": "Python"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Jupyter Notebook",
+        "size": 166061,
+        "type": "Programming_language",
+        "value": "Jupyter Notebook"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Shell",
+        "size": 6848,
+        "type": "Programming_language",
+        "value": "Shell"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Dockerfile",
+        "size": 1410,
+        "type": "Programming_language",
+        "value": "Dockerfile"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "readme_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/melobio/LOGO/master/README.md"
+      },
+      "technique": "file_exploration"
+    }
+  ],
+  "requirements": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Requirement",
+        "parent_header": [
+          "Languse of Genome (LOGO)",
+          "Usage"
+        ],
+        "type": "Text_excerpt",
+        "value": "```\n## System\nUbuntu 18.04\ngcc 7.5.0\n\n## Conda environment\ncudatoolkit               10.0.130                      0    defaults\ncudnn                     7.6.5                cuda10.0_0    defaults\n...\nkeras                     2.3.1                         0    defaults\nkeras-applications        1.0.8                      py_1    defaults\nkeras-base                2.3.1                    py36_0    defaults\nkeras-preprocessing       1.1.2              pyhd3eb1b0_0    defaults\npandas                    1.1.5            py36ha9443f7_0    defaults\npython                    3.6.9                h265db76_0    defaults\n...\ntensorflow                2.0.0           gpu_py36h6b29c10_0    defaults\ntensorflow-base           2.0.0           gpu_py36h0ec5d1f_0    defaults\ntensorflow-estimator      2.0.0              pyh2649769_0    defaults\ntensorflow-gpu            2.0.0                h0d30ee6_0    defaults\n\n```\n\n\n"
+      },
+      "source": "https://raw.githubusercontent.com/melobio/LOGO/master/README.md",
+      "technique": "header_analysis"
+    }
+  ],
+  "somef_missing_categories": [
+    "acknowledgement",
+    "run",
+    "download",
+    "contact",
+    "contributors",
+    "documentation",
+    "usage",
+    "faq",
+    "support",
+    "identifier"
+  ],
+  "somef_provenance": {
+    "date": "2024-10-05 23:19:33",
+    "somef_schema_version": "1.0.0",
+    "somef_version": "0.9.5"
+  },
+  "stargazers_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 19
+      },
+      "technique": "GitHub_API"
+    }
+  ]
+}

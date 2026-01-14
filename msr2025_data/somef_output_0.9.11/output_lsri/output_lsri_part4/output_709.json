@@ -1,0 +1,314 @@
+{
+  "code_repository": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/Dowell-Lab/DAStk"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_created": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2019-01-23T19:40:51Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_updated": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2024-07-02T12:02:45Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "description": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "Differential ATAC-seq toolkit"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 0.9292438631625876,
+      "result": {
+        "original_header": "DAStk",
+        "type": "Text_excerpt",
+        "value": "The Differential\n`ATAC-seq <https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4374986/>`__\nToolkit (DAStk) is a set of command-line tools to aid analyzing\ndifferential ATAC-seq data. By leveraging changes in accessible\nchromatin, we can detect significant changes in transcription factor\n(TF) activity. This is a simple but powerful tool for cellular\nperturbation analysis. In fact, the applications of DAStk are not\nnecessarily limited to ATAC-seq, but can extend to comparing any pair of\nbedGraphs containing regions of interest, e.g.\u00a0transcription regulatory\nelements (TRE) from nascent transcription assays like PRO-seq, or others\nlike ChIP-seq peaks. \n-  A pair of files listing peaks of ATAC-seq signal in two biological\n   conditions (e.g.\u00a0DMSO and drug-treated) in any BedGraph-compatible\n   format (tab-delimited)\n-  A set of files listing the putative binding sites across the\n   reference genome of choice, one file per transcription factor motif,\n   also in any BedGraph-like format. These are normally generated from\n   position weight matrices (PWMs) available at TF model databases like\n   `HOCOMOCO <http://hocomoco11.autosome.ru>`__. These files are\n   expected to have a ``.bed``, ``.BedGraph`` or ``.txt`` extension. \n**IMPORTANT: All files mentioned above (ATAC-seq peaks and computed\nmotif sites) MUST be sorted by the same criteria. Different\nbioinformatics tools use different lexical sorting criteria (e.g.\u00a0chr10\nafter chr1, or chr2 after chr1) so please ensure the sorting criteria is\nuniform.** \nThis is the simplest option, and it will also create the executable\ncommands ``process_atac`` and ``differential_md_score``. Alternatively,\nyou can clone this repository by running: \nThese scripts feature comprehensive help when called with the ``--help``\nargument. Every argument provides a short and long form (i.e.\u00a0``-t`` or\n``--threads``). There are normally two steps in a typical workflow: \n1. Process the ATAC-seq peak files (process_atac) to calculate the\n   `MD-score\n   statistic <https://genome.cshlp.org/content/28/3/334.short>`__ for\n   each motif provided.\n2. Detect the most statistically significant changes in MD-score\n   (differential_md_score) between both biological conditions (taking\n   into the account the peaks involved), and generate MA and barcode\n   plots. \nPerform differential analysis on the calculated motif displacement\nscores, highlighting the significant motifs at your p-value threshold of\nchoice: \nPerform downstream analysis to discover what is common among those\nsignificant TFs: \nData Processing and Plotting\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~ \nThe third plotting module, ``tf_intersect`` can be used to generate a\nvenn diagram (3 or fewer conditions) or an upset plot using multiple\nresult files as inputs to compare common motifs between conditions. For\nexample, using the -e/\u2013enriched argument and by providing multiple\n\\*_md_score.txt files files from ``process_atac``, all motifs with an MD\nscore >0.2 will be intersected. Additionally, if more than three input\nstats files are specified, three catplots will be generated alongside\nthe upset plot by taking the mean value of all of the stats files for\ntotal genome-wide motif hits, motif hits within 3kb of the region file,\nand the MD score. \n**IMPORTANT** Either raw MD score outputs from ``process_atac`` or\ndifferential MD scores from ``differential_md_score`` may be used,\nhowever it is not recommended to mix file input types. There are also\nsome plotting functions unique to each (e.g.\u00a0intersecting significant\nmotifs is only relevant to the ``differential_md_score`` outputs.\nFurthermore, -e/\u2013enriched and -d/\u2013depleted have different relative\nvalues between the two output types. Using the ``process_atac`` results,\nthe raw MD score will be used and defaults are relative to a background\nsingal of 0.1. Using the ``differential_md_score`` stats output, the\nenriched/depleted is based on the *differential* MD score (i.e.\u00a0the\ndifference in MD scores between the two conditions) and therefore the\nthresholds are specified by a different argument. \nA stats file of the intersection data will also be generated in the\nformat needed to generate the upset plot (see\nhttps://pypi.org/project/pyupset/0.1.1.post4/). There is a limit of 12\ninput files for plotting. However, if more than 12 files are specified,\na stats file output will still be generated specifying motif\nintersections. \nThe following will provide a full list of arguments and usage\ninstructions instructions for each of these plotting tools: \nThis build now includes a graph that combines all human proteins in\n`Uniprot <https://www.uniprot.org/>`__, with their respective\nannotations, and all human `Reactome <https://reactome.org/>`__ data on\nbiological pathways, biochemical reactions, and complex formation. This\nallows the user to query for existing knowledge about what aspects of\nthe significantly changing TFs are shared among two or more of them.\nThey may participate in the same pathway or biological process, be\nmembers of the same complex, have shared cofactors, directly interact\nwith each other, etc. \nYou can optionally provide a list of \u201cuninteresting\u201d intersections by\nlisting the ontology concept URIs in a file (see `our\nexample <./DAStk/uninteresting_relations.txt>`__ list, for things in\ncommon between TFs that are too obvious), so that they are omitted from\nthe output. You can also specify additional entities to include in the\nsearch, besides the TFs showing a change of activity beyond the provided\ncutoff, also in a different file listing ontology URIs. The `list of\nlabels for each concept\nused <./DAStk/public_knowledge/all_labels.tsv>`__ shows the possible\nURIs that could be included as an additional search endpoint. For\nexample, if we end up with 5 different TFs that are significantly\nchanging between conditions and we also want to search how they all\nrelate to zinc, we can provide a file with the URI\n`<http://purl.obolibrary.org/obo/CHEBI_29105> <http://purl.obolibrary.org/obo/CHEBI_29105>`__.\nThis tool produces a report that looks like the excerpt below: \n   Direct interactions between each of these TFs:\n   NFYB interacts with TP53\n   TP53 interacts with CEBPB \n   Other ways these TFs are related:\n   CEBPB, CEBPE, ELK1, HLF, NFIA, NFIB, NFIX, NFYB, NRF1, TP53, ZNF180, ZNF341, ZNF396, ZNF441, ZNF519, ZNF529, ZNF540, and ZNF93: located in nucleus \n   ZNF180, ZNF432, ZNF441, ZNF519, ZNF529, and ZNF540: molecularly interacts with KRAB-ZNF / KAP Complex [nucleoplasm] \n   CEBPB and CEBPD: interacts with ATF4 \n   CEBPB and CEBPD: interacts with CEBPA \n   CEBPB and CEBPD: participates in positive regulation of osteoblast differentiation \n   CEBPB and CEBPE: participates in cellular response to lipopolysaccharide \n   CEBPB and CEBPE: participates in defense response to bacterium \nThe above generates a tab-delimited file with all differential MD scores\nfor each motif and their p-values (sorted by p-value), an MA plot that\nlabels the most significant TF activity changes, at a p-value cutoff of\n1e-7. Note that better plot-friendly condition names (say, \u201cDMSO\u201d and\n\u201cTreatment\u201d) can be provided using the ``--label-1`` and ``--label-2``\narguments. The plots look like the example below: \nThe ``-b`` flag also generates a \u201cbarcode plot\u201d of each of these\nstatistically significat motif differences that depicts how close the\nATAC-seq peaks were to the (putative TF-binding) motif sites, within a\n1500 base-pair radius of the motif center: \nIf you can take advantage of multiprocessing, you can calculate\nMD-scores for both conditions simultaneously, assigning several threads\nto each, then generate the plots once both ``*_md_scores.txt`` files are\nready. \n   Motif name , p-value , # total motif hits, # nearby peaks in condition 1 , # nearby peaks in condition 2 , MD-score in condition 1 , MD-score in condition 2, differential MD-score \nTo query what we know about these highlighted TFs displaying a\nsignificant difference in activity, we can use: \n"
+      },
+      "source": "https://raw.githubusercontent.com/Dowell-Lab/DAStk/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9488289459704428,
+      "result": {
+        "original_header": "Additional Arguments",
+        "type": "Text_excerpt",
+        "value": "If your genome is not incuded in the UCSC genome repository, you will\ninstead need to provide a chromosome sizes file in processess_atac. This\ncan be generated using\n`samtools <http://www.htslib.org/doc/samtools.html>`__ faidx as follows: \nIf the -g/\u2013global-normalization argument is used in the\n``differential_md_score`` module, then the total number of genome-wide\nmotif hits will be used to normalize the barcode plots. This may be\nhelpful in better assessing changes across different\nperturbations/experiments or cell lines. Otherwise, the barcode plots\nwill simply be set to the same max heat to facilitate better\nvisualization of relative motif density between conditions. This\nnormalization argument has also been implemented in the ``barcode_plot``\nplotting module and as such the output stats file from\n``differential_md_score`` now include the total number of genome-wide\nmotif hits for each motif. \nWhile we strongly recommend using the default 1500bp radius window in\ncalculating the MD score (and differential MD score), as of v0.3.0 we\nnow have a radius argument (``-r``/``--radius``) which will allow you to\nexpand or shrink this window. If changed, the MD score calculation will\nfollow the same principle in that it will be a ratio of motifs hits\nwithin the cetner 1/10th of the window relative divided by the number of\ntotal motif hits within the window. For example, if the user specifies a\nradius of 2000bp, there will be a window size of 4000bp, a center of\n400bp around the features of interest, and the MD score will be # motif\nhits within 400bp/ # motifs within 4000bp. Keep in mind that expanding\nthis window may be useful in visualization, but will result in an MD\nscore approaching 0.1 (background). \nFeel free to use the pre-scanned motif files provided,\nHOCOMOCO_v11_p1e-6_grch38.tar.gz(`mirror\n1 <http://dowell.colorado.edu/pubs/DAStk/motifs/HOCOMOCO_v11_p1e-6_grch38.tar.gz>`__,\n`mirror\n2 <https://drive.google.com/file/d/19D1iW9x0mswiFLoj6hrDFjVfhYmAbLqG/view?usp=sharing>`__),\nHOCOMOCO_v11_p1e-6_hg19.tar.gz(`mirror\n1 <http://dowell.colorado.edu/pubs/DAStk/motifs/HOCOMOCO_v11_p1e-6_hg19.tar.gz>`__,\n`mirror\n2 <https://drive.google.com/file/d/10_0kuPQbswmhoazjvEJ1KfGRJDuJ-O0y/view?usp=sharing>`__)\nand HOCOMOCO_v11_p1e-6_mm10.tar.gz (`mirror\n1 <http://dowell.colorado.edu/pubs/DAStk/motifs/HOCOMOCO_v11_p1e-6_mm10.tar.gz>`__,\n`mirror\n2 <https://drive.google.com/file/d/1qCirs0AfHzFwnbXMEa8vTd06tEiyE42Z/view?usp=sharing>`__\nfor the ``GRCh38/hg38``, ``hg19`` and ``mm10`` reference genomes,\nrespectively. They have been generated from HOCOMOCO\u2019s v11\nmononucleotide model, background-corrected for each reference genome. To\ngenerate your own ``bed`` files for each motif from this or any other\nsource, you can use FIMO in combination with the downloaded ``.meme``\nfiles from your TF database of choice. For example, if using HOCOMOCO,\nyou can create the motif file for TP53 using their mononucleotide model\nwith a p-value threshold of 0.000001 by: \n*Kulakovskiy, I.V., Vorontsov, I.E., Yevshin, I.S., Sharipov, R.N.,\nFedorova, A.D., Rumynskiy, E.I., Medvedeva, Y.A., Magana-Mora, A.,\nBajic, V.B., Papatsenko, D.A., et al.\u00a0(2018).* `HOCOMOCO: towards a\ncomplete collection of transcription factor binding models for human and\nmouse via large-scale ChIP-Seq\nanalysis <https://academic.oup.com/nar/article/46/D1/D252/4616875>`__\\ *.\nNucleic Acids Res 46, D252\u2013D259.* \n"
+      },
+      "source": "https://raw.githubusercontent.com/Dowell-Lab/DAStk/master/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "download_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/Dowell-Lab/DAStk/releases"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 7
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/Dowell-Lab/DAStk/forks"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "Dowell-Lab/DAStk"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_title": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "DAStk"
+      },
+      "source": "https://raw.githubusercontent.com/Dowell-Lab/DAStk/master/README.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "installation": [
+    {
+      "confidence": 0.9749817284535042,
+      "result": {
+        "original_header": "DAStk",
+        "type": "Text_excerpt",
+        "value": "You will need the following inputs: \nInstall\n~~~~~~~ \nYou can install DAStk using ``pip``: \n   $ pip install DAStk \n   $ pip install --upgrade DAStk  \nThis is the simplest option, and it will also create the executable\ncommands ``process_atac`` and ``differential_md_score``. Alternatively,\nyou can clone this repository by running: \n   $ git clone https://github.com/Dowell-Lab/DAStk.git \nRequired Python libraries (automatically taken care of if installed thru ``pip``):\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ \n-  numpy\n-  argparse\n-  matplotlib\n-  scipy\n-  adjustText\n-  pandas\n-  multiprocessing\n-  pybedtools\n-  futures\n-  scikit-learn\n-  itertools\n-  networkx\n-  upsetplot \nInquiring about TF-TF relations\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ \nIn release v1.0.0 a new functionality has been included, if using assays\non human tissue and the TF motifs from HOCOMOCO: \nUnpack the motif files (see below for how to create your own, instead): \n   $ mkdir /path/to/grch38_motifs\n   $ tar xvfz motifs/HOCOMOCO_v11_p1e-6_grch38.tar.gz --directory /path/to/grch38_motifs \n   $ process_atac --threads 8 --atac-peaks /path/to/DMSO/ATAC/peaks/file \\\n     --genome hg38 \\\n     --motif-path /path/to/directory/containing/motif/files \\\n     --output /path/to/output/directory \n   $ process_atac --threads 8 --atac-peaks /path/to/treatment/ATAC/peaks/file \\\n     --genome hg38 \\\n     --motif-path /path/to/directory/containing/motif/files \\\n     --output /path/to/output/directory \n   $ differential_md_score --assay-1 DMSO --assay-2 Treatment --p-value 0.0000001 --barcodes --output /path/to/output/directory \nIf you can take advantage of multiprocessing, you can calculate\nMD-scores for both conditions simultaneously, assigning several threads\nto each, then generate the plots once both ``*_md_scores.txt`` files are\nready. \n   $ tf_result_explanations -p 0.0000001 \\\n     -d /path/to/output/directory/your_condition1_vs_condition2_differential_md_score.txt \\\n     -o /path/to/report_file.txt\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/Dowell-Lab/DAStk/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9851442998930328,
+      "result": {
+        "original_header": "Additional Arguments",
+        "type": "Text_excerpt",
+        "value": "If your genome is not incuded in the UCSC genome repository, you will\ninstead need to provide a chromosome sizes file in processess_atac. This\ncan be generated using\n`samtools <http://www.htslib.org/doc/samtools.html>`__ faidx as follows: \n   $ samtools faidx genome.fa\n   $ cut -f1,2 genome.fa.fai > genome.chrom.sizes \nThis file can then be specified using the ``-c``/``--chromosomes``\nargument in ``process_atac``. Scaffold chromosomes will be removed.\nPlease note that the ``--genome`` and ``--chromosomes`` arguments are\nmutually exclusive, and that the ``--genome`` argument assumes the\n``[fetchChromsizes](https://anaconda.org/bioconda/ucsc-fetchchromsizes)``\ntool is installed. \nFeel free to use the pre-scanned motif files provided,\nHOCOMOCO_v11_p1e-6_grch38.tar.gz(`mirror\n1 <http://dowell.colorado.edu/pubs/DAStk/motifs/HOCOMOCO_v11_p1e-6_grch38.tar.gz>`__,\n`mirror\n2 <https://drive.google.com/file/d/19D1iW9x0mswiFLoj6hrDFjVfhYmAbLqG/view?usp=sharing>`__),\nHOCOMOCO_v11_p1e-6_hg19.tar.gz(`mirror\n1 <http://dowell.colorado.edu/pubs/DAStk/motifs/HOCOMOCO_v11_p1e-6_hg19.tar.gz>`__,\n`mirror\n2 <https://drive.google.com/file/d/10_0kuPQbswmhoazjvEJ1KfGRJDuJ-O0y/view?usp=sharing>`__)\nand HOCOMOCO_v11_p1e-6_mm10.tar.gz (`mirror\n1 <http://dowell.colorado.edu/pubs/DAStk/motifs/HOCOMOCO_v11_p1e-6_mm10.tar.gz>`__,\n`mirror\n2 <https://drive.google.com/file/d/1qCirs0AfHzFwnbXMEa8vTd06tEiyE42Z/view?usp=sharing>`__\nfor the ``GRCh38/hg38``, ``hg19`` and ``mm10`` reference genomes,\nrespectively. They have been generated from HOCOMOCO\u2019s v11\nmononucleotide model, background-corrected for each reference genome. To\ngenerate your own ``bed`` files for each motif from this or any other\nsource, you can use FIMO in combination with the downloaded ``.meme``\nfiles from your TF database of choice. For example, if using HOCOMOCO,\nyou can create the motif file for TP53 using their mononucleotide model\nwith a p-value threshold of 0.000001 by: \n   $ fimo -max-stored-scores 10000000 --thresh 1e-6 -oc /path/to/output/directory -motif /path/to/motif/file \\\n     /path/to/HOCOMOCOv11_HUMAN_mono_meme_format.meme /path/to/whole_genome.fa \nPlease refer to the complete\n`FIMO <http://meme-suite.org/doc/fimo.html?man_type=web>`__\ndocumentation for any questions. \n*Tripodi, I.J.; Allen, M.A.; Dowell, R.D.* `Detecting Differential\nTranscription Factor Activity from ATAC-Seq\nData <https://www.mdpi.com/1420-3049/23/5/1136>`__\\ *. Molecules 2018,\n23, 1136.* \n"
+      },
+      "source": "https://raw.githubusercontent.com/Dowell-Lab/DAStk/master/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "invocation": [
+    {
+      "confidence": 0.8617657734129736,
+      "result": {
+        "original_header": "DAStk",
+        "type": "Text_excerpt",
+        "value": "Usage examples\n~~~~~~~~~~~~~~ \n   $ process_atac --threads 8 --atac-peaks /path/to/DMSO/ATAC/peaks/file \\\n     --genome hg38 \\\n     --motif-path /path/to/directory/containing/motif/files \\\n     --output /path/to/output/directory \n   $ process_atac --threads 8 --atac-peaks /path/to/treatment/ATAC/peaks/file \\\n     --genome hg38 \\\n     --motif-path /path/to/directory/containing/motif/files \\\n     --output /path/to/output/directory \n   $ differential_md_score --assay-1 DMSO --assay-2 Treatment --p-value 0.0000001 --barcodes --output /path/to/output/directory \n.. figure:: ./doc_files/sample_MA_plot.png\n   :alt: Sample MA plot \n   Sample MA plot \n.. figure:: ./doc_files/sample_barcode_plot.png\n   :alt: Sample barcode plot \n   Sample barcode plot \n   $ tf_result_explanations -p 0.0000001 \\\n     -d /path/to/output/directory/your_condition1_vs_condition2_differential_md_score.txt \\\n     -o /path/to/report_file.txt\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/Dowell-Lab/DAStk/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.8566560640334138,
+      "result": {
+        "original_header": "Additional Arguments",
+        "type": "Text_excerpt",
+        "value": "Genome File\n~~~~~~~~~~~ \n"
+      },
+      "source": "https://raw.githubusercontent.com/Dowell-Lab/DAStk/master/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "issue_tracker": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/Dowell-Lab/DAStk/issues"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "keywords": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": ""
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "license": [
+    {
+      "confidence": 1,
+      "result": {
+        "name": "BSD 3-Clause \"New\" or \"Revised\" License",
+        "spdx_id": "BSD-3-Clause",
+        "type": "License",
+        "url": "https://api.github.com/licenses/bsd-3-clause",
+        "value": "https://api.github.com/licenses/bsd-3-clause"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "File_dump",
+        "value": "BSD 3-Clause License\n\nCopyright (c) 2018, dowelllab\nAll rights reserved.\n\nRedistribution and use in source and binary forms, with or without\nmodification, are permitted provided that the following conditions are met:\n\n* Redistributions of source code must retain the above copyright notice, this\n  list of conditions and the following disclaimer.\n\n* Redistributions in binary form must reproduce the above copyright notice,\n  this list of conditions and the following disclaimer in the documentation\n  and/or other materials provided with the distribution.\n\n* Neither the name of the copyright holder nor the names of its\n  contributors may be used to endorse or promote products derived from\n  this software without specific prior written permission.\n\nTHIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS \"AS IS\"\nAND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE\nIMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE\nDISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE\nFOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL\nDAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR\nSERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER\nCAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,\nOR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE\nOF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.\n"
+      },
+      "source": "https://raw.githubusercontent.com/Dowell-Lab/DAStk/master/LICENSE",
+      "technique": "file_exploration"
+    }
+  ],
+  "name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "DAStk"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "owner": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Organization",
+        "value": "Dowell-Lab"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "programming_languages": [
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Python",
+        "size": 79110,
+        "type": "Programming_language",
+        "value": "Python"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "readme_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/Dowell-Lab/DAStk/master/README.md"
+      },
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/Dowell-Lab/DAStk/master/README.rst"
+      },
+      "technique": "file_exploration"
+    }
+  ],
+  "releases": [
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "ignaciot",
+          "type": "User"
+        },
+        "date_created": "2023-01-26T21:06:23Z",
+        "date_published": "2023-01-26T21:14:51Z",
+        "description": "Updated to include support for newer versions of numpy.",
+        "html_url": "https://github.com/Dowell-Lab/DAStk/releases/tag/v1.0.1",
+        "name": "DAStk v1.0.1",
+        "release_id": 90353613,
+        "tag": "v1.0.1",
+        "tarball_url": "https://api.github.com/repos/Dowell-Lab/DAStk/tarball/v1.0.1",
+        "type": "Release",
+        "url": "https://api.github.com/repos/Dowell-Lab/DAStk/releases/90353613",
+        "value": "https://api.github.com/repos/Dowell-Lab/DAStk/releases/90353613",
+        "zipball_url": "https://api.github.com/repos/Dowell-Lab/DAStk/zipball/v1.0.1"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "somef_missing_categories": [
+    "citation",
+    "acknowledgement",
+    "run",
+    "download",
+    "requirements",
+    "contact",
+    "contributors",
+    "documentation",
+    "usage",
+    "faq",
+    "support",
+    "identifier",
+    "has_build_file",
+    "executable_example"
+  ],
+  "somef_provenance": {
+    "date": "2024-11-04 04:32:24",
+    "somef_schema_version": "1.0.0",
+    "somef_version": "0.9.5"
+  },
+  "stargazers_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 27
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "type": [
+    {
+      "confidence": 0.82,
+      "result": {
+        "type": "String",
+        "value": "commandline-application"
+      },
+      "technique": "software_type_heuristics"
+    }
+  ]
+}

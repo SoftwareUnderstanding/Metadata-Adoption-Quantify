@@ -1,0 +1,317 @@
+{
+  "code_repository": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/pollardlab/CellWalker"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_created": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2020-07-22T00:22:27Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_updated": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2024-08-10T03:23:41Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "description": [
+    {
+      "confidence": 0.9861163759358769,
+      "result": {
+        "original_header": "<img src=\"WalkthroughFigures/cellwalker_icon.png\" id=\"id\" class=\"class\" width=\"50\" height=\"50\" /> CellWalker Walkthrough",
+        "type": "Text_excerpt",
+        "value": "This is a walkthrough of running CellWalker (described [here](https://genomebiology.biomedcentral.com/articles/10.1186/s13059-021-02279-1)) on SNARE-seq adult brain data generated in the paper \"High-throughput sequencing of the transcriptome and chromatin accessibility in the same cell.\" Running this code requires the following packages for R: \"data.table,\" \"Matrix,\" \"ggplot2,\" \"TxDb.Mmusculus.UCSC.mm10.knownGene,\" and \"org.Mm.eg.db.\" \nThe SNARE-seq data for adult and developing brain analyzed in the CellWalker paper are available from GEO accession number GSE126074. For other data analyzed in the paper: the 10x Single Cell Multiome ATAC + Gene Exp data for human healthy brain is [available from 10x after registration](https://support.10xgenomics.com/single-cell-multiome-atac-gex/datasets/1.0.0/human_brain_3k), and the scATAC-seq data on the developing human brain is a part of psychENCODE and is available to consortium members from synapse (synapse.org id [syn21392931](https://www.synapse.org/#!Synapse:syn21392931), not yet publically released). \nFirst, load the scATAC-seq data in the form of a cell-by-peak matrix\n``` r\nATAC_Barcodes = fread(\"GSE126074_AdBrainCortex_SNAREseq_chromatin.barcodes.tsv.gz\", header=FALSE)$V1\nATAC_Peaks = fread(\"GSE126074_AdBrainCortex_SNAREseq_chromatin.peaks.tsv.gz\", header=FALSE)$V1\nATAC_Mat = readMM(\"GSE126074_AdBrainCortex_SNAREseq_chromatin.counts.mtx.gz\")\nrownames(ATAC_Mat) = ATAC_Peaks\ncolnames(ATAC_Mat) = ATAC_Barcodes\nATAC_Mat = ATAC_Mat>0 #binarize\n```\nNext, load a list of marker genes for cell types. These are provided in [Supplementary Table 1](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6893138/bin/NIHMS1539957-supplement-sup_tab1.xlsx) of the SNARE-seq paper. We will use this for our label nodes.\n``` r\nRNA_markers = fread(\"adult_cerebral_cortex_markers.csv\")\ncellTypes = names(table(RNA_markers$Cluster))\n```\nGiven a list of label nodes, we need to compute weights of edges from these nodes to the scATAC-seq cells (label-to-cell edge weights). In this case, we'll compute the fraction of scATAC-seq reads in each cell that overlap marker genes for each cell type. Note that this particular function is only to test mm10 peaks. In general, the only requirement is that cells\\_in\\_markers have dimension c-by-l where c is the number of cells and l is the number of label nodes. Thus, the cell-by-gene matrices outputted by SnapATAC, CICERO, and ArchR can be used to generate label edges.\n``` r\ncells_in_markers = compute.fraction_marker(cellTypes, RNA_markers, ATAC_Mat)\n```\nNext, we compute the Jaccard similarity between all cells (cell-to-cell edge weights) to generate a matrix of dimension c-by-c.\n``` r\ndistMat = jaccard(t(ATAC_Mat))\n```\nNow we diffuse information over the combined network. For this walkthrough we test possible edge weights between 10<sup>\u22122</sup> and 10<sup>4</sup> and compute cell homogeneity at each weight to evaluate performance. For 10,000 cells CellWalker takes about 8 minutes to run for a single edge weight on a personal computer using one core.\n``` r\ni = length(cellTypes)\ncellHomogeneityList = list()\ncellTypeInfList = list()\ntypeTypeInfList = list()\ncellLabelList = list()\nfor(weight in 10^seq(-2,4,1)){\n    #combined graph\n    simMat = combine.graph(cells_in_markers, distMat, weight)\n    \n    #compute influence with random walk\n    infMat = random.walk(simMat)\n\n    #Label-to-cell influence\n    cellTypeInf = as.matrix(infMat[-(1:i),(1:i)])\n    colnames(cellTypeInf) = cellTypes\n\n    #Label-to-label influence\n    typeTypeInf = as.matrix(infMat[(1:i),(1:i)])\n    colnames(typeTypeInf) = cellTypes\n    rownames(typeTypeInf) = cellTypes\n\n    #normalize label-to-cell scores for ranking\n  labelsAdj = apply(cellTypeInf, 2, function(x) (x-mean(x))/sd(x))\n  labelsAdj = apply(labelsAdj, 2, function(x) x/max(x))\n  labelsAdjType = apply(labelsAdj, 1, function(x) cellTypes[order(x, decreasing = TRUE)][1])\n    \n  #compute cell homogeneity and store portions of information matrix\n  infMat = as.matrix(infMat)\n  cellHomogeneityList[[as.character(weight)]] =  compute.cell.homogeneity(cellTypes, labelsAdjType, infMat)\n  cellTypeInfList[[as.character(weight)]] = labelsAdj\n  typeTypeInfList[[as.character(weight)]] = typeTypeInf\n  cellLabelList[[as.character(weight)]] = labelsAdjType\n}\n```\nPlot cell homogeneity across edge weights:\n``` r\nrequire(\"ggplot2\")\ncellHomogeneityScores = unlist(cellHomogeneityList)\nggplot() + geom_line(aes(10^seq(-2,4,1), cellHomogeneityScores)) + scale_x_log10() + scale_y_log10() + theme_classic() + ylab(\"Predicted Cell Homogeneity\") + xlab(\"Label Edge Weight\")\n```\n \nIn this dataset we see that the different types of excitatory neurons are the hardest to distinguish from each other, though this uncertainty mostly arises between neurons in neighboring layers. \nFinally, we can label all cells based on the top labels for each cell:\n``` r\ncellLabels = cellLabelList[[weight]]\n```\nNow that we have generated and evaluated our influence matrix, we can use it for some further downstream analysis. For example, in the confusion matrix we often see that two types of level 3/4 excitatory neuron are often confused for each other. Thanks to CellWalker's \"fuzzy\" cell labeling, we can investigate if they have distinct influence profiles.\n``` r\nl34Score = compare.types(\"Ex-L3/4-Rorb\", \"Ex-L3/4-Rmst\", cellLabels, cellTypes, cellTypeInf)\nggplot() + geom_density(aes(l34Score)) + xlab(\"Ex-L3/4 Rorb vs Rmst Score\")\n```\n \nIt appears that for these two cell types it is difficult to identify distinct chromatin profiles. For comparsion, we can see that level 3/4 excitatory neurons are distinct from level 2/3 excitatory neurons.\n``` r\nl34_23Score = compare.types(\"Ex-L3/4-Rorb\", \"Ex-L2/3-Rasgrf2\", cellLabels, cellTypes, cellTypeInf)\nggplot() + geom_density(aes(l34_23Score)) + xlab(\"Ex-L3/4 Rorb vs Ex-L2/3 Rasgrf2 Score\")\n```\n \nWe can also examine if the accessibility genomic loci varies in a cell type-specific manner. For example, lets look at that second set of excitatory neurons in the context of mouse cortex topologically associated domains (TADs) from [Dixon et al.](http://chromosome.sdsc.edu/mouse/hi-c/download.html) (GEO accession number GSE35156).\n``` r\nTADRanges = fread(\"total.combined.domain\")\nTADRanges = GRanges(TADRanges$V1, IRanges(TADRanges$V2,TADRanges$V3))\nATAC_Mat = as.matrix(ATAC_Mat) #desparsify matrix for faster calculations\nl34_TADCor = correlate.TADS(TADRanges, \"Ex-L3/4-Rorb\", \"Ex-L3/4-Rmst\", l34Score, cellLabels, ATAC_Mat, ATAC_Peaks)\nggplot() + geom_density(aes(l34_TADCor)) + xlab(\"Ex-L3/4 Rorb vs Rmst Score - Accessibility Correlation in TADs\")\n```\n \nIn this case, unlike in the CellWalker paper testing developmental time points, we do not see any biomodality in TAD associations with these two cell types, indicating these labels are not correlated or anti-correlated with this set of cortical TADs. \nAnother downstream use of the influence matrix is scoring bulk-derived data with labels based on the cell-to-label influence scores. This can for example be used to assign cell type-specific labels to enhancers or transcription factors. First, we will label all Vista enhancers for the mouse forebrain (ENCODE id ENCFF225JUL).\n``` r\nVista_forebrain = fread(\"ENCFF225JUL.bed.gz\")\nVista_forebrain = GRanges(Vista_forebrain$V1, IRanges(Vista_forebrain$V2,Vista_forebrain$V3))\nenhancer_labels = labelBulk(Vista_forebrain, infMat, ATAC_Mat, ATAC_Peaks, cellType)\nenhancer_labels = enhancer_labels[!is.na(labeledEnhancers)] # some can't me mapped due to no overlap between bulk and single cell data\nggplot() + geom_bar(aes(enhancer_labels)) + xlab(\"Cell Type\") + theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust=.5))\n```\n \nA transcription factor can be labeled similarly, using a list of the regions it binds to in bulk data. This is done by calling labelBulk on a GRangesList (e.g. `labelBulk(GRangesList(binding_sites), infMat, ATAC_Mat, ATAC_Peaks, cellType)`) returns a single label that best corresponds to the full list of binding peaks. However, we don't yet recommend this functionality as we hypothesize that these results are often driven in part by dominant cell types within the bulk samples. Thus we can establish transcription factors as positives for asigned cell types, but we cannot be sure about false negatives.\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/PollardLab/CellWalker/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9957855033645109,
+      "result": {
+        "type": "Text_excerpt",
+        "value": "NOTE: This is a walkthrough and the associated scripts for CellWalker (described ). For a the R package implementing and extending this method, see . \n"
+      },
+      "source": "https://raw.githubusercontent.com/PollardLab/CellWalker/master/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "download_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/PollardLab/CellWalker/releases"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 1
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/pollardlab/CellWalker/forks"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "pollardlab/CellWalker"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_title": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": " CellWalker Walkthrough"
+      },
+      "source": "https://raw.githubusercontent.com/PollardLab/CellWalker/master/README.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "images": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/PollardLab/CellWalker/master/WalkthroughFigures/cellwalker_icon.png"
+      },
+      "source": "https://raw.githubusercontent.com/PollardLab/CellWalker/master/README.md",
+      "technique": "regular_expression"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/PollardLab/CellWalker/master/WalkthroughFigures/CellHomogeneity.png"
+      },
+      "source": "https://raw.githubusercontent.com/PollardLab/CellWalker/master/README.md",
+      "technique": "regular_expression"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/PollardLab/CellWalker/master/WalkthroughFigures/CellTypeClust.png"
+      },
+      "source": "https://raw.githubusercontent.com/PollardLab/CellWalker/master/README.md",
+      "technique": "regular_expression"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/PollardLab/CellWalker/master/WalkthroughFigures/UncertainMat.png"
+      },
+      "source": "https://raw.githubusercontent.com/PollardLab/CellWalker/master/README.md",
+      "technique": "regular_expression"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/PollardLab/CellWalker/master/WalkthroughFigures/Ex34_score.png"
+      },
+      "source": "https://raw.githubusercontent.com/PollardLab/CellWalker/master/README.md",
+      "technique": "regular_expression"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/PollardLab/CellWalker/master/WalkthroughFigures/Ex_34_23_score.png"
+      },
+      "source": "https://raw.githubusercontent.com/PollardLab/CellWalker/master/README.md",
+      "technique": "regular_expression"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/PollardLab/CellWalker/master/WalkthroughFigures/Ex34_score_TAD_cor.png"
+      },
+      "source": "https://raw.githubusercontent.com/PollardLab/CellWalker/master/README.md",
+      "technique": "regular_expression"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/PollardLab/CellWalker/master/WalkthroughFigures/vista_enhancers.png"
+      },
+      "source": "https://raw.githubusercontent.com/PollardLab/CellWalker/master/README.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "issue_tracker": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/pollardlab/CellWalker/issues"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "keywords": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": ""
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "license": [
+    {
+      "confidence": 1,
+      "result": {
+        "name": "GNU General Public License v2.0",
+        "spdx_id": "GPL-2.0",
+        "type": "License",
+        "url": "https://api.github.com/licenses/gpl-2.0",
+        "value": "https://api.github.com/licenses/gpl-2.0"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "File_dump",
+        "value": "                    GNU GENERAL PUBLIC LICENSE\n                       Version 2, June 1991\n\n Copyright (C) 1989, 1991 Free Software Foundation, Inc.,\n 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA\n Everyone is permitted to copy and distribute verbatim copies\n of this license document, but changing it is not allowed.\n\n                            Preamble\n\n  The licenses for most software are designed to take away your\nfreedom to share and change it.  By contrast, the GNU General Public\nLicense is intended to guarantee your freedom to share and change free\nsoftware--to make sure the software is free for all its users.  This\nGeneral Public License applies to most of the Free Software\nFoundation's software and to any other program whose authors commit to\nusing it.  (Some other Free Software Foundation software is covered by\nthe GNU Lesser General Public License instead.)  You can apply it to\nyour programs, too.\n\n  When we speak of free software, we are referring to freedom, not\nprice.  Our General Public Licenses are designed to make sure that you\nhave the freedom to distribute copies of free software (and charge for\nthis service if you wish), that you receive source code or can get it\nif you want it, that you can change the software or use pieces of it\nin new free programs; and that you know you can do these things.\n\n  To protect your rights, we need to make restrictions that forbid\nanyone to deny you these rights or to ask you to surrender the rights.\nThese restrictions translate to certain responsibilities for you if you\ndistribute copies of the software, or if you modify it.\n\n  For example, if you distribute copies of such a program, whether\ngratis or for a fee, you must give the recipients all the rights that\nyou have.  You must make sure that they, too, receive or can get the\nsource code.  And you must show them these terms so they know their\nrights.\n\n  We protect your rights with two steps: (1) copyright the software, and\n(2) offer you this license which gives you legal permission to copy,\ndistribute and/or modify the software.\n\n  Also, for each author's protection and ours, we want to make certain\nthat everyone understands that there is no warranty for this free\nsoftware.  If the software is modified by someone else and passed on, we\nwant its recipients to know that what they have is not the original, so\nthat any problems introduced by others will not reflect on the original\nauthors' reputations.\n\n  Finally, any free program is threatened constantly by software\npatents.  We wish to avoid the danger that redistributors of a free\nprogram will individually obtain patent licenses, in effect making the\nprogram proprietary.  To prevent this, we have made it clear that any\npatent must be licensed for everyone's free use or not licensed at all.\n\n  The precise terms and conditions for copying, distribution and\nmodification follow.\n\n                    GNU GENERAL PUBLIC LICENSE\n   TERMS AND CONDITIONS FOR COPYING, DISTRIBUTION AND MODIFICATION\n\n  0. This License applies to any program or other work which contains\na notice placed by the copyright holder saying it may be distributed\nunder the terms of this General Public License.  The \"Program\", below,\nrefers to any such program or work, and a \"work based on the Program\"\nmeans either the Program or any derivative work under copyright law:\nthat is to say, a work containing the Program or a portion of it,\neither verbatim or with modifications and/or translated into another\nlanguage.  (Hereinafter, translation is included without limitation in\nthe term \"modification\".)  Each licensee is addressed as \"you\".\n\nActivities other than copying, distribution and modification are not\ncovered by this License; they are outside its scope.  The act of\nrunning the Program is not restricted, and the output from the Program\nis covered only if its contents constitute a work based on the\nProgram (independent of having been made by running the Program).\nWhether that is true depends on what the Program does.\n\n  1. You may copy and distribute verbatim copies of the Program's\nsource code as you receive it, in any medium, provided that you\nconspicuously and appropriately publish on each copy an appropriate\ncopyright notice and disclaimer of warranty; keep intact all the\nnotices that refer to this License and to the absence of any warranty;\nand give any other recipients of the Program a copy of this License\nalong with the Program.\n\nYou may charge a fee for the physical act of transferring a copy, and\nyou may at your option offer warranty protection in exchange for a fee.\n\n  2. You may modify your copy or copies of the Program or any portion\nof it, thus forming a work based on the Program, and copy and\ndistribute such modifications or work under the terms of Section 1\nabove, provided that you also meet all of these conditions:\n\n    a) You must cause the modified files to carry prominent notices\n    stating that you changed the files and the date of any change.\n\n    b) You must cause any work that you distribute or publish, that in\n    whole or in part contains or is derived from the Program or any\n    part thereof, to be licensed as a whole at no charge to all third\n    parties under the terms of this License.\n\n    c) If the modified program normally reads commands interactively\n    when run, you must cause it, when started running for such\n    interactive use in the most ordinary way, to print or display an\n    announcement including an appropriate copyright notice and a\n    notice that there is no warranty (or else, saying that you provide\n    a warranty) and that users may redistribute the program under\n    these conditions, and telling the user how to view a copy of this\n    License.  (Exception: if the Program itself is interactive but\n    does not normally print such an announcement, your work based on\n    the Program is not required to print an announcement.)\n\nThese requirements apply to the modified work as a whole.  If\nidentifiable sections of that work are not derived from the Program,\nand can be reasonably considered independent and separate works in\nthemselves, then this License, and its terms, do not apply to those\nsections when you distribute them as separate works.  But when you\ndistribute the same sections as part of a whole which is a work based\non the Program, the distribution of the whole must be on the terms of\nthis License, whose permissions for other licensees extend to the\nentire whole, and thus to each and every part regardless of who wrote it.\n\nThus, it is not the intent of this section to claim rights or contest\nyour rights to work written entirely by you; rather, the intent is to\nexercise the right to control the distribution of derivative or\ncollective works based on the Program.\n\nIn addition, mere aggregation of another work not based on the Program\nwith the Program (or with a work based on the Program) on a volume of\na storage or distribution medium does not bring the other work under\nthe scope of this License.\n\n  3. You may copy and distribute the Program (or a work based on it,\nunder Section 2) in object code or executable form under the terms of\nSections 1 and 2 above provided that you also do one of the following:\n\n    a) Accompany it with the complete corresponding machine-readable\n    source code, which must be distributed under the terms of Sections\n    1 and 2 above on a medium customarily used for software interchange; or,\n\n    b) Accompany it with a written offer, valid for at least three\n    years, to give any third party, for a charge no more than your\n    cost of physically performing source distribution, a complete\n    machine-readable copy of the corresponding source code, to be\n    distributed under the terms of Sections 1 and 2 above on a medium\n    customarily used for software interchange; or,\n\n    c) Accompany it with the information you received as to the offer\n    to distribute corresponding source code.  (This alternative is\n    allowed only for noncommercial distribution and only if you\n    received the program in object code or executable form with such\n    an offer, in accord with Subsection b above.)\n\nThe source code for a work means the preferred form of the work for\nmaking modifications to it.  For an executable work, complete source\ncode means all the source code for all modules it contains, plus any\nassociated interface definition files, plus the scripts used to\ncontrol compilation and installation of the executable.  However, as a\nspecial exception, the source code distributed need not include\nanything that is normally distributed (in either source or binary\nform) with the major components (compiler, kernel, and so on) of the\noperating system on which the executable runs, unless that component\nitself accompanies the executable.\n\nIf distribution of executable or object code is made by offering\naccess to copy from a designated place, then offering equivalent\naccess to copy the source code from the same place counts as\ndistribution of the source code, even though third parties are not\ncompelled to copy the source along with the object code.\n\n  4. You may not copy, modify, sublicense, or distribute the Program\nexcept as expressly provided under this License.  Any attempt\notherwise to copy, modify, sublicense or distribute the Program is\nvoid, and will automatically terminate your rights under this License.\nHowever, parties who have received copies, or rights, from you under\nthis License will not have their licenses terminated so long as such\nparties remain in full compliance.\n\n  5. You are not required to accept this License, since you have not\nsigned it.  However, nothing else grants you permission to modify or\ndistribute the Program or its derivative works.  These actions are\nprohibited by law if you do not accept this License.  Therefore, by\nmodifying or distributing the Program (or any work based on the\nProgram), you indicate your acceptance of this License to do so, and\nall its terms and conditions for copying, distributing or modifying\nthe Program or works based on it.\n\n  6. Each time you redistribute the Program (or any work based on the\nProgram), the recipient automatically receives a license from the\noriginal licensor to copy, distribute or modify the Program subject to\nthese terms and conditions.  You may not impose any further\nrestrictions on the recipients' exercise of the rights granted herein.\nYou are not responsible for enforcing compliance by third parties to\nthis License.\n\n  7. If, as a consequence of a court judgment or allegation of patent\ninfringement or for any other reason (not limited to patent issues),\nconditions are imposed on you (whether by court order, agreement or\notherwise) that contradict the conditions of this License, they do not\nexcuse you from the conditions of this License.  If you cannot\ndistribute so as to satisfy simultaneously your obligations under this\nLicense and any other pertinent obligations, then as a consequence you\nmay not distribute the Program at all.  For example, if a patent\nlicense would not permit royalty-free redistribution of the Program by\nall those who receive copies directly or indirectly through you, then\nthe only way you could satisfy both it and this License would be to\nrefrain entirely from distribution of the Program.\n\nIf any portion of this section is held invalid or unenforceable under\nany particular circumstance, the balance of the section is intended to\napply and the section as a whole is intended to apply in other\ncircumstances.\n\nIt is not the purpose of this section to induce you to infringe any\npatents or other property right claims or to contest validity of any\nsuch claims; this section has the sole purpose of protecting the\nintegrity of the free software distribution system, which is\nimplemented by public license practices.  Many people have made\ngenerous contributions to the wide range of software distributed\nthrough that system in reliance on consistent application of that\nsystem; it is up to the author/donor to decide if he or she is willing\nto distribute software through any other system and a licensee cannot\nimpose that choice.\n\nThis section is intended to make thoroughly clear what is believed to\nbe a consequence of the rest of this License.\n\n  8. If the distribution and/or use of the Program is restricted in\ncertain countries either by patents or by copyrighted interfaces, the\noriginal copyright holder who places the Program under this License\nmay add an explicit geographical distribution limitation excluding\nthose countries, so that distribution is permitted only in or among\ncountries not thus excluded.  In such case, this License incorporates\nthe limitation as if written in the body of this License.\n\n  9. The Free Software Foundation may publish revised and/or new versions\nof the General Public License from time to time.  Such new versions will\nbe similar in spirit to the present version, but may differ in detail to\naddress new problems or concerns.\n\nEach version is given a distinguishing version number.  If the Program\nspecifies a version number of this License which applies to it and \"any\nlater version\", you have the option of following the terms and conditions\neither of that version or of any later version published by the Free\nSoftware Foundation.  If the Program does not specify a version number of\nthis License, you may choose any version ever published by the Free Software\nFoundation.\n\n  10. If you wish to incorporate parts of the Program into other free\nprograms whose distribution conditions are different, write to the author\nto ask for permission.  For software which is copyrighted by the Free\nSoftware Foundation, write to the Free Software Foundation; we sometimes\nmake exceptions for this.  Our decision will be guided by the two goals\nof preserving the free status of all derivatives of our free software and\nof promoting the sharing and reuse of software generally.\n\n                            NO WARRANTY\n\n  11. BECAUSE THE PROGRAM IS LICENSED FREE OF CHARGE, THERE IS NO WARRANTY\nFOR THE PROGRAM, TO THE EXTENT PERMITTED BY APPLICABLE LAW.  EXCEPT WHEN\nOTHERWISE STATED IN WRITING THE COPYRIGHT HOLDERS AND/OR OTHER PARTIES\nPROVIDE THE PROGRAM \"AS IS\" WITHOUT WARRANTY OF ANY KIND, EITHER EXPRESSED\nOR IMPLIED, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF\nMERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.  THE ENTIRE RISK AS\nTO THE QUALITY AND PERFORMANCE OF THE PROGRAM IS WITH YOU.  SHOULD THE\nPROGRAM PROVE DEFECTIVE, YOU ASSUME THE COST OF ALL NECESSARY SERVICING,\nREPAIR OR CORRECTION.\n\n  12. IN NO EVENT UNLESS REQUIRED BY APPLICABLE LAW OR AGREED TO IN WRITING\nWILL ANY COPYRIGHT HOLDER, OR ANY OTHER PARTY WHO MAY MODIFY AND/OR\nREDISTRIBUTE THE PROGRAM AS PERMITTED ABOVE, BE LIABLE TO YOU FOR DAMAGES,\nINCLUDING ANY GENERAL, SPECIAL, INCIDENTAL OR CONSEQUENTIAL DAMAGES ARISING\nOUT OF THE USE OR INABILITY TO USE THE PROGRAM (INCLUDING BUT NOT LIMITED\nTO LOSS OF DATA OR DATA BEING RENDERED INACCURATE OR LOSSES SUSTAINED BY\nYOU OR THIRD PARTIES OR A FAILURE OF THE PROGRAM TO OPERATE WITH ANY OTHER\nPROGRAMS), EVEN IF SUCH HOLDER OR OTHER PARTY HAS BEEN ADVISED OF THE\nPOSSIBILITY OF SUCH DAMAGES.\n\n                     END OF TERMS AND CONDITIONS\n"
+      },
+      "source": "https://raw.githubusercontent.com/PollardLab/CellWalker/master/LICENSE",
+      "technique": "file_exploration"
+    }
+  ],
+  "name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "CellWalker"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "owner": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Organization",
+        "value": "pollardlab"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "programming_languages": [
+    {
+      "confidence": 1,
+      "result": {
+        "name": "R",
+        "size": 9999,
+        "type": "Programming_language",
+        "value": "R"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "readme_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/PollardLab/CellWalker/master/README.md"
+      },
+      "technique": "file_exploration"
+    }
+  ],
+  "releases": [
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "PFPrzytycki",
+          "type": "User"
+        },
+        "date_created": "2021-01-21T23:53:38Z",
+        "date_published": "2021-01-22T00:15:40Z",
+        "html_url": "https://github.com/pollardlab/CellWalker/releases/tag/v1.0.0",
+        "name": "CellWalker Genome Biology",
+        "release_id": 36743139,
+        "tag": "v1.0.0",
+        "tarball_url": "https://api.github.com/repos/pollardlab/CellWalker/tarball/v1.0.0",
+        "type": "Release",
+        "url": "https://api.github.com/repos/pollardlab/CellWalker/releases/36743139",
+        "value": "https://api.github.com/repos/pollardlab/CellWalker/releases/36743139",
+        "zipball_url": "https://api.github.com/repos/pollardlab/CellWalker/zipball/v1.0.0"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "somef_missing_categories": [
+    "installation",
+    "citation",
+    "acknowledgement",
+    "run",
+    "download",
+    "requirements",
+    "contact",
+    "contributors",
+    "documentation",
+    "usage",
+    "faq",
+    "support",
+    "identifier",
+    "has_build_file",
+    "executable_example"
+  ],
+  "somef_provenance": {
+    "date": "2024-10-06 08:42:23",
+    "somef_schema_version": "1.0.0",
+    "somef_version": "0.9.5"
+  },
+  "stargazers_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 4
+      },
+      "technique": "GitHub_API"
+    }
+  ]
+}

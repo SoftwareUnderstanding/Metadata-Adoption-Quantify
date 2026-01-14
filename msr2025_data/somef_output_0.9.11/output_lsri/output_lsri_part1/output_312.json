@@ -1,0 +1,763 @@
+{
+  "citation": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Citing",
+        "parent_header": [
+          "TAGADA: Transcript And Gene Assembly, Deconvolution, Analysis"
+        ],
+        "type": "Text_excerpt",
+        "value": "If you use TAGADA in a publication, please cite [this](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC10578202/pdf/lqad089.pdf):\n\nKurylo C, Guyomar C, Foissac S, Djebali S. TAGADA: a scalable pipeline to improve genome annotations with RNA-seq data. NAR Genomics and Bioinformatics. 2023 Dec 1;5(4):lqad089.\n"
+      },
+      "source": "https://raw.githubusercontent.com/FAANG/analysis-TAGADA/master/README.md",
+      "technique": "header_analysis"
+    }
+  ],
+  "code_repository": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/FAANG/analysis-TAGADA"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_created": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2019-11-27T14:20:54Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_updated": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2024-08-30T09:41:13Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "description": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "GENE-SWitCH project RNA-Seq analysis pipeline"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 0.9943525756860302,
+      "result": {
+        "original_header": "TAGADA: Transcript And Gene Assembly, Deconvolution, Analysis",
+        "type": "Text_excerpt",
+        "value": "TAGADA is a Nextflow pipeline that processes RNA-Seq data. It parallelizes multiple tasks to control reads quality, align reads to a reference genome, assemble new transcripts to create a novel annotation, and quantify genes and transcripts. \n"
+      },
+      "source": "https://raw.githubusercontent.com/FAANG/analysis-TAGADA/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9724403141890674,
+      "result": {
+        "original_header": "Merging inputs",
+        "type": "Text_excerpt",
+        "value": "When using `--assemble-by` and/or `--quantify-by`, your inputs are merged into experiment groups that share common factors. With `--assemble-by`, transcripts assembly is done individually for each assembly group, and consensus transcripts are kept to generate a novel annotation. With `--quantify-by`, quantification values are given individually for each quantification group.\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/FAANG/analysis-TAGADA/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9031239439560063,
+      "result": {
+        "original_header": "Workflow and results",
+        "type": "Text_excerpt",
+        "value": "1. `FASTQC_control_reads`  \n   Control reads quality with [FastQC](https://github.com/s-andrews/FastQC). \n3. `STAR_index_genome`  \n   Index genome with [STAR](https://github.com/alexdobin/STAR).  \n   The indexed genome is saved to `output/index`. \n4. `STAR_align_reads`  \n   Align reads to the indexed genome with [STAR](https://github.com/alexdobin/STAR).  \n   Aligned reads are saved to `output/alignment` in `.bam` files. \n5. `BEDTOOLS_compute_coverage`  \n   Compute genome coverage with [Bedtools](https://github.com/arq5x/bedtools2).  \n   Coverage information is saved to `output/coverage` in `.bed` files. \n7. `STRINGTIE_assemble_transcripts`  \n   Assemble transcripts in each individual assembly group with [StringTie](https://github.com/gpertea/stringtie). \n8. `TAGADA_filter_transcripts`  \n   Filter rare transcripts that appear in few assembly groups and poorly-expressed transcripts with low TPM values. \n9. `STRINGTIE_coalesce_transcripts` or `TMERGE_coalesce_transcripts`  \n   Create a novel annotation with [StringTie](https://github.com/gpertea/stringtie) or [Tmerge](https://github.com/julienlag/tmerge).  \n   The novel annotation is saved to `output/annotation` in a `.gtf` file. \n11. `STRINGTIE_quantify_expression`  \n    Quantify genes and transcripts with [StringTie](https://github.com/gpertea/stringtie).  \n    Counts and TPM matrices are saved to `output/quantification` in `.tsv` files. \n12. `MULTIQC_generate_report`  \n    Aggregate quality controls into a report with [MultiQC](https://github.com/ewels/MultiQC).  \n    The report is saved to `output/control` in a `.html` file. \n"
+      },
+      "source": "https://raw.githubusercontent.com/FAANG/analysis-TAGADA/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9711502778004646,
+      "result": {
+        "original_header": "Novel annotation",
+        "type": "Text_excerpt",
+        "value": "The novel annotation contains information from [StringTie](https://github.com/gpertea/stringtie), [Tmerge](https://github.com/julienlag/tmerge), and [FEELnc](https://github.com/tderrien/FEELnc). It is provided in gtf format with exon, transcript and gene rows. Row attributes vary depending on which tool was used to coalesce transcripts. \n- `ref_gene_id`  \n  All rows. A comma-separated list of reference annotation `gene_id` when a Tmerge transcript is made of at least one reference transcript, otherwise a dot. \n- `transcript_id`  \n  Exon and transcript rows. The Tmerge `transcript_id` starting with TM, unless the transcript is exactly identical to a reference transcript, in which case the reference annotation `transcript_id` is provided. \n- `tmerge_tr_id`  \n  Exon and transcript rows. Optional. A comma-separated list of Tmerge `transcript_id` if the current `transcript_id` is from the reference annotation, to list which initial Tmerge transcripts it is made of. \n- `transcript_biotype`  \n  Exon and transcript rows. Optional. The reference annotation `transcript_biotype` of the `transcript_id`. \n- `transcript_id`  \n  Exon and transcript rows. The StringTie `transcript_id` starting with MSTRG, unless the transcript is exactly identical to a reference transcript, in which case the reference annotation `transcript_id` is provided. \n"
+      },
+      "source": "https://raw.githubusercontent.com/FAANG/analysis-TAGADA/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9034307203018876,
+      "result": {
+        "original_header": "Funding",
+        "type": "Text_excerpt",
+        "value": "This repository reflects only the listed contributors views. Neither the European Commission nor its Agency REA are responsible for any use that may be made of the information it contains.\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/FAANG/analysis-TAGADA/master/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "download_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/FAANG/analysis-TAGADA/releases"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 5
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/FAANG/analysis-TAGADA/forks"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "FAANG/analysis-TAGADA"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_title": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "TAGADA: Transcript And Gene Assembly, Deconvolution, Analysis"
+      },
+      "source": "https://raw.githubusercontent.com/FAANG/analysis-TAGADA/master/README.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "has_build_file": [
+    {
+      "confidence": 1,
+      "result": {
+        "format": "dockerfile",
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/FAANG/analysis-TAGADA/master/Dockerfile"
+      },
+      "source": "https://raw.githubusercontent.com/FAANG/analysis-TAGADA/master/Dockerfile",
+      "technique": "file_exploration"
+    }
+  ],
+  "installation": [
+    {
+      "confidence": 0.9933973281838441,
+      "result": {
+        "original_header": "Custom resources",
+        "type": "Text_excerpt",
+        "value": "With large datasets, some [workflow processes](#workflow-and-results) may require more computing resources than the pipeline defaults. To customize the amount of resources allotted to specific processes, add a [process scope](https://www.nextflow.io/docs/edge/config.html#scope-process) to your configuration file. Resources provided in the configuration file override the [resources options](#resources-options).\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/FAANG/analysis-TAGADA/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.868331948949205,
+      "result": {
+        "original_header": "Workflow and results",
+        "type": "Text_excerpt",
+        "value": "12. `MULTIQC_generate_report`  \n    Aggregate quality controls into a report with [MultiQC](https://github.com/ewels/MultiQC).  \n    The report is saved to `output/control` in a `.html` file. \n"
+      },
+      "source": "https://raw.githubusercontent.com/FAANG/analysis-TAGADA/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.860378283883727,
+      "result": {
+        "original_header": "Novel annotation",
+        "type": "Text_excerpt",
+        "value": "- `ref_gene_id`  \n  All rows. Optional. The reference annotation `gene_id`. \n- `ref_gene_name`  \n  All rows. Optional. The reference annotation `gene_name`. \n"
+      },
+      "source": "https://raw.githubusercontent.com/FAANG/analysis-TAGADA/master/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "issue_tracker": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/FAANG/analysis-TAGADA/issues"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "keywords": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": ""
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "license": [
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Apache License 2.0",
+        "spdx_id": "Apache-2.0",
+        "type": "License",
+        "url": "https://api.github.com/licenses/apache-2.0",
+        "value": "https://api.github.com/licenses/apache-2.0"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "File_dump",
+        "value": "                                 Apache License\n                           Version 2.0, January 2004\n                        http://www.apache.org/licenses/\n\n   TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION\n\n   1. Definitions.\n\n      \"License\" shall mean the terms and conditions for use, reproduction,\n      and distribution as defined by Sections 1 through 9 of this document.\n\n      \"Licensor\" shall mean the copyright owner or entity authorized by\n      the copyright owner that is granting the License.\n\n      \"Legal Entity\" shall mean the union of the acting entity and all\n      other entities that control, are controlled by, or are under common\n      control with that entity. For the purposes of this definition,\n      \"control\" means (i) the power, direct or indirect, to cause the\n      direction or management of such entity, whether by contract or\n      otherwise, or (ii) ownership of fifty percent (50%) or more of the\n      outstanding shares, or (iii) beneficial ownership of such entity.\n\n      \"You\" (or \"Your\") shall mean an individual or Legal Entity\n      exercising permissions granted by this License.\n\n      \"Source\" form shall mean the preferred form for making modifications,\n      including but not limited to software source code, documentation\n      source, and configuration files.\n\n      \"Object\" form shall mean any form resulting from mechanical\n      transformation or translation of a Source form, including but\n      not limited to compiled object code, generated documentation,\n      and conversions to other media types.\n\n      \"Work\" shall mean the work of authorship, whether in Source or\n      Object form, made available under the License, as indicated by a\n      copyright notice that is included in or attached to the work\n      (an example is provided in the Appendix below).\n\n      \"Derivative Works\" shall mean any work, whether in Source or Object\n      form, that is based on (or derived from) the Work and for which the\n      editorial revisions, annotations, elaborations, or other modifications\n      represent, as a whole, an original work of authorship. For the purposes\n      of this License, Derivative Works shall not include works that remain\n      separable from, or merely link (or bind by name) to the interfaces of,\n      the Work and Derivative Works thereof.\n\n      \"Contribution\" shall mean any work of authorship, including\n      the original version of the Work and any modifications or additions\n      to that Work or Derivative Works thereof, that is intentionally\n      submitted to Licensor for inclusion in the Work by the copyright owner\n      or by an individual or Legal Entity authorized to submit on behalf of\n      the copyright owner. For the purposes of this definition, \"submitted\"\n      means any form of electronic, verbal, or written communication sent\n      to the Licensor or its representatives, including but not limited to\n      communication on electronic mailing lists, source code control systems,\n      and issue tracking systems that are managed by, or on behalf of, the\n      Licensor for the purpose of discussing and improving the Work, but\n      excluding communication that is conspicuously marked or otherwise\n      designated in writing by the copyright owner as \"Not a Contribution.\"\n\n      \"Contributor\" shall mean Licensor and any individual or Legal Entity\n      on behalf of whom a Contribution has been received by Licensor and\n      subsequently incorporated within the Work.\n\n   2. Grant of Copyright License. Subject to the terms and conditions of\n      this License, each Contributor hereby grants to You a perpetual,\n      worldwide, non-exclusive, no-charge, royalty-free, irrevocable\n      copyright license to reproduce, prepare Derivative Works of,\n      publicly display, publicly perform, sublicense, and distribute the\n      Work and such Derivative Works in Source or Object form.\n\n   3. Grant of Patent License. Subject to the terms and conditions of\n      this License, each Contributor hereby grants to You a perpetual,\n      worldwide, non-exclusive, no-charge, royalty-free, irrevocable\n      (except as stated in this section) patent license to make, have made,\n      use, offer to sell, sell, import, and otherwise transfer the Work,\n      where such license applies only to those patent claims licensable\n      by such Contributor that are necessarily infringed by their\n      Contribution(s) alone or by combination of their Contribution(s)\n      with the Work to which such Contribution(s) was submitted. If You\n      institute patent litigation against any entity (including a\n      cross-claim or counterclaim in a lawsuit) alleging that the Work\n      or a Contribution incorporated within the Work constitutes direct\n      or contributory patent infringement, then any patent licenses\n      granted to You under this License for that Work shall terminate\n      as of the date such litigation is filed.\n\n   4. Redistribution. You may reproduce and distribute copies of the\n      Work or Derivative Works thereof in any medium, with or without\n      modifications, and in Source or Object form, provided that You\n      meet the following conditions:\n\n      (a) You must give any other recipients of the Work or\n          Derivative Works a copy of this License; and\n\n      (b) You must cause any modified files to carry prominent notices\n          stating that You changed the files; and\n\n      (c) You must retain, in the Source form of any Derivative Works\n          that You distribute, all copyright, patent, trademark, and\n          attribution notices from the Source form of the Work,\n          excluding those notices that do not pertain to any part of\n          the Derivative Works; and\n\n      (d) If the Work includes a \"NOTICE\" text file as part of its\n          distribution, then any Derivative Works that You distribute must\n          include a readable copy of the attribution notices contained\n          within such NOTICE file, excluding those notices that do not\n          pertain to any part of the Derivative Works, in at least one\n          of the following places: within a NOTICE text file distributed\n          as part of the Derivative Works; within the Source form or\n          documentation, if provided along with the Derivative Works; or,\n          within a display generated by the Derivative Works, if and\n          wherever such third-party notices normally appear. The contents\n          of the NOTICE file are for informational purposes only and\n          do not modify the License. You may add Your own attribution\n          notices within Derivative Works that You distribute, alongside\n          or as an addendum to the NOTICE text from the Work, provided\n          that such additional attribution notices cannot be construed\n          as modifying the License.\n\n      You may add Your own copyright statement to Your modifications and\n      may provide additional or different license terms and conditions\n      for use, reproduction, or distribution of Your modifications, or\n      for any such Derivative Works as a whole, provided Your use,\n      reproduction, and distribution of the Work otherwise complies with\n      the conditions stated in this License.\n\n   5. Submission of Contributions. Unless You explicitly state otherwise,\n      any Contribution intentionally submitted for inclusion in the Work\n      by You to the Licensor shall be under the terms and conditions of\n      this License, without any additional terms or conditions.\n      Notwithstanding the above, nothing herein shall supersede or modify\n      the terms of any separate license agreement you may have executed\n      with Licensor regarding such Contributions.\n\n   6. Trademarks. This License does not grant permission to use the trade\n      names, trademarks, service marks, or product names of the Licensor,\n      except as required for reasonable and customary use in describing the\n      origin of the Work and reproducing the content of the NOTICE file.\n\n   7. Disclaimer of Warranty. Unless required by applicable law or\n      agreed to in writing, Licensor provides the Work (and each\n      Contributor provides its Contributions) on an \"AS IS\" BASIS,\n      WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or\n      implied, including, without limitation, any warranties or conditions\n      of TITLE, NON-INFRINGEMENT, MERCHANTABILITY, or FITNESS FOR A\n      PARTICULAR PURPOSE. You are solely responsible for determining the\n      appropriateness of using or redistributing the Work and assume any\n      risks associated with Your exercise of permissions under this License.\n\n   8. Limitation of Liability. In no event and under no legal theory,\n      whether in tort (including negligence), contract, or otherwise,\n      unless required by applicable law (such as deliberate and grossly\n      negligent acts) or agreed to in writing, shall any Contributor be\n      liable to You for damages, including any direct, indirect, special,\n      incidental, or consequential damages of any character arising as a\n      result of this License or out of the use or inability to use the\n      Work (including but not limited to damages for loss of goodwill,\n      work stoppage, computer failure or malfunction, or any and all\n      other commercial damages or losses), even if such Contributor\n      has been advised of the possibility of such damages.\n\n   9. Accepting Warranty or Additional Liability. While redistributing\n      the Work or Derivative Works thereof, You may choose to offer,\n      and charge a fee for, acceptance of support, warranty, indemnity,\n      or other liability obligations and/or rights consistent with this\n      License. However, in accepting such obligations, You may act only\n      on Your own behalf and on Your sole responsibility, not on behalf\n      of any other Contributor, and only if You agree to indemnify,\n      defend, and hold each Contributor harmless for any liability\n      incurred by, or claims asserted against, such Contributor by reason\n      of your accepting any such warranty or additional liability.\n\n   END OF TERMS AND CONDITIONS\n\n   APPENDIX: How to apply the Apache License to your work.\n\n      To apply the Apache License to your work, attach the following\n      boilerplate notice, with the fields enclosed by brackets \"[]\"\n      replaced with your own identifying information. (Don't include\n      the brackets!)  The text should be enclosed in the appropriate\n      comment syntax for the file format. We also recommend that a\n      file or class name and description of purpose be included on the\n      same \"printed page\" as the copyright notice for easier\n      identification within third-party archives.\n\n   Copyright [yyyy] [name of copyright owner]\n\n   Licensed under the Apache License, Version 2.0 (the \"License\");\n   you may not use this file except in compliance with the License.\n   You may obtain a copy of the License at\n\n       http://www.apache.org/licenses/LICENSE-2.0\n\n   Unless required by applicable law or agreed to in writing, software\n   distributed under the License is distributed on an \"AS IS\" BASIS,\n   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n   See the License for the specific language governing permissions and\n   limitations under the License.\n"
+      },
+      "source": "https://raw.githubusercontent.com/FAANG/analysis-TAGADA/master/LICENSE",
+      "technique": "file_exploration"
+    }
+  ],
+  "name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "analysis-TAGADA"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "owner": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Organization",
+        "value": "FAANG"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "programming_languages": [
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Nextflow",
+        "size": 61321,
+        "type": "Programming_language",
+        "value": "Nextflow"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Python",
+        "size": 9201,
+        "type": "Programming_language",
+        "value": "Python"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Dockerfile",
+        "size": 2097,
+        "type": "Programming_language",
+        "value": "Dockerfile"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "readme_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/FAANG/analysis-TAGADA/master/README.md"
+      },
+      "technique": "file_exploration"
+    }
+  ],
+  "releases": [
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "cguyomar",
+          "type": "User"
+        },
+        "date_created": "2024-05-17T07:44:44Z",
+        "date_published": "2024-05-17T07:46:42Z",
+        "description": "- Upgrade image with new version of `Scripts `\r\n- Fix bug when only one modality is given to `quantify-by`",
+        "html_url": "https://github.com/FAANG/analysis-TAGADA/releases/tag/2.1.3",
+        "name": "Version 2.1.3",
+        "release_id": 156216965,
+        "tag": "2.1.3",
+        "tarball_url": "https://api.github.com/repos/FAANG/analysis-TAGADA/tarball/2.1.3",
+        "type": "Release",
+        "url": "https://api.github.com/repos/FAANG/analysis-TAGADA/releases/156216965",
+        "value": "https://api.github.com/repos/FAANG/analysis-TAGADA/releases/156216965",
+        "zipball_url": "https://api.github.com/repos/FAANG/analysis-TAGADA/zipball/2.1.3"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "cguyomar",
+          "type": "User"
+        },
+        "date_created": "2023-08-03T14:52:28Z",
+        "date_published": "2023-08-03T14:57:57Z",
+        "description": "### Changelog\r\n\r\n- Fixed bug in max resources settings",
+        "html_url": "https://github.com/FAANG/analysis-TAGADA/releases/tag/2.1.2",
+        "name": "Version 2.1.2",
+        "release_id": 114982985,
+        "tag": "2.1.2",
+        "tarball_url": "https://api.github.com/repos/FAANG/analysis-TAGADA/tarball/2.1.2",
+        "type": "Release",
+        "url": "https://api.github.com/repos/FAANG/analysis-TAGADA/releases/114982985",
+        "value": "https://api.github.com/repos/FAANG/analysis-TAGADA/releases/114982985",
+        "zipball_url": "https://api.github.com/repos/FAANG/analysis-TAGADA/zipball/2.1.2"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "chbk",
+          "type": "User"
+        },
+        "date_created": "2022-06-24T08:00:59Z",
+        "date_published": "2022-06-24T08:29:07Z",
+        "description": "### Changelog\r\n\r\n- Added `--feelnc-filter-args`, `--feelnc-codpot-args`, `--feelnc-classifier-args` to pass arguments to every FEELnc script.\r\n- Fixed expression clustering to work with any number of samples.\r\n- Updated resource requirements for processes.",
+        "html_url": "https://github.com/FAANG/analysis-TAGADA/releases/tag/2.1.1",
+        "name": "Version 2.1.1",
+        "release_id": 70466266,
+        "tag": "2.1.1",
+        "tarball_url": "https://api.github.com/repos/FAANG/analysis-TAGADA/tarball/2.1.1",
+        "type": "Release",
+        "url": "https://api.github.com/repos/FAANG/analysis-TAGADA/releases/70466266",
+        "value": "https://api.github.com/repos/FAANG/analysis-TAGADA/releases/70466266",
+        "zipball_url": "https://api.github.com/repos/FAANG/analysis-TAGADA/zipball/2.1.1"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "chbk",
+          "type": "User"
+        },
+        "date_created": "2022-04-19T15:37:15Z",
+        "date_published": "2022-04-20T06:12:45Z",
+        "description": "### Changelog\r\n\r\n- Added [Tmerge](https://github.com/julienlag/tmerge) by default instead of [StringTie](https://github.com/gpertea/stringtie) to coalesce assembled transcripts into a novel annotation.\r\n- Added `--coalesce-transcripts-with` to select the tool used to coalesce transcripts.\r\n- Added `--min-monoexonic-occurrence` and `--min-monoexonic-tpm` to filter rare monoexonic transcripts separately after assembly.\r\n- Added hierarchical clustering on genes TPM to compare quantification groups.\r\n- Updated dependencies:\r\n    - [MultiQC](https://github.com/ewels/MultiQC) 1.9 -> 1.12\r\n    - [STAR](https://github.com/alexdobin/STAR) 2.7.9a -> 2.7.10a\r\n    - [Subread](http://subread.sourceforge.net/featureCounts.html) 1.6.0 -> 2.0.1",
+        "html_url": "https://github.com/FAANG/analysis-TAGADA/releases/tag/2.1.0",
+        "name": "Version 2.1.0",
+        "release_id": 64810453,
+        "tag": "2.1.0",
+        "tarball_url": "https://api.github.com/repos/FAANG/analysis-TAGADA/tarball/2.1.0",
+        "type": "Release",
+        "url": "https://api.github.com/repos/FAANG/analysis-TAGADA/releases/64810453",
+        "value": "https://api.github.com/repos/FAANG/analysis-TAGADA/releases/64810453",
+        "zipball_url": "https://api.github.com/repos/FAANG/analysis-TAGADA/zipball/2.1.0"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "chbk",
+          "type": "User"
+        },
+        "date_created": "2022-01-26T13:13:23Z",
+        "date_published": "2022-01-26T13:48:27Z",
+        "description": "### Changelog\r\n\r\n- Rewrote the pipeline in Nextflow DSL2.\r\n- Added `--assemble-by` and `--quantify-by` to merge aligned reads separately for transcripts assembly and quantification.\r\n- Added `--min-transcript-occurrence` and `--min-transcript-tpm` to filter rare transcripts after transcripts assembly.\r\n- Added `--skip-assembly` to run the pipeline without generating a novel annotation.\r\n- Added control plots to the MultiQC report.",
+        "html_url": "https://github.com/FAANG/analysis-TAGADA/releases/tag/2.0.0",
+        "name": "Version 2.0.0",
+        "release_id": 58012242,
+        "tag": "2.0.0",
+        "tarball_url": "https://api.github.com/repos/FAANG/analysis-TAGADA/tarball/2.0.0",
+        "type": "Release",
+        "url": "https://api.github.com/repos/FAANG/analysis-TAGADA/releases/58012242",
+        "value": "https://api.github.com/repos/FAANG/analysis-TAGADA/releases/58012242",
+        "zipball_url": "https://api.github.com/repos/FAANG/analysis-TAGADA/zipball/2.0.0"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "chbk",
+          "type": "User"
+        },
+        "date_created": "2021-06-21T10:50:02Z",
+        "date_published": "2021-06-21T10:51:29Z",
+        "description": "### Changelog\r\n\r\n- Updated a dependency in the container to correct long non-coding transcript counts in the multiQC report.",
+        "html_url": "https://github.com/FAANG/analysis-TAGADA/releases/tag/1.0.2",
+        "name": "Version 1.0.2",
+        "release_id": 44953747,
+        "tag": "1.0.2",
+        "tarball_url": "https://api.github.com/repos/FAANG/analysis-TAGADA/tarball/1.0.2",
+        "type": "Release",
+        "url": "https://api.github.com/repos/FAANG/analysis-TAGADA/releases/44953747",
+        "value": "https://api.github.com/repos/FAANG/analysis-TAGADA/releases/44953747",
+        "zipball_url": "https://api.github.com/repos/FAANG/analysis-TAGADA/zipball/1.0.2"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "chbk",
+          "type": "User"
+        },
+        "date_created": "2021-06-09T07:06:13Z",
+        "date_published": "2021-06-11T10:24:03Z",
+        "description": "### Changelog\r\n\r\n- Corrected gene and transcript counts in the annotation comparison section of the multiQC report.",
+        "html_url": "https://github.com/FAANG/analysis-TAGADA/releases/tag/1.0.1",
+        "name": "Version 1.0.1",
+        "release_id": 44470610,
+        "tag": "1.0.1",
+        "tarball_url": "https://api.github.com/repos/FAANG/analysis-TAGADA/tarball/1.0.1",
+        "type": "Release",
+        "url": "https://api.github.com/repos/FAANG/analysis-TAGADA/releases/44470610",
+        "value": "https://api.github.com/repos/FAANG/analysis-TAGADA/releases/44470610",
+        "zipball_url": "https://api.github.com/repos/FAANG/analysis-TAGADA/zipball/1.0.1"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "chbk",
+          "type": "User"
+        },
+        "date_created": "2021-06-04T13:56:57Z",
+        "date_published": "2021-06-04T14:03:34Z",
+        "description": "First official production-ready release.",
+        "html_url": "https://github.com/FAANG/analysis-TAGADA/releases/tag/1.0.0",
+        "name": "Version 1.0.0",
+        "release_id": 44109868,
+        "tag": "1.0.0",
+        "tarball_url": "https://api.github.com/repos/FAANG/analysis-TAGADA/tarball/1.0.0",
+        "type": "Release",
+        "url": "https://api.github.com/repos/FAANG/analysis-TAGADA/releases/44109868",
+        "value": "https://api.github.com/repos/FAANG/analysis-TAGADA/releases/44109868",
+        "zipball_url": "https://api.github.com/repos/FAANG/analysis-TAGADA/zipball/1.0.0"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "chbk",
+          "type": "User"
+        },
+        "date_created": "2021-03-09T11:27:09Z",
+        "date_published": "2021-03-12T10:22:02Z",
+        "html_url": "https://github.com/FAANG/analysis-TAGADA/releases/tag/0.3.1",
+        "name": "Version 0.3.1",
+        "release_id": 39706747,
+        "tag": "0.3.1",
+        "tarball_url": "https://api.github.com/repos/FAANG/analysis-TAGADA/tarball/0.3.1",
+        "type": "Release",
+        "url": "https://api.github.com/repos/FAANG/analysis-TAGADA/releases/39706747",
+        "value": "https://api.github.com/repos/FAANG/analysis-TAGADA/releases/39706747",
+        "zipball_url": "https://api.github.com/repos/FAANG/analysis-TAGADA/zipball/0.3.1"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "chbk",
+          "type": "User"
+        },
+        "date_created": "2021-02-10T09:24:54Z",
+        "date_published": "2021-02-15T11:10:18Z",
+        "html_url": "https://github.com/FAANG/analysis-TAGADA/releases/tag/0.3.0",
+        "name": "Version 0.3.0",
+        "release_id": 38054808,
+        "tag": "0.3.0",
+        "tarball_url": "https://api.github.com/repos/FAANG/analysis-TAGADA/tarball/0.3.0",
+        "type": "Release",
+        "url": "https://api.github.com/repos/FAANG/analysis-TAGADA/releases/38054808",
+        "value": "https://api.github.com/repos/FAANG/analysis-TAGADA/releases/38054808",
+        "zipball_url": "https://api.github.com/repos/FAANG/analysis-TAGADA/zipball/0.3.0"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "chbk",
+          "type": "User"
+        },
+        "date_created": "2020-12-07T10:59:14Z",
+        "date_published": "2020-12-07T11:04:49Z",
+        "html_url": "https://github.com/FAANG/analysis-TAGADA/releases/tag/0.2.0",
+        "name": "Version 0.2.0",
+        "release_id": 34922169,
+        "tag": "0.2.0",
+        "tarball_url": "https://api.github.com/repos/FAANG/analysis-TAGADA/tarball/0.2.0",
+        "type": "Release",
+        "url": "https://api.github.com/repos/FAANG/analysis-TAGADA/releases/34922169",
+        "value": "https://api.github.com/repos/FAANG/analysis-TAGADA/releases/34922169",
+        "zipball_url": "https://api.github.com/repos/FAANG/analysis-TAGADA/zipball/0.2.0"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "chbk",
+          "type": "User"
+        },
+        "date_created": "2020-08-18T14:06:04Z",
+        "date_published": "2020-08-18T14:33:11Z",
+        "html_url": "https://github.com/FAANG/analysis-TAGADA/releases/tag/0.1.0",
+        "name": "Version 0.1.0",
+        "release_id": 29820141,
+        "tag": "0.1.0",
+        "tarball_url": "https://api.github.com/repos/FAANG/analysis-TAGADA/tarball/0.1.0",
+        "type": "Release",
+        "url": "https://api.github.com/repos/FAANG/analysis-TAGADA/releases/29820141",
+        "value": "https://api.github.com/repos/FAANG/analysis-TAGADA/releases/29820141",
+        "zipball_url": "https://api.github.com/repos/FAANG/analysis-TAGADA/zipball/0.1.0"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "requirements": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Dependencies",
+        "parent_header": [
+          "TAGADA: Transcript And Gene Assembly, Deconvolution, Analysis"
+        ],
+        "type": "Text_excerpt",
+        "value": "To use this pipeline you will need:\n\n- [Nextflow](https://www.nextflow.io/docs/latest/getstarted.html) >= 21.04.1\n- [Docker](https://docs.docker.com/engine/install/) >= 19.03.2 or [Singularity](https://sylabs.io/guides/3.5/user-guide/quick_start.html) >= 3.7.3\n\n"
+      },
+      "source": "https://raw.githubusercontent.com/FAANG/analysis-TAGADA/master/README.md",
+      "technique": "header_analysis"
+    }
+  ],
+  "somef_missing_categories": [
+    "acknowledgement",
+    "run",
+    "download",
+    "contact",
+    "contributors",
+    "documentation",
+    "faq",
+    "support",
+    "identifier",
+    "executable_example"
+  ],
+  "somef_provenance": {
+    "date": "2024-10-04 00:15:06",
+    "somef_schema_version": "1.0.0",
+    "somef_version": "0.9.5"
+  },
+  "stargazers_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 23
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "usage": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Usage",
+        "parent_header": [
+          "TAGADA: Transcript And Gene Assembly, Deconvolution, Analysis"
+        ],
+        "type": "Text_excerpt",
+        "value": "A small dataset is provided to test this pipeline. To try it out, use this command:\n\n    nextflow run FAANG/analysis-TAGADA -profile test,docker -revision 2.1.3 --output directory\n"
+      },
+      "source": "https://raw.githubusercontent.com/FAANG/analysis-TAGADA/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Nextflow options",
+        "parent_header": [
+          "TAGADA: Transcript And Gene Assembly, Deconvolution, Analysis",
+          "Usage"
+        ],
+        "type": "Text_excerpt",
+        "value": "The pipeline is written in Nextflow, which provides the following default options:\n\n<table>\n  <thead>\n    <tr>\n      <th width=222px>Option</th>\n      <th width=220px>Example</th>\n      <th width=215px>Description</th>\n      <th width=153px>Required</th>\n    </tr>\n  </thead>\n  <tbody>\n    <tr>\n      <td nowrap><strong><code>-profile</code></strong></td>\n      <td nowrap><code>profile1,profile2,etc.</code></td>\n      <td>Profile(s) to use when running the pipeline. Specify the profiles that fit your infrastructure among <code>singularity</code>, <code>docker</code>, <code>kubernetes</code>, <code>slurm</code>.</td>\n      <td align=center>Required</td>\n    </tr>\n    <tr>\n      <td nowrap><strong><code>-config</code></strong></td>\n      <td nowrap><code>custom.config</code></td>\n      <td>\n        Configuration file tailored to your infrastructure and dataset.<br><br>\n        To find a configuration file for your infrastructure, browse <a href=\"https://github.com/nf-core/configs/tree/master/conf\">nf-core configs</a>.<br><br>\n        Some large datasets require more computing resources than the pipeline defaults. To specify custom resources for specific processes, see the <a href=\"#custom-resources\">custom resources</a> section.\n      </td>\n      <td align=center>Optional</td>\n    </tr>\n    <tr>\n      <td nowrap><strong><code>-revision</code></strong></td>\n      <td nowrap><code>version</code></td>\n      <td>Version of the pipeline to launch.</td>\n      <td align=center>Optional</td>\n    </tr>\n    <tr>\n      <td nowrap><strong><code>-work-dir</code></strong></td>\n      <td nowrap><code>directory</code></td>\n      <td>Work directory where all temporary files are written.</td>\n      <td align=center>Optional</td>\n    </tr>\n    <tr>\n      <td nowrap><strong><code>-resume</code></strong></td>\n      <td nowrap></td>\n      <td>Resume the pipeline from the last completed process.</td>\n      <td align=center>Optional</td>\n    </tr>\n  </tbody>\n</table>\n\nFor more Nextflow options, see [Nextflow's documentation](https://www.nextflow.io/docs/latest/cli.html#run).\n"
+      },
+      "source": "https://raw.githubusercontent.com/FAANG/analysis-TAGADA/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Input and output options",
+        "parent_header": [
+          "TAGADA: Transcript And Gene Assembly, Deconvolution, Analysis",
+          "Usage"
+        ],
+        "type": "Text_excerpt",
+        "value": "<table>\n  <thead>\n    <tr>\n      <th width=222px>Option</th>\n      <th width=220px>Example</th>\n      <th width=215px>Description</th>\n      <th width=153px>Required</th>\n    </tr>\n  </thead>\n  <tbody>\n    <tr>\n      <td nowrap><strong><code>--output</code></strong></td>\n      <td nowrap><code>directory</code></td>\n      <td>Output directory where all results are written.</td>\n      <td align=center>Required</td>\n    </tr>\n    <tr>\n      <td nowrap><strong><code>--reads</code></strong></td>\n      <td nowrap><code>'path/to/reads/*'</code></td>\n      <td>\n        Input <code>fastq</code> file(s) and/or <code>bam</code> file(s).<br><br>\n        For single-end reads, your files must end with:<br><code>.fq[.gz]</code><br><br>\n        For paired-end reads, your files must end with:<br><code>_[R]{1,2}.fq[.gz]</code><br><br>\n        <code>TAGADA</code>code> will automatically infer read size and strandedness of libraries, but all libraries must have the same, and also the same read length<br><br>\n        For aligned reads, your files must end with:<br><code>.bam</code><br><br>\n        If the provided path includes a wildcard character like <code>*</code>, you must enclose it with quotes to prevent Bash glob expansion, as per <a href=\"https://www.nextflow.io/docs/latest/cli.html#pipeline-parameters\">Nextflow's requirements</a>.<br><br>\n        If the files are numerous, you may provide a <code>.txt</code> sheet with one path or url per line.</td>\n      <td align=center>Required</td>\n    </tr>\n    <tr>\n      <td nowrap><strong><code>--annotation</code></strong></td>\n      <td nowrap><code>annotation.gtf</code></td>\n      <td>Input reference<br>annotation file or url.\n        Be careful this file should contain both exon and transcript rows and should include gene_id and transcript_id in the 9th field.</td>\n      <td align=center>Required</td>\n    </tr>\n    <tr>\n      <td nowrap><strong><code>--genome</code></strong></td>\n      <td nowrap><code>genome.fa</code></td>\n      <td>Input genome<br>sequence file or url.</td>\n      <td align=center>Required</td>\n    </tr>\n    <tr>\n      <td nowrap><strong><code>--index</code></strong></td>\n      <td nowrap><code>directory</code></td>\n      <td>Input genome index<br>directory or url.</td>\n      <td align=center>Optional, to<br>skip genome indexing</td>\n    </tr>\n    <tr>\n      <td nowrap><strong><code>--metadata</code></strong></td>\n      <td nowrap><code>metadata.tsv</code></td>\n      <td>Input tabulated<br>metadata file or url.</td>\n      <td align=center>Required if<br><code>--assemble-by</code><br>or<br><code>--quantify-by</code><br>are provided</td>\n    </tr>\n  </tbody>\n</table>\n"
+      },
+      "source": "https://raw.githubusercontent.com/FAANG/analysis-TAGADA/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Merge options",
+        "parent_header": [
+          "TAGADA: Transcript And Gene Assembly, Deconvolution, Analysis",
+          "Usage"
+        ],
+        "type": "Text_excerpt",
+        "value": "<table>\n  <thead>\n    <tr>\n      <th width=222px>Option</th>\n      <th width=220px>Example</th>\n      <th width=215px>Description</th>\n      <th width=153px>Required</th>\n    </tr>\n  </thead>\n  <tbody>\n    <tr>\n      <td nowrap><strong><code>--assemble-by</code></strong></td>\n      <td nowrap><code>factor1,factor2,etc.</code></td>\n      <td>Factor(s) defining groups in which transcripts are assembled. Aligned reads of identical factors are merged and each resulting merge group is processed individually. See the <a href=\"#merging-inputs\">merging inputs</a> section for details.</td>\n      <td align=center>Optional</td>\n    </tr>\n    <tr>\n      <td nowrap><strong><code>--quantify-by</code></strong></td>\n      <td nowrap><code>factor1,factor2,etc.</code></td>\n      <td>Factor(s) defining groups in which transcripts are quantified. Aligned reads of identical factors are merged and each resulting merge group is processed individually. See the <a href=\"#merging-inputs\">merging inputs</a> section for details.</td>\n      <td align=center>Optional</td>\n    </tr>\n  </tbody>\n</table>\n"
+      },
+      "source": "https://raw.githubusercontent.com/FAANG/analysis-TAGADA/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Assembly options",
+        "parent_header": [
+          "TAGADA: Transcript And Gene Assembly, Deconvolution, Analysis",
+          "Usage"
+        ],
+        "type": "Text_excerpt",
+        "value": "<table>\n  <thead>\n    <tr>\n      <th width=262px>Option</th>\n      <th width=180px>Example</th>\n      <th width=268px>Description</th>\n      <th width=100px>Required</th>\n    </tr>\n  </thead>\n  <tbody>\n    <tr>\n      <td nowrap><strong><code>--min-transcript-occurrence</code></strong></td>\n      <td nowrap><code>2</code></td>\n      <td>After transcripts assembly, rare novel transcripts that appear in few assembly groups are removed from the final novel annotation. By default, if a transcript occurs in less than <code>2</code> assembly groups, it is removed. If there is only one assembly group, this option defaults to <code>1</code>.</td>\n      <td align=center>Optional</td>\n    </tr>\n    <tr>\n      <td nowrap><strong><code>--min-monoexonic-occurrence</code></strong></td>\n      <td nowrap><code>2</code></td>\n      <td>If specified, rare novel monoexonic transcripts are filtered according to the provided threshold. Otherwise, this option takes the value of<br><code>--min-transcript-occurrence</code>.</td>\n      <td align=center>Optional</td>\n    </tr>\n    <tr>\n      <td nowrap><strong><code>--min-transcript-tpm</code></strong></td>\n      <td nowrap><code>0.1</code></td>\n      <td>After transcripts assembly, novel transcripts with low TPM values in every assembly group are removed from the final novel annotation. By default, if a transcript's TPM value is lower than <code>0.1</code> in every assembly group, it is removed.</td>\n      <td align=center>Optional</td>\n    </tr>\n    <tr>\n      <td nowrap><strong><code>--min-monoexonic-tpm</code></strong></td>\n      <td nowrap><code>1</code></td>\n      <td>If specified, novel monoexonic transcripts with low TPM values are filtered according to the provided threshold. Otherwise, this option takes the value of<br><code>--min-transcript-tpm * 10</code>.</td>\n      <td align=center>Optional</td>\n    </tr>\n    <tr>\n      <td nowrap><strong><code>--coalesce-transcripts-with</code></strong></td>\n      <td nowrap><code>tmerge</code></td>\n      <td>Tool used to coalesce transcripts assemblies into a non-redundant set of transcripts for the novel annotation. Can be <code>tmerge</code> or <code>stringtie</code>. Defaults to <code>tmerge</code>.</td>\n      <td align=center>Optional</td>\n    </tr>\n    <tr>\n      <td nowrap><strong><code>--tmerge-args</code></strong></td>\n      <td nowrap><code>'--endFuzz 10000'</code></td>\n      <td>Custom arguments to pass to <a href=\"https://github.com/julienlag/tmerge#options\">tmerge</a> when coalescing transcripts.</td>\n      <td align=center>Optional</td>\n    </tr>\n    <tr>\n      <td nowrap><strong><code>--feelnc-filter-args</code></strong></td>\n      <td nowrap><code>'--size 200'</code></td>\n      <td>Custom arguments to pass to FEELnc's <a href=\"https://github.com/tderrien/FEELnc#1--feelnc_filterpl\">filter</a> script when detecting long non-coding transcripts.</td>\n      <td align=center>Optional</td>\n    </tr>\n    <tr>\n      <td nowrap><strong><code>--feelnc-codpot-args</code></strong></td>\n      <td nowrap><code>'--mode shuffle'</code></td>\n      <td>Custom arguments to pass to FEELnc's <a href=\"https://github.com/tderrien/FEELnc#2--feelnc_codpotpl\">coding potential</a> script when detecting long non-coding transcripts.</td>\n      <td align=center>Optional</td>\n    </tr>\n    <tr>\n      <td nowrap><strong><code>--feelnc-classifier-args</code></strong></td>\n      <td nowrap><code>'--window 10000'</code></td>\n      <td>Custom arguments to pass to FEELnc's <a href=\"https://github.com/tderrien/FEELnc#3--feelnc_classifierpl\">classifier</a> script when detecting long non-coding transcripts.</td>\n      <td align=center>Optional</td>\n    </tr>\n  </tbody>\n</table>\n"
+      },
+      "source": "https://raw.githubusercontent.com/FAANG/analysis-TAGADA/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Skip options",
+        "parent_header": [
+          "TAGADA: Transcript And Gene Assembly, Deconvolution, Analysis",
+          "Usage"
+        ],
+        "type": "Text_excerpt",
+        "value": "<table>\n  <thead>\n    <tr>\n      <th width=222px>Option</th>\n      <th width=220px>Example</th>\n      <th width=215px>Description</th>\n      <th width=153px>Required</th>\n    </tr>\n  </thead>\n  <tbody>\n    <tr>\n      <td nowrap><strong><code>--skip-assembly</code></strong></td>\n      <td nowrap></td>\n      <td>Skip transcripts assembly with StringTie and skip all subsequent processes working with a novel annotation.</td>\n      <td align=center>Optional</td>\n    </tr>\n    <tr>\n      <td nowrap><strong><code>--skip-lnc-detection</code></strong></td>\n      <td nowrap></td>\n      <td>Skip detection of long non-coding transcripts in the novel annotation with FEELnc.</td>\n      <td align=center>Optional</td>\n    </tr>\n  </tbody>\n</table>\n"
+      },
+      "source": "https://raw.githubusercontent.com/FAANG/analysis-TAGADA/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Resources options",
+        "parent_header": [
+          "TAGADA: Transcript And Gene Assembly, Deconvolution, Analysis",
+          "Usage"
+        ],
+        "type": "Text_excerpt",
+        "value": "<table>\n  <thead>\n    <tr>\n      <th width=222px>Option</th>\n      <th width=220px>Example</th>\n      <th width=215px>Description</th>\n      <th width=153px>Required</th>\n    </tr>\n  </thead>\n  <tbody>\n    <tr>\n      <td nowrap><strong><code>--max-cpus</code></strong></td>\n      <td nowrap><code>16</code></td>\n      <td>Maximum number of CPU cores that can be used for each process. This is a limit, not the actual number of requested CPU cores.</td>\n      <td align=center>Optional</td>\n    </tr>\n    <tr>\n      <td nowrap><strong><code>--max-memory</code></strong></td>\n      <td nowrap><code>64GB</code></td>\n      <td>Maximum memory that can be used for each process. This is a limit, not the actual amount of allotted memory.</td>\n      <td align=center>Optional</td>\n    </tr>\n    <tr>\n      <td nowrap><strong><code>--max-time</code></strong></td>\n      <td nowrap><code>24h</code></td>\n      <td>Maximum time that can be spent on each process. This is a limit and has no effect on the duration of each process.</td>\n      <td align=center>Optional</td>\n    </tr>\n  </tbody>\n</table>\n"
+      },
+      "source": "https://raw.githubusercontent.com/FAANG/analysis-TAGADA/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Example configuration",
+        "parent_header": [
+          "TAGADA: Transcript And Gene Assembly, Deconvolution, Analysis",
+          "Custom resources"
+        ],
+        "type": "Text_excerpt",
+        "value": "    -config custom.config\n\n`custom.config`\n\n    process {\n\n      withName: TRIMGALORE_trim_adapters {\n        cpus = 8\n        memory = 18.GB\n        time = 36.h\n      }\n\n      withName: STAR_align_reads {\n        cpus = 16\n        memory = 64.GB\n        time = 2.d\n      }\n\n    }\n\n"
+      },
+      "source": "https://raw.githubusercontent.com/FAANG/analysis-TAGADA/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Example metadata",
+        "parent_header": [
+          "TAGADA: Transcript And Gene Assembly, Deconvolution, Analysis",
+          "Metadata"
+        ],
+        "type": "Text_excerpt",
+        "value": "    --reads reads.txt --metadata metadata.tsv\n\n`reads.txt`\n\n    path/to/A_R1.fq\n    path/to/A_R2.fq\n    path/to/B.fq.gz\n    path/to/C.bam\n    path/to/D.fq\n\n`metadata.tsv`\n\n    input    tissue     stage\n    A        liver      30 days\n    B        liver      30 days\n    C        liver      60 days\n    D        muscle     60 days\n\n"
+      },
+      "source": "https://raw.githubusercontent.com/FAANG/analysis-TAGADA/master/README.md",
+      "technique": "header_analysis"
+    }
+  ],
+  "workflows": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/FAANG/analysis-TAGADA/master/main.nf"
+      },
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/FAANG/analysis-TAGADA/master/workflows/create_channels.nf"
+      },
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/FAANG/analysis-TAGADA/master/workflows/merge_reads.nf"
+      },
+      "technique": "file_exploration"
+    }
+  ]
+}

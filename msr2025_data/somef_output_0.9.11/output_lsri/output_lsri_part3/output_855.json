@@ -1,0 +1,802 @@
+{
+  "citation": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "citation",
+        "parent_header": [
+          "longshot"
+        ],
+        "type": "Text_excerpt",
+        "value": "If you use Longshot, please cite the publication:\n\n[Edge, P. and Bansal, V., 2019. Longshot enables accurate variant calling in diploid genomes from single-molecule long read sequencing. Nature communications, 10(1), pp.1-10.](https://www.nature.com/articles/s41467-019-12493-y)\n"
+      },
+      "source": "https://raw.githubusercontent.com/pjedge/longshot/master/README.md",
+      "technique": "header_analysis"
+    }
+  ],
+  "code_repository": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/pjedge/longshot"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_created": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2017-09-04T03:32:54Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_updated": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2024-10-01T16:02:33Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "description": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "diploid SNV caller for error-prone reads"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 0.979843550893913,
+      "result": {
+        "original_header": "longshot",
+        "type": "Text_excerpt",
+        "value": "Longshot is a variant calling tool for diploid genomes using long error prone reads such as Pacific Biosciences (PacBio) SMRT and Oxford Nanopore Technologies (ONT). It takes as input an aligned BAM/CRAM file and outputs a phased VCF file with variants and haplotype information. It can also genotype and phase input VCF files. It can output haplotype-separated BAM files that can be used for downstream analysis. Currently, it only calls single nucleotide variants (SNVs), but it can genotype indels if they are given in an input VCF.\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/pjedge/longshot/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9969660587533633,
+      "result": {
+        "original_header": "command line options",
+        "type": "Text_excerpt",
+        "value": "```\n$ longshot --help\n\nLongshot: variant caller (SNVs) for long-read sequencing data \n\nUSAGE:\n    longshot [FLAGS] [OPTIONS] --bam <BAM/CRAM> --ref <FASTA> --out <VCF>\n\nFLAGS:\n    -A, --auto_max_cov        Automatically calculate mean coverage for region and set max coverage to mean_coverage +\n                              5*sqrt(mean_coverage). (SLOWER)\n    -S, --stable_alignment    Use numerically-stable (logspace) pair HMM forward algorithm. Is significantly slower but\n                              may be more accurate. Tests have shown this not to be necessary for highly error prone\n                              reads (PacBio CLR).\n    -F, --force_overwrite     If output files (VCF or variant debug directory) exist, delete and overwrite them.\n    -x, --max_alignment       Use max scoring alignment algorithm rather than pair HMM forward algorithm.\n    -n, --no_haps             Don't call HapCUT2 to phase variants.\n        --output-ref          print reference genotypes (non-variant), use this option only in combination with -v\n                              option.\n    -h, --help                Prints help information\n    -V, --version             Prints version information\n\nOPTIONS:\n    -b, --bam <BAM>                            sorted, indexed BAM file with error-prone reads (CRAM files also supported)\n    -f, --ref <FASTA>                          indexed FASTA reference that BAM file is aligned to\n    -o, --out <VCF>                            output VCF file with called variants.\n    -r, --region <string>                      Region in format <chrom> or <chrom:start-stop> in which to call variants\n                                               (1-based, inclusive).\n    -v, --potential_variants <VCF>             Genotype and phase the variants in this VCF instead of using pileup\n                                               method to find variants. NOTES: VCF must be gzipped and tabix indexed or\n                                               contain contig information. Use with caution because excessive false\n                                               potential variants can lead to inaccurate results. Every variant is used\n                                               and only the allele fields are considered -- Genotypes, filters,\n                                               qualities etc are ignored. Indel variants will be genotyped but not\n                                               phased. Structural variants (length > 50 bp) are currently not supported.\n    -O, --out_bam <BAM>                        Write new bam file with haplotype tags (HP:i:1 and HP:i:2) for reads\n                                               assigned to each haplotype, any existing HP and PS tags are removed\n    -c, --min_cov <int>                        Minimum coverage (of reads passing filters) to consider position as a\n                                               potential SNV. [default: 6]\n    -C, --max_cov <int>                        Maximum coverage (of reads passing filters) to consider position as a\n                                               potential SNV. [default: 8000]\n    -q, --min_mapq <int>                       Minimum mapping quality to use a read. [default: 20]\n    -a, --min_allele_qual <float>              Minimum estimated quality (Phred-scaled) of allele observation on read to\n                                               use for genotyping/haplotyping. [default: 7.0]\n    -y, --hap_assignment_qual <float>          Minimum quality (Phred-scaled) of read->haplotype assignment (for read\n                                               separation). [default: 20.0]\n    -Q, --potential_snv_cutoff <float>         Consider a site as a potential SNV if the original PHRED-scaled QUAL\n                                               score for 0/0 genotype is below this amount (a larger value considers\n                                               more potential SNV sites). [default: 20.0]\n    -e, --min_alt_count <int>                  Require a potential SNV to have at least this many alternate allele\n                                               observations. [default: 3]\n    -E, --min_alt_frac <float>                 Require a potential SNV to have at least this fraction of alternate\n                                               allele observations. [default: 0.125]\n    -L, --hap_converge_delta <float>           Terminate the haplotype/genotype iteration when the relative change in\n                                               log-likelihood falls below this amount. Setting a larger value results in\n                                               faster termination but potentially less accurate results. [default:\n                                               0.0001]\n    -l, --anchor_length <int>                  Length of indel-free anchor sequence on the left and right side of read\n                                               realignment window. [default: 6]\n    -m, --max_snvs <int>                       Cut off variant clusters after this many variants. 2^m haplotypes must be\n                                               aligned against per read for a variant cluster of size m. [default: 3]\n    -W, --max_window <int>                     Maximum \"padding\" bases on either side of variant realignment window\n                                               [default: 50]\n    -I, --max_cigar_indel <int>                Throw away a read-variant during allelotyping if there is a CIGAR indel\n                                               (I/D/N) longer than this amount in its window. [default: 20]\n    -B, --band_width <Band width>              Minimum width of alignment band. Band will increase in size if sequences\n                                               are different lengths. [default: 20]\n    -D, --density_params <string>              Parameters to flag a variant as part of a \"dense cluster\". Format\n                                               <n>:<l>:<gq>. If there are at least n variants within l base pairs with\n                                               genotype quality >=gq, then these variants are flagged as \"dn\" [default:\n                                               10:500:50]\n    -s, --sample_id <string>                   Specify a sample ID to write to the output VCF [default: SAMPLE]\n        --hom_snv_rate <float>                 Specify the homozygous SNV Rate for genotype prior estimation [default:\n                                               0.0005]\n        --het_snv_rate <float>                 Specify the heterozygous SNV Rate for genotype prior estimation [default:\n                                               0.001]\n        --ts_tv_ratio <float>                  Specify the transition/transversion rate for genotype grior estimation\n                                               [default: 0.5]\n    -P, --strand_bias_pvalue_cutoff <float>    Remove a variant if the allele observations are biased toward one strand\n                                               (forward or reverse) according to Fisher's exact test. Use this cutoff\n                                               for the two-tailed P-value. [default: 0.01]\n    -d, --variant_debug_dir <path>             write out current information about variants at each step of algorithm to\n                                               files in this directory\n```\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/pjedge/longshot/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9985877930897467,
+      "result": {
+        "original_header": "important considerations",
+        "type": "Text_excerpt",
+        "value": "- It is highly recommended to use reads with at least 30x coverage.\n- It is recommended to process chromosomes separately using the ```--region``` option.\n- Longshot has only been tested using data from humans. Results may vary with organisms with significantly higher or lower SNV rate.\n- It is important to set a reasonable max read coverage cutoff (BASH2* option) to filter out sites coinciding with genomic features such as CNVs which can be problematic for variant calling. If the BASH3* option is used, Longshot will estimate the mean read coverage and set the max coverage to BASH4*, which we have found to be a reasonable filter in practice for humans.\n- CNVs and mapping issues can result in dense clusters of false positive SNVs. Longshot will attempt to find clusters like this and mark them as \"dn\" in the FILTER field. The BASH5* option is used to control which variants are flagged as \"dn\". The default parameters have been found to be effective for human sequencing data, but this option may need to be tweaked for other organisms with SNV rates significantly different from human.\n- Oxford Nanopore Technology (ONT) SMS reads are now officially supported. It is recommended to use the default BASH6* of 0.01 for ONT reads, since this option filters out false SNV sites prior to variant calling.\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/pjedge/longshot/master/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "download_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/pjedge/longshot/releases"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "faq": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "linker errors",
+        "parent_header": [
+          "longshot",
+          "installation troubleshooting"
+        ],
+        "type": "Text_excerpt",
+        "value": "For example:\n```\nerror: linking with `cc` failed: exit code: 1\n...\n...\n...\n= note: Non-UTF-8 output: /usr/bin/ld: /home/pedge/temp/longshot/target/release/build/longshot-347f3774e75b380c/out/libhapcut2.a(common.o)(.text.fprintf_time+0x81): unresolvable H\\x89\\\\$\\xe8H\\x89l$\\xf0H\\x89\\xf3L\\x89d$\\xf8H\\x83\\xec\\x18H\\x8bG\\x10H\\x89\\xfdI\\x89\\xd4H\\x89\\xd6H\\x8b;\\xffPxH\\x8bE\\x10I\\x8dt$\\x08H\\x8b{\\x08\\xffPxH\\x8bE\\x10H\\x8b{\\x10I\\x8dt$\\x10H\\x8b\\x1c$H\\x8bl$\\x08L\\x8bd$\\x10H\\x8b@xH\\x83\\xc4\\x18\\xff\\xe0f\\x90H\\x89\\\\$\\xe8H\\x89l$\\xf0H\\x89\\xfbL\\x89d$\\xf8H\\x83\\xec\\x18H\\x8bG\\x10I\\x89\\xd4H\\x89\\xf5H\\x89\\xf7\\xffPhI\\x89\\x04$H\\x8bC\\x10H\\x8d}\\x08\\xffPhH\\x8b\\x1c$I\\x89D$\\x08H\\x8bl$\\x08L\\x8bd$\\x10H\\x83\\xc4\\x18\\xc3\\x0f\\x1f relocation against symbol `time@@GLIBC_2.2.5\\'\\n/usr/bin/ld: BFD version 2.20.51.0.2-5.42.el6 20100205 internal error, aborting at reloc.c line 443 in bfd_get_reloc_size\\n\\n/usr/bin/ld: Please report this bug.\\n\\ncollect2: ld returned 1 exit status\\n\n...\n...\n...\n```\nYour system may have multiple versions of your linker that are causing a conflict. Rustc may be calling to a different or old version of the linker. In this case, specify the linker (in linux, gcc) as follows:\n```\nrustc -vV\n```\nNote the build target after \"host: \", i.e. \"x86_64-unknown-linux-gnu\".\n```\nmkdir .cargo\nnano .cargo/config\n```\nedit the config file to have these contents:\n```\n[target.<target-name>]\nlinker = \"</path/to/linker>\"\n```\nfor example,\n```\n[target.x86_64-unknown-linux-gnu]\nlinker = \"/opt/gnu/gcc/bin/gcc\"\n```\nthen,\n```\ncargo clean\ncargo build --release\n```\n"
+      },
+      "source": "https://raw.githubusercontent.com/pjedge/longshot/master/README.md",
+      "technique": "header_analysis"
+    }
+  ],
+  "forks_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 26
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/pjedge/longshot/forks"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "pjedge/longshot"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_title": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "longshot"
+      },
+      "source": "https://raw.githubusercontent.com/pjedge/longshot/master/README.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "has_build_file": [
+    {
+      "confidence": 1,
+      "result": {
+        "format": "dockerfile",
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/pjedge/longshot/master/Dockerfile"
+      },
+      "source": "https://raw.githubusercontent.com/pjedge/longshot/master/Dockerfile",
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "format": "dockerfile",
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/pjedge/longshot/master/.devcontainer/Dockerfile"
+      },
+      "source": "https://raw.githubusercontent.com/pjedge/longshot/master/.devcontainer/Dockerfile",
+      "technique": "file_exploration"
+    }
+  ],
+  "installation": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "installation using Bioconda",
+        "parent_header": [
+          "longshot",
+          "installation"
+        ],
+        "type": "Text_excerpt",
+        "value": "It is recommended to install Longshot using [Bioconda](https://bioconda.github.io/):\n```\nconda install longshot\n```\nThis method supports Linux and Mac.\nIf you do not have Bioconda, you can install it with these steps:\nFirst, install Miniconda (or Anaconda). Miniconda can be installed using the\nscripts [here](https://docs.conda.io/en/latest/miniconda.html). \n\nThe Bioconda channel can then be added using these commands:\n```\nconda config --add channels defaults\nconda config --add channels bioconda\nconda config --add channels conda-forge\n```"
+      },
+      "source": "https://raw.githubusercontent.com/pjedge/longshot/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "manual installation using apt for dependencies (Ubuntu 18.04)",
+        "parent_header": [
+          "longshot",
+          "installation"
+        ],
+        "type": "Text_excerpt",
+        "value": "If you are using Ubuntu 18.04, you can install the dependencies using apt. Then, the Rust cargo package manager is used to compile Longshot. \n```\nsudo apt-get install cargo zlib1g-dev xz-utils \\\n         libclang-dev clang cmake build-essential curl git  # install dependencies \ngit clone https://github.com/pjedge/longshot          # clone the Longshot repository\ncd longshot                                           # change directory\ncargo install --path .                                # install Longshot\nexport PATH=$PATH:/home/$USER/.cargo/bin              # add cargo binaries to path\n```\nInstallation should take around 4 minutes on a typical desktop machine and will use between 400 MB (counting cargo) and 1.2 GB (counting all dependencies) of disk space.\nIt is recommended to add the line ```export PATH=$PATH:/home/$USER/.cargo/bin``` to the end of your ```~/.bashrc``` file so that the longshot binary is in the PATH for future shell sessions.\n"
+      },
+      "source": "https://raw.githubusercontent.com/pjedge/longshot/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "older version of Rust",
+        "parent_header": [
+          "longshot",
+          "installation troubleshooting"
+        ],
+        "type": "Text_excerpt",
+        "value": "Check that the Rust version is 1.30.0 or higher:\n```\nrustc --version\n```\nIf not, update Rust using this command:\n```\nrustup update\n```\n\n"
+      },
+      "source": "https://raw.githubusercontent.com/pjedge/longshot/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 0.9999995194027651,
+      "result": {
+        "original_header": "supported operating systems",
+        "type": "Text_excerpt",
+        "value": "Longshot has been tested using Ubuntu 16.04 and 18.04, CentOS 6.6, Manjaro Linux 17.1.11, and Mac OS 10.14.2 Mojave.\nIt should work on any linux-based system that has Rust and Cargo installed.\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/pjedge/longshot/master/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "issue_tracker": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/pjedge/longshot/issues"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "keywords": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": ""
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "license": [
+    {
+      "confidence": 1,
+      "result": {
+        "name": "MIT License",
+        "spdx_id": "MIT",
+        "type": "License",
+        "url": "https://api.github.com/licenses/mit",
+        "value": "https://api.github.com/licenses/mit"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "File_dump",
+        "value": "MIT License\n\nCopyright (c) 2017 Peter Edge\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.\n"
+      },
+      "source": "https://raw.githubusercontent.com/pjedge/longshot/master/LICENSE",
+      "technique": "file_exploration"
+    }
+  ],
+  "name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "longshot"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "owner": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "User",
+        "value": "pjedge"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "programming_languages": [
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Rust",
+        "size": 350838,
+        "type": "Programming_language",
+        "value": "Rust"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "C",
+        "size": 91008,
+        "type": "Programming_language",
+        "value": "C"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "C++",
+        "size": 2871,
+        "type": "Programming_language",
+        "value": "C++"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Dockerfile",
+        "size": 1773,
+        "type": "Programming_language",
+        "value": "Dockerfile"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "readme_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/pjedge/longshot/master/README.md"
+      },
+      "technique": "file_exploration"
+    }
+  ],
+  "releases": [
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "vibansal",
+          "type": "User"
+        },
+        "date_created": "2024-01-22T20:25:03Z",
+        "date_published": "2024-03-15T20:23:37Z",
+        "html_url": "https://github.com/pjedge/longshot/releases/tag/v1.0.0",
+        "name": "v1.0.0",
+        "release_id": 146846456,
+        "tag": "v1.0.0",
+        "tarball_url": "https://api.github.com/repos/pjedge/longshot/tarball/v1.0.0",
+        "type": "Release",
+        "url": "https://api.github.com/repos/pjedge/longshot/releases/146846456",
+        "value": "https://api.github.com/repos/pjedge/longshot/releases/146846456",
+        "zipball_url": "https://api.github.com/repos/pjedge/longshot/zipball/v1.0.0"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "vibansal",
+          "type": "User"
+        },
+        "date_created": "2022-04-27T13:49:31Z",
+        "date_published": "2022-05-02T22:45:48Z",
+        "description": "- functionality to call tri-allelic SNVs (added by @ftostevin-ont)\r\n- fix problem with outputting haplotagged bam file (also output index)",
+        "html_url": "https://github.com/pjedge/longshot/releases/tag/v0.4.5",
+        "name": "v.0.4.5",
+        "release_id": 65850780,
+        "tag": "v0.4.5",
+        "tarball_url": "https://api.github.com/repos/pjedge/longshot/tarball/v0.4.5",
+        "type": "Release",
+        "url": "https://api.github.com/repos/pjedge/longshot/releases/65850780",
+        "value": "https://api.github.com/repos/pjedge/longshot/releases/65850780",
+        "zipball_url": "https://api.github.com/repos/pjedge/longshot/zipball/v0.4.5"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "tprodanov",
+          "type": "User"
+        },
+        "date_created": "2022-01-12T14:12:03Z",
+        "date_published": "2022-01-12T14:15:05Z",
+        "html_url": "https://github.com/pjedge/longshot/releases/tag/v0.4.4",
+        "name": "Version 0.4.4",
+        "release_id": 56923853,
+        "tag": "v0.4.4",
+        "tarball_url": "https://api.github.com/repos/pjedge/longshot/tarball/v0.4.4",
+        "type": "Release",
+        "url": "https://api.github.com/repos/pjedge/longshot/releases/56923853",
+        "value": "https://api.github.com/repos/pjedge/longshot/releases/56923853",
+        "zipball_url": "https://api.github.com/repos/pjedge/longshot/zipball/v0.4.4"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "tprodanov",
+          "type": "User"
+        },
+        "date_created": "2021-02-24T19:04:22Z",
+        "date_published": "2021-02-24T19:06:02Z",
+        "description": "Minor fixes.",
+        "html_url": "https://github.com/pjedge/longshot/releases/tag/v0.4.3",
+        "name": "Version 0.4.3",
+        "release_id": 38672965,
+        "tag": "v0.4.3",
+        "tarball_url": "https://api.github.com/repos/pjedge/longshot/tarball/v0.4.3",
+        "type": "Release",
+        "url": "https://api.github.com/repos/pjedge/longshot/releases/38672965",
+        "value": "https://api.github.com/repos/pjedge/longshot/releases/38672965",
+        "zipball_url": "https://api.github.com/repos/pjedge/longshot/zipball/v0.4.3"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "vibansal",
+          "type": "User"
+        },
+        "date_created": "2020-10-15T18:03:15Z",
+        "date_published": "2020-10-12T23:55:20Z",
+        "description": "- several bug fixes related to VCF specification\r\n- minor changes to output files",
+        "html_url": "https://github.com/pjedge/longshot/releases/tag/0.4.2-2",
+        "name": "v0.4.2",
+        "release_id": 32476746,
+        "tag": "0.4.2-2",
+        "tarball_url": "https://api.github.com/repos/pjedge/longshot/tarball/0.4.2-2",
+        "type": "Release",
+        "url": "https://api.github.com/repos/pjedge/longshot/releases/32476746",
+        "value": "https://api.github.com/repos/pjedge/longshot/releases/32476746",
+        "zipball_url": "https://api.github.com/repos/pjedge/longshot/zipball/0.4.2-2"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "tprodanov",
+          "type": "User"
+        },
+        "date_created": "2020-03-14T20:14:56Z",
+        "date_published": "2020-03-14T20:18:47Z",
+        "description": "- Output single BAM. Add tags HP (haplotype) and PS (phase sets) to output reads.\r\n- Work with CRAM files",
+        "html_url": "https://github.com/pjedge/longshot/releases/tag/v0.4.1",
+        "name": "v0.4.1",
+        "release_id": 24530434,
+        "tag": "v0.4.1",
+        "tarball_url": "https://api.github.com/repos/pjedge/longshot/tarball/v0.4.1",
+        "type": "Release",
+        "url": "https://api.github.com/repos/pjedge/longshot/releases/24530434",
+        "value": "https://api.github.com/repos/pjedge/longshot/releases/24530434",
+        "zipball_url": "https://api.github.com/repos/pjedge/longshot/zipball/v0.4.1"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "pjedge",
+          "type": "User"
+        },
+        "date_created": "2020-01-04T00:21:41Z",
+        "date_published": "2020-01-04T00:23:18Z",
+        "description": "* added VCF input option for variants to genotype and phase\r\n* changed default indel priors to enable indel calling with VCF",
+        "html_url": "https://github.com/pjedge/longshot/releases/tag/v0.4.0",
+        "name": "v0.4.0",
+        "release_id": 22589306,
+        "tag": "v0.4.0",
+        "tarball_url": "https://api.github.com/repos/pjedge/longshot/tarball/v0.4.0",
+        "type": "Release",
+        "url": "https://api.github.com/repos/pjedge/longshot/releases/22589306",
+        "value": "https://api.github.com/repos/pjedge/longshot/releases/22589306",
+        "zipball_url": "https://api.github.com/repos/pjedge/longshot/zipball/v0.4.0"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "pjedge",
+          "type": "User"
+        },
+        "date_created": "2019-09-16T16:14:08Z",
+        "date_published": "2019-09-16T23:19:33Z",
+        "description": "fixed bug causing crash when chromosome has no variants",
+        "html_url": "https://github.com/pjedge/longshot/releases/tag/v0.3.5",
+        "name": "v0.3.5",
+        "release_id": 20030867,
+        "tag": "v0.3.5",
+        "tarball_url": "https://api.github.com/repos/pjedge/longshot/tarball/v0.3.5",
+        "type": "Release",
+        "url": "https://api.github.com/repos/pjedge/longshot/releases/20030867",
+        "value": "https://api.github.com/repos/pjedge/longshot/releases/20030867",
+        "zipball_url": "https://api.github.com/repos/pjedge/longshot/zipball/v0.3.5"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "pjedge",
+          "type": "User"
+        },
+        "date_created": "2019-05-02T18:08:38Z",
+        "date_published": "2019-05-02T18:09:39Z",
+        "description": "Added filter flags to VCF output to avoid errors with BCFtools/other tools.\r\n\r\n",
+        "html_url": "https://github.com/pjedge/longshot/releases/tag/v0.3.4",
+        "name": "v0.3.4",
+        "release_id": 17117248,
+        "tag": "v0.3.4",
+        "tarball_url": "https://api.github.com/repos/pjedge/longshot/tarball/v0.3.4",
+        "type": "Release",
+        "url": "https://api.github.com/repos/pjedge/longshot/releases/17117248",
+        "value": "https://api.github.com/repos/pjedge/longshot/releases/17117248",
+        "zipball_url": "https://api.github.com/repos/pjedge/longshot/zipball/v0.3.4"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "pjedge",
+          "type": "User"
+        },
+        "date_created": "2019-03-26T23:57:33Z",
+        "date_published": "2019-03-26T23:59:25Z",
+        "description": "* Fixed a bug causing values at the far left end of the alignment band not to be properly cleared out and then get re-used in subsequent dynamic programming iterations.",
+        "html_url": "https://github.com/pjedge/longshot/releases/tag/v0.3.3",
+        "name": "v0.3.3",
+        "release_id": 16370138,
+        "tag": "v0.3.3",
+        "tarball_url": "https://api.github.com/repos/pjedge/longshot/tarball/v0.3.3",
+        "type": "Release",
+        "url": "https://api.github.com/repos/pjedge/longshot/releases/16370138",
+        "value": "https://api.github.com/repos/pjedge/longshot/releases/16370138",
+        "zipball_url": "https://api.github.com/repos/pjedge/longshot/zipball/v0.3.3"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "pjedge",
+          "type": "User"
+        },
+        "date_created": "2019-02-25T00:39:14Z",
+        "date_published": "2019-02-25T00:40:15Z",
+        "description": "- Changed behaviour of potential SNV identification: unexpected bases now replaced with N rather than bailing.",
+        "html_url": "https://github.com/pjedge/longshot/releases/tag/v0.3.2",
+        "name": "v0.3.2",
+        "release_id": 15744959,
+        "tag": "v0.3.2",
+        "tarball_url": "https://api.github.com/repos/pjedge/longshot/tarball/v0.3.2",
+        "type": "Release",
+        "url": "https://api.github.com/repos/pjedge/longshot/releases/15744959",
+        "value": "https://api.github.com/repos/pjedge/longshot/releases/15744959",
+        "zipball_url": "https://api.github.com/repos/pjedge/longshot/zipball/v0.3.2"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "pjedge",
+          "type": "User"
+        },
+        "date_created": "2019-02-19T18:21:59Z",
+        "date_published": "2019-02-19T18:28:14Z",
+        "description": "* Added a filter based on fishers exact test to remove potential SNVs that have a strand (forward or reverse) bias \r\n* Updated rust-htslib to 0.22.0\r\n* Switched to hashbrown crate for HashSets and HashMaps",
+        "html_url": "https://github.com/pjedge/longshot/releases/tag/v0.3.1",
+        "name": "v0.3.1",
+        "release_id": 15649747,
+        "tag": "v0.3.1",
+        "tarball_url": "https://api.github.com/repos/pjedge/longshot/tarball/v0.3.1",
+        "type": "Release",
+        "url": "https://api.github.com/repos/pjedge/longshot/releases/15649747",
+        "value": "https://api.github.com/repos/pjedge/longshot/releases/15649747",
+        "zipball_url": "https://api.github.com/repos/pjedge/longshot/zipball/v0.3.1"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "pjedge",
+          "type": "User"
+        },
+        "date_created": "2019-02-07T21:42:58Z",
+        "date_published": "2019-02-07T21:45:23Z",
+        "description": "* potential SNV identification step is significantly (>10x) faster.\r\n* added min alt count and min alt fraction parameters (2 and 0.125 by default)\r\n* updated rust-bio to 0.25.0 resulting in a performance boost due to log probability optimizations\r\n* fixed a bug that could cause haplotyping iteration to loop indefinitely in certain scenarios\r\n* fixed a bug that was causing \"potential SNV cutoff\" to be assigned the value of \"haplotype assignment qual\"\r\n* changed default minimum coverage to 6 reads\r\n",
+        "html_url": "https://github.com/pjedge/longshot/releases/tag/v0.3.0",
+        "name": "v0.3.0",
+        "release_id": 15435312,
+        "tag": "v0.3.0",
+        "tarball_url": "https://api.github.com/repos/pjedge/longshot/tarball/v0.3.0",
+        "type": "Release",
+        "url": "https://api.github.com/repos/pjedge/longshot/releases/15435312",
+        "value": "https://api.github.com/repos/pjedge/longshot/releases/15435312",
+        "zipball_url": "https://api.github.com/repos/pjedge/longshot/zipball/v0.3.0"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "pjedge",
+          "type": "User"
+        },
+        "date_created": "2018-12-18T19:27:06Z",
+        "date_published": "2018-12-18T19:28:30Z",
+        "description": "Implemented proper error handling throughout the Longshot program using the error-chain crate.",
+        "html_url": "https://github.com/pjedge/longshot/releases/tag/v0.2.1",
+        "name": "v0.2.1",
+        "release_id": 14600098,
+        "tag": "v0.2.1",
+        "tarball_url": "https://api.github.com/repos/pjedge/longshot/tarball/v0.2.1",
+        "type": "Release",
+        "url": "https://api.github.com/repos/pjedge/longshot/releases/14600098",
+        "value": "https://api.github.com/repos/pjedge/longshot/releases/14600098",
+        "zipball_url": "https://api.github.com/repos/pjedge/longshot/zipball/v0.2.1"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "pjedge",
+          "type": "User"
+        },
+        "date_created": "2018-11-28T19:41:08Z",
+        "date_published": "2018-11-28T19:43:25Z",
+        "description": "Introduced since 0.1:\r\n\r\n- faster execution with new convergence criteria\r\n- changed max coverage behaviour. By default the max coverage is 8000 but added -A option to automatically decide a max coverage at mean_cov+5*sqrt(mean_cov)\r\n- changed default ts/tv ratio for genotype priors to 0.5",
+        "html_url": "https://github.com/pjedge/longshot/releases/tag/v0.2.0",
+        "name": "v0.2.0",
+        "release_id": 14240632,
+        "tag": "v0.2.0",
+        "tarball_url": "https://api.github.com/repos/pjedge/longshot/tarball/v0.2.0",
+        "type": "Release",
+        "url": "https://api.github.com/repos/pjedge/longshot/releases/14240632",
+        "value": "https://api.github.com/repos/pjedge/longshot/releases/14240632",
+        "zipball_url": "https://api.github.com/repos/pjedge/longshot/zipball/v0.2.0"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "pjedge",
+          "type": "User"
+        },
+        "date_created": "2018-06-23T22:22:00Z",
+        "date_published": "2018-06-23T22:34:14Z",
+        "description": "This is the initial release for longshot.",
+        "html_url": "https://github.com/pjedge/longshot/releases/tag/v0.1",
+        "name": "v0.1",
+        "release_id": 11620143,
+        "tag": "v0.1",
+        "tarball_url": "https://api.github.com/repos/pjedge/longshot/tarball/v0.1",
+        "type": "Release",
+        "url": "https://api.github.com/repos/pjedge/longshot/releases/11620143",
+        "value": "https://api.github.com/repos/pjedge/longshot/releases/11620143",
+        "zipball_url": "https://api.github.com/repos/pjedge/longshot/zipball/v0.1"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "requirements": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "dependencies",
+        "parent_header": [
+          "longshot"
+        ],
+        "type": "Text_excerpt",
+        "value": "* rust >= 1.40.0\n* zlib >= 1.2.11\n* xz >= 5.2.3\n* clangdev >= 7.0.1\n* gcc >= 7.3.0\n* libc-dev\n* make\n* various rust dependencies (automatically managed by cargo)\n\n(older versions may work but have not been tested)"
+      },
+      "source": "https://raw.githubusercontent.com/pjedge/longshot/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "manual installation using apt for dependencies (Ubuntu 18.04)",
+        "parent_header": [
+          "longshot",
+          "installation"
+        ],
+        "type": "Text_excerpt",
+        "value": "If you are using Ubuntu 18.04, you can install the dependencies using apt. Then, the Rust cargo package manager is used to compile Longshot. \n```\nsudo apt-get install cargo zlib1g-dev xz-utils \\\n         libclang-dev clang cmake build-essential curl git  # install dependencies \ngit clone https://github.com/pjedge/longshot          # clone the Longshot repository\ncd longshot                                           # change directory\ncargo install --path .                                # install Longshot\nexport PATH=$PATH:/home/$USER/.cargo/bin              # add cargo binaries to path\n```\nInstallation should take around 4 minutes on a typical desktop machine and will use between 400 MB (counting cargo) and 1.2 GB (counting all dependencies) of disk space.\nIt is recommended to add the line ```export PATH=$PATH:/home/$USER/.cargo/bin``` to the end of your ```~/.bashrc``` file so that the longshot binary is in the PATH for future shell sessions.\n"
+      },
+      "source": "https://raw.githubusercontent.com/pjedge/longshot/master/README.md",
+      "technique": "header_analysis"
+    }
+  ],
+  "somef_missing_categories": [
+    "acknowledgement",
+    "run",
+    "download",
+    "contact",
+    "contributors",
+    "documentation",
+    "support",
+    "identifier",
+    "executable_example"
+  ],
+  "somef_provenance": {
+    "date": "2024-10-06 02:35:53",
+    "somef_schema_version": "1.0.0",
+    "somef_version": "0.9.5"
+  },
+  "stargazers_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 181
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "type": [
+    {
+      "confidence": 0.82,
+      "result": {
+        "type": "String",
+        "value": "commandline-application"
+      },
+      "technique": "software_type_heuristics"
+    }
+  ],
+  "usage": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "usage:",
+        "parent_header": [
+          "longshot"
+        ],
+        "type": "Text_excerpt",
+        "value": "After installation, execute the longshot binary as so:\n```\n$ longshot [FLAGS] [OPTIONS] --bam <BAM/CRAM> --ref <FASTA> --out <VCF>\n```\n"
+      },
+      "source": "https://raw.githubusercontent.com/pjedge/longshot/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "execution on an example dataset",
+        "parent_header": [
+          "longshot"
+        ],
+        "type": "Text_excerpt",
+        "value": "The directory ```example_data``` contains a simulated toy dataset that can be used to test out Longshot:\n- Reference genome containing 3 contigs each with length 200 kb (```example_data/genome.fa```)\n- 30x coverage simulated pacbio reads generated using [SimLoRD](https://bitbucket.org/genomeinformatics/simlord/) (```example_data/pacbio_reads_30x.bam```)\n- The 714 \"true\" variants for validation (```example_data/ground_truth_variants.vcf```)\n\nRun Longshot on the example data as so:\n```\nlongshot --bam example_data/pacbio_reads_30x.bam --ref example_data/genome.fa --out example_data/longshot_output.vcf\n```\n\nExecution should take around 5 to 10 seconds on a typical desktop machine. The output can be compared to ```ground_truth_variants.vcf``` for accuracy.\n"
+      },
+      "source": "https://raw.githubusercontent.com/pjedge/longshot/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "usage examples",
+        "parent_header": [
+          "longshot"
+        ],
+        "type": "Text_excerpt",
+        "value": "Call variants with default parameters:\n```\nlongshot --bam pacbio.bam --ref ref.fa --out output.vcf\n```\nCall variants for chromosome 1 only using the automatic max coverage cutoff:\n```\nlongshot -A -r chr1 --bam pacbio.bam --ref ref.fa --out output.vcf\n```\nCall variants in a 500 kb region and then output the reads into ```reads.bam``` using a haplotype assignment threshold of 30:\n```\nlongshot -r chr1:1000000-1500000 -y 30 -O reads.bam --bam pacbio.bam --ref ref.fa --out output.vcf\n```\nIf a read has an assigned haplotype, it will get a tag `HP:i:1` or `HP:i:2` and tag `PS:i:x` where `x` is a phase set number of the variants it covers.\n"
+      },
+      "source": "https://raw.githubusercontent.com/pjedge/longshot/master/README.md",
+      "technique": "header_analysis"
+    }
+  ]
+}

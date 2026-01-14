@@ -1,0 +1,754 @@
+{
+  "application_domain": [
+    {
+      "confidence": 18.64,
+      "result": {
+        "type": "String",
+        "value": "Computer Vision"
+      },
+      "technique": "supervised_classification"
+    }
+  ],
+  "code_repository": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/Teichlab/SpatialDE"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_created": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2016-11-25T13:22:50Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_updated": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2024-10-24T11:59:21Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "description": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "Test genes for Spatial Variation"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 0.9975093587184093,
+      "result": {
+        "original_header": "SpatialDE",
+        "type": "Text_excerpt",
+        "value": "\r\n**SpatialDE** is a method to identify genes which significantly depend\r\non spatial coordinates in non-linear and non-parametric ways. The\r\nintended applications are spatially resolved RNA-sequencing from e.g.\r\nSpatial Transcriptomics, or *in situ* gene expression measurements from\r\ne.g. SeqFISH or MERFISH.\r\n\r\nAdditionally, SpatialDE provides **automatic expression histology**, a\r\nmethod that groups genes into common spatial patterns (and conversely\r\nreveal histological patterns based on gene coexpression).\r\n\r\nThis repository contains both the implementations of our methods, as\r\nwell as case studies in applying it.\r\n\r\nThe key features of our method are\r\n\r\n-  Unsupervised - No need to define spatial regions\r\n-  Non-parametric and non-linear expression patterns\r\n-  Automatic histology based on spatially coexpressed genes\r\n-  Extremely fast - Transcriptome wide tests takes only a few minutes on\r\n   normal computers\r\n\r\nThe primary implementation is as a Python 3 package, and can be\r\ninstalled from the command line by\r\n\r\n::\r\n\r\n    $ pip install spatialde\r\n\r\n(This should only take a minute or so on a typical system)\r\n\r\nTo see usage example of SpatialDE either keep reading, or look in the\r\n``Analysis`` directory. The following examples are provided:\r\n\r\n``BreastCancer``\r\n    Transcriptome wide study on breast cancer tissue from\r\n    Spatial Transcriptomics.\r\n``Frog``\r\n    A time course of RNA-seq (\"1-d space\") of *Xenopus* development.\r\n``MERFISH``\r\n    Expression from single cells in a region of an osteoblast culture\r\n    using the MERFISH technology with 140 probes.\r\n``MouseOB``\r\n    Spatial Transcriptomics assay of a slice of Mouse Olfactory Bulb.\r\n    (Also see below)\r\n``SeqFISH``\r\n    Expression counts of single cells from mouse hippocampus using\r\n    the SeqFISH technology with 249 probes.\r\n\r\nIf you wish to look at the data used or run the notebooks and scripts\r\nfrom start to finish, the data needs to be fetched using |git-lfs|_,\r\na plugin to ``git`` for managing large files.\r\nInstallation instructions are available on the\r\nprojects `website <https://git-lfs.github.com/>`__. Once ``git lfs`` is\r\ninstalled and you have cloned this repository, data can be downloaded by\r\nrunning ``git lfs pull`` from inside any repository directory.\r\n\r\n.. |git-lfs| replace:: ``git lfs``\r\n.. _git-lfs: https://git-lfs.github.com/\r\n\r\nIf you are having problems using ``git lfs``, all the data are available on figshare here: https://figshare.com/articles/software/SpatialDE/17065217\r\n\r\nBelow follows a typical usage example in interactive form.\r\n\r \n"
+      },
+      "source": "https://raw.githubusercontent.com/Teichlab/SpatialDE/master/README.ipynb",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9679246155512936,
+      "result": {
+        "original_header": "Automatic expression histology",
+        "type": "Text_excerpt",
+        "value": "\r\nTo perform automatic expression histology (AEH), the genes should be\r\nfiltered by SpatialDE significance. For this example, let us use a very\r\nweak threshold. But in typical use, filter by ``qval < 0.05``\r\n\r\n.. code:: python\r\n\r\n    sign_results = results.query('qval < 0.05')\r\n\r\nAEH requires two parameters: the number of patterns, and the\r\ncharacteristic lengthscale for histological patterns.\r\n\r\nFor some guidance in picking the lengthscale ``l`` we can look at the\r\noptimal lengthscale for the signficant genes.\r\n\r\n.. code:: python\r\n\r\n    sign_results['l'].value_counts()\r\n\r\n.. parsed-literal::\r\n\r\n    1.135190    11\r\n    1.907609     4\r\n    0.675535     4\r\n    3.205604     1\r\n    Name: l, dtype: int64\r\n\r\n\r\n\r\nHere we see that the lengthscale on average is ~1.5, to use some extra\r\nspatial covariance, we put this paramater to ``l = 1.8``.\r\n\r\nFor the number of patterns, we try ``C = 3``.\r\n\r\n.. code:: python\r\n\r\n    histology_results, patterns = SpatialDE.aeh.spatial_patterns(X, resid_expr, sign_results, C=3, l=1.8, verbosity=1)\r\n\r\n.. parsed-literal::\r\n\r\n    iter 0, ELBO: -9.48e+08\r\n    iter 1, ELBO: -4.20e+08, delta_ELBO: 5.28e+08\r\n    iter 2, ELBO: -4.20e+08, delta_ELBO: 7.63e+02\r\n    iter 3, ELBO: -4.20e+08, delta_ELBO: 2.07e+02\r\n    iter 4, ELBO: -4.20e+08, delta_ELBO: 8.03e+01\r\n    iter 5, ELBO: -4.20e+08, delta_ELBO: 3.40e+00\r\n    iter 6, ELBO: -4.20e+08, delta_ELBO: 6.62e-02\r\n    iter 7, ELBO: -4.20e+08, delta_ELBO: 2.75e-03\r\n    iter 8, ELBO: -4.20e+08, delta_ELBO: 3.96e-03\r\n    iter 9, ELBO: -4.20e+08, delta_ELBO: 7.49e-05\r\n    Converged on iter 9\r\n\r\n\r\nAfter fitting the AEH model, the function returns two ``DataFrame``\\ s,\r\none with pattern membership information for each gene:\r\n\r\n.. code:: python\r\n\r\n    histology_results.head()\r\n\r\n.. raw:: html\r\n\r\n    <div>\r\n    <style scoped>\r\n        .dataframe tbody tr th:only-of-type {\r\n            vertical-align: middle;\r\n        }\r\n    \r\n        .dataframe tbody tr th {\r\n            vertical-align: top;\r\n        }\r\n    \r\n        .dataframe thead th {\r\n            text-align: right;\r\n        }\r\n    </style>\r\n    <table border=\"1\" class=\"dataframe\">\r\n      <thead>\r\n        <tr style=\"text-align: right;\">\r\n          <th></th>\r\n          <th>g</th>\r\n          <th>membership</th>\r\n          <th>pattern</th>\r\n        </tr>\r\n      </thead>\r\n      <tbody>\r\n        <tr>\r\n          <th>564</th>\r\n          <td>AI593442</td>\r\n          <td>1.0</td>\r\n          <td>1</td>\r\n        </tr>\r\n        <tr>\r\n          <th>619</th>\r\n          <td>Arhgef9</td>\r\n          <td>1.0</td>\r\n          <td>1</td>\r\n        </tr>\r\n        <tr>\r\n          <th>632</th>\r\n          <td>6330403K07Rik</td>\r\n          <td>1.0</td>\r\n          <td>1</td>\r\n        </tr>\r\n        <tr>\r\n          <th>646</th>\r\n          <td>Naaa</td>\r\n          <td>1.0</td>\r\n          <td>0</td>\r\n        </tr>\r\n        <tr>\r\n          <th>712</th>\r\n          <td>Hpcal4</td>\r\n          <td>1.0</td>\r\n          <td>2</td>\r\n        </tr>\r\n      </tbody>\r\n    </table>\r\n    </div>\r\n\r\nAnd one with realizations for the underlying expression for each\r\nhistological pattern.\r\n\r\nWe can visualize this underlying expression in the tissue context as we\r\nwould for any individual gene.\r\n\r\n.. code:: python\r\n\r\n    figsize(10, 3)\r\n    for i in range(3):\r\n        plt.subplot(1, 3, i + 1)\r\n        plt.scatter(sample_info['x'], sample_info['y'], c=patterns[i]);\r\n        plt.axis('equal')\r\n        plt.title('Pattern {} - {} genes'.format(i, histology_results.query('pattern == @i').shape[0] ))\r\n        plt.colorbar(ticks=[]);\r\n\r\n.. image:: README_files/README_31_0.png\r\n\r\nIt is usually interesting to see what the coexpressed genes determining\r\na histological pattern are:\r\n\r\n.. code:: python\r\n\r\n    for i in histology_results.sort_values('pattern').pattern.unique():\r\n        print('Pattern {}'.format(i))\r\n        print(', '.join(histology_results.query('pattern == @i').sort_values('membership')['g'].tolist()))\r\n        print()\r\n\r\n.. parsed-literal::\r\n\r\n    Pattern 0\r\n    Naaa, Aebp1, Mfap3l, Fmo1, 2810002D19Rik, Gng13\r\n    \r\n    Pattern 1\r\n    Map2, Arhgef9, AI593442, 6330403K07Rik, Slc38a3, Igfbp2, Nmb, Map1b\r\n    \r\n    Pattern 2\r\n    Hpcal4, Snap25, Pcp4, Gng4, Ppfia2, Kcnh3\r\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/Teichlab/SpatialDE/master/README.ipynb",
+      "technique": "supervised_classification"
+    }
+  ],
+  "download_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/Teichlab/SpatialDE/releases"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "executable_example": [
+    {
+      "confidence": 1,
+      "result": {
+        "format": "jupyter_notebook",
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/Teichlab/SpatialDE/master/README.ipynb"
+      },
+      "source": "https://raw.githubusercontent.com/Teichlab/SpatialDE/master/README.ipynb",
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "format": "jupyter_notebook",
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/Teichlab/SpatialDE/master/Analysis/MouseOB/Periodic%20vs%20SE.ipynb"
+      },
+      "source": "https://raw.githubusercontent.com/Teichlab/SpatialDE/master/Analysis/MouseOB/Periodic%20vs%20SE.ipynb",
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "format": "jupyter_notebook",
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/Teichlab/SpatialDE/master/Analysis/MouseOB/Clustering%20analysis.ipynb"
+      },
+      "source": "https://raw.githubusercontent.com/Teichlab/SpatialDE/master/Analysis/MouseOB/Clustering%20analysis.ipynb",
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "format": "jupyter_notebook",
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/Teichlab/SpatialDE/master/Analysis/MouseOB/AEH%20prototyping.ipynb"
+      },
+      "source": "https://raw.githubusercontent.com/Teichlab/SpatialDE/master/Analysis/MouseOB/AEH%20prototyping.ipynb",
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "format": "jupyter_notebook",
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/Teichlab/SpatialDE/master/Analysis/MouseOB/Variational%20inference.ipynb"
+      },
+      "source": "https://raw.githubusercontent.com/Teichlab/SpatialDE/master/Analysis/MouseOB/Variational%20inference.ipynb",
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "format": "jupyter_notebook",
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/Teichlab/SpatialDE/master/Analysis/MouseOB/Mouse%20Olfactory%20Bulb%20Analysis.ipynb"
+      },
+      "source": "https://raw.githubusercontent.com/Teichlab/SpatialDE/master/Analysis/MouseOB/Mouse%20Olfactory%20Bulb%20Analysis.ipynb",
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "format": "jupyter_notebook",
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/Teichlab/SpatialDE/master/Analysis/MouseOB/Compare%20clustering%20and%20AEH.ipynb"
+      },
+      "source": "https://raw.githubusercontent.com/Teichlab/SpatialDE/master/Analysis/MouseOB/Compare%20clustering%20and%20AEH.ipynb",
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "format": "jupyter_notebook",
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/Teichlab/SpatialDE/master/Analysis/MouseOB/Automatic%20expression%20histology.ipynb"
+      },
+      "source": "https://raw.githubusercontent.com/Teichlab/SpatialDE/master/Analysis/MouseOB/Automatic%20expression%20histology.ipynb",
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "format": "jupyter_notebook",
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/Teichlab/SpatialDE/master/Analysis/MERFISH/Make%20MERFISH%20Expression%20table.ipynb"
+      },
+      "source": "https://raw.githubusercontent.com/Teichlab/SpatialDE/master/Analysis/MERFISH/Make%20MERFISH%20Expression%20table.ipynb",
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "format": "jupyter_notebook",
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/Teichlab/SpatialDE/master/Analysis/MERFISH/MERFISH%20Analysis.ipynb"
+      },
+      "source": "https://raw.githubusercontent.com/Teichlab/SpatialDE/master/Analysis/MERFISH/MERFISH%20Analysis.ipynb",
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "format": "jupyter_notebook",
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/Teichlab/SpatialDE/master/Analysis/Comparison/Compare%20performance.ipynb"
+      },
+      "source": "https://raw.githubusercontent.com/Teichlab/SpatialDE/master/Analysis/Comparison/Compare%20performance.ipynb",
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "format": "jupyter_notebook",
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/Teichlab/SpatialDE/master/Analysis/Theory/Anscombe%20transformation.ipynb"
+      },
+      "source": "https://raw.githubusercontent.com/Teichlab/SpatialDE/master/Analysis/Theory/Anscombe%20transformation.ipynb",
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "format": "jupyter_notebook",
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/Teichlab/SpatialDE/master/Analysis/Theory/Simulation%20from%20basis%20function.ipynb"
+      },
+      "source": "https://raw.githubusercontent.com/Teichlab/SpatialDE/master/Analysis/Theory/Simulation%20from%20basis%20function.ipynb",
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "format": "jupyter_notebook",
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/Teichlab/SpatialDE/master/Analysis/Theory/Periods%20and%20length%20scales.ipynb"
+      },
+      "source": "https://raw.githubusercontent.com/Teichlab/SpatialDE/master/Analysis/Theory/Periods%20and%20length%20scales.ipynb",
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "format": "jupyter_notebook",
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/Teichlab/SpatialDE/master/Analysis/Theory/Simulation%20from%20null%20model.ipynb"
+      },
+      "source": "https://raw.githubusercontent.com/Teichlab/SpatialDE/master/Analysis/Theory/Simulation%20from%20null%20model.ipynb",
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "format": "jupyter_notebook",
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/Teichlab/SpatialDE/master/Analysis/Theory/Example%20Spatial%20Patterns.ipynb"
+      },
+      "source": "https://raw.githubusercontent.com/Teichlab/SpatialDE/master/Analysis/Theory/Example%20Spatial%20Patterns.ipynb",
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "format": "jupyter_notebook",
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/Teichlab/SpatialDE/master/Analysis/Theory/Covariance%20illustration.ipynb"
+      },
+      "source": "https://raw.githubusercontent.com/Teichlab/SpatialDE/master/Analysis/Theory/Covariance%20illustration.ipynb",
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "format": "jupyter_notebook",
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/Teichlab/SpatialDE/master/Analysis/Theory/AEH%20timing.ipynb"
+      },
+      "source": "https://raw.githubusercontent.com/Teichlab/SpatialDE/master/Analysis/Theory/AEH%20timing.ipynb",
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "format": "jupyter_notebook",
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/Teichlab/SpatialDE/master/Analysis/Theory/Simulation%20from%20model.ipynb"
+      },
+      "source": "https://raw.githubusercontent.com/Teichlab/SpatialDE/master/Analysis/Theory/Simulation%20from%20model.ipynb",
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "format": "jupyter_notebook",
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/Teichlab/SpatialDE/master/Analysis/Theory/P-value%20estimation.ipynb"
+      },
+      "source": "https://raw.githubusercontent.com/Teichlab/SpatialDE/master/Analysis/Theory/P-value%20estimation.ipynb",
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "format": "jupyter_notebook",
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/Teichlab/SpatialDE/master/Analysis/Theory/Bootstraps/Investigate%20Robustness.ipynb"
+      },
+      "source": "https://raw.githubusercontent.com/Teichlab/SpatialDE/master/Analysis/Theory/Bootstraps/Investigate%20Robustness.ipynb",
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "format": "jupyter_notebook",
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/Teichlab/SpatialDE/master/Analysis/BreastCancer/Compare%20to%20Rank-normalisation.ipynb"
+      },
+      "source": "https://raw.githubusercontent.com/Teichlab/SpatialDE/master/Analysis/BreastCancer/Compare%20to%20Rank-normalisation.ipynb",
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "format": "jupyter_notebook",
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/Teichlab/SpatialDE/master/Analysis/BreastCancer/Clustering%20analysis.ipynb"
+      },
+      "source": "https://raw.githubusercontent.com/Teichlab/SpatialDE/master/Analysis/BreastCancer/Clustering%20analysis.ipynb",
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "format": "jupyter_notebook",
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/Teichlab/SpatialDE/master/Analysis/BreastCancer/Standard%20Errors.ipynb"
+      },
+      "source": "https://raw.githubusercontent.com/Teichlab/SpatialDE/master/Analysis/BreastCancer/Standard%20Errors.ipynb",
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "format": "jupyter_notebook",
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/Teichlab/SpatialDE/master/Analysis/BreastCancer/Alternative%20explanatory%20factors.ipynb"
+      },
+      "source": "https://raw.githubusercontent.com/Teichlab/SpatialDE/master/Analysis/BreastCancer/Alternative%20explanatory%20factors.ipynb",
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "format": "jupyter_notebook",
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/Teichlab/SpatialDE/master/Analysis/BreastCancer/Breast%20Cancer%20Tissue%20Analysis.ipynb"
+      },
+      "source": "https://raw.githubusercontent.com/Teichlab/SpatialDE/master/Analysis/BreastCancer/Breast%20Cancer%20Tissue%20Analysis.ipynb",
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "format": "jupyter_notebook",
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/Teichlab/SpatialDE/master/Analysis/BreastCancer/Spatial%20Shuffling.ipynb"
+      },
+      "source": "https://raw.githubusercontent.com/Teichlab/SpatialDE/master/Analysis/BreastCancer/Spatial%20Shuffling.ipynb",
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "format": "jupyter_notebook",
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/Teichlab/SpatialDE/master/Analysis/BreastCancer/Automatic%20expression%20histology.ipynb"
+      },
+      "source": "https://raw.githubusercontent.com/Teichlab/SpatialDE/master/Analysis/BreastCancer/Automatic%20expression%20histology.ipynb",
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "format": "jupyter_notebook",
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/Teichlab/SpatialDE/master/Analysis/BMDC%20Pseudotime/DE%20Analsysis.ipynb"
+      },
+      "source": "https://raw.githubusercontent.com/Teichlab/SpatialDE/master/Analysis/BMDC%20Pseudotime/DE%20Analsysis.ipynb",
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "format": "jupyter_notebook",
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/Teichlab/SpatialDE/master/Analysis/BMDC%20Pseudotime/Antiviral%20analysis.ipynb"
+      },
+      "source": "https://raw.githubusercontent.com/Teichlab/SpatialDE/master/Analysis/BMDC%20Pseudotime/Antiviral%20analysis.ipynb",
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "format": "jupyter_notebook",
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/Teichlab/SpatialDE/master/Analysis/Frog/Frog%20Development%20Analysis.ipynb"
+      },
+      "source": "https://raw.githubusercontent.com/Teichlab/SpatialDE/master/Analysis/Frog/Frog%20Development%20Analysis.ipynb",
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "format": "jupyter_notebook",
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/Teichlab/SpatialDE/master/Analysis/HVG-analysis/HVG%20in%20each%20dataset.ipynb"
+      },
+      "source": "https://raw.githubusercontent.com/Teichlab/SpatialDE/master/Analysis/HVG-analysis/HVG%20in%20each%20dataset.ipynb",
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "format": "jupyter_notebook",
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/Teichlab/SpatialDE/master/Analysis/SeqFISH/Periodic%20vs%20linear.ipynb"
+      },
+      "source": "https://raw.githubusercontent.com/Teichlab/SpatialDE/master/Analysis/SeqFISH/Periodic%20vs%20linear.ipynb",
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "format": "jupyter_notebook",
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/Teichlab/SpatialDE/master/Analysis/SeqFISH/SeqFISH%20Analysis.ipynb"
+      },
+      "source": "https://raw.githubusercontent.com/Teichlab/SpatialDE/master/Analysis/SeqFISH/SeqFISH%20Analysis.ipynb",
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "format": "jupyter_notebook",
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/Teichlab/SpatialDE/master/Analysis/SeqFISH/Extract%20SeqFISH%20count%20matrices.ipynb"
+      },
+      "source": "https://raw.githubusercontent.com/Teichlab/SpatialDE/master/Analysis/SeqFISH/Extract%20SeqFISH%20count%20matrices.ipynb",
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "format": "jupyter_notebook",
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/Teichlab/SpatialDE/master/Analysis/SeqFISH/SeqFISH%20Results.ipynb"
+      },
+      "source": "https://raw.githubusercontent.com/Teichlab/SpatialDE/master/Analysis/SeqFISH/SeqFISH%20Results.ipynb",
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "format": "jupyter_notebook",
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/Teichlab/SpatialDE/master/Analysis/SeqFISH/Automatic%20expression%20histology.ipynb"
+      },
+      "source": "https://raw.githubusercontent.com/Teichlab/SpatialDE/master/Analysis/SeqFISH/Automatic%20expression%20histology.ipynb",
+      "technique": "file_exploration"
+    }
+  ],
+  "forks_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 54
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/Teichlab/SpatialDE/forks"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "Teichlab/SpatialDE"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_title": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "SpatialDE"
+      },
+      "source": "https://raw.githubusercontent.com/Teichlab/SpatialDE/master/README.ipynb",
+      "technique": "regular_expression"
+    }
+  ],
+  "has_script_file": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/Teichlab/SpatialDE/master/Analysis/rerun_all.sh"
+      },
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/Teichlab/SpatialDE/master/Analysis/Comparison/run.sh"
+      },
+      "technique": "file_exploration"
+    }
+  ],
+  "installation": [
+    {
+      "confidence": 0.9999999998906333,
+      "result": {
+        "original_header": "SpatialDE",
+        "type": "Text_excerpt",
+        "value": "\r\n**SpatialDE** is a method to identify genes which significantly depend\r\non spatial coordinates in non-linear and non-parametric ways. The\r\nintended applications are spatially resolved RNA-sequencing from e.g.\r\nSpatial Transcriptomics, or *in situ* gene expression measurements from\r\ne.g. SeqFISH or MERFISH.\r\n\r\nAdditionally, SpatialDE provides **automatic expression histology**, a\r\nmethod that groups genes into common spatial patterns (and conversely\r\nreveal histological patterns based on gene coexpression).\r\n\r\nThis repository contains both the implementations of our methods, as\r\nwell as case studies in applying it.\r\n\r\nThe key features of our method are\r\n\r\n-  Unsupervised - No need to define spatial regions\r\n-  Non-parametric and non-linear expression patterns\r\n-  Automatic histology based on spatially coexpressed genes\r\n-  Extremely fast - Transcriptome wide tests takes only a few minutes on\r\n   normal computers\r\n\r\nThe primary implementation is as a Python 3 package, and can be\r\ninstalled from the command line by\r\n\r\n::\r\n\r\n    $ pip install spatialde\r\n\r\n(This should only take a minute or so on a typical system)\r\n\r\nTo see usage example of SpatialDE either keep reading, or look in the\r\n``Analysis`` directory. The following examples are provided:\r\n\r\n``BreastCancer``\r\n    Transcriptome wide study on breast cancer tissue from\r\n    Spatial Transcriptomics.\r\n``Frog``\r\n    A time course of RNA-seq (\"1-d space\") of *Xenopus* development.\r\n``MERFISH``\r\n    Expression from single cells in a region of an osteoblast culture\r\n    using the MERFISH technology with 140 probes.\r\n``MouseOB``\r\n    Spatial Transcriptomics assay of a slice of Mouse Olfactory Bulb.\r\n    (Also see below)\r\n``SeqFISH``\r\n    Expression counts of single cells from mouse hippocampus using\r\n    the SeqFISH technology with 249 probes.\r\n\r\nIf you wish to look at the data used or run the notebooks and scripts\r\nfrom start to finish, the data needs to be fetched using |git-lfs|_,\r\na plugin to ``git`` for managing large files.\r\nInstallation instructions are available on the\r\nprojects `website <https://git-lfs.github.com/>`__. Once ``git lfs`` is\r\ninstalled and you have cloned this repository, data can be downloaded by\r\nrunning ``git lfs pull`` from inside any repository directory.\r\n\r\n.. |git-lfs| replace:: ``git lfs``\r\n.. _git-lfs: https://git-lfs.github.com/\r\n\r\nIf you are having problems using ``git lfs``, all the data are available on figshare here: https://figshare.com/articles/software/SpatialDE/17065217\r\n\r\nBelow follows a typical usage example in interactive form.\r\n\r \n"
+      },
+      "source": "https://raw.githubusercontent.com/Teichlab/SpatialDE/master/README.ipynb",
+      "technique": "supervised_classification"
+    }
+  ],
+  "issue_tracker": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/Teichlab/SpatialDE/issues"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "keywords": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": ""
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "license": [
+    {
+      "confidence": 1,
+      "result": {
+        "name": "MIT License",
+        "spdx_id": "MIT",
+        "type": "License",
+        "url": "https://api.github.com/licenses/mit",
+        "value": "https://api.github.com/licenses/mit"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "File_dump",
+        "value": "MIT License\n\nCopyright (c) 2018 Teichmann Group\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.\n"
+      },
+      "source": "https://raw.githubusercontent.com/Teichlab/SpatialDE/master/LICENSE",
+      "technique": "file_exploration"
+    }
+  ],
+  "name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "SpatialDE"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "owner": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Organization",
+        "value": "Teichlab"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "programming_languages": [
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Jupyter Notebook",
+        "size": 19745065,
+        "type": "Programming_language",
+        "value": "Jupyter Notebook"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Python",
+        "size": 69946,
+        "type": "Programming_language",
+        "value": "Python"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "R",
+        "size": 1708,
+        "type": "Programming_language",
+        "value": "R"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Stan",
+        "size": 1365,
+        "type": "Programming_language",
+        "value": "Stan"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Shell",
+        "size": 275,
+        "type": "Programming_language",
+        "value": "Shell"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "readme_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/Teichlab/SpatialDE/master/README.ipynb"
+      },
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/Teichlab/SpatialDE/master/README.rst"
+      },
+      "technique": "file_exploration"
+    }
+  ],
+  "releases": [
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "vals",
+          "type": "User"
+        },
+        "date_created": "2018-09-09T05:46:29Z",
+        "date_published": "2018-09-09T06:17:39Z",
+        "description": "This release adds wrappers to use the SpatialDE methods with [AnnData](https://anndata.readthedocs.io/en/latest/) objects.\r\n\r\nFor the spatial significance test, it is used e.g. this way:\r\n```\r\nfrom SpatialDE.anndata import spatialde_test\r\n\r\nresults = spatialde_test(adata, coord_columns=['x', 'y'],\r\n                                regress_formula='~np.log(total_counts)')\r\n```\r\n\r\nFor automatic expression histology, it is used e.g. this way:\r\n```\r\nfrom SpatialDE.anndata import automatic_expression_histology\r\n\r\nhistology_results, patterns = \\\r\nautomatic_expression_histology(adata, sres, C=8, l=1000.0,\r\n                               coord_columns=['x', 'y'],\r\n                               layer='residual',\r\n                               verbosity=1)\r\n```",
+        "html_url": "https://github.com/Teichlab/SpatialDE/releases/tag/1.1.0",
+        "release_id": 12801828,
+        "tag": "1.1.0",
+        "tarball_url": "https://api.github.com/repos/Teichlab/SpatialDE/tarball/1.1.0",
+        "type": "Release",
+        "url": "https://api.github.com/repos/Teichlab/SpatialDE/releases/12801828",
+        "value": "https://api.github.com/repos/Teichlab/SpatialDE/releases/12801828",
+        "zipball_url": "https://api.github.com/repos/Teichlab/SpatialDE/zipball/1.1.0"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "vals",
+          "type": "User"
+        },
+        "date_created": "2018-01-22T21:34:15Z",
+        "date_published": "2018-01-22T21:37:17Z",
+        "html_url": "https://github.com/Teichlab/SpatialDE/releases/tag/1.0",
+        "release_id": 9338535,
+        "tag": "1.0",
+        "tarball_url": "https://api.github.com/repos/Teichlab/SpatialDE/tarball/1.0",
+        "type": "Release",
+        "url": "https://api.github.com/repos/Teichlab/SpatialDE/releases/9338535",
+        "value": "https://api.github.com/repos/Teichlab/SpatialDE/releases/9338535",
+        "zipball_url": "https://api.github.com/repos/Teichlab/SpatialDE/zipball/1.0"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "somef_missing_categories": [
+    "citation",
+    "acknowledgement",
+    "run",
+    "download",
+    "requirements",
+    "contact",
+    "contributors",
+    "documentation",
+    "faq",
+    "support",
+    "identifier",
+    "has_build_file"
+  ],
+  "somef_provenance": {
+    "date": "2024-11-04 06:24:37",
+    "somef_schema_version": "1.0.0",
+    "somef_version": "0.9.5"
+  },
+  "stargazers_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 145
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "type": [
+    {
+      "confidence": 0.82,
+      "result": {
+        "type": "String",
+        "value": "commandline-application"
+      },
+      "technique": "software_type_heuristics"
+    }
+  ],
+  "usage": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "SpatialDE significance test example use",
+        "parent_header": [
+          "SpatialDE"
+        ],
+        "type": "Text_excerpt",
+        "value": "\r\n.. code:: python\r\n\r\n    %pylab inline\r\n    import pandas as pd\r\n    \r\n    rcParams['axes.spines.right'] = False\r\n    rcParams['axes.spines.top'] = False\r\n    \r\n    import NaiveDE\r\n    import SpatialDE\r\n\r\n.. parsed-literal::\r\n\r\n    Populating the interactive namespace from numpy and matplotlib\r\n\r\n\r\nAs an example, let us look at spatially dependent gene expression in\r\nMouse Olfactory Bulb using a data set published in `Stahl et al\r\n2016 <http://dx.doi.org/10.1126/science.aaf2403>`__. With the authors\r\nmethod, hundreds of locations on a tissue slice can be sampled at once,\r\nand gene expression is measured by sequencing in an unbiased\r\nwhole-transcriptome manner.\r\n\r\n.. code:: python\r\n\r\n    counts = pd.read_csv('Analysis/MouseOB/data/Rep11_MOB_0.csv', index_col=0)\r\n    counts = counts.T[counts.sum(0) >= 3].T  # Filter practically unobserved genes\r\n    \r\n    print(counts.shape)\r\n    counts.iloc[:5, :5]\r\n\r\n\r\n.. parsed-literal::\r\n\r\n    (262, 14859)\r\n\r\n+---------------+------+-------+-------+---------+------+\r\n|               | Nrf1 | Zbtb5 | Ccnl1 | Lrrfip1 | Bbs1 |\r\n+===============+======+=======+=======+=========+======+\r\n| 16.92x9.015   | 1    | 1     | 1     | 2       | 1    |\r\n+---------------+------+-------+-------+---------+------+\r\n| 16.945x11.075 | 0    | 0     | 3     | 2       | 2    |\r\n+---------------+------+-------+-------+---------+------+\r\n| 16.97x10.118  | 0    | 1     | 1     | 0       | 0    |\r\n+---------------+------+-------+-------+---------+------+\r\n| 16.939x12.132 | 1    | 0     | 1     | 0       | 4    |\r\n+---------------+------+-------+-------+---------+------+\r\n| 16.949x13.055 | 0    | 0     | 0     | 3       | 0    |\r\n+---------------+------+-------+-------+---------+------+\r\n\r\n.. code:: python\r\n\r\n    sample_info = pd.read_csv('Analysis/MouseOB/MOB_sample_info.csv', index_col=0)\r\n    counts = counts.loc[sample_info.index]  # Align count matrix with metadata table\r\n    \r\n    sample_info.head(5)\r\n\r\n.. raw:: html\r\n\r\n    <div>\r\n    <style scoped>\r\n        .dataframe tbody tr th:only-of-type {\r\n            vertical-align: middle;\r\n        }\r\n    \r\n        .dataframe tbody tr th {\r\n            vertical-align: top;\r\n        }\r\n    \r\n        .dataframe thead th {\r\n            text-align: right;\r\n        }\r\n    </style>\r\n    <table border=\"1\" class=\"dataframe\">\r\n      <thead>\r\n        <tr style=\"text-align: right;\">\r\n          <th></th>\r\n          <th>x</th>\r\n          <th>y</th>\r\n          <th>total_counts</th>\r\n        </tr>\r\n      </thead>\r\n      <tbody>\r\n        <tr>\r\n          <th>16.92x9.015</th>\r\n          <td>16.920</td>\r\n          <td>9.015</td>\r\n          <td>18790</td>\r\n        </tr>\r\n        <tr>\r\n          <th>16.945x11.075</th>\r\n          <td>16.945</td>\r\n          <td>11.075</td>\r\n          <td>36990</td>\r\n        </tr>\r\n        <tr>\r\n          <th>16.97x10.118</th>\r\n          <td>16.970</td>\r\n          <td>10.118</td>\r\n          <td>12471</td>\r\n        </tr>\r\n        <tr>\r\n          <th>16.939x12.132</th>\r\n          <td>16.939</td>\r\n          <td>12.132</td>\r\n          <td>22703</td>\r\n        </tr>\r\n        <tr>\r\n          <th>16.949x13.055</th>\r\n          <td>16.949</td>\r\n          <td>13.055</td>\r\n          <td>18641</td>\r\n        </tr>\r\n      </tbody>\r\n    </table>\r\n    </div>\r\n\r\nWe can plot the x and y coordinates in the sample info table to see\r\nwhich locations of the tissue slice has been sampled.\r\n\r\n.. code:: python\r\n\r\n    figsize(6, 4)\r\n    plt.scatter(sample_info['x'], sample_info['y'], c='k');\r\n    plt.axis('equal');\r\n\r\n.. image:: README_files/README_7_0.png\r\n\r\nOur method assumes normally distributed noise, but the data we are using\r\nis from expression counts, and empirically seems to follow a negative\r\nbinomial distribution. We use technique by Anscombe to approximately\r\ntransform the data to normal distributed noise.\r\n\r\nSecondly, library size or sequencing depth of the spatial samples will\r\nbias the expression of every gene. We use linear regression to account\r\nfor this effect before performing the spatial test.\r\n\r\n.. code:: python\r\n\r\n    norm_expr = NaiveDE.stabilize(counts.T).T\r\n    resid_expr = NaiveDE.regress_out(sample_info, norm_expr.T, 'np.log(total_counts)').T\r\n\r\nFor the sake of this example, let's just run the test on 1000 random\r\ngenes. This should just take a few seconds. With our very fast\r\nimplementation, testing all 14,000 genes takes about 10 minutes.\r\n\r\n.. code:: python\r\n\r\n    sample_resid_expr = resid_expr.sample(n=1000, axis=1, random_state=1)\r\n    \r\n    X = sample_info[['x', 'y']]\r\n    results = SpatialDE.run(X, sample_resid_expr)\r\n\r\n.. parsed-literal::\r\n\r\n    INFO:root:Performing DE test\r\n    INFO:root:Pre-calculating USU^T = K's ...\r\n    INFO:root:Done: 0.11s\r\n    INFO:root:Fitting gene models\r\n    INFO:root:Model 1 of 10\r\n    INFO:root:Model 2 of 10                            \r\n    INFO:root:Model 3 of 10                            \r\n    INFO:root:Model 4 of 10                            \r\n    INFO:root:Model 5 of 10                            \r\n    INFO:root:Model 6 of 10                            \r\n    INFO:root:Model 7 of 10                            \r\n    INFO:root:Model 8 of 10                            \r\n    INFO:root:Model 9 of 10                            \r\n    INFO:root:Model 10 of 10                           \r\n                                                       \r\n\r\nThe result will be a ``DataFrame`` with P-values and other relevant\r\nvalues for each gene.\r\n\r\nThe most important columns are\r\n\r\n-  ``g`` - The name of the gene\r\n-  ``pval`` - The P-value for spatial differential expression\r\n-  ``qval`` - Significance after correcting for multiple testing\r\n-  ``l`` - A parameter indicating the distance scale a gene changes\r\n   expression over\r\n\r\n.. code:: python\r\n\r\n    results.head().T\r\n\r\n.. raw:: html\r\n\r\n    <div>\r\n    <style scoped>\r\n        .dataframe tbody tr th:only-of-type {\r\n            vertical-align: middle;\r\n        }\r\n    \r\n        .dataframe tbody tr th {\r\n            vertical-align: top;\r\n        }\r\n    \r\n        .dataframe thead th {\r\n            text-align: right;\r\n        }\r\n    </style>\r\n    <table border=\"1\" class=\"dataframe\">\r\n      <thead>\r\n        <tr style=\"text-align: right;\">\r\n          <th></th>\r\n          <th>0</th>\r\n          <th>1</th>\r\n          <th>2</th>\r\n          <th>3</th>\r\n          <th>4</th>\r\n        </tr>\r\n      </thead>\r\n      <tbody>\r\n        <tr>\r\n          <th>FSV</th>\r\n          <td>0.999955</td>\r\n          <td>2.0597e-09</td>\r\n          <td>2.0597e-09</td>\r\n          <td>2.0597e-09</td>\r\n          <td>2.0597e-09</td>\r\n        </tr>\r\n        <tr>\r\n          <th>M</th>\r\n          <td>4</td>\r\n          <td>4</td>\r\n          <td>4</td>\r\n          <td>4</td>\r\n          <td>4</td>\r\n        </tr>\r\n        <tr>\r\n          <th>g</th>\r\n          <td>2410016O06Rik</td>\r\n          <td>Arpp19</td>\r\n          <td>Srsf7</td>\r\n          <td>Wbp7</td>\r\n          <td>Cpsf3l</td>\r\n        </tr>\r\n        <tr>\r\n          <th>l</th>\r\n          <td>0.402001</td>\r\n          <td>0.402001</td>\r\n          <td>0.402001</td>\r\n          <td>0.402001</td>\r\n          <td>0.402001</td>\r\n        </tr>\r\n        <tr>\r\n          <th>max_delta</th>\r\n          <td>4.53999e-05</td>\r\n          <td>4.85165e+08</td>\r\n          <td>4.85165e+08</td>\r\n          <td>4.85165e+08</td>\r\n          <td>4.85165e+08</td>\r\n        </tr>\r\n        <tr>\r\n          <th>max_ll</th>\r\n          <td>-52.2589</td>\r\n          <td>-107.685</td>\r\n          <td>-114.477</td>\r\n          <td>-112.664</td>\r\n          <td>-49.1672</td>\r\n        </tr>\r\n        <tr>\r\n          <th>max_mu_hat</th>\r\n          <td>-0.826851</td>\r\n          <td>-2.21845</td>\r\n          <td>-6.67811</td>\r\n          <td>-2.25044</td>\r\n          <td>0.146089</td>\r\n        </tr>\r\n        <tr>\r\n          <th>max_s2_t_hat</th>\r\n          <td>0.666985</td>\r\n          <td>1.04203e-08</td>\r\n          <td>9.22126e-08</td>\r\n          <td>1.07257e-08</td>\r\n          <td>2.20142e-10</td>\r\n        </tr>\r\n        <tr>\r\n          <th>model</th>\r\n          <td>SE</td>\r\n          <td>SE</td>\r\n          <td>SE</td>\r\n          <td>SE</td>\r\n          <td>SE</td>\r\n        </tr>\r\n        <tr>\r\n          <th>n</th>\r\n          <td>260</td>\r\n          <td>260</td>\r\n          <td>260</td>\r\n          <td>260</td>\r\n          <td>260</td>\r\n        </tr>\r\n        <tr>\r\n          <th>s2_FSV</th>\r\n          <td>1.94342</td>\r\n          <td>0.253788</td>\r\n          <td>47.2945</td>\r\n          <td>0.363388</td>\r\n          <td>4.48293</td>\r\n        </tr>\r\n        <tr>\r\n          <th>s2_logdelta</th>\r\n          <td>6.81931e+08</td>\r\n          <td>4.3315e+16</td>\r\n          <td>8.07194e+18</td>\r\n          <td>6.20209e+16</td>\r\n          <td>7.65119e+17</td>\r\n        </tr>\r\n        <tr>\r\n          <th>time</th>\r\n          <td>0.00134182</td>\r\n          <td>0.00104499</td>\r\n          <td>0.000994921</td>\r\n          <td>0.000999928</td>\r\n          <td>0.00106692</td>\r\n        </tr>\r\n        <tr>\r\n          <th>BIC</th>\r\n          <td>126.761</td>\r\n          <td>237.613</td>\r\n          <td>251.196</td>\r\n          <td>247.571</td>\r\n          <td>120.577</td>\r\n        </tr>\r\n        <tr>\r\n          <th>max_ll_null</th>\r\n          <td>-53.706</td>\r\n          <td>-107.686</td>\r\n          <td>-114.478</td>\r\n          <td>-112.665</td>\r\n          <td>-49.1681</td>\r\n        </tr>\r\n        <tr>\r\n          <th>LLR</th>\r\n          <td>1.44715</td>\r\n          <td>0.000964007</td>\r\n          <td>0.000964011</td>\r\n          <td>0.000964007</td>\r\n          <td>0.00096401</td>\r\n        </tr>\r\n        <tr>\r\n          <th>pval</th>\r\n          <td>0.228986</td>\r\n          <td>0.975231</td>\r\n          <td>0.975231</td>\r\n          <td>0.975231</td>\r\n          <td>0.975231</td>\r\n        </tr>\r\n        <tr>\r\n          <th>qval</th>\r\n          <td>0.975231</td>\r\n          <td>0.975231</td>\r\n          <td>0.975231</td>\r\n          <td>0.975231</td>\r\n          <td>0.975231</td>\r\n        </tr>\r\n      </tbody>\r\n    </table>\r\n    </div>\r\n\r\n.. code:: python\r\n\r\n    results.sort_values('qval').head(10)[['g', 'l', 'qval']]\r\n\r\n.. raw:: html\r\n\r\n    <div>\r\n    <style scoped>\r\n        .dataframe tbody tr th:only-of-type {\r\n            vertical-align: middle;\r\n        }\r\n    \r\n        .dataframe tbody tr th {\r\n            vertical-align: top;\r\n        }\r\n    \r\n        .dataframe thead th {\r\n            text-align: right;\r\n        }\r\n    </style>\r\n    <table border=\"1\" class=\"dataframe\">\r\n      <thead>\r\n        <tr style=\"text-align: right;\">\r\n          <th></th>\r\n          <th>g</th>\r\n          <th>l</th>\r\n          <th>qval</th>\r\n        </tr>\r\n      </thead>\r\n      <tbody>\r\n        <tr>\r\n          <th>890</th>\r\n          <td>Kcnh3</td>\r\n          <td>1.907609</td>\r\n          <td>0.001512</td>\r\n        </tr>\r\n        <tr>\r\n          <th>772</th>\r\n          <td>Pcp4</td>\r\n          <td>1.135190</td>\r\n          <td>0.013843</td>\r\n        </tr>\r\n        <tr>\r\n          <th>736</th>\r\n          <td>Igfbp2</td>\r\n          <td>1.135190</td>\r\n          <td>0.013843</td>\r\n        </tr>\r\n        <tr>\r\n          <th>800</th>\r\n          <td>Gng13</td>\r\n          <td>1.907609</td>\r\n          <td>0.022632</td>\r\n        </tr>\r\n        <tr>\r\n          <th>646</th>\r\n          <td>Naaa</td>\r\n          <td>0.675535</td>\r\n          <td>0.051705</td>\r\n        </tr>\r\n        <tr>\r\n          <th>749</th>\r\n          <td>Map1b</td>\r\n          <td>1.135190</td>\r\n          <td>0.051705</td>\r\n        </tr>\r\n        <tr>\r\n          <th>826</th>\r\n          <td>Gng4</td>\r\n          <td>1.907609</td>\r\n          <td>0.051705</td>\r\n        </tr>\r\n        <tr>\r\n          <th>724</th>\r\n          <td>Fmo1</td>\r\n          <td>1.135190</td>\r\n          <td>0.096710</td>\r\n        </tr>\r\n        <tr>\r\n          <th>714</th>\r\n          <td>Slc38a3</td>\r\n          <td>1.135190</td>\r\n          <td>0.096710</td>\r\n        </tr>\r\n        <tr>\r\n          <th>712</th>\r\n          <td>Hpcal4</td>\r\n          <td>1.135190</td>\r\n          <td>0.107360</td>\r\n        </tr>\r\n      </tbody>\r\n    </table>\r\n    </div>\r\n\r\nWe detected a few spatially differentially expressed genes, *Cck* and\r\n*Ptn* for example.\r\n\r\nA simple way to visualize these genes is by plotting the x and y\r\ncoordinates as above, but letting the color correspond to expression\r\nlevel.\r\n\r\n.. code:: python\r\n\r\n    figsize(10, 3)\r\n    for i, g in enumerate(['Kcnh3', 'Pcp4', 'Igfbp2']):\r\n        plt.subplot(1, 3, i + 1)\r\n        plt.scatter(sample_info['x'], sample_info['y'], c=norm_expr[g]);\r\n        plt.title(g)\r\n        plt.axis('equal')\r\n    \r\n        \r\n        plt.colorbar(ticks=[]);\r\n\r\n.. image:: README_files/README_16_0.png\r\n\r\nFor reference, we can compare these to genes which are not spatially DE\r\n\r\n.. code:: python\r\n\r\n    results.sort_values('qval').tail(10)[['g', 'l', 'qval']]\r\n\r\n.. raw:: html\r\n\r\n    <div>\r\n    <style scoped>\r\n        .dataframe tbody tr th:only-of-type {\r\n            vertical-align: middle;\r\n        }\r\n    \r\n        .dataframe tbody tr th {\r\n            vertical-align: top;\r\n        }\r\n    \r\n        .dataframe thead th {\r\n            text-align: right;\r\n        }\r\n    </style>\r\n    <table border=\"1\" class=\"dataframe\">\r\n      <thead>\r\n        <tr style=\"text-align: right;\">\r\n          <th></th>\r\n          <th>g</th>\r\n          <th>l</th>\r\n          <th>qval</th>\r\n        </tr>\r\n      </thead>\r\n      <tbody>\r\n        <tr>\r\n          <th>334</th>\r\n          <td>Tmem70</td>\r\n          <td>0.402001</td>\r\n          <td>0.975231</td>\r\n        </tr>\r\n        <tr>\r\n          <th>335</th>\r\n          <td>Rnf20</td>\r\n          <td>0.402001</td>\r\n          <td>0.975231</td>\r\n        </tr>\r\n        <tr>\r\n          <th>336</th>\r\n          <td>Zfp85-rs1</td>\r\n          <td>0.402001</td>\r\n          <td>0.975231</td>\r\n        </tr>\r\n        <tr>\r\n          <th>337</th>\r\n          <td>C1qtnf7</td>\r\n          <td>0.402001</td>\r\n          <td>0.975231</td>\r\n        </tr>\r\n        <tr>\r\n          <th>338</th>\r\n          <td>Ap4b1</td>\r\n          <td>0.402001</td>\r\n          <td>0.975231</td>\r\n        </tr>\r\n        <tr>\r\n          <th>339</th>\r\n          <td>Psma4</td>\r\n          <td>0.402001</td>\r\n          <td>0.975231</td>\r\n        </tr>\r\n        <tr>\r\n          <th>340</th>\r\n          <td>Aldh3b1</td>\r\n          <td>0.402001</td>\r\n          <td>0.975231</td>\r\n        </tr>\r\n        <tr>\r\n          <th>341</th>\r\n          <td>Hdx</td>\r\n          <td>0.402001</td>\r\n          <td>0.975231</td>\r\n        </tr>\r\n        <tr>\r\n          <th>328</th>\r\n          <td>Zfp113</td>\r\n          <td>0.402001</td>\r\n          <td>0.975231</td>\r\n        </tr>\r\n        <tr>\r\n          <th>999</th>\r\n          <td>Preb</td>\r\n          <td>9.052138</td>\r\n          <td>0.975231</td>\r\n        </tr>\r\n      </tbody>\r\n    </table>\r\n    </div>\r\n\r\n.. code:: python\r\n\r\n    figsize(10, 3)\r\n    for i, g in enumerate(['Myo9b', 'Sc4mol', 'Phf11b']):\r\n        plt.subplot(1, 3, i + 1)\r\n        plt.scatter(sample_info['x'], sample_info['y'], c=norm_expr[g]);\r\n        plt.title(g)\r\n        plt.axis('equal')\r\n    \r\n        \r\n        plt.colorbar(ticks=[]);\r\n\r\n.. image:: README_files/README_19_0.png\r\n\r\nIn regular differential expression analysis, we usually investigate the\r\nrelation between significance and effect size by so called *volcano\r\nplots*. We don't have the concept of fold change in our case, but we can\r\ninvestigate the fraction of variance explained by spatial variation.\r\n\r\n.. code:: python\r\n\r\n    figsize(5, 4)\r\n    plt.yscale('log')\r\n    \r\n    plt.scatter(results['FSV'], results['qval'], c='black')\r\n    \r\n    plt.axhline(0.05, c='black', lw=1, ls='--');\r\n    \r\n    plt.gca().invert_yaxis();\r\n    plt.xlabel('Fraction spatial variance')\r\n    plt.ylabel('Adj. P-value');\r\n\r\n.. image:: README_files/README_21_0.png\r\n\r\n\r"
+      },
+      "source": "https://raw.githubusercontent.com/Teichlab/SpatialDE/master/README.ipynb",
+      "technique": "header_analysis"
+    }
+  ]
+}

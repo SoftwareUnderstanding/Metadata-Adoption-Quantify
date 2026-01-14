@@ -1,0 +1,338 @@
+{
+  "application_domain": [
+    {
+      "confidence": 15.87,
+      "result": {
+        "type": "String",
+        "value": "Computer Vision"
+      },
+      "technique": "supervised_classification"
+    }
+  ],
+  "citation": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "References",
+        "parent_header": [
+          "RAMClustR: Mass Spectrometry Metabolomics Feature Clustering and Interpretation"
+        ],
+        "type": "Text_excerpt",
+        "value": "Broeckling CD, Afsar FA, Neumann S, Ben-Hur A, Prenni JE. RAMClust: a novel feature clustering method enables spectral-matching-based annotation for metabolomics data. Anal Chem. 2014 Jul 15;86(14):6812-7. doi: 10.1021/ac501530d. Epub 2014 Jun 26. PubMed PMID: 24927477.\n\nBroeckling CD, Ganna A, Layer M, Brown K, Sutton B, Ingelsson E, Peers G, Prenni JE. Enabling Efficient and Confident Annotation of LC-MS Metabolomics Data through MS1 Spectrum and Time Prediction. Anal Chem. 2016 Sep 20;88(18):9226-34. doi: 10.1021/acs.analchem.6b02479. Epub 2016 Sep 8. PubMed PMID: 7560453.\n\n"
+      },
+      "source": "https://raw.githubusercontent.com/cbroeckl/RAMClustR/master/README.md",
+      "technique": "header_analysis"
+    }
+  ],
+  "code_repository": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/cbroeckl/RAMClustR"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_created": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2013-10-23T07:04:07Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_updated": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2024-05-23T16:43:52Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "description": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "Assigning precursor-product ion relationships in indiscriminant MS/MS data"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Introduction",
+        "parent_header": [
+          "RAMClustR: Mass Spectrometry Metabolomics Feature Clustering and Interpretation",
+          "Documentation for users"
+        ],
+        "type": "Text_excerpt",
+        "value": "Main clustering function output - see citation for algorithm description or vignette('RAMClustR') for a walk through. batch.qc. normalization requires input of three vectors (1) batch (2) order (3) qc. This is a feature centric normalization approach which adjusts signal intensities first by comparing batch median intensity of each feature (one feature at a time) QC signal intensity to full dataset median to correct for systematic batch effects and then secondly to apply a local QC median vs global median sample correction to correct for run order effects.\n\nThere are two pathways for using RAMClustR; You can use either use the main ramclustR function or the individual stepwise workflow. \n\nBelow is a small example of using main ramclustR function.\n```R\n## Choose input file with feature column names `mz_rt` (expected by default).\n## Column with sample name is expected to be first (by default).\n## These can be adjusted with the `featdelim` and `sampNameCol` parameters.\nwd <- getwd()\nfilename <- file.path(wd, \"testdata/peaks.csv\")\npheno <- file.path(wd, \"testdata/phenoData.csv\") \nprint(filename)\nhead(data.frame(read.csv(filename)), c(6L, 5L))\n\n## If the file contains features from MS1, assign those to the `ms` parameter.\n## If the file contains features from MS2, assign those to the `idmsms` parameter.\n## If you ran `xcms` for the feature detection, the assign the output to the `xcmsObj` parameter.\n## In this example we use a MS1 feature table stored in a `csv` file.\nsetwd(tempdir())\nramclustobj <- ramclustR(\n    ms = filename,\n    pheno_csv = pheno,\n    st = 5,\n    maxt = 1,\n    blocksize = 1000\n  )\n\n## Investigate the deconvoluted features in the `spectra` folder in MSP format\n## or inspect the `ramclustobj` for feature retention times, annotations etc.\nprint(ramclustobj$ann)\nprint(ramclustobj$nfeat)\nprint(ramclustobj$SpecAbund[,1:6])\nsetwd(wd)\n```\n"
+      },
+      "source": "https://raw.githubusercontent.com/cbroeckl/RAMClustR/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Individual stepwise workflow",
+        "parent_header": [
+          "RAMClustR: Mass Spectrometry Metabolomics Feature Clustering and Interpretation",
+          "Documentation for users",
+          "Introduction"
+        ],
+        "type": "Text_excerpt",
+        "value": "![alt text](https://github.com/zargham-ahmad/RAMClustR/blob/issue_14/docs/ramclustR.png)\n\nBelow is a small example of using Individual stepwise workflow.\n```R\nset.seed(123) # to get reproducible results with jitters\nwd <- getwd()\ntmp <- tempdir()\nload(file.path(\"testdata\", \"test.rc.ramclustr.fillpeaks\"))\n\nsetwd(tmp)\n\nramclustObj <- rc.get.xcms.data(xcmsObj = xdata)\nramclustObj <- rc.expand.sample.names(ramclustObj = ramclustObj)\nramclustObj <- rc.feature.replace.na(ramclustObj = ramclustObj)\nramclustObj <- rc.feature.filter.blanks(ramclustObj = ramclustObj, blank.tag = \"Blanc\")\nramclustObj <- rc.feature.normalize.qc(ramclustObj = ramclustObj, qc.tag = \"QC\")\nramclustObj <- rc.feature.filter.cv(ramclustObj = ramclustObj)\nramclustObj <- rc.ramclustr(ramclustObj = ramclustObj)\nramclustObj <- rc.qc(ramclustObj = ramclustObj)\nramclustObj <- do.findmain(ramclustObj = ramclustObj)\n\n## Investigate the deconvoluted features in the `spectra` folder in MSP format\n## or inspect the `ramclustobj` for feature retention times, annotations etc.\nprint(ramclustobj$ann)\nprint(ramclustobj$nfeat)\nprint(ramclustobj$SpecAbund[,1:6])\nsetwd(wd)\n```\n"
+      },
+      "source": "https://raw.githubusercontent.com/cbroeckl/RAMClustR/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 0.9972780377312632,
+      "result": {
+        "original_header": "RAMClustR: Mass Spectrometry Metabolomics Feature Clustering and Interpretation",
+        "type": "Text_excerpt",
+        "value": "A feature clustering algorithm for non-targeted mass spectrometric metabolomics data. This method is compatible with gas and liquid chromatography coupled mass spectrometry, including indiscriminant tandem mass spectrometry data.\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/cbroeckl/RAMClustR/master/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "documentation": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Individual stepwise workflow",
+        "parent_header": [
+          "RAMClustR: Mass Spectrometry Metabolomics Feature Clustering and Interpretation",
+          "Documentation for users",
+          "Introduction"
+        ],
+        "type": "Text_excerpt",
+        "value": "![alt text](https://github.com/zargham-ahmad/RAMClustR/blob/issue_14/docs/ramclustR.png)\n\nBelow is a small example of using Individual stepwise workflow.\n```R\nset.seed(123) # to get reproducible results with jitters\nwd <- getwd()\ntmp <- tempdir()\nload(file.path(\"testdata\", \"test.rc.ramclustr.fillpeaks\"))\n\nsetwd(tmp)\n\nramclustObj <- rc.get.xcms.data(xcmsObj = xdata)\nramclustObj <- rc.expand.sample.names(ramclustObj = ramclustObj)\nramclustObj <- rc.feature.replace.na(ramclustObj = ramclustObj)\nramclustObj <- rc.feature.filter.blanks(ramclustObj = ramclustObj, blank.tag = \"Blanc\")\nramclustObj <- rc.feature.normalize.qc(ramclustObj = ramclustObj, qc.tag = \"QC\")\nramclustObj <- rc.feature.filter.cv(ramclustObj = ramclustObj)\nramclustObj <- rc.ramclustr(ramclustObj = ramclustObj)\nramclustObj <- rc.qc(ramclustObj = ramclustObj)\nramclustObj <- do.findmain(ramclustObj = ramclustObj)\n\n## Investigate the deconvoluted features in the `spectra` folder in MSP format\n## or inspect the `ramclustobj` for feature retention times, annotations etc.\nprint(ramclustobj$ann)\nprint(ramclustobj$nfeat)\nprint(ramclustobj$SpecAbund[,1:6])\nsetwd(wd)\n```\n"
+      },
+      "source": "https://raw.githubusercontent.com/cbroeckl/RAMClustR/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Testing",
+        "parent_header": [
+          "RAMClustR: Mass Spectrometry Metabolomics Feature Clustering and Interpretation",
+          "Documentation for developers"
+        ],
+        "type": "Text_excerpt",
+        "value": "```R\n# Activate the ramclustr-dev environment\n# Run the below command on R console\ndevtools::test()\n```\n"
+      },
+      "source": "https://raw.githubusercontent.com/cbroeckl/RAMClustR/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "format": "wiki",
+        "type": "Url",
+        "value": "https://github.com/cbroeckl/RAMClustR/wiki"
+      },
+      "source": "https://raw.githubusercontent.com/cbroeckl/RAMClustR/master/README.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "download_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/cbroeckl/RAMClustR/releases"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 16
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/cbroeckl/RAMClustR/forks"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "cbroeckl/RAMClustR"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_title": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "RAMClustR: Mass Spectrometry Metabolomics Feature Clustering and Interpretation"
+      },
+      "source": "https://raw.githubusercontent.com/cbroeckl/RAMClustR/master/README.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "images": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/zargham-ahmad/RAMClustR/issue_14/docs/ramclustR.png"
+      },
+      "source": "https://raw.githubusercontent.com/cbroeckl/RAMClustR/master/README.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "installation": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Installation",
+        "parent_header": [
+          "RAMClustR: Mass Spectrometry Metabolomics Feature Clustering and Interpretation",
+          "Documentation for developers"
+        ],
+        "type": "Text_excerpt",
+        "value": "The newest version of the package can be installed through conda from the [bioconda](https://anaconda.org/bioconda/r-ramclustr) channel:\n\n```bash\nconda install -c bioconda r-ramclustr\n```\n\nOr you can alternatively Install from R console:\n\ninstall.packages(\"devtools\", repos=\"http://cran.us.r-project.org\", dependencies=TRUE)\n\nlibrary(devtools)\n\ninstall_github(\"cbroeckl/RAMClustR\", build_vignettes = TRUE, dependencies = TRUE)\n\nlibrary(RAMClustR)\n\nvignette(\"RAMClustR\")\n"
+      },
+      "source": "https://raw.githubusercontent.com/cbroeckl/RAMClustR/master/README.md",
+      "technique": "header_analysis"
+    }
+  ],
+  "issue_tracker": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/cbroeckl/RAMClustR/issues"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "keywords": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": ""
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "license": [
+    {
+      "confidence": 1,
+      "result": {
+        "name": "MIT License",
+        "spdx_id": "MIT",
+        "type": "License",
+        "url": "https://api.github.com/licenses/mit",
+        "value": "https://api.github.com/licenses/mit"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "File_dump",
+        "value": "MIT License\n\nCopyright (c) 2023 Corey Broeckling\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.\n"
+      },
+      "source": "https://raw.githubusercontent.com/cbroeckl/RAMClustR/master/LICENSE",
+      "technique": "file_exploration"
+    }
+  ],
+  "name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "RAMClustR"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "owner": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "User",
+        "value": "cbroeckl"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "programming_languages": [
+    {
+      "confidence": 1,
+      "result": {
+        "name": "R",
+        "size": 261121,
+        "type": "Programming_language",
+        "value": "R"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "readme_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/cbroeckl/RAMClustR/master/README.md"
+      },
+      "technique": "file_exploration"
+    }
+  ],
+  "somef_missing_categories": [
+    "acknowledgement",
+    "run",
+    "download",
+    "requirements",
+    "contact",
+    "contributors",
+    "usage",
+    "faq",
+    "support",
+    "identifier",
+    "has_build_file",
+    "executable_example"
+  ],
+  "somef_provenance": {
+    "date": "2024-10-04 09:56:45",
+    "somef_schema_version": "1.0.0",
+    "somef_version": "0.9.5"
+  },
+  "stargazers_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 12
+      },
+      "technique": "GitHub_API"
+    }
+  ]
+}

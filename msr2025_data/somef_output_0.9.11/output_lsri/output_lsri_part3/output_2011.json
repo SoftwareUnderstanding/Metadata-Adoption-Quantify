@@ -1,0 +1,438 @@
+{
+  "citation": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "DR2S - dual redundant reference sequencing",
+        "type": "Text_excerpt",
+        "value": "An R package designed to facilitate generating reliable, full-length\nphase-defined reference sequences for novel HLA and KIR alleles.\n"
+      },
+      "source": "https://raw.githubusercontent.com/DKMS-LSL/dr2s/master/README.Rmd",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Input and output",
+        "parent_header": [
+          "DR2S - dual redundant reference sequencing",
+          "Workflow"
+        ],
+        "type": "Text_excerpt",
+        "value": "`DR2S` is designed to integrate long-read HLA and KIR data (e.g., PacBio\nor Oxford Nanopore sequences) and shortread shotgun data (Illumina). It\nis also possible to run `DR2S` in \u201clongread-only mode\u201d, but don\u2019t expect\nreference-quality consensus sequences that way.\n\nAs input, we expect longread and, optionally, shortread FASTQ files to\nbe placed in separate subdirectories within a working directory and to\nfollow the naming convention `SAMPLEID_LOCUS_.*.fastq(.gz)?`.\n\n`SAMPLEID` can be any arbitrary unique identification code and `LOCUS`\nshould be one of `A`, `B`, `C`, `DQB1`, `DRB1`, or `DPB1` for HLA, or\none of `2DL1`, `2DL2`, `2DL3`, `2DL4`, `2DL5A`, `2DL5B`, `2DP1`, `2DS1`,\n`2DS2`, `2DS3`, `2DS4`, `2DS5`, `3DL1`, `3DL2`, `3DL3`, `3DP1`, or\n`3DS1` for KIR.\n\nAll output is placed in a directory tree under the configured output\ndirectory `LOCUS\\SAMPLEID\\`.\n\nAn example:\n\n    ~/dr2s_data\n       |\n       +-- pacbio\n       |     |-- ID123_DPB1_lbc23.fastq.gz\n       |\n       |\n       +-- illumina\n       |     |-- ID123_DPB1_S23_L001_R1_001.fastq.gz\n       |     |-- ID123_DPB1_S23_L001_R2_001.fastq.gz\n       |\n       +-- output\n             |\n             +-- DQB1\n                   |\n                   +-- ID123\n                          | --...\n                          | --...\n                          | --...\n"
+      },
+      "source": "https://raw.githubusercontent.com/DKMS-LSL/dr2s/master/README.Rmd",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Arguments",
+        "parent_header": [
+          "DR2S - dual redundant reference sequencing",
+          "Workflow",
+          "Usage"
+        ],
+        "type": "Text_excerpt",
+        "value": "-   `sample`: A unique sample identifier. The FASTQs associated with a\n    sample need need to be prefixed with this identifier.\n-   `locus`: One of the allowed HLA and KIR loci above. If allele\n    information for a sample is available it can be specified as,\n    e.g.\u00a0`DPB1*04:02:01:01`. In this case this allele will be used as a\n    reference against which an initial mapping of the longreads is\n    performed. If this information is not given a generic locus-specific\n    reference is used. NOTE: generic references are not yet implemented\n    for KIR.\n-   `longreads`: The location, type, and mapper for longreads as a named\n    list with the fields `dir`, `type` (\u201cpacbio\u201d or \u201cnanopore\u201d) and\n    `mapper` (\u201cbwamem\u201d or \u201cminimap\u201d).\n-   `shortreads`: (optional) The location, type, and mapper for\n    shortreads as a named list with the fields `dir`, `type`\n    (\u201cillumina\u201d) and `mapper` (\u201cbwamem\u201d or \u201cminimap\u201d).\n-   `datadir`: The data directory (see above).\n-   `outdir`: The output directory (see above).\n-   `reference`: (optional) Path to a fasta file containing the\n    reference sequence.\n-   `details`: (optional) Named list of sample metadata. These data will\n    be included in the fasta headers of the final sequences and stored\n    in the config file.\n-   `opts`: (optional) Named list of arguments to the DR2S pipeline\n    steps. They will be stored in the config file. See below for a\n    detailed descriptions of options that control the DR2S pipeline.\n\nThis call generates an `R6` object of class `DR2S` that encapsulates all\ndata and methods for all subsequent analysis steps.\n\nAn alternative approach is to use yaml or json config files. An example\nconfig file is provided in the toy example at `URL to github project`:\n\n``` r\nconfigFile <- \"~/dr2s_data/dr2s_config.yaml\"\nx <- InitDR2S(\n  readDR2SConf(configFile)\n)\n```\n"
+      },
+      "source": "https://raw.githubusercontent.com/DKMS-LSL/dr2s/master/README.Rmd",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Pipeline",
+        "parent_header": [
+          "DR2S - dual redundant reference sequencing",
+          "Workflow",
+          "Usage"
+        ],
+        "type": "Text_excerpt",
+        "value": "An analysis proceeds in a number of steps that can be chained together\nusing the pipe `%>%`:\n\n``` r\nx %>% \n  mapInit() %>%\n  partitionLongreads() %>%\n  mapIter() %>%\n  partitionShortreads() %>%\n  mapFinal() %>%\n  report() %>% \n  cache()\n```\n\nAlternatively, the complete pipeline can be run in one go. There are two\navailable pipelines, one for the standard run (SR), and another for only\nlong-read data (LR). Which pipeline to run can be configured in the\nconfig file.\n\n``` r\nx$runPipeline()\n```\n\nThe individual steps perform the following analyses:\n\n-   `mapInit()`:\n    1.  Map the shortreads (SR) against an initial reference. Construct\n        a tentative consensus.\n    2.  Perform a second SR mapping to the consensus sequence from the\n        previous step. This expands the reference and may be necessary\n        if there are extensive repeat structures like microsatellites in\n        your sequence. Construct a tentative consensus.\n    3.  A final SR mapping to the consensus from the previous step.\n    4.  A longread (LR) mapping to the consensus from the previous step.\n-   `partitionLongreads()`:\n    1.  Infer polymorphic positions from the SR mapping performed in the\n        previous step.\n    2.  Construct a SNP matrix from the LR mapping at the polymorphic\n        positions infer from the SR mapping.\n    3.  Perform hierarchical clustering the LR SNPs.\n    4.  Attempt to detect chimeric reads.\n    5.  Assign a haplotype and a *haplotype\\_membership\\_coefficient* to\n        each read.\n    6.  Pick longreads that best represent the allele haplotypes based\n        on the *haplotype\\_membership\\_coefficient* from the previous\n        step.\n    7.  Extract the selected longreads from the alignment file and\n        output the data as FASTQs into subdirectories for each\n        haplotype.\n-   `mapIter()`:\n    1.  Construct a consensus sequence for each haplotype from the\n        initial LR mapping whilst using only reads that have been\n        assigned to that haplotype.\n    2.  Iteratively refine the longread consensus sequences by remapping\n        longreads per haplotype to the latest haplotype consensus.\n-   `partitionShortreads()`:\n    1.  Partition the shortreads into haplotypes using the inferred\n        longread haplotypes and the initial SR mapping.\n-   `mapFinal()`:\n    1.  Map the shortreads against the refined longread consensus\n        sequences.\n-   `report()`:\n    1.  Report the finalised shortread-based consensus sequences as\n        FASTA files. Provide a tsv file with suspicious positions that\n        may warrant manual inspection. Report the alignment of all\n        haplotypes.\n\nThroughout this process a number of diagnostic plots are produced and\nplaced in the output directory for later inspection.\n\nWhile this process works remarkably well, there are situations where\nalignment artefacts or plain bad luck may introduce errors in the final\nconsensus sequences. You should **never** accept the result as ground\ntruth without some manual and visual consistency checks!\n\n`DR2S` provides some facilities to aid checking and signing-off of\nfinalised consensus sequences.\n"
+      },
+      "source": "https://raw.githubusercontent.com/DKMS-LSL/dr2s/master/README.Rmd",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Postprocessing",
+        "parent_header": [
+          "DR2S - dual redundant reference sequencing",
+          "Workflow",
+          "Usage"
+        ],
+        "type": "Text_excerpt",
+        "value": "A typical post-processing workflow may look as follows:\n\n``` r\nrun_igv(x, 3000)\ncheck_alignment_file(x)\nrefineAlignment(x, \"A\")\nrun_igv(x, \"refine\")\nreport_checked_consensus(x)\n```\n\n-   **run\\_igv:** Opens an instance of the IGV Genome Browser for each\n    haplotype at a specified position (one for each allele) displaying\n    both the long read and short read data for manual inspection.\n\n-   **check\\_alignment\\_file :** Opens a pairwise or multiple alignment\n    of the final consensus sequences in your text editor. Use this to\n    perform any manual edits on the consensus sequences. Editor options\n    are: \u201csubl\u201d, \u201cgvim\u201d and \u201cgedit\u201d. Defaults to systems standard\n    editor.\n\n-   **report\\_checked\\_consensus:** Export final consensus sequences\n    from the edited pairwise or multiple alignment as FASTAs into a\n    separate subdirectory `./checked` in the output directory.\n\n`DR2S` creates bash scripts for the convenient access to important\npostprocessing functions:\n\n-   **run\\_checkConsensus.sh** Runs the `check_alignment_file` command.\n-   **runIGV\\_mapInit.sh** Opens an IGV instance of the initial mapping.\n-   **runIGV\\_mapIter.sh** Opens an IGV instance of the results of the\n    mapIter step.\n-   **runIGV\\_mapFinal.sh** Opens an IGV instance of the final mapping\n-   **run\\_remap\\[X\\].sh** Remap the reads of a haplotype to the manuall\n    curated sequence to look if it is finally correct. This command is\n    available for all found haplotypes\n-   **run\\_reportCheckedConsensus.sh** report the manually checked\n    consensus and state that its finished and can be used.\n"
+      },
+      "source": "https://raw.githubusercontent.com/DKMS-LSL/dr2s/master/README.Rmd",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Pipeline control options",
+        "parent_header": [
+          "DR2S - dual redundant reference sequencing",
+          "Workflow",
+          "Usage"
+        ],
+        "type": "Text_excerpt",
+        "value": "A more fine-grained control of the DR2S pipeline is available via a\n`json`-based config file. This config file can be created externally and\nread in using the `readDR2Sconf()` function. Alternatively the config\nfile is created by the `createDR2Sconf()` function. Pipeline control\noptions are set using the `opts` argument in `createDR2Sconf()`, e.g.:\n\n``` r\nconf <- createDR2SConf(\n  sample = \"ID12912701\",\n  locus = \"A*01:01:01:01\",\n  longreads = list(dir = \"pacbio\", type = \"pacbio\", mapper = \"minimap\"),\n  shortreads = list(dir = \"illumina\", type = \"illumina\", mapper = \"bwamem\"),\n  datadir = \"~/dr2s_data\",\n  outdir = \"~/dr2s_data/output\",\n  opts = list(\n    mapInit = list(topx = \"auto\",\n                   createIgv = FALSE),\n    partitionLongreads = list(threshold = 1/5,\n                              noGapPartitioning = TRUE,\n                              selectCorrelatedPositions = TRUE,\n                              selectAllelesBy = \"distance\"),\n    mapIter  = list(iterations = 2),\n    mapFinal = list(createIgv = FALSE),\n    report   = list(createIgv = FALSE)\n  ))\n```\n\nThe complete set of available options and their defaults are:\n\n``` r\n  ##\n  ## mapInit() defaults ####\n  ##\n  mapInit = list(\n    ## <includeDeletions>: include deletions in pileup.\n    includeDeletions = TRUE,\n    ## <includeInsertions>: include insertions in pileup.\n    includeInsertions = TRUE,\n    ## <callInsertionThreshold>: if <includeInsertions == TRUE>, an insertion\n    ## needs to be at frequency <callInsertionThreshold> for it to be included\n    ## in the pileup.\n    callInsertionThreshold = 1/5,\n    ## <microsatellite>: if <pipeline == \"SR\">, perform a second mapping of\n    ## shortreads to the inferred reference. Set to TRUE if you suspect\n    ## microsatellites or repetitive regions in your sequence. This extends\n    ## the reference to a maximum length and enables a better mapping.\n    microsatellite = FALSE,\n    ## <forceMapping>: set to TRUE if you want to force processing of \"bad\"\n    ## shortreads when the distribution of coverage is heavily unequal.\n    ## Aborts the program if maximum coverage > 75 % quantile * 5.\n    forceMapping = FALSE,\n    ## <minMapq>: don't filter longreads for mapping quality unless specified.\n    ## NOTE: for shortreads <minMapq = 50> is hardcoded.\n    minMapq = 0,\n    ## <topx>: pick the x top-scoring reads. Set to an integer value to pick\n    ## a fixed number of reads. Set to \"auto\" to use a dynamically determined\n    ## number of reads to be selected.\n    topx = FALSE,\n    ## <pickiness>: if <topx == \"auto\">: <pickiness < 1>: bias towards higher\n    ## scores/less reads; <pickiness > 1>: bias towards lower scores/more reads\n    pickiness = 1,\n    ## <increasePickiness>: if <topx == \"auto\">: increase pickiness for the\n    ## second iteration of LR mapping\n    increasePickiness = 1,\n    ## <lowerLimit>: if <topx == \"auto\"> or <topx > 0>: the  minimum number\n    ## of reads to pick if available.\n    lowerLimit = 200,\n    ## <updateBackgroundModel>: estimate the indel noise in a pileup and use\n    ## this information to update the background model for PWM scoring\n    updateBackgroundModel = FALSE,\n    ## <createIgv>: subsample bam files for visualisation with IgvJs in the\n    ## DR2S shiny app.\n    createIgv = TRUE,\n    ## <plot>: generate diagnostic plots.\n    plot = TRUE\n  )\n  ##\n  ## partitionLongreads() defaults ####\n  ##\n  partitionLongreads = list(\n    ## Threshold to call a polymorphic position. A minority nucleotide frequency\n    ## below this threshold is considered noise rather than a valid polymorphism.\n    threshold = 1/5,\n    ## The expected number of distinct alleles in the sample. This should be 2\n    ## for heterozygous samples, 1 for homozygous samples may be >2 for some\n    ## KIR loci.\n    distAlleles = 2,\n    ## The minumum frequency of the gap character required to call a gap position.\n    skipGapFreq = 2/3,\n    ## Don't partition based on gaps. Useful for samples with only few SNPs but\n    ## with homopolymers. The falsely called gaps could mask the real variation.\n    ## Set to override global default.\n    noGapPartitioning = TRUE,\n    ## Correlate polymorphic positions and cluster based on the absolute\n    ## correlation coefficient. Extract positions from the cluster with the\n    ## higher absolute mean correlation coefficient. This gets rid of positions\n    ## that are not well distributed across the two alleles.\n    selectCorrelatedPositions = FALSE,\n    ## if <selectCorrelatedPositions> == TRUE, use <measureOfAssociation>\n    ## (\"cramer.V\" or \"spearman\") to determine linkage between all polymorphic\n    ## positions.\n    measureOfAssociation = \"cramer.V\",\n    ## We perform an equivalence test on clusters of polymorhic positions:\n    ## Calculate the lower 1-sigma bound of the high-association cluster i.\n    ## Calculate the upper 1-sigma bound of the low-association cluster j.\n    ## Reject the clusters, if this bounds overlap by more than <proportionOfOverlap>\n    ## of the average distance (dij) between clusters.\n    proportionOfOverlap = 1/3,\n    ## By how much do we expect 2 clusters to minimally differ in mean Cram\u00e9r's V.\n    ## BIC-informed model-based clustering tends to split rather than lump\n    ## and this is a heuristical attempt to forestall this.\n    minimumExpectedDifference = 0.06,\n    ## If more than <distAlleles> clusters are found select clusters based on:\n    ## (1) \"distance\": The hamming distance of the resulting variant consensus\n    ## sequences or (2) \"count\": Take the clusters with the most reads as the\n    ## true alleles.\n    selectAllelesBy = \"distance\",\n    ## Minimum size of an allele cluster\n    minClusterSize = 20,\n    ## When selecting reads from allele clusters using a dynamic threshold:\n    ## pickiness < 1: bias towards higher scores/less reads\n    ## pickiness > 1: bias towards lower scores/more reads\n    pickiness = 1,\n    ## When selecting reads from allele clusters the minimum number of\n    ## reads to pick if available.\n    lowerLimit = 40,\n    ## Generate diagnostic plots.\n    plot = TRUE\n  )\n  ##\n  ## mapIter() defaults ####\n  ##\n  mapIter = list(\n    ## Number of <mapIter> iterations. How often are the\n    ## clustered reads remapped to updated reference sequences.\n    iterations = 1,\n    ## Minimum occupancy (1 - fraction of gap) below which\n    ## bases at insertion position are excluded from from consensus calling.\n    columnOccupancy = 2/5,\n   ## an insertion needs to be at frequency <callInsertionThreshold> for it\n    ## to be included in the pileup.\n    callInsertionThreshold = 1/5,\n    ## Generate diagnostic plots.\n    plot = TRUE\n  )\n  ##\n  ## mapFinal() defaults ####\n  ##\n  mapFinal = list(\n    ## include deletions in pileup.\n    includeDeletions = TRUE,\n    ## include insertions in pileup.\n    includeInsertions = TRUE,\n    ## an insertion needs to be at frequency <callInsertionThreshold> for it\n    ## to be included in the pileup.\n    callInsertionThreshold = 1/5,\n    ## (for shortreads only) trim softclips and polymorphic ends of reads before\n    ## the final mapping\n    trimPolymorphicEnds = FALSE,\n    ## Subsample bam files for visualisation with IgvJs in the\n    ## DR2S shiny app.\n    createIgv = TRUE,\n    ## Generate diagnostic plots.\n    plot = TRUE\n  )\n  ##\n  ## report() defaults ####\n  ##\n  report = list(\n    ## Maximum number of sequence letters per line in pairwise alignment.\n    blockWidth = 80,\n    ## Suppress remapping of reads against final consensus.\n    remap = TRUE,\n    ## Subsample bam files for visualisation with IgvJs in the\n    ## DR2S shiny app.\n    createIgv = TRUE\n  )\n```\n\nAn example config file:\n\n``` json\n{\n  \"sampleId\": \"ID123\",\n  \"locus\": \"A\",\n  \"datadir\": \"/home//dr2s_data\",\n  \"outdir\": \"/home/user/dr2s_data/A/ID12912701\",\n  \"reference\": \"HLA-A*01:01:01:01\",\n  \"longreads\": {\n    \"dir\": \"pacbio\",\n    \"type\": \"pacbio\",\n    \"mapper\": \"minimap\"\n  },\n  \"shortreads\": {\n    \"dir\": \"illumina\",\n    \"type\": \"illumina\",\n    \"mapper\": \"bwamem\"\n  },\n  \"pipeline\": \"SR\",\n  \"opts\": {\n    \"mapInit\": {\n      \"includeDeletions\": true,\n      \"includeInsertions\": true,\n      \"callInsertionThreshold\": 0.2,\n      \"microsatellite\": true,\n      \"forceMapping\": false,\n      \"minMapq\": 0,\n      \"topx\": false,\n      \"pickiness\": 1,\n      \"increasePickiness\": 1,\n      \"lowerLimit\": 200,\n      \"updateBackgroundModel\": false,\n      \"createIgv\": false,\n      \"plot\": true\n    },\n    \"partitionLongreads\": {\n      \"threshold\": 0.2,\n      \"distAlleles\": 2,\n      \"skipGapFreq\": 0.6667,\n      \"noGapPartitioning\": true,\n      \"selectCorrelatedPositions\": false,\n      \"measureOfAssociation\": \"cramer.V\",\n      \"proportionOfOverlap\": 0.3333,\n      \"minimumExpectedDifference\": 0.06,\n      \"selectAllelesBy\": \"distance\",\n      \"minClusterSize\": 20,\n      \"pickiness\": 1,\n      \"lowerLimit\": 40,\n      \"plot\": true\n    },\n    \"mapIter\": {\n      \"iterations\": 2,\n      \"columnOccupancy\": 0.4,\n      \"callInsertionThreshold\": 0.2,\n      \"plot\": true\n    },\n    \"mapFinal\": {\n      \"includeDeletions\": true,\n      \"includeInsertions\": true,\n      \"callInsertionThreshold\": 0.2,\n      \"trimPolymorphicEnds\": false,\n      \"createIgv\": false,\n      \"plot\": true\n    },\n    \"report\": {\n      \"blockWidth\": 80,\n      \"remap\": true,\n      \"createIgv\": false\n    }\n  },\n  \"format\": \"json\"\n}\n```\n"
+      },
+      "source": "https://raw.githubusercontent.com/DKMS-LSL/dr2s/master/README.Rmd",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Longread-only workflow *DR2S-LR*",
+        "parent_header": [
+          "DR2S - dual redundant reference sequencing",
+          "Workflow"
+        ],
+        "type": "Text_excerpt",
+        "value": "If you want to find allele sequences only based on longreads you just\nneed to set `shortreads = NULL` in `createDR2SConf()` and skip the the\n`partitionShortreads()` step in the DR2S pipeline.\n\n``` r\nx <- InitDR2S(createDR2SConf(\n  sample = \"ID12912701\",\n  locus = \"DPB1\",\n  longreads = list(dir = \"pacbio\", type = \"pacbio\", mapper = \"minimap\"),\n  datadir = \"~/dr2s_data\",\n  outdir = \"~/dr2s_data/output\"\n)) %>% \n  mapInit() %>%\n  partitionLongreads() %>%\n  mapIter() %>%\n  mapFinal() %>%\n  report() %>% \n  cache()\n```\n"
+      },
+      "source": "https://raw.githubusercontent.com/DKMS-LSL/dr2s/master/README.Rmd",
+      "technique": "header_analysis"
+    }
+  ],
+  "code_repository": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/DKMS-LSL/dr2s"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_created": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2018-05-08T10:45:51Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_updated": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2022-05-19T12:45:01Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "description": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "Dual Redundant Reference Sequencing"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "download_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/DKMS-LSL/dr2s/releases"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 1
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/DKMS-LSL/dr2s/forks"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "DKMS-LSL/dr2s"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_title": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "DR2S - dual redundant reference sequencing"
+      },
+      "source": "https://raw.githubusercontent.com/DKMS-LSL/dr2s/master/README.Rmd",
+      "technique": "regular_expression"
+    }
+  ],
+  "installation": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Installation",
+        "parent_header": [
+          "DR2S - dual redundant reference sequencing"
+        ],
+        "type": "Text_excerpt",
+        "value": "This package is only available on GitHub for now. It depends on a local\ninstallation of `samtools`, `bwa` (&gt;= 0.7.11) and `minimap2`. Some\nused R packages have additional system dependencies. Bash:\n\n``` bash\nsudo apt-get update\nsudo apt-get install \\\n  build-essentials \\ # for samtools, bwa \n  gcc \\              # for samtools, bwa \n  autoconf \\         # for samtools, bwa \n  libxml2-dev \\\n  libssl2-dev \\\n  libz-dev \\\n  libbz2-dev \\\n  liblzma-dev \\\n  libncurses5-dev\n```\n\nR:\n\n``` r\ninstall.packages(\"devtools\")  # if not already installed\ndevtools::install_github(\"DKMS-LSL/DR2S\")\n```\n\nA Docker image is also provided for convenience at docker hub. This can\nbe loaded and used with the following command:\n\n``` bash\ndocker pull dkmslsl/dr2s\ndocker run --rm -p 8788:8787 -e PASSWORD=<yourpassword> -it  dkmslsl/dr2s\n```\n\nAn rstudio server session can be accessed in your browser at\nlocalhost:8788 (The default port 8787 is mapped to the host port 8788 in\ncase you have, like me, rstudio server already running). Login to\nrstudio using the username \u201crstudio\u201d and your set password. A detailed\nintroduction to use DR2S with example data can be found at the Vignette\n\u201cDR2S\u201d.\n"
+      },
+      "source": "https://raw.githubusercontent.com/DKMS-LSL/dr2s/master/README.Rmd",
+      "technique": "header_analysis"
+    }
+  ],
+  "issue_tracker": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/DKMS-LSL/dr2s/issues"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "keywords": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": ""
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "license": [
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Other",
+        "spdx_id": "NOASSERTION",
+        "type": "License",
+        "url": null,
+        "value": null
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "File_dump",
+        "value": "YEAR: 2019\nCOPYRIGHT HOLDER: Steffen Klasberg \n"
+      },
+      "source": "https://raw.githubusercontent.com/DKMS-LSL/dr2s/master/LICENSE",
+      "technique": "file_exploration"
+    }
+  ],
+  "name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "dr2s"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "owner": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Organization",
+        "value": "DKMS-LSL"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "programming_languages": [
+    {
+      "confidence": 1,
+      "result": {
+        "name": "R",
+        "size": 340406,
+        "type": "Programming_language",
+        "value": "R"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "C++",
+        "size": 5356,
+        "type": "Programming_language",
+        "value": "C++"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "readme_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/DKMS-LSL/dr2s/master/README.Rmd"
+      },
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/DKMS-LSL/dr2s/master/README.md"
+      },
+      "technique": "file_exploration"
+    }
+  ],
+  "releases": [
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "sklas",
+          "type": "User"
+        },
+        "date_created": "2021-02-23T12:05:13Z",
+        "date_published": "2021-02-23T12:07:27Z",
+        "html_url": "https://github.com/DKMS-LSL/dr2s/releases/tag/v1.1.21",
+        "name": "Version 1.1.21",
+        "release_id": 38481818,
+        "tag": "v1.1.21",
+        "tarball_url": "https://api.github.com/repos/DKMS-LSL/dr2s/tarball/v1.1.21",
+        "type": "Release",
+        "url": "https://api.github.com/repos/DKMS-LSL/dr2s/releases/38481818",
+        "value": "https://api.github.com/repos/DKMS-LSL/dr2s/releases/38481818",
+        "zipball_url": "https://api.github.com/repos/DKMS-LSL/dr2s/zipball/v1.1.21"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "somef_missing_categories": [
+    "acknowledgement",
+    "run",
+    "download",
+    "requirements",
+    "contact",
+    "contributors",
+    "documentation",
+    "faq",
+    "support",
+    "identifier",
+    "has_build_file",
+    "executable_example"
+  ],
+  "somef_provenance": {
+    "date": "2024-10-06 07:16:27",
+    "somef_schema_version": "1.0.0",
+    "somef_version": "0.9.5"
+  },
+  "stargazers_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 3
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "usage": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Usage",
+        "parent_header": [
+          "DR2S - dual redundant reference sequencing",
+          "Workflow"
+        ],
+        "type": "Text_excerpt",
+        "value": "Once all input files are put in place a DR2S analysis is started with a\ncall to the functions `createDR2SConf()` or `readDR2SConf()` and\n`InitDR2S()`:\n\n``` r\n## a minimal example:\nx <- InitDR2S(\n  createDR2SConf(\n    sample = \"ID123\",\n    locus = \"DPB1\",\n    longreads = list(dir = \"Sequel\", type = \"pacbio\"),\n    shortreads = list(dir = \"Illumina\", type = \"illumina\"),\n    datadir = \"~/dr2s_data\",\n    outdir = \"~/dr2s_data/output\",\n    reference = \"DPB1\"\n))\n```\n"
+      },
+      "source": "https://raw.githubusercontent.com/DKMS-LSL/dr2s/master/README.Rmd",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Arguments",
+        "parent_header": [
+          "DR2S - dual redundant reference sequencing",
+          "Workflow",
+          "Usage"
+        ],
+        "type": "Text_excerpt",
+        "value": "-   `sample`: A unique sample identifier. The FASTQs associated with a\n    sample need need to be prefixed with this identifier.\n-   `locus`: One of the allowed HLA and KIR loci above. If allele\n    information for a sample is available it can be specified as,\n    e.g.\u00a0`DPB1*04:02:01:01`. In this case this allele will be used as a\n    reference against which an initial mapping of the longreads is\n    performed. If this information is not given a generic locus-specific\n    reference is used. NOTE: generic references are not yet implemented\n    for KIR.\n-   `longreads`: The location, type, and mapper for longreads as a named\n    list with the fields `dir`, `type` (\u201cpacbio\u201d or \u201cnanopore\u201d) and\n    `mapper` (\u201cbwamem\u201d or \u201cminimap\u201d).\n-   `shortreads`: (optional) The location, type, and mapper for\n    shortreads as a named list with the fields `dir`, `type`\n    (\u201cillumina\u201d) and `mapper` (\u201cbwamem\u201d or \u201cminimap\u201d).\n-   `datadir`: The data directory (see above).\n-   `outdir`: The output directory (see above).\n-   `reference`: (optional) Path to a fasta file containing the\n    reference sequence.\n-   `details`: (optional) Named list of sample metadata. These data will\n    be included in the fasta headers of the final sequences and stored\n    in the config file.\n-   `opts`: (optional) Named list of arguments to the DR2S pipeline\n    steps. They will be stored in the config file. See below for a\n    detailed descriptions of options that control the DR2S pipeline.\n\nThis call generates an `R6` object of class `DR2S` that encapsulates all\ndata and methods for all subsequent analysis steps.\n\nAn alternative approach is to use yaml or json config files. An example\nconfig file is provided in the toy example at `URL to github project`:\n\n``` r\nconfigFile <- \"~/dr2s_data/dr2s_config.yaml\"\nx <- InitDR2S(\n  readDR2SConf(configFile)\n)\n```\n"
+      },
+      "source": "https://raw.githubusercontent.com/DKMS-LSL/dr2s/master/README.Rmd",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Pipeline",
+        "parent_header": [
+          "DR2S - dual redundant reference sequencing",
+          "Workflow",
+          "Usage"
+        ],
+        "type": "Text_excerpt",
+        "value": "An analysis proceeds in a number of steps that can be chained together\nusing the pipe `%>%`:\n\n``` r\nx %>% \n  mapInit() %>%\n  partitionLongreads() %>%\n  mapIter() %>%\n  partitionShortreads() %>%\n  mapFinal() %>%\n  report() %>% \n  cache()\n```\n\nAlternatively, the complete pipeline can be run in one go. There are two\navailable pipelines, one for the standard run (SR), and another for only\nlong-read data (LR). Which pipeline to run can be configured in the\nconfig file.\n\n``` r\nx$runPipeline()\n```\n\nThe individual steps perform the following analyses:\n\n-   `mapInit()`:\n    1.  Map the shortreads (SR) against an initial reference. Construct\n        a tentative consensus.\n    2.  Perform a second SR mapping to the consensus sequence from the\n        previous step. This expands the reference and may be necessary\n        if there are extensive repeat structures like microsatellites in\n        your sequence. Construct a tentative consensus.\n    3.  A final SR mapping to the consensus from the previous step.\n    4.  A longread (LR) mapping to the consensus from the previous step.\n-   `partitionLongreads()`:\n    1.  Infer polymorphic positions from the SR mapping performed in the\n        previous step.\n    2.  Construct a SNP matrix from the LR mapping at the polymorphic\n        positions infer from the SR mapping.\n    3.  Perform hierarchical clustering the LR SNPs.\n    4.  Attempt to detect chimeric reads.\n    5.  Assign a haplotype and a *haplotype\\_membership\\_coefficient* to\n        each read.\n    6.  Pick longreads that best represent the allele haplotypes based\n        on the *haplotype\\_membership\\_coefficient* from the previous\n        step.\n    7.  Extract the selected longreads from the alignment file and\n        output the data as FASTQs into subdirectories for each\n        haplotype.\n-   `mapIter()`:\n    1.  Construct a consensus sequence for each haplotype from the\n        initial LR mapping whilst using only reads that have been\n        assigned to that haplotype.\n    2.  Iteratively refine the longread consensus sequences by remapping\n        longreads per haplotype to the latest haplotype consensus.\n-   `partitionShortreads()`:\n    1.  Partition the shortreads into haplotypes using the inferred\n        longread haplotypes and the initial SR mapping.\n-   `mapFinal()`:\n    1.  Map the shortreads against the refined longread consensus\n        sequences.\n-   `report()`:\n    1.  Report the finalised shortread-based consensus sequences as\n        FASTA files. Provide a tsv file with suspicious positions that\n        may warrant manual inspection. Report the alignment of all\n        haplotypes.\n\nThroughout this process a number of diagnostic plots are produced and\nplaced in the output directory for later inspection.\n\nWhile this process works remarkably well, there are situations where\nalignment artefacts or plain bad luck may introduce errors in the final\nconsensus sequences. You should **never** accept the result as ground\ntruth without some manual and visual consistency checks!\n\n`DR2S` provides some facilities to aid checking and signing-off of\nfinalised consensus sequences.\n"
+      },
+      "source": "https://raw.githubusercontent.com/DKMS-LSL/dr2s/master/README.Rmd",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Postprocessing",
+        "parent_header": [
+          "DR2S - dual redundant reference sequencing",
+          "Workflow",
+          "Usage"
+        ],
+        "type": "Text_excerpt",
+        "value": "A typical post-processing workflow may look as follows:\n\n``` r\nrun_igv(x, 3000)\ncheck_alignment_file(x)\nrefineAlignment(x, \"A\")\nrun_igv(x, \"refine\")\nreport_checked_consensus(x)\n```\n\n-   **run\\_igv:** Opens an instance of the IGV Genome Browser for each\n    haplotype at a specified position (one for each allele) displaying\n    both the long read and short read data for manual inspection.\n\n-   **check\\_alignment\\_file :** Opens a pairwise or multiple alignment\n    of the final consensus sequences in your text editor. Use this to\n    perform any manual edits on the consensus sequences. Editor options\n    are: \u201csubl\u201d, \u201cgvim\u201d and \u201cgedit\u201d. Defaults to systems standard\n    editor.\n\n-   **report\\_checked\\_consensus:** Export final consensus sequences\n    from the edited pairwise or multiple alignment as FASTAs into a\n    separate subdirectory `./checked` in the output directory.\n\n`DR2S` creates bash scripts for the convenient access to important\npostprocessing functions:\n\n-   **run\\_checkConsensus.sh** Runs the `check_alignment_file` command.\n-   **runIGV\\_mapInit.sh** Opens an IGV instance of the initial mapping.\n-   **runIGV\\_mapIter.sh** Opens an IGV instance of the results of the\n    mapIter step.\n-   **runIGV\\_mapFinal.sh** Opens an IGV instance of the final mapping\n-   **run\\_remap\\[X\\].sh** Remap the reads of a haplotype to the manuall\n    curated sequence to look if it is finally correct. This command is\n    available for all found haplotypes\n-   **run\\_reportCheckedConsensus.sh** report the manually checked\n    consensus and state that its finished and can be used.\n"
+      },
+      "source": "https://raw.githubusercontent.com/DKMS-LSL/dr2s/master/README.Rmd",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Pipeline control options",
+        "parent_header": [
+          "DR2S - dual redundant reference sequencing",
+          "Workflow",
+          "Usage"
+        ],
+        "type": "Text_excerpt",
+        "value": "A more fine-grained control of the DR2S pipeline is available via a\n`json`-based config file. This config file can be created externally and\nread in using the `readDR2Sconf()` function. Alternatively the config\nfile is created by the `createDR2Sconf()` function. Pipeline control\noptions are set using the `opts` argument in `createDR2Sconf()`, e.g.:\n\n``` r\nconf <- createDR2SConf(\n  sample = \"ID12912701\",\n  locus = \"A*01:01:01:01\",\n  longreads = list(dir = \"pacbio\", type = \"pacbio\", mapper = \"minimap\"),\n  shortreads = list(dir = \"illumina\", type = \"illumina\", mapper = \"bwamem\"),\n  datadir = \"~/dr2s_data\",\n  outdir = \"~/dr2s_data/output\",\n  opts = list(\n    mapInit = list(topx = \"auto\",\n                   createIgv = FALSE),\n    partitionLongreads = list(threshold = 1/5,\n                              noGapPartitioning = TRUE,\n                              selectCorrelatedPositions = TRUE,\n                              selectAllelesBy = \"distance\"),\n    mapIter  = list(iterations = 2),\n    mapFinal = list(createIgv = FALSE),\n    report   = list(createIgv = FALSE)\n  ))\n```\n\nThe complete set of available options and their defaults are:\n\n``` r\n  ##\n  ## mapInit() defaults ####\n  ##\n  mapInit = list(\n    ## <includeDeletions>: include deletions in pileup.\n    includeDeletions = TRUE,\n    ## <includeInsertions>: include insertions in pileup.\n    includeInsertions = TRUE,\n    ## <callInsertionThreshold>: if <includeInsertions == TRUE>, an insertion\n    ## needs to be at frequency <callInsertionThreshold> for it to be included\n    ## in the pileup.\n    callInsertionThreshold = 1/5,\n    ## <microsatellite>: if <pipeline == \"SR\">, perform a second mapping of\n    ## shortreads to the inferred reference. Set to TRUE if you suspect\n    ## microsatellites or repetitive regions in your sequence. This extends\n    ## the reference to a maximum length and enables a better mapping.\n    microsatellite = FALSE,\n    ## <forceMapping>: set to TRUE if you want to force processing of \"bad\"\n    ## shortreads when the distribution of coverage is heavily unequal.\n    ## Aborts the program if maximum coverage > 75 % quantile * 5.\n    forceMapping = FALSE,\n    ## <minMapq>: don't filter longreads for mapping quality unless specified.\n    ## NOTE: for shortreads <minMapq = 50> is hardcoded.\n    minMapq = 0,\n    ## <topx>: pick the x top-scoring reads. Set to an integer value to pick\n    ## a fixed number of reads. Set to \"auto\" to use a dynamically determined\n    ## number of reads to be selected.\n    topx = FALSE,\n    ## <pickiness>: if <topx == \"auto\">: <pickiness < 1>: bias towards higher\n    ## scores/less reads; <pickiness > 1>: bias towards lower scores/more reads\n    pickiness = 1,\n    ## <increasePickiness>: if <topx == \"auto\">: increase pickiness for the\n    ## second iteration of LR mapping\n    increasePickiness = 1,\n    ## <lowerLimit>: if <topx == \"auto\"> or <topx > 0>: the  minimum number\n    ## of reads to pick if available.\n    lowerLimit = 200,\n    ## <updateBackgroundModel>: estimate the indel noise in a pileup and use\n    ## this information to update the background model for PWM scoring\n    updateBackgroundModel = FALSE,\n    ## <createIgv>: subsample bam files for visualisation with IgvJs in the\n    ## DR2S shiny app.\n    createIgv = TRUE,\n    ## <plot>: generate diagnostic plots.\n    plot = TRUE\n  )\n  ##\n  ## partitionLongreads() defaults ####\n  ##\n  partitionLongreads = list(\n    ## Threshold to call a polymorphic position. A minority nucleotide frequency\n    ## below this threshold is considered noise rather than a valid polymorphism.\n    threshold = 1/5,\n    ## The expected number of distinct alleles in the sample. This should be 2\n    ## for heterozygous samples, 1 for homozygous samples may be >2 for some\n    ## KIR loci.\n    distAlleles = 2,\n    ## The minumum frequency of the gap character required to call a gap position.\n    skipGapFreq = 2/3,\n    ## Don't partition based on gaps. Useful for samples with only few SNPs but\n    ## with homopolymers. The falsely called gaps could mask the real variation.\n    ## Set to override global default.\n    noGapPartitioning = TRUE,\n    ## Correlate polymorphic positions and cluster based on the absolute\n    ## correlation coefficient. Extract positions from the cluster with the\n    ## higher absolute mean correlation coefficient. This gets rid of positions\n    ## that are not well distributed across the two alleles.\n    selectCorrelatedPositions = FALSE,\n    ## if <selectCorrelatedPositions> == TRUE, use <measureOfAssociation>\n    ## (\"cramer.V\" or \"spearman\") to determine linkage between all polymorphic\n    ## positions.\n    measureOfAssociation = \"cramer.V\",\n    ## We perform an equivalence test on clusters of polymorhic positions:\n    ## Calculate the lower 1-sigma bound of the high-association cluster i.\n    ## Calculate the upper 1-sigma bound of the low-association cluster j.\n    ## Reject the clusters, if this bounds overlap by more than <proportionOfOverlap>\n    ## of the average distance (dij) between clusters.\n    proportionOfOverlap = 1/3,\n    ## By how much do we expect 2 clusters to minimally differ in mean Cram\u00e9r's V.\n    ## BIC-informed model-based clustering tends to split rather than lump\n    ## and this is a heuristical attempt to forestall this.\n    minimumExpectedDifference = 0.06,\n    ## If more than <distAlleles> clusters are found select clusters based on:\n    ## (1) \"distance\": The hamming distance of the resulting variant consensus\n    ## sequences or (2) \"count\": Take the clusters with the most reads as the\n    ## true alleles.\n    selectAllelesBy = \"distance\",\n    ## Minimum size of an allele cluster\n    minClusterSize = 20,\n    ## When selecting reads from allele clusters using a dynamic threshold:\n    ## pickiness < 1: bias towards higher scores/less reads\n    ## pickiness > 1: bias towards lower scores/more reads\n    pickiness = 1,\n    ## When selecting reads from allele clusters the minimum number of\n    ## reads to pick if available.\n    lowerLimit = 40,\n    ## Generate diagnostic plots.\n    plot = TRUE\n  )\n  ##\n  ## mapIter() defaults ####\n  ##\n  mapIter = list(\n    ## Number of <mapIter> iterations. How often are the\n    ## clustered reads remapped to updated reference sequences.\n    iterations = 1,\n    ## Minimum occupancy (1 - fraction of gap) below which\n    ## bases at insertion position are excluded from from consensus calling.\n    columnOccupancy = 2/5,\n   ## an insertion needs to be at frequency <callInsertionThreshold> for it\n    ## to be included in the pileup.\n    callInsertionThreshold = 1/5,\n    ## Generate diagnostic plots.\n    plot = TRUE\n  )\n  ##\n  ## mapFinal() defaults ####\n  ##\n  mapFinal = list(\n    ## include deletions in pileup.\n    includeDeletions = TRUE,\n    ## include insertions in pileup.\n    includeInsertions = TRUE,\n    ## an insertion needs to be at frequency <callInsertionThreshold> for it\n    ## to be included in the pileup.\n    callInsertionThreshold = 1/5,\n    ## (for shortreads only) trim softclips and polymorphic ends of reads before\n    ## the final mapping\n    trimPolymorphicEnds = FALSE,\n    ## Subsample bam files for visualisation with IgvJs in the\n    ## DR2S shiny app.\n    createIgv = TRUE,\n    ## Generate diagnostic plots.\n    plot = TRUE\n  )\n  ##\n  ## report() defaults ####\n  ##\n  report = list(\n    ## Maximum number of sequence letters per line in pairwise alignment.\n    blockWidth = 80,\n    ## Suppress remapping of reads against final consensus.\n    remap = TRUE,\n    ## Subsample bam files for visualisation with IgvJs in the\n    ## DR2S shiny app.\n    createIgv = TRUE\n  )\n```\n\nAn example config file:\n\n``` json\n{\n  \"sampleId\": \"ID123\",\n  \"locus\": \"A\",\n  \"datadir\": \"/home//dr2s_data\",\n  \"outdir\": \"/home/user/dr2s_data/A/ID12912701\",\n  \"reference\": \"HLA-A*01:01:01:01\",\n  \"longreads\": {\n    \"dir\": \"pacbio\",\n    \"type\": \"pacbio\",\n    \"mapper\": \"minimap\"\n  },\n  \"shortreads\": {\n    \"dir\": \"illumina\",\n    \"type\": \"illumina\",\n    \"mapper\": \"bwamem\"\n  },\n  \"pipeline\": \"SR\",\n  \"opts\": {\n    \"mapInit\": {\n      \"includeDeletions\": true,\n      \"includeInsertions\": true,\n      \"callInsertionThreshold\": 0.2,\n      \"microsatellite\": true,\n      \"forceMapping\": false,\n      \"minMapq\": 0,\n      \"topx\": false,\n      \"pickiness\": 1,\n      \"increasePickiness\": 1,\n      \"lowerLimit\": 200,\n      \"updateBackgroundModel\": false,\n      \"createIgv\": false,\n      \"plot\": true\n    },\n    \"partitionLongreads\": {\n      \"threshold\": 0.2,\n      \"distAlleles\": 2,\n      \"skipGapFreq\": 0.6667,\n      \"noGapPartitioning\": true,\n      \"selectCorrelatedPositions\": false,\n      \"measureOfAssociation\": \"cramer.V\",\n      \"proportionOfOverlap\": 0.3333,\n      \"minimumExpectedDifference\": 0.06,\n      \"selectAllelesBy\": \"distance\",\n      \"minClusterSize\": 20,\n      \"pickiness\": 1,\n      \"lowerLimit\": 40,\n      \"plot\": true\n    },\n    \"mapIter\": {\n      \"iterations\": 2,\n      \"columnOccupancy\": 0.4,\n      \"callInsertionThreshold\": 0.2,\n      \"plot\": true\n    },\n    \"mapFinal\": {\n      \"includeDeletions\": true,\n      \"includeInsertions\": true,\n      \"callInsertionThreshold\": 0.2,\n      \"trimPolymorphicEnds\": false,\n      \"createIgv\": false,\n      \"plot\": true\n    },\n    \"report\": {\n      \"blockWidth\": 80,\n      \"remap\": true,\n      \"createIgv\": false\n    }\n  },\n  \"format\": \"json\"\n}\n```\n"
+      },
+      "source": "https://raw.githubusercontent.com/DKMS-LSL/dr2s/master/README.Rmd",
+      "technique": "header_analysis"
+    }
+  ]
+}

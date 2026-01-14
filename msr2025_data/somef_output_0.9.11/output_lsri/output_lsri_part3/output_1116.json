@@ -1,0 +1,313 @@
+{
+  "code_repository": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/Ilarius/metaDEA"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_created": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2021-04-01T11:04:45Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_updated": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2023-04-27T09:07:11Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "description": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "a package to perform meta-analysis of heterogeneous transcriptomic data"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Introduction",
+        "parent_header": [
+          "metaDEA"
+        ],
+        "type": "Text_excerpt",
+        "value": "meta-analysis of differential expression analyses (metaDEA) is a simple package that provide easy functions to integrate the results of previously computed differential expression analyses to find out the genes that are more consistently differentially expressed across different comparisons and their statistics. The power of this package is that it allows to perform meta-analysis on highly heterogeneneous transcriptomic data. Classical co-expression analyses is sensitive to outliers and require high-quality homogenous data, especially in terms of platform. To overcome this limitation we developed a simpler method that uses previously computed differential expression analyses. This allows to apply the suitable method for each specific platform (e.g. moderated t-statistics for microarray and negative binomial for RNA-sequencing data) and thereafter, integrating the results by simply analyzing the already computed log2 fold changes and adjusted p-values.\n"
+      },
+      "source": "https://raw.githubusercontent.com/Ilarius/metaDEA/master/README.Rmd",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 0.9846322798317564,
+      "result": {
+        "original_header": "Generating the dataset for the meta-analysis",
+        "type": "Text_excerpt",
+        "value": "In the example we load two different dataframes with the differential expression analyses performed on Down syndrome samples. The first (`ipsc_deseq2`) is the results of a DEA performed with `DESeq2` on an mRNA-profiling of induced pluripotent stem cells derived from fibroblasts of monozygotic twins discordant for trisomy 21; the second (`thymus_limma`) is the results of a DEA peformed with `limma` on microarray data of thymic samples from patient with and without Down syndrome.\n``` r\noptions(width=300)\ndata(\"ipsc_deseq2\")\nhead(ipsc_deseq2)\n#>                 baseMean log2FoldChange     lfcSE      stat       pvalue         padj\n#> ENSG00000156508 579814.1      0.2541743 0.1696525 1.4982053 1.340799e-01 2.676178e-01\n#> ENSG00000198804 391715.3      0.1866105 0.2205701 0.8460369 3.975322e-01 5.736697e-01\n#> ENSG00000198886 335490.6      0.6387031 0.1782505 3.5831771 3.394403e-04 1.866190e-03\n#> ENSG00000075624 307336.7      0.4220840 0.1607130 2.6263219 8.631315e-03 3.001498e-02\n#> ENSG00000210082 329134.3      0.7549744 0.4359188 1.7319154 8.328863e-02 1.875120e-01\n#> ENSG00000198712 273659.4      1.1308065 0.2557758 4.4210850 9.820655e-06 8.038232e-05\n```\n \nWe then create the dataset by specifying the name(s) of the columns containing respectively the identifiers (`GeneName`), the adjusted p-values (`adj.P.Val` and `padj`) and the log2 fold changes (`logFC` and `log2FoldChange`). Please note that in `\u00ecpsc_deseq2` there is no column for the identifiers (gene names are in the rownames) and therefore you do not need to specify anything in the `col_name` argument. Also notice that the identifiers should be of the same type. Therefore, for the `thymus_limma` dataset ensemble identifiers have been previously retrieved from the probe names with an annotation package.\n``` r\nlist_array_2studies=create_dataset(thymus_limma, ipsc_deseq2,col_names=\"GeneName\", col_adjpvals=c(\"adj.P.Val\", \"padj\"), col_log2FC=c(\"logFC\", \"log2FoldChange\"))\n```\nThis returns a list of 3 lists, one called `names` with the gene identifiers of the two comparisons (each one is a sublist named with the names of the DEAs), one called `adjpval` with the adjused p-values of the comparisons and one called `log2FC` with the log2 fold changes. The elements of each sublist are ordered in the same way like that there is a correspondance among names, adjusted p-values, and fold changes for each gene.\n``` r\nstr(list_array_2studies)\n#> List of 3\n#>  $ names  :List of 2\n#>   ..$ thymus_limma: chr [1:20994] \"ENSG00000149294\" \"ENSG00000160294\" \"ENSG00000151623\" \"ENSG00000273590\" ...\n#>   ..$ ipsc_deseq2 : chr [1:58336] \"ENSG00000156508\" \"ENSG00000198804\" \"ENSG00000198886\" \"ENSG00000075624\" ...\n#>  $ adjpval:List of 2\n#>   ..$ thymus_limma: num [1:20994] 1.26e-06 4.97e-05 1.21e-03 4.26e-03 4.26e-03 ...\n#>   ..$ ipsc_deseq2 : num [1:58336] 0.26762 0.57367 0.00187 0.03001 0.18751 ...\n#>  $ log2FC :List of 2\n#>   ..$ thymus_limma: num [1:20994] 2.301 0.755 1.103 0.721 0.721 ...\n#>   ..$ ipsc_deseq2 : num [1:58336] 0.254 0.187 0.639 0.422 0.755 ...\n```\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/Ilarius/metaDEA/master/README.Rmd",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9421514086274545,
+      "result": {
+        "original_header": "Subsetting the dataset",
+        "type": "Text_excerpt",
+        "value": "Researchers might want to filter the comparisons included in the dataset based on fold changes and/or p-values to focus on the genes significantly changing in one condition compared to another. Here we upload a dataset containing the results of 124 comparisons between trisomic samples versus euploid samples that had been previously filter using a low threshold (adjusted p-value&lt;0.1). These comparisons belong to both mouse and human samples and include different cells, tissues, and platform (both sequencing and microarrays). We use the function `subset_metanalysis` to further filter each comparison keeping only the genes with adjusted p-value &lt; 0.05 and absolute fold change &gt;1.5. Since this filter could still be too low for some of the comparisons we also set a third threshold to keep only the first 500 genes in case there are more than 500 DE genes.\n``` r\n#load data\ndata(list_array)\n# create a list of lists were only the first 500 most significant genes with adjusted p-value < 0.05 and fold change >1.5 or < -1.5 are included\nlist_array.05_fc1.5_max500 <- subset_metanalysis(dataset=list_array, adjpval = 0.05, abslog2FC = log2(1.5), max_n_genes = 500 )\n```\n \nBy applying these thresholds we end up with 92 comparisons.\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/Ilarius/metaDEA/master/README.Rmd",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9951903494049459,
+      "result": {
+        "original_header": "Find statistics for individual genes",
+        "type": "Text_excerpt",
+        "value": "Once we have our filtered dataset we might be interested in how specific genes are dysregulated across the different comparisons. We coded a simple function to retrieve this information by querying specific genes. The function `find_fold_changes_and_pvalues` returns a dataframe with log2 fold changes and adjusted p-values for each one of the comparisons of the different studies. For this example we query the DYRK1A gene and find its deregulation (mainly upregulation) in 9 comparisons, as expected since this genes is coded on the triplicated chromosome and is one of the most studied for its pathogenetic role in several hallmarks of the syndrome.\n``` r\n#retrieve log2FCs and adjusted-p-values for the DYRK1A gene (ensemblID=\"ENSG00000157540\")\nfind_fold_changes_and_pvalues(gene=\"ENSG00000157540\",dataset=list_array.05_fc1.5_max500)\n#>                            log2FC      adjpval\n#> GSE121066               0.8714199 6.207130e-06\n#> GSE48553                0.6868195 9.288870e-05\n#> GSE83449                0.5869155 1.289070e-04\n#> GSE70102               -0.8750075 1.960972e-03\n#> GSE4119.aml             1.5457345 2.757646e-03\n#> EMEXP654                0.8078573 3.151341e-03\n#> GSE42956ipcs           -1.0384554 3.337780e-03\n#> GSE79842lymphoblastoid  0.7878831 4.317548e-03\n#> GSE59630v1c.adult      -1.1643237 2.071358e-02\n```\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/Ilarius/metaDEA/master/README.Rmd",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9964005014814707,
+      "result": {
+        "original_header": "Retrieving global statistics of the dataset",
+        "type": "Text_excerpt",
+        "value": "We can also retrieve summary statistics of all the genes in the dataset to detect the genes that are most consistently deregulated across all comparisons. In order to rank genes we can consider in how many comparisons a given gene is found differentially expressed (occurences) or we can analyze the fold changes calculating for each gene their mean, standard deviation and median log2 fold change across the different comparisons. We also computed an original statistics that we called \"pseudo t-score\" corresponding to the ratio of the mean log2FC over the standard deviation of the log2FCs divided by the square root of the number of comparisons. This statistics will therefore be negative for overall downregulated genes and positive for overall upregulated genes and its absolute value will be higher for those genes with high and consistent changes in several comparisons, and lower for inconsistent and variable fold changes (e.g. upregulated in some datasets and downregulated in others) that are found only in a few comparisons. \n"
+      },
+      "source": "https://raw.githubusercontent.com/Ilarius/metaDEA/master/README.Rmd",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9665341117208562,
+      "result": {
+        "original_header": "Co-differential expression analysis",
+        "type": "Text_excerpt",
+        "value": "One of the advantages of our approach is that it allows to detect genes that are consistently differentially (co-DE genes) expressed together. By analysing our Down syndrome transcriptomic dataset we found that co-DE genes tend to: (1) be involved in the same gene or (2) disease ontology or in (3) physical and functional interactions reported in STRINGdb or (4) in the same genomic region. Co-differential expression analysis has not to be confused with co-expression analysis. Co-expression between two genes means that gene levels across sample correlate, while in our case it means that the two genes are both differentially expressed in different comparisons. Coming back to our example with DYRK1A by using the `find_coDE` function we found that this gene was found co-DE with 2798 other genes. The most frequent co-DE interactions occurred with five genes that were found co-DE together with DYRK1A in 4 comparisons: CSF2RB (ENSG00000100368), PFKL (ENSG00000141959), USP16 (ENSG00000156256), PAXBP1 (ENSG00000159086), and BRWD1 (ENSG00000185658). Notably, PFKL, USP16, PAXBP1, and BRWD1 are all HSA21 genes.\n``` r\n#find co-DE genes for the DYRK1A gene (ensemblID=\"ENSG00000157540\")\ncode_dyrk1a=find_coDE(gene=\"ENSG00000157540\",dataset=list_array.05_fc1.5_max500)\n#> calculating combinations...\n#> creating gene co-DE matrix...\ndim(code_dyrk1a)\n#> [1] 2789    4\n```\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/Ilarius/metaDEA/master/README.Rmd",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9754391456679414,
+      "result": {
+        "original_header": "Plotting a network of co-DE genes",
+        "type": "Text_excerpt",
+        "value": "Let's move forward and find the network of co-DE interactions among the top 50 genes whose statistics we previously retrieved in this vignette. You can whether pass to the function the whole dataset with the option `top=50` or pass the previously computed dataframes: one with the statistics and one with the co-differential expression results. We already computed the statistics for the most frequent 50 genes. We then pass these genes as input to the `find_coDE` function to create our co-DE dataframe. When `find_coDE` receives a vector of genes instead of a single gene it only retrieves co-DE interactions between the genes given as input. Thereafter, we pass both the dataframe with statistics and the one with co-DE interactions to the `plot_gene_coDE_network`. This plot a graph where each node is a gene whose size is proportional to the number of occurrences, and each edge is a co-DE interaction with thickness proportional to the number of comparisons in which a given interaction was found. \nAs you can see only one gene is downregulated, corresponding to intergrin beta 8 which is crucial for neurogenesis and neurovascular homeostasis regulation may affect Down syndrome neuropathology. \nIf you wants to know more about the Down syndrome dataset used in this vignette please visit this web application: \n"
+      },
+      "source": "https://raw.githubusercontent.com/Ilarius/metaDEA/master/README.Rmd",
+      "technique": "supervised_classification"
+    }
+  ],
+  "download_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/Ilarius/metaDEA/releases"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 0
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/Ilarius/metaDEA/forks"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "Ilarius/metaDEA"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_title": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "metaDEA"
+      },
+      "source": "https://raw.githubusercontent.com/Ilarius/metaDEA/master/README.Rmd",
+      "technique": "regular_expression"
+    }
+  ],
+  "images": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/Ilarius/metaDEA/master/man/figures/README-plotting-1.png"
+      },
+      "source": "https://raw.githubusercontent.com/Ilarius/metaDEA/master/README.Rmd",
+      "technique": "regular_expression"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/Ilarius/metaDEA/master/man/figures/README-plotting2-1.png"
+      },
+      "source": "https://raw.githubusercontent.com/Ilarius/metaDEA/master/README.Rmd",
+      "technique": "regular_expression"
+    }
+  ],
+  "installation": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Installation",
+        "parent_header": [
+          "metaDEA"
+        ],
+        "type": "Text_excerpt",
+        "value": "metaDEA can be installed from `github`. You need to have the `devtools` package installed. Also you will need the `igraph` package and the `plot3D` package as depenencies for the plotting function.\n\n``` r\n\nif (\"devtools\" %in% installed.packages()){\n  library(devtools)\n} else {\n  install.packages(\"devtools\")\n  library(devtools)\n  }\n#> Loading required package: usethis\n\n\nif (\"metaDEA\" %in% installed.packages()){\n   library(metaDEA)\n} else{\n    install_github(\"Ilarius/metaDEA\")\n    library(metaDEA)\n  }\n```\n"
+      },
+      "source": "https://raw.githubusercontent.com/Ilarius/metaDEA/master/README.Rmd",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 0.9389731958891034,
+      "result": {
+        "original_header": "Plotting a network of co-DE genes",
+        "type": "Text_excerpt",
+        "value": "<https://ilariodetoma.shinyapps.io/shiny_meta-analysis/>\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/Ilarius/metaDEA/master/README.Rmd",
+      "technique": "supervised_classification"
+    }
+  ],
+  "issue_tracker": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/Ilarius/metaDEA/issues"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "keywords": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": ""
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "metaDEA"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "owner": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "User",
+        "value": "Ilarius"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "programming_languages": [
+    {
+      "confidence": 1,
+      "result": {
+        "name": "R",
+        "size": 27770,
+        "type": "Programming_language",
+        "value": "R"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "readme_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/Ilarius/metaDEA/master/README.Rmd"
+      },
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/Ilarius/metaDEA/master/README.md"
+      },
+      "technique": "file_exploration"
+    }
+  ],
+  "somef_missing_categories": [
+    "citation",
+    "acknowledgement",
+    "run",
+    "download",
+    "requirements",
+    "contact",
+    "contributors",
+    "documentation",
+    "license",
+    "usage",
+    "faq",
+    "support",
+    "identifier",
+    "has_build_file",
+    "executable_example"
+  ],
+  "somef_provenance": {
+    "date": "2024-10-06 03:37:35",
+    "somef_schema_version": "1.0.0",
+    "somef_version": "0.9.5"
+  },
+  "stargazers_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 1
+      },
+      "technique": "GitHub_API"
+    }
+  ]
+}

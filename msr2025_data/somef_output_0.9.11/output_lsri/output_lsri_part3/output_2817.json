@@ -1,0 +1,533 @@
+{
+  "citation": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "References",
+        "parent_header": [
+          "ViralLink"
+        ],
+        "type": "Text_excerpt",
+        "value": "[*Gordon et al.*](https://www.nature.com/articles/s41586-020-2286-9):\n\n> Gordon DE., Jang GM., Bouhaddou M., *et al.*. (2020). A SARS-CoV-2 protein interaction map reveals targets for drug repurposing, *Nature*, https://doi.org/10.1038/s41586-020-2286-9.\n\n[*Castresana-Aguirre and Sonnhammer*](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC7423893/):\n\n> Castresana-Aguirre M. and Sonnhammer ELL. (2020). Pathway-specific model estimation for improved pathway annotation by network crosstalk, *Scientific Reports*, https://doi.org/10.1038/s41598-020-70239-z.\n\n"
+      },
+      "source": "https://raw.githubusercontent.com/korcsmarosgroup/ViralLink/master/README.md",
+      "technique": "header_analysis"
+    }
+  ],
+  "code_repository": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/korcsmarosgroup/ViralLink"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_created": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2020-06-08T13:43:12Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_updated": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2023-04-27T02:12:05Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "description": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "ViralLink is a systems biology workflow which reconstructs and analyses networks representing the effect of viral infection on specific human cell types."
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 0.9542715172743064,
+      "result": {
+        "original_header": "Overview",
+        "type": "Text_excerpt",
+        "value": "ViralLink is a systems biology workflow which reconstructs and analyses networks representing the effect of viral infection on specific human cell types. \nThese networks trace the flow of signal from intracellular viral proteins through their human binding proteins and downstream signalling pathways, ending with transcription factors regulating genes differentially expressed upon viral exposure. In this way, the workflow provides a mechanistic insight from previously identified knowledge of virally infected cells. By default, the workflow is set up to analyse the intracellular effects of SARS-CoV-2, requiring only transcriptomics counts data as input from the user: thus encouraging and enabling rapid multidisciplinary research. However, the wide ranging applicability and modularity of the workflow facilitates customisation of viral context, *a priori* interactions and analysis methods. \nViralLink is currently available as a series of R and Python scripts which can be run through two different methods:<br>\nWith docker: the whole pipeline and/or the separate stages can be run from within a docker container which negates the need for local Python and R installations making the pipeline easily accessible (recommended).<br>\nWithout docker: the whole pipeline (via a Python wrapper script) and/or the separate scripts can be run locally using local installations of Python and R with associated packages. \n\nMore detailed information about ViralLink is available in the following paper: \n"
+      },
+      "source": "https://raw.githubusercontent.com/korcsmarosgroup/ViralLink/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9376067390637193,
+      "result": {
+        "original_header": "Inputs to ViralLink",
+        "type": "Text_excerpt",
+        "value": "When running the whole workflow (not using the scripts seperately), all input files and parameters should be specified by editing the *parameters.yml* file using a text editor. For description of these parameters, see the *parameters_description.tsv* file. Both files are located in the folder *deploy/pipeline/*.\n> NB.\n> * Do not edit the parameter names in the *parameters.yml* file.\n> * File paths can be relative and slashes are not required at the beginning and end of the paths.\n> * The whole workflow wrapper will run all scripts in step 1 -> step 6 inclusive. The only script not run is step 7, as it requires interpretation of the results for the purpose of selecting functions of interest to visualise.\n> The below changes must be made before starting the docker container \nTo run ViralLink on your own transcriptomics data there are two required input files: a normalised counts table and a metadata table. However it is also possible (although more complicated) to run the workflow using instead a normalised counts table (of only test conditions), a metadata file, a table of prefiltered differentially expressed genes and a table of unfiltered differentially expressed genes. To use the later set of input files see the section *How to skip differential expression step*. \n**The input files for ViralLink are as follows:** \n1. An unnormalised counts table from a human transcriptomics study. Genes (using gene symbols or UniProt protein IDs) as rows and samples as columns.  (REQUIRED FROM USER) \n3. Viral - human protein-protein interaction table\n  - Interactions for SARS-CoV-2 from [*Gordon et al.*](https://www.nature.com/articles/s41586-020-2286-9) provided: *input_files/sarscov2-human_ppis_gordon_april2020.txt*\n  - Tab-delimited with one line per interaction\n  - 2 columns named *viral_protein* and *human_protein*\n  - An optional 3rd column named *sign* can contain either *+* or *-* to indicate an activator or an inhibitory interaction (respectively). If this column is not provided, all interactions are assumed to be inhibitory.\n  - Human proteins in UniProt format\n \n4. Gene symbol annotations for all input viral proteins, for ease of data interpretation.\n  - Annotations for the Gordon *et al.* SARS-CoV-2 proteins provided: *input_files/sarscov2_protein_annotations.txt*\n  - Tab-delimited with one line per protein\n  - At least 2 columns named *Accession* and *gene_symbol* \n5. Reactome annotations for human Ensembl IDs created specifically for ANUBIX network aware pathway analysis tool\n  - Required for network aware pathway analysis using ANUBIX ([*Castresana-Aguirre and Sonnhammer*](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC7423893/))\n  - Obtained from *https://bitbucket.org/sonnhammergroup/anubix/src/master/anubix_benchmark/* on 05-11-2020 and saved as *input_files/anubix_reactome_pathways.txt*\n  - Tab delimited text file with Ensembl gene IDs in column 1 and pathway annotations in column 2.\n  \n6. Reactome annotations for all human UniProt IDs\n  - Only required for the *filter_networks_by_functions.R* script (which is not part of the Python wrapper)\n  - Provided based on data downloaded from Reactome on 30/04/2020: *input_files/reactome_annotations_uniprot_300420.txt*\n  - Tab-delimited text file with 2 columns: uniprot id column \"gene\" and a column of Reactome pathway names separated by \";\", named \"reactome\"\n \n**Additional required parameters:** \n1. Log2 fold change cut off\n  - Genes must have log2 fold change more than or equal the modulus of this value to be differentially expressed\n \n2. Adjusted p value cut off\n  - Genes must have adjusted p value (from differential expression analysis) less than than or equal to this value to be differentially expressed\n \n3. Type of ID in the input expression data\n  -  Must be *symbol* (for gene symbols) or *uniprot* (for Uniprot IDs)\n   \n"
+      },
+      "source": "https://raw.githubusercontent.com/korcsmarosgroup/ViralLink/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9296836459496363,
+      "result": {
+        "original_header": "How to skip the differential expression step",
+        "type": "Text_excerpt",
+        "value": "\nTo run ViralLink on your own transcriptomics data there are two required input files: a normalised counts table and a metadata table. However it is also possible (although more complicated) to run the workflow using instead a normalised counts table (of only test conditions), a metadata file, a table of prefiltered differentially expressed genes and a table of unfiltered differentially expressed genes. In order to do this th workflow must skip the differential expression step. Please follow these instructions: \n1. Create a blank text file and save as *deploy/pipeline/virallink.out*. \n2. Format your normalised counts table and save in \"deploy/pipeline/output_directory/1_process_expression_data/counts_filename.txt\" (where *output_directory* is specified in the *paramters.yml* file).\n  - Genes are rows and samples are columns\n  - Tab-delimited file\n  - First column should contain gene names/ids and all other columns are counts values for test samples (as expressed genes are calculated only on test samples).   - The first row should contain a header. \n  \n3. Format your filtered and unfiltered differential expression tables and save as *deploy/pipeline/output_directory/1_process_expression_data/\nunfiltered_degs_filename.csv* and *deploy/pipeline/output_directory/1_process_expression_data/filtered_degs_filename.csv* (where *output_directory* is specified in the *paramters.yml* file).\n  - The first column contains gene names/ids with header *Gene*.\n  - Additionally columns with header *padj* and *log2FoldChange* must exist in the datasets. \n  - The files must be saved in csv format\n  \n3. Edit the *deploy/pipeline/virallink.py* file to specify the filepaths of the files from steps 2 and 3. To do this:\n  - Replace *1_process_expression_data/counts_normalised_deseq2.txt* with *1_process_expression_data/counts_filename.txt*\n  - Replace *\"1_process_expression_data/deseq2_res_condition_test_vs_control_filtered.csv* with *1_process_expression_data/filtered_degs_filename.csv* (there are multiple instances that need to be changed)\n  - Replace *1_process_expression_data/deseq2_res_condition_test_vs_control.csv* with *1_process_expression_data/unfiltered_degs_filename.csv* \n"
+      },
+      "source": "https://raw.githubusercontent.com/korcsmarosgroup/ViralLink/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.941594556306146,
+      "result": {
+        "original_header": "Outputs of ViralLink",
+        "type": "Text_excerpt",
+        "value": "ViralLink outputs a number of different files. The most important are the final network and analysis results files:\n1. **The reconstructed intracellular network:**\n  - In edge table text format: *4_create_network/final_network.txt*\n  - In Cytoscape format: *5_betweenness_and_cluster_analysis/causal_network.cys*\n \n2. **Node annotations for each gene/protein in the network:**\n  - Without betweenness centrality measures and cluster annotations: *4_create_network/node_table.txt*\n  - With betweenness centrality measures and cluster annotations: *5_betweenness_and_cluster_analysis/node_table_betweenness_cluster.txt*\n \n3. **Overrepresented functions/pathways:**\n  - All related files output to the folder: *6_functional_analysis/* \n"
+      },
+      "source": "https://raw.githubusercontent.com/korcsmarosgroup/ViralLink/master/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "download_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/korcsmarosgroup/ViralLink/releases"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 0
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/korcsmarosgroup/ViralLink/forks"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "korcsmarosgroup/ViralLink"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_title": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "ViralLink"
+      },
+      "source": "https://raw.githubusercontent.com/korcsmarosgroup/ViralLink/master/README.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "has_build_file": [
+    {
+      "confidence": 1,
+      "result": {
+        "format": "dockerfile",
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/korcsmarosgroup/ViralLink/master/deploy/Dockerfile"
+      },
+      "source": "https://raw.githubusercontent.com/korcsmarosgroup/ViralLink/master/deploy/Dockerfile",
+      "technique": "file_exploration"
+    }
+  ],
+  "has_script_file": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/korcsmarosgroup/ViralLink/master/virallink.sh"
+      },
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/korcsmarosgroup/ViralLink/master/deploy/entry_point.sh"
+      },
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/korcsmarosgroup/ViralLink/master/deploy/install_base_layer.sh"
+      },
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/korcsmarosgroup/ViralLink/master/deploy/install_python.sh"
+      },
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/korcsmarosgroup/ViralLink/master/deploy/install_r.sh"
+      },
+      "technique": "file_exploration"
+    }
+  ],
+  "images": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/korcsmarosgroup/ViralLink/master/virallink_overview.png"
+      },
+      "source": "https://raw.githubusercontent.com/korcsmarosgroup/ViralLink/master/README.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "installation": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Windows-specific set up",
+        "parent_header": [
+          "ViralLink",
+          "Getting Started",
+          "Dockerised pipeline"
+        ],
+        "type": "Text_excerpt",
+        "value": "1.  Running the dockerised pipeline on Windows requires Docker to be installed. Running Docker requires enabling of Hyper-V in BIOS which is only available for Windows 10 Pro, Enterprise, and Education (*https://docs.microsoft.com/en-us/virtualization/hyper-v-on-windows/quick-start/enable-hyper-v*).\n\n2. WSL2 should be installed and set as default (*https://docs.microsoft.com/en-us/windows/wsl/install-win10*). N.B. for step 6 in this webpage we succeessfully tested with Ubuntu 20.04 LTS.\n\n3.  In the Docker settings select \"WSL2 based engine\".\n\n4. Download the ViralLink repository using the _Clone or download_ button on the Github web page or by typing the following into the Command Prompt (if you have *git* installed):\n\n```\ncd folder/to/clone-into/\ngit clone git@github.com:korcsmarosgroup/ViralLink.git\n```\n\n4. Open the Command Prompt and convert all \".sh\" files within the ViralLink folder to 'unix' format (they are automatically converted to dos when downloaded). You may need to install *dos2unix* in order to so this (*http://gnuwin32.sourceforge.net/packages/cygutils.htm*).\n\n```\ncd /path/to/ViraLink/deploy\ndos2unix entry_point.sh\ndos2unix install_base_layer.sh\ndos2unix install_python.sh\ndos2unix install_r.sh\ncd ../\ndos2unix virallink.sh\n```\n\n5. From here you should be able to continue with the instructions within the *Running dockerised ViralLink* section below. Use the Windows terminal command prompt as your terminal.\n"
+      },
+      "source": "https://raw.githubusercontent.com/korcsmarosgroup/ViralLink/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 0.8728528163521163,
+      "result": {
+        "original_header": "Overview",
+        "type": "Text_excerpt",
+        "value": "ViralLink is currently available as a series of R and Python scripts which can be run through two different methods:<br>\nWith docker: the whole pipeline and/or the separate stages can be run from within a docker container which negates the need for local Python and R installations making the pipeline easily accessible (recommended).<br>\nWithout docker: the whole pipeline (via a Python wrapper script) and/or the separate scripts can be run locally using local installations of Python and R with associated packages. \n"
+      },
+      "source": "https://raw.githubusercontent.com/korcsmarosgroup/ViralLink/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.8640606672579167,
+      "result": {
+        "original_header": "Inputs to ViralLink",
+        "type": "Text_excerpt",
+        "value": "If the user would like to run the scripts separately from the whole workflow wrapper, each script should be run from the command line, specifying the required input parameters. The parameters for each script can be found in the *deploy/pipeline/scripts/parameters_all.tsv* file and in the script *readme.md* files. \n"
+      },
+      "source": "https://raw.githubusercontent.com/korcsmarosgroup/ViralLink/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9784830937376833,
+      "result": {
+        "original_header": "How to skip the differential expression step",
+        "type": "Text_excerpt",
+        "value": "> if os.path.isfile(\"virallink.out\"):\n>       os.remove(\"virallink.out\") \n"
+      },
+      "source": "https://raw.githubusercontent.com/korcsmarosgroup/ViralLink/master/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "invocation": [
+    {
+      "confidence": 0.8190280761749505,
+      "result": {
+        "original_header": "Inputs to ViralLink",
+        "type": "Text_excerpt",
+        "value": "\n|   sample_name    |   condition  |\n| ------------- | ------------- |\n|   sample1    |   test   |\n|   sample2    |   test   |\n|   sample3    |   control    | \n"
+      },
+      "source": "https://raw.githubusercontent.com/korcsmarosgroup/ViralLink/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.8551263665349741,
+      "result": {
+        "original_header": "How to skip the differential expression step",
+        "type": "Text_excerpt",
+        "value": "2. Format your normalised counts table and save in \"deploy/pipeline/output_directory/1_process_expression_data/counts_filename.txt\" (where *output_directory* is specified in the *paramters.yml* file).\n  - Genes are rows and samples are columns\n  - Tab-delimited file\n  - First column should contain gene names/ids and all other columns are counts values for test samples (as expressed genes are calculated only on test samples).   - The first row should contain a header. \n  \n3. Format your filtered and unfiltered differential expression tables and save as *deploy/pipeline/output_directory/1_process_expression_data/\nunfiltered_degs_filename.csv* and *deploy/pipeline/output_directory/1_process_expression_data/filtered_degs_filename.csv* (where *output_directory* is specified in the *paramters.yml* file).\n  - The first column contains gene names/ids with header *Gene*.\n  - Additionally columns with header *padj* and *log2FoldChange* must exist in the datasets. \n  - The files must be saved in csv format\n  \n3. Edit the *deploy/pipeline/virallink.py* file to specify the filepaths of the files from steps 2 and 3. To do this:\n  - Replace *1_process_expression_data/counts_normalised_deseq2.txt* with *1_process_expression_data/counts_filename.txt*\n  - Replace *\"1_process_expression_data/deseq2_res_condition_test_vs_control_filtered.csv* with *1_process_expression_data/filtered_degs_filename.csv* (there are multiple instances that need to be changed)\n  - Replace *1_process_expression_data/deseq2_res_condition_test_vs_control.csv* with *1_process_expression_data/unfiltered_degs_filename.csv* \n> \"1_process_expression_data\": [\"filter_expression_gaussian.py\"], \n"
+      },
+      "source": "https://raw.githubusercontent.com/korcsmarosgroup/ViralLink/master/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "issue_tracker": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/korcsmarosgroup/ViralLink/issues"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "keywords": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": ""
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "ViralLink"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "owner": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Organization",
+        "value": "korcsmarosgroup"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "programming_languages": [
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Python",
+        "size": 77198,
+        "type": "Programming_language",
+        "value": "Python"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "R",
+        "size": 74872,
+        "type": "Programming_language",
+        "value": "R"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Shell",
+        "size": 4519,
+        "type": "Programming_language",
+        "value": "Shell"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Dockerfile",
+        "size": 1388,
+        "type": "Programming_language",
+        "value": "Dockerfile"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "readme_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/korcsmarosgroup/ViralLink/master/README.md"
+      },
+      "technique": "file_exploration"
+    }
+  ],
+  "requirements": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Prerequisites",
+        "parent_header": [
+          "ViralLink",
+          "Getting Started",
+          "Non-dockerised pipeline"
+        ],
+        "type": "Text_excerpt",
+        "value": "ViralLink should run on any UNIX system, and has been tested on Linux and Mac OS. Windows compatibility is not supported at this time - (use the dockerised pipeline to run ViralLink on Windows).\n\n**R (\u2265 4.0.0)** and **Python 3** are required to run the workflow. Additionally, for clustering analysis and visualisation, **Cytoscape (\u2265 7.0.0)** is required (AND IT MUST BE OPEN LOCALLY when the scripts are run - or these functions will be skipped).\n\nFurthermore, the following packages are required:\n\n> NB. The R packages should be installed automatically as part of the workflow, but it is advisable to pre-install them if you can. The Python packages must be pre-installed.\n\n**R packages:**\n\n```\ntidyverse\norg.Hs.eg.db\nDESeq2\nOmnipathR (needs \"devtools\")\nRCy3 (\u2265 2.6.0)\nigraph\nreshape2\nnaniar\nclusterProfiler\nReactomePA\nANUBIX\n```\n\nTo install R packages, type the following into the terminal:\n\n```\nR\ninstall.packages(c(\"BiocManager\",\"tidyverse\",\"devtools\", \"igraph\",\"reshape2\",\"naniar\"))\nrequire(devtools)\ninstall_github('saezlab/OmnipathR')\ninstall_bitbucket(\"sonnhammergroup/anubix\")\nBiocManager::install(\"RCy3\",\"DESeq2\",\"clusterProfiler\",\"ReactomePA\",\"org.Hs.eg.db\")\nquit()\n```\n\n**Python3 packages:**\n\n```\nscipy (\u2265 0.12.0)\nnumpy (\u2265 1.7)\nnetworkx\ndistributions\n```\nTo install Python3 packages, type the following into the terminal:\n\n```\npip install numpy networkx scipy distributions\n```\n"
+      },
+      "source": "https://raw.githubusercontent.com/korcsmarosgroup/ViralLink/master/README.md",
+      "technique": "header_analysis"
+    }
+  ],
+  "run": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Running dockerised ViralLink",
+        "parent_header": [
+          "ViralLink",
+          "Getting Started",
+          "Dockerised pipeline"
+        ],
+        "type": "Text_excerpt",
+        "value": "To use the dockerised ViralLink, download the ViralLink repository using the _Clone or download_ button on the Github web page or by typing the following into a terminal window (of course, if you already did this during the Windows instructions then skip it):\n\n```\ncd folder/to/clone-into/\ngit clone git@github.com:korcsmarosgroup/ViralLink.git\n```\nOnce the GitHub repository is successfully downloaded, then you need do the following within the command line terminal:\nGo to the folder, where you downloaded the pipeline:\n```\ncd folder/to/clone-into/ViralLink\n```\nNB. if you plan to provide your own input files please refer to the *Inputs to ViralLink section* to specify the input files before you run the pipeline. Otherwise the pipeline will run with the provided default input files. Do this before you build the docker image.\n\nType the following command into the terminal: this builds a docker image, starts a docker container and steps into this container (it will take time):\n```\nbash virallink.sh\n```\nIf the above command successfully finished, you should see something like this:\n```\nroot@3c172830ba15:/home/virallink#\n```\nAfter you got this prompt in your terminal, you can run the whole pipeline with the following command:\n```\npython3 virallink.py\n```\n\nThe speed of the whole pipeline run is roughly between 2 - 2 \u00bd hours, but this will depend on the hardware which it is being run on.\n\nIf you want to run any steps separately from the others, you need to navigate into the scripts folder after you got your prompt inside the docker container: ```root@3c172830ba15:/home/virallink#```. Every step has its own readme file, which contains the information on how you can run the given step only. For example:\n```\ncd scripts/1_process_expression_data/\n```\n"
+      },
+      "source": "https://raw.githubusercontent.com/korcsmarosgroup/ViralLink/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Running non-dockerised ViralLink",
+        "parent_header": [
+          "ViralLink",
+          "Getting Started",
+          "Non-dockerised pipeline"
+        ],
+        "type": "Text_excerpt",
+        "value": "To use ViralLink, download the ViralLink repository using the _Clone or download_ button on the Github web page or by typing the following into a terminal window:\n\n```\ncd folder/to/clone-into/\ngit clone https://github.com/korcsmarosgroup/ViralLink\n```\n\nMake sure to navigate to the repository main directory before running the script. Do not change the folder structure or file names.\n\n> NB. Ensure the *parameters.yml* file have been edited prior to running the script (unless you're running the example input data).<br>\n> And do not forget to open Cytoscape locally!\n>\n```\n*Open Cytoscape locally*\ncd folder/to/clone-into/ViralLink/deploy/pipeline\npython3 virallink.py\n```\n\nThe speed of the workflow will depend on the specification of the computer. The most intensive parts are the tiedie.py script in step 3 and the functional analysis of step 6. It is likely to take between 30 minutes and a 2 hours to complete everything.\n\nIf you want to run any steps separately from the others, you need to navigate into the scripts folders. Every step has its own readme file, which contains the information on how you can run the given step only. For example:\n```\ncd folder/to/clone-into/ViralLink/deploy/pipeline/scripts/1_process_expression_data/\n```\n\n#### Debugging\n\n* The wrapper outputs command line messages, warnings and errors to the file *virallink.out*. Open this in a text editor to try to identify issues with the workflow.\n\n* Make sure that the *virallink.py* script is being run in Python 3 and from the main directory of the ViralLink repository. Make sure none of the folders or files have been renamed or moved.\n\n* Ensure that the layout of the *parameters.yml* file and the parameter names have not been altered. Regarding the specified parameters, make sure that the file paths are reachable from the main directory of the ViralLink repository.\n\n* The wrapper should install all required R packages, but this isn't always possible and can therefore cause errors running the workflow. Python packages must be pre-installed. Try to install all required packages (see section above) prior to running the wrapper.\n\n* If you are missing *.cys* files or clustering results, make sure Cytoscape is open locally before running the workflow.\n\n----\n"
+      },
+      "source": "https://raw.githubusercontent.com/korcsmarosgroup/ViralLink/master/README.md",
+      "technique": "header_analysis"
+    }
+  ],
+  "somef_missing_categories": [
+    "acknowledgement",
+    "download",
+    "contact",
+    "contributors",
+    "documentation",
+    "license",
+    "faq",
+    "support",
+    "identifier",
+    "executable_example"
+  ],
+  "somef_provenance": {
+    "date": "2024-10-06 10:24:53",
+    "somef_schema_version": "1.0.0",
+    "somef_version": "0.9.5"
+  },
+  "stargazers_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 4
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "type": [
+    {
+      "confidence": 0.82,
+      "result": {
+        "type": "String",
+        "value": "commandline-application"
+      },
+      "technique": "software_type_heuristics"
+    }
+  ],
+  "usage": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Getting Started",
+        "parent_header": [
+          "ViralLink"
+        ],
+        "type": "Text_excerpt",
+        "value": "You can run the pipeline with or without a dockerisation. In both of the options, you can run the whole pipeline at once or you can run the different steps separately from each other. The dockerised and non dockerised versions have been successfully tested on OSX and Linux. The dockerised version has also been successfully tested on Windows 10, although a few extra steps are required. <br><br>\nNOTE: The whole pipeline (with the example input data) needs around 6 GB of memory! But the memory allocation will vary on the input dataset. For example if you try to use it on a bigger dataset then they may require more memory! You can change the memory available to Docker in the Docker application settings.\n"
+      },
+      "source": "https://raw.githubusercontent.com/korcsmarosgroup/ViralLink/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Dockerised pipeline",
+        "parent_header": [
+          "ViralLink",
+          "Getting Started"
+        ],
+        "type": "Text_excerpt",
+        "value": "The dockerised pipeline requires only a few commands to run the whole analysis. Here you need to have Docker installed and open on your computer (docker version >=3). This is easily downloadable from the Docker website (www.docker.com). Also remember to edit the memory settings to give Docker at least 6 GB of memory. If you are running the dockerised pipeline on Windows please refer to the *Windows-specific set up* section for additional set up requirements. If running on OSX or Linux please skip the *Windows-specific set up* section.\n"
+      },
+      "source": "https://raw.githubusercontent.com/korcsmarosgroup/ViralLink/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Save files from the docker container to your computer",
+        "parent_header": [
+          "ViralLink",
+          "Getting Started",
+          "Dockerised pipeline"
+        ],
+        "type": "Text_excerpt",
+        "value": "* If you are done with your pipeline run and you would like to save out the results from the docker container to your computer, you can do that with the following commands.\n* First of all, do not close the docker container! Then, open a new terminal tab and run the following command to save the results in your computer:\n```\ndocker cp virallink:/home/virallink/output_directory /path/on/your/computer/\ndocker cp virallink:/home/virallink/virallink.out /path/on/your/computer/\n```\n"
+      },
+      "source": "https://raw.githubusercontent.com/korcsmarosgroup/ViralLink/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Debugging",
+        "parent_header": [
+          "ViralLink",
+          "Getting Started",
+          "Non-dockerised pipeline"
+        ],
+        "type": "Text_excerpt",
+        "value": "* Upon running \u2018bash virallink.sh\u2019 an error such as the following means that docker is not installed or running on your computer:\n```\nvirallink.sh: line 4: docker: command not found\n```\n\n* Upon running \u2018bash virallink.sh\u2019 an error such as the following means that the specified port is reserved. \n```\ndocker: Error response from daemon: Ports are not available: listen tcp 0.0.0.0:5900: bind: address already in use.\n```\nYou should be able to get around this problem by opening the _virallink.sh file in a text editor and deleting the line where the reserved port is mentioned:\n```\n-p 5900:5900 \\\n```\n"
+      },
+      "source": "https://raw.githubusercontent.com/korcsmarosgroup/ViralLink/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Non-dockerised pipeline",
+        "parent_header": [
+          "ViralLink",
+          "Getting Started"
+        ],
+        "type": "Text_excerpt",
+        "value": "The pipeline can also be run using local installations of Python and R (with associated packages, see below for details), without the need for Docker.\n"
+      },
+      "source": "https://raw.githubusercontent.com/korcsmarosgroup/ViralLink/master/README.md",
+      "technique": "header_analysis"
+    }
+  ]
+}

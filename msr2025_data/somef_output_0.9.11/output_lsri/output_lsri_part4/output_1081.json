@@ -1,0 +1,578 @@
+{
+  "application_domain": [
+    {
+      "confidence": 0.8487306687286178,
+      "result": {
+        "type": "String",
+        "value": "Semantic web"
+      },
+      "technique": "supervised_classification"
+    }
+  ],
+  "code_repository": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/cchauve/HyAsP"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_created": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2018-11-30T13:34:59Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_updated": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2022-12-04T05:21:47Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "description": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "Hybrid Assembler for Plasmids"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 0.9978833836751184,
+      "result": {
+        "original_header": "HyAsP",
+        "type": "Text_excerpt",
+        "value": "**HyAsP** (Hybrid Assember for Plasmids) is a tool for the extracting plasmids from WGS assemblies in an automatic way.\nIt combines ideas from both reference-based and depth-based methods to identify plasmids in a greedy algorithm, \nusing information on the occurrences of known plasmid genes and considering characteristics of the contigs such as read depth and GC content. \n"
+      },
+      "source": "https://raw.githubusercontent.com/cchauve/HyAsP/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9775116200854039,
+      "result": {
+        "original_header": "Overview",
+        "type": "Text_excerpt",
+        "value": "Directory `HyAsp/` contains the source code of **HyAsP**, which can be installed as a package through `setup.py` (see below).\nDirectory `databases/` provides exemplary files that can be used to construct a gene database for **HyAsP**, \nwhile `results/` contains the results of a comparison of **HyAsP** with plasmidSPAdes, MOB-recon and Recycler.  \n"
+      },
+      "source": "https://raw.githubusercontent.com/cchauve/HyAsP/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9520697440298074,
+      "result": {
+        "original_header": "Outputs",
+        "type": "Text_excerpt",
+        "value": "**Contig chains**  \nLists contigs and their orientation as they appear in the linear contig chain of all plasmids (both putative and questionable).\nOnly for `fanout = 1`.    \n*File name:* `contig_chains.csv`    \n*Format:* `<plasmid id>;<comma-separated list of contigs with orientation>`    \n*Example:* plasmid_0;23+,25-,10+     \n**Plasmids**    \nStores the plasmid sequences (concatenations of the (orientated) contigs) in FASTA format. \nThe plasmid identifier is also used as the identifier of the FASTA entry. \nThe additional information on each plasmid are provided in the deflines (e.g. seed_contig and gene_density.\nOnly for `fanout = 1`.        \n*File names:* `putative_plasmids.fasta`, `questionable_plasmids.fasta`    \n*Format:* FASTA with additional information in defline (as tab-separated list of `<property>=<value>` pairs) \n**Contig collections**    \nLists name and orientation of all contigs for each putative resp. questionable plasmid.\nOnly for `fanout > 1`.    \n*File names:* `putative_plasmid_contigs_list.csv`, `questionable_plasmid_contigs_list.csv`     \n*Format:* `<plasmid id>;<comma-separated list of contigs with orientation>`    \n*Example:* `plasmid_0;23+,25-,10+` \n**Contigs**    \nStores the contigs underlying plasmids in FASTA format. \nIf a contig is used in negative orientation, the reverse complement of its sequence is stored in the output file.\nThe identifier of a FASTA entry consists of the contig name and the contig identifier (separated by the `|`-symbol).    \n*File names:* `putative_plasmid_contigs.fasta`, `questionable_plasmid_contigs.fasta`        \n*Format:* FASTA     \n**Tagged assembly graph**    \nStores a copy of the input assembly graph and adds colour and label information to contigs used in putative and questionable plasmids.\nContigs occurring in at least one putative plasmids are blue, while those occurring one or more questionable plasmids \n(but no putative plasmid) are light blue.\nEach contig is labelled with the identifiers of the plasmids it occurs in and seed contigs also contain a `*` in their label.    \n*File name:* `tagged_assembly.gfa`    \n*Format:* GFA with additional (optional) tags for contigs \n\n**Plasmid bins**    \nLists the plasmid identifiers (of putative plasmids resp. all plasmids) grouped into the different bins.\nOnly for `binning != NaN`.    \n*File names:* `plasmid_bins_putative.csv`, `plasmid_bins_all.csv`    \n*Format:* `<comma-separated list of plasmid identifiers>`    \n*Example:* `plasmid_0,plasmid_10,plasmid_3`     \n"
+      },
+      "source": "https://raw.githubusercontent.com/cchauve/HyAsP/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9298485257203399,
+      "result": {
+        "original_header": "Pipeline from FASTQ reads to plasmids",
+        "type": "Text_excerpt",
+        "value": "The pipeline takes FASTQ reads and a collection of (plasmid) genes as input. \nThe reads are preprocessed (sickle, Trim Galore) and assembled (Unicycler).\nThe preprocessing and an analysis of the read data (FastQC) are optional.\nSubsequently, the genes are mapped to the assembly contigs using BLAST (blastn / megablast) \nand plasmids are predicted in the assembly graph using **HyAsP**. \n\nPaired short-read data can be used by using the `-1` and `-2` options, e.g.\n```\nhyasp_pipeline output_dir genes.fasta -1 first_reads.fastq -2 second_reads.fastq \n``` \nLong reads can be added (to unpaired and / or paired short-read data) through the `-l` option, e.g.\n```\nhyasp_pipeline output_dir genes.fasta -s short_reads.fastq -l long_reads.fastq\n``` \nThe gene-contig mapping obtained from BLAST is filtered before the greedy algorithm is used.\nThe filtering can be influenced by changing the length and / or identity threshold, e.g.\n```\nhyasp_pipeline output_dir genes.fasta -s reads.fastq --identity_threshold 0.9 --length_threshold 0.92\n```\nThe default value for both is 0.95. \nIn addition, the options of the greedy algorithm can be given to `hyasp_pipeline`. \n`hyasp_pipeline -h` provides a list of the possible options. \nThe final output of the pipeline corresponds to the output of **HyAsP** described above and is stored in the `plasmids/` subdirectory of the output directory. \nThe results of the preprocessing and assembly step are found in the `data/` and `assembly/` subdirectory of the output directory, respectively. \n"
+      },
+      "source": "https://raw.githubusercontent.com/cchauve/HyAsP/master/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "documentation": [
+    {
+      "confidence": 1,
+      "result": {
+        "format": "wiki",
+        "type": "Url",
+        "value": "https://github.com/broadinstitute/pilon/wiki"
+      },
+      "source": "https://raw.githubusercontent.com/cchauve/HyAsP/master/README.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "download_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/cchauve/HyAsP/releases"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "executable_example": [
+    {
+      "confidence": 1,
+      "result": {
+        "format": "jupyter_notebook",
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/cchauve/HyAsP/master/results/binning_scores_translocations.ipynb"
+      },
+      "source": "https://raw.githubusercontent.com/cchauve/HyAsP/master/results/binning_scores_translocations.ipynb",
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "format": "jupyter_notebook",
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/cchauve/HyAsP/master/results/parameter_variation.ipynb"
+      },
+      "source": "https://raw.githubusercontent.com/cchauve/HyAsP/master/results/parameter_variation.ipynb",
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "format": "jupyter_notebook",
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/cchauve/HyAsP/master/results/plasmid_chromosome_quast_alignments.ipynb"
+      },
+      "source": "https://raw.githubusercontent.com/cchauve/HyAsP/master/results/plasmid_chromosome_quast_alignments.ipynb",
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "format": "jupyter_notebook",
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/cchauve/HyAsP/master/results/evaluate_mob_filtered_refined.ipynb"
+      },
+      "source": "https://raw.githubusercontent.com/cchauve/HyAsP/master/results/evaluate_mob_filtered_refined.ipynb",
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "format": "jupyter_notebook",
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/cchauve/HyAsP/master/results/evaluate_ncbi_filtered_refined.ipynb"
+      },
+      "source": "https://raw.githubusercontent.com/cchauve/HyAsP/master/results/evaluate_ncbi_filtered_refined.ipynb",
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "format": "jupyter_notebook",
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/cchauve/HyAsP/master/results/score_alternatives.ipynb"
+      },
+      "source": "https://raw.githubusercontent.com/cchauve/HyAsP/master/results/score_alternatives.ipynb",
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "format": "jupyter_notebook",
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/cchauve/HyAsP/master/results/graph_vs_scores.ipynb"
+      },
+      "source": "https://raw.githubusercontent.com/cchauve/HyAsP/master/results/graph_vs_scores.ipynb",
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "format": "jupyter_notebook",
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/cchauve/HyAsP/master/results/num_plasmids_vs_score.ipynb"
+      },
+      "source": "https://raw.githubusercontent.com/cchauve/HyAsP/master/results/num_plasmids_vs_score.ipynb",
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "format": "jupyter_notebook",
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/cchauve/HyAsP/master/results/num_references_predictions.ipynb"
+      },
+      "source": "https://raw.githubusercontent.com/cchauve/HyAsP/master/results/num_references_predictions.ipynb",
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "format": "jupyter_notebook",
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/cchauve/HyAsP/master/results/reference_similarity.ipynb"
+      },
+      "source": "https://raw.githubusercontent.com/cchauve/HyAsP/master/results/reference_similarity.ipynb",
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "format": "jupyter_notebook",
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/cchauve/HyAsP/master/results/hyasp_quast_analysis_ncbi_filtered.ipynb"
+      },
+      "source": "https://raw.githubusercontent.com/cchauve/HyAsP/master/results/hyasp_quast_analysis_ncbi_filtered.ipynb",
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "format": "jupyter_notebook",
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/cchauve/HyAsP/master/results/recycler_quast_analysis.ipynb"
+      },
+      "source": "https://raw.githubusercontent.com/cchauve/HyAsP/master/results/recycler_quast_analysis.ipynb",
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "format": "jupyter_notebook",
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/cchauve/HyAsP/master/results/subsampling_analysis.ipynb"
+      },
+      "source": "https://raw.githubusercontent.com/cchauve/HyAsP/master/results/subsampling_analysis.ipynb",
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "format": "jupyter_notebook",
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/cchauve/HyAsP/master/results/hyasp_quast_analysis_mob_filtered.ipynb"
+      },
+      "source": "https://raw.githubusercontent.com/cchauve/HyAsP/master/results/hyasp_quast_analysis_mob_filtered.ipynb",
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "format": "jupyter_notebook",
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/cchauve/HyAsP/master/example/HyAsP_example_usage.ipynb"
+      },
+      "source": "https://raw.githubusercontent.com/cchauve/HyAsP/master/example/HyAsP_example_usage.ipynb",
+      "technique": "file_exploration"
+    }
+  ],
+  "forks_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 5
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/cchauve/HyAsP/forks"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "cchauve/HyAsP"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_title": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "HyAsP"
+      },
+      "source": "https://raw.githubusercontent.com/cchauve/HyAsP/master/README.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "installation": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Installation",
+        "parent_header": [
+          "HyAsP"
+        ],
+        "type": "Text_excerpt",
+        "value": "Get the source code from GitHub and, optionally, install **HyAsP** as a package:\n```\ngit clone https://github.com/cchauve/hyasp.git\ncd hyasp\npython setup.py sdist\npip install dist/HyAsP-1.0.0.tar.gz\n```\nInstalling **HyAsP** as a package makes `hyasp.py` and `fastq_to_plasmids.py` available as `hyasp` and `hyasp_pipeline`, respectively.\nWe strongly recommend installing **HyAsP** in a virtual environment which uses Python 3.\n\nSubsequently, a default gene database could be built as follows:\n```\ncd databases\nhyasp create ncbi_database_genes.fasta -p plasmids.csv -b ncbi_blacklist.txt -d -l 500 -m 100 -t GenBank -r 2015-12-19T00:00:00Z\n```\nSee `databases/README.md` for more information on this database and a download link.\nHowever, the gene database does not have to be created using the `create` command of **HyAsP** or with above parameters.\n\n\n"
+      },
+      "source": "https://raw.githubusercontent.com/cchauve/HyAsP/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Alternative: Singularity containers",
+        "parent_header": [
+          "HyAsP",
+          "Installation"
+        ],
+        "type": "Text_excerpt",
+        "value": "In order to simplify the installation of **HyAsP**, especially with respect to the dependencies of the pipeline, \nwe have packaged **HyAsP** (and the pipeline) also as application containers, using [Singularity](https://www.sylabs.io/) (version 3).\n\nWe provide two containers in `singularity/`: \n - `hyasp_only.img`: **HyAsP** (and its direct dependencies) but not the pipeline.\n - `hyasp_pipeline.img`: **HyAsP** and all the dependencies necessary to run the pipeline.\n\nThey can also be built from the provided definition files using the following commands (assuming root privileges and that Singularity is available through the command `singularity`):\n```\nsudo singularity build hyasp_pipeline.img hyasp_pipeline.def\nsudo singularity build hyasp_only.img hyasp_only.def\n```\n\nThe usage of **HyAsP** (explained below) is the same, regardless of using the tool directly or through the containers.\nThe commands remain the same, except that `hyasp` and `hyasp_pipeline` are replaced by `singularity run hyasp_only.img` and `singularity run hyasp_pipeline.img`, respectively:\n\n*HyAsP:*\n```\n# direct usage\nhyasp create genes.fasta -a accessions.txt\n# container\nsingularity run hyasp_only.img create genes.fasta -a accessions.txt`\n```\n\n*Pipeline:*\n```\n# direct usage\nhyasp_pipeline output_dir genes.fasta -s reads.fastq\n# pipeline   \nsingularity run hyasp_pipeline.img output_dir genes.fasta -s reads.fastq\n```\n\n\n"
+      },
+      "source": "https://raw.githubusercontent.com/cchauve/HyAsP/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 0.9026069973756637,
+      "result": {
+        "original_header": "Pipeline from FASTQ reads to plasmids",
+        "type": "Text_excerpt",
+        "value": "The pipeline can be used as a stand-alone script or imported as a module. \n"
+      },
+      "source": "https://raw.githubusercontent.com/cchauve/HyAsP/master/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "invocation": [
+    {
+      "confidence": 0.8112077809624114,
+      "result": {
+        "original_header": "Outputs",
+        "type": "Text_excerpt",
+        "value": "**Contig collections**    \nLists name and orientation of all contigs for each putative resp. questionable plasmid.\nOnly for `fanout > 1`.    \n*File names:* `putative_plasmid_contigs_list.csv`, `questionable_plasmid_contigs_list.csv`     \n*Format:* `<plasmid id>;<comma-separated list of contigs with orientation>`    \n*Example:* `plasmid_0;23+,25-,10+` \n\n**Plasmid bins**    \nLists the plasmid identifiers (of putative plasmids resp. all plasmids) grouped into the different bins.\nOnly for `binning != NaN`.    \n*File names:* `plasmid_bins_putative.csv`, `plasmid_bins_all.csv`    \n*Format:* `<comma-separated list of plasmid identifiers>`    \n*Example:* `plasmid_0,plasmid_10,plasmid_3`     \n"
+      },
+      "source": "https://raw.githubusercontent.com/cchauve/HyAsP/master/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "issue_tracker": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/cchauve/HyAsP/issues"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "keywords": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": ""
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "license": [
+    {
+      "confidence": 1,
+      "result": {
+        "name": "MIT License",
+        "spdx_id": "MIT",
+        "type": "License",
+        "url": "https://api.github.com/licenses/mit",
+        "value": "https://api.github.com/licenses/mit"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "File_dump",
+        "value": "The MIT License\n\nCopyright (c) 2018 Cedric Chauve\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in\nall copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN\nTHE SOFTWARE."
+      },
+      "source": "https://raw.githubusercontent.com/cchauve/HyAsP/master/LICENSE",
+      "technique": "file_exploration"
+    }
+  ],
+  "name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "HyAsP"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "owner": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "User",
+        "value": "cchauve"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "programming_languages": [
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Jupyter Notebook",
+        "size": 13973746,
+        "type": "Programming_language",
+        "value": "Jupyter Notebook"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Python",
+        "size": 206895,
+        "type": "Programming_language",
+        "value": "Python"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "readme_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/cchauve/HyAsP/master/README.md"
+      },
+      "technique": "file_exploration"
+    }
+  ],
+  "related_documentation": [
+    {
+      "confidence": 1,
+      "result": {
+        "format": "readthedocs",
+        "type": "Url",
+        "value": "https://cutadapt.readthedocs.io/"
+      },
+      "source": "https://raw.githubusercontent.com/cchauve/HyAsP/master/README.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "requirements": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Requirements",
+        "parent_header": [
+          "HyAsP"
+        ],
+        "type": "Text_excerpt",
+        "value": "**HyAsP** was developed and tested with the following software dependencies: \n  - [Python](https://www.python.org/downloads/) (`python`, version 3.5.4; *packages*: Bio, math, numpy, os, pandas, random, subprocess, sys)\n  - [BLAST+](https://blast.ncbi.nlm.nih.gov/Blast.cgi?CMD=Web&PAGE_TYPE=BlastDocs&DOC_TYPE=Download) (`makeblastdb` `tblastn` and `blastn`; version 2.6.0)\n  - standard UNIX tools (`mkdir`, `rm`, `cat`)\n  \nBLAST+ is only required for the `create` command.\n  \nIn order to use **HyAsP** as part of the provided pipeline starting from FASTQ reads, \nthe following requirements have to be satisfied in addition:\n  - [FastQC](https://www.bioinformatics.babraham.ac.uk/projects/fastqc/) (`fastqc`, version 0.11.5)\n  - [sickle](https://github.com/najoshi/sickle) (`sickle`, version 1.33)\n  - [cutadapt](https://cutadapt.readthedocs.io/en/stable/) (`cutadapt`, version 1.16)\n  - [Trim Galore](http://www.bioinformatics.babraham.ac.uk/projects/trim_galore/) (`trim_galore`, version 0.4.5_dev)\n  - [Unicycler](https://github.com/rrwick/Unicycler) (`unicycler`, version 0.4.5)\n    - [SPAdes](http://cab.spbu.ru/software/spades/) (`spades.py`, version 3.12.0)\n    - [Racon](https://github.com/isovic/racon) (`racon`, version 1.3.0)\n    - [Pilon](https://github.com/broadinstitute/pilon/wiki) (`pilon-1.22.jar`, version 1.22)\n    - [SAMtools](http://www.htslib.org/) (`samtools`, version 1.5)\n    - [Bowtie 2](http://bowtie-bio.sourceforge.net/bowtie2/index.shtml) (`bowtie2` and `bowtie2-build`; version 2.3.3.1)\n    - [Java](https://www.java.com/en/download/manual.jsp) (`java`, version 1.8.0_121)\n \nPython and the other tools have to be in the `PATH` or specified through their path options.\n\n\n"
+      },
+      "source": "https://raw.githubusercontent.com/cchauve/HyAsP/master/README.md",
+      "technique": "header_analysis"
+    }
+  ],
+  "somef_missing_categories": [
+    "citation",
+    "acknowledgement",
+    "run",
+    "download",
+    "contact",
+    "contributors",
+    "faq",
+    "support",
+    "identifier",
+    "has_build_file"
+  ],
+  "somef_provenance": {
+    "date": "2024-11-04 05:54:45",
+    "somef_schema_version": "1.0.0",
+    "somef_version": "0.9.5"
+  },
+  "stargazers_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 10
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "usage": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Usage",
+        "parent_header": [
+          "HyAsP",
+          "Pipeline from FASTQ reads to plasmids"
+        ],
+        "type": "Text_excerpt",
+        "value": "**HyAsP** provides the functions to find plasmids and create necessary inputs through different commands.\nBelow example show simple uses of the commands.\nSee section *Parameters* for lists of options to change the behaviour of each command.\n\nWe also provide a minimal working example in `example/`. \nThe notebook inside it guides the user through the different steps, either using **HyAsP** and the pipeline directly or using the Singularity containers.\n\n \n "
+      },
+      "source": "https://raw.githubusercontent.com/cchauve/HyAsP/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "1) Create a gene database from a collection of plasmids",
+        "parent_header": [
+          "HyAsP",
+          "Usage"
+        ],
+        "type": "Text_excerpt",
+        "value": "Command: `hyasp create`\n\nRequires a list of plasmids with annotated genes or a plasmid table obtained from [NCBI](https://www.ncbi.nlm.nih.gov/genome/browse#!/plasmids/) (with all columns).\n\n**Example:**\n```\nhyasp create genes.fasta -a accessions.txt\n```\nHere, the gene database (`genes.fasta`) is created by downloading the GenBank files of the plasmids given by accession number in `accessions.txt` (one per line)\nand extracting the genes from them.\n\n**Additional options:** \n```\n--from_accession, -a        Path to file containing one (plasmid) accession number per line OR list of accession numbers (see --from_command_line).\n                            (default: (empty string), i.e. not used)\n--from_genbank, -g          Path to file containing path to a GenBank file per line OR list of paths (see --from_command_line).\n                            (default: (empty string), i.e. not used)\n--from_plasmid_table, -p    Path to plasmid table downloaded from NCBI.\n                            (default: (empty string), i.e. not used)\n--keep_plasmids, -k         Stores the plasmids underlying the gene database in FASTA format if a file is specified.\n                            (default: (empty string), i.e. deactivated)\n--dereplicate, -d           Removes duplicate genes from database if activated.\n                            (default: False)\n--from_command_line, -c     Instead of a file containing the accession numbers (file paths), the options -a (-g) expect\n                            a comma-separated list of accession numbers (file paths). Cannot be combined from -p.\n                            (default: False)\n--extend, -e                Genes (and plasmids) are added to an existing database instead of overwriting it.\n                            (default: False)\n--released_before, -r       Consider only plasmids released before the specified date. Can only be combined with -p.\n                            Date format: YYYY-MM-DDTHH:MM:SSZ, e.g. 2005-07-31T00:00:00Z.\n                            (default: (empty string), i.e. deactivated)\n--type, -t                  Build the databases from the RefSeq accession numbers (RefSeq), GenBank accession numbers (GenBank) or both (both).\n                            Affects only option -p.\n                            (default: both)\n--blacklist, -b             Comma-separated list of accession numbers of plasmids not to be included in the databases.\n                            Cannot be combined with -e.\n                            (default: (empty string), i.e. deactivated)\n--min_length, -l            Minimum length of plasmids to be considered for the database.\n                            (default: 0)\n--max_length, -L            Maximum length of plasmids to be considered for the database.\n                            (default: infinity)\n--min_gene_length, -m       Minimum length of genes to be considered for the database.\n                            (default: 0)\n--num_attempts, -n          Maximum number of attempts to properly download a GenBank file from NCBI.\n                            (default: 25)\n--verbose, -v               Flag activating detailed logging. \n                            (default: False) \n```\nThe database is created from either accession numbers or (already downloaded) GenBank files or the NCBI plasmid table, i.e. the options `-a`, `-g` and `-p` cannot be combined.\n\n\n"
+      },
+      "source": "https://raw.githubusercontent.com/cchauve/HyAsP/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "2) Map a collection of genes to the contigs of an assembly",
+        "parent_header": [
+          "HyAsP",
+          "Usage"
+        ],
+        "type": "Text_excerpt",
+        "value": "Command: `hyasp map`\n\nRequires a gene database and a collection of contigs.\n\n**Example:**\n```\nhyasp map genes.fasta gcm.csv -g assembly.gfa  \n```\nHere, the gene-contig mapping `gcm.csv` is determined by mapping the genes in `genes.fasta` to the contigs of the assembly\nin `assembly.gfa`. \n\n**Additional options:**\n```\n--from_fasta, -f    Path to the file containing the contigs (in FASTA format) to which the genes should be matched.\n                    (default: (empty string), i.e. not used)\n--from_gfa, -g      Path to the file containing the contigs (as part of an assembly graph in GFA format) to which the genes should be matched.\n                    (default: (empty string), i.e. not used)\n--clean, -c         Remove temporary files after the mapping has been created.\n                    (default: False)\n--verbose, -v       Flag activating detailed logging. \n                    (default: False) \n--makeblastdb       Path to the makeblastdb executable.\n                    (default: makeblastdb)\n--blastn            Path to the blastn executable.\n                    (default: blastn)\n```\nThe contigs are read from either a FASTA or a GFA file, i.e. either `-f` or `-g` have to be used.\n\n\n"
+      },
+      "source": "https://raw.githubusercontent.com/cchauve/HyAsP/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "3) Filter a gene-contig mapping",
+        "parent_header": [
+          "HyAsP",
+          "Usage"
+        ],
+        "type": "Text_excerpt",
+        "value": "Command: `hyasp filter`\n\nRequires a gene database and a gene-contig mapping (created with `map`).\n\n**Example:**\n```\nhyasp filter genes.fasta gcm.csv filtered_gcm.csv \n```\nHere, the gene-contig mapping `gcm.csv` (based on the genes in `genes.fasta`) will be filtered using default thresholds \n(for identity and length) and the remaining mapping is stored in `filtered_gcm.csv`. \n\n**Additional options:**\n```\n--identity_threshold, -i    Minimum identity of hits retained in the mapping.\n                            (default: 0.95)\n--length_threshold, -l      Minimum fraction of query (gene) that has be matched to keep a hit.\n                            (default: 0.95) \n--find_fragmented, -f       Search for fragmented hits, i.e. several short high-identity hits that together satisfy the length threshold.\n                            (default: False)\n--verbose, -v               Flag activating detailed logging. \n                            (default: False) \n```\n\n\n"
+      },
+      "source": "https://raw.githubusercontent.com/cchauve/HyAsP/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "4) Find plasmids in an assembly graph",
+        "parent_header": [
+          "HyAsP",
+          "Usage"
+        ],
+        "type": "Text_excerpt",
+        "value": "Command: `hyasp find`\n\nRequires an assembly graph (in [GFA v1](https://github.com/GFA-spec/GFA-spec/blob/master/GFA1.md) format), \na gene database (see `create`) and a (filtered) gene-contig mapping (`map`, `filter`).\n\n**Example:**\n```\nhyasp find assembly.gfa genes.fasta gcm.csv output_dir\n```\nHere, the plasmids are predicted for the assembly provided in `assembly.gfa`, based on the gene-contig mapping `gcm.csv`\nand the gene database provided in `genes.fasta`.\n\n**Additional options:**\n```\n--min_gene_density, -g          Minimum gene density of a putative plasmid. Plasmids with a lower gene density are marked as questionable.  \n                                (default: 0.3) \n--min_seed_gene_density, -k     Minimum gene density necessary for a contig to be considered as a seed.     \n                                (default: 1.5 * min_gene_density) \n--min_length, -l                Minimum length of a putative plasmid. Shorter plasmids are marked as questionable.\n                                (default: 1500) \n--max_length, -L                Maximum length of a putative plasmid. Gene-containing contigs longer than max_length are not used as seeds. \n                                A contig is excluded from list of potential extensions, if the combined length of the contig \n                                and the plasmid is larger than max_length.\n                                (default: 1750000) \n--min_read_depth, -r            Minimum read depth of a contig to be able to participate in a plasmid.\n                                (default: 0.75 * min_plasmid_read_depth) \n--min_plasmid_read_depth, -d    Minimum average read depth of a putative plasmid. Plasmids with a lower average read depth are marked as questionable.\n                                (default: 0.4 * (median read depth of input assembly graph)) \n--max_gc_diff, -G               Maximum difference in GC content between a plasmid and a potentially added contig.\n                                (default: 0.15) \n--max_intermediate_contigs, -c  Maximum number of gene-free contigs between two gene-containing contigs in a plasmid. \n                                A contig is excluded from the list of potential extensions, if its addition would violate this threshold. \n                                (default: 2) \n--max_intermediate_nt, -n       Maximum total length of any consecutive sequence of gene-free contigs in a plasmid. \n                                A contig is excluded from the list of potential extensions, if its addition would violate this threshold. \n                                (default: 2000) \n--max_score, -s                 Maximum score of a potential extension. Possible extensions with a higher score are discarded. \n                                (default: infinity) \n--score_weights, -w             Weights of the different components of the function used to score extensions. \n                                Comma-separated list of entries of the form <name>=<value>.\n                                The weight of a component is determined automatically if the question mark (?) is used as <value>. \n                                (default: depth_diff=1,gene_density=1,gc_diff=1) \n--keep_subplasmids, -q          Do not mark plasmids whose underlying set of contigs is contained by others as questionable. \n                                If several plasmids have the same underlying set of contigs, one of them will remain \n                                in the collection of putative plasmids. \n                                (default: False) \n--overlap_ends, -o              Minimum overlap between the two ends of a plasmid in order to mark it as circular. \n                                (default: infinity) \n--binning, -b                   Factor determining how many standard deviations the read depth and GC content of plasmids are allowed to differ\n                                from the 'centre' of their bin. Binning is activated by setting the parameter to any value different from NaN. \n                                (default: NaN, i.e. deactivated) \n--fanout, -f                    Maximum number of predecessors / successors of any contig in a 'plasmid' (or rather contig collection). \n                                Setting this parameter to any value > 1 leads to non-linear / branching contig chains. \n                                Changes which files are generated as output. Cannot be used together with probabilistic.\n                                (default: 1) \n--probabilistic, -p             Flag changing the behaviour of the extension step to a probabilistic choice. \n                                The probability of an extension is the share of involved contig of the total read depth of all extensions. \n                                Cannot be used together with fanout. \n                                (default: False) \n--use_node_based, -N            Flag changing the behaviour of the extension step to a node-based loop avoidance (instead of link-based).           \n                                (default: False) \n--use_median, -u                Flag activating the use of median (instead of mean) in order to compute the average read depth of a plasmid. \n                                (default: False) \n--verbose, -v                   Flag activating detailed logging (of the extension procedure). \n                                (default: False) \n```\n\n\n"
+      },
+      "source": "https://raw.githubusercontent.com/cchauve/HyAsP/master/README.md",
+      "technique": "header_analysis"
+    }
+  ]
+}

@@ -1,0 +1,687 @@
+{
+  "code_repository": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/PombertLab/3DFI"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_created": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2020-07-13T17:58:31Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_updated": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2024-05-07T06:51:40Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "description": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "The 3DFI pipeline predicts the 3D structure of proteins and searches for structural homology in the 3D space."
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 0.9199366646077441,
+      "result": {
+        "type": "Text_excerpt",
+        "value": "The 3DFI pipeline automates protein structure predictions, structural homology searches and alignments with putative structural homologs at the genome scale. Protein structures predicted in PDB format are searched against a local copy of the [RSCB PDB](https://www.rcsb.org/) database with [Foldseek](https://github.com/steineggerlab/foldseek) or GESAMT (General Efficient Structural Alignment of Macromolecular Targets) from the [CCP4](https://www.ccp4.ac.uk/) package. Known PDB structures can also be searched against sets of predicted structures to identify potential structural homologs in predicted datasets. These structural homologs are then aligned for visual inspection with [ChimeraX](https://www.rbvi.ucsf.edu/chimerax/download.html). \n## Table of contents\n* [Introduction](#introduction)\n* [Getting started](#getting-started)\n\t* [Recommended hardware](#recommended-hardware)\n\t* [Software requirements](#software-requirements)\n\t* [Installing 3DFI](#installing-3DFI)\n\t\t* [Initial setup](#initial-setup)\n\t\t* [Downloading the 3DFI databases](#downloading-the-3DFI-databases)\n\t* [Using 3DFI](#Using-3DFI)\n\t\t* [A case example - Unknown proteins from Microsporidia](#a-case-example---unknown-proteins-from-microsporidia)\n\t\t\t* [Interpreting the results](#Interpreting-the-results)\n* [The 3DFI pipeline process in detail](#the-3DFI-ipeline-process-in-detail)\n\t* [Preparing FASTA files](#preparing-fasta-files)\n\t* [3D structure prediction](#3D-structure-prediction)\n\t\t* [AlphaFold2](#AlphaFold2---deep-learning-based-protein-structure-modeling)\n\t\t* [RoseTTAFOLD](#RoseTTAFOLD---deep-learning-based-protein-structure-modeling)\n\t\t* [RaptorX](#Raptorx---template-based-protein-structure-modeling)\n\t* [Structural homology searches](#Structural-homology-searches)\n\t\t* [Downloading PDB files from RCSB](#downloading-PDB-files-from-RCSB)\n\t\t* [Creating a list of PDB titles](#creating-a-list-of-PDB-titles)\n\t\t* [Creating or querying a Foldseek database](#creating-or-querying-a-Foldseek-database)\n\t\t* [Creating or querying a GESAMT database](#creating-or-querying-a-GESAMT-database)\n\t\t* [Parsing the output of homology searches](#Parsing-the-output-of-homology-searches)\n\t* [Structural alignment and visualization](#Structural-alignment-and-visualization)\n\t\t* [About alignment and visualization](#About-alignment-and-visualization)\n\t\t* [Aligning protein structures and inspecting alignments with ChimeraX](#Aligning-protein-structures-and-inspecting-alignments-with-ChimeraX)\n\t\t* [Coloring AlphaFold2 or RoseTTAFold predictions per confidence scores](#Coloring-AlphaFold2-or-RoseTTAFold-predictions-per-confidence-scores)\n* [Miscellaneous](#miscellaneous)\n\t* [Useful scripts](#useful-scripts)\n\t* [Alternate predictors](#alternate-predictors)\n    \t* [trRosetta](#trRosetta---deep-learning-based-protein-structure-modeling)\n\t\t* [trRosetta2](#trRosetta2---deep-learning-based-protein-structure-modeling)\n* [Funding and acknowledgments](#Funding-and-acknowledgments)\n* [How to cite](#how-to-cite)\n* [References](#references)\n</details> \n### Introduction\n###### About function inferences\nInferring the function of proteins using computational approaches usually involves performing some sort of homology search based on sequences or structures. In sequence-based searches, nucleotide or amino acid sequences are queried against known proteins or motifs using tools such as [BLAST](https://blast.ncbi.nlm.nih.gov/Blast.cgi), [DIAMOND](https://github.com/bbuchfink/diamond), [HHBLITS](https://github.com/soedinglab/hh-suite) or [HMMER](http://hmmer.org/), but those searches may fail if the proteins investigated are highly divergent. In structure-based searches, proteins are searched instead at the 3D level for structural homologs. \n###### Why structural homologs?\nBecause structure often confers function in biology, structural homologs often share similar functions, even if the building blocks are not the same (*i.e.* a wheel made of wood or steel is still a wheel regardless of its composition). Using this approach, we might be able to infer putative functions for proteins that share little to no similarity at the sequence level with known proteins, assuming that a structural match can be found. \n###### What is needed for structure-based homology searches?\nTo perform structure-based predictions we need 3D structures \u2014 either determined experimentally or predicted computationally \u2014 that we can query against other structures, such as those from the [RCSB PDB](https://www.rcsb.org/). We also need tools that can search for homology at the structural level. Several tools are now available to predict protein structures, many of which are implemented as web servers for ease of use. A listing can be found at [CAMEO](https://www.cameo3d.org/), a website that evaluates their accuracy and reliability. Fewer tools are available to perform searches at the 3D levels (*e.g.* Foldseek, GESAMT, SSM). [Foldseek](https://github.com/steineggerlab/foldseek) is available as a standalone program, GESAMT is distributed as part of the [CCP4](https://www.ccp4.ac.uk/) package, and SSM is implemented in [PDBeFold](https://www.ebi.ac.uk/msd-srv/ssm/). \n###### Why this pipeline?\nAlthough predicting the structure of a protein and searching for structural homologs can be done online, for example by using [SWISS-MODEL](https://swissmodel.expasy.org/) and [PDBeFold](https://www.ebi.ac.uk/msd-srv/ssm/), genomes often code for thousands of proteins and applying this approach on a genome scale using web portals would be time consuming and error prone. We implemented the 3DFI pipeline to enable the use of structure-based homology searches at a genome-wide level from the command line.\n</details> \n1. The deep-learning based protein structure predictors [AlphaFold2](https://github.com/deepmind/alphafold) and [RoseTTAFold](https://github.com/RosettaCommons/RoseTTAFold) leverage the NVIDIA CUDA framework to accelerate computations on existing GPUs. Although small proteins might fit within 8Gb of video RAM (VRAM), larger proteins will require more VRAM (the RoseTTAFold authors used a 24 Gb VRAM GPU in their [paper](https://pubmed.ncbi.nlm.nih.gov/34282049/)). Both [AlphaFold2](https://github.com/deepmind/alphafold) and [RoseTTAFold](https://github.com/RosettaCommons/RoseTTAFold) can run without GPU acceleration, but doing so is much slower and is only recommended for small numbers of proteins. The template-based protein structure predictor [RaptorX](http://raptorx.uchicago.edu/) does not require any GPU. \n2. Both [AlphaFold2](https://github.com/deepmind/alphafold) and [RoseTTAFold](https://github.com/RosettaCommons/RoseTTAFold) leverage hhblits from [HH-suite3](https://github.com/soedinglab/hh-suite) to perform hidden Markov model searches as part of their protein structure prediction processes. These searches are I/O intensive and can be greatly sped up by putting the databases to query onto an NVME SSD. Because the Alphafold databases are over 2.2 Tb in size once uncompressed, a fast SSD of at least 4TB is recommended to store all databases in a single location. Running hhblits on hard drives is possible (if slower), but we have seen hhblits searches crash on a few occasions when an hard drive's I/O was being saturated. \n3. Using [AlphaFold2](https://github.com/deepmind/alphafold) with its --full_dbs preset can require a large amount of system memory. The AlphaFold --reduced_dbs preset uses a smaller memory footprint. [3DFI](https://github.com/PombertLab/3DFI) was tested on machines with a minimum of 64 Gb of RAM but may work on machines with more modest specifications. \n4. If investigating large datasets, a 10 Tb+ storage solution is recommended (hard drives are fine) to store the results. AlphaFold often outputs over 50 Gb of data per protein. \n##### Protein structure prediction tools\nThe [customized](https://github.com/PombertLab/alphafold) version of AlphaFold can be installed together with [RaptorX](http://raptorx.uchicago.edu/) and/or [RoseTTAFold](https://github.com/RosettaCommons/RoseTTAFold) with [setup_3DFI.pl](https://github.com/PombertLab/3DFI/blob/master/setup_3DFI.pl) as described [below](https://github.com/PombertLab/3DFI#installing-3DFI). Docker and/or Conda should be installed prior to running setup_3DFI.pl. Notes on how to install Docker and Conda on Fedora are provided [here](https://github.com/PombertLab/3DFI/blob/master/Notes/Installation_notes.sh) for convenience. \nDue to its excellent results in the [CASP14](https://predictioncenter.org/casp14/) competition (see this Nature news [article](https://www.nature.com/articles/d41586-020-03348-4)), we recommend using [AlphaFold2](https://github.com/deepmind/alphafold) if a single predictor is desired. \n[RaptorX](http://raptorx.uchicago.edu/) is an interesting option if no CUDA-enabled GPU is available. Its template-based approach can work where deep-learning methods do not, making it an interesting alternative even if GPUs are available. We thank Professor Jinbo Xu for allowing us to redistribute RaptorX with 3DFI for non-commercial purposes. \n[RoseTTAFold](https://github.com/RosettaCommons/RoseTTAFold) is also an excellent choice but a PyRosetta [license](http://www.pyrosetta.org/) and the latest PyRosetta4.Release.python37.*.tar.bz2 release should be obtained prior to running [setup_3DFI.pl](https://github.com/PombertLab/3DFI/blob/master/setup_3DFI.pl). \n##### Perl modules\nThe 3DFI pipeline uses standard Perl modules installed together with Perl, with the exception of PerlIO::gzip which is used to read compressed GZIPPED files on the fly. On Fedora, the PerlIO::gzip module can be installed from the DNF package manager with:\n```\nsudo dnf install perl-PerlIO-gzip\n``` \n- The 3DFI installation and database directories will be set as environment variables (**\\$TDFI_HOME** and **\\$TDFI_DB**, respectively). \n<details open>\n  <summary>Once created, the content of the 3DFI database directory should look like this:</summary> \n```\n-h (--help)\t\tPrint detailed options\n-f (--fasta)\t\tProteins to query (in FASTA format)\n-o (--out)\t\tOutput directory [Default: Results_3DFI]\n-p (--pred)\t\tStructure predictor(s): alphafold, rosettafold, and/or raptorx\n-c (--cpu)\t\t# of CPUs to use [Default: 10]\n-3do (--3D_only)\t3D folding only; no structural homology search(es) / structural alignment(s)\n-3dh (--3D_hom)\t\t3D folding + homology; no (pre-)vizualization step with ChimeraX\n-a (--align)\t\t3D alignment/homology search tool: foldseek or gesamt [Default: foldseek]\n-v (--viz)\t\tTurn on visualization once the structural homology searches are completed\n--mican\t\t\tPerform alignment scoring (TM-score) with MICAN\n```\n</details> \n- Because the protein structure prediction step is time-consuming even with GPU acceleration, we recommend running only one predictor at a time if using large protein datasets. The average AlphaFold folding time on our AMD Ryzen 5950X/NVIDIA RTX A6000 workstation was 31.59 minutes per protein (~ 50 proteins/day) on a ~1,900 protein dataset, with computation times as low and high as 9.07 and 4282.32 minutes per protein, respectively. \n#### A case example - Unknown proteins from Microsporidia\n*Encephalitozoon cuniculi* is a fungal-like [NIAID category B pathogen](https://www.niaid.nih.gov/research/emerging-infectious-diseases-pathogens) belonging to the phylum Microsporidia. Proteins encoded in *Encephalitozoon* genomes are highly divergent such that roughly half cannot be identified using sequence-based homology approaches. The [sequences.fasta](https://github.com/PombertLab/3DFI/tree/master/Examples/FASTA/sequences.fasta) file from 3DFI/Examples/FASTA is a multifasta file containing a total of 3 small proteins from [*Encephalitozoon cuniculi* GB-M1](https://microsporidiadb.org/micro/app/downloads/Current_Release/EcuniculiGBM1/) that cannot be identified by traditional sequence-based approaches. Running [InterProScan](http://www.ebi.ac.uk/interpro/search/sequence/) searches using these proteins as queries return no results, *e.g.*: \n<p align=\"center\"><img src=\"https://github.com/PombertLab/3DFI/blob/master/Images/no_homology.png\" alt=\"Example of a lack of sequence homology with InterProScan 5\" width=\"1200\"></p>   \n\\\nThe 3DFI pipeline can be used to predict the 3D structure of these proteins and search for structural homologs in the 3D space to see if putative functions can be assigned to these proteins based on matches with proteins from the [RCSB](https://www.rcsb.org/) Protein Data Bank. \nTo use the 3DFI pipeline on the provided examples using 16 CPU cores together with CUDA-enabled GPU(s) (whenever possible) for [AlphaFold2](https://github.com/PombertLab/3DFI/blob/master/Prediction/AlphaFold2/af2_installation_notes.sh), [RoseTTAFold](https://github.com/PombertLab/3DFI/blob/master/Prediction/RoseTTAFold/rfold_installation_notes.sh) and [RaptorX](https://github.com/PombertLab/3DFI/blob/master/Prediction/RaptorX/raptorx_installation_notes.sh), we can type:\n```Bash\n## Creating a working directory to store results from 3DFI\nexport RESULTS=~/Results_3DFI\n\n## Running 3DFI with 16 CPU cores and the alphafold, rosettafold and raptorx\n## protein structure predictors; to launch the visualization step\n## automatically afterwards, add the -v flag\nrun_3DFI.pl \\\n  -f $TDFI_HOME/Examples/FASTA/*.fasta \\\n  -o $RESULTS \\\n  -c 16 \\\n  -p alphafold rosettafold raptorx \\\n  -a gesamt\n```\n \nIn the above example, structural homology searches will be performed automatically with GESAMT against the databases located in **$TDFI_DB**. On our AMD Ryzen 5950X/NVIDIA RTX A6000 workstation (equipped with an NVME SSD), the process from start to finish took 1 hour 45 minutes *vs.* 4 hours 25 minutes on our Intel Xeon E5-2640/NVIDIA GTX 1070 workstation (equipped with a standard 7200 RPM hard drive). In contrast, running the pipeline on the same machines using AlphaFold as the only protein structure predictor took 51 minutes *vs.* 1 hour 59 minutes. We recommend using [Foldseek](https://github.com/PombertLab/3DFI/tree/foldseek) instead of GESAMT to speed up the overall computation time (Foldseek is really fast). \nThe 3DFI output data is partitionned in 4 subdirectories:\n1. FASTA\n2. Folding\n3. Homology\n4. Visualization \n- The FASTA subdirectory contains single FASTA files created by the pipeline from files specified with -f.\n- The Folding subdirectory contains protein stuctures generated by the requested protein structure predictor(s).\n- The Homology subdirectory contains the results of GESAMT homology searches against RCSB PDB files.\n- The Visualization subdirectory contains alignments in .cxs format between predicted structures and putative structural analogs for later visualization/inspection with ChimeraX. \n<details open>\n  <summary>Content of an ALPHAFOLD_3D subdirectory</summary> \n\\\nThe overall process of performing protein structure predictions, runnning structural homology searches, and aligning predicted structures to possible matches can take a very long time on large datasets. If long computation times are expected, we suggest running the visualization step independently after completion of the run_3DFI.pl tasks. The visualization of the alignments is not automatic and requires manual curation. This step is not computationally intensive and can be performed on machines with modest specifications. \nStructural homologs found with GESAMT will be summarized in [All_GESAMT_matches_per_protein.tsv](https://github.com/PombertLab/3DFI/blob/master/Examples/Results_3DFI/Homology/GESAMT/All_GESAMT_matches_per_protein.tsv) located in Homology/GESAMT. This file ranks matches by decreasing Q-scores (a measure of structural similarity ranging from 0 to 1). Structural homologs found with Foldseek will be summarized in All_FOLDSEEK_matches_per_protein.tsv located in Homology/FOLDSEEK. For brevity, only the best match to a unique RCSB PDB + chain entry is listed. \n\\\n\\\nSelecting [M] will open a submenu to select a 3D structure and view it in [ChimeraX](https://www.rbvi.ucsf.edu/chimerax/download.html)   (color-coded by per-residue confidence scores if available):\n```\nSelection: M\n\n\n\tWhich of the following predictors would you like to see viewable structural predictions for?\n\n\t\tALPHAFOLD\n\t\tRAPTORX\n\t\tROSETTAFOLD\n\n\tSelection: ALPHAFOLD\n\n\n\t\tWhich of the following models would you like to visualize?\n\n\t\t\tECU03_1140-m1.pdb\n\t\t\tECU03_1140-m2.pdb\n\t\t\tECU03_1140-m3.pdb\n\t\t\tECU03_1140-m4.pdb\n\t\t\tECU03_1140-m5.pdb\n\n\t\tSelection: ECU03_1140-m1.pdb\n\n```\n \n#### Interpreting the results\n> Using the approach above, we were able to identity the ECU03_1140 protein from *Encephalitozoon cuniculi* as Stn1. In yeast, Stn1 is part of the Cdc13-Stn1-Ten1 complex involved in telomere protection and maintenance. Stn1 is a telomere-specific structural homolog of replication protein A 32 (RPA32), which has been identified previously in *E. cuniculi* based on sequence homology, and which shows up in the best matches based on structural homology. This is a good example of why manual curation is recommended as assigning a function based solely on the top structural homolog could lead to an erroneous conclusion. \n### The 3DFI pipeline process in detail\nThis section details the behaviour of each independent script used by the run_3DFI.pl master script and is split into the following subsections:\n- [Preparing FASTA files](https://github.com/PombertLab/3DFI#preparing-fasta-files)\n- [3D structure prediction](https://github.com/PombertLab/3DFI#3D-structure-prediction)\n- [Structural homology searches](https://github.com/PombertLab/3DFI#structural-homology-searches)\n- [Structural alignment and visualization](https://github.com/PombertLab/3DFI#structural-alignment-and-visualization) \n```\n-a (--afdir)\tAlphaFold output directory\n-o (--outdir)\tParsed output directory\n-p (--pdbtype)\tranked (k), relaxed (r), unrelaxed (u), all (a) [Default: k]\n-t (--top)\tTop X number of pdb files to keep, from best to worst (max 5) [Default: 1]\n-s (--standard)\tUses standardized model names (-m1 to -m5) instead of -r0 to -r4 for ranked PDB files \n-v (--verbose)\tAdds verbosity\n```\n</details> \nNote that the e2e folding option is constrained by video RAM and requires a CUDA-enabled GPU with more than 8 Gb of RAM to tackle large proteins (a video card with at least 24 Gb of RAM is recommended). If out of memory, the 'RuntimeError: CUDA out of memory' will appear in the log/network.stderr file and the .pdb file will not be generated. The pyrosetta folding option is slower (CPU-bound) but not constrained by video RAM. \n```\n-r (--rfdir)\tRoseTTAFold output directory\n-o (--outdir)\tParsed output directory\n-p (--pdbtype)\tPDB type: pyrosetta (py) or end-to-end (e2e) [Default: e2e]\n-t (--top)\tTop X number of pdb files to keep for pyrosetta PDBs, from best to worst (max 5) [Default: 1]\n-v (--verbose)\tAdds verbosity\n```\n</details> \n```\n-t (--threads)\tNumber of threads to use [Default: 10]\n-i (--input)\tFolder containing fasta files\n-o (--output)\tOutput folder\n-k (--TopK)\tNumber of top template(s) to use per protein for model building [Default: 1]\n-m (--modeller)\tMODELLER binary name [Default: mod10.1] ## Use absolute or relative path if not set in $PATH\n```\n</details> \n#### Structural homology searches\n##### Downloading PDB files from RCSB\nPDB files from the [Protein Data Bank](https://www.rcsb.org/) can be downloaded directly from its website. Detailed instructions are provided [here](https://www.wwpdb.org/ftp/pdb-ftp-sites). Because of the large size of this dataset, downloading it using [rsync](https://rsync.samba.org/) is recommended. This can be done with [update_PDB.pl](https://github.com/PombertLab/3DFI/blob/master/Homology_search/update_PDB.pl) as follows:\n```bash\n## Setting up RCSB PDB database location:\nexport TDFI_DB=/media/FatCat/databases/3DFI\nexport RCSB_PDB=$TDFI_DB/RCSB_PDB/\n\n## Downloading the RCSB PDB database:\nupdate_PDB.pl \\\n  -o $RCSB_PDB \\\n  -n 15\n```\n \n##### Creating a list of PDB titles\nTo create a tab-delimited list of PDB entries and their titles and chains from the downloaded PDB gzipped files (pdb*.ent.gz), we can use [PDB_headers.pl](https://github.com/PombertLab/3DFI/blob/master/Homology_search/PDB_headers.pl) (requires [PerlIO::gzip](https://metacpan.org/pod/PerlIO::gzip)):\n```Bash\n## Setting up 3DFI results location:\nexport TDFI_DB=/media/FatCat/databases/3DFI\n\n## Running a list of titles and chains from PDB files\nPDB_headers.pl \\\n   -p $RCSB_PDB \\\n   -o $TDFI_DB/RCSB_PDB_titles.tsv\n```\n \nThe list created should look like this:\n```\n5tzz\tTITLE\tCRYSTAL STRUCTURE OF HUMAN PHOSPHODIESTERASE 2A IN COMPLEX WITH 1-[(3-BROMO-4-FLUOROPHENYL)CARBONYL]-3,3-DIFLUORO-5-{5-METHYL-[1,2, 4]TRIAZOLO[1,5-A]PYRIMIDIN-7-YL}PIPERIDINE \n5tzz\tA\tCGMP-DEPENDENT 3',5'-CYCLIC PHOSPHODIESTERASE\n5tzz\tB\tCGMP-DEPENDENT 3',5'-CYCLIC PHOSPHODIESTERASE\n5tzz\tC\tCGMP-DEPENDENT 3',5'-CYCLIC PHOSPHODIESTERASE\n5tzz\tD\tCGMP-DEPENDENT 3',5'-CYCLIC PHOSPHODIESTERASE\n4tza\tTITLE\tTGP, AN EXTREMELY THERMOSTABLE GREEN FLUORESCENT PROTEIN CREATED BY STRUCTURE-GUIDED SURFACE ENGINEERING \n4tza\tC\tFLUORESCENT PROTEIN\n4tza\tA\tFLUORESCENT PROTEIN\n4tza\tB\tFLUORESCENT PROTEIN\n4tza\tD\tFLUORESCENT PROTEIN\n4tz3\tTITLE\tENSEMBLE REFINEMENT OF THE E502A VARIANT OF SACTELAM55A FROM STREPTOMYCES SP. SIREXAA-E IN COMPLEX WITH LAMINARITETRAOSE \n4tz3\tA\tPUTATIVE SECRETED PROTEIN\n5tzw\tTITLE\tCRYSTAL STRUCTURE OF HUMAN PHOSPHODIESTERASE 2A IN COMPLEX WITH 1-[(3,4-DIFLUOROPHENYL)CARBONYL]-3,3-DIFLUORO-5-{5-METHYL-[1,2, 4]TRIAZOLO[1,5-A]PYRIMIDIN-7-YL}PIPERIDINE \n5tzw\tA\tCGMP-DEPENDENT 3',5'-CYCLIC PHOSPHODIESTERASE\n5tzw\tB\tCGMP-DEPENDENT 3',5'-CYCLIC PHOSPHODIESTERASE\n5tzw\tC\tCGMP-DEPENDENT 3',5'-CYCLIC PHOSPHODIESTERASE\n5tzw\tD\tCGMP-DEPENDENT 3',5'-CYCLIC PHOSPHODIESTERASE\n```\n##### Creating or querying a Foldseek database\nA foldseek-formatted database is required to perform structural homology searches with [Foldseek](https://github.com/PombertLab/3DFI/tree/foldseek). The foldseek database can be created automatically with [create_3DFI_db.pl](https://github.com/PombertLab/3DFI/blob/master/create_3DFI_db.pl). The database can also be created manually with [run_foldseek.pl](https://github.com/PombertLab/3DFI/master/foldseek/Homology_search/run_foldseek.pl).\n```Bash\n## Creating environment variables pointing to our Foldseek database:\nexport TDFI_DB=/media/FatCat/databases/3DFI\nexport FSEEK_DB=$TDFI_DB/FOLDSEEK/\n\n## To create a Foldseek database\nrun_foldseek.pl \\\n   -create \\\n   -db $FSEEK_DB/rcsb \\\n   -pdb $RCSB_PDB\n\n## To query a Foldseek database\nrun_foldseek.pl \\\n   -query \\\n   -db $FSEEK_DB/rcsb \\\n   -input *.pdb \\\n   -o FSEEK_RESULTS \\\n   -z\n```\n \n##### Parsing the output of structural homology searches\nTo add definitions/products to the PDB matches found with Foldseek or GESAMT, we can use the list generated by [PDB_headers.pl](https://github.com/PombertLab/3DFI/blob/master/Homology_search/PDB_headers.pl) together with [descriptive_matches.pl](https://github.com/PombertLab/3DFI/blob/master/Homology_search/descriptive_matches.pl):\n```Bash\ndescriptive_matches.pl \\\n   -r $TDFI_DB/RCSB_PDB_titles.tsv \\\n   -m $GSMT/*.gesamt.gz \\\n   -q 0.3 \\\n   -b 5 \\\n   -o $RESULTS/ALPHAFOLD_GESAMT_per_model.matches\n```\n \n##### Parsing the output of descriptive_matches.pl per protein accross all models, from best Q-score to worst\nStructural matches obtained from all protein stucture predictors can be parsed with [parse_all_models_by_Q.pl](https://github.com/PombertLab/3DFI/blob/master/Homology_search/parse_all_models_by_Q.pl). To summarize these matches with parse_all_models_by_Q.pl:\n```Bash\nparse_all_models_by_Q.pl \\\n  -a gesamt \\\n  -m *_GESAMT_per_model.matches \\\n  -o All_GESAMT_matches_per_protein.tsv\n```\n \n#### Structural alignment and visualization\n##### About alignment and visualization\nVisually inspecting the predicted 3D structure of a protein is an important step in determing the validity of any identified structural homolog. Though a .pdb file may be obtained from a protein structure prediction tool, the quality of the fold may be low. Alternatively, though Foldseek/GESAMT may return a structural homolog with a reasonable quality score, the quality of the alignment may be low. A low fold/alignment-quality can result in both false-positives (finding a structural homolog when one doesn't exist) and false-negatives (not finding a structural homolog when one exists). Visually inspecting protein structures and structural homolog alignments is an easy way to prevent these outcomes. This can be done with the excellent [ChimeraX](https://www.rbvi.ucsf.edu/chimerax/) molecular visualization program. \nExamples:\n- A [good result](https://github.com/PombertLab/3DFI/blob/master/Images/Good_Match.png), in which both the folding and the alignment are good.\n- A [false-negative](https://github.com/PombertLab/3DFI/blob/master/Images/Bad_Predicted_Fold.png), where the quality of the protein folding is low, resulting in a failure to find a structural homolog.\n- A [false-positive](https://github.com/PombertLab/3DFI/blob/master/Images/Bad_Match.png), where the quality of the fold is high, but the alignment-quality is low and a pseudo-structural homolog is found. \n##### Aligning protein structures and inspecting alignments with ChimeraX\nTo prepare visualizations for inspection, we can use [prepare_visualizations.pl](https://github.com/PombertLab/3DFI/blob/master/Visualization/prepare_visualizations.pl) to automatically align predicted proteins with their structural homologs determined with Foldseek or GESAMT. These alignments are performed with [ChimeraX](https://www.rbvi.ucsf.edu/chimerax/) via its API.\n```bash\n## Creating shortcut to results directory\nexport RESULTS=~/Results_3DFI\nexport RCSB_PDB=$TDFI_DB/RCSB_PDB/\n\n## Preparing data for visualization:\nprepare_visualizations.pl \\\n    -a gesamt \\\n    -m $TDFI_HOME/Examples/Results_3DFI/Homology/GESAMT/ALPHAFOLD_GESAMT_per_model.matches \\\n    -p $TDFI_HOME/Examples/Results_3DFI/Folding/ALPHAFOLD_3D_Parsed/ \\\n    -o $RESULTS/Visualization\n```\n \nIn this example, selecting [M] will open the visualization of the predicted 3D structure with [ChimeraX](https://www.rbvi.ucsf.edu/chimerax/download.html): \nAlternatively, selecting [1-5] will open the visualization of the alignment of the predicted 3D structure with its selected structural homolog: \n##### Coloring AlphaFold2 or RoseTTAFold predictions per confidence scores\n[AlphaFold2](https://github.com/deepmind/alphafold) and [RoseTTAFold](https://github.com/RosettaCommons/RoseTTAFold) add per-residue confidence scores to the B-factor [columns](https://www.cgl.ucsf.edu/chimera/docs/UsersGuide/tutorials/pdbintro.html) of the PDB files they generate. AlphaFold adds pLDDT (predicted lDDT-C\u03b1) values ranging from 0 to 100 while RoseTTAFold adds CA-lDDT values from 0 to 1 when using its end-to-end implementation (its PyRosetta version uses estimated CA RMS errors instead). \nAlternatively, we can also set the legend using the Chimerax [key](https://www.cgl.ucsf.edu/chimerax/docs/user/commands/key.html) command. For example, we can set it to the right of the molecule with:\n```\nkey pos 0.85,0.2 size 0.04,0.6 justification left labelOffset 5\n\n## In the above:\npos x,y => x and y coordinates\nsize w,h => width and height\n```\n<img src=\"https://github.com/PombertLab/3DFI/blob/master/Images/bfactor_key_cmd.png\"> \n\nNote that to save an image with a transparent background in Chimerax (see [manual](https://www.cgl.ucsf.edu/chimerax/docs/user/commands/save.html)), we can use:\n```\nsave ~/bfactor.png transparentBackground True\n```\n</details> \n##### Alternate predictors \nThis section refers to predictors that are no longer maintained / not yet supported. Code is available in [3DFI/prediction](https://github.com/PombertLab/3DFI/tree/master/Prediction).  \n###### trRosetta - deep-learning-based protein structure modeling\nTo perform 3D structure predictions locally with [trRosetta](https://github.com/gjoni/trRosetta), [HH-suite3](https://github.com/soedinglab/hh-suite), [tensorflow](https://www.tensorflow.org/) version 1.15 and [PyRosetta](http://www.pyrosetta.org/) must be installed. A database for HHsuite3's hhblits, such as [Uniclust](https://uniclust.mmseqs.com/), should also be installed. Note that hhblits databases should be located on a solid state disk (ideally NVME) to reduce i/o bottlenecks during homology searches. \nFor ease of use, [tensorflow](https://www.tensorflow.org/) 1.15 and [PyRosetta](http://www.pyrosetta.org/) can be installed in a conda environment. For more detail, see [trRosetta_installation_notes.sh](https://github.com/PombertLab/3DFI/blob/master/Prediction/trRosetta/trRosetta_installation_notes.sh). \n5. The .pdb files thus generated contain lines that are not standard and that can prevent applications such as [PDBeFOLD](https://www.ebi.ac.uk/msd-srv/ssm/) to run on the corresponding files. We can clean up the PDB files with [sanitize_pdb.pl](https://github.com/PombertLab/3DFI/blob/master/Prediction/trRosetta/sanitize_pdb.pl) as follows:\n```Bash\n$TR_3DFI/sanitize_pdb.pl \\\n   -p $TR/PDB/*.pdb \\\n   -o $TR/PDB_clean\n```\n \n###### trRosetta2 - deep-learning-based protein structure modeling\nHow to set up [trRosetta2](https://github.com/RosettaCommons/trRosetta2) is described on its GitHub page. The [trRosetta2.pl](https://github.com/PombertLab/3DFI/blob/master/Prediction/trRosetta2/trRosetta2.pl) script is a Perl wrapper that enables running trRosetta2 in batch mode. To simplify its use, the TRROSETTA2_HOME environment variable can be set in the shell.\n```bash\n## Setting up trRosetta2 installation directory as environment variable:\nexport TRROSETTA2_HOME=/opt/trRosetta2\n\n## Creating a working directory for trRosetta2:\nexport RESULTS=~/Results_3DFI\nexport TR2=$RESULTS/TROS2_3D\nmkdir -p $RESULTS $TR2\n```\nTo convert FASTA sequences to single string FASTA sequences with [fasta_oneliner.pl](https://github.com/PombertLab/3DFI/blob/master/Prediction/trRosetta2/fasta_oneliner.pl), type:\n```Bash\n$TR2_3DFI/fasta_oneliner.pl \\\n   -f $TDFI/Examples/FASTA/*.fasta \\\n   -o $TR2/FASTA_OL\n```\n \n```\n-r (--r2dir)\ttrRosetta2 output directory\n-o (--outdir)\tParsed output directory\n-t (--top)\tTop X number of pdb files to keep, from best to worst (max 5) [Default: 1]\n-v (--verbose)\tAdds verbosity\n```\n</details>\n</details> \n<details open>\n  <summary><b><i>Show/hide section: Funding and acknowledgments</i></b></summary> \n## Funding and acknowledgments\nThis work was supported in part by the National Institute of Allergy and Infectious Diseases of the National Institutes of Health (award number R15AI128627) to Jean-Francois Pombert. The content is solely the responsibility of the authors and does not necessarily represent the official views of the National Institutes of Health.\n</details> \n## How to cite\n##### If you use this pipeline, please cite the 3DFI publication: \n##### Please also cite the tool(s) used for protein stucture prediction (AlphaFold, RoseTTAFold and/or RaptorX), structural homology searches (GESAMT) and 3D visualization (ChimeraX), as needed: \n"
+      },
+      "source": "https://raw.githubusercontent.com/PombertLab/3DFI/master/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "download_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/PombertLab/3DFI/releases"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 7
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/PombertLab/3DFI/forks"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "PombertLab/3DFI"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_title": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": ""
+      },
+      "source": "https://raw.githubusercontent.com/PombertLab/3DFI/master/README.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "has_script_file": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/PombertLab/3DFI/master/Notes/Installation_notes.sh"
+      },
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/PombertLab/3DFI/master/Prediction/trRosetta/trRosetta_installation_notes.sh"
+      },
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/PombertLab/3DFI/master/Prediction/RoseTTAFold/install_pyrosetta.sh"
+      },
+      "technique": "file_exploration"
+    }
+  ],
+  "identifier": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://zenodo.org/doi/10.5281/zenodo.5525018"
+      },
+      "source": "https://raw.githubusercontent.com/PombertLab/3DFI/master/README.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "images": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/PombertLab/3DFI/master/Images/no_homology.png"
+      },
+      "source": "https://raw.githubusercontent.com/PombertLab/3DFI/master/README.md",
+      "technique": "regular_expression"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/PombertLab/3DFI/master/Images/ECU03_1140-m4_3kdf_B.png"
+      },
+      "source": "https://raw.githubusercontent.com/PombertLab/3DFI/master/README.md",
+      "technique": "regular_expression"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/PombertLab/3DFI/master/Images/ECU03_1140-m4.png"
+      },
+      "source": "https://raw.githubusercontent.com/PombertLab/3DFI/master/README.md",
+      "technique": "regular_expression"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/PombertLab/3DFI/master/Images/Just_PDB.png"
+      },
+      "source": "https://raw.githubusercontent.com/PombertLab/3DFI/master/README.md",
+      "technique": "regular_expression"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/PombertLab/3DFI/master/Images/Just_PDB_rainbow.png"
+      },
+      "source": "https://raw.githubusercontent.com/PombertLab/3DFI/master/README.md",
+      "technique": "regular_expression"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/PombertLab/3DFI/master/Images/With_Alignment.png"
+      },
+      "source": "https://raw.githubusercontent.com/PombertLab/3DFI/master/README.md",
+      "technique": "regular_expression"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/PombertLab/3DFI/master/Images/bfactor.png"
+      },
+      "source": "https://raw.githubusercontent.com/PombertLab/3DFI/master/README.md",
+      "technique": "regular_expression"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/PombertLab/3DFI/master/Images/bfactor_key.png"
+      },
+      "source": "https://raw.githubusercontent.com/PombertLab/3DFI/master/README.md",
+      "technique": "regular_expression"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/PombertLab/3DFI/master/Images/bfactor_key_cmd.png"
+      },
+      "source": "https://raw.githubusercontent.com/PombertLab/3DFI/master/README.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "installation": [
+    {
+      "confidence": 0.981232265359052,
+      "result": {
+        "type": "Text_excerpt",
+        "value": "### Getting started\n#### Recommended hardware\nThe 3DFI pipeline was tested on Fedora 33/34 Linux workstations (*Workstation 1* - AMD Ryzen 5950X, NVIDIA RTX A6000, 128 Gb RAM; *Workstation 2* - AMD Ryzen 3900X, NVIDIA RTX 2070S, 64 Gb RAM; *Workstation 3* - 2x Intel Xeon E5-2640, NVIDIA GTX 1070, 128 Gb RAM). \nThe following hardware is recommended to use 3DFI:\n- A CUDA-enabled NVIDIA GPU (>= 24 Gb VRAM; >= 6.1 compute capability)\n- A fast 4 Tb+ SSD\n- At least 64 Gb of RAM  \n##### Aria2\nAria2 is a lightweight utility tool that can resume partial downloads. 3DFI uses this tool to download its databases. On Fedora, aria2 can be installed from the DNF package manager:\n```Bash\nsudo dnf install aria2\n``` \n##### Protein structure prediction tools\nThe [customized](https://github.com/PombertLab/alphafold) version of AlphaFold can be installed together with [RaptorX](http://raptorx.uchicago.edu/) and/or [RoseTTAFold](https://github.com/RosettaCommons/RoseTTAFold) with [setup_3DFI.pl](https://github.com/PombertLab/3DFI/blob/master/setup_3DFI.pl) as described [below](https://github.com/PombertLab/3DFI#installing-3DFI). Docker and/or Conda should be installed prior to running setup_3DFI.pl. Notes on how to install Docker and Conda on Fedora are provided [here](https://github.com/PombertLab/3DFI/blob/master/Notes/Installation_notes.sh) for convenience. \n[RoseTTAFold](https://github.com/RosettaCommons/RoseTTAFold) is also an excellent choice but a PyRosetta [license](http://www.pyrosetta.org/) and the latest PyRosetta4.Release.python37.*.tar.bz2 release should be obtained prior to running [setup_3DFI.pl](https://github.com/PombertLab/3DFI/blob/master/setup_3DFI.pl). \n##### Modeller\nRaptorX requires [Modeller](https://salilab.org/modeller/). The license for Modeller can be requested [here](https://salilab.org/modeller/registration.html). Modeller can be downloaded [here](https://salilab.org/modeller/download_installation.html). To install Modeller on RedHat/Fedora:\n```Bash\nLICENSE=XXXXX ## replace XXXXX by modeller license\nMODELLER=modeller-10.1-1.x86_64.rpm\nsudo env KEY_MODELLER=$LICENSE rpm -Uvh $MODELLER\n``` \n##### Structural homology tools\n##### Foldseek\nFoldseek is installed automatically with [setup_3DFI.pl](https://github.com/PombertLab/3DFI/blob/master/setup_3DFI.pl). It can also be installed from the [Foldseek](https://github.com/steineggerlab/foldseek) Github page. \n##### GESAMT\nGESAMT is distributed with the [CCP4](https://www.ccp4.ac.uk/) package, which can be installed by following the prompts from its graphical user interface. The gesamt program required by 3DFI will be located inside the bin subdirectory, which should be added to the **$PATH** environment variable.\n```Bash\nexport CCP4=/opt/xtal/CCP4/ccp4-7.1/bin/\nexport PATH=$PATH:$CCP4\n```\n \n##### ChimeraX\n[ChimeraX](https://www.cgl.ucsf.edu/chimerax/download.html) 1.3+ is provided as .deb and .rpm packages for Debian- and RedHat-based Linux distributions. On Fedora, ChimeraX can be installed from the command line with the DNF package manager.\n```Bash\nsudo dnf install ucsf-chimerax-*.rpm\n``` \n##### Perl modules\nThe 3DFI pipeline uses standard Perl modules installed together with Perl, with the exception of PerlIO::gzip which is used to read compressed GZIPPED files on the fly. On Fedora, the PerlIO::gzip module can be installed from the DNF package manager with:\n```\nsudo dnf install perl-PerlIO-gzip\n``` \nThe module can also be installed from CPAN by invoking 'cpan' from the command line followed by entering 'install PerlIO::gzip' in the prompt:\n```\ncpan[1]> install PerlIO::gzip\ncpan[2]> exit\n``` \n#### Installing 3DFI\nThe 3DFI pipeline can be downloaded directly from GitHub with git clone. \n```Bash\n## To download 3DFI from GitHub:\ngit clone https://github.com/PombertLab/3DFI.git\n``` \n##### Initial setup\nThe [setup_3DFI.pl](https://github.com/PombertLab/3DFI/blob/master/setup_3DFI.pl) script can be used to install AlphaFold, RaptorX and/or RoseTTAFold, install [Foldseek](https://github.com/steineggerlab/foldseek), and to set up the 3DFI environment variables. The script can also add the 3DFI installation folder and it subdirectories to the **\\$PATH** environment variable (if desired) from the interactive prompts.  \n- When run, the 3DFI pipeline will search for the following environment variables (**\\$ALPHAFOLD_HOME**, **\\$ROSETTAFOLD_HOME** and/or **\\$RAPTORX_HOME**) depending on the requested protein structure predictor(s). \n- The 3DFI installation and database directories will be set as environment variables (**\\$TDFI_HOME** and **\\$TDFI_DB**, respectively). \nTo install AlphaFold, RaptorX and RoseTTAFold and set the 3DFI environment variables in the ~/.bashrc with setup_3DFI.pl:\n```Bash\nexport CONFIG=~/.bashrc\nexport DATABASE=/media/databases/3DFI\nexport PYROSETTA=~/Downloads/PyRosetta4.Release.python37.*.tar.bz2\n\ncd 3DFI/\n./setup_3DFI.pl \\\n  -c $CONFIG \\\n  -d $DATABASE \\\n  -i alphafold raptorx rosettafold \\\n  -pyr $PYROSETTA\n```\n<details open>\n  <summary>Options for setup_3DFI.pl are:</summary>\n```\n-c (--config)\tConfiguration file to edit/create (e.g. ~/.bashrc)\n-w (--write)\tWrite mode: (a)ppend or (o)verwrite [Default: a]\n-d (--dbdir)\t3DFI databases directory ($TDFI_DB)\n-p (--path)\t3DFI installation directory ($TDFI_HOME) [Default: ./]\n\n## Protein structure predictors \n-i (--install)\t\t3D structure predictor(s) to install (alphafold raptorx and/or rosettafold)\n-pyr (--pyrosetta)\tPyRosetta4 [Python-3.7.Release] .tar.bz2 archive to install\n\t\t\t# Download - https://www.pyrosetta.org/downloads#h.xe4c0yjfkl19\n\t\t\t# License - https://els2.comotion.uw.edu/product/pyrosetta\n\n## Docker\n-name (--docker_image)\tName of the AlphaFold docker image to build [Default: alphafold_3dfi]\n-rebuild\t\tBuild/rebuild the docker image with the --pull and --no-cache flags\n```\n</details>\n \n```bash\n### 3DFI environment variables\nexport TDFI_HOME=/opt/3DFI\nexport TDFI_DB=/media/databases/3DFI\n\n### 3DFI environment variables for protein structure predictor(s)\nexport RAPTORX_HOME=/opt/3DFI/3D/RaptorX\nexport ROSETTAFOLD_HOME=/opt/3DFI/3D/RoseTTAFold\nexport ALPHAFOLD_HOME=/opt/3DFI/3D/alphafold\n\n### 3DFI PATH variables\nPATH=$PATH:/opt/3DFI\nPATH=$PATH:/opt/3DFI/3D\nPATH=$PATH:/opt/3DFI/Prediction/RaptorX\nPATH=$PATH:/opt/3DFI/Prediction/AlphaFold2\nPATH=$PATH:/opt/3DFI/Prediction/RoseTTAFold\nPATH=$PATH:/opt/3DFI/Homology_search\nPATH=$PATH:/opt/3DFI/Visualization\nPATH=$PATH:/opt/3DFI/Misc_tools\n\nexport PATH\n```\n</details> \n##### Downloading the 3DFI databases\nThe [create_3DFI_db.pl](https://github.com/PombertLab/3DFI/blob/master/create_3DFI_db.pl) script can be used to download the 3DFI databases. If the **\\$TDFI_DB** environment variable is set, [create_3DFI_db.pl](https://github.com/PombertLab/3DFI/blob/master/create_3DFI_db.pl) can be used without invoking the -d command line switch. \nTo download all 3DFI databases [~770 Gb; 3.2 Tb unpacked] with create_3DFI_db.pl, unpack them, then delete the packed archives:\n```Bash\ncd $TDFI_HOME\n./create_3DFI_db.pl --all --delete\n```\n<details open>\n  <summary>Options for create_3DFI_db.pl are:</summary>\n```\n-a (--all)\tDownload/create all databases: RCSB, ALPHAFOLD, ROSETTAFOLD, RAPTORX, Foldseek, GESAMT\n-d (--db)\tTarget 3DFI database location [Default: \\$TDFI_DB]\n-c (--cpu)\tNumber of CPUs to create/update the Foldseek/GESAMT databases [Default: 10]\n\n# Download/create specific databases:\n--rcsb\t\tRCSB PDB + Foldseek + GESAMT\n--alpha\t\tAlphaFold2\n--raptorx\tRaptorX\n--rosetta\tRoseTTAFold\n\n# Download options\n--nconnect\tNumber of concurrent aria2 connections [Default: 10]\n--no_unpack\tDo not unpack downloaded files ## Useful for backups\n--delete\tDelete downloaded archives after unpacking them\n\n# GESAMT options\n--make_gesamt\tCreate a GESAMT archive from the RCSB PDB files instead of \n\t\tdownloading a pre-built version\n--update_gesamt\tUpdate an existing GESAMT archive made with --make_gesamt\n\n### Approximate download size / disk usage\n# TOTAL\t\t\t\t669 Gb / 3.2 Tb\n# RSCB PDB\t\t\t39 Gb / 42 Gb inflated\n# BFD (AlphaFold/RoseTTAFold)\t272 Gb / 1.8 Tb inflated\n# AlphaFold (minus BFD)\t\t176 Gb / 0.6 Tb inflated\n# RoseTTAFold (minus BFD)\t146 Gb / 849 Gb inflated\n# RaptorX\t\t\t37 Gb / 76 Gb inflated\n```\n</details>\n \nThe 3DFI pipeline can be run on one (or more) set of single/multifasta files using all three predictors with the following command line:\n```bash\nexport OUTPUT=Results_3DFI\n\nrun_3DFI.pl \\\n  -f *.fasta \\\n  -o $OUTPUT \\\n  -p alphafold rosettafold raptorx \\\n  -c 16 \\\n  -a foldseek\n```\n \n```Bash\n## FASTA preparation\n--window\t\tSplit individual fasta sequences into fragments using sliding windows [Default: off]\n--win_size\t\tSize of the the sliding window [Default: 250 (aa)]\n--win_overlap\t\tSliding window overlap [Default: 100 (aa)]\n\n## 3D Folding options\n-n (--nogpu)\t\tALPHAFOLD/ROSETTAFOLD: Turn off GPU acceleration / use CPU only\n-g (--gpu_dev)\t\tALPHAFOLD: list of GPU devices to use: e.g. all; 0,1; 0,1,2,3 [Default: all]\n-m (--maxdate)\t\tALPHAFOLD: --max_template_date option (YYYY-MM-DD) [Default: current date]\n-s (--preset)\t\tALPHAFOLD: full_dbs or reduced_dbs [Default: full_dbs]\n-i (--docker_image)\tALPHAFOLD: docker image name [Default: alphafold_3dfi]\n-u (--use_msas)\t\tALPHAFOLD: Use precomputed MSAs\n-k (--ranks)\t\tRAPTORX: # Number of top ranks to model [Default: 5]\n--modeller\t\tRAPTORX: Modeller version [Default: mod10.1]\n\n## Structural homology/alignment searches\n--fskdb\t\t\tfoldseek database to query [Default: $TDFI_DB/FOLDSEEK/rcsb]\n--ftype\t\t\tFoldseek alignment type [Default: 2];\n\t\t\t  0: 3Di Gotoh-Smith-Waterman \n\t\t\t  1: TMalign \n\t\t\t  2: 3Di+AA Gotoh-Smith-Waterman\n-q (--qscore)\t\tMininum quality score to keep [Default: 200]\n\t\t\t# Recommended: 3Di+AA => 200; TMalign => 50; GESAMT => 0.1\n-b (--best)\t\tKeep the best match(es) only (top X hits) [Default: 5]\n-d (--db)\t\t3DFI Foldseek/GESAMT databases location [Default: $TDFI_DB]\n--query\t\t\tModels to query per protein and predictor: all or best [Default: all]\n```\n</details> \n<p align=\"center\"><img src=\"https://github.com/PombertLab/3DFI/blob/master/Images/no_homology.png\" alt=\"Example of a lack of sequence homology with InterProScan 5\" width=\"1200\"></p>   \nTo use the 3DFI pipeline on the provided examples using 16 CPU cores together with CUDA-enabled GPU(s) (whenever possible) for [AlphaFold2](https://github.com/PombertLab/3DFI/blob/master/Prediction/AlphaFold2/af2_installation_notes.sh), [RoseTTAFold](https://github.com/PombertLab/3DFI/blob/master/Prediction/RoseTTAFold/rfold_installation_notes.sh) and [RaptorX](https://github.com/PombertLab/3DFI/blob/master/Prediction/RaptorX/raptorx_installation_notes.sh), we can type:\n```Bash\n## Creating a working directory to store results from 3DFI\nexport RESULTS=~/Results_3DFI\n\n## Running 3DFI with 16 CPU cores and the alphafold, rosettafold and raptorx\n## protein structure predictors; to launch the visualization step\n## automatically afterwards, add the -v flag\nrun_3DFI.pl \\\n  -f $TDFI_HOME/Examples/FASTA/*.fasta \\\n  -o $RESULTS \\\n  -c 16 \\\n  -p alphafold rosettafold raptorx \\\n  -a gesamt\n```\n \nIn the above, AlphaFold ranks the models predicted from best (0) to worst (4); the *-m1.pdb to *-m5.pdb files representing the ranked_0.pdb to ranked_4.pdb files for the corresponding proteins.\n</details>\n</details>   \n<img src=\"https://github.com/PombertLab/3DFI/blob/master/Images/ECU03_1140-m4_3kdf_B.png\">   \n\\\n\\\nSelecting [M] will open a submenu to select a 3D structure and view it in [ChimeraX](https://www.rbvi.ucsf.edu/chimerax/download.html)   (color-coded by per-residue confidence scores if available):\n```\nSelection: M\n\n\n\tWhich of the following predictors would you like to see viewable structural predictions for?\n\n\t\tALPHAFOLD\n\t\tRAPTORX\n\t\tROSETTAFOLD\n\n\tSelection: ALPHAFOLD\n\n\n\t\tWhich of the following models would you like to visualize?\n\n\t\t\tECU03_1140-m1.pdb\n\t\t\tECU03_1140-m2.pdb\n\t\t\tECU03_1140-m3.pdb\n\t\t\tECU03_1140-m4.pdb\n\t\t\tECU03_1140-m5.pdb\n\n\t\tSelection: ECU03_1140-m1.pdb\n\n```\n \n<img src=\"https://github.com/PombertLab/3DFI/blob/master/Images/ECU03_1140-m4.png\">   \n#### Preparing FASTA files\nSingle FASTA files (one sequence per file) are expected by most predictors and can be created from a MULTIFASTA file with [split_Fasta.pl](https://github.com/PombertLab/3DFI/blob/master/Misc_tools/split_Fasta.pl):\n```Bash\n## Creating a working directory for 3DFI:\nexport RESULTS=~/Results_3DFI\nexport FSAOUT=$RESULTS/FASTA\nmkdir -p $RESULTS\n\n## Running split_Fasta.pl on provided examples:\nsplit_Fasta.pl \\\n   -f $TDFI_HOME/Examples/FASTA/*.fasta \\\n   -o $FSAOUT\n```\n \n```Bash\n## General\n-f (--fasta)\tFASTA input file(s) (supports .gz gzipped files)\n-o (--output)\tOutput directory [Default: Split_Fasta]\n-e (--ext)\tDesired file extension [Default: fasta]\n-v (--verbose)\tAdds verbosity\n\n## Fasta header parsing\n-r (--regex)\tword (\\w+) or nonspace (\\S+) [Default: word]\n\n## Sliding window options\n-w (--window)\tSplit individual fasta sequences into fragments using sliding windows [Default: off]\n-s (--size)\tSize of the the sliding window [Default: 250 (aa)]\n-l (--overlap)\tSliding window overlap [Default: 100 (aa)]\n```\n</details> \n```\n-f (--fasta)\t\tFASTA files to fold\n-o (--outdir)\t\tOutput directory\n-d (--docker)\t\tDocker image name [Default: alphafold_3dfi]\n-m (--max_date)\t\t--max_template_date option (YYYY-MM-DD) from AlphaFold2 [Default: current date]\n-p (--preset)\t\tAlphafold --db_preset: full_dbs or reduced_dbs [Default: full_dbs]\n-u (--use_msas)\t\tUse precomputed MSAs\n-g (--gpu_dev)\t\tList of GPU devices to use: e.g. all; 0,1; 0,1,2,3 [Default: all]\n-n (--no_gpu)\t\tTurns off GPU acceleration\n-ah (--alpha_home)\tAlphaFold2 installation directory [Default: \\$ALPHAFOLD_HOME]\n-ad (--alpha_db)\tAlphaFold2 databases location [Default: \\$TDFI_DB/ALPHAFOLD]\n```\n</details> \n##### RoseTTAFold - deep-learning-based protein structure modeling\nThe [rosettafold.pl](https://github.com/PombertLab/3DFI/blob/master/Prediction/RoseTTAFold/rosettafold.pl) script is a Perl wrapper that enables running the [RoseTTAFold](https://github.com/RosettaCommons/RoseTTAFold) run_e2e_ver.sh / run_pyrosetta_ver.sh scripts in batch mode. To run rosettafold.pl on multiple fasta files, type:\n```bash\n## Creating working directories for 3DFI / RoseTTAFold:\nexport RESULTS=~/Results_3DFI\nexport FOLDING=$RESULTS/Folding\nexport RF=$FOLDING/ROSETTAFOLD_3D\nmkdir -p $RESULTS $FOLDING $RF\n\n## Running RoseTTAFold on provided examples:\nrosettafold.pl \\\n   -f $TDFI_HOME/Examples/FASTA/*.fasta \\\n   -o $RF\n```\n \n```\n-f (--fasta)\tFASTA files to fold\n-o (--outdir)\tOutput directory\n-t (--type)\tFolding type: pyrosetta (py) or end-to-end (e2e)  [Default: e2e]\n-r (--rosetta)\tRoseTTAFold installation directory ## if not set in $ROSETTAFOLD_HOME\n```\n</details> \nNOTES:\n- RaptorX expects a PYTHONHOME environment variable but runs fine without it. The following warning message can be safely ignored (silencing it by setting up the PYTHONHOME environment variable could create issues with other applications).\n```renamed env vars for consistencyindependent libraries <prefix>\nCould not find platform dependent libraries <exec_prefix>\nConsider setting $PYTHONHOME to <prefix>[:<exec_prefix>]\n```\n- The import site warning message below can also be safely ignored:\nBASH42* \n#### Structural homology searches\n##### Downloading PDB files from RCSB\nPDB files from the [Protein Data Bank](https://www.rcsb.org/) can be downloaded directly from its website. Detailed instructions are provided [here](https://www.wwpdb.org/ftp/pdb-ftp-sites). Because of the large size of this dataset, downloading it using [rsync](https://rsync.samba.org/) is recommended. This can be done with [update_PDB.pl](https://github.com/PombertLab/3DFI/blob/master/Homology_search/update_PDB.pl) as follows:\n```bash\n## Setting up RCSB PDB database location:\nexport TDFI_DB=/media/FatCat/databases/3DFI\nexport RCSB_PDB=$TDFI_DB/RCSB_PDB/\n\n## Downloading the RCSB PDB database:\nupdate_PDB.pl \\\n  -o $RCSB_PDB \\\n  -n 15\n```\n \n```\n-o (--outdir)\tPDB output directory [Default: PDB]\n-n (--nice)\tDefines niceness (adjusts scheduling priority)\n```\n</details> \n##### Creating a list of PDB titles\nTo create a tab-delimited list of PDB entries and their titles and chains from the downloaded PDB gzipped files (pdb*.ent.gz), we can use [PDB_headers.pl](https://github.com/PombertLab/3DFI/blob/master/Homology_search/PDB_headers.pl) (requires [PerlIO::gzip](https://metacpan.org/pod/PerlIO::gzip)):\n```Bash\n## Setting up 3DFI results location:\nexport TDFI_DB=/media/FatCat/databases/3DFI\n\n## Running a list of titles and chains from PDB files\nPDB_headers.pl \\\n   -p $RCSB_PDB \\\n   -o $TDFI_DB/RCSB_PDB_titles.tsv\n```\n \n```\n-p (--pdb)\tDirectory containing PDB files downloaded from RCSB PDB/PDBe (gzipped)\n-o (--output)\tOutput file in tsv format\n-v (--verbose)\tPrints progess every X file [Default: 1000]\n```\n</details> \n```\n-d (--db)\t\t\tFoldseek database to create or query\n-t (--threads)\t\t\tCPU threads [Default: 12]\n-v (--verbosity)\tVerbosity: 0: quiet, 1: +errors, 2: +warnings, 3: +info [Default: 3]\n-l (--log)\t\t\tLog file [Default: foldseek.log]\n\n## Creating a Foldseek database\n-c (--create)\tCreate a foldseek database\n-p (--pdb)\tFolder containing the PDB files for the database\n\n## Querying a Foldseek database\n-q (--query)\tQuery a Foldseek database\n-o (--outdir)\tOutput directory [Default: ./]\n-i (--input)\tPDF files to query\n-a (--atype)\tAlignment type [Default: 2]:\n\t\t  0: 3Di Gotoh-Smith-Waterman \n\t\t  1: TMalign \n\t\t  2: 3Di+AA Gotoh-Smith-Waterman\n-m (--mseq)\tAmount of prefilter sequences handed to the alignment [Default: 300]\n-z (--gzip)\tCompress output files [Default: off]\n```\n</details> \n##### Creating or querying a GESAMT database\nBefore performing structural homology searches with GESAMT (from the [CCP4](https://www.ccp4.ac.uk/) package), we should first create an archive to speed up the searches. We can also update the archive later as sequences are added (for example after the RCSB PDB files are updated with rsync). GESAMT archives can be created/updated with [run_GESAMT.pl](https://github.com/PombertLab/3DFI/blob/master/Homology_search/run_GESAMT.pl):\n```Bash\n## Creating environment variables pointing to our GESAMT archive:\nexport TDFI_DB=/media/FatCat/databases/3DFI\nexport GESAMT_ARCHIVE=$TDFI_DB/RCSB_GESAMT\n\n## To create a GESAMT archive:\nrun_GESAMT.pl \\\n   -cpu 10 \\\n   -make \\\n   -arch $GESAMT_ARCHIVE \\\n   -pdb $RCSB_PDB\n\n## To update a GESAMT archive:\nrun_GESAMT.pl \\\n   -cpu 10 \\\n   -update \\\n   -arch $GESAMT_ARCHIVE \\\n   -pdb $RCSB_PDB\n```\n \n```\n-c (--cpu)\tCPU threads [Default: 10]\n-a (--arch)\tGESAMT archive location [Default: ./]\n-m (--make)\tCreate a GESAMT archive\n-u (--update)\tUpdate existing archive\n-p (--pdb)\tFolder containing RCSB PDB files to archive\n```\n</details> \nStructural homology searches with GESAMT can also be performed with [run_GESAMT.pl](https://github.com/PombertLab/3DFI/blob/master/Homology_search/run_GESAMT.pl):\n```Bash\n## Creating a working directory for GESAMT:\nexport RESULTS=~/Results_3DFI\nexport GSMT=$RESULTS/Homology/GESAMT\nmkdir -p $RESULTS $GSMT\n\n## Performing structural homology searches with GESAMT:\nrun_GESAMT.pl \\\n   -cpu 10 \\\n   -query \\\n   -arch $GESAMT_ARCHIVE \\\n   -input $TDFI_HOME/Examples/Results_3DFI/Folding/ALPHAFOLD_3D_Parsed/*.pdb \\\n   -o $GSMT \\\n   -mode normal\n```\n \nThe concatenated list generated should look like:\n```\n### ECU03_1140-m1; Query mode = normal\nECU03_1140-m1\t1\t3KDF\tD\t0.6666\t1.6532\t0.1545\t110\t119\tpdb3kdf.ent.gz\tREPLICATION PROTEIN A 32 KDA SUBUNIT\nECU03_1140-m1\t2\t1QUQ\tC\t0.6543\t1.7185\t0.1545\t110\t119\tpdb1quq.ent.gz\tPROTEIN (REPLICATION PROTEIN A 32 KD SUBUNIT)\nECU03_1140-m1\t3\t2PQA\tA\t0.6507\t1.6714\t0.1504\t113\t128\tpdb2pqa.ent.gz\tREPLICATION PROTEIN A 32 KDA SUBUNIT\nECU03_1140-m1\t4\t3KDF\tB\t0.6479\t1.7816\t0.1545\t110\t118\tpdb3kdf.ent.gz\tREPLICATION PROTEIN A 32 KDA SUBUNIT\nECU03_1140-m1\t5\t4GNX\tB\t0.6460\t1.6761\t0.1182\t110\t122\tpdb4gnx.ent.gz\tPUTATIVE UNCHARACTERIZED PROTEIN\n### ECU03_1140-m2; Query mode = normal\nECU03_1140-m2\t1\t3KDF\tD\t0.6744\t1.6116\t0.1545\t110\t119\tpdb3kdf.ent.gz\tREPLICATION PROTEIN A 32 KDA SUBUNIT\nECU03_1140-m2\t2\t1QUQ\tC\t0.6613\t1.6815\t0.1545\t110\t119\tpdb1quq.ent.gz\tPROTEIN (REPLICATION PROTEIN A 32 KD SUBUNIT)\nECU03_1140-m2\t3\t2PQA\tA\t0.6578\t1.6328\t0.1593\t113\t128\tpdb2pqa.ent.gz\tREPLICATION PROTEIN A 32 KDA SUBUNIT\nECU03_1140-m2\t4\t4GNX\tB\t0.6523\t1.6419\t0.1182\t110\t122\tpdb4gnx.ent.gz\tPUTATIVE UNCHARACTERIZED PROTEIN\nECU03_1140-m2\t5\t4GOP\tB\t0.6513\t1.6472\t0.1182\t110\t122\tpdb4gop.ent.gz\tPUTATIVE UNCHARACTERIZED PROTEIN\n### ECU03_1140-m3; Query mode = normal\nECU03_1140-m3\t1\t3KDF\tD\t0.6705\t1.6324\t0.1545\t110\t119\tpdb3kdf.ent.gz\tREPLICATION PROTEIN A 32 KDA SUBUNIT\nECU03_1140-m3\t2\t1QUQ\tC\t0.6591\t1.6930\t0.1545\t110\t119\tpdb1quq.ent.gz\tPROTEIN (REPLICATION PROTEIN A 32 KD SUBUNIT)\nECU03_1140-m3\t3\t2PQA\tA\t0.6552\t1.6470\t0.1593\t113\t128\tpdb2pqa.ent.gz\tREPLICATION PROTEIN A 32 KDA SUBUNIT\nECU03_1140-m3\t4\t4GNX\tB\t0.6503\t1.6531\t0.1182\t110\t122\tpdb4gnx.ent.gz\tPUTATIVE UNCHARACTERIZED PROTEIN\nECU03_1140-m3\t5\t3KDF\tB\t0.6496\t1.7729\t0.1545\t110\t118\tpdb3kdf.ent.gz\tREPLICATION PROTEIN A 32 KDA SUBUNIT\n``` \n```\n-a (--align)\t3D alignment tool: foldseek or gesamt [Default: gesamt]\n-m (--matches)\tFoldseek/GESAMT matches parsed by descriptive_matches.pl\n-p (--pred)\tAbsolute path to predicted .pdb files\n-r (--rcsb)\tAbsolute path to RCSB .ent.gz files\n-k (--keep)\tKeep unzipped RCSB .ent files\n-o (--outdir)\tOutput directory for ChimeraX sessions [Default: ./3D_Visualizations]\n```\n</details> \n<img src=\"https://github.com/PombertLab/3DFI/blob/master/Images/Just_PDB.png\"> \n<img src=\"https://github.com/PombertLab/3DFI/blob/master/Images/Just_PDB_rainbow.png\"> \n<img src=\"https://github.com/PombertLab/3DFI/blob/master/Images/With_Alignment.png\"> \nAlternatively, we can also set the legend using the Chimerax [key](https://www.cgl.ucsf.edu/chimerax/docs/user/commands/key.html) command. For example, we can set it to the right of the molecule with:\n```\nkey pos 0.85,0.2 size 0.04,0.6 justification left labelOffset 5\n\n## In the above:\npos x,y => x and y coordinates\nsize w,h => width and height\n```\n<img src=\"https://github.com/PombertLab/3DFI/blob/master/Images/bfactor_key_cmd.png\"> \n## Miscellaneous\n##### Useful scripts\n###### Splitting PDB files\nRCSB PDB files can be split per chain with [split_PDB.pl](https://github.com/PombertLab/3DFI/blob/master/Misc_tools/split_PDB.pl):\n```\nsplit_PDB.pl \\\n   -p files.pdb \\\n   -o output_folder \\\n   -e pdb\n``` \n```\n-p (--pdb)\tPDB input file (supports gzipped files)\n-o (--output)\tOutput directory. If blank, will create one folder per PDB file based on file prefix\n-e (--ext)\tDesired file extension [Default: pdb]\n```\n</details> \n###### Renaming files\nFiles can be renamed using regular expressions with [rename_files.pl](https://github.com/PombertLab/3DFI/blob/master/Misc_tools/rename_files.pl):\n```\nrename_files.pl \\\n   -o 'i{0,1}-t26_1-p1' \\\n   -n '' \\\n   -f *.fasta\n``` \nFor ease of use, [tensorflow](https://www.tensorflow.org/) 1.15 and [PyRosetta](http://www.pyrosetta.org/) can be installed in a conda environment. For more detail, see [trRosetta_installation_notes.sh](https://github.com/PombertLab/3DFI/blob/master/Prediction/trRosetta/trRosetta_installation_notes.sh). \n###### Tensorflow 1.15 in conda\nTo install tensorflow with GPU in conda:\n```Bash\n## The files can eat through GPU VRAM very quickly. 8 Gb is usually insufficient.\nconda create -n tfgpu python=3.7\nconda activate tfgpu\npip install tensorflow-gpu==1.15\npip install numpy==1.19.5\nconda install cudatoolkit==10.0.130\nconda install cudnn==7.6.5\n```\nTo install tensorflow with CPU in conda:\n```Bash\nconda create -n tfcpu python=3.7\nconda activate tfcpu\npip install tensorflow-cpu==1.15\npip install numpy==1.19.5\n```\n###### Running trRosetta\nRunning [trRosetta](https://github.com/gjoni/trRosetta) involves 3 main steps: 1) searches with [HHsuite3](https://github.com/soedinglab/hh-suite)'s hhblits to generate alignments (.a3m); 2) prediction of protein inter-residue geometries (.npz) with [trRosetta](https://github.com/gjoni/trRosetta)'s predict.py; and 3) prediction of 3D structures (.pdb) with trRosetta.py and [PyRosetta](http://www.pyrosetta.org/). Performing these predictions on several proteins can be automated with 3DFI scripts. \n```bash\n## Setting up trRosetta installation directories as environment variables:\nexport TRROSETTA_HOME=/opt/trRosetta\nexport TRROSETTA_SCRIPTS=$TRROSETTA_HOME/trRosetta_scripts\nAligning strucutures and inspecting \n## Creating a working directory for trRosetta:\nexport RESULTS=~/Results_3DFI\nexport TR=$RESULTS/TRROSETTA_3D\nmkdir -p $RESULTS $TR\n```\n1. To convert FASTA sequences to single string FASTA sequences with [fasta_oneliner.pl](https://github.com/PombertLab/3DFI/blob/master/Prediction/trRosetta/fasta_oneliner.pl), type:\n```Bash\n$TR_3DFI/fasta_oneliner.pl \\\n   -f $TDFI/Examples/FASTA/*.fasta \\\n   -o $TR/FASTA_OL\n```\n \n2. To run hhblits searches with [run_hhblits.pl](https://github.com/PombertLab/3DFI/blob/master/Prediction/trRosetta/run_hhblits.pl), type:\n```Bash\n## Setting Uniclust database (https://uniclust.mmseqs.com/) location:\nexport UNICLUST=/media/FatCat/databases/UniRef30_2020_06\n\n## Running hhblits on multiple evalues independently:\n$TR_3DFI/run_hhblits.pl \\\n   -t 10 \\\n   -f $TR/FASTA_OL/ \\\n   -o $TR/HHBLITS/ \\\n   -d $UNICLUST/UniRef30_2020_06 \\\n   -e 1e-40 1e-10 1e-03 1e+01\n\n## Running hhblits on evalues sequentially, from stricter to more permissive:\n$TR_3DFI/run_hhblits.pl \\\n   -t 10 \\\n   -f $TR/FASTA_OL/ \\\n   -o $TR/HHBLITS/ \\\n   -d $UNICLUST/UniRef30_2020_06 \\\n   -s \\\n   -se 1e-70 1e-50 1e-30 1e-10 1e-06 1e-04 1e+01\n```\n \n3. To create .npz files containing inter-residue geometries with [create_npz.pl](https://github.com/PombertLab/3DFI/blob/master/Prediction/trRosetta/create_npz.pl), type:\n```Bash\n## activate conda environment tfcpu or tfgpu\nconda activate tfcpu\n\n## Creating npz files:\n$TR_3DFI/create_npz.pl \\\n   -a $TR/HHBLITS/*.a3m \\\n   -o $TR/NPZ/\n``` \n4. To generate .pdb files containing 3D models from the .npz files with [create_pdb.pl](https://github.com/PombertLab/3DFI/blob/master/Prediction/trRosetta/create_pdb.pl), type:\n```Bash\n## activate conda environment tfcpu or tfgpu\nconda activate tfcpu\n\n## Creating PDB files\n$TR_3DFI/create_pdb.pl \\\n   -c 10 \\\n   -n $TR/NPZ/ \\\n   -o $TR/PDB/ \\\n   -f $TR/FASTA_OL/\n```\n \n```\n-c (--cpu)\t\tNumber of cpu threads to use [Default: 10] ## i.e. runs n processes in parallel\n-m (--memory)\t\tMemory available (in Gb) to threads [Default: 16] \n-n (--npz)\t\tFolder containing .npz files\n-o (--output)\t\tOutput folder [Default: ./]\n-f (--fasta)\t\tFolder containing the oneliner fasta files\n-t (--trrosetta)\ttrRosetta installation directory (TRROSETTA_HOME)\n-p (--python)\t\tPreferred Python interpreter [Default: python]\n```\n</details> \n5. The .pdb files thus generated contain lines that are not standard and that can prevent applications such as [PDBeFOLD](https://www.ebi.ac.uk/msd-srv/ssm/) to run on the corresponding files. We can clean up the PDB files with [sanitize_pdb.pl](https://github.com/PombertLab/3DFI/blob/master/Prediction/trRosetta/sanitize_pdb.pl) as follows:\n```Bash\n$TR_3DFI/sanitize_pdb.pl \\\n   -p $TR/PDB/*.pdb \\\n   -o $TR/PDB_clean\n```\n \n```\n-p (--pdb)      .pdb files generated by trRosetta\n-o (--output)   Output folder\n```\n</details> \n###### trRosetta2 - deep-learning-based protein structure modeling\nHow to set up [trRosetta2](https://github.com/RosettaCommons/trRosetta2) is described on its GitHub page. The [trRosetta2.pl](https://github.com/PombertLab/3DFI/blob/master/Prediction/trRosetta2/trRosetta2.pl) script is a Perl wrapper that enables running trRosetta2 in batch mode. To simplify its use, the TRROSETTA2_HOME environment variable can be set in the shell.\n```bash\n## Setting up trRosetta2 installation directory as environment variable:\nexport TRROSETTA2_HOME=/opt/trRosetta2\n\n## Creating a working directory for trRosetta2:\nexport RESULTS=~/Results_3DFI\nexport TR2=$RESULTS/TROS2_3D\nmkdir -p $RESULTS $TR2\n```\nTo convert FASTA sequences to single string FASTA sequences with [fasta_oneliner.pl](https://github.com/PombertLab/3DFI/blob/master/Prediction/trRosetta2/fasta_oneliner.pl), type:\n```Bash\n$TR2_3DFI/fasta_oneliner.pl \\\n   -f $TDFI/Examples/FASTA/*.fasta \\\n   -o $TR2/FASTA_OL\n```\n \n```\n-f (--fasta)\t\tFASTA files to fold\n-o (--outdir)\t\tOutput directory\n-g (--gpu)\t\tUses GPU acceleration (>= 16 Gb video RAM recommended); defaults to CPU otherwize\n-t (--trrosetta2)\ttrRosetta2 installation directory\n```\n</details> \n"
+      },
+      "source": "https://raw.githubusercontent.com/PombertLab/3DFI/master/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "invocation": [
+    {
+      "confidence": 0.850618686222633,
+      "result": {
+        "type": "Text_excerpt",
+        "value": "To download all 3DFI databases [~770 Gb; 3.2 Tb unpacked] with create_3DFI_db.pl, unpack them, then delete the packed archives:\n```Bash\ncd $TDFI_HOME\n./create_3DFI_db.pl --all --delete\n```\n<details open>\n  <summary>Options for create_3DFI_db.pl are:</summary>\n```\n-a (--all)\tDownload/create all databases: RCSB, ALPHAFOLD, ROSETTAFOLD, RAPTORX, Foldseek, GESAMT\n-d (--db)\tTarget 3DFI database location [Default: \\$TDFI_DB]\n-c (--cpu)\tNumber of CPUs to create/update the Foldseek/GESAMT databases [Default: 10]\n\n# Download/create specific databases:\n--rcsb\t\tRCSB PDB + Foldseek + GESAMT\n--alpha\t\tAlphaFold2\n--raptorx\tRaptorX\n--rosetta\tRoseTTAFold\n\n# Download options\n--nconnect\tNumber of concurrent aria2 connections [Default: 10]\n--no_unpack\tDo not unpack downloaded files ## Useful for backups\n--delete\tDelete downloaded archives after unpacking them\n\n# GESAMT options\n--make_gesamt\tCreate a GESAMT archive from the RCSB PDB files instead of \n\t\tdownloading a pre-built version\n--update_gesamt\tUpdate an existing GESAMT archive made with --make_gesamt\n\n### Approximate download size / disk usage\n# TOTAL\t\t\t\t669 Gb / 3.2 Tb\n# RSCB PDB\t\t\t39 Gb / 42 Gb inflated\n# BFD (AlphaFold/RoseTTAFold)\t272 Gb / 1.8 Tb inflated\n# AlphaFold (minus BFD)\t\t176 Gb / 0.6 Tb inflated\n# RoseTTAFold (minus BFD)\t146 Gb / 849 Gb inflated\n# RaptorX\t\t\t37 Gb / 76 Gb inflated\n```\n</details>\n \n#### Preparing FASTA files\nSingle FASTA files (one sequence per file) are expected by most predictors and can be created from a MULTIFASTA file with [split_Fasta.pl](https://github.com/PombertLab/3DFI/blob/master/Misc_tools/split_Fasta.pl):\n```Bash\n## Creating a working directory for 3DFI:\nexport RESULTS=~/Results_3DFI\nexport FSAOUT=$RESULTS/FASTA\nmkdir -p $RESULTS\n\n## Running split_Fasta.pl on provided examples:\nsplit_Fasta.pl \\\n   -f $TDFI_HOME/Examples/FASTA/*.fasta \\\n   -o $FSAOUT\n```\n \n```Bash\n## General\n-f (--fasta)\tFASTA input file(s) (supports .gz gzipped files)\n-o (--output)\tOutput directory [Default: Split_Fasta]\n-e (--ext)\tDesired file extension [Default: fasta]\n-v (--verbose)\tAdds verbosity\n\n## Fasta header parsing\n-r (--regex)\tword (\\w+) or nonspace (\\S+) [Default: word]\n\n## Sliding window options\n-w (--window)\tSplit individual fasta sequences into fragments using sliding windows [Default: off]\n-s (--size)\tSize of the the sliding window [Default: 250 (aa)]\n-l (--overlap)\tSliding window overlap [Default: 100 (aa)]\n```\n</details> \n##### RoseTTAFold - deep-learning-based protein structure modeling\nThe [rosettafold.pl](https://github.com/PombertLab/3DFI/blob/master/Prediction/RoseTTAFold/rosettafold.pl) script is a Perl wrapper that enables running the [RoseTTAFold](https://github.com/RosettaCommons/RoseTTAFold) run_e2e_ver.sh / run_pyrosetta_ver.sh scripts in batch mode. To run rosettafold.pl on multiple fasta files, type:\n```bash\n## Creating working directories for 3DFI / RoseTTAFold:\nexport RESULTS=~/Results_3DFI\nexport FOLDING=$RESULTS/Folding\nexport RF=$FOLDING/ROSETTAFOLD_3D\nmkdir -p $RESULTS $FOLDING $RF\n\n## Running RoseTTAFold on provided examples:\nrosettafold.pl \\\n   -f $TDFI_HOME/Examples/FASTA/*.fasta \\\n   -o $RF\n```\n \n```\n-o (--outdir)\tPDB output directory [Default: PDB]\n-n (--nice)\tDefines niceness (adjusts scheduling priority)\n```\n</details> \n```\n-p (--pdb)\tDirectory containing PDB files downloaded from RCSB PDB/PDBe (gzipped)\n-o (--output)\tOutput file in tsv format\n-v (--verbose)\tPrints progess every X file [Default: 1000]\n```\n</details> \n```\n-d (--db)\t\t\tFoldseek database to create or query\n-t (--threads)\t\t\tCPU threads [Default: 12]\n-v (--verbosity)\tVerbosity: 0: quiet, 1: +errors, 2: +warnings, 3: +info [Default: 3]\n-l (--log)\t\t\tLog file [Default: foldseek.log]\n\n## Creating a Foldseek database\n-c (--create)\tCreate a foldseek database\n-p (--pdb)\tFolder containing the PDB files for the database\n\n## Querying a Foldseek database\n-q (--query)\tQuery a Foldseek database\n-o (--outdir)\tOutput directory [Default: ./]\n-i (--input)\tPDF files to query\n-a (--atype)\tAlignment type [Default: 2]:\n\t\t  0: 3Di Gotoh-Smith-Waterman \n\t\t  1: TMalign \n\t\t  2: 3Di+AA Gotoh-Smith-Waterman\n-m (--mseq)\tAmount of prefilter sequences handed to the alignment [Default: 300]\n-z (--gzip)\tCompress output files [Default: off]\n```\n</details> \n```\n-c (--cpu)\tCPU threads [Default: 10]\n-a (--arch)\tGESAMT archive location [Default: ./]\n-m (--make)\tCreate a GESAMT archive\n-u (--update)\tUpdate existing archive\n-p (--pdb)\tFolder containing RCSB PDB files to archive\n```\n</details> \n```\n-c (--cpu)\tCPU threads [Default: 10]\n-a (--arch)\tGESAMT archive location [Default: ./]\n-q (--query)\tQuery a GESAMT archive\n-i (--input)\tPDF files to query\n-o (--outdir)\tOutput directory [Default: ./]\n-d (--mode)\tQuery mode: normal of high [Default: normal]\n-z (--gzip)\tCompress output files [Default: off]\n```\n</details> \n```\n-p (--pdb)\tPDB input file (supports gzipped files)\n-o (--output)\tOutput directory. If blank, will create one folder per PDB file based on file prefix\n-e (--ext)\tDesired file extension [Default: pdb]\n```\n</details> \n```\n-f (--fasta)    FASTA files to convert\n-o (--output)   Output folder\n```\n</details> \n```\n-a (--a3m)\t\t.a3m files generated by hhblits\n-o (--output)\t\tOutput folder [Default: ./]\n-t (--trrosetta)\ttrRosetta installation directory (TRROSETTA_HOME)\n-m (--model)\t\ttrRosetta model directory [Default: model2019_07]\n```\n</details> \n```\n-c (--cpu)\t\tNumber of cpu threads to use [Default: 10] ## i.e. runs n processes in parallel\n-m (--memory)\t\tMemory available (in Gb) to threads [Default: 16] \n-n (--npz)\t\tFolder containing .npz files\n-o (--output)\t\tOutput folder [Default: ./]\n-f (--fasta)\t\tFolder containing the oneliner fasta files\n-t (--trrosetta)\ttrRosetta installation directory (TRROSETTA_HOME)\n-p (--python)\t\tPreferred Python interpreter [Default: python]\n```\n</details> \nTo run [trRosetta2](https://github.com/RosettaCommons/trRosetta2) in batch mode with [trRosetta2.pl](https://github.com/PombertLab/3DFI/blob/master/Prediction/trRosetta2/trRosetta2.pl), type:\n```Bash\n$TR2_3DFI/trRosetta2.pl \\\n   -f $TR2/FASTA_OL/*.fasta \\\n   -o $TR2/TROS2_3D \\\n   -g\n``` \n"
+      },
+      "source": "https://raw.githubusercontent.com/PombertLab/3DFI/master/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "issue_tracker": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/PombertLab/3DFI/issues"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "keywords": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "3d-structure, pdb-files, structural-homologs"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "license": [
+    {
+      "confidence": 1,
+      "result": {
+        "name": "MIT License",
+        "spdx_id": "MIT",
+        "type": "License",
+        "url": "https://api.github.com/licenses/mit",
+        "value": "https://api.github.com/licenses/mit"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "File_dump",
+        "value": "MIT License\n\nCopyright (c) 2020 Pombert Lab\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.\n"
+      },
+      "source": "https://raw.githubusercontent.com/PombertLab/3DFI/master/LICENSE",
+      "technique": "file_exploration"
+    }
+  ],
+  "logo": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/PombertLab/3DFI/master/Images/Logo.png"
+      },
+      "source": "https://raw.githubusercontent.com/PombertLab/3DFI/master/README.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "3DFI"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "owner": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Organization",
+        "value": "PombertLab"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "programming_languages": [
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Perl",
+        "size": 171356,
+        "type": "Programming_language",
+        "value": "Perl"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Shell",
+        "size": 5095,
+        "type": "Programming_language",
+        "value": "Shell"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Python",
+        "size": 3019,
+        "type": "Programming_language",
+        "value": "Python"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "readme_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/PombertLab/3DFI/master/README.md"
+      },
+      "technique": "file_exploration"
+    }
+  ],
+  "releases": [
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "Pombert-JF",
+          "type": "User"
+        },
+        "date_created": "2022-05-27T14:41:56Z",
+        "date_published": "2022-05-27T14:45:38Z",
+        "description": "Minor bug fix:\r\n- Added RoseTTAFold support to run_MICAN_on_homology_results.pl # %Folds();",
+        "html_url": "https://github.com/PombertLab/3DFI/releases/tag/1.0.1a",
+        "name": "3DFI-v1.0.1a",
+        "release_id": 68027405,
+        "tag": "1.0.1a",
+        "tarball_url": "https://api.github.com/repos/PombertLab/3DFI/tarball/1.0.1a",
+        "type": "Release",
+        "url": "https://api.github.com/repos/PombertLab/3DFI/releases/68027405",
+        "value": "https://api.github.com/repos/PombertLab/3DFI/releases/68027405",
+        "zipball_url": "https://api.github.com/repos/PombertLab/3DFI/zipball/1.0.1a"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "Pombert-JF",
+          "type": "User"
+        },
+        "date_created": "2022-05-27T14:27:15Z",
+        "date_published": "2022-05-27T14:33:31Z",
+        "description": "Minor update:\r\n- Added support for keyboard interrupts (SIGINT + SIGTERM) where possible with checksig(); subroutine\r\n- Added distinct defaults cutoffs for GESAMT and Foldseek\r\n- Fixed the --align cmd line parsing; --align not --aligner\r\n- Removed obsolete descriptive_matches.pl option (-a) from the corresponding cmd line in run_3DFI.pl\r\n\r\n# AlphaFold:\r\n- Added protobuf==3.20.1 to the AlphaFold Dockerfile; newer versions present the docker image from running",
+        "html_url": "https://github.com/PombertLab/3DFI/releases/tag/1.0.1",
+        "name": "3DFI-v1.0.1",
+        "release_id": 68026356,
+        "tag": "1.0.1",
+        "tarball_url": "https://api.github.com/repos/PombertLab/3DFI/tarball/1.0.1",
+        "type": "Release",
+        "url": "https://api.github.com/repos/PombertLab/3DFI/releases/68026356",
+        "value": "https://api.github.com/repos/PombertLab/3DFI/releases/68026356",
+        "zipball_url": "https://api.github.com/repos/PombertLab/3DFI/zipball/1.0.1"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "Pombert-JF",
+          "type": "User"
+        },
+        "date_created": "2022-05-13T12:05:41Z",
+        "date_published": "2022-05-13T13:04:16Z",
+        "description": "- Added support for MICAN-SQ\r\n- Added support for Foldseek structural homology searches (now set as default instead of GESAMT in run_3DFI.pl)\r\n- Mican and Foldseek are installed automatically with setup_3DFI.pl\r\n- Foldseek RCSB database can be created automatically with create_3DFI_db.pl\r\n- Fixed a bug where ChimeraX alignments for visualization were not generated if # of matches == 1\r\n- Switched to ChimeraX 1.3+ ## APIs 1.2.5 and 1.3 are not compatible\r\n- Added -3dh command line option to run_3DFI.pl [3D folding + homology; no (pre)-visualization step with ChimeraX]\r\n- Updated AlphaFold fork to version 2.2 + added new NVIDIA signing keys (2022) to its Dockerfile\r\n- Minor cosmetic changes for readability ",
+        "html_url": "https://github.com/PombertLab/3DFI/releases/tag/1.0.0",
+        "name": "3DFI-v1.0.0",
+        "release_id": 66803846,
+        "tag": "1.0.0",
+        "tarball_url": "https://api.github.com/repos/PombertLab/3DFI/tarball/1.0.0",
+        "type": "Release",
+        "url": "https://api.github.com/repos/PombertLab/3DFI/releases/66803846",
+        "value": "https://api.github.com/repos/PombertLab/3DFI/releases/66803846",
+        "zipball_url": "https://api.github.com/repos/PombertLab/3DFI/zipball/1.0.0"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "Pombert-JF",
+          "type": "User"
+        },
+        "date_created": "2021-12-23T18:47:04Z",
+        "date_published": "2021-12-23T18:59:31Z",
+        "description": "- Updated 3DFI to work with AlphaFold 2.1.0 and homogenized the command line switches to facilitate further updates.\r\n (if using a previous version of 3DFI, the alphafold_3dfi docker image should be rebuilt to match the new command lines in 0.9.0+)\r\n- Fixed an issue wherein the alphafold database preset was not properly parsed with GetOptions();\r\n- Replaced the hard-coded docker image names by variables.\r\n- Fixed an issue with the jax version in the AlphaFold Dockerfile by replacing ==1.69 with >=1.69\r\n",
+        "html_url": "https://github.com/PombertLab/3DFI/releases/tag/0.9.0",
+        "name": "3DFI-v0.9.0",
+        "release_id": 55917572,
+        "tag": "0.9.0",
+        "tarball_url": "https://api.github.com/repos/PombertLab/3DFI/tarball/0.9.0",
+        "type": "Release",
+        "url": "https://api.github.com/repos/PombertLab/3DFI/releases/55917572",
+        "value": "https://api.github.com/repos/PombertLab/3DFI/releases/55917572",
+        "zipball_url": "https://api.github.com/repos/PombertLab/3DFI/zipball/0.9.0"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "Pombert-JF",
+          "type": "User"
+        },
+        "date_created": "2021-12-21T14:01:04Z",
+        "date_published": "2021-12-21T14:09:51Z",
+        "description": "- Fixed an issue with `command -v $program` on Ubuntu 20.04+ that would prevent the shell from returning the expected values. Changed to `echo \\$(command -v $program)` as a workaround.",
+        "html_url": "https://github.com/PombertLab/3DFI/releases/tag/0.8.7a",
+        "name": "3DFI-v0.8.7a",
+        "release_id": 55750885,
+        "tag": "0.8.7a",
+        "tarball_url": "https://api.github.com/repos/PombertLab/3DFI/tarball/0.8.7a",
+        "type": "Release",
+        "url": "https://api.github.com/repos/PombertLab/3DFI/releases/55750885",
+        "value": "https://api.github.com/repos/PombertLab/3DFI/releases/55750885",
+        "zipball_url": "https://api.github.com/repos/PombertLab/3DFI/zipball/0.8.7a"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "Pombert-JF",
+          "type": "User"
+        },
+        "date_created": "2021-12-08T15:37:15Z",
+        "date_published": "2021-12-08T15:46:12Z",
+        "description": "Minor release:\r\n- Fixed an issue in which some of the databases downloaded with create_3DFI_db.pl were only readable by the owner.\r\n- The nvidia-docker2 package used by Alphafold2 is becoming obsolete. It is being replaced by nvidia-container-runtime. Added notes in Installation_notes.sh on how to use nvidia-container-runtime instead of nvidia-docker2 on Fedora 35.\r\n- Added the 'How to cite' section to the README referring to the 3DFI publication in Bioinformatics advances.",
+        "html_url": "https://github.com/PombertLab/3DFI/releases/tag/0.8.7",
+        "name": "3DFI-v0.8.7",
+        "release_id": 54884104,
+        "tag": "0.8.7",
+        "tarball_url": "https://api.github.com/repos/PombertLab/3DFI/tarball/0.8.7",
+        "type": "Release",
+        "url": "https://api.github.com/repos/PombertLab/3DFI/releases/54884104",
+        "value": "https://api.github.com/repos/PombertLab/3DFI/releases/54884104",
+        "zipball_url": "https://api.github.com/repos/PombertLab/3DFI/zipball/0.8.7"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "AlexanderThomasJulian",
+          "type": "User"
+        },
+        "date_created": "2021-09-27T20:45:24Z",
+        "date_published": "2021-10-07T19:35:23Z",
+        "description": "- run_visualizations.pl can now iterate through predicted structures without structural homologs.\r\n- made minor cosmetic changes to run_visualizations.pl for increased readability\r\n- fixed run_3DFI.pl typo\r\n- added missing predicted_structures.log to Example/Visualizations\r\n- fixed alignment selection issue\r\n\r\n",
+        "html_url": "https://github.com/PombertLab/3DFI/releases/tag/0.8.6",
+        "name": "3DFI-v0.8.6",
+        "release_id": 50990072,
+        "tag": "0.8.6",
+        "tarball_url": "https://api.github.com/repos/PombertLab/3DFI/tarball/0.8.6",
+        "type": "Release",
+        "url": "https://api.github.com/repos/PombertLab/3DFI/releases/50990072",
+        "value": "https://api.github.com/repos/PombertLab/3DFI/releases/50990072",
+        "zipball_url": "https://api.github.com/repos/PombertLab/3DFI/zipball/0.8.6"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "Pombert-JF",
+          "type": "User"
+        },
+        "date_created": "2021-09-23T15:53:38Z",
+        "date_published": "2021-09-23T16:07:03Z",
+        "description": "Major changes:\r\n- setup_3DFI.pl => can now install AlphaFold, RaptorX and/or RoseTTAFold automatically\r\n- create_3DFI_db.pl  => can now download all databases automatically\r\n- PDB_headers.pl => now updates the RCSB_PDB_titles.tsv list rather than recreating it every time; much faster\r\n- README => updated/simplified for increased readability\r\n",
+        "html_url": "https://github.com/PombertLab/3DFI/releases/tag/0.8.5",
+        "name": "3DFI-v0.8.5",
+        "release_id": 50147765,
+        "tag": "0.8.5",
+        "tarball_url": "https://api.github.com/repos/PombertLab/3DFI/tarball/0.8.5",
+        "type": "Release",
+        "url": "https://api.github.com/repos/PombertLab/3DFI/releases/50147765",
+        "value": "https://api.github.com/repos/PombertLab/3DFI/releases/50147765",
+        "zipball_url": "https://api.github.com/repos/PombertLab/3DFI/zipball/0.8.5"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "Pombert-JF",
+          "type": "User"
+        },
+        "date_created": "2021-09-16T15:42:01Z",
+        "date_published": "2021-09-16T15:53:00Z",
+        "description": "Alpha version of major update 0.8:\r\n- Added a run_3DFI.pl master script\r\n- Added a create_3DFI_db.pl script to create the 3DFI databases ## initial version, to be improved\r\n- Added a setup_3DFI.pl script ## initial version, to be improved\r\n- Added GZIP compression to GESAMT results to save on storage\r\n- Improved  the visualization script and renamed it: run_visualizations.pl (plDDT scores are now colored automatically if present in PDB)\r\n- Made modifications to several scripts for better integration with run_3DFI.pl \r\n- Restructured README for readability\r\n- Added case examples and replaced one example that didn't fit within 8 GB of VRAM with ROSETTAFOLD by  a smaller one.\r\n- Removed support for trRosetta/trRosetta2 and moved them to alternate predictors",
+        "html_url": "https://github.com/PombertLab/3DFI/releases/tag/0.8a",
+        "name": "3DFI-v0.8a",
+        "release_id": 49688940,
+        "tag": "0.8a",
+        "tarball_url": "https://api.github.com/repos/PombertLab/3DFI/tarball/0.8a",
+        "type": "Release",
+        "url": "https://api.github.com/repos/PombertLab/3DFI/releases/49688940",
+        "value": "https://api.github.com/repos/PombertLab/3DFI/releases/49688940",
+        "zipball_url": "https://api.github.com/repos/PombertLab/3DFI/zipball/0.8a"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "Pombert-JF",
+          "type": "User"
+        },
+        "date_created": "2021-07-31T15:42:51Z",
+        "date_published": "2021-07-31T17:12:06Z",
+        "description": "- Fixed issue with multiple models in homology searches and visualizations\r\n- Added setup_3DFI.pl to help set environment variables\r\n- Added examples of ChimeraX .cxs alignments with prepare_visualizations.pl\r\n- Sent harmless ChimeraX WebEngine message to /dev/null\r\n",
+        "html_url": "https://github.com/PombertLab/3DFI/releases/tag/0.7a",
+        "name": "3DFI-v0.7a",
+        "release_id": 47094699,
+        "tag": "0.7a",
+        "tarball_url": "https://api.github.com/repos/PombertLab/3DFI/tarball/0.7a",
+        "type": "Release",
+        "url": "https://api.github.com/repos/PombertLab/3DFI/releases/47094699",
+        "value": "https://api.github.com/repos/PombertLab/3DFI/releases/47094699",
+        "zipball_url": "https://api.github.com/repos/PombertLab/3DFI/zipball/0.7a"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "Pombert-JF",
+          "type": "User"
+        },
+        "date_created": "2021-07-23T14:14:08Z",
+        "date_published": "2021-07-26T15:13:35Z",
+        "description": "- Added wrappers for AlphaFold and RoseTTAFold\r\n- Restructured folders for prediction, homology searches and visualization\r\n- Added examples\r\n- Restructured TOC for greater clarity.",
+        "html_url": "https://github.com/PombertLab/3DFI/releases/tag/0.7",
+        "name": "3DFI-v0.7",
+        "release_id": 46776621,
+        "tag": "0.7",
+        "tarball_url": "https://api.github.com/repos/PombertLab/3DFI/tarball/0.7",
+        "type": "Release",
+        "url": "https://api.github.com/repos/PombertLab/3DFI/releases/46776621",
+        "value": "https://api.github.com/repos/PombertLab/3DFI/releases/46776621",
+        "zipball_url": "https://api.github.com/repos/PombertLab/3DFI/zipball/0.7"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "Pombert-JF",
+          "type": "User"
+        },
+        "date_created": "2021-07-14T17:21:07Z",
+        "date_published": "2021-07-14T17:29:35Z",
+        "description": "- Can now run RaptorX from anywhere by setting the RAPTORX_PATH environment variable\r\n- Added visualization step with ChimeraX (tested with v1.2.5)\r\n- Added an editable shell script that can be used to install RaptorX\r\n- Improved readme and log file\r\n- Minor bug fixes\r\n",
+        "html_url": "https://github.com/PombertLab/3DFI/releases/tag/0.6",
+        "name": "3DFI-v0.6",
+        "release_id": 46203557,
+        "tag": "0.6",
+        "tarball_url": "https://api.github.com/repos/PombertLab/3DFI/tarball/0.6",
+        "type": "Release",
+        "url": "https://api.github.com/repos/PombertLab/3DFI/releases/46203557",
+        "value": "https://api.github.com/repos/PombertLab/3DFI/releases/46203557",
+        "zipball_url": "https://api.github.com/repos/PombertLab/3DFI/zipball/0.6"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "Pombert-JF",
+          "type": "User"
+        },
+        "date_created": "2021-03-12T21:25:24Z",
+        "date_published": "2021-03-14T01:22:10Z",
+        "description": "Initial release with code cleaned up a bit. Should work as intended.",
+        "html_url": "https://github.com/PombertLab/3DFI/releases/tag/0.5",
+        "name": "3DFI-v0.5",
+        "release_id": 39772206,
+        "tag": "0.5",
+        "tarball_url": "https://api.github.com/repos/PombertLab/3DFI/tarball/0.5",
+        "type": "Release",
+        "url": "https://api.github.com/repos/PombertLab/3DFI/releases/39772206",
+        "value": "https://api.github.com/repos/PombertLab/3DFI/releases/39772206",
+        "zipball_url": "https://api.github.com/repos/PombertLab/3DFI/zipball/0.5"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "somef_missing_categories": [
+    "citation",
+    "acknowledgement",
+    "run",
+    "download",
+    "requirements",
+    "contact",
+    "contributors",
+    "documentation",
+    "usage",
+    "faq",
+    "support",
+    "has_build_file",
+    "executable_example"
+  ],
+  "somef_provenance": {
+    "date": "2024-10-04 14:28:48",
+    "somef_schema_version": "1.0.0",
+    "somef_version": "0.9.5"
+  },
+  "stargazers_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 17
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "type": [
+    {
+      "confidence": 0.82,
+      "result": {
+        "type": "String",
+        "value": "commandline-application"
+      },
+      "technique": "software_type_heuristics"
+    }
+  ]
+}

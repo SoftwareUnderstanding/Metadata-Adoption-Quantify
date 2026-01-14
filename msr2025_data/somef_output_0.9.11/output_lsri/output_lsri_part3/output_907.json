@@ -1,0 +1,617 @@
+{
+  "application_domain": [
+    {
+      "confidence": 15.09,
+      "result": {
+        "type": "String",
+        "value": "Computer Vision"
+      },
+      "technique": "supervised_classification"
+    }
+  ],
+  "code_repository": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/SaritaPoonia/unCTC"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_created": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2022-10-19T11:36:25Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_updated": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2022-11-02T10:47:41Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "description": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Introduction",
+        "parent_header": [
+          "unCTC: Characterising single circulating tumor cell transcriptomes"
+        ],
+        "type": "Text_excerpt",
+        "value": "unCTC employs pathway-based unsupervised clustering of single-cell\nRNA-Seq data to identify circulating tumour cells (CTCs) among white\nblood cells (WBCs). It accepts a list of raw Countdata/TPM single-cell\nRNA-Seq expression matrices. In the expression matrix, genes must be\naligned in rows, while cells must be in columns. unCTC integrates all\nmatrices based on common genes, removes low-expression genes and cells,\neliminates batch effects, and normalises the integrated matrix. For\nunsupervised clustering of circulating tumour cells (CTCs) and white\nblood cells (WBCs), a normalised matrix is translated to pathway space\nand deep dictionary learning with k-means clustering is implemented.\nunCTC also computes copy number variations (CNVs) , revealing the\nfrequency of CNVs and the position of the p/q arm variation. Using\nStouffer\u2019s Z-score, unCTC enables the detection of numerous canonical\nmarkers indicating malignant/epithelial/immune origins (Stouffer et al.,\n1949). The expression of other canonical markers confirms the lineage of\ncirculating tumour cells (CTCs).\n"
+      },
+      "source": "https://raw.githubusercontent.com/SaritaPoonia/unCTC/master/README.Rmd",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 0.9941605907503666,
+      "result": {
+        "original_header": "Calculate pathway enrichment score",
+        "type": "Text_excerpt",
+        "value": "-   Make list of datasets and integrate data on the basis of common\n    genes.  \n-   Filter out low expressed genes and cells.  \n-   Use Linnorm.Norm() for normalization and batch effect correction.  \n-   Create singleCellObject instance.  \n-   Calculate pathway enrichment score.  \n-   Store metadata.  \n-   Return pathway enrichment score and pathway metadata. \nPathwayEnrichmentScore requires following inputs:  \n\\* data_list: List of expression data matrices  \n\\* data_id: List of expression data matrices\u2019 name in the same order. \\*\nGenesets: List of pathways \\* min.size: Minimum size of genes in\npathways/Genesets, Default is 10  \n\\* max.size: Maximum size of genes in pathways/Genesets, Default is\n500  \n\\* min_Sample: filter out genes which are not expressedin at least\nmin_Sample cells, Default is 5.  \n\\* min_Gene: Filter out those cells which do not express at least\nmin_Gene genes, Default is 1500. \\* Parallel_threads : Number of threads\nin parallel to execute process\n``` r\n#Call PathwayEnrichmentScore\nPathway_score = unCTC::PathwayEnrichmentScore(data_list =dataList,\n                                        data_id = dataId,\n                                        Genesets = genesets,\n                                        min.size=10,\n                                        max.size = 500,\n                                        min_Sample = 5,\n                                        min_Gene = 1500,\n                                       Parallel_threads=8L)\n```\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/SaritaPoonia/unCTC/master/README.Rmd",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9544109336662837,
+      "result": {
+        "original_header": "Calculate the optimal number of clusters for pathway enrichment score matrix",
+        "type": "Text_excerpt",
+        "value": "For the above pathway enrichment score matrix, we calculate the number\nof clusters using the Elbow method.\n``` r\nlibrary(factoextra)\nlibrary(NbClust)\nfviz_nbclust(Pathway_score$Pathway_score, kmeans, method = \"wss\") +\n    geom_vline(xintercept = 4, linetype = 2)+\n    labs(subtitle = \"Elbow method\")\n```\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/SaritaPoonia/unCTC/master/README.Rmd",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.995620066489184,
+      "result": {
+        "original_header": "DDLK Clusteing",
+        "type": "Text_excerpt",
+        "value": "-   PathwayScore: Pathway enrichment score matrix. We get this from\n    PathwayEnrichmentScore_output$Pathway_score  \n-   PathwayMetaData: Pathways metadata. we get this from\n    PathwayEnrichmentScore_output$Pathway_metadata  \n-   n: Number of clusters for K-means clustering. We can determine the\n    optimal number of clusters for pathway enrichment score matrix using\n    the Elbow method, Average silhouette method, Gap statistic method.  \n-   out.dir: Directory to save enrichment score. This input is\n    mandatory. Default is your current directory.  \n-   MetaData: list of metadata for all expression matrices. This input\n    is optional. Only give if you have the same columns in all metadata\n    matrices.\n``` r\n# DDLK_Clust use python environment so set python environment before running DDLK_Clust()\n# Set Python3 Path: Example: Sys.setenv(RETICULATE_PYTHON = \"/usr/bin/python3\")\n\nSys.setenv(RETICULATE_PYTHON = \"/path/to/python3\") \nlibrary(reticulate)\n\n#Retrive information about the version of python being used by reticulate\nreticulate::py_config()\n#If version is different from the the given path then restart session and\n#give path again can change path\n\nDDLK_Clusters = unCTC::DDLK_Clust(PathwayScore = Pathway_score$Pathway_score,\n                           PathwayMetaData = Pathway_score$Pathway_metadata,\n                           n = 4,\n                           out.dir = getwd(),\n                           MetaData = MetaData\n                           )\n```\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/SaritaPoonia/unCTC/master/README.Rmd",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9434063722499546,
+      "result": {
+        "original_header": "unCTC plots:",
+        "type": "Text_excerpt",
+        "value": "unCTC_plots Plots principal components of pathway enrichment score. \n-   Return list of three plots:group_by_Class,\n    group_by_Cluster,p1_p5_Pairssplot \nRequired input for unCTC_plots method is: \n-   PathwayScore: Pathway enrichment score matrix. We get this from\n    PathwayEnrichmentScore_output$Pathway_score.  \n-   PathwayMetaData: Pathways metadata. we get this from\n    PathwayEnrichmentScore_output$Pathway_metadata.  \n-   colorby: Any column name from PathwayMetaData, default is\n    \u201cData_id\u201d.  \n-   Color_cluster: Any column name from PathwayMetaData, default is\n    \u201cClusters\u201d.  \n-   pairsplotLegend: Legend Position in pairsplot. Choose one from\n    \u201cleft\u201d,\u201cright\u201d and \u201cnone\u201d\n``` r\nplots = unCTC::unCTC_plots(Pathway_score = DDLK_Clusters$Pathway_score,\n                    Pathway_metadata = DDLK_Clusters$PathwayDDLK_clust,\n                    colorby = \"Data_id\",\n                    Color_cluster = \"Clusters\",\n                    pairsplotLegend = \"none\")\n```\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/SaritaPoonia/unCTC/master/README.Rmd",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9974213777159996,
+      "result": {
+        "original_header": "Differential genes",
+        "type": "Text_excerpt",
+        "value": "-   data_list: List of expression data matrices  \n-   min_Sample: filter out genes which are not expressedin at least\n    min_Sample cells, Default is 5  \n-   min_Gene: Filter out those cells which do not express at least\n    min_Gene genes, Default is 1500.  \n-   DDLK_Clusters: output of DDLK_Clust()  \n-   data_id: List of expression data matrices name in same order.  \n-   data_type: choose from given vector,c(\u201cNormalised\u201d,\u201cRaw\u201d).\n-   DifferentiateBy: Default is Clusters. We can choose any column name\n    from DDLK_Clusters$PathwayDDLK_clust  \n-   p_val = Threshold p-value, Default is 0.05\n-   lfc = Threshold log fold change value, Default is 0\n-   up_gene_number = Select number of upregulated genes you want to\n    obtain. Default is 10. If you get an error when computing the number\n    of upregulated genes, relax the p val parameter.\n``` r\nDiff_matrix = unCTC::Differential_genes(data_list=dataList,\n                                 min_Sample = 5,\n                                 min_Gene = 1500,\n                                 DDLK_Clusters,\n                                 Genesets = genesets,\n                                 data_id=dataId,\n                                 data_type = \"Normalised\",\n                                 DifferentiateBy = \"Clusters\",\n                                 up_gene_number = 200)\n```\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/SaritaPoonia/unCTC/master/README.Rmd",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9946438501189211,
+      "result": {
+        "original_header": "Differential Pathways",
+        "type": "Text_excerpt",
+        "value": "-   Pathway_score: Output of PathwayEnrichmentScore.R method  \n-   DDLK_Clusters: output of DDLK_Clust.R method  \n-   DifferentiateBy: Default is Clusters. We can choose any column name\n    from DDLK_Clusters$PathwayDDLK_clust  \n-   p_val = Threshold p-value, Default is 0.05\n-   lfc = Threshold log fold change value, Default is 0\n-   up_pathways_number = Select number of upregulated pathways you want\n    to obtain. Default is 10. If you get an error when computing the\n    number of upregulated pathways, relax the p val parameter.\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/SaritaPoonia/unCTC/master/README.Rmd",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9775414717079126,
+      "result": {
+        "original_header": "Out of top 100 upregulated pathways in each cluster we select relevent pathways from each cluster",
+        "type": "Text_excerpt",
+        "value": "### Out of top 100 upregulated pathways in each cluster we select relevent pathways from each cluster \n"
+      },
+      "source": "https://raw.githubusercontent.com/SaritaPoonia/unCTC/master/README.Rmd",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9950570410270912,
+      "result": {
+        "original_header": "Calcuate Stouffers score",
+        "type": "Text_excerpt",
+        "value": "-   Calculate Z score of log normalized data  \n-   Calculate Stouffer score for the specific gene list  \n-   Assign Stouffer score to different groups of data and results are\n    shown in boxplot \n-   data_list: List of expression data matrices.  \n-   min_Sample: filter out genes which are not expressedin at least\n    min_Sample cells, Default is 5.  \n-   min_Gene: Filter out those cells which do not express at least\n    min_Gene genes, Default is 1500.\n-   data_id: List of expression data matrices name in the same order.  \n-   gene_list: Specific genes in vector.  \n-   MetaData: Optional, List of metadata of expression matrices. If\n    given, then columns of all metadata in the list must be the same.  \n-   metaColPos: default = 1,Only require if metadata is given. Position\n    of the column in metadata for which we want to calculate and compare\n    Stouffer score for given gene list.  \n-   metaColName: default = \u201cClass\u201d, Only require if metadata is given.  \n    Name of the column in metadata for which we want to calculate and\n    compare Stouffer score for given gene list. \nWith this package, we have given two types of gene list:\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/SaritaPoonia/unCTC/master/README.Rmd",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.8873238642418831,
+      "result": {
+        "original_header": "Stouffer\u2019s Score:",
+        "type": "Text_excerpt",
+        "value": "``` r\n#Calculate Stouffer's score for Blood gene\nS_WBC = unCTC::Stouffer_score(data_list = dataList,\n                         min_Sample = 5,\n                         min_Gene = 1500,\n                         gene_list =Immune_signature_genes,\n                         data_id = dataId,\n                         Groupby = \"Clusters\",\n                         DDLKCluster_data = DDLK_Clusters)\n\n\n#Calculate Stouffer's score for Breast elevated genes\nS_Breast = unCTC::Stouffer_score(data_list = dataList,\n                           min_Sample = 5,\n                           min_Gene = 1500,\n                           gene_list = Breast_elevated_genes,\n                           data_id = dataId,\n                           Groupby = \"Clusters\",\n                           DDLKCluster_data = DDLK_Clusters)\n```\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/SaritaPoonia/unCTC/master/README.Rmd",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.8243355697603164,
+      "result": {
+        "original_header": "Stouffer\u2019s Score Plot",
+        "type": "Text_excerpt",
+        "value": "For better colour visualization we are using following color key:\n``` r\nlibrary(ggplot2)\nlibrary(ggpubr)\nColorKey = c(\"darkred\",\"deepskyblue3\",\"darkolivegreen4\",\n             \"dark turquoise\",\"pale violet red\",\n             \"steelblue\",\"forestgreen\",\"gray2\",\n             \"gray50\",\"hotpink\",\"lightslateblue\",\n             \"tan4\",\"yellow3\",\"sienna4\",\"orchid4\")\n```\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/SaritaPoonia/unCTC/master/README.Rmd",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9928004169978475,
+      "result": {
+        "original_header": "Copy Number Variation Analysis:",
+        "type": "Text_excerpt",
+        "value": "inferCNV R package is used for analysing copy number variation for raw\nCount/TPM data. Along with all analysis of inferCNV,\nunCTC::CNV_alterations calculate addition and deletion position in p and\nq arms in test/cancerous/ diseased data as compared to\nreference/normal/healthy. To calculate p and q arm location from\ninferCNV events, we used GRCh37 cytoband information. \n-   data_list: List of expression data matrices.  \n-   data_id: List of expression data matrices name in the same order.  \n-   path= path to save output files.\n-   min_Sample: filter out genes which are not expressedin at least\n    min_Sample cells, Default is 5.  \n-   min_Gene: Filter out those cells which do not express at least\n    min_Gene genes, Default is 1500.\n-   GenePositionFile: Gene/chromosomal order file. This package includes\n    genecode hg19 gene order file. Either you can use this or download\n    it from outer sources.  \n-   threads_no: Thread number for parallel processes, default is 8.  \n-   MetaData: Optional, List of metadata of expression matrices. If\n    given, then columns of all metadata in the list must be the same.  \n-   Groupby: Any column name from MetaData, which we want to use as an\n    annotation file. Only applicable if MetaData is given.  \n-   Reference_name: Any cell type from the data_id list or any cell type\n    from the column assign to Groupby.  \n-   obs.title: Title of test/observation matrix. Default is\n    \u201cObservations\u201d.  \n-   ref.title: Title of reference matrix. Default is \u201cReferences\u201d.  \n-   out.Filename: Output filename-prefix. Default is \u201cinferCNV\u201d.\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/SaritaPoonia/unCTC/master/README.Rmd",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9201892590574714,
+      "result": {
+        "original_header": "Gene_Violin_plots",
+        "type": "Text_excerpt",
+        "value": "Give violin plot for a given Canonical marker expression. \nGene_Violin_plots require input:  \n\\* data_list: List of expression data matrices  \n\\* data_id: List of expression data matrices name in the same order.  \n\\* min_Sample: filter out genes which are not expressedin at least\nmin_Sample cells, Default is 5.  \n\\* min_Gene: Filter out those cells which do not express at least\nmin_Gene genes, Default is 1500. \\* gene_symbol: Specific gene for which\nwe want to see expression.  \n\\* MetaData: Optional, list of metadata of expression matrices. If given\nthen columns of all metadata in the list must be identical.  \n\\* Groupby: Any column name from MetaData, which we want to use to see\ndifferential expression of the gene. Default is \u201cdata_id\u201d.\n``` r\n# Gene Violin plot\nPTPRC = Gene_Violin_plots(data_list =dataList,\n                  data_id = dataId,\n                  min_Sample = 5,\n                  min_Gene = 1500,\n                  gene_symbol = \"PTPRC\",\n                  DDLKCluster_data = DDLK_Clusters$PathwayDDLK_clust,\n                  Groupby = \"Clusters\")\nNKG7 = Gene_Violin_plots(data_list =dataList,\n                  data_id = dataId,\n                  min_Sample = 5,\n                  min_Gene = 1500,\n                  gene_symbol = \"NKG7\",\n                  DDLKCluster_data = DDLK_Clusters$PathwayDDLK_clust,\n                  Groupby = \"Clusters\")\n\nEPCAM = Gene_Violin_plots(data_list =dataList,\n                  data_id = dataId,\n                  min_Sample = 5,\n                  min_Gene = 1500,\n                  gene_symbol = \"EPCAM\",\n                  DDLKCluster_data = DDLK_Clusters$PathwayDDLK_clust,\n                  Groupby = \"Clusters\")\nKRT18 = Gene_Violin_plots(data_list =dataList,\n                  data_id = dataId,\n                  min_Sample = 5,\n                  min_Gene = 1500,\n                  gene_symbol = \"KRT18\",\n                  DDLKCluster_data = DDLK_Clusters$PathwayDDLK_clust,\n                  Groupby = \"Clusters\")\n```\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/SaritaPoonia/unCTC/master/README.Rmd",
+      "technique": "supervised_classification"
+    }
+  ],
+  "download_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/SaritaPoonia/unCTC/releases"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 0
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/SaritaPoonia/unCTC/forks"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "SaritaPoonia/unCTC"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_title": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "README"
+      },
+      "source": "https://raw.githubusercontent.com/SaritaPoonia/unCTC/master/README.Rmd",
+      "technique": "regular_expression"
+    }
+  ],
+  "images": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/SaritaPoonia/unCTC/master/man/figures/K_clustNo.png"
+      },
+      "source": "https://raw.githubusercontent.com/SaritaPoonia/unCTC/master/README.Rmd",
+      "technique": "regular_expression"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/SaritaPoonia/unCTC/master/man/figures/PCA_plots.png"
+      },
+      "source": "https://raw.githubusercontent.com/SaritaPoonia/unCTC/master/README.Rmd",
+      "technique": "regular_expression"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/SaritaPoonia/unCTC/master/man/figures/umap_plots.png"
+      },
+      "source": "https://raw.githubusercontent.com/SaritaPoonia/unCTC/master/README.Rmd",
+      "technique": "regular_expression"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/SaritaPoonia/unCTC/master/man/figures/Counts-per-cluster-1.png"
+      },
+      "source": "https://raw.githubusercontent.com/SaritaPoonia/unCTC/master/README.Rmd",
+      "technique": "regular_expression"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/SaritaPoonia/unCTC/master/man/figures/Differential-gene-matrix-pheatmap-1.png"
+      },
+      "source": "https://raw.githubusercontent.com/SaritaPoonia/unCTC/master/README.Rmd",
+      "technique": "regular_expression"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/SaritaPoonia/unCTC/master/man/figures/Specific-Pathways-1.png"
+      },
+      "source": "https://raw.githubusercontent.com/SaritaPoonia/unCTC/master/README.Rmd",
+      "technique": "regular_expression"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/SaritaPoonia/unCTC/master/man/figures/Immune-genes-Stouffer-1.png"
+      },
+      "source": "https://raw.githubusercontent.com/SaritaPoonia/unCTC/master/README.Rmd",
+      "technique": "regular_expression"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/SaritaPoonia/unCTC/master/man/figures/Breast-genes-Stouffer-1.png"
+      },
+      "source": "https://raw.githubusercontent.com/SaritaPoonia/unCTC/master/README.Rmd",
+      "technique": "regular_expression"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/SaritaPoonia/unCTC/master/man/figures/Poonia_data_infercnv_head.png"
+      },
+      "source": "https://raw.githubusercontent.com/SaritaPoonia/unCTC/master/README.Rmd",
+      "technique": "regular_expression"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/SaritaPoonia/unCTC/master/man/figures/infercnv_poonia.png"
+      },
+      "source": "https://raw.githubusercontent.com/SaritaPoonia/unCTC/master/README.Rmd",
+      "technique": "regular_expression"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/SaritaPoonia/unCTC/master/man/figures/Ebright_data_infercnv_head.png"
+      },
+      "source": "https://raw.githubusercontent.com/SaritaPoonia/unCTC/master/README.Rmd",
+      "technique": "regular_expression"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/SaritaPoonia/unCTC/master/man/figures/infercnv_Ebright.png"
+      },
+      "source": "https://raw.githubusercontent.com/SaritaPoonia/unCTC/master/README.Rmd",
+      "technique": "regular_expression"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/SaritaPoonia/unCTC/master/man/figures/Canonical-markers-expression-1.png"
+      },
+      "source": "https://raw.githubusercontent.com/SaritaPoonia/unCTC/master/README.Rmd",
+      "technique": "regular_expression"
+    }
+  ],
+  "installation": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Installation",
+        "parent_header": [
+          "unCTC: Characterising single circulating tumor cell transcriptomes"
+        ],
+        "type": "Text_excerpt",
+        "value": "You can install the released version of unCTC from \u2026.\n\n``` r\n#First, you need to install the devtools package. \ninstall.packages(\"devtools\")\n\n#Load the devtools package.\nlibrary(devtools)\n\n#Install the unCTC package\ninstall_github(\"SaritaPoonia/unCTC\")\n\n#Load unCTC\nlibrary(unCTC)\n```\n"
+      },
+      "source": "https://raw.githubusercontent.com/SaritaPoonia/unCTC/master/README.Rmd",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 0.985440691916725,
+      "result": {
+        "original_header": "Calculate pathway enrichment score",
+        "type": "Text_excerpt",
+        "value": "PathwayEnrichmentScore uses the following steps: \n"
+      },
+      "source": "https://raw.githubusercontent.com/SaritaPoonia/unCTC/master/README.Rmd",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9205539291315128,
+      "result": {
+        "original_header": "DDLK Clusteing",
+        "type": "Text_excerpt",
+        "value": "DDLk_Clust need the following inputs \n"
+      },
+      "source": "https://raw.githubusercontent.com/SaritaPoonia/unCTC/master/README.Rmd",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.8928672583509064,
+      "result": {
+        "original_header": "Differential genes",
+        "type": "Text_excerpt",
+        "value": "Differential_genes require following inputs: \n"
+      },
+      "source": "https://raw.githubusercontent.com/SaritaPoonia/unCTC/master/README.Rmd",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.8928672583509064,
+      "result": {
+        "original_header": "Differential Pathways",
+        "type": "Text_excerpt",
+        "value": "Differential_pathways require following inputs: \n"
+      },
+      "source": "https://raw.githubusercontent.com/SaritaPoonia/unCTC/master/README.Rmd",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.874662411113687,
+      "result": {
+        "original_header": "Calcuate Stouffers score",
+        "type": "Text_excerpt",
+        "value": "Stouffer_score method uses the following steps: \n"
+      },
+      "source": "https://raw.githubusercontent.com/SaritaPoonia/unCTC/master/README.Rmd",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.8698746394780853,
+      "result": {
+        "original_header": "Copy Number Variation Analysis:",
+        "type": "Text_excerpt",
+        "value": "CNV_alterations require the following inputs: \n"
+      },
+      "source": "https://raw.githubusercontent.com/SaritaPoonia/unCTC/master/README.Rmd",
+      "technique": "supervised_classification"
+    }
+  ],
+  "issue_tracker": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/SaritaPoonia/unCTC/issues"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "keywords": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": ""
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "unCTC"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "owner": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "User",
+        "value": "SaritaPoonia"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "programming_languages": [
+    {
+      "confidence": 1,
+      "result": {
+        "name": "R",
+        "size": 64069,
+        "type": "Programming_language",
+        "value": "R"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Python",
+        "size": 6856,
+        "type": "Programming_language",
+        "value": "Python"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "readme_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/SaritaPoonia/unCTC/master/README.Rmd"
+      },
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/SaritaPoonia/unCTC/master/README.md"
+      },
+      "technique": "file_exploration"
+    }
+  ],
+  "requirements": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Software Requirements",
+        "parent_header": [
+          "unCTC: Characterising single circulating tumor cell transcriptomes"
+        ],
+        "type": "Text_excerpt",
+        "value": "-   R (tested in R version 4.0.3 (2020-10-10))  \n-   R libraries required include : PCAtools, viridis, magrittr, stringr,\n    limma, rworldmap, data.table, GSVA, pheatmap, qusage, umap, ggplot2,\n    SingleCellExperiment, Linnorm, readxl, readtext, infercnv, ggpubr,\n    reticulate, GenomicRanges, readtext, S4Vectors, cowplot, edgeR,\n    D3GB, dplyr, SummarizedExperiment, IRanges, Matrix, utils, stats\n-   Python 3 with installed modules: h5py, scipy, pandas, numpy,\n    sklearn, matplotlib.pyplot, scipy.io\n\n``` r\nlibrary(unCTC)\nlibrary(pheatmap)\nlibrary(viridis)\nlibrary(ggplot2)\nlibrary(cowplot)\n```\n"
+      },
+      "source": "https://raw.githubusercontent.com/SaritaPoonia/unCTC/master/README.Rmd",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Data Requirements",
+        "parent_header": [
+          "unCTC: Characterising single circulating tumor cell transcriptomes"
+        ],
+        "type": "Text_excerpt",
+        "value": "unCTC requires:  \n\\* List of expression data matrices.  \n\\* List of expression data matrices\u2019 name in the same order.  \n\\* Gene list: List of specific genes or marker genes  \n\\* Genesets: list of pathways \\* A gene/chromosome positions file\n"
+      },
+      "source": "https://raw.githubusercontent.com/SaritaPoonia/unCTC/master/README.Rmd",
+      "technique": "header_analysis"
+    }
+  ],
+  "somef_missing_categories": [
+    "citation",
+    "acknowledgement",
+    "run",
+    "download",
+    "contact",
+    "contributors",
+    "documentation",
+    "license",
+    "faq",
+    "support",
+    "identifier",
+    "has_build_file",
+    "executable_example"
+  ],
+  "somef_provenance": {
+    "date": "2024-10-06 02:47:32",
+    "somef_schema_version": "1.0.0",
+    "somef_version": "0.9.5"
+  },
+  "stargazers_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 0
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "usage": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Usage and workflow",
+        "parent_header": [
+          "unCTC: Characterising single circulating tumor cell transcriptomes"
+        ],
+        "type": "Text_excerpt",
+        "value": "Two data matrices 1) Poonia_et_al.\\_TPMData and 2)\nDing_et_al.\\_WBC1_TPMData, and their meta data are given with this\npackage.\n"
+      },
+      "source": "https://raw.githubusercontent.com/SaritaPoonia/unCTC/master/README.Rmd",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Load Data and meta data from package",
+        "parent_header": [
+          "unCTC: Characterising single circulating tumor cell transcriptomes",
+          "Usage and workflow"
+        ],
+        "type": "Text_excerpt",
+        "value": "``` r\nPoonia_et_al._TPMData = unCTC::Poonia_et_al._TPMData\nDing_et_al._WBC1_TPMData = unCTC::Ding_et_al._WBC1_TPMData\nPoonia_et_al._metaData = unCTC::Poonia_et_al._metaData\nDing_et_al._WBC1_metaData = unCTC::Ding_et_al._WBC1_metaData\n```\n\nHere we are using two other dataset Ding_et_al.\\_WBC2_TPMData and\nEbright_et_al.\\_TPMData.\n\n-   Download all datasets from below link:  \n    <https://drive.google.com/file/d/1Hsf_eapDpEQbgqlBOrfhznKRBcDyG-9T/view?usp=sharing>\n-   download unCTC_data.zip folder.\n-   Unzip unCTC_data.zip..\n-   It contains all the data used in the creating and validating unCTC\n    package.\n-   Here we are using 4 expression data and 4 corresponding meta data\n    files. Out of which Poonia_et_al.\\_TPMData, Poonia_et_al.\\_metaData,\n    Ding_et_al.\\_WBC1_TPMData and Ding_et_al.\\_WBC1_metaData are given\n    with the package. So we can direct load from unCTC package.\n-   Load Ding_et_al.\\_WBC2_TPMData, Ding_et_al.\\_WBC2_metaData,\n    Ebright_et_al.\\_TPMData and Ebright_et_al.\\_metaData from downloaded\n    folder.\n\n``` r\nload(\"/path/of/downloaded/folder/Ebright_et_al._TPMData.RData\")\nEbright_et_al._TPMData = Ebright_et_al._TPMData\n\nload(\"/path/of/downloaded/folder/Ding_et_al._WBC2_TPMData.RData\")\nDing_et_al._WBC2_TPMData = Ding_et_al._WBC2_TPMData\n\nload(\"/path/of/downloaded/folder/Ebright_et_al._metaData.RData\")\nEbright_et_al._metaData = Ebright_et_al._metaData\n\nload(\"/path/of/downloaded/folder/Ding_et_al._WBC2_metaData.RData\")\nDing_et_al._WBC2_metaData = Ding_et_al._WBC2_metaData\n```\n"
+      },
+      "source": "https://raw.githubusercontent.com/SaritaPoonia/unCTC/master/README.Rmd",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Load geneset",
+        "parent_header": [
+          "unCTC: Characterising single circulating tumor cell transcriptomes",
+          "Usage and workflow"
+        ],
+        "type": "Text_excerpt",
+        "value": "This package includes one geneset, which is taken from molecular\nsignature database.\n\n``` r\nc2.all.v7.2.symbols = unCTC::c2.all.v7.2.symbols\n```\n\n``` r\n#Create Expression data list\ndataList = list(Poonia_et_al._TPMData,Ebright_et_al._TPMData,\n                Ding_et_al._WBC1_TPMData,Ding_et_al._WBC2_TPMData)\n\n#Create Data Id's list\ndataId = list(\"Poonia_et_al._TPMData\",\"Ebright_et_al._TPMData\",\n              \"Ding_et_al._WBC1_TPMData\",\"Ding_et_al._WBC2_TPMData\")\n\n#Create Meta data list\nMetaData = list(Poonia_et_al._metaData, Ebright_et_al._metaData, \n                Ding_et_al._WBC1_metaData, Ding_et_al._WBC2_metaData )\n\n#Genesets given with this package\ngenesets = c2.all.v7.2.symbols\n```\n"
+      },
+      "source": "https://raw.githubusercontent.com/SaritaPoonia/unCTC/master/README.Rmd",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Heatmap showing the top 200 upregulated genes in the 4 clusters.",
+        "parent_header": [
+          "unCTC: Characterising single circulating tumor cell transcriptomes",
+          "Differential genes"
+        ],
+        "type": "Text_excerpt",
+        "value": "``` r\nlibrary(pheatmap)\nlibrary(viridis)\nannotation = Diff_matrix$annotations\nannotation$Data_id <- NULL\nannotation$GroupID <- NULL\nannotation$Cell_type <- NULL\nann = annotation[,c(\"HormoneStatus\",\"Class\",\"Clusters\")] \n\npheatmap(t(scale(t(Diff_matrix$DiffMat))),cluster_cols = FALSE,\n         show_colnames = FALSE,cluster_rows = FALSE, show_rownames = FALSE,\n         color = viridis(1000),annotation = ann)\n```\n\n<img src=\"man/figures/Differential-gene-matrix-pheatmap-1.png\" width=\"80%\" style=\"display: block; margin: auto;\" />\n"
+      },
+      "source": "https://raw.githubusercontent.com/SaritaPoonia/unCTC/master/README.Rmd",
+      "technique": "header_analysis"
+    }
+  ]
+}

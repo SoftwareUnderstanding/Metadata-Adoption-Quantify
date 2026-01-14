@@ -1,0 +1,373 @@
+{
+  "code_repository": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/mortunco/snp-starrseq"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_created": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2020-09-21T17:10:28Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_updated": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2022-01-05T20:26:04Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "description": [
+    {
+      "confidence": 0.9104611350409444,
+      "result": {
+        "original_header": "Configuration and Outputs",
+        "type": "Text_excerpt",
+        "value": "Our pipeline needs a config file for execution. It is recommended to create a separate config file for each analysis for reproducibility. Example config file shared in the `config/config.small-example.yaml` with descriptions. Parameters of the manuscript data is in the `config/full-calibstrict.yaml`. Mandatory/optional fields are also referred in the `config/small-example.yaml`. \nOur basic file structure is as follows. There are 4 main steps;\nIn step 1, we cluster and generate consensus sequences from asymmetric reads.\n- asym.shortlong/shortlong.cluster --> Calib cluster output from independent asymmteric sequnecing runs which contain cluster number and read information.\n- asym.cons.longshort/shortlong.rX.fastq --> Calib consensus output from independent asymmteric sequnecing runs which contain consensus sequence of all clusters which =>2 members.\n- asym.merged.rX.fastq --> We merge longshort/shortlongs r1 and r2 in two separate files for `2-read-matching` step.\nIn step 2, we match long mates of the two asymmeric runs using 24 bp barcodes. \n- (5' ~ 3bp UMI - 9 bp Fragment Sequence - ... - 9 bp Fragment Sequence - 3bp UMI ~ 3')\n- asym.master-barcode-cid.txt --> Master table that contains information of each unique fragment. There are possible three outcomes, clustered means fragments are present in both (longshort/shortlong) runs. Orphan means fragment is found only in single run (one of longshort/shortlong). Problematic ones such as multiple and same same were cases that same barcodes was found by different fragments in the single run. In our benchmark this rate was <%1 therefore, we dump those reads to a file for further investigation.\nIn step 3, we collapsed matched long asymmetric reads and retreive enhancer fragments.\n- asym/pb.collapsed-fragments.bam/fastq --> As a result of the collapsing process, this file contains sucessfully collapsed fragments reference genome alignment and reads. If pacbio method is pb prefix is used.\n- asym/pb.barcode-variant-table.tsv --> This file contains all mismatches/indels on the collapsed fragments with respect to reference genome. If pacbio method is used. pb prefix is used.\n- asym/pb.barcode-allele.tsv --> From the previous file, we annotate each collapsed fragment whether they support alternative allele and WT allele. Only SNP events that are located in `capture_bed` bed file were considered. If pacbio method is used. pb prefix is used.\nIn step 4, we quantify barcode counts from symmterical starrseq data. (optional)\n- samplename[481/lib].bam --> For each symmetric sample, we initially map reads to the reference genome.\n- samplename[481/lib].vis-info --> File contains enhancer fragment index, enhancer fragment position and supporting symmetrical short read name. This information is required for visualisation process.\n- startposcounts.samplename[481/lib].txt --> for each file, using the alignment files we generate index (startpos:6bpUMI) for each read and quantify the occurance in the sample. These indexes should be concordant with the indexes from asymmetric section of the analysis.\nIn step 5, we calculate bi-allelic activity of SNPs based on the change in the enhancer fragments. \n- comparison.result-table.txt --> Containts output for each different comparison that was inputted in the config file.\nIn step 6, we generate two separate bedgraph files for WT and VAR alleles for those signifcant SNPs in each comparison. \n- comp_a/SNPid_chr-pos-ref-alt.WT/VAR.bedGraph --> Each SNP will get a pair of bedGraph files normalized by unique plasmid count.\n- vis-done --> indicated all visualisations are succesfully completed for this comparison. \n"
+      },
+      "source": "https://raw.githubusercontent.com/mortunco/snp-starrseq/dev_2/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9991286704398831,
+      "result": {
+        "original_header": "Annotation file for RSids.",
+        "type": "Text_excerpt",
+        "value": "5th step of our pipeline calculates bi-allelic activity of each SNP with our novel NBR method. To include RSid (rsXXX) for the events our analysis code requires annotation file which is consisted two column such as 1-base genomic position with chr:pos (**no chr**) and RS snp id (rsXXX). We shared dbsnp150 common VCF annotation for hg19/grch37 and grch38 genomes in our repository. But any user specific VCF could be used for this procedure if other annotation is neccasary.\n```\n# for example, common VCF file from dbsnp150\nwget https://ftp.ncbi.nih.gov/snp/organisms/human_9606_b150_GRCh38p7/VCF/00-common_all.vcf.gz -O common_all.dbsnp150.grch38.vcf.gz\nzcat common_all.dbsnp150.grch38.vcf.gz | grep -v \"#\" | cut -f 1-3 | awk '{print $1 \":\" $2 \"\\t\" $3}' > dbsnp150.grch38.snp\n\n$head dbsnp150.grch38.snp\n1:10177 rs367896724\n1:10352 rs555500075\n1:10352 rs145072688\n1:10616 rs376342519\n1:10642 rs558604819\n1:11008 rs575272151\n1:11012 rs544419019\n1:11063 rs561109771\n1:13110 rs540538026\n```\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/mortunco/snp-starrseq/dev_2/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9654174286134345,
+      "result": {
+        "original_header": "Pacbio CCS mode mode",
+        "type": "Text_excerpt",
+        "value": "snpSTARRseq pipeline can take Pacbio CCS reads as an input. To use this mode, our pipeline expect raw Pacbio output(XXX.subreads.bam) from the sequencer to be processed by [SMRT Tools](https://www.pacb.com/support/software-downloads/) 's (release_9.0.0.92188 used in our project) CCS module with default options.\n```\nccs --min-length 100 XX.subreads.bam ccs.out.bam\n```\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/mortunco/snp-starrseq/dev_2/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9792511471490732,
+      "result": {
+        "original_header": "Visualisation",
+        "type": "Text_excerpt",
+        "value": "6th step of our pipeline generates two separate bedGraph files for WT and VAR allales all SNPs which passes minimum enhancer fragment support threshold (Default 15). These files can then be visualised with genome browsers that are compatible with BedGraph format. Our publication's figure 2C was generated by saving 15kb window of target SNPs using the BedGraph output generated by our pipeline. \n \n"
+      },
+      "source": "https://raw.githubusercontent.com/mortunco/snp-starrseq/dev_2/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "download_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/mortunco/snp-starrseq/releases"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 0
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/mortunco/snp-starrseq/forks"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "mortunco/snp-starrseq"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_title": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "Table of contents"
+      },
+      "source": "https://raw.githubusercontent.com/mortunco/snp-starrseq/dev_2/README.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "installation": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "1. Create a project directory and its sub-structures.",
+        "parent_header": [
+          "Table of contents",
+          "Installation"
+        ],
+        "type": "Text_excerpt",
+        "value": "```\nmkdir test && mkdir test/code && mkdir test/analysis && mkdir test/raw-data && mkdir test/code\ncd test/code ## and enter the code directory under test\n```\n"
+      },
+      "source": "https://raw.githubusercontent.com/mortunco/snp-starrseq/dev_2/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "2. Create a new environment for snakemake (version &gt;= 6.4.1) You can skip this step if you already have one.",
+        "parent_header": [
+          "Table of contents",
+          "Installation"
+        ],
+        "type": "Text_excerpt",
+        "value": "```\nconda create -c bioconda -n snakemake snakemake_env\n```\n"
+      },
+      "source": "https://raw.githubusercontent.com/mortunco/snp-starrseq/dev_2/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "3. Clone following repositories",
+        "parent_header": [
+          "Table of contents",
+          "Installation"
+        ],
+        "type": "Text_excerpt",
+        "value": "```\ngit clone https://github.com/mortunco/snp-starrseq.git\ngit clone -b v0.3.4 https://github.com/vpc-ccg/calib.git\n```\n"
+      },
+      "source": "https://raw.githubusercontent.com/mortunco/snp-starrseq/dev_2/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "4. Create environment for calib",
+        "parent_header": [
+          "Table of contents",
+          "Installation"
+        ],
+        "type": "Text_excerpt",
+        "value": "```\nconda env create --file snp-starrseq/env/env.calib.yaml\nexit # to reset variables.\n```\n"
+      },
+      "source": "https://raw.githubusercontent.com/mortunco/snp-starrseq/dev_2/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "5. Build Calib from source.",
+        "parent_header": [
+          "Table of contents",
+          "Installation"
+        ],
+        "type": "Text_excerpt",
+        "value": "Our pipeline requires Calib for asymmetric sequencing fragmant reconstruction. \n```\nexit ### Start a new terminal \ncd go/to/your/test\nconda activate calib-v3.4\nexport CPATH=${CONDA_PREFIX}/include\nmake ## compiles calib\nmake -C consensus/ # compiles calib's consensus module\n```\n\nOnce calib is compiled we dont need this environment. Calib and consensus should return the following.\n```\n(calib-env)$ ./calib\nCombined barcode lengths must be a positive integer and each mate barcode length must be non-negative! Note if both mates have the same barcode length you can use -l/--barcode-length parameter instead.\nCalib: Clustering without alignment using LSH and MinHashing of barcoded reads\nUsage: calib [--PARAMETER VALUE]\nExample: calib -f R1.fastq -r R2.fastq -o my_out. -e 1 -l 8 -m 5 -t 2 -k 4 --silent\nCalib's paramters arguments:\n        -f    --input-forward                   (type: string;   REQUIRED paramter)\n        -r    --input-reverse                   (type: string;   REQUIRED paramter)\n        -o    --output-prefix                   (type: string;   REQUIRED paramter)\n        -s    --silent                          (type: no value; default: unset)\n        -q    --no-sort                         (type: no value; default:  unset)\n        -g    --gzip-input                      (type: no value; default:  unset)\n        -l    --barcode-length                  (type: int;      REQUIRED paramter unless -l1 and -l2 are provided)\n        -l1   --barcode-length-1                (type: int;      REQUIRED paramter unless -l is provided)\n        -l2   --barcode-length-2                (type: int;      REQUIRED paramter unless -l is provided)\n        -p    --ignored-sequence-prefix-length  (type: int;      default: 0)\n        -m    --minimizer-count                 (type: int;      default: Depends on observed read length;)\n        -k    --kmer-size                       (type: int;      default: Depends on observed read length;)\n        -e    --error-tolerance                 (type: int;      default: Depends on observed read length;)\n        -t    --minimizer-threshold             (type: int;      default: Depends on observed read length;)\n        -c    --threads                         (type: int;      default: 1)\n        -h    --help\n```\n\n```\n(calib-env)$ ./consensus/calib_cons\nNo cluster filename was passed.\nCalib Consensus: Generating consensus sequence from Calib clusters.\nUsage: calib_cons [--PARAMETER VALUE]\nExample 1: calib_cons -t 8 -c input.cluster -q 1.fastq 2.fastq -o 1.out 2.out\nExample 2: calib_cons -q 1.fastq -q 2.fastq -o 1.out 2.out -c input.cluster\nCalib's paramters arguments:\n  -q  --fastq                    (type: space separated string list;\n                                    REQUIRED paramter;\n                                    can be set multiple times like in Example 2)\n  -o  --output-prefix            (type: space separated string list;\n                                    REQUIRED paramter;\n                                    can be set multiple times like in Example 2;\n                                    must be same size as fastq list)\n  -c  --cluster                  (string;\n                                    REQUIRED paramter)\n  -t  --threads                  (positive integer;\n                                    default: 4)\n  -m  --min-reads-per-cluster    (positive integer;\n                                    default: 2)\n  -h  --help\n```\n"
+      },
+      "source": "https://raw.githubusercontent.com/mortunco/snp-starrseq/dev_2/README.md",
+      "technique": "header_analysis"
+    }
+  ],
+  "invocation": [
+    {
+      "confidence": 0.8341008206574592,
+      "result": {
+        "original_header": "Configuration and Outputs",
+        "type": "Text_excerpt",
+        "value": "Below, the expected output directory tree for small-example with asymmetric mode.\n```\n$ tree small-example/\n\u251c\u2500\u2500 1-cluster-consensus\n\u2502\u00a0\u00a0 \u251c\u2500\u2500 asym.cons.longshort.r1.fastq\n\u2502\u00a0\u00a0 \u251c\u2500\u2500 asym.cons.longshort.r2.fastq\n\u2502\u00a0\u00a0 \u251c\u2500\u2500 asym.cons.shortlong.r1.fastq\n\u2502\u00a0\u00a0 \u251c\u2500\u2500 asym.cons.shortlong.r2.fastq\n\u2502\u00a0\u00a0 \u251c\u2500\u2500 asym.longshort.cluster\n\u2502\u00a0\u00a0 \u251c\u2500\u2500 asym.merged.r1.fastq\n\u2502\u00a0\u00a0 \u251c\u2500\u2500 asym.merged.r2.fastq\n\u2502\u00a0\u00a0 \u2514\u2500\u2500 asym.shortlong.cluster\n\u251c\u2500\u2500 2-match-reads\n\u2502\u00a0\u00a0 \u251c\u2500\u2500 asym.clustered.r1.fastq\n\u2502\u00a0\u00a0 \u251c\u2500\u2500 asym.clustered.r2.fastq\n\u2502\u00a0\u00a0 \u251c\u2500\u2500 asym.master-barcode-cid.txt\n\u2502\u00a0\u00a0 \u251c\u2500\u2500 asym.orphan.fastq\n\u2502\u00a0\u00a0 \u251c\u2500\u2500 asym.problematic_multiple.interleaved.fastq\n\u2502\u00a0\u00a0 \u2514\u2500\u2500 asym.problematic_samesame.interleaved.fastq\n\u251c\u2500\u2500 3-generate-fragment-lib\n\u2502\u00a0\u00a0 \u251c\u2500\u2500 asym.barcode-allele.tsv\n\u2502\u00a0\u00a0 \u251c\u2500\u2500 asym.barcode-variant-table.tsv\n\u2502\u00a0\u00a0 \u251c\u2500\u2500 asym.collapsed-fragments.bam\n\u2502\u00a0\u00a0 \u251c\u2500\u2500 asym.collapsed-fragments.bam.bai\n\u2502\u00a0\u00a0 \u251c\u2500\u2500 asym.trimmed.clustered.r1.fastq\n\u2502\u00a0\u00a0 \u251c\u2500\u2500 asym.trimmed.clustered.r2.fastq\n\u2502\u00a0\u00a0 \u251c\u2500\u2500 pb.barcode-allele.tsv ### Pipeline was run second time to generate Pacbio based fies\n\u2502\u00a0\u00a0 \u251c\u2500\u2500 pb.barcode-variant-table.tsv ### Pipeline was run second time to generate Pacbio based fies\n\u2502\u00a0\u00a0 \u251c\u2500\u2500 pb.collapsed-fragments.bam ### Pipeline was run second time to generate Pacbio based fies\n\u2502\u00a0\u00a0 \u251c\u2500\u2500 pb.collapsed-fragments.bam.bai ### Pipeline was run second time to generate Pacbio based fies\n\u2502\u00a0\u00a0 \u2514\u2500\u2500 pb.fasta\n\u251c\u2500\u2500 4-symmetric-barcode-quantification\n\u2502\u00a0\u00a0 \u251c\u2500\u2500 481.bam\n\u2502\u00a0\u00a0 \u251c\u2500\u2500 481.vis-info\n\u2502\u00a0\u00a0 \u251c\u2500\u2500 482.bam\n\u2502\u00a0\u00a0 \u251c\u2500\u2500 482.vis-info\n\u2502\u00a0\u00a0 \u251c\u2500\u2500 483.bam\n\u2502\u00a0\u00a0 \u251c\u2500\u2500 483.vis-info\n\u2502\u00a0\u00a0 \u251c\u2500\u2500 lib.bam\n\u2502\u00a0\u00a0 \u251c\u2500\u2500 lib.vis-info\n\u2502\u00a0\u00a0 \u251c\u2500\u2500 startposcounts.481.txt\n\u2502\u00a0\u00a0 \u251c\u2500\u2500 startposcounts.482.txt\n\u2502\u00a0\u00a0 \u251c\u2500\u2500 startposcounts.483.txt\n\u2502\u00a0\u00a0 \u2514\u2500\u2500 startposcounts.lib.txt\n\u251c\u2500\u2500 5-bi-allelic-comparisons\n\u2502\u00a0\u00a0 \u251c\u2500\u2500 comp_a.result-table.txt\n\u2502\u00a0\u00a0 \u251c\u2500\u2500 comp_b.result-table.txt\n\u2502\u00a0\u00a0 \u251c\u2500\u2500 hg19.fa.fai -> /home/tmorova/tools/hg19.fa.fai\n\u2502\u00a0\u00a0 \u251c\u2500\u2500 hg19.genome\n\u2502\u00a0\u00a0 \u2514\u2500\u2500 tmp\n\u2514\u2500\u2500 6-vis\n    \u2514\u2500\u2500 comp_a\n        \u251c\u2500\u2500 rs10457185_chr6-109322477-G-C.REF.bedGraph\n        \u251c\u2500\u2500 rs10457185_chr6-109322477-G-C.VAR.bedGraph\n        \u251c\u2500\u2500 rs2273668_chr6-109323519-G-T.REF.bedGraph\n        \u251c\u2500\u2500 rs2273668_chr6-109323519-G-T.VAR.bedGraph\n        \u251c\u2500\u2500 rs75675305_chr6-109324353-T-C.REF.bedGraph\n        \u251c\u2500\u2500 rs75675305_chr6-109324353-T-C.VAR.bedGraph\n        \u251c\u2500\u2500 rs7761290_chr6-109326621-T-G.REF.bedGraph\n        \u251c\u2500\u2500 rs7761290_chr6-109326621-T-G.VAR.bedGraph\n        \u2514\u2500\u2500 vis-done\n```\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/mortunco/snp-starrseq/dev_2/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "issue_tracker": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/mortunco/snp-starrseq/issues"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "keywords": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": ""
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "license": [
+    {
+      "confidence": 1,
+      "result": {
+        "name": "MIT License",
+        "spdx_id": "MIT",
+        "type": "License",
+        "url": "https://api.github.com/licenses/mit",
+        "value": "https://api.github.com/licenses/mit"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "File_dump",
+        "value": "MIT License\n\nCopyright (c) 2022 Tunc Morova\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.\n"
+      },
+      "source": "https://raw.githubusercontent.com/mortunco/snp-starrseq/dev_2/LICENSE",
+      "technique": "file_exploration"
+    }
+  ],
+  "name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "snp-starrseq"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "owner": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "User",
+        "value": "mortunco"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "programming_languages": [
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Python",
+        "size": 25838,
+        "type": "Programming_language",
+        "value": "Python"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "R",
+        "size": 5796,
+        "type": "Programming_language",
+        "value": "R"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "F*",
+        "size": 134,
+        "type": "Programming_language",
+        "value": "F*"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "readme_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/mortunco/snp-starrseq/dev_2/README.md"
+      },
+      "technique": "file_exploration"
+    }
+  ],
+  "run": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Dry run to test &amp; Run the small test data analysis",
+        "parent_header": [
+          "Table of contents",
+          "Running Small Example"
+        ],
+        "type": "Text_excerpt",
+        "value": "We generated a small example dataset and corresponding configuration file (config/config.small-example.yaml) to familirize our users with our pipeline. This configuration file contains required parameters to run full pipeline in asymmetric settings. For sake of simplicity, we incorporated only single sample but defined as different samples in the configuration.\n\n``` \n## Download small data set \ncd test/raw-data # go to the test directory that we created initially.\nwget https://figshare.com/ndownloader/files/31851779 -O data.tar.gz\ntar -xvf data.tar.gz\ncd ..\n\n## activate preferred snakemake env\nconda activate snakemake_env \n## run the pipeline\nsnakemake --snakefile code/snp-starrseq/Snakemake.py -j5 --use-conda --configfile code/snp-starrseq/config/config.small-example.yaml -p -n\nsnakemake --snakefile code/snp-starrseq/Snakemake.py -j5 --use-conda --configfile code/snp-starrseq/config/config.small-example.yaml -p\n```\n"
+      },
+      "source": "https://raw.githubusercontent.com/mortunco/snp-starrseq/dev_2/README.md",
+      "technique": "header_analysis"
+    }
+  ],
+  "somef_missing_categories": [
+    "citation",
+    "acknowledgement",
+    "download",
+    "requirements",
+    "contact",
+    "contributors",
+    "documentation",
+    "usage",
+    "faq",
+    "identifier",
+    "has_build_file",
+    "executable_example"
+  ],
+  "somef_provenance": {
+    "date": "2024-10-04 11:12:16",
+    "somef_schema_version": "1.0.0",
+    "somef_version": "0.9.5"
+  },
+  "stargazers_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 0
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "support": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Contant and Support",
+        "parent_header": [
+          "Table of contents"
+        ],
+        "type": "Text_excerpt",
+        "value": "Feel free to open an issue on our issue section.\n\n"
+      },
+      "source": "https://raw.githubusercontent.com/mortunco/snp-starrseq/dev_2/README.md",
+      "technique": "header_analysis"
+    }
+  ]
+}

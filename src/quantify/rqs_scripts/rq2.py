@@ -9,15 +9,7 @@ This script is for answering RQ2
 """
 SWH_API_ENDPOINT = "https://archive.softwareheritage.org/api/1/origin/"
 
-token = "eyJhbGciOiJIUzI1NiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICJhMTMxYTQ1My1hM2IyLTQwMTUtODQ2Ny05MzAyZjk3MTFkOGEifQ.eyJpYXQiOjE3MzI4Mjc4MTgsImp0aSI6IjJjYTNhYzEwLWZkMmItNGFjNy05NmI2LWUzMTk4YjY2ZmZmNSIsImlzcyI6Imh0dHBzOi8vYXV0aC5zb2Z0d2FyZWhlcml0YWdlLm9yZy9hdXRoL3JlYWxtcy9Tb2Z0d2FyZUhlcml0YWdlIiwiYXVkIjoiaHR0cHM6Ly9hdXRoLnNvZnR3YXJlaGVyaXRhZ2Uub3JnL2F1dGgvcmVhbG1zL1NvZnR3YXJlSGVyaXRhZ2UiLCJzdWIiOiI3YjFiMjZmZi03NTYxLTQ1NjEtOGIwOS01ZjUwYTM4YzU4MWUiLCJ0eXAiOiJPZmZsaW5lIiwiYXpwIjoic3doLXdlYiIsInNlc3Npb25fc3RhdGUiOiIyOTE5NGU2My01MGRkLTQyOTItYWYxNi00MzhjNzA0Y2IwOGUiLCJzY29wZSI6Im9wZW5pZCBvZmZsaW5lX2FjY2VzcyBwcm9maWxlIGVtYWlsIn0.xH3gFM3CNjlFi0OAO8q_lHVMulnC6493rfbdFuRFuQs"
-
-result = {
-        "results": [],
-        "summary": {
-            "count_in_swh": 0,
-            "count_not_in_swh": 0
-        },
-    }
+token = ""
 
 def check_swh_presence(github_url, token):
 
@@ -49,6 +41,13 @@ def check_swh_presence(github_url, token):
             return False
 
 def rq2(input_file, token, output_file, output_directory):
+    result = {
+        "results": [],
+        "summary": {
+            "count_in_swh": 0,
+            "count_not_in_swh": 0
+        },
+    }
 
     try:
         with open(input_file, 'r') as file:
@@ -60,7 +59,7 @@ def rq2(input_file, token, output_file, output_directory):
         return
 
     for repo in repositories:
-        github_url = repo.get("githublink")
+        github_url = repo.get("github_url")
 
         if github_url:
 

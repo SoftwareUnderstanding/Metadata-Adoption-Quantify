@@ -1,0 +1,633 @@
+{
+  "code_repository": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/icbi-lab/immune_deconvolution_benchmark"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_created": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2018-03-21T11:50:28Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_updated": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2024-08-30T03:10:02Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "description": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "Reproducible pipeline for \"Comprehensive evaluation of cell-type quantification methods for immuno-oncology\", Sturm et al. 2019, https://doi.org/10.1093/bioinformatics/btz363"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 0.9040937105827199,
+      "result": {
+        "original_header": "Comprehensive evaluation of cell-type quantification methods for immuno-oncology",
+        "type": "Text_excerpt",
+        "value": "> Sturm, G., Finotello, F., Petitprez, F., Zhang, J. D., Baumbach, J., Fridman, W. H., ..., List, M., Aneichyk, T. (2019). Comprehensive evaluation of transcriptome-based cell-type quantification methods for immuno-oncology. Bioinformatics, 35(14), i436-i445. https://doi.org/10.1093/bioinformatics/btz363\n \nThe source code in this project can be used to reproduce the results\ndescribed in the paper. Additionally, the pipeline can be easily\nextended to test novel methods against the state-of-the art. \n"
+      },
+      "source": "https://raw.githubusercontent.com/grst/immune_deconvolution_benchmark/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9939373470262655,
+      "result": {
+        "original_header": "Test your own method",
+        "type": "Text_excerpt",
+        "value": "Our pipeline is designed in a way that you can easily test your own method and benchmark it against the\nstate-of-the-art. All you have to do is to write an `R` function within the `immunedeconv` package that calls your\nmethod. \nIn brief, this is what we need to do: \n"
+      },
+      "source": "https://raw.githubusercontent.com/grst/immune_deconvolution_benchmark/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.8721169744686819,
+      "result": {
+        "original_header": "Add the new method to the `immunedeconv` package",
+        "type": "Text_excerpt",
+        "value": "The sourcecode of the `immunedeconv` package is located in `./immunedeconv`. The pipeline always loads this package from the source code there. \n1. **Go to the package and checkout a new branch**\n```bash\ncd immunedeconv\ngit checkout -b new_method\n```\n \nNext, we add a new deconvolution function for our method. \nIn our case, we add\n```r\n#' Deconvolute using the awseome RANDOM technique\n#'\n#' Here is a good place to add some documentation.\ndeconvolute_random = function(gene_expression_matrix) {\n  # list of the cell types we want to 'predict'\n  cell_types = c(\"CD4+ Tcell\", \"CD8+ Tcell\", \"NK cell\", \"Macrophage\",\n                 \"Monocyte\")\n  n_samples = ncol(gene_expression_matrix)\n\n  # generate random values\n  results = matrix(runif(length(cell_types) * n_samples), ncol=n_samples)\n\n  # rescale the values to sum to 1 for each sample\n  results = apply(results, 2, function(x) {x/sum(x)})\n  rownames(results) = cell_types\n  colnames(results) = colnames(gene_expression_matrix)\n\n  results\n}\n``` \nFinally, register the new method in the generic `deconvolute()` function.\n```r\ndeconvolute = function(gene_expression, method=deconvolution_methods, indications=NULL) {\n  message(paste0(\"\\n\", \">>> Running \", method))\n  # run selected method\n  res = switch(method,\n         xcell = deconvolute_xcell(gene_expression),\n         mcp_counter = deconvolute_mcp_counter(gene_expression),\n         epic = deconvolute_epic(gene_expression),\n         quantiseq = deconvolute_quantiseq(gene_expression),\n         cibersort = deconvolute_cibersort(gene_expression, absolute = FALSE),\n         cibersort_abs = deconvolute_cibersort(gene_expression, absolute = TRUE),\n         timer = deconvolute_timer(gene_expression, indications=indications),\n         random = deconvolute_random(gene_expression)   # <- method added here\n         )\n\n  # convert to tibble and annotate unified cell_type names\n  res = res %>%\n    as_tibble(rownames=\"method_cell_type\") %>%\n    annotate_cell_type(method=method)\n\n  return(res)\n}\n``` \n"
+      },
+      "source": "https://raw.githubusercontent.com/grst/immune_deconvolution_benchmark/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9015329660743823,
+      "result": {
+        "original_header": "Adjust pipeline configuration (optional)",
+        "type": "Text_excerpt",
+        "value": "Here, we can specify where our new random method will be used in \nthe benchmark. We add our random predictor to the set of methods that\nwill be benchmarked in terms of *absolute deviations* from the\nreal score (not supported by all methods):\n```r\n############## Specify methods used in the benchmark ##################\n\n# these methods will be used in the benchmark. Default: Use all methods\n# provided by the `immundeconv` package. \nconfig$deconvolution_methods = immunedeconv::deconvolution_methods\n\n# these methods will be treated as 'absolute' methods in the mixing benchmark\nconfig$abs_methods_mixing = c(\"cibersort_abs\", \"epic\", \"quantiseq\", \"xcell\", \"random\")\n\n# these methods will be shown as 'absolute' methods in the validation benchmark\nconfig$abs_methods_validation = c(\"cibersort_abs\", \"quantiseq\", \"epic\", \"random\")\n\n# these methods provide scores that support within-sample comparisons\nconfig$methods_within_sample_comparison = c(\"cibersort\", \"cibersort_abs\", \"quantiseq\", \"epic\")\n```\n### Run the pipeline\n```bash\nsnakemake wipe   # use this command to clear up previous results and to eradicate the cache\nsnakemake --use-conda book\n```\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/grst/immune_deconvolution_benchmark/master/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "download_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/grst/immune_deconvolution_benchmark/releases"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "faq": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "1. The pipeline fails with a weird error message.",
+        "parent_header": [
+          "Comprehensive evaluation of cell-type quantification methods for immuno-oncology",
+          "FAQ"
+        ],
+        "type": "Text_excerpt",
+        "value": "A likely reason for that is that you don't have enough RAM per core. Try to reduce the maximum number of cores in [notebooks/config.R](https://github.com/icbi-lab/immune_deconvolution_benchmark/blob/ce5684bae11a16784547b00719f1ab51795dbf2c/notebooks/config.R#L3) until you have at least 12GB of RAM per core. \n\nThis happens when the pipeline breaks out of a parallel for loop. A possible error message is \n```\nError in names(object) <- nm : \n  'names' attribute [10] must be the same length as the vector [0]\nCalls: <Anonymous> ... getResult -> getResult.iforeach -> <Anonymous> -> setNames\n```\nwhich does not really hint at a lack of memory. Others might be possible if the pipeline fails at other stages. \n"
+      },
+      "source": "https://raw.githubusercontent.com/grst/immune_deconvolution_benchmark/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "2. Can I test my own method?",
+        "parent_header": [
+          "Comprehensive evaluation of cell-type quantification methods for immuno-oncology",
+          "FAQ"
+        ],
+        "type": "Text_excerpt",
+        "value": "Yes, you need to write a small wrapper function. \nSee [below](#test-your-own-method). \n"
+      },
+      "source": "https://raw.githubusercontent.com/grst/immune_deconvolution_benchmark/master/README.md",
+      "technique": "header_analysis"
+    }
+  ],
+  "forks_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 14
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/icbi-lab/immune_deconvolution_benchmark/forks"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "icbi-lab/immune_deconvolution_benchmark"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_title": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "Comprehensive evaluation of cell-type quantification methods for immuno-oncology"
+      },
+      "source": "https://raw.githubusercontent.com/grst/immune_deconvolution_benchmark/master/README.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "images": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/grst/immune_deconvolution_benchmark/master/img/screenshot_mapping.png"
+      },
+      "source": "https://raw.githubusercontent.com/grst/immune_deconvolution_benchmark/master/README.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "installation": [
+    {
+      "confidence": 0.9997350563771612,
+      "result": {
+        "original_header": "Add the new method to the `immunedeconv` package",
+        "type": "Text_excerpt",
+        "value": "1. **Go to the package and checkout a new branch**\n```bash\ncd immunedeconv\ngit checkout -b new_method\n```\n \nTo check everything, run the unit tests of the `immunedeconv` package.\nInvoke the following command from the root of the main repository:\n```bash\nsnakemake --use-conda test_immunedeconv\n``` \n"
+      },
+      "source": "https://raw.githubusercontent.com/grst/immune_deconvolution_benchmark/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9094471606671196,
+      "result": {
+        "original_header": "Adjust pipeline configuration (optional)",
+        "type": "Text_excerpt",
+        "value": "Have a look at the configuration file:\n```\nnotebooks/config.R\n``` \n"
+      },
+      "source": "https://raw.githubusercontent.com/grst/immune_deconvolution_benchmark/master/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "invocation": [
+    {
+      "confidence": 0.8253499120289988,
+      "result": {
+        "original_header": "Add the new method to the `immunedeconv` package",
+        "type": "Text_excerpt",
+        "value": "* Input: gene expression matrix (cols = samples, rows = genes, rownames = HGNC symbols, colnames = sample names)\n* Output: A matrix with immune cell estimates (cols = samples, rows = cell types,\nrownames = cell type name, colnames = sample names from input) \n"
+      },
+      "source": "https://raw.githubusercontent.com/grst/immune_deconvolution_benchmark/master/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "issue_tracker": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/icbi-lab/immune_deconvolution_benchmark/issues"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "keywords": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": ""
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "license": [
+    {
+      "confidence": 1,
+      "result": {
+        "name": "BSD 3-Clause \"New\" or \"Revised\" License",
+        "spdx_id": "BSD-3-Clause",
+        "type": "License",
+        "url": "https://api.github.com/licenses/bsd-3-clause",
+        "value": "https://api.github.com/licenses/bsd-3-clause"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "File_dump",
+        "value": "BSD 3-Clause License\n\nCopyright (c) 2018, Gregor Sturm\nAll rights reserved.\n\nRedistribution and use in source and binary forms, with or without\nmodification, are permitted provided that the following conditions are met:\n\n* Redistributions of source code must retain the above copyright notice, this\n  list of conditions and the following disclaimer.\n\n* Redistributions in binary form must reproduce the above copyright notice,\n  this list of conditions and the following disclaimer in the documentation\n  and/or other materials provided with the distribution.\n\n* Neither the name of the copyright holder nor the names of its\n  contributors may be used to endorse or promote products derived from\n  this software without specific prior written permission.\n\nTHIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS \"AS IS\"\nAND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE\nIMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE\nDISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE\nFOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL\nDAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR\nSERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER\nCAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,\nOR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE\nOF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.\n"
+      },
+      "source": "https://raw.githubusercontent.com/grst/immune_deconvolution_benchmark/master/LICENSE",
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Licenses",
+        "parent_header": [
+          "Comprehensive evaluation of cell-type quantification methods for immuno-oncology",
+          "Getting started"
+        ],
+        "type": "Text_excerpt",
+        "value": "While this pipeline is free software, you may require a license to run the individual methods. \nPlease see [this table](https://github.com/icbi-lab/immunedeconv/blob/master/README.md#available-methods-licenses-citations) for more information. In particular, CIBERSORT and EPIC are free for non-commercial use only. Additional steps are required to include CIBERSORT into the pipeline (see below). \n"
+      },
+      "source": "https://raw.githubusercontent.com/grst/immune_deconvolution_benchmark/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "EPIC",
+        "parent_header": [
+          "Comprehensive evaluation of cell-type quantification methods for immuno-oncology",
+          "Getting started",
+          "Licenses"
+        ],
+        "type": "Text_excerpt",
+        "value": "EPIC is published under an [Academic License](https://github.com/GfellerLab/EPIC/blob/master/LICENSE) restricting its use to non-commercial applications. If you plan to use this pipeline in a commerical setting, you need to obtain a license [from the authors](https://github.com/GfellerLab/EPIC#contact-information). If you with to exclude EPIC from the pipeline, you can do so in `notebooks/config.R`. \n"
+      },
+      "source": "https://raw.githubusercontent.com/grst/immune_deconvolution_benchmark/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "CIBERSORT",
+        "parent_header": [
+          "Comprehensive evaluation of cell-type quantification methods for immuno-oncology",
+          "Getting started",
+          "Licenses"
+        ],
+        "type": "Text_excerpt",
+        "value": "Due to licensing restrictions, CIBERSORT could not be included in this repo.\nYou have to go to the [CIBERSORT website](https://cibersort.stanford.edu),\nobtain a license and download the source code.\n\nPlace the files `CIBERSORT.R` and `LM22.txt` in the\n```\nlibs/CIBERSORT/\n```\nfolder of this repository.\n\nAlternatively, you can adjust the paths in `notebooks/config.R`\n\nIf CIBERSORT is not available, it will automatically be excluded from the\nanalysis (see `notebooks/config.R` for more details).\n\n"
+      },
+      "source": "https://raw.githubusercontent.com/grst/immune_deconvolution_benchmark/master/README.md",
+      "technique": "header_analysis"
+    }
+  ],
+  "name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "immune_deconvolution_benchmark"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "owner": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Organization",
+        "value": "icbi-lab"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "programming_languages": [
+    {
+      "confidence": 1,
+      "result": {
+        "name": "TeX",
+        "size": 43011,
+        "type": "Programming_language",
+        "value": "TeX"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "R",
+        "size": 4902,
+        "type": "Programming_language",
+        "value": "R"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Python",
+        "size": 4497,
+        "type": "Programming_language",
+        "value": "Python"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "readme_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/grst/immune_deconvolution_benchmark/master/README.md"
+      },
+      "technique": "file_exploration"
+    }
+  ],
+  "related_documentation": [
+    {
+      "confidence": 1,
+      "result": {
+        "format": "readthedocs",
+        "type": "Url",
+        "value": "https://snakemake.readthedocs.io/"
+      },
+      "source": "https://raw.githubusercontent.com/grst/immune_deconvolution_benchmark/master/README.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "releases": [
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "grst",
+          "type": "User"
+        },
+        "date_created": "2019-01-26T13:13:17Z",
+        "date_published": "2019-01-27T09:53:56Z",
+        "description": "Background prediction level: \r\n* Include stromal cell types\r\n* Change simulation approach: Now all other cell types are used as a background \r\nSpillover:\r\n* Include stromal cell types\r\n\r\n**All (preprocessed) data needed to reproduce the results**:\r\n[data.tar.gz](https://github.com/grst/immune_deconvolution_benchmark/releases/download/v1.0.0-rc1/data.tar.gz)",
+        "html_url": "https://github.com/icbi-lab/immune_deconvolution_benchmark/releases/tag/v1.1.0",
+        "name": "v1.1.0",
+        "release_id": 15196470,
+        "tag": "v1.1.0",
+        "tarball_url": "https://api.github.com/repos/icbi-lab/immune_deconvolution_benchmark/tarball/v1.1.0",
+        "type": "Release",
+        "url": "https://api.github.com/repos/icbi-lab/immune_deconvolution_benchmark/releases/15196470",
+        "value": "https://api.github.com/repos/icbi-lab/immune_deconvolution_benchmark/releases/15196470",
+        "zipball_url": "https://api.github.com/repos/icbi-lab/immune_deconvolution_benchmark/zipball/v1.1.0"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "grst",
+          "type": "User"
+        },
+        "date_created": "2018-11-07T13:23:36Z",
+        "date_published": "2018-11-07T16:39:08Z",
+        "description": "Fix minor problems when adding novel method. \r\n\r\n**All (preprocessed) data needed to reproduce the results**:\r\n[data.tar.gz](https://github.com/grst/immune_deconvolution_benchmark/releases/download/v1.0.0-rc1/data.tar.gz)\r\n\r\n**Pre-computed, simulated data-set of immune cell spike-ins to measure background prediction level and minimal detection fraction**:\r\n[cache.tar.gz](https://github.com/grst/immune_deconvolution_benchmark/releases/download/v1.0.0-rc1/cache.tar.gz)",
+        "html_url": "https://github.com/icbi-lab/immune_deconvolution_benchmark/releases/tag/v1.0.0",
+        "name": "v1.0.0",
+        "release_id": 13880062,
+        "tag": "v1.0.0",
+        "tarball_url": "https://api.github.com/repos/icbi-lab/immune_deconvolution_benchmark/tarball/v1.0.0",
+        "type": "Release",
+        "url": "https://api.github.com/repos/icbi-lab/immune_deconvolution_benchmark/releases/13880062",
+        "value": "https://api.github.com/repos/icbi-lab/immune_deconvolution_benchmark/releases/13880062",
+        "zipball_url": "https://api.github.com/repos/icbi-lab/immune_deconvolution_benchmark/zipball/v1.0.0"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "grst",
+          "type": "User"
+        },
+        "date_created": "2018-11-01T17:51:37Z",
+        "date_published": "2018-11-06T12:01:45Z",
+        "html_url": "https://github.com/icbi-lab/immune_deconvolution_benchmark/releases/tag/v1.0.0-rc1",
+        "name": "v1.0.0-rc1",
+        "release_id": 13851219,
+        "tag": "v1.0.0-rc1",
+        "tarball_url": "https://api.github.com/repos/icbi-lab/immune_deconvolution_benchmark/tarball/v1.0.0-rc1",
+        "type": "Release",
+        "url": "https://api.github.com/repos/icbi-lab/immune_deconvolution_benchmark/releases/13851219",
+        "value": "https://api.github.com/repos/icbi-lab/immune_deconvolution_benchmark/releases/13851219",
+        "zipball_url": "https://api.github.com/repos/icbi-lab/immune_deconvolution_benchmark/zipball/v1.0.0-rc1"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "grst",
+          "type": "User"
+        },
+        "date_created": "2018-07-31T09:39:16Z",
+        "date_published": "2018-07-31T12:05:50Z",
+        "description": "* Pipeline has been tested on different machines\r\n* Pipeline supports missing CIBERSORT\r\n* Pipeline supports additional, custom method. ",
+        "html_url": "https://github.com/icbi-lab/immune_deconvolution_benchmark/releases/tag/v0.2.0",
+        "release_id": 12182702,
+        "tag": "v0.2.0",
+        "tarball_url": "https://api.github.com/repos/icbi-lab/immune_deconvolution_benchmark/tarball/v0.2.0",
+        "type": "Release",
+        "url": "https://api.github.com/repos/icbi-lab/immune_deconvolution_benchmark/releases/12182702",
+        "value": "https://api.github.com/repos/icbi-lab/immune_deconvolution_benchmark/releases/12182702",
+        "zipball_url": "https://api.github.com/repos/icbi-lab/immune_deconvolution_benchmark/zipball/v0.2.0"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "grst",
+          "type": "User"
+        },
+        "date_created": "2018-07-18T13:04:42Z",
+        "date_published": "2018-07-18T14:39:50Z",
+        "html_url": "https://github.com/icbi-lab/immune_deconvolution_benchmark/releases/tag/v0.1.0",
+        "name": "prerelease testing reproducibility. ",
+        "release_id": 11987967,
+        "tag": "v0.1.0",
+        "tarball_url": "https://api.github.com/repos/icbi-lab/immune_deconvolution_benchmark/tarball/v0.1.0",
+        "type": "Release",
+        "url": "https://api.github.com/repos/icbi-lab/immune_deconvolution_benchmark/releases/11987967",
+        "value": "https://api.github.com/repos/icbi-lab/immune_deconvolution_benchmark/releases/11987967",
+        "zipball_url": "https://api.github.com/repos/icbi-lab/immune_deconvolution_benchmark/zipball/v0.1.0"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "requirements": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Prerequisites",
+        "parent_header": [
+          "Comprehensive evaluation of cell-type quantification methods for immuno-oncology",
+          "Getting started"
+        ],
+        "type": "Text_excerpt",
+        "value": "This pipeline uses [Anaconda](https://conda.io/miniconda.html) and\n[Snakemake](https://snakemake.readthedocs.io/en/stable/).\n\n1. **Download and install [Miniconda](https://conda.io/miniconda.html)**\n2. **Install snakemake**\n```\nconda install -c conda-forge -c bioconda snakemake\n```\n\n3. **Clone this repo.** We use a [git submodule](https://git-scm.com/docs/git-submodule) to import\nthe source code for the [immundeconv](https://github.com/icbi-lab/immunedeconv) R package.\n```\ngit clone --recurse-submodules git@github.com:icbi-lab/immune_deconvolution_benchmark.git\n```\n\nIf you have problems retrieving the submodule, read this [question on\nstackoverflow](https://stackoverflow.com/questions/3796927/how-to-git-clone-including-submodules).\n\n"
+      },
+      "source": "https://raw.githubusercontent.com/grst/immune_deconvolution_benchmark/master/README.md",
+      "technique": "header_analysis"
+    }
+  ],
+  "run": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Run the pipeline",
+        "parent_header": [
+          "Comprehensive evaluation of cell-type quantification methods for immuno-oncology",
+          "Test your own method"
+        ],
+        "type": "Text_excerpt",
+        "value": "To perform all computations and to generate a HTML report with\n[bookdown](https://bookdown.org/yihui/bookdown/) invoke\nthe corresponding `Snakemake` target:\n\n```\nsnakemake --use-conda book\n```\n\nMake sure to use the `--use-conda` flag to tell Snakemake to download all dependencies from Anaconda.org.\n\nThe pipeline will generate a `results` folder.\nThe HTML report with all figures and results will be available in\n`results/book`.\n\n"
+      },
+      "source": "https://raw.githubusercontent.com/grst/immune_deconvolution_benchmark/master/README.md",
+      "technique": "header_analysis"
+    }
+  ],
+  "somef_missing_categories": [
+    "citation",
+    "acknowledgement",
+    "download",
+    "contact",
+    "contributors",
+    "documentation",
+    "support",
+    "identifier",
+    "has_build_file",
+    "executable_example"
+  ],
+  "somef_provenance": {
+    "date": "2024-11-04 03:01:30",
+    "somef_schema_version": "1.0.0",
+    "somef_version": "0.9.5"
+  },
+  "stargazers_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 41
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "type": [
+    {
+      "confidence": 0.82,
+      "result": {
+        "type": "String",
+        "value": "commandline-application"
+      },
+      "technique": "software_type_heuristics"
+    }
+  ],
+  "usage": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Getting started",
+        "parent_header": [
+          "Comprehensive evaluation of cell-type quantification methods for immuno-oncology"
+        ],
+        "type": "Text_excerpt",
+        "value": "Short version:\n```\nconda install -c conda-forge -c bioconda snakemake\ngit clone --recurse-submodules git@github.com:icbi-lab/immune_deconvolution_benchmark.git\ncd immune_deconvolution_benchmark\n#<add CIBERSORT source code; see below (optional)>\nsnakemake get_cache  # download some precomputed files to speed up the build process (optional)\nsnakemake --use-conda\n```\n\nFor details, see below.\n\nIf you have trouble running the pipeline first, see the [FAQ](#FAQ) then report an issue on GitHub. \n"
+      },
+      "source": "https://raw.githubusercontent.com/grst/immune_deconvolution_benchmark/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "EPIC",
+        "parent_header": [
+          "Comprehensive evaluation of cell-type quantification methods for immuno-oncology",
+          "Getting started",
+          "Licenses"
+        ],
+        "type": "Text_excerpt",
+        "value": "EPIC is published under an [Academic License](https://github.com/GfellerLab/EPIC/blob/master/LICENSE) restricting its use to non-commercial applications. If you plan to use this pipeline in a commerical setting, you need to obtain a license [from the authors](https://github.com/GfellerLab/EPIC#contact-information). If you with to exclude EPIC from the pipeline, you can do so in `notebooks/config.R`. \n"
+      },
+      "source": "https://raw.githubusercontent.com/grst/immune_deconvolution_benchmark/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "CIBERSORT",
+        "parent_header": [
+          "Comprehensive evaluation of cell-type quantification methods for immuno-oncology",
+          "Getting started",
+          "Licenses"
+        ],
+        "type": "Text_excerpt",
+        "value": "Due to licensing restrictions, CIBERSORT could not be included in this repo.\nYou have to go to the [CIBERSORT website](https://cibersort.stanford.edu),\nobtain a license and download the source code.\n\nPlace the files `CIBERSORT.R` and `LM22.txt` in the\n```\nlibs/CIBERSORT/\n```\nfolder of this repository.\n\nAlternatively, you can adjust the paths in `notebooks/config.R`\n\nIf CIBERSORT is not available, it will automatically be excluded from the\nanalysis (see `notebooks/config.R` for more details).\n\n"
+      },
+      "source": "https://raw.githubusercontent.com/grst/immune_deconvolution_benchmark/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Computational resources and caching",
+        "parent_header": [
+          "Comprehensive evaluation of cell-type quantification methods for immuno-oncology",
+          "Getting started"
+        ],
+        "type": "Text_excerpt",
+        "value": "Running the full pipeline can take a lot of time and computational resources.\nIn particular the sensitivity and specificity analysis do a lot of simulations.\n\nThe pipeline internally generates caches to speed up repetitive builds.\nTo eradicate all caches, use\n```\nsnakemake wipe\n```\n\nBy default, the pipeline uses up to 16 cores and requires up to 12GB of\nmemory per core. You can adjust the number of cores in [notebooks/config.R](https://github.com/icbi-lab/immune_deconvolution_benchmark/blob/ce5684bae11a16784547b00719f1ab51795dbf2c/notebooks/config.R#L3).\n\nThe runtime of the pipeline can be several hours, depending on the number of cores.\n\n"
+      },
+      "source": "https://raw.githubusercontent.com/grst/immune_deconvolution_benchmark/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Useful Snakemake targets.",
+        "parent_header": [
+          "Comprehensive evaluation of cell-type quantification methods for immuno-oncology",
+          "Getting started"
+        ],
+        "type": "Text_excerpt",
+        "value": "Have a look at the `Snakefile`, it is self-explanatory.\n\nA list of the most useful targets\n```\nsnakemake --use-conda book       # generate a HTML-book in `results/book`\nsnakemake --use-conda            # default target (= book)\nsnakemake clean                  # cleans the HTML book\nsnakemake wipe                   # cleans everything, including all caches.\nsnakemake get_cache              # downloads precomputed results for sensitivity and specificity\n```\n"
+      },
+      "source": "https://raw.githubusercontent.com/grst/immune_deconvolution_benchmark/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "3. Can I use my own dataset (FACS or scRNA-seq) in the pipeline?",
+        "parent_header": [
+          "Comprehensive evaluation of cell-type quantification methods for immuno-oncology",
+          "FAQ"
+        ],
+        "type": "Text_excerpt",
+        "value": "No, not out-of-the-box. \nFeel free to use the Rmarkdown notebooks in [notebooks](notebooks) as a template. It should be fairly easy\nto edit them e.g. in Rstudio and adjust the datasets. \n\n"
+      },
+      "source": "https://raw.githubusercontent.com/grst/immune_deconvolution_benchmark/master/README.md",
+      "technique": "header_analysis"
+    }
+  ]
+}

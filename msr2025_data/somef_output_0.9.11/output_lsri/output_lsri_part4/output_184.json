@@ -1,0 +1,242 @@
+{
+  "citation": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Preprocess of reference",
+        "type": "Text_excerpt",
+        "value": "python filter_gencode_transcript.py gencode.v26.annotation.gtf gencode.v26.pc_transcripts.fa gencode.v26.pc_translations.fa\n\npython select_rrna_from_ncrna.py Homo_sapiens.GRCh38.ncrna.fa GRCh38.rrna.fa\n\npython build_contaminant.py GRCh38.rrna.fa hg38-tRNAs.fa Homo_sapiens human_contaminant.fa\n\npython find_transcript_synonyms.py gencode.v26.pc_transcripts_filter.fa synonym.txt\n\nmkdir StarIndex\n\nmkdir StarIndex/contaminant\n\nSTAR --runThreadN 15 --runMode genomeGenerate --genomeDir StarIndex/contaminant --genomeFastaFiles human_contaminant.fa --genomeSAindexNbases 8 --genomeChrBinNbits 11\n\nmkdir StarIndex/transcript\nSTAR --runThreadN 15 --runMode genomeGenerate --genomeDir StarIndex/transcript/ --genomeFastaFiles gencode.v26.pc_transcripts_filter.fa --genomeSAindexNbases 11 --genomeChrBinNbits 12\n"
+      },
+      "source": "https://raw.githubusercontent.com/cuihf06/DeepShape/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Mapping Ribo-seq data to references",
+        "type": "Text_excerpt",
+        "value": "gunzip -c Ref_RiboSeq_GSM546920.txt.gz > Ref_RiboSeq_GSM546920.fastq\n\nsrun -c3 cutadapt -m 5 -a TCGTATGCCGTCTTCTGCTTG --trim-n -o Ref_RiboSeq_GSM546920.adapterfree.fq Ref_RiboSeq_GSM546920.fastq\n\nsrun -c2 fastq_quality_filter -q 20 -p 50 -i Ref_RiboSeq_GSM546920.adapterfree.fq -o Ref_RiboSeq_GSM546920.HQ.fq\n\nmkdir align\n\nmkdir align/contaminant/\n\nfilter_params=\"--seedSearchLmax 10 --outFilterMultimapScoreRange 0 --outFilterMultimapNmax 255 --outFilterMismatchNmax 1 --outFilterIntronMotifs RemoveNoncanonical\"\n\nSTAR --runThreadN 15 --genomeDir StarIndex/contaminant/ --readFilesIn Ref_RiboSeq_GSM546920.HQ.fq --outFileNamePrefix align/contaminant/Ref_RiboSeq_GSM546920.HQ_ --outStd SAM --outReadsUnmapped Fastx --outSAMmode NoQS ${filter_params}\n\nmkdir align/transcript\n\nfilter_params=\"--seedSearchLmax 10 --outFilterMultimapScoreRange 0 --outFilterMultimapNmax 255 --outFilterMismatchNmax 1 --outFilterIntronMotifs RemoveNoncanonical\"\n\nSAM_params=\"--outSAMtype BAM Unsorted --outSAMmode NoQS --outSAMattributes NH NM\"\n\nSTAR --runThreadN 15 --genomeDir StarIndex/transcript/ --readFilesIn align/contaminant/Ref_RiboSeq_GSM546920.HQ_Unmapped.out.mate1 --outFileNamePrefix align/transcript/Ref_RiboSeq_GSM546920.HQ_transcript_ ${SAM_params} ${filter_params}\n\nsamtools view align/transcript/Ref_RiboSeq_GSM546920.HQ_transcript_Aligned.out.bam | awk '{if(length($10)>=25 && length($10)<=36){print $1\"\\t\"$3\"\\t\"$4\"\\t\"length($10);}}' | awk -F\"|\" '{printf $1\"\\t\"$2; for(i=8;i<=NF-1;i++){if($i~/CDS:/) {gsub(\"CDS:\",\"\",$i); gsub(\"-\",\"\\t\",$i); printf \"\\t\"$i;}} printf $NF\"\\n\"}' > Ref_RiboSeq_GSM546920.bam.reformat\n\npython ParseBam2RiboPos.py gencode.v26.annotation.gtf gencode.v26.pc_transcripts_filter.fa Ref_RiboSeq_GSM546920.bam.reformat Ref_RiboSeq_GSM546920.bam.reformat.absolute\n"
+      },
+      "source": "https://raw.githubusercontent.com/cuihf06/DeepShape/master/README.md",
+      "technique": "header_analysis"
+    }
+  ],
+  "code_repository": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/cuihf06/DeepShape"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_created": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2018-03-27T06:47:33Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_updated": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2020-06-02T07:26:42Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "description": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "For the estimation of Isoform-Level Ribosome Abundance and Distribution Accurately which needs Ribo-seq data only."
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 0.9959499840615942,
+      "result": {
+        "original_header": "DeepShape",
+        "type": "Text_excerpt",
+        "value": "For the estimation of Isoform-Level Ribosome Abundance and Distribution Accurately which needs Ribo-seq data only.\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/cuihf06/DeepShape/master/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "download_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/cuihf06/DeepShape/releases"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 2
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/cuihf06/DeepShape/forks"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "cuihf06/DeepShape"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_title": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "DeepShape"
+      },
+      "source": "https://raw.githubusercontent.com/cuihf06/DeepShape/master/README.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "installation": [
+    {
+      "confidence": 0.9217777663858597,
+      "result": {
+        "original_header": "DeepShape-prime",
+        "type": "Text_excerpt",
+        "value": "mkdir DeepShapePrimeOutputs \nmkdir DeepShapeOutputs_Loop199 \nawk '{print $1\"\\t\"$2;}' DeepShapePrimeOutputs/runlog_199.txt | sed '$d' > TPM_DeepShapePrime_Loop199.txt \npython TrueRibo_RecursiveShape_customloops.py \\\n -r gencode.v26.pc_transcripts_filter.fa \\\n -a WT_RPF_CT00_rep2.bam.reformat.absolute \\\n -s TPM_DeepShapePrime_Loop199.txt \\\n -o ./DeepShapeOutputs_Loop199 \\\n -l 10\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/cuihf06/DeepShape/master/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "invocation": [
+    {
+      "confidence": 0.8995991293197059,
+      "result": {
+        "original_header": "DeepShape-prime",
+        "type": "Text_excerpt",
+        "value": "python DeepShape-prime.py Ref_RiboSeq_GSM546920.bam.reformat.absolute gencode.v26.pc_transcripts_filter.fa ./DeepShapePrimeOutputs 200 \nawk '{print $1\"\\t\"$2;}' DeepShapePrimeOutputs/runlog_199.txt | sed '$d' > TPM_DeepShapePrime_Loop199.txt \npython TrueRibo_RecursiveShape_customloops.py \\\n -r gencode.v26.pc_transcripts_filter.fa \\\n -a WT_RPF_CT00_rep2.bam.reformat.absolute \\\n -s TPM_DeepShapePrime_Loop199.txt \\\n -o ./DeepShapeOutputs_Loop199 \\\n -l 10\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/cuihf06/DeepShape/master/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "issue_tracker": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/cuihf06/DeepShape/issues"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "keywords": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": ""
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "DeepShape"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "owner": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "User",
+        "value": "cuihf06"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "programming_languages": [
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Python",
+        "size": 49533,
+        "type": "Programming_language",
+        "value": "Python"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "readme_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/cuihf06/DeepShape/master/README.md"
+      },
+      "technique": "file_exploration"
+    }
+  ],
+  "somef_missing_categories": [
+    "acknowledgement",
+    "run",
+    "download",
+    "requirements",
+    "contact",
+    "contributors",
+    "documentation",
+    "license",
+    "usage",
+    "faq",
+    "support",
+    "identifier",
+    "has_build_file",
+    "executable_example"
+  ],
+  "somef_provenance": {
+    "date": "2024-11-04 02:24:15",
+    "somef_schema_version": "1.0.0",
+    "somef_version": "0.9.5"
+  },
+  "stargazers_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 1
+      },
+      "technique": "GitHub_API"
+    }
+  ]
+}

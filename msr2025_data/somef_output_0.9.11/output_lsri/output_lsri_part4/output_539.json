@@ -1,0 +1,259 @@
+{
+  "code_repository": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/dohlee/prism"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_created": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2019-01-27T02:09:13Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_updated": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2024-10-15T00:41:24Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "description": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "\ud83d\udd0d Methylation Pattern-based, Reference-free Inference of Subclonal Makeup. (Lee et al., Bioinformatics. 2019)"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 0.9964093586033024,
+      "result": {
+        "type": "Text_excerpt",
+        "value": "<p align=\"center\"><img src=\"images/logo_bgwhite.png\" /></p>\r\n<p align=\"center\">Methylation <b>P</b>attern-based, <b>R</b>eference-free <b>I</b>nference of <b>S</b>ubclonal <b>M</b>akeup. (v1.0.1)</p>\r\n<p align=\"center\">\r\n  <a href=\"https://subclone-prism.readthedocs.io/en/latest/\"><img src=\"https://readthedocs.org/projects/subclone-prism/badge/?style=flat\" /></a>\r\n  <a href=\"https://pypi.python.org/pypi/\"><img src=\"https://img.shields.io/pypi/v/subclone-prism.svg\" /></a>\r\n  <a href=\"https://travis-ci.org/dohlee/prism\"><img src=\"https://travis-ci.org/dohlee/prism.svg?branch=master\" /></a>\r\n</p>\r\n\r\n\r\n<h2 align=\"center\">Prerequisites</h2>\r\n\r\n- **BAM file of RRBS reads, aligned by Bismark.**\r\n\r\nPRISM requires the mapping result of [Bismark](https://www.bioinformatics.babraham.ac.uk/projects/bismark/), a bisulfite read mapping tool. Also note that PRISM only applies to RRBS data, and unfortunately, the feasibility of PRISM to the data from other methylation profiling techniques such as whole genome bisulfite sequencing (WGBS), methylated DNA immunoprecipitation sequencing (MeDIP-Seq), or methyl-CpG binding domain-based capture sequencing (MBDCap-Seq) has not been verified.\r\n\r\n<h2 align=\"center\">Installation</h2>\r\n\r\nPRISM can be installed via PyPI.\r\n\r\nBASH1*\r\n\r\n<h2 align=\"center\">Documentation</h2>\r\n\r\nSimple quick-start usage can be found below. If your are interested, please refer to the [full documentation](https://subclone-prism.readthedocs.io/en/latest/).\r\n\r\n<h2 align=\"center\">Usage</h2>\r\n\r\n![](images/workflow.png)\r\n\r\nThe PRISM analysis is done in three steps: `extract` - `preprocess` - `deconvolute`.\r\n\r\n## Quickstart\r\n\r\nBASH2*\r\n\r\n## extract\r\n\r\n`prism extract` command extracts viable epiloci from a BAM file.\r\nIn other words, it extracts genomic regions harboring a sufficient number of mapped reads (>= d) with a sufficient number of CpGs (>= c).\r\nA resulting file with those epiloci information is generated, whose file extension will be `.met` afterwards.\r\nTo extract epiloci with default settings (d = 20, c = 4), simply run the command below:\r\n\r\nBASH3*\r\n\r\nIf you want to specify your own cutoffs for the required sequencing depth and the number of CpGs, say, d = 15 and c = 3, run as follows:\r\n\r\nBASH4*\r\n\r\nNote that depending on the reference genome used, you may have to specify `-u/--prepend-chr` option.\r\nAlso, you should use `-x/--paired` option to inform PRISM that you are using paired-end sequencing data.\r\nFor a more detailed description about all options, run `prism extract -h`.\r\n\r\n## preprocess\r\n\r\n`prism preprocess` command corrects for the errors in methylation patterns in order to amplify the number of *fingerprint epiloci* and calibrate for the subclone size estimates.\r\n\r\nBASH5*\r\n\r\nYou may benefit from multithreading with `-t/--threads` option.\r\n\r\nBASH6*\r\n\r\nThis step is resource intensive, so by default PRISM tries to pre-filter the epilocus that is not likely to be a fingerprint epilocus.\r\nThis pre-filtering of course can be turned off by `-f/--no-prefilter` option and this indeed gives a better estimates of subclones.\r\nHowever, please be warned, depending on your data size, this step will last long.\r\nTo help you deciding whether or not to apply prefiltering, with 30 threads (`-t 30`) ~200M met file took about 5 hours to be preprocessed without prefiltering.\r\n\r\nBASH7*\r\n\r\nFor a more detailed description about all options, run `prism preprocess -h`.\r\n\r\n## deconvolute\r\n\r\n`prism deconvolute` command infers the subclonal composition of the sample. Simply give methylation pattern-corrected epiloci file.\r\n\r\nBASH8*\r\n\r\nAnother feature of PRISM is that it can utilize two or more samples from a single tumor at the same time, and jointly infer subclonal composition. To provoke joint-analysis, specify a list of `corrected.met` files.\r\n\r\nBASH9*\r\n\r\nFor a more detailed description about all options, run `prism deconvolute -h`.\r\n\r\n\r\n## scatter\r\n\r\n`prism scatter` command generates a scatterplot of the PRISM analysis result. \r\nYou need a result of `prism deconvolute`.\r\nThe dimension of anlaysis (i.e., the number of samples you gave to `prism deconvolute` command) should not be more than three to visualize it.\r\nNote that the file extension of output file should be a general one for image files such as png, jpg, or pdf.\r\n\r\nBASH10*\r\n\r\n<p align=\"center\"><img src=\"images/scatter.png\" width=\"66%\" height=\"66%\"></p>\r\n\r\n## annotate\r\n\r\n`prism annotate` command does functional annotation of the PRISM analysis result.\r\nIt requires collections of genomic intervals as BED files. Give one or more BED file to `prism annotate`, with representative annotation term for each BED file.\r\nBasically it generates annotated result, with an additional column having comma-separated terms that the epiloci is annotated to.\r\n\r\nBASH11*\r\n\r\nTo extract epiloci with specific annotation term, use the command below.\r\n\r\nBASH12*\r\n\r\nAlso, scatterplots with annotation can be generated with `--figure` option.\r\n\r\nBASH13*\r\n\r\n<p align=\"center\"><img src=\"images/annotate.png\" width=\"66%\" height=\"66%\"></p>\r\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/dohlee/prism/master/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "download_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/dohlee/prism/releases"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 1
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/dohlee/prism/forks"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "dohlee/prism"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_title": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": ""
+      },
+      "source": "https://raw.githubusercontent.com/dohlee/prism/master/README.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "images": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/dohlee/prism/master/images/workflow.png"
+      },
+      "source": "https://raw.githubusercontent.com/dohlee/prism/master/README.md",
+      "technique": "regular_expression"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/dohlee/prism/master/images/scatter.png"
+      },
+      "source": "https://raw.githubusercontent.com/dohlee/prism/master/README.md",
+      "technique": "regular_expression"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/dohlee/prism/master/images/annotate.png"
+      },
+      "source": "https://raw.githubusercontent.com/dohlee/prism/master/README.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "issue_tracker": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/dohlee/prism/issues"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "keywords": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": ""
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "logo": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/dohlee/prism/master/images/logo_bgwhite.png"
+      },
+      "source": "https://raw.githubusercontent.com/dohlee/prism/master/README.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "prism"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "owner": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "User",
+        "value": "dohlee"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "programming_languages": [
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Python",
+        "size": 85575,
+        "type": "Programming_language",
+        "value": "Python"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Batchfile",
+        "size": 763,
+        "type": "Programming_language",
+        "value": "Batchfile"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "readme_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/dohlee/prism/master/README.md"
+      },
+      "technique": "file_exploration"
+    }
+  ],
+  "related_documentation": [
+    {
+      "confidence": 1,
+      "result": {
+        "format": "readthedocs",
+        "type": "Url",
+        "value": "https://subclone-prism.readthedocs.io/"
+      },
+      "source": "https://raw.githubusercontent.com/dohlee/prism/master/README.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "somef_missing_categories": [
+    "installation",
+    "citation",
+    "acknowledgement",
+    "run",
+    "download",
+    "requirements",
+    "contact",
+    "contributors",
+    "documentation",
+    "license",
+    "usage",
+    "faq",
+    "support",
+    "identifier",
+    "has_build_file",
+    "executable_example"
+  ],
+  "somef_provenance": {
+    "date": "2024-11-04 03:53:18",
+    "somef_schema_version": "1.0.0",
+    "somef_version": "0.9.5"
+  },
+  "stargazers_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 7
+      },
+      "technique": "GitHub_API"
+    }
+  ]
+}

@@ -1,0 +1,583 @@
+{
+  "code_repository": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/fansalon/TEspeX"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_created": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2019-07-11T09:24:10Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_updated": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2024-08-19T20:57:20Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "description": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "TEspeX - pipeline for Transposable Elements expression quantification"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 0.9842730108436968,
+      "result": {
+        "original_header": "Overview",
+        "type": "Text_excerpt",
+        "value": "TEspeX (Transposable Elements SPEcific eXpression) is a tool for the TE expression quantification from Illummina short RNA-seq reads. The rationale of the pipeline is to map the reads against a reference transcriptome composed by i) TE consensus sequences, ii) coding transcripts and iii) non-coding transcripts and to quantify the expression of TEs avoiding counting reads deriving from TE fragments embedded in coding/non-coding non-TE annotated transcripts. \n\nPossible scenarios:\n* A read maps with best alignment score to TE consensus sequences but not to coding/non-coding transcripts --> counted as TE-specific\n* A read maps with best alignment score to TE consensus sequences but not to coding/non-coding transcripts. However, the reads multi-map to >10 loci and it is aligned to all of them with an alignment score (AS) ranging between the maxAS and the maxAS-1 --> discarded as not assignable to a specific TE subfamily\n* A read maps to *BOTH* TE consensus sequences and coding/non-coding transcripts. However, the alignment(s) on TEs is flagged as best whereas the one(s) on non-TE transcripts is not -->  counted as TE-specific\n* A read maps with best alignment score to *BOTH* TE consensus sequences and coding/non-coding transcripts --> discarded as it may be generated from TE fragments embedded in coding/non-coding transcripts\n* A read maps with best alignment score to coding/non-coding transcripts --> discarded as it is (probably) transcribed from coding/non-coding transcripts. \n"
+      },
+      "source": "https://raw.githubusercontent.com/fansalon/TEspeX/fansalon/TEspeX/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9905881877185365,
+      "result": {
+        "original_header": "TEspeX in standard mode",
+        "type": "Text_excerpt",
+        "value": "This command shows the help that should be something very similar to:\n```\nusage: TEspeX.py [-h] --TE TE --cdna CDNA --ncrna NCRNA --sample SAMPLE\n                 --paired PAIRED --length LENGTH --out OUT --strand STRAND\n                 [--num_threads NUM_THREADS] [--remove REMOVE] [--index INDEX]\n                 [--mask MASK] [--version]\n\noptional arguments:\n  -h, --help            show this help message and exit\n  --TE TE               fa/fa.gz file containing TE consensus sequences in\n                        fasta format [required]\n  --cdna CDNA           fa/fa.gz file containing cdna Ensembl sequences in\n                        fasta format [required]\n  --ncrna NCRNA         fa/fa.gz file containing ncrna Ensembl sequences in\n                        fasta format [required]\n  --sample SAMPLE       txt file containing fq/fq.gz FULL PATHS. If reads are\n                        single end, one path should be written in each line.\n                        If reads are paired end the two mates should be\n                        written in the same line separated by \\t [required]\n  --paired PAIRED       T (true) or F (false). T means the reads are paired\n                        and consequently the sample file is expected to\n                        contain 2 columns. F means the reads are not paired,\n                        sample file is expected to contain 1 single column\n                        [required]\n  --length LENGTH       length of the read given as input. This is used to\n                        calculate STAR index parameters. If your fq/fq.gz file\n                        contains reads with different length specify the most\n                        frequent read length [required]\n  --out OUT             directory where the output files will be written. This\n                        directory is created by the pipeline, specificy a non-\n                        yet-existing directory\n  --strand STRAND       strandeness of the RNAseq library. no =\n                        unstranded/htseqcount 'no', yes = htseqcount 'yes',\n                        reverse = htseqcount 'reverse'\n  --num_threads NUM_THREADS\n                        number of threads used by STAR and samtools [2]\n  --remove REMOVE       T (true) or F (false). If this parameter is set to T\n                        all the bam files are removed. If it is F they are not\n                        removed [T]\n  --index INDEX         If you want TEspeX to build the index for you, leave\n                        the default value [recommended]. Otherwise provide\n                        FULL path to a directoray containing STAR indexes\n                        [not_recommended] [F]\n  --mask MASK           fasta file containing sequences to be masked. If this\n                        file is provided, the sequences contained within it\n                        are considered as coding/non-coding transcripts and\n                        are added to the --cdna and --ncrna fasta files. This\n                        might be of help if the users wish to consider some\n                        specific regions as belonging to coding/non-coding\n                        transcripts even though they are not reported in\n                        --cdna and --ncrna fasta files. (e.g., N kb downstream\n                        to the transcript TTS for a better handling of\n                        readthrough process or non-genic TE-derived sequences\n                        known to be passively transcribed from criptic\n                        promoters). [F]\n  --multimap MULTIMAP   maximum number of loci a read/read pair is allowed to\n                        map to. This value will be provided to STAR\n                        --outFilterMultimapNmax and --winAnchorMultimapNmax\n                        parameters. It is warmly suggested not to change the\n                        default value [10]\n  --version             show the version number and exit\n``` \nAll the arguments, except fot ```--num_threads```, BASH4*, BASH5*, BASH6* and BASH7* are required.\\\nWe suggest to use as argument of BASH8* argument a fasta file containing TE consensus sequences and as arguments of the BASH9* and BASH10* arguments the transcriptome files containing cdna and ncrna from ensembl (or genecode if working with human or mouse data).\\\nThe BASH11* of the read is only needed to build the index of the reference transcriptome - in case of trimmed reads just provide the most frequent read lenght.\\\nAs BASH12* TEspeX expects the same nomenclature as the one used by htseq-count (if you are unsure about the strandedness of your data please take a look at: https://chipster.csc.fi/manual/library-type-summary.html) .\\\nBy default ```--num_threads``` is set to 2,  BASH4* is set to T by default (meaning all the bam files are removed)  and BASH5* is set to F (meaning TEspeX will take care about index building). \n"
+      },
+      "source": "https://raw.githubusercontent.com/fansalon/TEspeX/fansalon/TEspeX/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9807181550016303,
+      "result": {
+        "original_header": "TEspeX in wrapper mode",
+        "type": "Text_excerpt",
+        "value": "This should print to screen:\n```\nusage: wrapper_slurm.py [-h] --script SCRIPT --TE TE --cdna CDNA --ncrna NCRNA\n                        --sample SAMPLE --paired PAIRED --length LENGTH --out\n                        OUT --strand STRAND --job JOB --q Q --walltime\n                        WALLTIME [--num_threads NUM_THREADS] [--remove REMOVE]\n                        [--mask MASK] [--module MODULE] [--version]\n\noptional arguments:\n  -h, --help            show this help message and exit\n  --script SCRIPT       path to the TEspeX*.py pipeline for calculation of TE\n                        expression [required]\n  --TE TE               fa/fa.gz file containing TE consensus sequences in\n                        fasta format [required]\n  --cdna CDNA           fa/fa.gz file containing cdna Ensembl sequences in\n                        fasta format [required]\n  --ncrna NCRNA         fa/fa.gz file containing ncrna Ensembl sequences in\n                        fasta format [required]\n  --sample SAMPLE       txt file containing fq/fq.gz FULL PATHS. If reads are\n                        single end, one path should be written in each line.\n                        If reads are paired end the two mates should be\n                        written in the same line separated by \\t [required]\n  --paired PAIRED       T (true) or F (false). T means the reads are paired\n                        and consequently the sample file is expected to\n                        contain 2 columns. F means the reads are not paired,\n                        sample file is expected to contain 1 single column\n                        [required]\n  --length LENGTH       length of the read given as input. This is used to\n                        calculateSTAR index parameters. If your fq/fq.gz file\n                        contains reads with different length specify the most\n                        frequent read length [required]\n  --out OUT             directory where the output files will be written. This\n                        directory is created by the pipeline, specificy a non-\n                        yet-existing directory\n  --strand STRAND       strandeness of the RNAseq library. no =\n                        unstranded/htseqcount 'no', yes = htseqcount 'yes',\n                        reverse = htseqcount 'reverse'\n  --job JOB             number of jobs that can be run at the same time\n  --q Q                 name of the the queue of your SLURM system you want\n                        TEspeX to be run (SBATCH -p parameter) [required]\n  --walltime WALLTIME   walltime of each job TEspeX will launch on your SLURM\n                        system reported in hh:mm:ss format (SBATCH -t\n                        parameter) [required]\n  --num_threads NUM_THREADS\n                        number of threads used by STAR and samtools. Minimum\n                        number of threads: 4 [4]\n  --remove REMOVE       T (true) or F (false). If this parameter is set to T\n                        all the bam files are removed. If it is F they are not\n                        removed [T]\n  --mask MASK           fasta file containing sequences to be masked. If this\n                        file is provided, the sequences contained within it\n                        are considered as coding/non-coding transcripts and\n                        are added to the --cdna and --ncrna fasta files. This\n                        might be of help if the users wish to consider some\n                        specific regions as belonging to coding/non-coding\n                        transcripts even though they are not reported in\n                        --cdna and --ncrna fasta files. (e.g., N kb downstream\n                        to the transcript TTS for a better handling of\n                        readthrough process or non-genic TE-derived sequences\n                        known to be passively transcribed from criptic\n                        promoters). [F]\n  --module MODULE       list of modules to be uploaded within each job by\n                        'module load'. If more than one modules need to be\n                        loaded provide a comma separated list (e.g.,\n                        java,samtools) Reported modules should be available\n                        through the 'module av' command. [F]\n  --multimap MULTIMAP   maximum number of loci a read/read pair is allowed to\n                        map to. This value will be provided to STAR\n                        --outFilterMultimapNmax and --winAnchorMultimapNmax\n                        parameters. It is warmly suggested not to change the\n                        default value [10]\n  --version             show the version number and exit\n\n``` \nWhen all is done you should have in your ```--out``` folder: slurm output files and 4 output files (TE_transc_reference.fa, TE_transc_reference.fai and the 2 output files mapping_stats_total.txt and outfile_total.txt) and 3 directories (index/, mappings/ and tmp/). In the mappings/ directory there is one directory for each fq/fq.gz analyzed containing all the temporary output files. \n"
+      },
+      "source": "https://raw.githubusercontent.com/fansalon/TEspeX/fansalon/TEspeX/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9509880842867141,
+      "result": {
+        "original_header": "How to test for differentially expressed TEs",
+        "type": "Text_excerpt",
+        "value": "TEspeX provides a raw-count output file that can be potentially used as input for any of the several tools developed to detect differential expression of genes among two biological conditions (e.g. DESeq2 and edgeR). However, the large majority (all?) of such tools estimate the library size (i.e., sequencing depth) of each analysed sample by summing together the reads mapped on all the genes. While this assumption is perfectly working when analysing gene expression data, this might be unprecise when analysing TE expression data (i.e. the sum of the reads mapping on TE consensus is not a good aproximation of the total library size). \nThus, we **strongly** recommend not to allow the tool to automatically calculate the library size, providing instead as library size the total number of reads TEspeX has succesfully mapped on the reference transcriptome (i.e., TE consensus+cdna+ncrna). This information is contained in the 3rd column of the mapping_stats.txt/mapping_stats_total.txt TEspeX outputs in the working directory. \nIn edgeR this can be easily done with the following commands:\n```\nnorm <- read.table(\"mapping_stats_total.txt\",header=T,sep='\\t')\ny <- DGEList(counts=counts,group=group,lib.size = norm$mapped)  # assuming conuts is the matrix containing the raw counts and group the factor containing metadata information\n``` \nIt is likely that **the perfect tool** for testing for DE TEs does not exist yet as most of the assumptions made on gene expression data are not necessarily true in the TE scenario. We have internally tested the DE analysis downstream to TEspeX with i) edgeR, ii) DESeq2 and iii) applying a Welch t.test to normalised counts (RPM: raw counts / tot mapped reads \\*1M). \nOur tests suggest that edgeR works slightly better than both DESeq2 (as it better handles the TEs showing no expression in multiple samples) and t.test (as it is less sensible to the sample size) and we thus suggest to use edgeR. DE testing downstream to TEspeX has been, nevertheless, tested with all the 3 methods providing consistent results in all the tested scenarios. \nIf you are interested in the development of **the perfect tool** for testing for DE TEs - or at least to try - feel free to contact Federico at (federico.ansaloni@gmail.com). \n"
+      },
+      "source": "https://raw.githubusercontent.com/fansalon/TEspeX/fansalon/TEspeX/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "download_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/fansalon/TEspeX/releases"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 2
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/fansalon/TEspeX/forks"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "fansalon/TEspeX"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_title": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "TEspeX"
+      },
+      "source": "https://raw.githubusercontent.com/fansalon/TEspeX/fansalon/TEspeX/README.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "installation": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "**Install TEspeX and TEspeX prerequisites**",
+        "parent_header": [
+          "How to install TEspeX on Unix systems"
+        ],
+        "type": "Text_excerpt",
+        "value": "**0. Prerequisites**\n\nPlease note how this manual assumes you have already installed and in $PATH:\n  * gcc\n  * make\n  * bash\n\nYou can easily check this by typing ```which <name>```. If they are not installed, please install them before installing TEspeX.\n\n**1. conda**\n  * first check if conda, activate and deactivate are already installed and in $PATH typing:\n    * ```which conda```\n    * ```which activate```\n    * ```which deactivate```\n   \nIf paths are printed, you can directly go to 2., otherwise follow the steps below:\n\n  * download and install miniconda\n    * download the installer ```wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh```\n    * install it ```bash Miniconda3-latest-Linux-x86_64.sh```\n    * follow the prompts on the installer screens\n    * there is no need to run conda init. What is, however, required is the add /path/to/miniconda3/bin to the $PATH\n    * this depends on where you have installed miniconda3 so first declare where the miniconda3 is  ```conda_dir=</path/to/miniconda3/>```\n    * then add it to the .bashrc   ```echo \"export PATH=\\${PATH}:${conda_dir}/bin\" >> ~/.bashrc```\n    * refresh it ```source ~/.bashrc```\n    * check conda is in $PATH ```which conda```\n    \n\n\n**2. java (JDK)**\n  * test if java JDK is already installed and in path:\n    * ```java -version```\n  \nIf this prints something like:\n```\nopenjdk version \"11.0.11\" 2021-04-20\nOpenJDK Runtime Environment (build 11.0.11+9-Ubuntu-0ubuntu2.18.04)\nOpenJDK 64-Bit Server VM (build 11.0.11+9-Ubuntu-0ubuntu2.18.04, mixed mode, sharing)\n```\n\nSkip to 3.; otherwise:\n  * ```conda install -c anaconda openjdk```\n  \n**3. git**\n  * test if git is already installed:\n    * ```which git```\n\nIf the git version is printed you can directly go to 4., otherwise type:\n\n  * ```conda install git```\n\n**4. zlib**\n\nIt is likely that you already have zlib installed and properly configured somewhere. To check this type:\n  * ```echo $LD_LIBRARY_PATH```\n  * ```echo $CFLAGS```\n  * ```echo $LDFLAGS```\n\nIf paths to zlib lib and include folders are returned, everything should be OK - skip to 5.\n\nOtherwise:\n  * ```cd </path/to/miniconda3/>```\n  * ```wget http://zlib.net/zlib-1.2.11.tar.gz```\n  * ```tar -zxvf zlib-1.2.11.tar.gz```\n  * ```cd zlib-1.2.11/```\n  * ```./configure --prefix=$PWD/packages```\n  * ```make```\n  * ```make install```\n  * ```export LD_LIBRARY_PATH=$PWD/packages/lib/:$LD_LIBRARY_PATH ```\n  * ```export CFLAGS=\"-I$PWD/packages/include\"```\n  * ```export LDFLAGS=\"-L$PWD/packages/lib\"```\n\n**5. clone TEspeX and create working directory variable**\n\n  * ```cd </path/where/install/TEspeX>```\n  * ```git clone https://github.com/fansalon/TEspeX```\n  * ```cd TEspeX/```\n  * ```tespex=$PWD```\n\n**6. Picard**\n\nA file called 'picard.jar' is contained in the 'bin/picard' directory.\\\nTo check whether java is properly installed on your machine and picard properly works, type:\n\n  * ```java -jar $tespex/bin/picard/picard.jar```\n  \nIf the picard help is printed everything is fine. If an error rises java is not (properly) installed on your machine. Possible solutions: i) go back to 2. and check conda has successfully installed java, ii) check that the java installed by conda is in $PATH and iii) check that the invoked java is really the one installed by conda.\n\n\n**7. STAR**\n\nSTAR executables should be in the 'bin/STAR-2.6.0c' directory.\\\nTo check whether STAR is properly working, type:\n\n * ```$tespex/bin/STAR-2.6.0c/STAR --version```\n\nthis should return:\n```STAR_2.6.0c``` \n\n**8. samtools**\n\ninstall samtools-1.3.1\n```\ncd $tespex/bin\nwget -O samtools-1.3.1.tar.bz2 https://github.com/samtools/samtools/releases/download/1.3.1/samtools-1.3.1.tar.bz2\ntar xjf samtools-1.3.1.tar.bz2\ncd samtools-1.3.1\n./configure --prefix=$PWD/\n(if during the --configure step you encounter an error like: \"configure: error: curses development files not found\" please relaunch the command adding the \"--without-curses\" flag)\nmake\nmake install\nbin/samtools --version\n```\nthis should return something like:\n```\nsamtools 1.3.1\nUsing htslib 1.3.1\nCopyright (C) 2016 Genome Research Ltd.\n```\n\n**9. create a conda environment where the required version of python, pysam and pandas are installed**\n\nTo create the conda environment and install the required libraries type:\n```\nconda create -n TEspeX_deps --override-channels -c bioconda -c defaults python=3.6 pandas=0.23.0 pysam'>=0.15.0,<=0.15.1'\n## --> you will be asked to let conda download and install new packages: type Y\n\n# activate the environment - to be done every time TEspeX is used\n# **PLEASE DO NOT CHANGE THE ENVIRONMENT NAME AS IT WILL COMPROMISE THE FUNCTIONING OF THE PIPELINE**\nsource activate TEspeX_deps\n\n# to check everything properly worked\nwhich python3\n## --> /path/to/envs/TEspeX_deps/bin/python3\nwhich pip3\n## --> /path/to/envs/TEspeX_deps/bin/pip3\npython3 --version\n## --> Python 3.6.13 :: Anaconda, Inc.\npip3 --version\n## --> pip 21.1.3 from /path/to/envs/TEspeX_deps/lib/python3.6/site-packages/pip (python 3.6)\n\n# deactivate the environment\nconda deactivate\n```\n\n**10. Test TEspeX has been successfully installed**\n\nIn the folder 'example' a copy of the files used to perform the TE expression analysis on 2 *C. elegans* embryonic fastq files (Tintori SC, et al. - Dev. Cell - 2016 - https://www.ncbi.nlm.nih.gov/pubmed/27554860) is deposited. Please, **please**, **DO** test whether the pipeline is working properly following the steps below:\n\n  * change to TEspeX  dir and create the list of fq/fq.gz to be analysed:\n    * ```cd $tespex```\n    * ```ls $tespex/example/*.fastq.gz > $tespex/example/reads.txt```\n  * activate TEspeX, **this has to be done every time TEspeX is launched**\n    * ```source activate TEspeX_deps```\n  * launch the pipeline typing the following command:\n    ```\n    python3 TEspeX.py --TE example/ce.Dfam.fa.gz \\\n    --cdna example/Caenorhabditis_elegans.WBcel235.cdna.all.fa.gz \\\n    --ncrna example/Caenorhabditis_elegans.WBcel235.ncrna.fa.gz \\\n    --sample example/reads.txt --paired F --length 50 --out test --strand no\n    ```\n  * check the output files are as expected:\n    * ```cd $tespex```\n    * ```diff test/outfile.txt example/outfile.txt```\n    * ```diff test/mapping_stats.txt example/mapping_stats.txt```\n    \n    If nothing is printed it means all went fine. Otherwise, error has rose.\n    \n    \n    "
+      },
+      "source": "https://raw.githubusercontent.com/fansalon/TEspeX/fansalon/TEspeX/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 0.908626978674472,
+      "result": {
+        "original_header": "Overview",
+        "type": "Text_excerpt",
+        "value": "The pipeline has been written in python3 and it has been tested on Ubuntu, CentOS and Mac OS X systems.\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/fansalon/TEspeX/fansalon/TEspeX/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.99977829303608,
+      "result": {
+        "original_header": "TEspeX in standard mode",
+        "type": "Text_excerpt",
+        "value": "```\ncd $tespex\nsource activate TEspeX_deps\npython3 TEspeX.py --help\n``` \n"
+      },
+      "source": "https://raw.githubusercontent.com/fansalon/TEspeX/fansalon/TEspeX/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9633078097681762,
+      "result": {
+        "original_header": "TEspeX in wrapper mode",
+        "type": "Text_excerpt",
+        "value": "To see the help, type:\n```\ncd $tespex\nsource activate TEspeX_deps\npython3 wrapper_slurm.py -h\n``` \nWhen all is done you should have in your ```--out``` folder: slurm output files and 4 output files (TE_transc_reference.fa, TE_transc_reference.fai and the 2 output files mapping_stats_total.txt and outfile_total.txt) and 3 directories (index/, mappings/ and tmp/). In the mappings/ directory there is one directory for each fq/fq.gz analyzed containing all the temporary output files. \n"
+      },
+      "source": "https://raw.githubusercontent.com/fansalon/TEspeX/fansalon/TEspeX/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "invocation": [
+    {
+      "confidence": 0.8101905688670437,
+      "result": {
+        "original_header": "Output files",
+        "type": "Text_excerpt",
+        "value": "* outfile.txt: txt file containing the raw counts of reads mapping specifically on TEs. The first column contains the TE names as they are in the TE consensus fasta file, the other columns contain the read counts for each fq input file\n* mapping_stats.txt: txt file containing mapping statistics\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/fansalon/TEspeX/fansalon/TEspeX/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.8159533477519024,
+      "result": {
+        "original_header": "TEspeX in wrapper mode",
+        "type": "Text_excerpt",
+        "value": "The file wrapper_slurm.py is the **SLURM** wrapper file.  \n"
+      },
+      "source": "https://raw.githubusercontent.com/fansalon/TEspeX/fansalon/TEspeX/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "issue_tracker": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/fansalon/TEspeX/issues"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "keywords": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": ""
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "license": [
+    {
+      "confidence": 1,
+      "result": {
+        "name": "GNU General Public License v3.0",
+        "spdx_id": "GPL-3.0",
+        "type": "License",
+        "url": "https://api.github.com/licenses/gpl-3.0",
+        "value": "https://api.github.com/licenses/gpl-3.0"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "File_dump",
+        "value": "                    GNU GENERAL PUBLIC LICENSE\n                       Version 3, 29 June 2007\n\n Copyright (C) 2007 Free Software Foundation, Inc. <https://fsf.org/>\n Everyone is permitted to copy and distribute verbatim copies\n of this license document, but changing it is not allowed.\n\n                            Preamble\n\n  The GNU General Public License is a free, copyleft license for\nsoftware and other kinds of works.\n\n  The licenses for most software and other practical works are designed\nto take away your freedom to share and change the works.  By contrast,\nthe GNU General Public License is intended to guarantee your freedom to\nshare and change all versions of a program--to make sure it remains free\nsoftware for all its users.  We, the Free Software Foundation, use the\nGNU General Public License for most of our software; it applies also to\nany other work released this way by its authors.  You can apply it to\nyour programs, too.\n\n  When we speak of free software, we are referring to freedom, not\nprice.  Our General Public Licenses are designed to make sure that you\nhave the freedom to distribute copies of free software (and charge for\nthem if you wish), that you receive source code or can get it if you\nwant it, that you can change the software or use pieces of it in new\nfree programs, and that you know you can do these things.\n\n  To protect your rights, we need to prevent others from denying you\nthese rights or asking you to surrender the rights.  Therefore, you have\ncertain responsibilities if you distribute copies of the software, or if\nyou modify it: responsibilities to respect the freedom of others.\n\n  For example, if you distribute copies of such a program, whether\ngratis or for a fee, you must pass on to the recipients the same\nfreedoms that you received.  You must make sure that they, too, receive\nor can get the source code.  And you must show them these terms so they\nknow their rights.\n\n  Developers that use the GNU GPL protect your rights with two steps:\n(1) assert copyright on the software, and (2) offer you this License\ngiving you legal permission to copy, distribute and/or modify it.\n\n  For the developers' and authors' protection, the GPL clearly explains\nthat there is no warranty for this free software.  For both users' and\nauthors' sake, the GPL requires that modified versions be marked as\nchanged, so that their problems will not be attributed erroneously to\nauthors of previous versions.\n\n  Some devices are designed to deny users access to install or run\nmodified versions of the software inside them, although the manufacturer\ncan do so.  This is fundamentally incompatible with the aim of\nprotecting users' freedom to change the software.  The systematic\npattern of such abuse occurs in the area of products for individuals to\nuse, which is precisely where it is most unacceptable.  Therefore, we\nhave designed this version of the GPL to prohibit the practice for those\nproducts.  If such problems arise substantially in other domains, we\nstand ready to extend this provision to those domains in future versions\nof the GPL, as needed to protect the freedom of users.\n\n  Finally, every program is threatened constantly by software patents.\nStates should not allow patents to restrict development and use of\nsoftware on general-purpose computers, but in those that do, we wish to\navoid the special danger that patents applied to a free program could\nmake it effectively proprietary.  To prevent this, the GPL assures that\npatents cannot be used to render the program non-free.\n\n  The precise terms and conditions for copying, distribution and\nmodification follow.\n\n                       TERMS AND CONDITIONS\n\n  0. Definitions.\n\n  \"This License\" refers to version 3 of the GNU General Public License.\n\n  \"Copyright\" also means copyright-like laws that apply to other kinds of\nworks, such as semiconductor masks.\n\n  \"The Program\" refers to any copyrightable work licensed under this\nLicense.  Each licensee is addressed as \"you\".  \"Licensees\" and\n\"recipients\" may be individuals or organizations.\n\n  To \"modify\" a work means to copy from or adapt all or part of the work\nin a fashion requiring copyright permission, other than the making of an\nexact copy.  The resulting work is called a \"modified version\" of the\nearlier work or a work \"based on\" the earlier work.\n\n  A \"covered work\" means either the unmodified Program or a work based\non the Program.\n\n  To \"propagate\" a work means to do anything with it that, without\npermission, would make you directly or secondarily liable for\ninfringement under applicable copyright law, except executing it on a\ncomputer or modifying a private copy.  Propagation includes copying,\ndistribution (with or without modification), making available to the\npublic, and in some countries other activities as well.\n\n  To \"convey\" a work means any kind of propagation that enables other\nparties to make or receive copies.  Mere interaction with a user through\na computer network, with no transfer of a copy, is not conveying.\n\n  An interactive user interface displays \"Appropriate Legal Notices\"\nto the extent that it includes a convenient and prominently visible\nfeature that (1) displays an appropriate copyright notice, and (2)\ntells the user that there is no warranty for the work (except to the\nextent that warranties are provided), that licensees may convey the\nwork under this License, and how to view a copy of this License.  If\nthe interface presents a list of user commands or options, such as a\nmenu, a prominent item in the list meets this criterion.\n\n  1. Source Code.\n\n  The \"source code\" for a work means the preferred form of the work\nfor making modifications to it.  \"Object code\" means any non-source\nform of a work.\n\n  A \"Standard Interface\" means an interface that either is an official\nstandard defined by a recognized standards body, or, in the case of\ninterfaces specified for a particular programming language, one that\nis widely used among developers working in that language.\n\n  The \"System Libraries\" of an executable work include anything, other\nthan the work as a whole, that (a) is included in the normal form of\npackaging a Major Component, but which is not part of that Major\nComponent, and (b) serves only to enable use of the work with that\nMajor Component, or to implement a Standard Interface for which an\nimplementation is available to the public in source code form.  A\n\"Major Component\", in this context, means a major essential component\n(kernel, window system, and so on) of the specific operating system\n(if any) on which the executable work runs, or a compiler used to\nproduce the work, or an object code interpreter used to run it.\n\n  The \"Corresponding Source\" for a work in object code form means all\nthe source code needed to generate, install, and (for an executable\nwork) run the object code and to modify the work, including scripts to\ncontrol those activities.  However, it does not include the work's\nSystem Libraries, or general-purpose tools or generally available free\nprograms which are used unmodified in performing those activities but\nwhich are not part of the work.  For example, Corresponding Source\nincludes interface definition files associated with source files for\nthe work, and the source code for shared libraries and dynamically\nlinked subprograms that the work is specifically designed to require,\nsuch as by intimate data communication or control flow between those\nsubprograms and other parts of the work.\n\n  The Corresponding Source need not include anything that users\ncan regenerate automatically from other parts of the Corresponding\nSource.\n\n  The Corresponding Source for a work in source code form is that\nsame work.\n\n  2. Basic Permissions.\n\n  All rights granted under this License are granted for the term of\ncopyright on the Program, and are irrevocable provided the stated\nconditions are met.  This License explicitly affirms your unlimited\npermission to run the unmodified Program.  The output from running a\ncovered work is covered by this License only if the output, given its\ncontent, constitutes a covered work.  This License acknowledges your\nrights of fair use or other equivalent, as provided by copyright law.\n\n  You may make, run and propagate covered works that you do not\nconvey, without conditions so long as your license otherwise remains\nin force.  You may convey covered works to others for the sole purpose\nof having them make modifications exclusively for you, or provide you\nwith facilities for running those works, provided that you comply with\nthe terms of this License in conveying all material for which you do\nnot control copyright.  Those thus making or running the covered works\nfor you must do so exclusively on your behalf, under your direction\nand control, on terms that prohibit them from making any copies of\nyour copyrighted material outside their relationship with you.\n\n  Conveying under any other circumstances is permitted solely under\nthe conditions stated below.  Sublicensing is not allowed; section 10\nmakes it unnecessary.\n\n  3. Protecting Users' Legal Rights From Anti-Circumvention Law.\n\n  No covered work shall be deemed part of an effective technological\nmeasure under any applicable law fulfilling obligations under article\n11 of the WIPO copyright treaty adopted on 20 December 1996, or\nsimilar laws prohibiting or restricting circumvention of such\nmeasures.\n\n  When you convey a covered work, you waive any legal power to forbid\ncircumvention of technological measures to the extent such circumvention\nis effected by exercising rights under this License with respect to\nthe covered work, and you disclaim any intention to limit operation or\nmodification of the work as a means of enforcing, against the work's\nusers, your or third parties' legal rights to forbid circumvention of\ntechnological measures.\n\n  4. Conveying Verbatim Copies.\n\n  You may convey verbatim copies of the Program's source code as you\nreceive it, in any medium, provided that you conspicuously and\nappropriately publish on each copy an appropriate copyright notice;\nkeep intact all notices stating that this License and any\nnon-permissive terms added in accord with section 7 apply to the code;\nkeep intact all notices of the absence of any warranty; and give all\nrecipients a copy of this License along with the Program.\n\n  You may charge any price or no price for each copy that you convey,\nand you may offer support or warranty protection for a fee.\n\n  5. Conveying Modified Source Versions.\n\n  You may convey a work based on the Program, or the modifications to\nproduce it from the Program, in the form of source code under the\nterms of section 4, provided that you also meet all of these conditions:\n\n    a) The work must carry prominent notices stating that you modified\n    it, and giving a relevant date.\n\n    b) The work must carry prominent notices stating that it is\n    released under this License and any conditions added under section\n    7.  This requirement modifies the requirement in section 4 to\n    \"keep intact all notices\".\n\n    c) You must license the entire work, as a whole, under this\n    License to anyone who comes into possession of a copy.  This\n    License will therefore apply, along with any applicable section 7\n    additional terms, to the whole of the work, and all its parts,\n    regardless of how they are packaged.  This License gives no\n    permission to license the work in any other way, but it does not\n    invalidate such permission if you have separately received it.\n\n    d) If the work has interactive user interfaces, each must display\n    Appropriate Legal Notices; however, if the Program has interactive\n    interfaces that do not display Appropriate Legal Notices, your\n    work need not make them do so.\n\n  A compilation of a covered work with other separate and independent\nworks, which are not by their nature extensions of the covered work,\nand which are not combined with it such as to form a larger program,\nin or on a volume of a storage or distribution medium, is called an\n\"aggregate\" if the compilation and its resulting copyright are not\nused to limit the access or legal rights of the compilation's users\nbeyond what the individual works permit.  Inclusion of a covered work\nin an aggregate does not cause this License to apply to the other\nparts of the aggregate.\n\n  6. Conveying Non-Source Forms.\n\n  You may convey a covered work in object code form under the terms\nof sections 4 and 5, provided that you also convey the\nmachine-readable Corresponding Source under the terms of this License,\nin one of these ways:\n\n    a) Convey the object code in, or embodied in, a physical product\n    (including a physical distribution medium), accompanied by the\n    Corresponding Source fixed on a durable physical medium\n    customarily used for software interchange.\n\n    b) Convey the object code in, or embodied in, a physical product\n    (including a physical distribution medium), accompanied by a\n    written offer, valid for at least three years and valid for as\n    long as you offer spare parts or customer support for that product\n    model, to give anyone who possesses the object code either (1) a\n    copy of the Corresponding Source for all the software in the\n    product that is covered by this License, on a durable physical\n    medium customarily used for software interchange, for a price no\n    more than your reasonable cost of physically performing this\n    conveying of source, or (2) access to copy the\n    Corresponding Source from a network server at no charge.\n\n    c) Convey individual copies of the object code with a copy of the\n    written offer to provide the Corresponding Source.  This\n    alternative is allowed only occasionally and noncommercially, and\n    only if you received the object code with such an offer, in accord\n    with subsection 6b.\n\n    d) Convey the object code by offering access from a designated\n    place (gratis or for a charge), and offer equivalent access to the\n    Corresponding Source in the same way through the same place at no\n    further charge.  You need not require recipients to copy the\n    Corresponding Source along with the object code.  If the place to\n    copy the object code is a network server, the Corresponding Source\n    may be on a different server (operated by you or a third party)\n    that supports equivalent copying facilities, provided you maintain\n    clear directions next to the object code saying where to find the\n    Corresponding Source.  Regardless of what server hosts the\n    Corresponding Source, you remain obligated to ensure that it is\n    available for as long as needed to satisfy these requirements.\n\n    e) Convey the object code using peer-to-peer transmission, provided\n    you inform other peers where the object code and Corresponding\n    Source of the work are being offered to the general public at no\n    charge under subsection 6d.\n\n  A separable portion of the object code, whose source code is excluded\nfrom the Corresponding Source as a System Library, need not be\nincluded in conveying the object code work.\n\n  A \"User Product\" is either (1) a \"consumer product\", which means any\ntangible personal property which is normally used for personal, family,\nor household purposes, or (2) anything designed or sold for incorporation\ninto a dwelling.  In determining whether a product is a consumer product,\ndoubtful cases shall be resolved in favor of coverage.  For a particular\nproduct received by a particular user, \"normally used\" refers to a\ntypical or common use of that class of product, regardless of the status\nof the particular user or of the way in which the particular user\nactually uses, or expects or is expected to use, the product.  A product\nis a consumer product regardless of whether the product has substantial\ncommercial, industrial or non-consumer uses, unless such uses represent\nthe only significant mode of use of the product.\n\n  \"Installation Information\" for a User Product means any methods,\nprocedures, authorization keys, or other information required to install\nand execute modified versions of a covered work in that User Product from\na modified version of its Corresponding Source.  The information must\nsuffice to ensure that the continued functioning of the modified object\ncode is in no case prevented or interfered with solely because\nmodification has been made.\n\n  If you convey an object code work under this section in, or with, or\nspecifically for use in, a User Product, and the conveying occurs as\npart of a transaction in which the right of possession and use of the\nUser Product is transferred to the recipient in perpetuity or for a\nfixed term (regardless of how the transaction is characterized), the\nCorresponding Source conveyed under this section must be accompanied\nby the Installation Information.  But this requirement does not apply\nif neither you nor any third party retains the ability to install\nmodified object code on the User Product (for example, the work has\nbeen installed in ROM).\n\n  The requirement to provide Installation Information does not include a\nrequirement to continue to provide support service, warranty, or updates\nfor a work that has been modified or installed by the recipient, or for\nthe User Product in which it has been modified or installed.  Access to a\nnetwork may be denied when the modification itself materially and\nadversely affects the operation of the network or violates the rules and\nprotocols for communication across the network.\n\n  Corresponding Source conveyed, and Installation Information provided,\nin accord with this section must be in a format that is publicly\ndocumented (and with an implementation available to the public in\nsource code form), and must require no special password or key for\nunpacking, reading or copying.\n\n  7. Additional Terms.\n\n  \"Additional permissions\" are terms that supplement the terms of this\nLicense by making exceptions from one or more of its conditions.\nAdditional permissions that are applicable to the entire Program shall\nbe treated as though they were included in this License, to the extent\nthat they are valid under applicable law.  If additional permissions\napply only to part of the Program, that part may be used separately\nunder those permissions, but the entire Program remains governed by\nthis License without regard to the additional permissions.\n\n  When you convey a copy of a covered work, you may at your option\nremove any additional permissions from that copy, or from any part of\nit.  (Additional permissions may be written to require their own\nremoval in certain cases when you modify the work.)  You may place\nadditional permissions on material, added by you to a covered work,\nfor which you have or can give appropriate copyright permission.\n\n  Notwithstanding any other provision of this License, for material you\nadd to a covered work, you may (if authorized by the copyright holders of\nthat material) supplement the terms of this License with terms:\n\n    a) Disclaiming warranty or limiting liability differently from the\n    terms of sections 15 and 16 of this License; or\n\n    b) Requiring preservation of specified reasonable legal notices or\n    author attributions in that material or in the Appropriate Legal\n    Notices displayed by works containing it; or\n\n    c) Prohibiting misrepresentation of the origin of that material, or\n    requiring that modified versions of such material be marked in\n    reasonable ways as different from the original version; or\n\n    d) Limiting the use for publicity purposes of names of licensors or\n    authors of the material; or\n\n    e) Declining to grant rights under trademark law for use of some\n    trade names, trademarks, or service marks; or\n\n    f) Requiring indemnification of licensors and authors of that\n    material by anyone who conveys the material (or modified versions of\n    it) with contractual assumptions of liability to the recipient, for\n    any liability that these contractual assumptions directly impose on\n    those licensors and authors.\n\n  All other non-permissive additional terms are considered \"further\nrestrictions\" within the meaning of section 10.  If the Program as you\nreceived it, or any part of it, contains a notice stating that it is\ngoverned by this License along with a term that is a further\nrestriction, you may remove that term.  If a license document contains\na further restriction but permits relicensing or conveying under this\nLicense, you may add to a covered work material governed by the terms\nof that license document, provided that the further restriction does\nnot survive such relicensing or conveying.\n\n  If you add terms to a covered work in accord with this section, you\nmust place, in the relevant source files, a statement of the\nadditional terms that apply to those files, or a notice indicating\nwhere to find the applicable terms.\n\n  Additional terms, permissive or non-permissive, may be stated in the\nform of a separately written license, or stated as exceptions;\nthe above requirements apply either way.\n\n  8. Termination.\n\n  You may not propagate or modify a covered work except as expressly\nprovided under this License.  Any attempt otherwise to propagate or\nmodify it is void, and will automatically terminate your rights under\nthis License (including any patent licenses granted under the third\nparagraph of section 11).\n\n  However, if you cease all violation of this License, then your\nlicense from a particular copyright holder is reinstated (a)\nprovisionally, unless and until the copyright holder explicitly and\nfinally terminates your license, and (b) permanently, if the copyright\nholder fails to notify you of the violation by some reasonable means\nprior to 60 days after the cessation.\n\n  Moreover, your license from a particular copyright holder is\nreinstated permanently if the copyright holder notifies you of the\nviolation by some reasonable means, this is the first time you have\nreceived notice of violation of this License (for any work) from that\ncopyright holder, and you cure the violation prior to 30 days after\nyour receipt of the notice.\n\n  Termination of your rights under this section does not terminate the\nlicenses of parties who have received copies or rights from you under\nthis License.  If your rights have been terminated and not permanently\nreinstated, you do not qualify to receive new licenses for the same\nmaterial under section 10.\n\n  9. Acceptance Not Required for Having Copies.\n\n  You are not required to accept this License in order to receive or\nrun a copy of the Program.  Ancillary propagation of a covered work\noccurring solely as a consequence of using peer-to-peer transmission\nto receive a copy likewise does not require acceptance.  However,\nnothing other than this License grants you permission to propagate or\nmodify any covered work.  These actions infringe copyright if you do\nnot accept this License.  Therefore, by modifying or propagating a\ncovered work, you indicate your acceptance of this License to do so.\n\n  10. Automatic Licensing of Downstream Recipients.\n\n  Each time you convey a covered work, the recipient automatically\nreceives a license from the original licensors, to run, modify and\npropagate that work, subject to this License.  You are not responsible\nfor enforcing compliance by third parties with this License.\n\n  An \"entity transaction\" is a transaction transferring control of an\norganization, or substantially all assets of one, or subdividing an\norganization, or merging organizations.  If propagation of a covered\nwork results from an entity transaction, each party to that\ntransaction who receives a copy of the work also receives whatever\nlicenses to the work the party's predecessor in interest had or could\ngive under the previous paragraph, plus a right to possession of the\nCorresponding Source of the work from the predecessor in interest, if\nthe predecessor has it or can get it with reasonable efforts.\n\n  You may not impose any further restrictions on the exercise of the\nrights granted or affirmed under this License.  For example, you may\nnot impose a license fee, royalty, or other charge for exercise of\nrights granted under this License, and you may not initiate litigation\n(including a cross-claim or counterclaim in a lawsuit) alleging that\nany patent claim is infringed by making, using, selling, offering for\nsale, or importing the Program or any portion of it.\n\n  11. Patents.\n\n  A \"contributor\" is a copyright holder who authorizes use under this\nLicense of the Program or a work on which the Program is based.  The\nwork thus licensed is called the contributor's \"contributor version\".\n\n  A contributor's \"essential patent claims\" are all patent claims\nowned or controlled by the contributor, whether already acquired or\nhereafter acquired, that would be infringed by some manner, permitted\nby this License, of making, using, or selling its contributor version,\nbut do not include claims that would be infringed only as a\nconsequence of further modification of the contributor version.  For\npurposes of this definition, \"control\" includes the right to grant\npatent sublicenses in a manner consistent with the requirements of\nthis License.\n\n  Each contributor grants you a non-exclusive, worldwide, royalty-free\npatent license under the contributor's essential patent claims, to\nmake, use, sell, offer for sale, import and otherwise run, modify and\npropagate the contents of its contributor version.\n\n  In the following three paragraphs, a \"patent license\" is any express\nagreement or commitment, however denominated, not to enforce a patent\n(such as an express permission to practice a patent or covenant not to\nsue for patent infringement).  To \"grant\" such a patent license to a\nparty means to make such an agreement or commitment not to enforce a\npatent against the party.\n\n  If you convey a covered work, knowingly relying on a patent license,\nand the Corresponding Source of the work is not available for anyone\nto copy, free of charge and under the terms of this License, through a\npublicly available network server or other readily accessible means,\nthen you must either (1) cause the Corresponding Source to be so\navailable, or (2) arrange to deprive yourself of the benefit of the\npatent license for this particular work, or (3) arrange, in a manner\nconsistent with the requirements of this License, to extend the patent\nlicense to downstream recipients.  \"Knowingly relying\" means you have\nactual knowledge that, but for the patent license, your conveying the\ncovered work in a country, or your recipient's use of the covered work\nin a country, would infringe one or more identifiable patents in that\ncountry that you have reason to believe are valid.\n\n  If, pursuant to or in connection with a single transaction or\narrangement, you convey, or propagate by procuring conveyance of, a\ncovered work, and grant a patent license to some of the parties\nreceiving the covered work authorizing them to use, propagate, modify\nor convey a specific copy of the covered work, then the patent license\nyou grant is automatically extended to all recipients of the covered\nwork and works based on it.\n\n  A patent license is \"discriminatory\" if it does not include within\nthe scope of its coverage, prohibits the exercise of, or is\nconditioned on the non-exercise of one or more of the rights that are\nspecifically granted under this License.  You may not convey a covered\nwork if you are a party to an arrangement with a third party that is\nin the business of distributing software, under which you make payment\nto the third party based on the extent of your activity of conveying\nthe work, and under which the third party grants, to any of the\nparties who would receive the covered work from you, a discriminatory\npatent license (a) in connection with copies of the covered work\nconveyed by you (or copies made from those copies), or (b) primarily\nfor and in connection with specific products or compilations that\ncontain the covered work, unless you entered into that arrangement,\nor that patent license was granted, prior to 28 March 2007.\n\n  Nothing in this License shall be construed as excluding or limiting\nany implied license or other defenses to infringement that may\notherwise be available to you under applicable patent law.\n\n  12. No Surrender of Others' Freedom.\n\n  If conditions are imposed on you (whether by court order, agreement or\notherwise) that contradict the conditions of this License, they do not\nexcuse you from the conditions of this License.  If you cannot convey a\ncovered work so as to satisfy simultaneously your obligations under this\nLicense and any other pertinent obligations, then as a consequence you may\nnot convey it at all.  For example, if you agree to terms that obligate you\nto collect a royalty for further conveying from those to whom you convey\nthe Program, the only way you could satisfy both those terms and this\nLicense would be to refrain entirely from conveying the Program.\n\n  13. Use with the GNU Affero General Public License.\n\n  Notwithstanding any other provision of this License, you have\npermission to link or combine any covered work with a work licensed\nunder version 3 of the GNU Affero General Public License into a single\ncombined work, and to convey the resulting work.  The terms of this\nLicense will continue to apply to the part which is the covered work,\nbut the special requirements of the GNU Affero General Public License,\nsection 13, concerning interaction through a network will apply to the\ncombination as such.\n\n  14. Revised Versions of this License.\n\n  The Free Software Foundation may publish revised and/or new versions of\nthe GNU General Public License from time to time.  Such new versions will\nbe similar in spirit to the present version, but may differ in detail to\naddress new problems or concerns.\n\n  Each version is given a distinguishing version number.  If the\nProgram specifies that a certain numbered version of the GNU General\nPublic License \"or any later version\" applies to it, you have the\noption of following the terms and conditions either of that numbered\nversion or of any later version published by the Free Software\nFoundation.  If the Program does not specify a version number of the\nGNU General Public License, you may choose any version ever published\nby the Free Software Foundation.\n\n  If the Program specifies that a proxy can decide which future\nversions of the GNU General Public License can be used, that proxy's\npublic statement of acceptance of a version permanently authorizes you\nto choose that version for the Program.\n\n  Later license versions may give you additional or different\npermissions.  However, no additional obligations are imposed on any\nauthor or copyright holder as a result of your choosing to follow a\nlater version.\n\n  15. Disclaimer of Warranty.\n\n  THERE IS NO WARRANTY FOR THE PROGRAM, TO THE EXTENT PERMITTED BY\nAPPLICABLE LAW.  EXCEPT WHEN OTHERWISE STATED IN WRITING THE COPYRIGHT\nHOLDERS AND/OR OTHER PARTIES PROVIDE THE PROGRAM \"AS IS\" WITHOUT WARRANTY\nOF ANY KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING, BUT NOT LIMITED TO,\nTHE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR\nPURPOSE.  THE ENTIRE RISK AS TO THE QUALITY AND PERFORMANCE OF THE PROGRAM\nIS WITH YOU.  SHOULD THE PROGRAM PROVE DEFECTIVE, YOU ASSUME THE COST OF\nALL NECESSARY SERVICING, REPAIR OR CORRECTION.\n\n  16. Limitation of Liability.\n\n  IN NO EVENT UNLESS REQUIRED BY APPLICABLE LAW OR AGREED TO IN WRITING\nWILL ANY COPYRIGHT HOLDER, OR ANY OTHER PARTY WHO MODIFIES AND/OR CONVEYS\nTHE PROGRAM AS PERMITTED ABOVE, BE LIABLE TO YOU FOR DAMAGES, INCLUDING ANY\nGENERAL, SPECIAL, INCIDENTAL OR CONSEQUENTIAL DAMAGES ARISING OUT OF THE\nUSE OR INABILITY TO USE THE PROGRAM (INCLUDING BUT NOT LIMITED TO LOSS OF\nDATA OR DATA BEING RENDERED INACCURATE OR LOSSES SUSTAINED BY YOU OR THIRD\nPARTIES OR A FAILURE OF THE PROGRAM TO OPERATE WITH ANY OTHER PROGRAMS),\nEVEN IF SUCH HOLDER OR OTHER PARTY HAS BEEN ADVISED OF THE POSSIBILITY OF\nSUCH DAMAGES.\n\n  17. Interpretation of Sections 15 and 16.\n\n  If the disclaimer of warranty and limitation of liability provided\nabove cannot be given local legal effect according to their terms,\nreviewing courts shall apply local law that most closely approximates\nan absolute waiver of all civil liability in connection with the\nProgram, unless a warranty or assumption of liability accompanies a\ncopy of the Program in return for a fee.\n\n                     END OF TERMS AND CONDITIONS\n\n            How to Apply These Terms to Your New Programs\n\n  If you develop a new program, and you want it to be of the greatest\npossible use to the public, the best way to achieve this is to make it\nfree software which everyone can redistribute and change under these terms.\n\n  To do so, attach the following notices to the program.  It is safest\nto attach them to the start of each source file to most effectively\nstate the exclusion of warranty; and each file should have at least\nthe \"copyright\" line and a pointer to where the full notice is found.\n\n    <one line to give the program's name and a brief idea of what it does.>\n    Copyright (C) <year>  <name of author>\n\n    This program is free software: you can redistribute it and/or modify\n    it under the terms of the GNU General Public License as published by\n    the Free Software Foundation, either version 3 of the License, or\n    (at your option) any later version.\n\n    This program is distributed in the hope that it will be useful,\n    but WITHOUT ANY WARRANTY; without even the implied warranty of\n    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the\n    GNU General Public License for more details.\n\n    You should have received a copy of the GNU General Public License\n    along with this program.  If not, see <https://www.gnu.org/licenses/>.\n\nAlso add information on how to contact you by electronic and paper mail.\n\n  If the program does terminal interaction, make it output a short\nnotice like this when it starts in an interactive mode:\n\n    <program>  Copyright (C) <year>  <name of author>\n    This program comes with ABSOLUTELY NO WARRANTY; for details type `show w'.\n    This is free software, and you are welcome to redistribute it\n    under certain conditions; type `show c' for details.\n\nThe hypothetical commands `show w' and `show c' should show the appropriate\nparts of the General Public License.  Of course, your program's commands\nmight be different; for a GUI interface, you would use an \"about box\".\n\n  You should also get your employer (if you work as a programmer) or school,\nif any, to sign a \"copyright disclaimer\" for the program, if necessary.\nFor more information on this, and how to apply and follow the GNU GPL, see\n<https://www.gnu.org/licenses/>.\n\n  The GNU General Public License does not permit incorporating your program\ninto proprietary programs.  If your program is a subroutine library, you\nmay consider it more useful to permit linking proprietary applications with\nthe library.  If this is what you want to do, use the GNU Lesser General\nPublic License instead of this License.  But first, please read\n<https://www.gnu.org/licenses/why-not-lgpl.html>.\n"
+      },
+      "source": "https://raw.githubusercontent.com/fansalon/TEspeX/fansalon/TEspeX/LICENSE",
+      "technique": "file_exploration"
+    }
+  ],
+  "name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "TEspeX"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "owner": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "User",
+        "value": "fansalon"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "programming_languages": [
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Python",
+        "size": 82574,
+        "type": "Programming_language",
+        "value": "Python"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "readme_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/fansalon/TEspeX/fansalon/TEspeX/README.md"
+      },
+      "technique": "file_exploration"
+    }
+  ],
+  "releases": [
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "fansalon",
+          "type": "User"
+        },
+        "date_created": "2022-11-18T22:39:14Z",
+        "date_published": "2022-11-18T22:40:09Z",
+        "description": "released on 18/11/2022\r\n\r\n* TEspeX now checks that no redundant sequence headers are found among the three input fasta files. If found, an error is rose and the run is killed\r\n\r\nThanks to Davide Bressan (University of Trento, ITA) | (https://github.com/DavideBrex) for reporting the bug.",
+        "html_url": "https://github.com/fansalon/TEspeX/releases/tag/TEspeX_v_2.0.1",
+        "name": "TEspeX_v_2.0.1",
+        "release_id": 83618877,
+        "tag": "TEspeX_v_2.0.1",
+        "tarball_url": "https://api.github.com/repos/fansalon/TEspeX/tarball/TEspeX_v_2.0.1",
+        "type": "Release",
+        "url": "https://api.github.com/repos/fansalon/TEspeX/releases/83618877",
+        "value": "https://api.github.com/repos/fansalon/TEspeX/releases/83618877",
+        "zipball_url": "https://api.github.com/repos/fansalon/TEspeX/zipball/TEspeX_v_2.0.1"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "fansalon",
+          "type": "User"
+        },
+        "date_created": "2022-07-05T22:37:57Z",
+        "date_published": "2022-07-05T22:43:46Z",
+        "description": "Released on 06.07.2022\r\n\r\n* fixed minor issues",
+        "html_url": "https://github.com/fansalon/TEspeX/releases/tag/TEspeX_v_1.2.1",
+        "name": "TEspeX_v_1.2.1",
+        "release_id": 71321144,
+        "tag": "TEspeX_v_1.2.1",
+        "tarball_url": "https://api.github.com/repos/fansalon/TEspeX/tarball/TEspeX_v_1.2.1",
+        "type": "Release",
+        "url": "https://api.github.com/repos/fansalon/TEspeX/releases/71321144",
+        "value": "https://api.github.com/repos/fansalon/TEspeX/releases/71321144",
+        "zipball_url": "https://api.github.com/repos/fansalon/TEspeX/zipball/TEspeX_v_1.2.1"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "fansalon",
+          "type": "User"
+        },
+        "date_created": "2022-06-07T05:46:33Z",
+        "date_published": "2022-06-07T05:52:30Z",
+        "description": "Released on 07.06.2022\r\n\r\n* New ```--multimap``` parameter has been added to this new TEspeX version. Through this parameter the user can now define the maximum number of multiple loci a read/read pair can align to. The default value is 10 and we recommend not to change this. The provided number will be passed to STAR ```--outFilterMultimapNmax``` and ```--winAnchorMultimapNmax``` parameters. So, if you really want to change them, please, carefully read the STAR manual before doing that",
+        "html_url": "https://github.com/fansalon/TEspeX/releases/tag/TEspeX_v_1.2.0",
+        "name": "TEspeX_v_1.2.0",
+        "release_id": 68788151,
+        "tag": "TEspeX_v_1.2.0",
+        "tarball_url": "https://api.github.com/repos/fansalon/TEspeX/tarball/TEspeX_v_1.2.0",
+        "type": "Release",
+        "url": "https://api.github.com/repos/fansalon/TEspeX/releases/68788151",
+        "value": "https://api.github.com/repos/fansalon/TEspeX/releases/68788151",
+        "zipball_url": "https://api.github.com/repos/fansalon/TEspeX/zipball/TEspeX_v_1.2.0"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "fansalon",
+          "type": "User"
+        },
+        "date_created": "2022-01-13T10:06:52Z",
+        "date_published": "2022-01-13T10:14:04Z",
+        "description": "* the ```--module``` parameter has been added to TEspeX wrapper. Sometimes it might be that while running TEspeX, some installed modules need to be uploaded in the running environment. If this is the case, provide the list of modules through this parameter. TEspeX will then take care of uploading the listed modules in each job by ```module load <module name>```\r\n* until TEspeX v 1.1.0, TEspeX could be run in wrapper mode on SLURM systems only. Here, ```wrapper_pbs.py``` is provided and should IN THEORY work on PBS-based systems. This, however, has not been extensively tested",
+        "html_url": "https://github.com/fansalon/TEspeX/releases/tag/TEspeX_v_1.1.1",
+        "name": "TEspeX_v_1.1.1",
+        "release_id": 56999409,
+        "tag": "TEspeX_v_1.1.1",
+        "tarball_url": "https://api.github.com/repos/fansalon/TEspeX/tarball/TEspeX_v_1.1.1",
+        "type": "Release",
+        "url": "https://api.github.com/repos/fansalon/TEspeX/releases/56999409",
+        "value": "https://api.github.com/repos/fansalon/TEspeX/releases/56999409",
+        "zipball_url": "https://api.github.com/repos/fansalon/TEspeX/zipball/TEspeX_v_1.1.1"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "fansalon",
+          "type": "User"
+        },
+        "date_created": "2021-10-08T06:40:49Z",
+        "date_published": "2021-10-08T06:48:42Z",
+        "description": "Released on Oct 8th 2021\r\n\r\n* Fixed minor bug in counting reads, TE counts from this version might slightly differ from the previous versions one if the reads have been trimmed before launching TEspeX",
+        "html_url": "https://github.com/fansalon/TEspeX/releases/tag/TEspeX_v_1.1.0",
+        "name": "TEspeX_v_1.1.0",
+        "release_id": 51012793,
+        "tag": "TEspeX_v_1.1.0",
+        "tarball_url": "https://api.github.com/repos/fansalon/TEspeX/tarball/TEspeX_v_1.1.0",
+        "type": "Release",
+        "url": "https://api.github.com/repos/fansalon/TEspeX/releases/51012793",
+        "value": "https://api.github.com/repos/fansalon/TEspeX/releases/51012793",
+        "zipball_url": "https://api.github.com/repos/fansalon/TEspeX/zipball/TEspeX_v_1.1.0"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "fansalon",
+          "type": "User"
+        },
+        "date_created": "2021-08-24T12:06:12Z",
+        "date_published": "2021-08-24T12:27:08Z",
+        "description": "Released on 24.08.2021\r\n\r\n* added the --mask parameter\r\n* STAR is now provided as executable - no need to download it anymore",
+        "html_url": "https://github.com/fansalon/TEspeX/releases/tag/TEspeX_v_1.0.4",
+        "name": "TEspeX_v_1.0.4",
+        "release_id": 48349897,
+        "tag": "TEspeX_v_1.0.4",
+        "tarball_url": "https://api.github.com/repos/fansalon/TEspeX/tarball/TEspeX_v_1.0.4",
+        "type": "Release",
+        "url": "https://api.github.com/repos/fansalon/TEspeX/releases/48349897",
+        "value": "https://api.github.com/repos/fansalon/TEspeX/releases/48349897",
+        "zipball_url": "https://api.github.com/repos/fansalon/TEspeX/zipball/TEspeX_v_1.0.4"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "fansalon",
+          "type": "User"
+        },
+        "date_created": "2021-07-29T10:37:29Z",
+        "date_published": "2021-07-29T10:38:36Z",
+        "description": "TEspeX v1.0.3 - 29.07.21\r\n\r\n* installation of conda and other required tools is now step-by-step explained in the README\r\n* fixed the code such as only the python libraries installed within the TEspeX_deps environement are used. This grants that TEspeX uses exclusively the newly installed python libraries resolving potential conflicts with previously installed python libraries",
+        "html_url": "https://github.com/fansalon/TEspeX/releases/tag/TEspeX_v_1.0.3",
+        "name": "TEspeX_v_1.0.3",
+        "release_id": 46966350,
+        "tag": "TEspeX_v_1.0.3",
+        "tarball_url": "https://api.github.com/repos/fansalon/TEspeX/tarball/TEspeX_v_1.0.3",
+        "type": "Release",
+        "url": "https://api.github.com/repos/fansalon/TEspeX/releases/46966350",
+        "value": "https://api.github.com/repos/fansalon/TEspeX/releases/46966350",
+        "zipball_url": "https://api.github.com/repos/fansalon/TEspeX/zipball/TEspeX_v_1.0.3"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "fansalon",
+          "type": "User"
+        },
+        "date_created": "2021-07-19T19:30:35Z",
+        "date_published": "2021-07-20T09:01:00Z",
+        "description": "Released on 20th Jul 2021.\r\n\r\n* to simplify the installation of TEspeX, the installation now occurs through a conda environment. The user is therefore required to have conda installed and in $PATH. Through conda a TEspeX_deps environment based on python 3.6 is created. Then, within the environment, the required versions of pysam and pandas are installed.  \r\n* this allows more installation flexibility and, most importantly, does not interfere with previous/future installation of pandas and pysam\r\n* STAR and samtools are installed as in the previous releases\r\n* updated the installation manual accordingly",
+        "html_url": "https://github.com/fansalon/TEspeX/releases/tag/TEspeX_v_1.0.1",
+        "name": "TEspeX_v_1.0.1",
+        "release_id": 46460352,
+        "tag": "TEspeX_v_1.0.1",
+        "tarball_url": "https://api.github.com/repos/fansalon/TEspeX/tarball/TEspeX_v_1.0.1",
+        "type": "Release",
+        "url": "https://api.github.com/repos/fansalon/TEspeX/releases/46460352",
+        "value": "https://api.github.com/repos/fansalon/TEspeX/releases/46460352",
+        "zipball_url": "https://api.github.com/repos/fansalon/TEspeX/zipball/TEspeX_v_1.0.1"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "fansalon",
+          "type": "User"
+        },
+        "date_created": "2021-07-01T09:19:07Z",
+        "date_published": "2021-07-03T15:42:26Z",
+        "description": "This is the release 1.0 of TEspeX.\r\n\r\n* Additional checks on the arguments provided by the user have been added\r\n* The pipeline checks the required versions of the pandas libraries are installed\r\n* --q and --walltime are added to the wrapper script in order to simplify the job-launching operations",
+        "html_url": "https://github.com/fansalon/TEspeX/releases/tag/TEspeX_v_1.0",
+        "name": "TEspeX_v_1.0",
+        "release_id": 45660848,
+        "tag": "TEspeX_v_1.0",
+        "tarball_url": "https://api.github.com/repos/fansalon/TEspeX/tarball/TEspeX_v_1.0",
+        "type": "Release",
+        "url": "https://api.github.com/repos/fansalon/TEspeX/releases/45660848",
+        "value": "https://api.github.com/repos/fansalon/TEspeX/releases/45660848",
+        "zipball_url": "https://api.github.com/repos/fansalon/TEspeX/zipball/TEspeX_v_1.0"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "fansalon",
+          "type": "User"
+        },
+        "date_created": "2021-03-01T14:06:29Z",
+        "date_published": "2021-06-22T09:23:55Z",
+        "description": "First release of TEspeX",
+        "html_url": "https://github.com/fansalon/TEspeX/releases/tag/TEspeX_v_0.2.1",
+        "name": "TEspeX_v_0.2.1",
+        "release_id": 45014187,
+        "tag": "TEspeX_v_0.2.1",
+        "tarball_url": "https://api.github.com/repos/fansalon/TEspeX/tarball/TEspeX_v_0.2.1",
+        "type": "Release",
+        "url": "https://api.github.com/repos/fansalon/TEspeX/releases/45014187",
+        "value": "https://api.github.com/repos/fansalon/TEspeX/releases/45014187",
+        "zipball_url": "https://api.github.com/repos/fansalon/TEspeX/zipball/TEspeX_v_0.2.1"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "requirements": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "**Install TEspeX and TEspeX prerequisites**",
+        "parent_header": [
+          "How to install TEspeX on Unix systems"
+        ],
+        "type": "Text_excerpt",
+        "value": "**0. Prerequisites**\n\nPlease note how this manual assumes you have already installed and in $PATH:\n  * gcc\n  * make\n  * bash\n\nYou can easily check this by typing ```which <name>```. If they are not installed, please install them before installing TEspeX.\n\n**1. conda**\n  * first check if conda, activate and deactivate are already installed and in $PATH typing:\n    * ```which conda```\n    * ```which activate```\n    * ```which deactivate```\n   \nIf paths are printed, you can directly go to 2., otherwise follow the steps below:\n\n  * download and install miniconda\n    * download the installer ```wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh```\n    * install it ```bash Miniconda3-latest-Linux-x86_64.sh```\n    * follow the prompts on the installer screens\n    * there is no need to run conda init. What is, however, required is the add /path/to/miniconda3/bin to the $PATH\n    * this depends on where you have installed miniconda3 so first declare where the miniconda3 is  ```conda_dir=</path/to/miniconda3/>```\n    * then add it to the .bashrc   ```echo \"export PATH=\\${PATH}:${conda_dir}/bin\" >> ~/.bashrc```\n    * refresh it ```source ~/.bashrc```\n    * check conda is in $PATH ```which conda```\n    \n\n\n**2. java (JDK)**\n  * test if java JDK is already installed and in path:\n    * ```java -version```\n  \nIf this prints something like:\n```\nopenjdk version \"11.0.11\" 2021-04-20\nOpenJDK Runtime Environment (build 11.0.11+9-Ubuntu-0ubuntu2.18.04)\nOpenJDK 64-Bit Server VM (build 11.0.11+9-Ubuntu-0ubuntu2.18.04, mixed mode, sharing)\n```\n\nSkip to 3.; otherwise:\n  * ```conda install -c anaconda openjdk```\n  \n**3. git**\n  * test if git is already installed:\n    * ```which git```\n\nIf the git version is printed you can directly go to 4., otherwise type:\n\n  * ```conda install git```\n\n**4. zlib**\n\nIt is likely that you already have zlib installed and properly configured somewhere. To check this type:\n  * ```echo $LD_LIBRARY_PATH```\n  * ```echo $CFLAGS```\n  * ```echo $LDFLAGS```\n\nIf paths to zlib lib and include folders are returned, everything should be OK - skip to 5.\n\nOtherwise:\n  * ```cd </path/to/miniconda3/>```\n  * ```wget http://zlib.net/zlib-1.2.11.tar.gz```\n  * ```tar -zxvf zlib-1.2.11.tar.gz```\n  * ```cd zlib-1.2.11/```\n  * ```./configure --prefix=$PWD/packages```\n  * ```make```\n  * ```make install```\n  * ```export LD_LIBRARY_PATH=$PWD/packages/lib/:$LD_LIBRARY_PATH ```\n  * ```export CFLAGS=\"-I$PWD/packages/include\"```\n  * ```export LDFLAGS=\"-L$PWD/packages/lib\"```\n\n**5. clone TEspeX and create working directory variable**\n\n  * ```cd </path/where/install/TEspeX>```\n  * ```git clone https://github.com/fansalon/TEspeX```\n  * ```cd TEspeX/```\n  * ```tespex=$PWD```\n\n**6. Picard**\n\nA file called 'picard.jar' is contained in the 'bin/picard' directory.\\\nTo check whether java is properly installed on your machine and picard properly works, type:\n\n  * ```java -jar $tespex/bin/picard/picard.jar```\n  \nIf the picard help is printed everything is fine. If an error rises java is not (properly) installed on your machine. Possible solutions: i) go back to 2. and check conda has successfully installed java, ii) check that the java installed by conda is in $PATH and iii) check that the invoked java is really the one installed by conda.\n\n\n**7. STAR**\n\nSTAR executables should be in the 'bin/STAR-2.6.0c' directory.\\\nTo check whether STAR is properly working, type:\n\n * ```$tespex/bin/STAR-2.6.0c/STAR --version```\n\nthis should return:\n```STAR_2.6.0c``` \n\n**8. samtools**\n\ninstall samtools-1.3.1\n```\ncd $tespex/bin\nwget -O samtools-1.3.1.tar.bz2 https://github.com/samtools/samtools/releases/download/1.3.1/samtools-1.3.1.tar.bz2\ntar xjf samtools-1.3.1.tar.bz2\ncd samtools-1.3.1\n./configure --prefix=$PWD/\n(if during the --configure step you encounter an error like: \"configure: error: curses development files not found\" please relaunch the command adding the \"--without-curses\" flag)\nmake\nmake install\nbin/samtools --version\n```\nthis should return something like:\n```\nsamtools 1.3.1\nUsing htslib 1.3.1\nCopyright (C) 2016 Genome Research Ltd.\n```\n\n**9. create a conda environment where the required version of python, pysam and pandas are installed**\n\nTo create the conda environment and install the required libraries type:\n```\nconda create -n TEspeX_deps --override-channels -c bioconda -c defaults python=3.6 pandas=0.23.0 pysam'>=0.15.0,<=0.15.1'\n## --> you will be asked to let conda download and install new packages: type Y\n\n# activate the environment - to be done every time TEspeX is used\n# **PLEASE DO NOT CHANGE THE ENVIRONMENT NAME AS IT WILL COMPROMISE THE FUNCTIONING OF THE PIPELINE**\nsource activate TEspeX_deps\n\n# to check everything properly worked\nwhich python3\n## --> /path/to/envs/TEspeX_deps/bin/python3\nwhich pip3\n## --> /path/to/envs/TEspeX_deps/bin/pip3\npython3 --version\n## --> Python 3.6.13 :: Anaconda, Inc.\npip3 --version\n## --> pip 21.1.3 from /path/to/envs/TEspeX_deps/lib/python3.6/site-packages/pip (python 3.6)\n\n# deactivate the environment\nconda deactivate\n```\n\n**10. Test TEspeX has been successfully installed**\n\nIn the folder 'example' a copy of the files used to perform the TE expression analysis on 2 *C. elegans* embryonic fastq files (Tintori SC, et al. - Dev. Cell - 2016 - https://www.ncbi.nlm.nih.gov/pubmed/27554860) is deposited. Please, **please**, **DO** test whether the pipeline is working properly following the steps below:\n\n  * change to TEspeX  dir and create the list of fq/fq.gz to be analysed:\n    * ```cd $tespex```\n    * ```ls $tespex/example/*.fastq.gz > $tespex/example/reads.txt```\n  * activate TEspeX, **this has to be done every time TEspeX is launched**\n    * ```source activate TEspeX_deps```\n  * launch the pipeline typing the following command:\n    ```\n    python3 TEspeX.py --TE example/ce.Dfam.fa.gz \\\n    --cdna example/Caenorhabditis_elegans.WBcel235.cdna.all.fa.gz \\\n    --ncrna example/Caenorhabditis_elegans.WBcel235.ncrna.fa.gz \\\n    --sample example/reads.txt --paired F --length 50 --out test --strand no\n    ```\n  * check the output files are as expected:\n    * ```cd $tespex```\n    * ```diff test/outfile.txt example/outfile.txt```\n    * ```diff test/mapping_stats.txt example/mapping_stats.txt```\n    \n    If nothing is printed it means all went fine. Otherwise, error has rose.\n    \n    \n    "
+      },
+      "source": "https://raw.githubusercontent.com/fansalon/TEspeX/fansalon/TEspeX/README.md",
+      "technique": "header_analysis"
+    }
+  ],
+  "run": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "How to run TEspeX",
+        "type": "Text_excerpt",
+        "value": "TEspeX can be run calling directly the script from the command line. However, for those users disposing a queue managment system we suggest to use a wrapper script that can launch several jobs in parallel saving consistent amount of time. Wrapper file we use on our slurm queue managment system is provided (see the section TEspeX in  wrapper mode for more info).\n\n  "
+      },
+      "source": "https://raw.githubusercontent.com/fansalon/TEspeX/fansalon/TEspeX/README.md",
+      "technique": "header_analysis"
+    }
+  ],
+  "somef_missing_categories": [
+    "citation",
+    "acknowledgement",
+    "download",
+    "contact",
+    "contributors",
+    "documentation",
+    "usage",
+    "faq",
+    "identifier",
+    "has_build_file",
+    "executable_example"
+  ],
+  "somef_provenance": {
+    "date": "2024-10-04 13:48:21",
+    "somef_schema_version": "1.0.0",
+    "somef_version": "0.9.5"
+  },
+  "stargazers_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 19
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "support": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Development and help",
+        "type": "Text_excerpt",
+        "value": "The TEspeX pipeline has been developed by Federico Ansaloni, former PhD student in the Computational Genomics lab (SISSA/ISAS - Trieste - Italy) of prof. Remo Sanges (https://www.sangeslab.eu). \\\nNicolo' Gualandi and Mauro Esposito contributed to the pipeline testing.\\\nTo report bugs or suggestions please feel free to write to the TEspeX supporting group https://groups.google.com/g/tespex-help\n\n\n"
+      },
+      "source": "https://raw.githubusercontent.com/fansalon/TEspeX/fansalon/TEspeX/README.md",
+      "technique": "header_analysis"
+    }
+  ],
+  "type": [
+    {
+      "confidence": 0.82,
+      "result": {
+        "type": "String",
+        "value": "commandline-application"
+      },
+      "technique": "software_type_heuristics"
+    }
+  ]
+}

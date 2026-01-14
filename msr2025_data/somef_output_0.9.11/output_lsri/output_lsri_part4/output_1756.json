@@ -1,0 +1,592 @@
+{
+  "code_repository": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/evoldoers/historian"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_created": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2016-01-13T16:52:36Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_updated": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2023-04-13T20:10:39Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "description": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "Reconstruction of phylogenetic insertion-deletion histories"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 0.9931402601352417,
+      "result": {
+        "original_header": "Historian",
+        "type": "Text_excerpt",
+        "value": "Historian is a multiple aligner that aims at providing accurate historical reconstructions of the evolution of a set of DNA or protein sequences. Many multiple alignment tools instead optimize for structure: that is, they try to provide protein alignments that correctly identify regions of 3D structural homology. If you are trying to predict the structure of a protein, you should probably use one of those other tools (or the latest CASP winner). If you care about the evolutionary history of your sequences, consider using Historian. \nOften, multiple alignment tools (notable examples including Clustal, Muscle, ProbCons) are optimized for homology-based structure prediction, and tested on structural alignment benchmarks (e.g. BAliBase, Oxbench, Prefab, Sabmark). That's a good empirical approach as far as it goes, because structurally-informed protein alignments make a good \"gold standard\" for benchmarking alignment tools. Often, these tools have scoring schemes that are optimized for reproducing common signatures of protein selection, such as reduced indel rates in hydrophobic regions. However, optimizing for structure has the unfortunate drawback of introducing biases into the estimates of indel (and possibly substitution) rates (as a rule of thumb, all methods tend to underestimate mutation rates, but with standard multiple aligners the biases can be unpredictable and can vary widely at different indel rates [1,2]). Consequently, this approach yields a less-than-accurate picture of evolutionary history. \nBy contrast, Historian uses an explicit evolutionary model of indel and substitution events, derived rigorously from statistical phylogenetics using finite-state transducers as evolutionary operators. In simulation tests (using the third-party evolution simulator [indel-Seq-Gen](https://www.ncbi.nlm.nih.gov/pubmed/17158778)), it introduces significantly fewer biases than other tools. It also performs pretty well on structural alignment benchmarks, though not quite as well as tools like Muscle and ProbCons that are optimized for that. \nThe basic method and initial benchmarks of the approach were described in Westesson _et al_, 2012 [1], reporting benchmarks using a program called ProtPal. Historian is a clean reimplementation of ProtPal that also runs a lot faster, is more user-friendly, and has more features for molecular evolutionary modeling [2]. \nThe closest method to Historian is PRANK [3]. Relative to PRANK, Historian is of comparable accuracy (on simulation benchmarks) or slightly more accurate (on structural alignment benchmarks), has more features (such as the ability to estimate substitution rate matrices), and runs faster. \n"
+      },
+      "source": "https://raw.githubusercontent.com/evoldoers/historian/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9177359303114159,
+      "result": {
+        "original_header": "Model-fitting",
+        "type": "Text_excerpt",
+        "value": "Historian's underlying model is a simple one: there is a substitution rate matrix, an insertion rate, a deletion rate, and insertion/deletion extension probabilities. These are all specified in a JSON file format, several examples of which can be found in the [model](https://github.com/evoldoers/historian/blob/master/model) directory. \nThe default model `lg` is an amino acid substitution matrix estimated by [Le and Gascuel (2008)](https://www.ncbi.nlm.nih.gov/pubmed/18367465) using [XRate](http://journals.plos.org/plosone/article?id=10.1371/journal.pone.0036898) on a dataset of [Pfam](http://pfam.xfam.org/) alignments, with indel rates and probabilities that were also estimated from Pfam. However, the `historian` program allows you to load a model from a file using the `-model` option, or to use one of the preset models using the `-preset` option. You can also add discretized-gamma rate categories using the `-gamma` and `-shape` options. For example, to use the [Whelan and Goldman](https://www.ncbi.nlm.nih.gov/pubmed/11319253) model with 4 rate categories and gamma shape parameter 1.5: \nAlternatively, the model parameters can be estimated directly from sequence data using the built-in EM algorithm that is the same algorithm used by XRate (as described in [this paper](http://bmcbioinformatics.biomedcentral.com/articles/10.1186/1471-2105-7-428)).\nTo estimate rates from data, use the `fit` command. Model-fitting takes a little longer than reconstruction, since the EM algorithm typically takes a few iterations to converge, so you might want to turn on some logging. For example: \nYou can then load this model using the `-model` option, and use it to reconstruct another sequence history. For example, using it to reconstruct the ancestors of the Cas9 bridge helix domain (Pfam family PF16593), included as file [data/PF16593.fa](https://github.com/evoldoers/historian/blob/master/data/PF16593.fa) in the repository: \n\thistorian fit -fast data/gp120.fa data/PF16593.fa -v3 >aggregated.model.json \nConversely, you can use `-fixgaprates` to hold the indel rates (and indel extension parameters) constant, while estimating substitution rates. Other aspects of the model-fitting algorithm (for example, the use of [Laplace pseudocounts](https://en.wikipedia.org/wiki/Additive_smoothing), or the EM convergence criteria) can be set via the [command-line options](#HelpText).\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/evoldoers/historian/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9194829534279073,
+      "result": {
+        "original_header": "Nucleotide models",
+        "type": "Text_excerpt",
+        "value": "The above examples used `-preset wag` to use the Whelan-and-Goldman amino acid substitution matrix, and `-fit` to fit the model to data. \nYou can also use a nucleotide rate matrix with `-preset jc`, which starts with the Jukes-Cantor 1969 model.\nMore precisely, it is the general-time irreversible nucleotide model initialized with rates that are the same as those in the Jukes-Cantor model.\nIf you then fit this model to data using `-fit`, you will get a general irreversible model. \nIt is also possible (and fairly straightforward) to edit the JSON model file directly, so as to specify any (single-character) alphabet.\nThe model file format is probably self-explanatory; for example, [here](https://github.com/evoldoers/historian/blob/master/model/jc.json) is the Jukes-Cantor model file.\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/evoldoers/historian/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9182469960129701,
+      "result": {
+        "original_header": "Event-counting",
+        "type": "Text_excerpt",
+        "value": "The model-fitting algorithm described above is an [Expectation-Maximization algorithm](https://en.wikipedia.org/wiki/Expectation%E2%80%93maximization_algorithm) that iteratively estimates the _a posteriori_ expected number of indel and substitution events of each possible type, along with the amount of time spent in each state, and then uses these expected counts and times to update the mutation rates. \n\thistorian count data/gp120.fa >gp120.counts.json \nOne application of the counts is as [pseudocounts](https://en.wikipedia.org/wiki/Pseudocount) representing hyperparameters of Dirichlet priors. JSON counts files that were computed using the `count` command can be passed as pseudocounts to the `fit` command via the `-counts` option: \nThe `-nolaplace` option here indicates that we don't want to add the usual [+1 Laplace pseudocounts](https://en.wikipedia.org/wiki/Additive_smoothing) in this case.\nOtherwise, these are added by default (to smooth the data), but when we are using explicit pseudocounts there is typically no need for them. \nYou can also use the `count` command to estimate counts for a bunch of alignments in parallel, then combine the counts using the `sum` command, and finally estimate the maximum-likelihood parameters for these combined counts using `fit`. This amounts to doing a single iteration of the EM algorithm. Probably the only reason you'd want to do this would be if you were implementing some kind of roll-your-own [MapReduce](https://en.wikipedia.org/wiki/MapReduce)-style approach to splitting up the EM algorithm on a large dataset. Which is probably unlikely, but here's roughly what it'd look like: \n"
+      },
+      "source": "https://raw.githubusercontent.com/evoldoers/historian/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9327852350710142,
+      "result": {
+        "original_header": "Simulation",
+        "type": "Text_excerpt",
+        "value": "\thistorian generate data/gp120.tree.nh \n"
+      },
+      "source": "https://raw.githubusercontent.com/evoldoers/historian/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9859892860921877,
+      "result": {
+        "original_header": "MCMC",
+        "type": "Text_excerpt",
+        "value": "Historian includes an experimental MCMC implementation for co-sampling trees and alignments. Currently, this implementation only works for ultrametric trees. It is available via the `mcmc` command.\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/evoldoers/historian/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9920546944710242,
+      "result": {
+        "original_header": "Method",
+        "type": "Text_excerpt",
+        "value": "At its core, Historian uses the phylogenetic transducer method.\nSee [Westesson et al, 2012](http://journals.plos.org/plosone/article?id=10.1371/journal.pone.0034572) for an evaluation and brief description of the method, or [this arXiv report](http://arxiv.org/abs/1103.4347) for a tutorial introduction. \nVery briefly, the idea of this method is as follows. The main recursion of Felsenstein's [pruning algorithm](https://en.wikipedia.org/wiki/Felsenstein%27s_tree-pruning_algorithm) for calculating the likelihood of a multiple alignment column can be summarized, in matrix form, as **Fn=(Bl Fl).(Br Fr)** where **n**, **l** and **r** are the node and its two children, **Bn** is the branch substitution matrix on the branch leading to node **n**, **(A B)** denotes the matrix product and **A.B** the pointwise (Hadamard) product, with each **Fn** denoting an ancestral sequence profile. If for our matrix representation we use [weighted finite-state transducers](https://en.wikipedia.org/wiki/Finite-state_transducer), with **(A B)** denoting the operation of transducer composition and **A.B** the operation of transducer intersection, then Felsenstein's algorithm yields an instance of [Sankoff's algorithm](http://epubs.siam.org/doi/abs/10.1137/0145048) for multiple sequence alignment, and **Fn** is a state machine. We constrain the algorithm to be practical by retaining only high-probability states of **Fn** at each stage. The branch transducers **Bn** are derived using a simple approximation that indel events on a single branch never overlap.\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/evoldoers/historian/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.8196712164366312,
+      "result": {
+        "original_header": "Release Notes, v1.0 (10/9/2016)",
+        "type": "Text_excerpt",
+        "value": "* The tests work for the following development environment. Other builds may give subtly different results due to rounding errors.\n * Apple LLVM version 7.3.0 (clang-703.0.31)\n * Boost 1.62.0\n * GSL 2.2.1\n* At present, Historian requires the Boost C++ library due to inconsistencies in the way different C++ compilers and standard libraries implement regular expressions. \n"
+      },
+      "source": "https://raw.githubusercontent.com/evoldoers/historian/master/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "download_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/evoldoers/historian/releases"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 1
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/evoldoers/historian/forks"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "evoldoers/historian"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_title": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "Historian"
+      },
+      "source": "https://raw.githubusercontent.com/evoldoers/historian/master/README.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "installation": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Installation",
+        "parent_header": [
+          "Historian"
+        ],
+        "type": "Text_excerpt",
+        "value": "To build from source, type `make`. This will create a binary file `bin/historian`.\n\nAt present, Historian requires the following build environment to compile:\n\n* Apple LLVM version 7.3.0 or later (clang-703.0.31), or gcc version 4.8.3 or later\n * Boost C++ library version 1.62.0 or later\n * Gnu Scientific Library (GSL) version 2.2.1 or later\n * zlib version 1.2.5 or later\n * pkg-config version 0.29.1 or later\n\nTo install all these on a Mac, you can type\n\n~~~~\nbrew install boost gsl pkg-config zlib\n~~~~\n\nOn Ubuntu Linux, the following should work\n\n~~~~\nsudo yum -y install boost-devel gsl-devel zlib\n~~~~\n\nIf you want to run the tests, type `make test`. (The tests are oriented to a Mac OSX build environment; numerical precision errors may cause slight differences in output on different machines, which may lead to some tests failing.)\n\nPre-compiled binaries are also available from the GitHub repository [release page](https://github.com/evoldoers/historian/releases).\n"
+      },
+      "source": "https://raw.githubusercontent.com/evoldoers/historian/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 0.8931642744511985,
+      "result": {
+        "original_header": "Model-fitting",
+        "type": "Text_excerpt",
+        "value": "If you only want to estimate the indel rates and not the substitution matrix, then you can use the `-fixsubrates` option to hold the substitution rates constant: \n"
+      },
+      "source": "https://raw.githubusercontent.com/evoldoers/historian/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9413796084225295,
+      "result": {
+        "original_header": "Event-counting",
+        "type": "Text_excerpt",
+        "value": "If you are just interested in these counts, you can get at them using the `count` command. For example: \n"
+      },
+      "source": "https://raw.githubusercontent.com/evoldoers/historian/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9930540799224514,
+      "result": {
+        "original_header": "Simulation",
+        "type": "Text_excerpt",
+        "value": "If you care to, you can simulate from a model using the `generate` command. You will need to specify a tree: \n"
+      },
+      "source": "https://raw.githubusercontent.com/evoldoers/historian/master/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "invocation": [
+    {
+      "confidence": 0.8509333343596364,
+      "result": {
+        "original_header": "Model-fitting",
+        "type": "Text_excerpt",
+        "value": "\thistorian reconstruct -model gp120.model.json data/PF16593.fa \n\thistorian fit data/gp120.fa -fixsubrates >gp120.model.json \n"
+      },
+      "source": "https://raw.githubusercontent.com/evoldoers/historian/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.8271259370621123,
+      "result": {
+        "original_header": "Event-counting",
+        "type": "Text_excerpt",
+        "value": "\thistorian count data/gp120.fa >gp120.counts.json \n\thistorian fit data/PF16593.fa -counts gp120.counts.json -nolaplace >PF16593.model.json \n\thistorian count file1.fa >file1.counts.json\n\thistorian count file2.fa >file2.counts.json\n\t...\n\thistorian count fileN.fa >fileN.counts.json\n\thistorian sum file1.counts.json file2.counts.json ... fileN.counts.json >summed.counts.json\n\thistorian fit -nolaplace -counts summed.counts.json >updated.model.json\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/evoldoers/historian/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.8099405294898503,
+      "result": {
+        "original_header": "Simulation",
+        "type": "Text_excerpt",
+        "value": "\thistorian generate data/gp120.tree.nh \n        historian generate data/gp120.tree.nh -seed 123 -scale 10 -preset dayhoff -output fasta\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/evoldoers/historian/master/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "issue_tracker": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/evoldoers/historian/issues"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "keywords": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": ""
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "license": [
+    {
+      "confidence": 1,
+      "result": {
+        "name": "BSD 3-Clause \"New\" or \"Revised\" License",
+        "spdx_id": "BSD-3-Clause",
+        "type": "License",
+        "url": "https://api.github.com/licenses/bsd-3-clause",
+        "value": "https://api.github.com/licenses/bsd-3-clause"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "File_dump",
+        "value": "Copyright (c) 2016, Ian Holmes,\nAll rights reserved.\n\nRedistribution and use in source and binary forms, with or without\nmodification, are permitted provided that the following conditions are met:\n    * Redistributions of source code must retain the above copyright\n      notice, this list of conditions and the following disclaimer.\n    * Redistributions in binary form must reproduce the above copyright\n      notice, this list of conditions and the following disclaimer in the\n      documentation and/or other materials provided with the distribution.\n    * Neither the name of the Evolutionary Software Foundation nor the\n      names of its contributors may be used to endorse or promote products\n      derived from this software without specific prior written permission.\n\nTHIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS \"AS IS\" AND\nANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED\nWARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE\nDISCLAIMED. IN NO EVENT SHALL <COPYRIGHT HOLDER> BE LIABLE FOR ANY\nDIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES\n(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;\nLOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND\nON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT\n(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS\nSOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.\n"
+      },
+      "source": "https://raw.githubusercontent.com/evoldoers/historian/master/LICENSE",
+      "technique": "file_exploration"
+    }
+  ],
+  "name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "historian"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "owner": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Organization",
+        "value": "evoldoers"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "programming_languages": [
+    {
+      "confidence": 1,
+      "result": {
+        "name": "C++",
+        "size": 774040,
+        "type": "Programming_language",
+        "value": "C++"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Perl",
+        "size": 79209,
+        "type": "Programming_language",
+        "value": "Perl"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "C",
+        "size": 15686,
+        "type": "Programming_language",
+        "value": "C"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Makefile",
+        "size": 14157,
+        "type": "Programming_language",
+        "value": "Makefile"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "JavaScript",
+        "size": 8189,
+        "type": "Programming_language",
+        "value": "JavaScript"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Python",
+        "size": 1618,
+        "type": "Programming_language",
+        "value": "Python"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "HTML",
+        "size": 1110,
+        "type": "Programming_language",
+        "value": "HTML"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "readme_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/evoldoers/historian/master/README.md"
+      },
+      "technique": "file_exploration"
+    }
+  ],
+  "releases": [
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "ihh",
+          "type": "User"
+        },
+        "date_created": "2019-10-31T17:46:53Z",
+        "date_published": "2020-01-27T20:48:42Z",
+        "description": "January 2020 release.",
+        "html_url": "https://github.com/evoldoers/historian/releases/tag/v1.1.0",
+        "name": "Release 1.1.0",
+        "release_id": 23164689,
+        "tag": "v1.1.0",
+        "tarball_url": "https://api.github.com/repos/evoldoers/historian/tarball/v1.1.0",
+        "type": "Release",
+        "url": "https://api.github.com/repos/evoldoers/historian/releases/23164689",
+        "value": "https://api.github.com/repos/evoldoers/historian/releases/23164689",
+        "zipball_url": "https://api.github.com/repos/evoldoers/historian/zipball/v1.1.0"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "ihh",
+          "type": "User"
+        },
+        "date_created": "2016-10-30T23:01:09Z",
+        "date_published": "2016-10-30T23:01:42Z",
+        "description": "Release 1.0.1 of the Historian software.\n\nIncludes simulation capabilities and more model presets.\n",
+        "html_url": "https://github.com/evoldoers/historian/releases/tag/v1.0.1",
+        "name": "Release 1.0.1",
+        "release_id": 4522045,
+        "tag": "v1.0.1",
+        "tarball_url": "https://api.github.com/repos/evoldoers/historian/tarball/v1.0.1",
+        "type": "Release",
+        "url": "https://api.github.com/repos/evoldoers/historian/releases/4522045",
+        "value": "https://api.github.com/repos/evoldoers/historian/releases/4522045",
+        "zipball_url": "https://api.github.com/repos/evoldoers/historian/zipball/v1.0.1"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "ihh",
+          "type": "User"
+        },
+        "date_created": "2016-10-09T22:05:52Z",
+        "date_published": "2016-10-09T22:09:56Z",
+        "description": "Release 1.0 of the Indel Historian software.\n",
+        "html_url": "https://github.com/evoldoers/historian/releases/tag/v1.0",
+        "name": "Version 1.0",
+        "release_id": 4344093,
+        "tag": "v1.0",
+        "tarball_url": "https://api.github.com/repos/evoldoers/historian/tarball/v1.0",
+        "type": "Release",
+        "url": "https://api.github.com/repos/evoldoers/historian/releases/4344093",
+        "value": "https://api.github.com/repos/evoldoers/historian/releases/4344093",
+        "zipball_url": "https://api.github.com/repos/evoldoers/historian/zipball/v1.0"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "somef_missing_categories": [
+    "citation",
+    "acknowledgement",
+    "run",
+    "download",
+    "requirements",
+    "contact",
+    "contributors",
+    "documentation",
+    "faq",
+    "identifier",
+    "has_build_file",
+    "executable_example"
+  ],
+  "somef_provenance": {
+    "date": "2024-11-04 08:11:19",
+    "somef_schema_version": "1.0.0",
+    "somef_version": "0.9.5"
+  },
+  "stargazers_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 8
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "support": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Command-line help text",
+        "parent_header": [
+          "Historian"
+        ],
+        "type": "Text_excerpt",
+        "value": "The following is the message that appears when you type `historian help`:\n\n<pre><code>\nUsage: historian {recon,count,fit,mcmc,generate,help,version} [options]\n\nEXAMPLES\n\nReconstruction:\n  historian recon seqs.fa [-tree tree.nh] -output fasta &gt;reconstruction.fa\n  historian recon -guide guide.fa [-tree tree.nh] &gt;reconstruction.stk\n  historian recon guide.stk &gt;reconstruction.stk\n  historian recon data.nex -output nexus &gt;reconstruction.nex\n\nEvent counting:\n  historian count seqs.fa [-tree tree.nh] [-model model.json] &gt;counts.json\n  historian count -guide guide.fa [-tree tree.nh] &gt;counts.json\n  historian count -recon reconstruction.fa -tree tree.nh &gt;counts.json\n\nModel fitting:\n  historian fit seqs.fa &gt;newmodel.json\n  historian fit -counts counts.json &gt;newmodel.json\n\nSimulation:\n  historian generate [-model model.json] [-rootlen N] tree.nh &gt;sim.stk\n\nCommands can be abbreviated to single letters, like so:\n  historian r seqs.fa &gt;reconstruction.stk\n  historian c seqs.fa &gt;counts.json\n  historian f -counts counts.json &gt;model.json\n  historian g tree.nh &gt;sim.stk\n(etc.)\n\nIf a command is omitted, 'reconstruct' is assumed, e.g.\n  historian data/gp120.fa -v2\n\nOPTIONS\n\nModel specification options\n~~~~~~~~~~~~~~~~~~~~~~~~~~~\n  -model &lt;file&gt;   Load substitution & indel model from file (JSON)\n  -preset &lt;name&gt;  Select preset model by name\n                   (jc, jcrna dayhoff, jtt, wag, lg, ECMrest, ECMunrest)\n\n  -normalize      Normalize expected substitution rate\n  -insrate &lt;R&gt;, -delrate &lt;R&gt;, -insextprob &lt;P&gt;, -delextprob &lt;P&gt;\n                  Override indel parameters\n  -inslen &lt;L&gt;, -dellen &lt;L&gt;\n                  Alternate way of setting -insextprob & -delextprob\n  -gaprate &lt;R&gt;, -gapextprob &lt;P&gt;, -gaplen &lt;L&gt;\n                  Shorthand to set both insertion & deletion params\n  -subscale &lt;N&gt;, -indelscale &lt;N&gt;, -scale &lt;N&gt;\n                  Scale substitution rates, indel rates, or both\n\n  -gamma &lt;N&gt;      Add N discretized-gamma rate categories\n  -shape &lt;S&gt;      Specify shape parameter for gamma distribution\n\n  -savemodel &lt;f&gt;  Save model to file, prior to any model-fitting\n\nReconstruction file I/O options\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n  -auto &lt;file&gt;    Auto-detect file format and guess its purpose\n  -seqs &lt;file&gt;    Specify unaligned sequence file (FASTA)\n  -guide &lt;file&gt;   Specify guide alignment file (gapped FASTA)\n  -tree &lt;file&gt;    Specify phylogeny file (New Hampshire)\n  -nexus &lt;file&gt;, -stockholm &lt;file&gt;\n                  Specify phylogeny & guide alignment together\n\n  -saveguide &lt;f&gt;  Save guide alignment to file\n                   (guide tree too, if output format allows)\n  -output (nexus|fasta|stockholm|json)\n                  Specify output format (default is Stockholm)\n  -noancs         Do not display ancestral sequences\n\n  -codon          Interpret sequences as spliced protein-coding DNA/RNA\n\nReconstruction algorithm options\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\nThe reconstruction algorithm iterates through the guide tree in postorder,\naligning each sibling pair and reconstructing a profile of their parent.\nThe dynamic programming is constrained to a band around a guide alignment.\n\n  -band &lt;n&gt;       Size of band around guide alignment (default 20)\n  -noband         Unlimit band, removing dependence on guide alignment\n\nThe reconstructed parent profile is a weighted finite-state transducer\nsampled from the posterior distribution implied by the children. The\nposterior probability threshold for inclusion in the parent profile and\nmax number of states in the parent profile can both be specified to trade\nsensitivity vs performance.\n\n  -profminpost &lt;P&gt;, -profsamples &lt;N&gt;\n                  Specify minimum posterior prob. (P) for retaining DP states\n                   in profile, or sample N traces randomly (default is -profsamples 10\n  -profmaxstates &lt;S&gt;, -profmaxmem &lt;M&gt;\n                  Limit profile to at most S states, or to use at most M% of\n                   memory for DP matrix (default is -profmaxmem 0.050000)\n\nFollowing alignment, ancestral sequence reconstruction can be performed.\n\n  -ancseq         Predict ancestral sequences (default is to leave them as *'s)\n  -ancprob        Report posterior probabilities for ancestral residues\n\nFor additional accuracy in historical reconstruction, the alignment can be\niteratively refined, or MCMC-sampled. By default, refinement and MCMC are\nboth disabled. (MCMC currently requires an ultrametric tree.)\n\n  -norefine, -refine                  Disable/enable iterative refinement after initial reconstruction\n\n  -mcmc           Run MCMC sampler after reconstruction\n  -samples &lt;N&gt;    Number of MCMC iterations per sequence (default 100)\n  -trace &lt;file&gt;   Specify MCMC trace filename\n  -fixtree        Fix tree during MCMC (sample alignment only)\n  -fixalign       Fix alignment during MCMC (sample tree only)\n\nGuide alignment & tree estimation options\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\nThe guide aligner builds a maximal spanning tree of pairwise alignments.\nIt can be accelerated in two ways. The first is by using a sparse random\ngraph instead of a fully connected all-vs-all pairwise comparison.\n\n  -rndspan        Use a sparse random spanning graph (default)\n  -allspan        Use a dense random spanning graph, i.e. all-vs-all pairs\n\nThe second way to optimize construction of the guide alignment is by\nconfining the pairwise DP matrix to cells around a subset of diagonals\nthat contain above a threshold number of k-mer matches. To turn on the\nformer optimization, use -rndspan; the latter is turned on by default for\nsequences whose full DP matrix would not otherwise fit in memory (the\nmemory threshold can be set with -kmatchmb). It can be disabled with\n-kmatchoff, or enabled (for a particular k-mer threshold) with -kmatchn.\n\n  -kmatchn &lt;n&gt;    Threshold# of kmer matches to seed a diagonal\n                   (default sets this as low as available memory will allow)\n  -kmatch &lt;k&gt;     Length of kmers for pre-filtering heuristic (default 6)\n  -kmatchband &lt;n&gt; Size of DP band around kmer-matching diagonals (default 64)\n  -kmatchmb &lt;M&gt;   Set kmer threshold to use M megabytes of memory\n  -kmatchmax      Set kmer threshold to use all available memory\n  -kmatchoff      No kmer threshold, do full DP\n\nFollowing construction of the guide alignment, a tree is estimated using a\ndistance matrix method. By default this is UPGMA.\n\n  -upgma          Use UPGMA to estimate tree (default for MCMC)\n  -nj             Use neighbor-joining, not UPGMA, to estimate tree\n  -jc             Use Jukes-Cantor-like estimates for distance matrix\n\nSome common settings (the default is somewhere in between these extremes):\n\n  -careful        Run in careful mode. Shorthand for the following:\n                   -allspan -kmatchoff -band 40 -profminpost .001 -profmaxmem 5.000000 -refine\n\n  -fast           Run in fast mode. Shorthand for the following:\n                   -rndspan -kmatchn 3 -band 10 -profmaxstates 1 -jc -norefine\n\nModel-fitting and event-counting options\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\nIn reconstruction mode, any supplied alignment will be interpreted as a hint,\ni.e. a guide alignment. In MCMC, counting, or model-fitting mode, any alignment\nthat contains a full ancestral sequence reconstruction will be interpreted as a\nreconstruction. To force the alignment to be interpreted as a reconstruction,\nprecede it with -recon, -nexusrecon or -stockrecon (depending on the format).\n\n  -recon &lt;file&gt;, -nexusrecon &lt;file&gt;, -stockrecon &lt;file&gt;\n                  Use precomputed reconstruction (FASTA/NEXUS/Stockholm)\n  -mininc &lt;n&gt;     EM convergence threshold as relative log-likelihood increase\n                   (default is .001)\n  -maxiter &lt;n&gt;    Max number of EM iterations (default 100)\n  -nolaplace      Do not add Laplace +1 pseudocounts during model-fitting\n  -fixsubrates    Do not estimate substitution rates or initial composition\n  -fixgaprates    Do not estimate indel rates or length distributions\n\nGeneral options\n~~~~~~~~~~~~~~~\n  -verbose, -vv, -vvv, -v4, -v5, etc.\n                  Various levels of logging (-nocolor for monochrome)\n  -V, --version   Print GNU-style version info\n  -h, --help      Print help message\n  -seed &lt;n&gt;       Seed random number generator (mt19937; default seed 5489)\n\nREFERENCES\n\nThe primary reference for this software is the following:\n  Holmes (2017). Historian: Accurate Reconstruction of\n  Ancestral Sequences and Evolutionary Rates.\n  Bioinformatics, DOI: 10.1093/bioinformatics/btw791\n  https://academic.oup.com/bioinformatics/article/33/8/1227/2926463\n\nThe reconstruction algorithm uses phylogenetic transducers, as described in:\n  Westesson, Lunter, Paten & Holmes (2012). Accurate Reconstruction of\n  Insertion-Deletion Histories by Statistical Phylogenetics.\n  PLoS One, DOI: 10.1371/journal.pone.0034572\n  http://journals.plos.org/plosone/article?id=10.1371/journal.pone.0034572\n\nA longer, tutorial-style introduction to transducers is available here:\n  Westesson, Lunter, Paten & Holmes (2012).\n  Phylogenetic Automata, Pruning, and Multiple Alignment.\n  http://arxiv.org/abs/1103.4347\n\nModel-fitting uses the following phylogenetic EM algorithm:\n  Holmes & Rubin (2002). An Expectation Maximization Algorithm\n  for Training Hidden Substitution Models.\n  Journal of Molecular Biology, 317(5).\n\nThe MCMC kernels for co-sampling alignments and trees are described in:\n  Holmes & Bruno (2001). Evolutionary HMMs: A Bayesian Approach to\n  Multiple Alignment. Bioinformatics, 17(9).\n  Redelings & Suchard (2005). Joint Bayesian Estimation of Alignment\n  and Phylogeny. Systematic Biology, 54(3).\n\n</code></pre>\n"
+      },
+      "source": "https://raw.githubusercontent.com/evoldoers/historian/master/README.md",
+      "technique": "header_analysis"
+    }
+  ],
+  "type": [
+    {
+      "confidence": 0.82,
+      "result": {
+        "type": "String",
+        "value": "commandline-application"
+      },
+      "technique": "software_type_heuristics"
+    }
+  ],
+  "usage": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Basic reconstruction",
+        "parent_header": [
+          "Historian",
+          "Examples"
+        ],
+        "type": "Text_excerpt",
+        "value": "The simplest way to use Historian is just to point it at a FASTA file. It will then estimate a guide alignment, estimate a tree from that (using neighbor-joining), and perform a full ancestral reconstruction.\n\nFor example, using a test file of [HIV GP120 protein sequences](https://github.com/evoldoers/historian/blob/master/data/gp120.fa) that is included in the repository:\n\n\thistorian data/gp120.fa\n\nThis will generally be pretty fast, but you can make it faster (at a slight cost in accuracy) using the `-fast` option:\n\n\thistorian data/gp120.fa -fast\n\nThe `-fast` option is an alias for several reconstruction options, as described in the [help message](#HelpText).\n"
+      },
+      "source": "https://raw.githubusercontent.com/evoldoers/historian/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Commands",
+        "parent_header": [
+          "Historian",
+          "Examples",
+          "Basic reconstruction"
+        ],
+        "type": "Text_excerpt",
+        "value": "Historian is one of these toolbox programs where the first argument can be a command, specifying what action is to be performed. If you omit this first command-argument, Historian assumes you want to reconstruct something. You can make this explicit as follows:\n\n\thistorian reconstruct data/gp120.fa\n\nYou can also abbreviate `reconstruct` to `recon` or just `r`:\n\n\thistorian r data/gp120.fa\n\nAll commands can be abbreviated to single letters.\nOf course, if you are doing reconstruction (as noted above), you can omit the command entirely, but the examples [further below](#ModelFitting) will use different commands.\n"
+      },
+      "source": "https://raw.githubusercontent.com/evoldoers/historian/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Logging",
+        "parent_header": [
+          "Historian",
+          "Examples",
+          "Basic reconstruction"
+        ],
+        "type": "Text_excerpt",
+        "value": "By default, the `historian` program runs in classic Unix mode, i.e. printing nothing except the output. This can be a bit boring for long jobs, so run with `-v` for verbose logging output, or `-vv` for more verbose, or `-vvv` (or equivalently `-v3`) for even more logging, and so on. Probably `-v2` is about the right balance.\n\n\thistorian -v2 data/gp120.fa\n\nThis produces output somewhat like this:\n\n\tUsing default amino acid model (lg)\n\tAlphabet: arndcqeghilkmfpstwyv\n\tSubstitution model has 1 mixture component, expected rate 1\n\tInsertion rate 0.01, expected insertion length 2.94118\n\tDeletion rate 0.01, expected deletion length 2.94118\n\tLoading sequences from data/gp120.fa\n\tBuilding guide alignment (data/gp120.fa)\n\tEstimating initial tree by neighbor-joining (data/gp120.fa)\n\tStarting reconstruction on 19-node tree (data/gp120.fa)\n\tAligning ENV_HV2BE/24-510 (489 states, 488 transitions) and ENV_HV2D1/24-501 (480 states, 479 transitions)\n\tAligning ENV_HV2G1/23-502 (482 states, 481 transitions) and (ENV_HV2BE/24-510:0.106114,ENV_HV2D1/24-501:0.0784677) (689 states, 808 transitions)\n\t...\n...and so on.\n"
+      },
+      "source": "https://raw.githubusercontent.com/evoldoers/historian/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "File formats",
+        "parent_header": [
+          "Historian",
+          "Examples",
+          "Basic reconstruction"
+        ],
+        "type": "Text_excerpt",
+        "value": "Historian speaks a variety of input and output formats. By default, it outputs alignments in [Stockholm format](https://en.wikipedia.org/wiki/Stockholm_format), which allows easy extraction of the alignment while also affording space for metadata like trees. If you prefer your alignments in another output format, for example [Nexus](https://en.wikipedia.org/wiki/Nexus_file) or [FASTA](https://en.wikipedia.org/wiki/FASTA_format), use `-output nexus` or `-output fasta`.\n\nInput sequence formats will usually be auto-detected, but this behavior can be overridden to stipulate particular file formats via the [command-line arguments](#HelpText).\n"
+      },
+      "source": "https://raw.githubusercontent.com/evoldoers/historian/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Fine-tuning the reconstruction",
+        "parent_header": [
+          "Historian",
+          "Examples",
+          "Basic reconstruction"
+        ],
+        "type": "Text_excerpt",
+        "value": "As briefly alluded to above, Historian does several performance-optimizing steps _en route_ to a reconstruction. First, it builds a quick-guess multiple alignment by a greedy maximal-spanning-tree type approach; this can optionally be accelerated by a k-mer match step (confining the alignment to diagonals of the dynamic programming matrix that pass a minimum threshold of k-mer matches) and by using a sparse [random spanning forest](https://www.ncbi.nlm.nih.gov/pubmed/19478997) instead of a dense all-vs-all comparison. Second, it uses this alignment to build a guide tree by neighbor-joining. Third, it builds a progressive reconstruction that includes suboptimal alignments in something like a [partial-order graph](https://www.ncbi.nlm.nih.gov/pubmed/11934745). And fourth, it optionally does iterative refinement to optimize the reconstruction. The latter two steps (reconstruction and refinement) can be constrained to stay near the guide alignment for performance reasons.\n\nThe default settings attempt to navigate this maze of options for you, mostly using the higher-accuracy options until memory becomes a limiting factor and then switching to the more approximate options. However, as a power user, you may want to take control of these options. Command-line arguments allow you to supply guide alignments and/or guide trees, and change the parameters or behavior of the standard workflow.\n\nFor example, if you want to supply sequences in FASTA format ([gp120.fa](https://github.com/evoldoers/historian/blob/master/data/gp120.fa)) and a guide tree in New Hampshire format ([gp120.tree.nh](https://github.com/evoldoers/historian/blob/master/data/gp120.tree.nh))\n\n\thistorian -seqs data/gp120.fa -tree data/gp120.tree.nh\n\nAlternatively, if your sequences are in Nexus or Stockholm format, you can encode the tree together with your sequences, using the appropriate syntax for encoding New Hampshire-format trees in those formats (`#=GF NH` for Stockholm).\n\nIf you want to estimate the tree and use UPGMA instead of neighbor-joining, so as to enforce an ultrametric tree, use the `-upgma` option, e.g.\n\n\thistorian -upgma data/gp120.fa\n\nTo save the guide alignment, use the `-saveguide` option:\n\n\thistorian data/gp120.fa -saveguide gp120.guide.fa\n\nIf you already have your sequences aligned, and you want to use [this alignment](https://github.com/evoldoers/historian/blob/master/data/gp120.guide.fa) as the guide alignment, you only need to supply that alignment (not the sequences):\n\n\thistorian -guide gp120.guide.fa\n\nThe guide alignment is, by default, just treated as a \"hint\". Historian will do dynamic programming in a \"band\" around the guide alignment, sliding gaps back and forth up to a maximum distance specified by the `-band` argument. If, instead, you want to use the guide alignment as a strict constraint, and find the best reconstruction that is exactly consistent with the guide, then set the band to zero:\n\n\thistorian -guide gp120.guide.fa -band 0\n\nFor some alignments, it may be the case that there is no reconstruction under Historian's model that is exactly consistent with the guide (due to ordering of gaps), in which case you might want to relax the band to 1:\n\n\thistorian -guide gp120.guide.fa -band 1\n\nThese arguments are all listed in the help text, available via the `-h` option and copied [below](#HelpText).\n"
+      },
+      "source": "https://raw.githubusercontent.com/evoldoers/historian/master/README.md",
+      "technique": "header_analysis"
+    }
+  ]
+}

@@ -1,0 +1,340 @@
+{
+  "citation": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Citation",
+        "parent_header": [
+          "ukbpheno"
+        ],
+        "type": "Text_excerpt",
+        "value": "If you use ukbpheno, please cite [Yeung, M. W., van der Harst, P., & Verweij, N. (2022). ukbpheno v1.0: An R package for phenotyping health-related outcomes in the UK Biobank. STAR Protocols, 3(3), 101471.](https://star-protocols.cell.com/protocols/1733#article-info)\n"
+      },
+      "source": "https://raw.githubusercontent.com/niekverw/ukbpheno/master/README.md",
+      "technique": "header_analysis"
+    }
+  ],
+  "code_repository": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/niekverw/ukbpheno"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_created": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2020-02-20T11:40:47Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_updated": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2024-08-28T19:55:14Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "description": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Description",
+        "parent_header": [
+          "ukbpheno"
+        ],
+        "type": "Text_excerpt",
+        "value": "ukbpheno is an R package for efficiently munging the files provided by UK Biobank to generate data tables of with unified format for further analysis such as making dichotomous phenotypes for UKbio and a composite time-to-event variable combining record level data (HESIN/GP/cancer registry) and main dataset (self reports i.e. nurse interview / touchscreen). Aim of the package is to define binary phenotype data for different types of longitudinal data analysis (e.g. GWAS analysis, cox regressions, baseline tables) in a standardized and reproducible manner. The package can also be used for data exploration with efficient subsetting of the main dataset and visualization functions.\n\nPlease check out the [wiki](https://github.com/niekverw/ukbpheno/wiki) for short tutorials on downloading the data as well as usage of the package.\n"
+      },
+      "source": "https://raw.githubusercontent.com/niekverw/ukbpheno/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 0.9180710341116094,
+      "result": {
+        "original_header": "Ascertainment of health outcomes",
+        "type": "Text_excerpt",
+        "value": "Health outcomes are ascertained using data from linkage with national registries (e.g. primary /secondary care) or self report. Full definitions are described in https://bit.ly/3KrMsYD \n- Coronary artery disease (doi: 10.1161/CIRCRESAHA.117.312086) \n  - Ischemic heart diseases diagnosis codes \n  - Myocardial infarction diagnosis codes \n  - Coronary Artery Bypass Graft operation codes \n  - Percutaneous Coronary Intervention operation codes \n- Heart failure due to ischemia vs no heart failure after ischemia\n    - heart failure among participants with coronary artery disease\n    - exclude any participant with cardiomyopathy diagnosis from controls\n  \n```R\n# definition table included in the package \nfdefinitions <- system.file(\"extdata\", \"definitions_cardiometabolic_traits.tsv\", package=\"ukbpheno\")\n# data setting file included in the package\nfdata_setting <- system.file(\"extdata\", \"data.settings.tsv\", package=\"ukbpheno\")\ndfData.settings <-fread(fdata_setting)\n# process the definition table based on data setting\ndfDefinitions_processed_expanded<-read_defnition_table(fdefinitions,fdata_setting,dir.code.map=system.file(\"extdata\", package=\"ukbpheno\"))\n# harmonize data\nlst.harmonized.data<-harmonize_ukb_data(f.ukbtab = fukbtab,f.html = fhtml,dfDefinitions=dfDefinitions_processed_expanded,f.gp_clinical = fgp_clinical,f.gp_scripts = fgp_scripts,f.hesin = fhesin,f.hesin_diag = fhesin_diag,f.hesin_oper=fhesin_oper,allow_missing_fields = TRUE)\n\n# to identify cases/controls status for CAD  \ntrait<-\"Cad\"\ndf_reference_dt_v0<-lst.harmonized.data$dfukb[,c(\"identifier\",\"f.53.0.0\")]\n# read withdrawal list, individuals to be removed from the analysis\nf_particip_withdraw<-paste(pheno_dir,\"w12345_20210809.csv\",sep=\"\")\ndf_withdrawal<-fread(f_particip_withdraw)\ndf_reference_dt_v0<-df_reference_dt_v0[! identifier  %in% df_withdrawal$V1]\nlst.Cad.case_control <- get_cases_controls(definitions=dfDefinitions_processed_expanded %>% filter(TRAIT==trait), lst.harmonized.data$lst.data,dfData.settings, df_reference_date=df_reference_dt_v0)\n# summary of diagnosis per participant including case/control status before/after the reference date (baseline visit) as well as the corresponding time-to-event information\nView(lst.Cad.case_control$df.casecontrol)\n\n# HF in CAD\ntrait<-\"HfInCad\"\n\n# the reference date is the date of diagnosis of CAD\nlst.HfInCad.case_control <- get_cases_controls(definitions=dfDefinitions_processed_expanded %>% filter(TRAIT==trait), lst.harmonized.data$lst.data,dfData.settings, vct.identifiers=df_reference_dt_v0$identifier)\n```\n \nFigure above: Relative contribution of different data sources to selected cardiovascular diseases \n"
+      },
+      "source": "https://raw.githubusercontent.com/niekverw/ukbpheno/master/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "documentation": [
+    {
+      "confidence": 1,
+      "result": {
+        "format": "wiki",
+        "type": "Url",
+        "value": "https://github.com/niekverw/ukbpheno/wiki"
+      },
+      "source": "https://raw.githubusercontent.com/niekverw/ukbpheno/master/README.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "download_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/niekverw/ukbpheno/releases"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 12
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/niekverw/ukbpheno/forks"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "niekverw/ukbpheno"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_title": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "ukbpheno"
+      },
+      "source": "https://raw.githubusercontent.com/niekverw/ukbpheno/master/README.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "identifier": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://zenodo.org/badge/latestdoi/241869442"
+      },
+      "source": "https://raw.githubusercontent.com/niekverw/ukbpheno/master/README.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "images": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://user-images.githubusercontent.com/9621370/170734618-092b9fb3-3a3d-41c3-bcf9-8ccf83a4e860.jpg"
+      },
+      "source": "https://raw.githubusercontent.com/niekverw/ukbpheno/master/README.md",
+      "technique": "regular_expression"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://user-images.githubusercontent.com/9621370/151220378-1ade1fa5-8e38-469e-9b9d-aa74138b8be0.png"
+      },
+      "source": "https://raw.githubusercontent.com/niekverw/ukbpheno/master/README.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "installation": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Installation",
+        "parent_header": [
+          "ukbpheno"
+        ],
+        "type": "Text_excerpt",
+        "value": "```R \ndevtools::install_github(\"niekverw/ukbpheno\")\n```\n\n"
+      },
+      "source": "https://raw.githubusercontent.com/niekverw/ukbpheno/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 0.9663088259641043,
+      "result": {
+        "original_header": "Code lookup with shiny app",
+        "type": "Text_excerpt",
+        "value": "Required:\n- the code maps (Excel workbook) provided by UK Biobank Showcase Resource 592. \n- R library \"optparse\" \n```shell\ncd ../ukbpheno/inst/util\n# show input options \nRscript shiny.lookup_codes.R --help\n# to start the app\nRscript shiny.lookup_codes.R --fcoding_xls path_to_download/all_lkps_maps_v3.xlsx\n```\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/niekverw/ukbpheno/master/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "issue_tracker": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/niekverw/ukbpheno/issues"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "keywords": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": ""
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "license": [
+    {
+      "confidence": 1,
+      "result": {
+        "name": "MIT License",
+        "spdx_id": "MIT",
+        "type": "License",
+        "url": "https://api.github.com/licenses/mit",
+        "value": "https://api.github.com/licenses/mit"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "File_dump",
+        "value": "MIT License\n\nCopyright (c) 2022 NIEK VERWEIJ and MING WAI YEUNG\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.\n"
+      },
+      "source": "https://raw.githubusercontent.com/niekverw/ukbpheno/master/LICENSE",
+      "technique": "file_exploration"
+    }
+  ],
+  "name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "ukbpheno"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "owner": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "User",
+        "value": "niekverw"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "programming_languages": [
+    {
+      "confidence": 1,
+      "result": {
+        "name": "R",
+        "size": 262759,
+        "type": "Programming_language",
+        "value": "R"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "readme_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/niekverw/ukbpheno/master/README.md"
+      },
+      "technique": "file_exploration"
+    }
+  ],
+  "releases": [
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "niekverw",
+          "type": "User"
+        },
+        "date_created": "2022-05-01T14:19:22Z",
+        "date_published": "2022-05-17T16:27:11Z",
+        "html_url": "https://github.com/niekverw/ukbpheno/releases/tag/release",
+        "name": "v1.0.0",
+        "release_id": 67098004,
+        "tag": "release",
+        "tarball_url": "https://api.github.com/repos/niekverw/ukbpheno/tarball/release",
+        "type": "Release",
+        "url": "https://api.github.com/repos/niekverw/ukbpheno/releases/67098004",
+        "value": "https://api.github.com/repos/niekverw/ukbpheno/releases/67098004",
+        "zipball_url": "https://api.github.com/repos/niekverw/ukbpheno/zipball/release"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "somef_missing_categories": [
+    "acknowledgement",
+    "run",
+    "download",
+    "requirements",
+    "contact",
+    "contributors",
+    "faq",
+    "support",
+    "has_build_file",
+    "executable_example"
+  ],
+  "somef_provenance": {
+    "date": "2024-10-05 23:17:41",
+    "somef_schema_version": "1.0.0",
+    "somef_version": "0.9.5"
+  },
+  "stargazers_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 27
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "usage": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Basic Usage",
+        "parent_header": [
+          "ukbpheno"
+        ],
+        "type": "Text_excerpt",
+        "value": "```R\nlibrary(data.table)\nlibrary(ukbpheno)\n\n# the directory with datafiles\npheno_dir <-\"mydata/ukb99999/\"\n\n# main dataset \nfukbtab <- paste(pheno_dir,\"ukb99999.tab\",sep=\"\")\n\n# meta data file\nfhtml <- paste(pheno_dir,\"ukb99999.html\",sep=\"\")\n\n# hospital inpatient data\nfhesin <- paste(pheno_dir,\"hesin.txt\",sep=\"\")\nfhesin_diag <- paste(pheno_dir,\"hesin_diag.txt\",sep=\"\")\nfhesin_oper <- paste(pheno_dir,\"hesin_oper.txt\",sep=\"\")\n\n# GP data\nfgp_clinical <- paste(pheno_dir,\"gp_clinical.txt\",sep=\"\")\nfgp_scripts <- paste(pheno_dir,\"gp_scripts.txt\",sep=\"\")\n\n# harmonize the data without any definition\nlst.harmonized.data<-harmonize_ukb_data(f.ukbtab = fukbtab,f.html = fhtml,f.gp_clinical = fgp_clinical,f.gp_scripts = fgp_scripts,f.hesin = fhesin,f.hesin_diag = fhesin_diag,f.hesin_oper=fhesin_oper,allow_missing_fields = TRUE)\n```\n"
+      },
+      "source": "https://raw.githubusercontent.com/niekverw/ukbpheno/master/README.md",
+      "technique": "header_analysis"
+    }
+  ]
+}

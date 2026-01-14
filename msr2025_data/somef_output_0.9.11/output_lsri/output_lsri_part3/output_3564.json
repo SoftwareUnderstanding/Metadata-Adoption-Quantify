@@ -1,0 +1,689 @@
+{
+  "citation": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "References",
+        "parent_header": [
+          "LuxUS"
+        ],
+        "type": "Text_excerpt",
+        "value": "[1] \u00c4ij\u00f6, T., Yue, X., Rao, A., L\u00e4hdesm\u00e4ki, H (2016) LuxGLM: a probabilistic covariate model for quantification of DNA methylation modifications with complex experimental designs. *Bioinformatics*, 32(17), i511-i519.\n\n[2] Carpenter, B., Gelman, A., Hoffman,M. D., Lee, D., Goodrich, B., Betancourt, M., Brubaker, M., Guo, J., Li, P., Riddell, A. (2017) Stan: A probabilistic programming language. *Journal of Statistical Software*, 76(1).\n\n[3] Stan Development Team (2018) CmdStan: the command-line interface to Stan, Version 2.18.0.   http://mc-stan.org\n\n[4] Stan Development Team (2017) PyStan: the Python interface to Stan, Version 2.16.0.0.   http://mc-stan.org\n\n[5] Halla-aho, V. and L\u00e4hdesm\u00e4ki, H. (2020) LuxUS: DNA methylation analysis using generalized linear mixed model with spatial correlation. Bioinformatics, Volume 36, Issue 17, Pages 4535\u20134543, https://doi.org/10.1093/bioinformatics/btaa539\n"
+      },
+      "source": "https://raw.githubusercontent.com/hallav/LuxUS/master/README.md",
+      "technique": "header_analysis"
+    }
+  ],
+  "code_repository": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/hallav/LuxUS"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_created": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2019-01-18T12:22:55Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_updated": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2022-03-17T09:31:57Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "description": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "A tool for differential methylation analysis."
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 0.9644411025695447,
+      "result": {
+        "original_header": "LuxUS",
+        "type": "Text_excerpt",
+        "value": "*Lux*GLM *U*sing *S*patial correlation (LuxUS) is a tool for differential methylation analysis [5]. The tool is based on LuxGLM by \u00c4ij\u00f6 et al. (2016) [1]. LuxUS uses a  generalized linear mixed model with spatial correlation structure. The model parameters are fitted using probabilistic programming language Stan [2]. Savage-Dickey Bayes factor estimates are used for statistical testing of a covariate of interest. LuxUS supports both continuous and binary variables. The model takes into account the experimental parameters, such as bisulfite conversion efficiency. \nThe needed Python scripts and Stan model files for running the tool and example input and output files are stored in this GitHub repository.\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/hallav/LuxUS/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9979186938638112,
+      "result": {
+        "original_header": "Simulating data from the LuxUS model",
+        "type": "Text_excerpt",
+        "value": "The script *simulate_data_LuxUS.py* creates *-n N_DATASETS* datasets with differential methylation and *-n N_DATASETS* with no differential methylation between the case and control samples, each with *-c N_CYTOSINES* cytosines in them. The locations for the cytosines are generated randomly from 1 to *-w WIDTH*. The simulation function uses experimental design with an intercept term and case/control indicator variable, and the coefficients *b* are defined using parameter *-m MEAN_B*. The example command would create data with total read count *-q READS* for every cytosine. The number of samples simulated would be 6 + 6 (case replicates + control replicates), if 6 is given as parameter *-r REPLICATES*. The script saves the generated data sets to the folder defined by *-f FOLDER*. The user can define the formats in which the data is saved by using parameters *-x SAVE_LUXUS*, *-y SAVE_PROPORTION_TABLE* and *-z SAVE_LUXUS_SEP*. When specifying *-x 1* and/or *-z 1*, the data is saved in a format that can be given as input to the LuxUS Stan model. The parameter *-j SIGMAB2_STAN* defines the variance of the coefficients *b* used in the LuxUS analysis. If the data is saved only in proportion table format (*-x 0 -y 1 -z 0*), the parameter *-j* is not needed and arbitrary value can be given as input to the parameter. Defining *-z 1* saves data for every cytosine separately in a format that can be used with LuxUS Stan model. When saving the data in proportion table format, *chr1* is used as a dummy chromosome name for the first column.  Examples of design matrix and proportion table outputs can be found from data folder with file names *design_matrix_simulated_diff0.txt*, *design_matrix_simulated_diff1.txt*, *proportion_table_simulated_diff0.txt* and *proportion_table_simulated_diff1.txt*.\n```\nusage: simulate_data_LuxUS.py [-h] -e SIGMAE2 -q READS -r REPLICATES -c\n                              N_CYTOSINES -l L -w WIDTH -n N_DATASETS -f\n                              FOLDER -g ID -v SIGMAB2 -d SIGMAR2 -a SIGMAC2 -m\n                              MEAN_B -j SIGMAB2_STAN -x SAVE_LUXUS -y\n                              SAVE_PROPORTION_TABLE -z SAVE_LUXUS_SEP\n\nSimulates bisulphite sequencing data from the LuxUS model.\n\noptional arguments:\n  -h, --help            show this help message and exit\n  -e SIGMAE2, --sigmae2 SIGMAE2\n                        Variance for residual term e.\n  -q READS, --reads READS\n                        Number of BS calls i.e. (total) reads.\n  -r REPLICATES, --replicates REPLICATES\n                        Number of replicates for cases and controls, the total\n                        number of samples will be 2x replicates.\n  -c N_CYTOSINES, --cytosines N_CYTOSINES\n                        Number of cytosines.\n  -l L, --lengthscale L\n                        Lengthscale parameter for covariance matrix for the\n                        simulations.\n  -w WIDTH, --width WIDTH\n                        Width of the genomic region where the N_cytosines lie\n                        (in basepairs).\n  -n N_DATASETS, --datasets N_DATASETS\n                        Number of datasets to be created for both cases (no\n                        differential methylation, differential methylation).\n                        Total number of resulting datasets is 2xN_datasets.\n  -f FOLDER, --folder FOLDER\n                        Folder where to store the generated data files. Format\n                        /level1/level2\n  -g ID, --ID ID        Identifier used in the resulting file names.\n  -v SIGMAB2, --sigmaB2 SIGMAB2\n                        Variance for B, which is inserted into covariance\n                        matrix diagonal (SigmaB). Used for simulations.\n  -d SIGMAR2, --sigmar2 SIGMAR2\n                        sigma_r2 used for simulations.\n  -a SIGMAC2, --sigmac2 SIGMAC2\n                        sigma_c2 used for simulations.\n  -m MEAN_B, --mean_B MEAN_B\n                        Mean for B0 (coefficient for the intercept term) and\n                        value for B1 (coefficient for case/control covariate)\n                        for the cases with differential methylation. Should be\n                        given as string in format [B1, B2]\n  -j SIGMAB2_STAN, --sigmaB2_stan SIGMAB2_STAN\n                        Variance for B, the value which will be used in LuxUS\n                        analysis. (Can be different from what is used for\n                        simulations).\n  -x SAVE_LUXUS, --save_LuxUS SAVE_LUXUS\n                        0 or 1 indicating whether the seimulated data should\n                        be saved in a format supported by LuxUS.\n  -y SAVE_PROPORTION_TABLE, --save_proportion_table SAVE_PROPORTION_TABLE\n                        0 or 1 indicating whether the seimulated data should\n                        be saved in proportion table format, which can be used\n                        with eg. Radmeth. Also a design matrix is saved into a\n                        text file.\n  -z SAVE_LUXUS_SEP, --save_LuxUS_sep SAVE_LUXUS_SEP\n                        0 or 1 indicating whether the seimulated data should\n                        be saved in a format supported by LuxUS analysis where\n                        each cytosine is analysed separately.\n```\nUsage example for the simulation function is given below. This command would create 100 + 100 datasets with 6 + 6 samples. The total read count is 12 for each 10 cytosine in each data set. The simulated data is saved in folder /folder1/folder2 in LuxUS input format. The mean of the normal distribution from which the intercept term coefficients are drawn is -1.4 and the variance is set to 0.25. When simulating a data set with differential methylation, the coefficient for the case/control covariate is set to 1.0 and when simulating a data set with no differential methylation, the coefficient for the case/control covariate is set to 0. The variance terms and the region width are set as described in [5].\n```\nFOLDER=/folder1/folder2\nSIGMAE2=1\nSIGMAR2=0.69\nSIGMAC2=2\nSIGMAB2=0.25\nSIGMAB2_STAN=15\nN_CYT=10\nREADS=12\nREPS=6\nN_DATASETS=100\nL=38\nWIDTH=1000\n\npython simulate_data_LuxUS.py -e $SIGMAE2 -q $READS -r $REPS -c $N_CYT -l $L -w $WIDTH -n $N_DATASETS -f $FOLDER -g \"testing\" -v $SIGMAB2 -d $SIGMAR2 -a $SIGMAC2 -m '[-1.4, 1.0]' -j $SIGMAB2_STAN -x 1 -y 0 -z 0\n```\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/hallav/LuxUS/master/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "download_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/hallav/LuxUS/releases"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 0
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/hallav/LuxUS/forks"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "hallav/LuxUS"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_title": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "LuxUS"
+      },
+      "source": "https://raw.githubusercontent.com/hallav/LuxUS/master/README.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "has_script_file": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/hallav/LuxUS/master/scripts/producing_article_results/HascherEtAlData/run_luxus.sh"
+      },
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/hallav/LuxUS/master/scripts/producing_article_results/HascherEtAlData/run_luxus_NSCLC_data_sigmaB2_5.sh"
+      },
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/hallav/LuxUS/master/scripts/producing_article_results/HascherEtAlData/run_luxus_NSCLC_data_sigmaB2_25.sh"
+      },
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/hallav/LuxUS/master/scripts/producing_article_results/HascherEtAlData/run_LuxUS_preanalysis_HascherEtAl.sh"
+      },
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/hallav/LuxUS/master/scripts/producing_article_results/simulatedData/run_radmeth_for_simulated_data.sh"
+      },
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/hallav/LuxUS/master/scripts/producing_article_results/simulatedData/run_bsseq.sh"
+      },
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/hallav/LuxUS/master/scripts/producing_article_results/simulatedData/run_calculate_BF_luxus_N_cytosines.sh"
+      },
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/hallav/LuxUS/master/scripts/producing_article_results/simulatedData/run_M3D_for_simulated_data.sh"
+      },
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/hallav/LuxUS/master/scripts/producing_article_results/simulatedData/srun_calculate_BF_luxus_N_cytosines.sh"
+      },
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/hallav/LuxUS/master/scripts/producing_article_results/simulatedData/start_luxus_runs_simulated_data.sh"
+      },
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/hallav/LuxUS/master/scripts/producing_article_results/simulatedData/run_DSS_simulated.sh"
+      },
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/hallav/LuxUS/master/scripts/producing_article_results/simulatedData/run_metilene.sh"
+      },
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/hallav/LuxUS/master/scripts/producing_article_results/simulatedData/start_luxus_runs_N_cytosines.sh"
+      },
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/hallav/LuxUS/master/scripts/producing_article_results/simulatedData/srun_calculate_BF_luxus_simulated_data.sh"
+      },
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/hallav/LuxUS/master/scripts/producing_article_results/simulatedData/run_calculate_BF_luxus_simulated_data.sh"
+      },
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/hallav/LuxUS/master/scripts/producing_article_results/confounding_covariates/start_LuxUS_runs.sh"
+      },
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/hallav/LuxUS/master/scripts/producing_article_results/confounding_covariates/run_DSS_for_simulated_data_confounding_covs.sh"
+      },
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/hallav/LuxUS/master/scripts/producing_article_results/confounding_covariates/run_LuxUS_confounding_covariates.sh"
+      },
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/hallav/LuxUS/master/scripts/producing_article_results/confounding_covariates/run_DSS_MORE_covs.sh"
+      },
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/hallav/LuxUS/master/scripts/producing_article_results/confounding_covariates/run_bsseq_for_simulated_data_confounding_covs.sh"
+      },
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/hallav/LuxUS/master/scripts/producing_article_results/confounding_covariates/run_radmeth_for_simulated_data_confounding_covs.sh"
+      },
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/hallav/LuxUS/master/scripts/producing_article_results/confounding_covariates/run_M3D_for_simulated_data_confounding_covs.sh"
+      },
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/hallav/LuxUS/master/scripts/producing_article_results/confounding_covariates/run_metilene_for_simulated_data_confounding_covs.sh"
+      },
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/hallav/LuxUS/master/scripts/producing_article_results/confounding_covariates/srun_LuxUS_confounding_covs.sh"
+      },
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/hallav/LuxUS/master/scripts/producing_article_results/HebestreitEtAlData/run_radmeth_HebestreitEtAl_DMR.sh"
+      },
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/hallav/LuxUS/master/scripts/producing_article_results/HebestreitEtAlData/run_luxus_HebestreitEtAl_nonDMR.sh"
+      },
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/hallav/LuxUS/master/scripts/producing_article_results/HebestreitEtAlData/run_bsseq_HebestreitEtAl.sh"
+      },
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/hallav/LuxUS/master/scripts/producing_article_results/HebestreitEtAlData/run_M3D_for_HebestreitEtAl.sh"
+      },
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/hallav/LuxUS/master/scripts/producing_article_results/HebestreitEtAlData/run_luxus_HebestreitEtAl_DMR.sh"
+      },
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/hallav/LuxUS/master/scripts/producing_article_results/HebestreitEtAlData/run_radmeth_HebestreitEtAl_nonDMR.sh"
+      },
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/hallav/LuxUS/master/scripts/producing_article_results/HebestreitEtAlData/run_DSS_HebestreitEtAl.sh"
+      },
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/hallav/LuxUS/master/scripts/producing_article_results/HebestreitEtAlData/run_metilene_HebestreitEtAl.sh"
+      },
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/hallav/LuxUS/master/scripts/producing_article_results/HebestreitEtAlData/run_prepare_data_for_luxus_HebestreitEtAl_nonDMRs.sh"
+      },
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/hallav/LuxUS/master/scripts/producing_article_results/HebestreitEtAlData/run_prepare_data_for_luxus_HebestreitEtAl_DMRs.sh"
+      },
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/hallav/LuxUS/master/scripts/producing_article_results/HansenData/run_prepare_data_for_luxus_Hansen.sh"
+      },
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/hallav/LuxUS/master/scripts/producing_article_results/HansenData/run_luxus_hansen_data_chr21.sh"
+      },
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/hallav/LuxUS/master/scripts/producing_article_results/HansenData/run_luxus_hansen_data_chr22_PValAboveLimit.sh"
+      },
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/hallav/LuxUS/master/scripts/producing_article_results/HansenData/run_luxus_hansen_data_chr22.sh"
+      },
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/hallav/LuxUS/master/scripts/producing_article_results/HansenData/run_prepare_data_for_luxus_Hansen_complementPValue.sh"
+      },
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/hallav/LuxUS/master/scripts/producing_article_results/HansenData/run_luxus_hansen_data_chr21_PValAboveLimit.sh"
+      },
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/hallav/LuxUS/master/scripts/producing_article_results/HansenData/run_radmeth_Hansen.sh"
+      },
+      "technique": "file_exploration"
+    }
+  ],
+  "installation": [
+    {
+      "confidence": 0.9977077433365137,
+      "result": {
+        "original_header": "Combining results files",
+        "type": "Text_excerpt",
+        "value": "Again, continuing the analysis of the test input data, we combine the input file and the calculated Bayes factors into a final results file with command\n```\npython  final_results.py -i \"$INPUT_FOLDER\"/proportion_table_test_data_diff1.txt  -f $OUTPUT_FOLDER -o test_data_diff1_final_results.txt -b \"$OUTPUT_FOLDER\"/test_data_diff1_result.txt -w \"$OUTPUT_FOLDER\"/proportion_table_test_data_diff1_in_analysis_indicator.txt\n```\nThe script produces the file *test_data_diff1_final_results.txt*.  \n"
+      },
+      "source": "https://raw.githubusercontent.com/hallav/LuxUS/master/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "invocation": [
+    {
+      "confidence": 0.8620071963322966,
+      "result": {
+        "original_header": "Combining results files",
+        "type": "Text_excerpt",
+        "value": "If desired, the script *final_results.py* can be used to combine the Bayes factor result file and the original proportion table file into a final result file. This script produces a new column, in which either the calculated Bayes factor or a \"\\*\\\" (for cytosines which were filtered in the preanalysis phase) is presented for each cytosine. The needed input files are the proportion table file, which was given as an input for the *prepare_data_for_luxus.py* script, the file into which the Bayes factor values and corresponding window indices were stored and the window index file, which is an output file from the *prepare_data_for_luxus.py* script. A folder in which the resulting file should be stored should be specified. The results file can then be used and filtered according to the user's needs. \n```\nusage: final_results.py [-h] -i INPUT_FILE [-f OUTPUT_FOLDER] -o OUTPUT_FILE\n                        -b BF_FILE -w WINDOW_INDEX\n\nGenerates a final results file where the calculated Bayes factors are included\nas columns into the original data file.\n\noptional arguments:\n  -h, --help            show this help message and exit\n  -i INPUT_FILE, --BS_data_file_name INPUT_FILE\n                        The input data file name.\n  -f OUTPUT_FOLDER, --output_folder OUTPUT_FOLDER\n                        The output folder where the results files will be\n                        stored.\n  -o OUTPUT_FILE, --output_file OUTPUT_FILE\n                        Name for the final output file.\n  -b BF_FILE, --BF_file BF_FILE\n                        The BF file name.\n  -w WINDOW_INDEX, --window_index_file WINDOW_INDEX\n                        The window index file.\n```\n \nAgain, continuing the analysis of the test input data, we combine the input file and the calculated Bayes factors into a final results file with command\n```\npython  final_results.py -i \"$INPUT_FOLDER\"/proportion_table_test_data_diff1.txt  -f $OUTPUT_FOLDER -o test_data_diff1_final_results.txt -b \"$OUTPUT_FOLDER\"/test_data_diff1_result.txt -w \"$OUTPUT_FOLDER\"/proportion_table_test_data_diff1_in_analysis_indicator.txt\n```\nThe script produces the file *test_data_diff1_final_results.txt*.  \n"
+      },
+      "source": "https://raw.githubusercontent.com/hallav/LuxUS/master/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "issue_tracker": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/hallav/LuxUS/issues"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "keywords": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": ""
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "license": [
+    {
+      "confidence": 1,
+      "result": {
+        "name": "MIT License",
+        "spdx_id": "MIT",
+        "type": "License",
+        "url": "https://api.github.com/licenses/mit",
+        "value": "https://api.github.com/licenses/mit"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "File_dump",
+        "value": "MIT License\n\nCopyright (c) 2019 Viivi Halla-aho\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.\n"
+      },
+      "source": "https://raw.githubusercontent.com/hallav/LuxUS/master/LICENSE",
+      "technique": "file_exploration"
+    }
+  ],
+  "name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "LuxUS"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "owner": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "User",
+        "value": "hallav"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "programming_languages": [
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Python",
+        "size": 211563,
+        "type": "Programming_language",
+        "value": "Python"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Shell",
+        "size": 42290,
+        "type": "Programming_language",
+        "value": "Shell"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "R",
+        "size": 30329,
+        "type": "Programming_language",
+        "value": "R"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Stan",
+        "size": 8014,
+        "type": "Programming_language",
+        "value": "Stan"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "readme_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/hallav/LuxUS/master/README.md"
+      },
+      "technique": "file_exploration"
+    }
+  ],
+  "related_documentation": [
+    {
+      "confidence": 1,
+      "result": {
+        "format": "readthedocs",
+        "type": "Url",
+        "value": "https://pystan.readthedocs.io/"
+      },
+      "source": "https://raw.githubusercontent.com/hallav/LuxUS/master/README.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "requirements": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Requirements",
+        "parent_header": [
+          "LuxUS"
+        ],
+        "type": "Text_excerpt",
+        "value": "- Python 2.7\n- NumPy\n- SciPy\n- Matplotlib\n- PyStan [3]\n- CmdStan [4] (for running ADVI)\n\nThe versions used were: NumPy 1.14.5, SciPy 1.1.0, Matplotlib 2.2.2, PyStan 2.17.1.0, CmdStan 2.12.0. The tool has been tested in Linux environment.\n"
+      },
+      "source": "https://raw.githubusercontent.com/hallav/LuxUS/master/README.md",
+      "technique": "header_analysis"
+    }
+  ],
+  "run": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Running preanalysis",
+        "parent_header": [
+          "LuxUS"
+        ],
+        "type": "Text_excerpt",
+        "value": "The script *prepare_data_for_luxus_publishing.py* can be used to prepare BS-seq data for LuxUS analysis. Before LuxUS analysis the data should be aligned and the methylation proportions for each cytosine in each sample should be calculated. The input file for a BS-seq experiment with N samples in total should be a headerless tab-separated proportion table with the following format\n\n```\n<Chromosome name> <Genomic location start> <Genomic location end> <Total count, sample 1> <Methylated read count, sample 1> ... <Total count, sample N> <Methylated read count, sample N>\n```\nExamples of proportion table files can be found from the folder *data*, see for example *proportion_table_test_data_diff0.txt*. The proportion table can contain cytosines from multiple chromosomes and it should be sorted based on the genomic location of the cytosines. The chromosomes can be sorted in any order. If available, the experimental parameters bisulfite conversion efficiency, incorrect bisulfite conversion efficiency and sequencing error rates should also be provided to the script.\n\nThe corresponding design matrix for the experiment should also be given as a headerless text file. The rows of the file correspond to the samples, which should be given in the same order with the input proportion table. The first column represents the intercept in the model, and should be set to all ones. The next columns correspond to the other covariates in the model. By default, the covariate to be tested is the second column (column 1, as the numbering starts from 0). This covariate is used as a test covariate in the F-test in the preanalysis filtering step. The argument *-u REQ_PVAL* defines the p-value cutoff-value for the F-test. This covariate is assumed to be a binary variable, although both binary and continuous variables can be tested with the LuxUS model. The variables in the design matrix should be either binary or continuous.  \n\nIn the preanalysis phase each cytosine is first evaluated separately. The cytosine has to be located at maximum in the defined window width range from the start of the window. There also has to be samples with minimum coverage of *-v REQUIRED_COVERAGE* at least in as many samples as defined by *-s N_REQUIRED_SAMPLES* in both case and control groups, which are defined by the covariate *-t T_COVARIATE*. The sorted cytosines are evaluated one by one, until either the maximum width of a genomic window or maximum number of cytosines *-c N_CYTOSINES* is reached. Then the genomic window goes through another filtering step. The mean coverage over the window should be at least *-v REQUIRED_COVERAGE* in at least as many samples as defined by argument *-s N_REQUIRED_SAMPLES* in both case and control groups, which are again defined by covariate *-t T_COVARIATE*. Then the F-test is performed using the log-transformed average methylation states of the samples as data. Before the log-transformation of the average methylation states, they are truncated to the range [0.00001, 0.99999] to enable the logit transformation.\n\nFor the windows that pass the preanalysis step, the script produces input files for the *run_luxus.py* script. Each input file contains the data of one genomic window. The number of cytosines and mean coverages for each window can be stored into separate text files. The information of whether a cytosine passed the preanalysis step and the index of the possible genomic window into which it belongs is stored into file with name *INPUT_NAME_in_analysis_indicator.txt*, where *INPUT NAME* is the name of the proportion table file. This file is later used when combining the calculated Bayes factors and the original input file into the final results file.\n\n```\nusage: prepare_data_for_luxus.py [-h] -i INPUT_NAME -o OUTPUT_FOLDER -d\n                                 DESIGN_MATRIX [-w WIDTH] [-c N_CYTOSINES] -r\n                                 N_REPLICATES [-b SIGMAB2] [-p ALPHA_L]\n                                 [-q BETA_L] [-m ALPHA_E] [-n BETA_E]\n                                 [-k ALPHA_R] [-l BETA_R] [-g ALPHA_C]\n                                 [-f BETA_C] [-s N_REQUIRED_SAMPLES]\n                                 [-a BSEFF] [-e BSBEFF] [-j SEQERR]\n                                 [-t T_COVARIATE] -u REQ_PVAL\n                                 [-v REQUIRED_COVERAGE] [-y MEANCOVFILE]\n                                 [-z CYTNFILE]\n\nTakes in the data in text file format and then prepares it for running LuxUS.\nThe data objects will be saved to the specified location.\n\noptional arguments:\n  -h, --help            show this help message and exit\n  -i INPUT_NAME, --BS_data_file_name INPUT_NAME\n                        The input data file. The input data file should\n                        contain only cytosines in one chromosome.\n  -o OUTPUT_FOLDER, --output_folder OUTPUT_FOLDER\n                        The output location.\n  -d DESIGN_MATRIX, --design_matrix DESIGN_MATRIX\n                        The design matrix file (and file path if needed),\n                        where there is one row for each sample. Include also\n                        the column of ones corresponding to the intercept.\n  -w WIDTH, --window_width WIDTH\n                        Maximum width of the genomic window in basepairs. If\n                        not specified, default value 1000 is used.\n  -c N_CYTOSINES, --N_cytosines N_CYTOSINES\n                        Maximum number of cytosines in a window. If not\n                        specified 20 is used as default.\n  -r N_REPLICATES, --N_replicates N_REPLICATES\n                        Number of replicates.\n  -b SIGMAB2, --sigmab2 SIGMAB2\n                        Prior variance for the coefficients b. If not\n                        specified, default value 15 is used.\n  -p ALPHA_L, --alpha_l ALPHA_L\n                        Hyperparameter alpha for prior distribution of l. If\n                        not specified, default value 38 is used.\n  -q BETA_L, --beta_l BETA_L\n                        Hyperparameter beta for prior distribution of l. If\n                        not specified, default value 1 is used.\n  -m ALPHA_E, --alpha_e ALPHA_E\n                        Hyperparameter alpha for prior distribution of sigmaE2. If\n                        not specified, default value 5 is used.\n  -n BETA_E, --beta_e BETA_E\n                        Hyperparameter beta for prior distribution of sigmaE2. If\n                        not specified, default value 5 is used.\n  -k ALPHA_R, --alpha_r ALPHA_R\n                        Hyperparameter alpha for prior distribution of\n                        sigmaR2. If not specified, default value 98 is used.\n  -l BETA_R, --beta_r BETA_R\n                        Hyperparameter beta for prior distribution of sigmaR2.\n                        If not specified, default value 143 is used.\n  -g ALPHA_C, --alpha_c ALPHA_C\n                        Hyperparameter alpha for prior distribution of\n                        sigmaC2. If not specified, default value 6 is used.\n  -f BETA_C, --beta_c BETA_C\n                        Hyperparameter beta for prior distribution of sigmaC2.\n                        If not specified, default value 3 is used.\n  -s N_REQUIRED_SAMPLES, --N_required_samples N_REQUIRED_SAMPLES\n                        Number of samples (from both case and control groups)\n                        each cytosine must be present for it to be included in\n                        the analysis. If not specified, default value 1 is\n                        used.\n  -a BSEFF, --bsEff BSEFF\n                        Bisulphite conversion efficiency in format\n                        [bsEff_1,...,bsEff_N_replicates]. If not specified,\n                        default value 1 is used for all samples.\n  -e BSBEFF, --bsbEff BSBEFF\n                        Incorrect bisulphite conversion efficiency in in\n                        format [bsbEff_1,...,bsbEff_N_replicates]. If not\n                        specified, default value 0 is used for all samples.\n  -j SEQERR, --seqErr SEQERR\n                        Sequencing error in format\n                        [seqErr_1,...,seqErr_N_replicates]. If not specified,\n                        default value 0 is used for all samples.\n  -t T_COVARIATE, --test_covariate T_COVARIATE\n                        Give integer value indicating the column which is the\n                        covariate to be tested. Assumed to be a binary\n                        covariate. Indexing starts from 0. If not specified,\n                        default value 1 is used.\n  -u REQ_PVAL, --required_pval REQ_PVAL\n                        Required maximum p-value for the coefficient for the\n                        variable given as --test_covariate for the cytosine\n                        window to be included in the analysis. Set to 1 if no\n                        p-value restriction is desired.\n  -v REQUIRED_COVERAGE, --required_coverage REQUIRED_COVERAGE\n                        Required average coverage over window for a replicate.\n                        If not specified, default value 5 is used.\n  -y MEANCOVFILE, --meanCovFile MEANCOVFILE\n                        File name for storing mean coverages for each window\n  -z CYTNFILE, --cytNFile CYTNFILE\n                        File name for storing the number of cytosines in each\n                        window.\n```\n\nTest input data files and all the result files have been provided in the *data* folder in this GitHub repository. The command for running the *prepare_data_for_luxus.py* script (with default parameters and the p-value limit for the preanalysis F-test set to 0.1) for the test input file *proportion_table_test_data_diff1.txt* and corresponding design matrix *design_matrix_test_data_diff1.txt* (both stored in folder defined in $INPUT_FOLDER) could be for example the following\n```\npython prepare_data_for_luxus.py -i \"$INPUT_FOLDER\"/proportion_table_test_data_diff1.txt -d \"$INPUT_FOLDER\"/design_matrix_test_data_diff1.txt -o $OUTPUT_FOLDER -r 12 -t 1 -u 0.1 -y \"$OUTPUT_FOLDER\"/window_mean_coverage_test_data_diff1.txt -z \"$OUTPUT_FOLDER\"/window_number_of_cytosines_test_data_diff1.txt\n```\nThis command produces the following output files\n- Stan input file *input_for_luxus_1.pickle*. As the test data covers only 10 cytosines in a 1000bp region, only one genomic window was found, resulting in one Stan input file. The file is stored in the folder defined in *$OUTPUT_FOLDER*. \n- Window index file *proportion_table_test_data_diff1_in_analysis_indicator.txt*, where an indicator value is stored for each cytosine. Value 0 means that the cytosine was not included in a genomic window (or the window did not pass the preanalysis phase) and other values indicate the genomic window into which the cytosine belongs to. \n- *window_mean_coverage_test_data_diff1.txt* which contains the mean coverages for each sample (over the genomic window) for each genomic window that passed the preanalysis filtering phase. \n- *window_number_of_cytosines_test_data_diff1.txt* which contains the number of cytosines in the genomic window for each genomic window that passed the preanalysis filtering phase. \n\nThe test input file *proportion_table_test_data_diff0.txt* contains a test data set in which no differential methylation is present and it will not pass the preanalysis filtering.\n\nWhen defining the hyperparameters for e, sigmaR2 and sigmaC2, it is possible to give the desired parameters to either gamma or inverse-gamma prior. The default parameters are meant to be used with a gamma prior.\n"
+      },
+      "source": "https://raw.githubusercontent.com/hallav/LuxUS/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Running LuxUS analysis",
+        "parent_header": [
+          "LuxUS"
+        ],
+        "type": "Text_excerpt",
+        "value": "The *run_luxus.py* script can be used to run the LuxUS analysis for the desired input data, which has first been prepared with the *prepare_data_for_LuxUS.py* script. The script loads the input data, fits the model with using the chosen model fitting method, calculates the Bayes factor and saves it into the result file. The computation time can also be saved if desired. As the script is run on one genomic window at a time, it is possible to parallelize the computation of Bayes factors if desired. \n\nWith argument *-a ALGORITHM* the algorithm to be used for fitting the model parameter can be chosen between Hamiltonian Monte Carlo (HMC) sampling and Automatic Differentation Variational Inference (ADVI), with Hamiltonian Monte Carlo sampling being the default option. When performing model fitting with HMC, the standard Stan fit summary can be found from the Python log file. If desired, the sample chains and histograms of the samples for the variance parameters for the cytosine and replicate random effects and the noise term, fixed effect coefficients and lengthscale parameter can be plotted. When using ADVI for model fitting, the input files are first saved as temporal [R dump files](https://pystan.readthedocs.io/en/latest/conversion.html). Then CmdStan is called using [subprocess package](https://docs.python.org/2/library/subprocess.html) in Python and temporal sample files are produced as a result. The samples are extracted from these files and used for Bayes factor calculation. After this the temporal files are removed by the script. Before running this script with ADVI chosen as the model fitting method, the Stan model should be built using CmdStan. This can be done by running [*make* command](https://github.com/stan-dev/cmdstan/wiki/Getting-Started-with-CmdStan) for the Stan model file (.stan file) in the CmdStan folder. The result will be stored in the same folder where the original .stan file was located. This should be the same folder from which the *run_luxus.py* script is run. Please run the *make* command for all Stan models that will be used with ADVI.\n\nThe script uses a precompiled Stan model if possible by pickling the compiled Stan model after first usage. Please see the detailed description on the [PyStan manual page](https://pystan.readthedocs.io/en/latest/avoiding_recompilation.html).\n\nWith argument *-n VARIANCE_PRIOR* one can change the default gamma priors for the variance parameters to inverse-gamma priors. The hyperparameters should be chosen accordingly at the preanalysis phase.  \n\n```\nusage: run_luxus.py [-h] -d INPUT_DATA -o OUTPUTFOLDER -i INPUTFOLDER -j\n                    OUTPUTFILE -x TEST_COVARIATE [-y TEST_COVARIATE2]\n                    [-b SIGMAB2] -a ALGORITHM [-p DIAGNOSTIC_PLOTS]\n                    [-g N_GRADSAMPLES] [-e N_ELBOSAMPLES]\n                    [-v N_OUTPUTSAMPLES_VI] [-m N_OUTPUTSAMPLES_HMC]\n                    [-c N_HMC_CHAINS] [-w WINDOW_INDEX] [-t TIMEFILE]\n\nRuns LuxUS model for the given input data and returns a BF for the whole\nwindow.\n\noptional arguments:\n  -h, --help            show this help message and exit\n  -d INPUT_DATA, --input_data INPUT_DATA\n                        Name of the data file.\n  -o OUTPUTFOLDER, --outputFolder OUTPUTFOLDER\n                        Folder where to store the results.\n  -i INPUTFOLDER, --inputFolder INPUTFOLDER\n                        Folder where the input data is stored.\n  -j OUTPUTFILE, --outputFile OUTPUTFILE\n                        File into which the BFs are written. Will be located\n                        in folder specified in -o.\n  -x TEST_COVARIATE, --test_covariate TEST_COVARIATE\n                        Covariate to be tested. Give index (in design matrix)\n                        starting from 0.\n  -y TEST_COVARIATE2, --test_covariate2 TEST_COVARIATE2\n                        Type 2 test: the covariate to be compared to the\n                        covariate defined by argument -x. If not provided,\n                        type 1 test will be performed. Give index (in design\n                        matrix) starting from 0.\n  -b SIGMAB2, --sigmaB2 SIGMAB2\n                        Variance for B. Default value 15 is used if not\n                        specified.\n  -a ALGORITHM, --algorithm ALGORITHM\n                        Give value 0 (use HMC, default) or 1 (use VI).\n  -p DIAGNOSTIC_PLOTS, --diagnostic_plots DIAGNOSTIC_PLOTS\n                        Give value 0 (do not plot sample diagnostics for HMC)\n                        or 1 (plot sample diagnostics for HMC). Default value\n                        is 0.\n  -g N_GRADSAMPLES, --N_gradsamples N_GRADSAMPLES\n                        Number of gradient samples used in VI. Default value\n                        10 is used if not specified.\n  -e N_ELBOSAMPLES, --N_elbosamples N_ELBOSAMPLES\n                        Number of ELBO samples used in VI. Default value 200\n                        is used if not specified.\n  -v N_OUTPUTSAMPLES_VI, --N_outputsamples_VI N_OUTPUTSAMPLES_VI\n                        Number of posterior samples used in VI. Default value\n                        2000 is used if not specified.\n  -m N_OUTPUTSAMPLES_HMC, --N_outputsamples_HMC N_OUTPUTSAMPLES_HMC\n                        Number of posterior samples per chain used in HMC (the\n                        burn-in will be removed from this sample number).\n                        Default value 1000 is used if not specified.\n  -c N_HMC_CHAINS, --N_HMC_chains N_HMC_CHAINS\n                        Number of chains in HMC sampling. Default value 4 is\n                        used if not specified.\n  -w WINDOW_INDEX, --window_index WINDOW_INDEX\n                        The index of the window being analysed. If value is\n                        not given the BF is saved without window index into\n                        the defined output file.\n  -t TIMEFILE, --timeFile TIMEFILE\n                        File name (and path) for storing computation time. If\n                        no file name is given the computation times will not\n                        be stored into a file.\n  -n VARIANCE_PRIOR, --variance_prior VARIANCE_PRIOR\n                        Which prior distribution to use for variance\n                        parameters. Give value 0 (use gamma priors, default)\n                        or 1 (use inverse-gamma priors).\n\n\n```\n\nContinuing the analysis of the test input data set, the produced Stan input file *input_for_luxus_1.pickle* can now be given as input to the *run_luxus.py* script. The following command will run LuxUS analysis (with type 1 test) on the input data with default parameters and by saving the diagnostics plot\n```\npython run_luxus.py -d input_for_luxus_1.pickle -o $OUTPUT_FOLDER -i $OUTPUT_FOLDER -j test_data_diff1_result.txt -x 1 -p 1 -w 1\n```\nThis will produce an output file *test_data_diff1_result.txt* (stored in folder defined by argument *-o OUTPUTFOLDER*), where the computed Bayes factor for the input data is stored along with the window index defined by argument *-w WINDOW_INDEX*. The diagnostics plot *input_for_luxus_1_diagnostic_plots_HMC.png* is also saved in the same folder. Input file name (the Stan input file) should be given as argument *-d INPUT_DATA* and the input file folder as argument *-i INPUTFOLDER*. \n\n "
+      },
+      "source": "https://raw.githubusercontent.com/hallav/LuxUS/master/README.md",
+      "technique": "header_analysis"
+    }
+  ],
+  "somef_missing_categories": [
+    "acknowledgement",
+    "download",
+    "contact",
+    "contributors",
+    "documentation",
+    "usage",
+    "faq",
+    "support",
+    "identifier",
+    "has_build_file",
+    "executable_example"
+  ],
+  "somef_provenance": {
+    "date": "2024-10-06 13:13:37",
+    "somef_schema_version": "1.0.0",
+    "somef_version": "0.9.5"
+  },
+  "stargazers_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 3
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "type": [
+    {
+      "confidence": 0.82,
+      "result": {
+        "type": "String",
+        "value": "commandline-application"
+      },
+      "technique": "software_type_heuristics"
+    }
+  ]
+}

@@ -13,7 +13,7 @@ def run_somef_on_links(json_file, output_dir, threshold, temp):
         if link:
             print(f"Extracting: {link}")
             output_file = os.path.join(output_dir, f"output_{i+1}.json")
-            command = f"somef describe -r {link} -o {output_file} -t {threshold} -kt {temp} -p -m"
+            command = f"somef describe -r {link} -o {output_file} -t {threshold} -p -m"
             subprocess.run(command, shell=True)
 
 

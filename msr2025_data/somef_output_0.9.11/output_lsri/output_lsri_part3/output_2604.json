@@ -1,0 +1,428 @@
+{
+  "code_repository": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/hmdlab/raptgen"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_created": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2021-02-16T07:48:58Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_updated": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2024-08-20T05:43:23Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "description": [
+    {
+      "confidence": 0.8952362440325341,
+      "result": {
+        "original_header": "Quickstart",
+        "type": "Text_excerpt",
+        "value": "Visualized train logs look like;\n```shell\n% python3 scripts/real.py data/sample/sample.fasta \nsaving to /Users/niwn/raptgen/out/real\nreading fasta format sequence\nadapter info not provided. estimating value\nestimated forward adapter len is 5 : AAAAA\nestimated reverse adapter len is 5 : GGGGG\nfiltering with : AAAAA(5N)-20N-GGGGG(5N)\nexperiment name : 20211128_210830338899\n# of sequences -> 100\n\n[1] 139 itr  26.2 <->  26.9 (25.8+ 1.1) of _vae.mdl..:  14%|\u2588    | 13/100 [02:38<16:16,  11s/it]\n``` \n1. the number of epochs with no validation loss update.\n2. train loss\n3. valid (recon+norm.) loss\n4. model name\n5. training progress\n6. number of iteration\n7. elapsed time / estimate time of training\n8. training speed\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/hmdlab/raptgen/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9554704669402112,
+      "result": {
+        "original_header": "Train RaptGen using real data",
+        "type": "Text_excerpt",
+        "value": "```\nUsage: real.py [OPTIONS] SEQPATH\n\n  run experiment with real data\n\nOptions:\n  --epochs INTEGER        the number of training epochs  [default: 1000]\n  --threshold INTEGER     the number of epochs with no loss update to stop\n                          training  [default: 50]\n\n  --use-cuda / --no-cuda  use cuda if available  [default: True]\n  --cuda-id INTEGER       the device id of cuda to run  [default: 0]\n  --save-dir PATH         path to save results  [default: out/real]\n\n  --fwd TEXT              forward adapter\n  --rev TEXT              reverse adapter\n  --min-count INTEGER     minimum duplication count to pass sequence for\n                          training  [default: 1]\n\n  --multi INTEGER         the number of training for multiple times  [default:\n                          1]\n\n  --reg-epochs INTEGER    the number of epochs to conduct state transition\n                          regularization  [default: 50]\n\n  --embed-size INTEGER    the number of embedding dimension of raptgen model\n                          [default: 2]\n\n  --fast / --normal       [experimental] use fast calculation of probability\n                          estimation. Output of the decoder shape is different\n                          and the visualizers are not implemented.  [default:\n                          False]\n\n  --help                  Show this message and exit.  [default: False]\n``` \n\n`.fa`, `.fasta`, and `.fastq` files are automatically processed. The default saving folder is `out/simlulation/real`. The runtime depends on the sequence length and number of unique sequences. The output of this procedure is the followings; \n"
+      },
+      "source": "https://raw.githubusercontent.com/hmdlab/raptgen/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.932426760035625,
+      "result": {
+        "original_header": "Encode sequence to achieve latent representation",
+        "type": "Text_excerpt",
+        "value": "To embed the sequence, use `encode.py`, which input sequences and trained model and output sequences' representation vector. While the VAE model encodes the sequence into the latent space in the form of distribution, the output representation vector is the center of this distribution.  \n```\nUsage: encode.py [OPTIONS] SEQPATH MODELPATH\n\n  achieve sequence vector in embedded space.\n\nOptions:\n  --use-cuda / --no-cuda  use cuda if available  [default: True]\n  --cuda-id INTEGER       the device id of cuda to run  [default: 0]\n  --fwd TEXT              forward adapter\n  --rev TEXT              reverse adapter\n  --save-dir PATH         path to save results  [default: out/encode]\n\n  --fast / --normal       [experimental] use fast calculation of probability\n                          estimation. Output of the decoder shape is different\n                          and the visualizers are not implemented.  [default:\n                          False]\n\n  --help                  Show this message and exit.  [default: False]\n``` \n"
+      },
+      "source": "https://raw.githubusercontent.com/hmdlab/raptgen/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.8265957802650502,
+      "result": {
+        "original_header": "Decode latent point to most_probable sequence",
+        "type": "Text_excerpt",
+        "value": "To reconstruct sequence from the latent space, use `decode.py`. Given the model parameters and data points, the raptgen model would sample the most probable sequence from the derived profile HMM. Note that the model length has to be explicitly passed to the script to initialize the model.\n```shell\n% python3 scripts/decode.py \\\n    out/encode/embed_seq.csv \\\n    results/simulation/multiple/cnn_phmm_vae.mdl \\\n    20\n```\n \nThis will input csv with the identifier columns followed by dimension info;\n```\nindex,dim1,dim2\n0,0.14,0.08\n1,0.1,0.03\n...\n```\nand output reconstructed model and log probability of the sequence in the following format;\n```\nindex,dim1,dim2,pattern,maximum_probable_sequence,log_proba\n0,0.14,0.08,*C*T*ATCCCGCCCC,ACGTGATCCCGCCCC,-17.602188110351562\n1,0.1,0.03,*C*T*ATCCCGCTGC,ACATGATCCCGCTGC,-16.477264404296875\n...\n```\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/hmdlab/raptgen/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.8715783365518203,
+      "result": {
+        "original_header": "Evaluating multi-motifs",
+        "type": "Text_excerpt",
+        "value": "This outputs models (`[MODEL_NAME].mdl`) and its training result (`[MODEL_NAME].csv`) into specified folder (default is out/simlulation/multiple). A single run takes approximately 20 hours on Tesla V100 GPU.\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/hmdlab/raptgen/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.8543262883289432,
+      "result": {
+        "original_header": "Directory structure",
+        "type": "Text_excerpt",
+        "value": "```text\n.\n\u251c\u2500\u2500 data\n\u2502   \u251c\u2500\u2500 real\n\u2502   \u251c\u2500\u2500 sample\n\u2502   \u2514\u2500\u2500 simulation\n\u2502       \u251c\u2500\u2500 multiple\n\u2502       \u2514\u2500\u2500 paired\n\u251c\u2500\u2500 results\n\u2502   \u251c\u2500\u2500 real\n\u2502   \u2514\u2500\u2500 simulation\n\u2502       \u251c\u2500\u2500 multiple\n\u2502       \u2514\u2500\u2500 paired\n\u251c\u2500\u2500 scripts\n\u2514\u2500\u2500 src\n    \u251c\u2500\u2500 data\n    \u251c\u2500\u2500 models\n    \u2514\u2500\u2500 visualization\n```\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/hmdlab/raptgen/master/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "download_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/hmdlab/raptgen/releases"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 5
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/hmdlab/raptgen/forks"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "hmdlab/raptgen"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_title": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "Supplementary code for \"Generative aptamer discovery using RaptGen\""
+      },
+      "source": "https://raw.githubusercontent.com/hmdlab/raptgen/master/README.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "has_build_file": [
+    {
+      "confidence": 1,
+      "result": {
+        "format": "dockerfile",
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/hmdlab/raptgen/master/Dockerfile"
+      },
+      "source": "https://raw.githubusercontent.com/hmdlab/raptgen/master/Dockerfile",
+      "technique": "file_exploration"
+    }
+  ],
+  "identifier": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://zenodo.org/badge/latestdoi/339321685"
+      },
+      "source": "https://raw.githubusercontent.com/hmdlab/raptgen/master/README.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "installation": [
+    {
+      "confidence": 0.9999750923892546,
+      "result": {
+        "original_header": "Tested environment",
+        "type": "Text_excerpt",
+        "value": "* Ubuntu == 18.04\n* python == 3.7\n* pytorch == 1.5.0\n* cuda == 10.2 \nFor other requirements, see [Pipfile](Pipfile). Also We verified that the codes are runnable in the provided Docker environment (see [Dockerfile](Dockerfile)). Built image is available at [`natuski/raptgen-gpu`](https://hub.docker.com/repository/docker/natuski/raptgen-gpu) on docker hub. The requirements are installable using [pipenv](https://pipenv.pypa.io/en/latest/) with;\n```shell\n% pipenv install\n```\n \nThe install time was about 10 minutes on MacbookPro 2020 Core i5 16G. You may also need to install `cairo` library to generate profile hmm image. For mac OS X, it can be installed by `brew install cairo && brew install pango`. For Ubuntu, `sudo apt-get install -y libcairo2` would work.\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/hmdlab/raptgen/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9985975591889619,
+      "result": {
+        "original_header": "Quickstart",
+        "type": "Text_excerpt",
+        "value": "All scripts have `--help` command that prints the options and the arguments if required. For example,\n```shell\n% python scripts/multiple.py --help \nUsage: multiple.py [OPTIONS]\n\n  run experiment with multiple motif\n\nOptions:\n  --n-motif INTEGER       the number of motifs  [default: 10]\n  --n-seq INTEGER         the number of the sequence to generate  [default:\n                          10000]\n\n  --seed INTEGER          seed for seqeunce generation reproduction  [default:\n                          0]\n\n  --error-rate FLOAT      the ratio to modify sequence  [default: 0.1]\n  --epochs INTEGER        the number of training epochs  [default: 1000]\n  --threshold INTEGER     the number of epochs with no loss update to stop\n                          training  [default: 50]\n\n  --use-cuda / --no-cuda  use cuda if available  [default: True]\n  --cuda-id INTEGER       the device id of cuda to run  [default: 0]\n  --save-dir PATH         path to save results  [default:\n                          out/simlulation/multiple]\n\n  --reg-epochs INTEGER    the number of epochs to conduct state transition\n                          regularization  [default: 50]\n\n  --help                  Show this message and exit.  [default: False]\n```\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/hmdlab/raptgen/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9945945371683284,
+      "result": {
+        "original_header": "Decode latent point to most_probable sequence",
+        "type": "Text_excerpt",
+        "value": "```\nUsage: decode.py [OPTIONS] POS_PATH MODEL_PATH TARGET_LEN\n\n  achieve sequence vector in embedded space.\n\nOptions:\n  --use-cuda / --no-cuda  use cuda if available  [default: True]\n  --cuda-id INTEGER       the device id of cuda to run  [default: 0]\n  --save-dir PATH         path to save results  [default: out/decode]\n\n  --embed-dim INTEGER     the embedding dimension of raptgen model  [default:\n                          2]\n\n  --eval-max INTEGER      the maximum number of sequence to evaluate most\n                          probable sequence  [default: 256]\n\n  --help                  Show this message and exit.  [default: False]\n``` \n"
+      },
+      "source": "https://raw.githubusercontent.com/hmdlab/raptgen/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9584223997476105,
+      "result": {
+        "original_header": "Evaluating multi-motifs",
+        "type": "Text_excerpt",
+        "value": "To run the experiment with multiple sequence motifs, run;\n```shell\n% python3 scripts/multiple.py\n```\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/hmdlab/raptgen/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.8427942816020563,
+      "result": {
+        "original_header": "Evaluating paired-motifs",
+        "type": "Text_excerpt",
+        "value": "To run the experiment with paired sequence motifs, run;\n```shell\n% python3 scripts/paired.py\n```\n\n<details><summary>help of paired.py</summary>\n```\nUsage: paired.py [OPTIONS]\n\n  run experiment with paired motif\n\nOptions:\n  --n-seq INTEGER            the number of the sequence to generate  [default:\n                             5000]\n\n  --seed INTEGER             seed for seqeunce generation reproduction\n                             [default: 0]\n\n  --epochs INTEGER           the number of training epochs  [default: 1000]\n  --threshold INTEGER        the number of epochs with no loss update to stop\n                             training  [default: 50]\n\n  --use-cuda / --no-cuda     use cuda if available  [default: True]\n  --cuda-id INTEGER          the device id of cuda to run  [default: 0]\n  --save-dir PATH            path to save results  [default: /home/natsuki-\n                             iwano/raptgen-xilorole/out/simlulation/paired]\n\n  --reg-epochs INTEGER       the number of epochs to conduct state transition\n                             regularization  [default: 50]\n\n  --multi INTEGER            the number of training for multiple times\n                             [default: 1]\n\n  --only-cnn / --all-models  train all encoder types or not  [default: False]\n  --help                     Show this message and exit.  [default: False]\n```\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/hmdlab/raptgen/master/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "invocation": [
+    {
+      "confidence": 0.915097325733153,
+      "result": {
+        "original_header": "Train RaptGen using real data",
+        "type": "Text_excerpt",
+        "value": "To run the experiment with sequence files, run `real.py`;\n```shell\n% python3 scripts/real.py data/sample/sample.fasta\n```\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/hmdlab/raptgen/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.933008601807915,
+      "result": {
+        "original_header": "Encode sequence to achieve latent representation",
+        "type": "Text_excerpt",
+        "value": "Run;\n```shell\n% python3 scripts/encode.py \\\n    data/sample/sample.fasta \\\n    results/simulation/multiple/cnn_phmm_vae.mdl \\\n```\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/hmdlab/raptgen/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.8445093731989661,
+      "result": {
+        "original_header": "Evaluating multi-motifs",
+        "type": "Text_excerpt",
+        "value": "To run the experiment with multiple sequence motifs, run;\n```shell\n% python3 scripts/multiple.py\n```\n \nThis outputs models (`[MODEL_NAME].mdl`) and its training result (`[MODEL_NAME].csv`) into specified folder (default is out/simlulation/multiple). A single run takes approximately 20 hours on Tesla V100 GPU.\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/hmdlab/raptgen/master/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "issue_tracker": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/hmdlab/raptgen/issues"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "keywords": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": ""
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "license": [
+    {
+      "confidence": 1,
+      "result": {
+        "name": "MIT License",
+        "spdx_id": "MIT",
+        "type": "License",
+        "url": "https://api.github.com/licenses/mit",
+        "value": "https://api.github.com/licenses/mit"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "File_dump",
+        "value": "MIT License\n\nCopyright (c) 2021 Natsuki IWANO\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.\n"
+      },
+      "source": "https://raw.githubusercontent.com/hmdlab/raptgen/master/LICENSE",
+      "technique": "file_exploration"
+    }
+  ],
+  "name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "raptgen"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "owner": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Organization",
+        "value": "hmdlab"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "programming_languages": [
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Python",
+        "size": 120863,
+        "type": "Programming_language",
+        "value": "Python"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Dockerfile",
+        "size": 758,
+        "type": "Programming_language",
+        "value": "Dockerfile"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "readme_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/hmdlab/raptgen/master/README.md"
+      },
+      "technique": "file_exploration"
+    }
+  ],
+  "releases": [
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "Xilorole",
+          "type": "User"
+        },
+        "date_created": "2022-04-16T15:36:04Z",
+        "date_published": "2022-04-19T16:00:36Z",
+        "description": "# Initial release of RaptGen\r\n\r\n## What's Changed\r\n* Xilorole master by @Xilorole in https://github.com/hmdlab/raptgen/pull/2\r\n* pull newest version by @Xilorole in https://github.com/hmdlab/raptgen/pull/1\r\n\r\n\r\n**Full Changelog**: https://github.com/hmdlab/raptgen/commits/1.0.0",
+        "html_url": "https://github.com/hmdlab/raptgen/releases/tag/v1.0.0",
+        "name": "v1.0.0",
+        "release_id": 64755170,
+        "tag": "v1.0.0",
+        "tarball_url": "https://api.github.com/repos/hmdlab/raptgen/tarball/v1.0.0",
+        "type": "Release",
+        "url": "https://api.github.com/repos/hmdlab/raptgen/releases/64755170",
+        "value": "https://api.github.com/repos/hmdlab/raptgen/releases/64755170",
+        "zipball_url": "https://api.github.com/repos/hmdlab/raptgen/zipball/v1.0.0"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "run": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Run GMM",
+        "parent_header": [
+          "Supplementary code for \"Generative aptamer discovery using RaptGen\"",
+          "To evaluate real data"
+        ],
+        "type": "Text_excerpt",
+        "value": "To select the center of the GMM populations, run;\n\n```shell\n% python3 scripts/gmm.py \\\n    data/sample/sample.fasta \\\n    data/sample/cnn_phmm_vae.mdl\n```\n\n<details>\n<summary>help of gmm.py</summary>\n\n```\nUsage: gmm.py [OPTIONS] SEQPATH MODELPATH\n\n  select gmm center with trained model\n\nOptions:\n  --use-cuda / --no-cuda  use cuda if available  [default: True]\n  --cuda-id INTEGER       the device id of cuda to run  [default: 0]\n  --save-dir PATH         path to save results  [default: out/gmm]\n\n  --fwd TEXT              forward adapter\n  --rev TEXT              reverse adapter\n  --help                  Show this message and exit.  [default: False]\n```\n\n</details>\n\nThis will output the top 10 sequences to a specified directory (default out/gmm/gmm_seq.csv).\n"
+      },
+      "source": "https://raw.githubusercontent.com/hmdlab/raptgen/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Run BO",
+        "parent_header": [
+          "Supplementary code for \"Generative aptamer discovery using RaptGen\"",
+          "To evaluate real data"
+        ],
+        "type": "Text_excerpt",
+        "value": "To conduct multipoint Bayesian optimization, run;\n\n```shell\n% python3 scripts/bo.py \\\n    data/real/A_4R.fastq \\\n    results/real/A_best.mdl \\\n    results/real/A_evaled.csv\n```\n\n<details><summary>help of bo.py</summary>\n\n```\nUsage: bo.py [OPTIONS] SEQPATH MODELPATH EVALPATH\n\n  run Bayesian optimization with trained model and evaluated results\n\nOptions:\n  --use-cuda / --no-cuda  use cuda if available  [default: True]\n  --cuda-id INTEGER       the device id of cuda to run  [default: 0]\n  --fwd TEXT              forward adapter\n  --rev TEXT              reverse adapter\n  --save-dir PATH         path to save results  [default: out/bo]\n\n  --help                  Show this message and exit.  [default: False]\n```\n\n</details>\n\nThe evaluates sequences should only hold the random region, and each row should be written in  `[string],[value]` format.\n\n```text\nAACGAGAGATGGTAGACCTATCTTTTAGCC,79.0\nGTAGAGATTCTGAGGGTTCTCCTGCTATA,107.1\nTTTTATAAAAAAGTGTTTAAAAAAGATTCA,-3.6\n...\n```\n\nThe result contains:\n* The sequence is to be evaluated.\n* The position of the motif embedding.\n* The embedding of the most probable sequence (`re_`).\n\n```shell\n% cat out/bo/bo_seq.csv\nbo_index,seq,x,y,re_x,re_y\n0,GTAGAGATTCTGAGGGTTCTCCTGTTGACC,1.53,-0.13,1.60,-0.50\n1,GTAGAGATTCTGAGGGTTCTCCTGTTGCCA,1.56,-0.58,1.62,-0.47\n```\n"
+      },
+      "source": "https://raw.githubusercontent.com/hmdlab/raptgen/master/README.md",
+      "technique": "header_analysis"
+    }
+  ],
+  "somef_missing_categories": [
+    "citation",
+    "acknowledgement",
+    "download",
+    "requirements",
+    "contact",
+    "contributors",
+    "documentation",
+    "usage",
+    "faq",
+    "support",
+    "executable_example"
+  ],
+  "somef_provenance": {
+    "date": "2024-10-06 09:30:57",
+    "somef_schema_version": "1.0.0",
+    "somef_version": "0.9.5"
+  },
+  "stargazers_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 23
+      },
+      "technique": "GitHub_API"
+    }
+  ]
+}

@@ -1,0 +1,362 @@
+{
+  "application_domain": [
+    {
+      "confidence": 0.8957526221501316,
+      "result": {
+        "type": "String",
+        "value": "Semantic web"
+      },
+      "technique": "supervised_classification"
+    }
+  ],
+  "code_repository": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/s312569/clj-biosequence"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_created": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2013-07-10T05:38:03Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_updated": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2024-08-05T03:58:38Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "description": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "A Clojure library designed to make the manipulation of biological sequence data easier."
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 0.9873466813495274,
+      "result": {
+        "original_header": "`clj-biosequence`",
+        "type": "Text_excerpt",
+        "value": "`clj-biosequence` is a library designed to make working with\nbiological sequence data easier. Basic functions include: \n- Parses and accessors for Genbank, Uniprot XML, fasta and fastq formats.\n- A wrapper for BLAST.\n- A wrapper for signalP.\n- A wrapper for TMHMM.\n- Indexing of files for random access.\n- Mechanisms for lazy processing of sequences from very large files.\n- Interfaces for search and retrieval of sequences from online databases.\n- Translation functions for DNA and RNA sequences.\n- ID mapping functionality using the Uniprot's ID mapping tool.\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/s312569/clj-biosequence/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.8778707281197249,
+      "result": {
+        "original_header": "Indexing",
+        "type": "Text_excerpt",
+        "value": "For random access to biosequences each supported file format also has\nan indexed version. \nTypical usage as follows:\n```clojure\n;; calling `index-biosequence-file` on any biosequence file returns a\n;; biosequence index. Which is accessed using `with-open` just like \n;; other readers but with faster retrieval of specific biosequences.\n\nuser> (use 'clj-biosequence.index)\nnil\nuser> (def fasta-in (index-biosequence-file fa-file))\n#'user/fasta-in\nuser> (with-open [r (bs-reader fasta-in)]\n        (count (biosequence-seq r))\n6\nuser> (with-open [r (bs-reader fasta-in)]\n        (first (biosequence-seq r))\n#clj_biosequence.core.fastaSequence{:acc \"gi|116025203|gb|EG339215.1|EG339215\", :description \"KAAN-aaa29f08.b1 ... etc\"\n\nuser> (with-open [r (bs-reader fasta-in)]\n        (accession (get-biosequence r \"gi|114311762|gb|EE738912.1|EE738912\"))\n\"gi|114311762|gb|EE738912.1|EE738912\"\n\n;; when a file is indexed two additional files are created with the same\n;; base-name as the biosequence file but with the extensions `.bin` and `.idx`.\n;; The `.bin` file is compressed sequences and the `.idx` file is a \n;; text file containing the index. The `.idx` file is readable with\n;; edn/read-string. To load an index use `load-biosequence-index` with the\n;; path and basename of the index files.\n\nuser> (def fa-ind-2 (load-biosequence-index \"/Users/jason/Dropbox/clj-biosequence/resources/test-files/nuc-sequence.fasta\"))\n#'user/fa-ind-2\nuser> (with-open [r (bs-reader fa-ind-2)]\n        (accession (get-biosequence r \"gi|114311762|gb|EE738912.1|EE738912\"))\n\"gi|114311762|gb|EE738912.1|EE738912\"\n\n;; biosequence collections can be indexed using `index-biosequence-list`.\n\nuser> (def fa-ind-3 (with-open [r (bs-reader fa-file)]\n                      (index-biosequence-list (biosequence-seq r)\n                                              \"/tmp/fasta-ind\")))\n#'user/fa-ind-3\nuser> (with-open [r (bs-reader fa-ind-3)]\n        (accession (get-biosequence r \"gi|114311762|gb|EE738912.1|EE738912\"))\n\"gi|114311762|gb|EE738912.1|EE738912\"\n\n;; this can be handy when filtering biosequences. For example secreted proteins\n;; can be filtered into their own index\n\nuser> (def secreted (with-open [r (bs-reader toxins)]\n                               (index-biosequence-list (-> (take 20 (biosequence-seq r))\n                                                           (filter-signalp :trim true))\n                                                       \"/tmp/secreted-ind\")))\n#'user/secreted\nuser> (with-open [r (bs-reader fa-ind-3)]\n        (count (biosequence-seq r))\n6\n```\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/s312569/clj-biosequence/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9680722015339842,
+      "result": {
+        "original_header": "BLAST",
+        "type": "Text_excerpt",
+        "value": "`clj-biosequence` supports most forms of BLAST, with the exception of\nPSI-BLAST. As with other parts of clj-biosequence the BLAST functions\nseek to be as lazy and composable as possible. To work the various\nBLAST+ programs from the NCBI need to be in your path. \nTypical usage as follows:\n```clojure\n;; initialise a BLAST db by passing the basename of the indexes to `init-blast-db`\n\nuser> (use 'clj-biosequence.blast)\nnil\nuser> (def toxindb (init-blast-db \"test-files/toxins.fasta\" :iupacAminoAcids))\n#'user/toxindb\n\n;; The function`blast` takes a list of biosequence objects and blasts them against\n;; a blast database. It returns a blast search result which is a pointer to the\n;; blast result file. This can then be opened using `bs-reader` and results\n;; accessed using `biosequence-seq`\n\nuser> (def tox-bl (with-open [r (bs-reader toxins)]\n                             (blast (take 20 (biosequence-seq r))\n                                    \"blastp\"\n                                    toxindb\n                                    \"/tmp/blast.xml\")))\n#'user/tox-bl\nuser> (with-open [r (bs-reader tox-bl)]\n                 (count (biosequence-seq r)))\n20\n\n;; Addiitonal parameters can be passed to `blast` using the `:param` keyword\n;; argument. Format is a hash-map with keys strings of the command line switches\n;; with the desired value as a string. For example:\n\nuser> (def tox-bl (with-open [r (bs-reader toxins)]\n                             (blast (take 20 (biosequence-seq r))\n                                    \"blastp\"\n                                    toxindb\n                                    \"/tmp/blast.xml\"\n                                    :params {\"-max_target_seqs\" \"3\"\n                                             \"-evalue\" \"1\"})))\n#'user/tox-bl\n\n;; BLAST results can be accessed using the accessors defined in the package\n;; and the functions `hit-seq` and `hsp-seq`. For example to filter all\n;; proteins in `tox-bl` that had a hit with a bit-score greater than\n;; 50 and report their accession (note the use of second to avoid hits\n;; to themselves):\n\nuser> (with-open [r (bs-reader tox-bl)]\n                 (doall (->> (biosequence-seq r)\n                             (filter #(>= (-> (hit-seq %) second hit-bit-scores first) 50))\n                             (map #(-> (hit-seq %) second hit-accession))))\n(\"B3EWT5\" \"Q5UFR8\" \"C1IC47\" \"Q53B61\" \"O76199\" \"C0JAT6\" \"P0CE79\" \"C0JAU1\" \"C0JAT6\" \"P0CE78\"\n\"C0JAT9\" \"C0JAT5\" \"C0JAT9\" \"C0JAT6\" \"P0CE81\" \"P0CE80\" \"P0CE81\" \"P0CE82\" \"P0CE81\")\n\n;; Or a hash-map of the query id and  hit id of hits with a bit score greater than 50\n;; (note that calling `accession` on a BLAST iteraton returns the query accession):\n\nuser> (with-open [r (bs-reader tox-bl)]\n                 (->> (biosequence-seq r)\n                      (filter #(>= (-> (hit-seq %) second hit-bit-scores first) 50))\n                      (map #(vector (accession %)\n                                    (-> (hit-seq %) second hit-accession)))\n                      (into {}))))\n{\"sp|P84001|29C0_ANCSP\" \"B3EWT5\", \"sp|P0CE81|A1HB1_LOXIN\" \"P0CE80\", \"sp|C0JAT9|A1H1_LOXSP\"\n\"C0JAU1\", \"sp|P0CE82|A1HB2_LOXIN\" \"P0CE81\", \"sp|P0CE80|A1HA_LOXIN\" \"P0CE81\",\n\"sp|C0JAT8|A1H4_LOXHI\" \"C0JAT6\", \"sp|C0JAT5|A1H2_LOXHI\" \"C0JAT6\", \"sp|C0JAT6|A1H3_LOXHI\"\n\"C0JAT5\", \"sp|C0JAT4|A1H1_LOXHI\" \"C0JAT6\", \"sp|C0JAU1|A1H2_LOXSP\" \"C0JAT9\",\n\"sp|C0JAU2|A1H3_LOXSP\" \"C0JAT9\", \"sp|Q4VDB5|A1H_LOXGA\" \"P0CE82\", \"sp|C1IC47|3FN3_WALAE\"\n\"Q5UFR8\", \"sp|C1IC48|3FN4_WALAE\" \"C1IC47\", \"sp|C1IC49|3FN5_WALAE\" \"Q53B61\",\n\"sp|P84028|45C1_ANCSP\" \"O76199\", \"sp|Q56JA9|A1H_LOXSM\" \"P0CE81\", \"sp|P0CE78|A1H1_LOXRE\"\n\"P0CE79\", \"sp|P0CE79|A1H2_LOXRE\" \"P0CE78\"}\n\n;; This can be combined with indexes or biosequence files to obtain the original\n;; query biosequences.\n\nuser> (def toxin-index (index-biosequence-file toxins))\n#'user/toxin-index\n\nuser> (with-open [r (bs-reader tox-bl)\n                  i (bs-reader toxin-index)]\n                 (->> (biosequence-seq r)\n                      (filter #(>= (-> (hit-seq %) second hit-bit-scores first) 50))\n                      (map #(get-biosequence i (accession %)))\n                      first))\n#clj_biosequence.core.fastaSequence{:acc \"sp|P84001|29C0_ANCSP\", :description\n\"U3-ctenitoxin-Asp1a (Fragment) OS=Ancylometes sp. PE=1 SV=1\", :alphabet :iupacAminoAcids,\n:sequence [\\A \\N \\A \\C \\T \\K \\Q \\A \\D \\C \\A \\E \\D \\E \\C \\C \\L \\D \\N \\L \\F \\F \\K \\R \\P \\Y\n\\C \\E \\M \\R \\Y \\G \\A \\G \\K \\R \\C \\A \\A \\A \\S \\V \\Y \\K \\E \\D \\K \\D \\L \\Y]}\n\n;; or sent off to a file.\n\nuser> (with-open [r (bs-reader tox-bl)\n                  i (bs-reader toxin-index)]\n                 (biosequence->file\n                  (->> (biosequence-seq r)\n                       (filter #(>= (-> (hit-seq %) second hit-bit-scores first) 50))\n                       (map #(get-biosequence i (accession %))))\n                  \"/tmp/blast.fa\"))\n\"/tmp/blast.fa\"\n\n;; As the entire chain is lazy these methods will work with as big a file as\n;; can be thrown at them (hopefully). So one could annotate a large fasta file\n;; starting with a fasta index and a blast DB by:\n\nuser> (with-open [r (bs-reader (blast (biosequence-seq toxin-index) \"blastp\" toxindb\n                                      \"/tmp/outfile.xml\"))\n\t          i (bs-reader toxin-index)]\n                 (biosequence->file\n                  (->> (biosequence-seq r)\n                       (filter #(>= (-> (hit-seq %) second hit-bit-scores first) 50))\n                       (map #(let [s (get-biosequence i (accession %))\n                                   h (-> (hit-seq %) first)]\n                               (assoc s :description\n                                      (str (def-line s) \" - \"\n                                           \"Similar to \" (hit-def h) \" - \"\n                                           (first (hit-bit-scores h)))))))\n                  \"/tmp/annotated-sequeunces.fa\"))\n\"/tmp/annotated-sequeunces.fa\"\nuser> (with-open [r (bs-reader (init-fasta-file \"/tmp/annotated-sequeunces.fa\"\n                                                :iupacAminoAcids))]\n                 (println (def-line (first (biosequence-seq r)))))\nU3-ctenitoxin-Asp1a (Fragment) OS=Ancylometes sp. PE=1 SV=1 - Similar to Toxin CSTX-20 \\\nOS=Cupiennius salei PE=1 SV=1 - 89.737335\n\n;; Although this is getting a bit complicated for the REPL and should probably\n;; be a function(s) of itself (and the blast outfile might need to be deleted).\n\n;; BLAST readers also provide access to the parameters used and these\n;; can be accessed by calling `parameters` on the reader. This will return a\n;; blast parameters object with accessors defined in the package.\n\nuser> (with-open [r (bs-reader tox-bl)]\n                 (blast-database (parameters r)))\n\"/Users/jason/Dropbox/clj-biosequence/resources/test-files/toxins.fasta\"\nuser> (with-open [r (bs-reader tox-bl)]\n                 (blast-version (parameters r)))\n\"BLASTP 2.2.24+\"\nuser> (with-open [r (bs-reader tox-bl)]\n                 (blast-evalue (parameters r)))\n\"10\"\nuser> (with-open [r (bs-reader tox-bl)]\n                 (blast-filter (parameters r)))\n\"F\"\n\n;; BLAST searches can be indexed like any other biosequence file. In which case\n;; the index is keyed to the query accession. Although, the parameter information\n;; is lost.\n\nuser> (def blast-ind (index-biosequence-file tox-bl))\n#'user/blast-ind\nuser> (-> (get-biosequence blast-ind \"sp|Q56JA9|A1H_LOXSM\") hit-seq first hit-accession)\n\"P0CE82\"\n\n```\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/s312569/clj-biosequence/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.870884361222354,
+      "result": {
+        "original_header": "SignalP",
+        "type": "Text_excerpt",
+        "value": "SignalP works in a similar way as BLAST. If you have signalp in your\npath it can be applied to collections of bioseqeunces using the\nfunction `signalp` (which returns a signalp result object) or a\nSignalP output file in short form format can be initialised as a\nresult object. \n"
+      },
+      "source": "https://raw.githubusercontent.com/s312569/clj-biosequence/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9773947796184832,
+      "result": {
+        "original_header": "Accession mapping",
+        "type": "Text_excerpt",
+        "value": "`clj-biosequence` provides a facility for mapping accessions from one\ndatabase to another. It is provided in the core package and uses the\nUniprot mapping service so needs an active internet connection. \nBasic usage:\n```clojure\n;; `id-convert` converts accessions. Its arguments are a list of accessions\n;; to be converted, a 'from' database, a 'to' database and an email (required\n;; by Uniprot). The 'from' and 'to' arguments are strings corresponding to\n;; to the database codes used by the Uniprot mapping tool (full list at\n;; http://www.uniprot.org/faq/28#id_mapping_examples and a partial list in\n;; the doc string of `id-convert`.\n\n;; `id-convert` returns a hash-map of query accessions and search results. If\n;; an ID returned no result it is not in the result hash-map. There is a\n;; 100,000 limit on individual queries imposed by Uniprot.\n\n;; For example, to convert a list of Uniprot accessions to NCBI Genbank ids, \n;; using the previously defined toxin protein index which has accessions in\n;; the format \"sp|xxx|xxxx\":\n\nuser> (map accession (take 5 (biosequence-seq toxin-index)))\n(\"sp|P58809|CTX_CONMR\" \"sp|P61792|TXU2_HETVE\" \"sp|P86259|CT2X_CONTE\"\n\"sp|Q9BP63|O3611_CONPE\" \"sp|A0SE59|CA13_CONMR\")\n\nuser> (require '[clojure.string :as st])\nnil\nuser> (-> (map #(second (st/split (accession %) #\"\\|\"))\n                (take 5 (biosequence-seq toxin-index)))\n          (id-convert \"ACC\" \"P_GI\" \"jason.mulvenna@gmail.com\"))\n{\"P58809\" \"20454877\", \"P61792\" \"48428590\", \"P86259\" \"229485330\", \"Q9BP63\" \"74848505\",\n\"A0SE59\" \"83657225\"}\n```\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/s312569/clj-biosequence/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9652033286323304,
+      "result": {
+        "original_header": "Sequence retrieval",
+        "type": "Text_excerpt",
+        "value": "Sequences can be retrieved from both Genabnk and Uniprot using\n`init-uniprot-connection` and `init-genbank-connection`. Both\nfunctions take a list of accession numbers and a return type argument.\nUniprot also needs and email argument and Genbank a database argument.\nBoth functions can be used in conjunction with the search functions,\n`genbank-search` and `uniprot-search`. \nBasic usage:\n```clojure\n;; To generate a list of accessions search for Uniprot accessions (note this\n;; generates a non-lazy list). Search syntax is exactly the same as Uniprot\n;; search syntax (described at http://www.uniprot.org/help/text-search and\n;; summarised in the doc string of `uniprot-search`).\n\n;; For example, to get accessions of all proteins in the Schistosoma mansoni\n;; reference proteome set:\n\nuser> (use 'clj-biosequence.uniprot)\nnil\nuser> (def sm-prot (uniprot-search \"organism:6183 AND keyword:1185\" \"jason.mulvenna@gmail.com\"))\n#'user/sm-prot\nuser> (count sm-prot)\n11711\nuser> (first sm-prot)\n\"C4PYP8\"\n\n;; A lazy sequence of biosequences can be retrieved from Uniprot using\n;; `init-uniprot-connection` and `bs-reader`. Sequences can be retrieved as\n;; fasta or full Uniprot entries.\n\nuser> (def up-conn (init-uniprot-connection (take 10 sm-prot) :fasta \"jason.mulvenna@gmail.com\"))\n#'user/up-conn\nuser> (with-open [r (bs-reader up-conn)]\n                 (first (biosequence-seq r)))\n#clj_biosequence.core.fastaSequence{:acc \"sp|C4PYP8|DRE2_SCHMA\", :description\\\n\"Anamorsin homolog OS=Schistosoma mansoni GN=Smp_207000 PE=3 SV=2\", :alphabet\\\n:iupacAminoAcids, :sequence [\\M \\E \\Q \\C \\V \\A \\D \\C \\L \\N \\S \\D \\D \\C \\V \\M ... etc\n\n;; Uniprot\n\nuser> (def up-conn (init-uniprot-connection (take 10 sm-prot) :xml \"jason.mulvenna@gmail.com\"))\n#'user/up-conn\nuser> (with-open [r (bs-reader up-conn)]\n                 (class (first (biosequence-seq r))))\nclj_biosequence.uniprot.uniprotProtein\n\n;; Although sequences are downloaded as a compressed stream large sequence\n;; downloads can take a long time ...\n\n;; Genbank works exactly the same way. Search syntax is the same as Genbank query\n;; format (see http://www.ncbi.nlm.nih.gov/books/NBK3837/ and a summary in the doc\n;; doc string of `genbank-search`). A database also neds to specified and may be one\n;; of :protein, :nucest, :nuccore, :nucgss or :popset.\n\n;; So to get all Schistosoma mansoni proteins from Genbank\n\nuser> (use 'clj-biosequence.genbank)\nnil\nuser> (def sm-prots (genbank-search \"txid6183[Organism:noexp]\" :protein))\n#'user/sm-prots\nuser> (first sm-prots)\n\"566601372\"\nuser> (with-open [r (bs-reader (init-genbank-connection (take 10 sm-prots) :protein :fasta))]\n                 (second (biosequence-seq r)))\n#clj_biosequence.core.fastaSequence{:acc \"gi|566601352|gb|AHC70335.1|\", :description\n\"nicotinic acetylcholine receptor [Schistosoma mansoni]\", :alphabet :iupacAminoAcids,\n:sequence [\\M ... etc\n\nuser> (with-open [r (bs-reader (init-genbank-connection (take 10 sm-prots) :protein :xml))]\n                 (class (second (biosequence-seq r))))\nclj_biosequence.genbank.genbankSequence\n```\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/s312569/clj-biosequence/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.8721367961940176,
+      "result": {
+        "original_header": "Supported formats",
+        "type": "Text_excerpt",
+        "value": "clj-biosequence uses protocols and records to provide a uniformish\ninterface to diferent formats.\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/s312569/clj-biosequence/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.846634707697989,
+      "result": {
+        "original_header": "Fasta",
+        "type": "Text_excerpt",
+        "value": "```clojure\n;; initialise fasta files using `init-fasta-file` and access\n;; sequences using `bs-reader` and `biosequence-seq`\n\nuser> (def ff (init-fasta-file \"test-files/toxins.fasta\" :iupacAminoAcids))\n\nuser> (with-open [r (bs-reader ff)]\n\t(count (biosequence-seq r)))\n5135\nuser> \n\n;; records and protocols implemented by them as follows:\n\n->fastaSequence\nImplements: biosequenceID\n\t    biosequenceDescription\n\t    Biosequence\n``` \n"
+      },
+      "source": "https://raw.githubusercontent.com/s312569/clj-biosequence/master/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "download_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/s312569/clj-biosequence/releases"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 11
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/s312569/clj-biosequence/forks"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "s312569/clj-biosequence"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_title": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "clj-biosequence"
+      },
+      "source": "https://raw.githubusercontent.com/s312569/clj-biosequence/master/README.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "installation": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Installation",
+        "parent_header": [
+          "`clj-biosequence`"
+        ],
+        "type": "Text_excerpt",
+        "value": "Available from [Clojars](https://clojars.org/clj-biosequence). For the\ncurrent version add the following to your project.clj file:\n\n```clojure\n[clj-biosequence \"0.5.2\"]\n```\n\nTo use in your namespace:\n\n```clojure\n(ns my-app.core\n  (:require [clj-biosequence.core :as cbs] ;; for base functionality and fasta\n  \t        [clj-biosequence.uniprot :as up] ;; for Uniprot xml\n\t        [clj-biosequence.genbank :as gb] ;; for Genbank gbseq xml\n\t        [clj-biosequence.blast :as bl] ;; for BLAST functionality\n            [clj-biosequence.fastq :as fq] ;; for fastq functionality\n            [clj-biosequence.index :as ind] ;; for indexing functionality\n\t        [clj-biosequence.signalp :as sp] ;; for a wrapper for signalp\n\t\t[clj-biosequence.entrezgene :as ez] ;; for entrezgene xml\n            [clj-biosequence.tmhmm :as tm])) ;; for a wrapper for TMHMM\n```\n\nThe project page is [here](http://s312569.github.io/clj-biosequence/)\nand there is also a guide to getting started with Clojure\n[here](http://s312569.github.io/clj-biosequence/starting.html).\n\nAPI docs are available\n[here](http://s312569.github.io/clj-biosequence/api/index.html).\n"
+      },
+      "source": "https://raw.githubusercontent.com/s312569/clj-biosequence/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 0.9994596838451493,
+      "result": {
+        "original_header": "Sequence retrieval",
+        "type": "Text_excerpt",
+        "value": "Sequences can be retrieved from both Genabnk and Uniprot using\n`init-uniprot-connection` and `init-genbank-connection`. Both\nfunctions take a list of accession numbers and a return type argument.\nUniprot also needs and email argument and Genbank a database argument.\nBoth functions can be used in conjunction with the search functions,\n`genbank-search` and `uniprot-search`. \nBasic usage:\n```clojure\n;; To generate a list of accessions search for Uniprot accessions (note this\n;; generates a non-lazy list). Search syntax is exactly the same as Uniprot\n;; search syntax (described at http://www.uniprot.org/help/text-search and\n;; summarised in the doc string of `uniprot-search`).\n\n;; For example, to get accessions of all proteins in the Schistosoma mansoni\n;; reference proteome set:\n\nuser> (use 'clj-biosequence.uniprot)\nnil\nuser> (def sm-prot (uniprot-search \"organism:6183 AND keyword:1185\" \"jason.mulvenna@gmail.com\"))\n#'user/sm-prot\nuser> (count sm-prot)\n11711\nuser> (first sm-prot)\n\"C4PYP8\"\n\n;; A lazy sequence of biosequences can be retrieved from Uniprot using\n;; `init-uniprot-connection` and `bs-reader`. Sequences can be retrieved as\n;; fasta or full Uniprot entries.\n\nuser> (def up-conn (init-uniprot-connection (take 10 sm-prot) :fasta \"jason.mulvenna@gmail.com\"))\n#'user/up-conn\nuser> (with-open [r (bs-reader up-conn)]\n                 (first (biosequence-seq r)))\n#clj_biosequence.core.fastaSequence{:acc \"sp|C4PYP8|DRE2_SCHMA\", :description\\\n\"Anamorsin homolog OS=Schistosoma mansoni GN=Smp_207000 PE=3 SV=2\", :alphabet\\\n:iupacAminoAcids, :sequence [\\M \\E \\Q \\C \\V \\A \\D \\C \\L \\N \\S \\D \\D \\C \\V \\M ... etc\n\n;; Uniprot\n\nuser> (def up-conn (init-uniprot-connection (take 10 sm-prot) :xml \"jason.mulvenna@gmail.com\"))\n#'user/up-conn\nuser> (with-open [r (bs-reader up-conn)]\n                 (class (first (biosequence-seq r))))\nclj_biosequence.uniprot.uniprotProtein\n\n;; Although sequences are downloaded as a compressed stream large sequence\n;; downloads can take a long time ...\n\n;; Genbank works exactly the same way. Search syntax is the same as Genbank query\n;; format (see http://www.ncbi.nlm.nih.gov/books/NBK3837/ and a summary in the doc\n;; doc string of `genbank-search`). A database also neds to specified and may be one\n;; of :protein, :nucest, :nuccore, :nucgss or :popset.\n\n;; So to get all Schistosoma mansoni proteins from Genbank\n\nuser> (use 'clj-biosequence.genbank)\nnil\nuser> (def sm-prots (genbank-search \"txid6183[Organism:noexp]\" :protein))\n#'user/sm-prots\nuser> (first sm-prots)\n\"566601372\"\nuser> (with-open [r (bs-reader (init-genbank-connection (take 10 sm-prots) :protein :fasta))]\n                 (second (biosequence-seq r)))\n#clj_biosequence.core.fastaSequence{:acc \"gi|566601352|gb|AHC70335.1|\", :description\n\"nicotinic acetylcholine receptor [Schistosoma mansoni]\", :alphabet :iupacAminoAcids,\n:sequence [\\M ... etc\n\nuser> (with-open [r (bs-reader (init-genbank-connection (take 10 sm-prots) :protein :xml))]\n                 (class (second (biosequence-seq r))))\nclj_biosequence.genbank.genbankSequence\n```\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/s312569/clj-biosequence/master/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "invocation": [
+    {
+      "confidence": 0.8187063706033222,
+      "result": {
+        "original_header": "SignalP",
+        "type": "Text_excerpt",
+        "value": "Basic usage as follows:\n```clojure\n;; running signalp\n\nuser> (use 'clj-biosequence.signalp)\nnil\nuser> (def sr (signalp (take 20 (biosequence-seq toxin-index)) \"/tmp/signalp.txt\"))\n#'user/sr\nuser> (with-open [r (bs-reader sr)]\n                 (first (biosequence-seq r)))\n#clj_biosequence.signalp.signalpProtein{:name \"sp|P58809|CTX_CONMR\", :cmax 0.105,\n:cpos 7, :ymax 0.147, :ypos 1, :smax 0.208, :spos 1, :smean 0.0, :D 0.068, :result \"N\",\n:Dmaxcut 0.45, :network \"SignalP-noTM\"}\nuser> (with-open [r (bs-reader sr)]\n                 (accession (first (biosequence-seq r))))\n\"sp|P58809|CTX_CONMR\"\n\n;; `signalp?` can be used to determine if a result is positive or not\n\nuser> (with-open [r (bs-reader sr)]\n                 (signalp? (first (biosequence-seq r))))\nfalse\nuser> (with-open [r (bs-reader sr)]\n                 (-> (filter signalp? (biosequence-seq r))\n                     first))\n#clj_biosequence.signalp.signalpProtein{:name \"sp|Q9BP63|O3611_CONPE\", :cmax 0.51,\n:cpos 21, :ymax 0.696, :ypos 21, :smax 0.982, :spos 12, :smean 0.952, :D 0.834,\n:result \"Y\", :Dmaxcut 0.45, :network \"SignalP-noTM\"}\n\n;; a convenience function `filter-signalp` filters a collection of biosequence\n;; proteins and returns only proteins containing a signal sequence. If the\n;; keyword argument `:trim` is true the returned biosequences will have the\n;; signal sequence trimmed from the sequence\n\nuser> (->> (filter-signalp (take 20 (biosequence-seq toxin-index)))\n           first\n           bioseq->string)\n\"MSRLGIMVLTLLLLVFIVTSHQDAGEKQATQRDAINFRWRRSLIRRTATEECEEYCEDEEKTCCGLEDGEPVCATTCLG\"\nuser> (->> (filter-signalp (take 20 (biosequence-seq toxin-index)) :trim true)\n           first\n           bioseq->string)\n\"DAGEKQATQRDAINFRWRRSLIRRTATEECEEYCEDEEKTCCGLEDGEPVCATTCLG\"\n\n;; SignalP result objects can be indexed in the same manner as BLAST ie.\n;; the query sequence accession becomes the index keys.\n\nuser> (def si (index-biosequence-file sr))\n#'user/si\nuser> (accession (get-biosequence si \"sp|P58809|CTX_CONMR\"))\n\"sp|P58809|CTX_CONMR\"\nuser> (signalp? (get-biosequence si \"sp|P58809|CTX_CONMR\"))\nfalse\n\n;; Search parameters can be passed to `signalp` and `filter-signalp` as hash-maps\n;; using the `:param` keyword argument.\n\nuser> (def sr (signalp (take 20 (biosequence-seq toxin-index)) \"/tmp/signalp.txt\"\n                       :params {\"-s\" \"best\" \"-t\" \"gram+\"}))\n#'user/sr\nuser> (with-open [r (bs-reader sr)]\n                 (first (biosequence-seq r)))\n#clj_biosequence.signalp.signalpProtein{:name \"sp|P58809|CTX_CONMR\", :cmax 0.101,\n:cpos 2, :ymax 0.119, :ypos 2, :smax 0.139, :spos 1, :smean 0.139, :D 0.127,\n:result \"N\", :Dmaxcut 0.45, :network \"SignalP-TM\"}\n```\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/s312569/clj-biosequence/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.843459165814719,
+      "result": {
+        "original_header": "Fastq",
+        "type": "Text_excerpt",
+        "value": "```clojure\n\n;; Use `init-fastq-file` and access sequences as above.\n\nuser> (def ff (init-fastq-file \"test-files/fastq-test.fastq\"))\n#'user/ff\nuser> (with-open [r (bs-reader ff)]\n\t(count (biosequence-seq r)))\n9\nuser> \n\n;; records and protocols as follows:\n\n->fastqSequence\nImplements: biosequenceID\n\t    biosequenceDescription\n\t    Biosequence\n```\t    \n \n"
+      },
+      "source": "https://raw.githubusercontent.com/s312569/clj-biosequence/master/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "issue_tracker": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/s312569/clj-biosequence/issues"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "keywords": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": ""
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "license": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "License",
+        "parent_header": [
+          "`clj-biosequence`"
+        ],
+        "type": "Text_excerpt",
+        "value": "Copyright \u00a9 2015 Jason Mulvenna\n\nDistributed under the Eclipse Public License either version 1.0 or (at\nyour option) any later version.\n\n"
+      },
+      "source": "https://raw.githubusercontent.com/s312569/clj-biosequence/master/README.md",
+      "technique": "header_analysis"
+    }
+  ],
+  "name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "clj-biosequence"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "owner": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "User",
+        "value": "s312569"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "programming_languages": [
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Clojure",
+        "size": 172079,
+        "type": "Programming_language",
+        "value": "Clojure"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "readme_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/s312569/clj-biosequence/master/README.md"
+      },
+      "technique": "file_exploration"
+    }
+  ],
+  "somef_missing_categories": [
+    "citation",
+    "acknowledgement",
+    "run",
+    "download",
+    "requirements",
+    "contact",
+    "contributors",
+    "documentation",
+    "faq",
+    "support",
+    "identifier",
+    "has_build_file",
+    "executable_example"
+  ],
+  "somef_provenance": {
+    "date": "2024-11-04 08:44:49",
+    "somef_schema_version": "1.0.0",
+    "somef_version": "0.9.5"
+  },
+  "stargazers_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 77
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "type": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "static-website"
+      },
+      "technique": "software_type_heuristics"
+    }
+  ],
+  "usage": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Basic usage",
+        "parent_header": [
+          "`clj-biosequence`"
+        ],
+        "type": "Text_excerpt",
+        "value": "`clj-biosequence` provides a reader and sequence mechanism for the\nlazy access of biosequences in a variety of formats. For example, if\nworking with fasta sequences a typical session in the REPL could go\nsomething like:\n\n```clojure\n\n;; import core and fasta functions\n\nuser> (use 'clj-biosequence.core)\n\n;; To initialise a file call the relevant initialisation function,\n;; a string or java file object can be used.\n;; For fasta an alphabet is also required to initialise a file.\n\nuser> (def fa-file (init-fasta-file \"test-files/nuc-sequence.fasta\" :iupacNucleicAcids))\n#'user/fa-file\n\n;; then `bs-reader` can be used with `with-open` and `biosequence-seq`\n;; to get access to a lazy sequence of fasta sequences in the file.\n\nuser> (with-open [r (bs-reader fa-file)]\n                 (realized? (biosequence-seq r)))\nfalse\nuser> (with-open [r (bs-reader fa-file)]\n                 (count (biosequence-seq r)))\n6\n```\n\nAnd thats just about it. The same pattern is used for all sequence\nformats supported (at the moment this includes Geneseq xml, Entrezgene\nxml, Uniprot xml, fasta and fastq formats).\n\nSome examples:\n\n```clojure\n\n;; a lazy sequence of translations in six reading frames\n\nuser> (with-open [r (bs-reader fa-file)]\n                 (->> (biosequence-seq r)\n                      (mapcat #(six-frame-translation %))\n                      realized?))\nfalse\nuser> (with-open [r (bs-reader fa-file)]\n                 (->> (biosequence-seq r)\n                      (mapcat #(six-frame-translation %))\n                      count))\n36\n\n;; `fasta-string` can be used to convert biosequences to fasta strings\n\nuser> (use 'clj-biosequence.uniprot)\nnil\nuser> (def uniprot-f (init-uniprotxml-file \"test-files/uniprot-s-mansoni-20121217.xml\"))\n#'user/uniprot-f\nuser> (with-open [r (bs-reader uniprot-f)]\n                 (println (->> (biosequence-seq r) first fasta-string)))\n\n>sp|C4PYP8|DRE2_SCHMA Anamorsin homolog | Fe-S cluster assembly protein DRE2 homolog [Schistosoma mansoni]\nMEQCVADCLNSDDCVMIVWSGEVQEDVMRGLQVAVSTYVKKLQFENLEKFVDSSAVDSQLXHECSVILCGWPNSISVNILK\nLGLLSNLLSCLRPGGRFFGRDLITGDWDSLKKNLTLSGYIXNPYQLSCENHLIFSASVPSNYTQGSSVKLPWANSDVEAAW\nENVDNSSDANGNIINTNTLLXQKSDLKTPLSVCGKEAATDSVGKKKRACKNCTCGLAEIEAAEEDKSDVPISSCGNCYLGD\nXAFRCSTCPYRGLPPFKPGERILIPDDVLRADL\n\n;; filters can be implemented pretty easily\n\nuser> (with-open [r (bs-reader fa-file)]\n                 (->> (biosequence-seq r)\n                      (filter #(second (re-find #\"(Mus musculus)\" (def-line %))))\n                      first\n                      accession))\n\"gi|114311762|gb|EE738912.1|EE738912\"\n\n;; The function `biosequence->file` sends biosequences to a file and\n;; also accepts a function argument to transform the biosequence\n;; before writing (the default is `fasta-string`).\n\n;; a Uniprot to fasta converter is thus:\n\nuser> (with-open [r (bs-reader uniprot-f)]\n                 (biosequence->file (biosequence-seq r)\n\t\t                     \"/tmp/fasta.fa\"))\n\"/tmp/fasta.fa\"\nuser> (with-open [r (bs-reader (init-fasta-file \"/tmp/fasta.fa\"\n                               :iupacAminoAcids))]\n                 (count (biosequence-seq r)))\n2\nuser> (with-open [r (bs-reader (init-fasta-file \"/tmp/fasta.fa\"\n                                                :iupacAminoAcids))]\n                 (class (first (biosequence-seq r))))\nclj_biosequence.core.fastaSequence\n\n;; sequences can be filtered to file using this function\n;; for eg. filter Cytoplasmic proteins to file in fasta format\n\nuser> (with-open [r (bs-reader uniprot-f)]\n                 (biosequence->file\n                  (->> (biosequence-seq r)\n                       (filter #(some (partial = \"Cytoplasm\")\n                           (map :text (subcellular-location %)))))\n                  \"/tmp/fasta.fa\"))\n\"/tmp/fasta.fa\"\nuser> (with-open [r (bs-reader (init-fasta-file \"/tmp/fasta.fa\" :iupacAminoAcids))]\n                 (count (biosequence-seq r)))\n1\nuser> (with-open [r (bs-reader (init-fasta-file \"/tmp/fasta.fa\" :iupacAminoAcids))]\n                 (println (fasta-string (first (biosequence-seq r)))))\n>sp|C4PYP8|DRE2_SCHMA Anamorsin homolog | Fe-S cluster assembly protein DRE2 homolog [Schistosoma mansoni]\nMEQCVADCLNSDDCVMIVWSGEVQEDVMRGLQVAVSTYVKKLQFENLEKFVDSSAVDSQLXHECSVILCGWPNSISVNILK\nLGLLSNLLSCLRPGGRFFGRDLITGDWDSLKKNLTLSGYIXNPYQLSCENHLIFSASVPSNYTQGSSVKLPWANSDVEAAW\nENVDNSSDANGNIINTNTLLXQKSDLKTPLSVCGKEAATDSVGKKKRACKNCTCGLAEIEAAEEDKSDVPISSCGNCYLGD\nXAFRCSTCPYRGLPPFKPGERILIPDDVLRADL\n```\nFor strings containing fasta, Uniprot XML or Genbank XML formatted sequences the functions\n`init-fasta-string`, `init-uniprot-string` and `init-genbank-string` allow the use of\nstrings with the `with-open` idiom. For Uniprot and Genbank connection initialisation\nfunctions provide the same capability with remotely stored sequences from the relevant\nservers (see below).\n"
+      },
+      "source": "https://raw.githubusercontent.com/s312569/clj-biosequence/master/README.md",
+      "technique": "header_analysis"
+    }
+  ]
+}

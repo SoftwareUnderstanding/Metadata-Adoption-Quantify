@@ -1,0 +1,911 @@
+{
+  "acknowledgement": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Acknowledgement",
+        "type": "Text_excerpt",
+        "value": "VirSorter 2 is jointly developed by the Sullivan Lab at Ohio State University (https://u.osu.edu/viruslab/) and the Viral Genomics Group at the DOE Joint Genome Institute (https://jgi.doe.gov/our-science/scientists-jgi/viral-genomics/).  Funding was provided by NSF (#OCE1829831, #ABI1758974), the U.S. Department of Energy (#DE-SC0020173), and the Gordon and Betty Moore Foundation (#3790). The work conducted by the U.S. Department of Energy Joint Genome Institute is supported by the Office of Science of the U.S. Department of Energy under contract no. DE-AC02-05CH11231.\n"
+      },
+      "source": "https://raw.githubusercontent.com/jiarong/VirSorter2/master/README.md",
+      "technique": "header_analysis"
+    }
+  ],
+  "code_repository": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/jiarong/VirSorter2"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_created": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2020-05-14T09:29:21Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_updated": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2024-10-01T05:52:04Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "description": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "customizable pipeline to identify viral sequences from (meta)genomic data"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Detailed description on output files",
+        "type": "Text_excerpt",
+        "value": "- final-viral-combined.fa\n\n  > identified viral sequences, including two types:\n  > - full sequences identified as viral (identified with suffix `||full`);\n  > - partial sequences identified as viral (identified with suffix `||{i}_partial`); here `{i}` can be numbers starting from 0 to max number of viral fragments found in that contig;\n  > - short (less than two genes) sequences with hallmark genes identified as viral (identified with suffix `||lt2gene`);\n\n \n- final-viral-score.tsv\n\n  > This table can be used for further screening of results. It includes the following columns:\n  >   - sequence name\n  >   - score of each viral sequences across groups (multiple columns)\n  >   - max score across groups\n  >   - max score group\n  >   - contig length \n  >   - hallmark gene count\n  >   - viral gene %\n  >   - nonviral gene %\n\n---\n**NOTE**\n\nNote that classifiers of different viral groups are not exclusive from each other, and may have overlap in their target viral sequence space, which means this information should not be used or considered as reliable taxonomic classification. We limit the purpose of VirSorter2 to viral idenfication only.\n\n---\n\n- final-viral-boundary.tsv\n\n  > only some of the columns in this file might be useful:\n  >   - seqname: original sequence name\n  >   - trim\\_orf\\_index\\_start, trim\\_orf\\_index\\_end:  start and end ORF index on orignal sequence of identified viral sequence\n  >   - trim\\_bp\\_start, trim\\_bp\\_end:  start and end position on orignal sequence of identified viral sequence\n  >   - trim\\_pr: score of final trimmed viral sequence\n  >   - partial:  full sequence as viral or partial sequence as viral; this is defined when a full sequence has score > score cutoff, it is full (0), or else any viral sequence extracted within it is partial (1) \n  >   - pr\\_full:  score of the original sequence\n  >   - hallmark\\_cnt:  hallmark gene count\n  >   - group: the classifier of viral group that gives high score; this should **NOT** be used as reliable classification\n\n---\n**NOTE**\n\nVirSorter2 tends to sometimes overestimate the size of viral sequence during provirus extraction procedure in order to achieve better sensitity. We recommend cleaning these provirus predictions to remove potential host genes on the edge of the predicted viral region, e.g. using a tool like CheckV (https://bitbucket.org/berkeleylab/checkv).\n\n---\n"
+      },
+      "source": "https://raw.githubusercontent.com/jiarong/VirSorter2/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 0.9601314069348522,
+      "result": {
+        "original_header": "VirSorter 2",
+        "type": "Text_excerpt",
+        "value": "- work with more viral groups including dsDNA phages, ssDNA viruses, RNA viruses, NCLDV (Nucleocytoviricota), *lavidaviridae* (virophages);\n- apply machine learning to estimate viralness using genomic features including structural/functional/taxonomic annotation and viral hallmark genes;\n- train with high quality virus genomes from metagenomes or other sources. \n"
+      },
+      "source": "https://raw.githubusercontent.com/jiarong/VirSorter2/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9966512167747525,
+      "result": {
+        "original_header": "Important updates",
+        "type": "Text_excerpt",
+        "value": "- The newest stable version is 2.2.4. \n- A tutorial/SOP on how to quality control VirSorter2 results is avaiable [here](https://www.protocols.io/view/viral-sequence-identification-sop-with-virsorter2-btv8nn9w).\n- A few new options are added to accommodate the SOP (see details in [change log](Changelog.md)).\n- The default --include-groups is changed from all viral groups to dsDNAphage and ssDNA since this should be used for most people interested in phage.\n- A new [FAQ](#FAQ) section is available at the bottom of this doc.\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/jiarong/VirSorter2/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9952038529681709,
+      "result": {
+        "original_header": "Quality control",
+        "type": "Text_excerpt",
+        "value": "The default score cutoff (0.5) works well known viruses (RefSeq). For the real environmental data, we can expect to get false positives (non-viral) with the default cutoff. Generally, samples with more host (e.g. bulk metaG) and unknown sequences (e.g. soil) tends to have more false positives. We find a score cutoff of 0.9 work well as a cutoff for high confidence hits, but there are also many viral hits with score <0.9. It's difficult to separate the viral and non-viral hits by score alone. So we recommend using the default score cutoff (0.5) for maximal sensitivity and then applying a quality checking step using checkV. Here is a tutorial of [viral identification SOP](https://www.protocols.io/view/viral-sequence-identification-sop-with-virsorter2-btv8nn9w) used in Sullivan Lab.\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/jiarong/VirSorter2/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9788204187089706,
+      "result": {
+        "original_header": "DRAMv compatibility",
+        "type": "Text_excerpt",
+        "value": "[DRAMv](https://github.com/shafferm/DRAM) is a tool for annotating viral contigs identified by VirSorter. It needs two input files from VirSorter: 1) viral contigs, 2) `affi-contigs.tab` that have info on viral/nonviral and hallmark genes along contigs. In VirSorter2, these files can be generated by `--prep-for-dramv` flag. \n"
+      },
+      "source": "https://raw.githubusercontent.com/jiarong/VirSorter2/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9371333452694242,
+      "result": {
+        "original_header": "Training customized classifiers",
+        "type": "Text_excerpt",
+        "value": "VirSorter2 currently has classifiers of five viral groups (dsDNAphage, NCLDV, RNA, ssNA virus, and *lavidaviridae*). It's designed for easy addition of more classifiers. The information of classifiers are store in the database (`-d`) specified during [setup step](#download-database-and-dependencies). For each viral group, it needs four files below: \n  > a collection of viral HMMs for gene annotation; if not specified, the one in `db/hmm/viral/combined.hmm` is used. \n  > prodigal RBS (ribosomal binding site) motif training model; this can be produced with `-t` option in prodigal; This is useful feature for NCLDV due to large genome size for training; For other viral groups, it's OK to skip this file. \nIn this tutorial, I will show how to make `model` for the *autolykiviridae* family. \nIn the output directory (`autolyki-feature.out`), `all.pdg.ftr` is the feature file needed for next step.   \n"
+      },
+      "source": "https://raw.githubusercontent.com/jiarong/VirSorter2/master/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "download": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Download database and dependencies",
+        "type": "Text_excerpt",
+        "value": "Before running VirSorter2, users must download all databases and install dependencies (takes 10+ mins, but this only need to be done once). The following command line downloads databases and dependencies to `db` directory, and its location is recorded in the tool configuration as a default, so you do not need to type `--db-dir` for other `virsorter` subcommands.\n\nNote that this step takes ~ 10 mins. If you feel impatient and cancel the process, make sure to **remove the diretory specified by `-d/--db-dir` (`db` in this case) before running again**.\n\n```bash\n# just in case there is a failed attemp before; \n#   remove the whole diretory specified by -d\nrm -rf db\n# run setup\nvirsorter setup -d db -j 4\n```\n\nIf you have issues with setup the database with the above `setup` command (e.g. server firewall setting does not allow `wget`), you can download the database manually at `https://osf.io/v46sc/download`. The name of downloaded file should be `db.tgz` if downloaded from a brower. Next move/upload it to the current diretory and then run the following commands to extract the database and setup configuration:\n```bash\ntar -xzf db.tgz\nvirsorter config --init-source --db-dir=./db\n```\n"
+      },
+      "source": "https://raw.githubusercontent.com/jiarong/VirSorter2/master/README.md",
+      "technique": "header_analysis"
+    }
+  ],
+  "download_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/jiarong/VirSorter2/releases"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "faq": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Q: How should I pick a score cutoff?",
+        "parent_header": [
+          "FAQ"
+        ],
+        "type": "Text_excerpt",
+        "value": "A: Generally, those with score >0.9 are high confidence. Those with score between 0.5 and 0.9 could be a mixture of viral and non-viral. It's hard to find a optimal score separating viral and non-viral since it depends on % of host sequence and unknown sequences. So we recommend using the default cutoff (0.5) for maximal sensitivity and then applying a quality checking step using checkV to for removing false positives (other than predicting completeness). Here is the [viral identification SOP in the Sullivan Lab](https://www.protocols.io/view/viral-sequence-identification-sop-with-virsorter2-btv8nn9w).\n"
+      },
+      "source": "https://raw.githubusercontent.com/jiarong/VirSorter2/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Q: Why does virsorter work in when running interactively but does not work when submit as batch script (e.g. showing error `No module name screed`)?",
+        "parent_header": [
+          "FAQ"
+        ],
+        "type": "Text_excerpt",
+        "value": "A: This is usually caused by the incompatibility between two different package/environment managing tools: Modules (`module load`) and conda (`conda activate`). There are two solutions: 1) install conda on your own (user level) instead of using the system conda, and thus avoiding `module load`; 2) Sometimes server system admins discourage users to install conda at user level. If so, you can remove the `module load` or `module use` in batch scripts, and instead run them interactively in the terminal to load necessary packages before submitting the batch scripts.\n"
+      },
+      "source": "https://raw.githubusercontent.com/jiarong/VirSorter2/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Q: Why is there installation error with macOS?",
+        "parent_header": [
+          "FAQ"
+        ],
+        "type": "Text_excerpt",
+        "value": "A: MacOS is not supported currently. VirSorter2 runs are typically computationally expensive, and should be run in servers (typically Linux). VirSorter2 leverages large viral protein HMM reference databases to achieve its high sensitivity, and the flip side is that its computationally expensive.\n"
+      },
+      "source": "https://raw.githubusercontent.com/jiarong/VirSorter2/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Q: How can I tell if an identified viral sequence is provirus?",
+        "parent_header": [
+          "FAQ"
+        ],
+        "type": "Text_excerpt",
+        "value": "A: Only partially viral sequences (ending with \\_partial) can be confirmed as provirus. Fully viral sequences (ending with ||full) in VirSorter2 defined as contigs with significant viral signal (score >=0.8) as a whole sequene. Thus some could be provirus too: 1) they could be a fragment from within a provirus; 2) the whole sequence has strong viral signal in spite of some host genes at ends.\n"
+      },
+      "source": "https://raw.githubusercontent.com/jiarong/VirSorter2/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Q: Why are there host genes left at ends of predicted viral sequences?",
+        "parent_header": [
+          "FAQ"
+        ],
+        "type": "Text_excerpt",
+        "value": "A: The provirus boundary dectection algorithm in VirSorter2 tends to overextend to host regions. VirSorter2 estimate boundaries by looking at the peak score of sub-sequences and then overextend a bit (within 95% of peak score by default). This is a design decision so that predicted viral sequences can be further passed to a more specialized provirus boundary prediction tool.\n"
+      },
+      "source": "https://raw.githubusercontent.com/jiarong/VirSorter2/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Q: Why are fully viral sequences (ending with ||full) trimmed?",
+        "parent_header": [
+          "FAQ"
+        ],
+        "type": "Text_excerpt",
+        "value": "A: There are three situations that a fully viral sequence can be trimmed. 1) VirSorter2 is based on genes called by prodigal. A few bases overhang beyond the first and last gene are ignored by prodigal and also ignored VirSorter2 by default; 2) Circular sequences are usually split in the middle of a gene and have duplicate segments. VirSorter2 trims the duplicate segments and fixes the split gene by moving the partial gene the start to the end. 3) fully viral sequences only means the whole sequence has significant viral signal (score >=0.95 by default), but VirSorter2 still applies an end trimming step (10% of genes on each end) on them to find the optimal viral segments (longest within 95% of peak score by default). Again, the \"full\" sequences trimmed by the end trimming step should not be interpreted as provirus, since genes that have low impact on score, such as unknown gene or genes shared by host and virus, could be trimmed. If you prefer the full sequences (ending with ||full) not to be trimmed and leave it to specialized tools such as checkV, you can use `--keep-original-seq` option.\n"
+      },
+      "source": "https://raw.githubusercontent.com/jiarong/VirSorter2/master/README.md",
+      "technique": "header_analysis"
+    }
+  ],
+  "forks_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 29
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/jiarong/VirSorter2/forks"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "jiarong/VirSorter2"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_title": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "VirSorter 2"
+      },
+      "source": "https://raw.githubusercontent.com/jiarong/VirSorter2/master/README.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "has_build_file": [
+    {
+      "confidence": 1,
+      "result": {
+        "format": "dockerfile",
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/jiarong/VirSorter2/master/Dockerfile"
+      },
+      "source": "https://raw.githubusercontent.com/jiarong/VirSorter2/master/Dockerfile",
+      "technique": "file_exploration"
+    }
+  ],
+  "has_script_file": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/jiarong/VirSorter2/master/virsorter/scripts/sandbox/prepdb-split-pfam-by-domain.sh"
+      },
+      "technique": "file_exploration"
+    }
+  ],
+  "installation": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Option 1 (bioconda version)",
+        "parent_header": [
+          "Installation (tested on CentOS linux; should work in all linux; MacOS is not supported at the moment)"
+        ],
+        "type": "Text_excerpt",
+        "value": "Mamba is the easiest way to install VirSorter2. If you do not have mamba installed, it can be installed following [this link](https://mamba.readthedocs.io/en/latest/installation.html).\n\n```bash\nmamba create -n vs2 -c conda-forge -c bioconda virsorter=2\nmamba activate vs2\n```\n"
+      },
+      "source": "https://raw.githubusercontent.com/jiarong/VirSorter2/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Option 2 (development version)",
+        "parent_header": [
+          "Installation (tested on CentOS linux; should work in all linux; MacOS is not supported at the moment)"
+        ],
+        "type": "Text_excerpt",
+        "value": "The development version is most updated. To install the development version:\n\n```bash\nmamba create -n vs2 -c conda-forge -c bioconda \"python>=3.6,<=3.10\" scikit-learn=0.22.1 imbalanced-learn pandas seaborn hmmer==3.3 prodigal screed ruamel.yaml \"snakemake>=5.18,<=5.26\" click \"conda-package-handling<=1.9\"\nmamba activate vs2\ngit clone https://github.com/jiarong/VirSorter2.git\ncd VirSorter2\npip install -e .\n```\n"
+      },
+      "source": "https://raw.githubusercontent.com/jiarong/VirSorter2/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Option 3",
+        "parent_header": [
+          "Installation (tested on CentOS linux; should work in all linux; MacOS is not supported at the moment)"
+        ],
+        "type": "Text_excerpt",
+        "value": "If you have **apptainer** (formerly known as **singularity**) [installed](https://apptainer.org/) (typical in HPC clusters), the following is the most convenient. Also use the option if you have issues with conda. \n\n```bash\napptainer build virsorter2.sif docker://jiarong/virsorter:latest\n```\n\nYou will get a file `virsorter2.sif`, which is a singularity image that can be run like a binary executable file. You can use the **absolute path** of this file to replace `virsorter` in commands for the rest of the tutorial. Also this image has the database and dependencies included, so you can skip the [Download database and dependencies step](#download-database-and-dependencies) below.\n"
+      },
+      "source": "https://raw.githubusercontent.com/jiarong/VirSorter2/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Q: Why is there installation error with macOS?",
+        "parent_header": [
+          "FAQ"
+        ],
+        "type": "Text_excerpt",
+        "value": "A: MacOS is not supported currently. VirSorter2 runs are typically computationally expensive, and should be run in servers (typically Linux). VirSorter2 leverages large viral protein HMM reference databases to achieve its high sensitivity, and the flip side is that its computationally expensive.\n"
+      },
+      "source": "https://raw.githubusercontent.com/jiarong/VirSorter2/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 0.99870839031408,
+      "result": {
+        "original_header": "choosing viral groups (`--include-groups`)",
+        "type": "Text_excerpt",
+        "value": "The available options are dsDNAphage, NCLDV, RNA, ssDNA virus, and *lavidaviridae*. The default is dsDNAphage and ssDNA (changed from all groups since version 2.2), suitable for those only interested in phage. If you are only interested in RNA virus, you can run:\n```bash\nrm -rf test.out\nvirsorter run -w test.out -i test.fa --include-groups RNA -j 4 all\n```\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/jiarong/VirSorter2/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9999991344047083,
+      "result": {
+        "original_header": "re-run with different score cutoff (`--min-score` and `--classify`)",
+        "type": "Text_excerpt",
+        "value": "VirSorter2 takes one positional argument, `all` or `classify`. The default is `all`, which means running the whole pipeline, including 1) preprocessing, 2) annotation (feature extraction), and 3) classification. The main computational bottleneck is the annotation step, taking about 95% of CPU time. In case you just want to re-run with different score cutoff (--min-score), `classify` argument can skip the annotation steps, and only re-run only the classify step.\n```bash\nvirsorter run -w test.out -i test.fa --include-groups \"dsDNAphage,ssDNA\" -j 4 --min-score 0.8 classify\n```\nThe above overwrites the previous final output files. If you want to keep previous results, you can use `--label` to add a prefix to the new final output files.\n```bash\nvirsorter run -w test.out -i test.fa --include-groups \"dsDNAphage,ssDNA\" -j 4 --min-score 0.9 --label rerun classify\n```\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/jiarong/VirSorter2/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9526534101034876,
+      "result": {
+        "original_header": "Training customized classifiers",
+        "type": "Text_excerpt",
+        "value": "- customized.hmm (optional) \n- hallmark-gene.list (optional) \n- rbs-prodigal-train.db (optional) \nFirst, prepare the dataset needed: 1) high quality viral genomes 2) protein sequence of hallmark gene; and install two more dependecies.\n```bash\n# download genome sequences\nwget https://github.com/jiarong/small-dataset/raw/master/autolyki/vibrio_autolyki.fna.gz -O autolyki.fna.gz\n# download hallmark gene seqs\nwget https://raw.githubusercontent.com/jiarong/small-dataset/master/autolyki/DJR.fa -O DJR.fa\n# download source code\ngit clone https://github.com/jiarong/VirSorter2.git\n# install two more dependencies\nconda install -c bioconda -y screed hmmer\n```\n \nNote that we will need the VirSorter2 database here. If you skip the tutorial above, you can download the database by `virsorter setup -d db -j 4`. This will take 10+ mins.\n```bash\n# compare all HMMs and protein sequences of hallmark gene\n# this will take 10+ mins due to large hmm database file\nhmmsearch -T 50 --tblout DJR.hmmtbl --cpu 4 -o /dev/null db/hmm/viral/combined.hmm DJR.fa\n# get HMMs names that are signicant hits with protein sequences of hallmark gene\npython VirSorter2/virsorter/scripts/prepdb-train-get-seq-from-hmm-domtbl.py 50 DJR.hmmtbl > hallmark-gene.list\n```\nWith `hallmark-gene.list` and the high quality genomes `autolyki.fna.gz`, you can train the features that are used for the classifier model.\n```bash\n# train feature file\nvirsorter train-feature --seqfile autolyki.fna.gz --hallmark hallmark-gene.list --hmm db/hmm/viral/combined.hmm --frags-per-genome 5 --jobs 4 -w autolyki-feature.out \n# check output\nls autolyki-feature.out\n```\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/jiarong/VirSorter2/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9999999559911156,
+      "result": {
+        "type": "Text_excerpt",
+        "value": "#####################################################################\n    ####  __   __(_) _ __  ___   ___   _ __ | |_  ___  _ __  |___ \\  ####\n    ####  \\ \\ / /| || '__|/ __| / _ \\ | '__|| __|/ _ \\| '__|   __) | ####\n    ####   \\ V / | || |   \\__ \\| (_) || |   | |_|  __/| |     / __/  ####\n    ####    \\_/  |_||_|   |___/ \\___/ |_|    \\__|\\___||_|    |_____| ####\n    ##################################################################### \n"
+      },
+      "source": "https://raw.githubusercontent.com/jiarong/VirSorter2/master/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "invocation": [
+    {
+      "confidence": 0.8459356266914768,
+      "result": {
+        "original_header": "DRAMv compatibility",
+        "type": "Text_excerpt",
+        "value": "```bash\nrm -rf test.out\nvirsorter run --prep-for-dramv -w test.out -i test.fa -j 4 all\nls test.out/for-dramv\n```\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/jiarong/VirSorter2/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.8100716270228208,
+      "result": {
+        "original_header": "Training customized classifiers",
+        "type": "Text_excerpt",
+        "value": "- rbs-prodigal-train.db (optional) \n"
+      },
+      "source": "https://raw.githubusercontent.com/jiarong/VirSorter2/master/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "issue_tracker": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/jiarong/VirSorter2/issues"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "keywords": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": ""
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "license": [
+    {
+      "confidence": 1,
+      "result": {
+        "name": "GNU General Public License v2.0",
+        "spdx_id": "GPL-2.0",
+        "type": "License",
+        "url": "https://api.github.com/licenses/gpl-2.0",
+        "value": "https://api.github.com/licenses/gpl-2.0"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "File_dump",
+        "value": "                    GNU GENERAL PUBLIC LICENSE\n                       Version 2, June 1991\n\n Copyright (C) 1989, 1991 Free Software Foundation, Inc.,\n 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA\n Everyone is permitted to copy and distribute verbatim copies\n of this license document, but changing it is not allowed.\n\n                            Preamble\n\n  The licenses for most software are designed to take away your\nfreedom to share and change it.  By contrast, the GNU General Public\nLicense is intended to guarantee your freedom to share and change free\nsoftware--to make sure the software is free for all its users.  This\nGeneral Public License applies to most of the Free Software\nFoundation's software and to any other program whose authors commit to\nusing it.  (Some other Free Software Foundation software is covered by\nthe GNU Lesser General Public License instead.)  You can apply it to\nyour programs, too.\n\n  When we speak of free software, we are referring to freedom, not\nprice.  Our General Public Licenses are designed to make sure that you\nhave the freedom to distribute copies of free software (and charge for\nthis service if you wish), that you receive source code or can get it\nif you want it, that you can change the software or use pieces of it\nin new free programs; and that you know you can do these things.\n\n  To protect your rights, we need to make restrictions that forbid\nanyone to deny you these rights or to ask you to surrender the rights.\nThese restrictions translate to certain responsibilities for you if you\ndistribute copies of the software, or if you modify it.\n\n  For example, if you distribute copies of such a program, whether\ngratis or for a fee, you must give the recipients all the rights that\nyou have.  You must make sure that they, too, receive or can get the\nsource code.  And you must show them these terms so they know their\nrights.\n\n  We protect your rights with two steps: (1) copyright the software, and\n(2) offer you this license which gives you legal permission to copy,\ndistribute and/or modify the software.\n\n  Also, for each author's protection and ours, we want to make certain\nthat everyone understands that there is no warranty for this free\nsoftware.  If the software is modified by someone else and passed on, we\nwant its recipients to know that what they have is not the original, so\nthat any problems introduced by others will not reflect on the original\nauthors' reputations.\n\n  Finally, any free program is threatened constantly by software\npatents.  We wish to avoid the danger that redistributors of a free\nprogram will individually obtain patent licenses, in effect making the\nprogram proprietary.  To prevent this, we have made it clear that any\npatent must be licensed for everyone's free use or not licensed at all.\n\n  The precise terms and conditions for copying, distribution and\nmodification follow.\n\n                    GNU GENERAL PUBLIC LICENSE\n   TERMS AND CONDITIONS FOR COPYING, DISTRIBUTION AND MODIFICATION\n\n  0. This License applies to any program or other work which contains\na notice placed by the copyright holder saying it may be distributed\nunder the terms of this General Public License.  The \"Program\", below,\nrefers to any such program or work, and a \"work based on the Program\"\nmeans either the Program or any derivative work under copyright law:\nthat is to say, a work containing the Program or a portion of it,\neither verbatim or with modifications and/or translated into another\nlanguage.  (Hereinafter, translation is included without limitation in\nthe term \"modification\".)  Each licensee is addressed as \"you\".\n\nActivities other than copying, distribution and modification are not\ncovered by this License; they are outside its scope.  The act of\nrunning the Program is not restricted, and the output from the Program\nis covered only if its contents constitute a work based on the\nProgram (independent of having been made by running the Program).\nWhether that is true depends on what the Program does.\n\n  1. You may copy and distribute verbatim copies of the Program's\nsource code as you receive it, in any medium, provided that you\nconspicuously and appropriately publish on each copy an appropriate\ncopyright notice and disclaimer of warranty; keep intact all the\nnotices that refer to this License and to the absence of any warranty;\nand give any other recipients of the Program a copy of this License\nalong with the Program.\n\nYou may charge a fee for the physical act of transferring a copy, and\nyou may at your option offer warranty protection in exchange for a fee.\n\n  2. You may modify your copy or copies of the Program or any portion\nof it, thus forming a work based on the Program, and copy and\ndistribute such modifications or work under the terms of Section 1\nabove, provided that you also meet all of these conditions:\n\n    a) You must cause the modified files to carry prominent notices\n    stating that you changed the files and the date of any change.\n\n    b) You must cause any work that you distribute or publish, that in\n    whole or in part contains or is derived from the Program or any\n    part thereof, to be licensed as a whole at no charge to all third\n    parties under the terms of this License.\n\n    c) If the modified program normally reads commands interactively\n    when run, you must cause it, when started running for such\n    interactive use in the most ordinary way, to print or display an\n    announcement including an appropriate copyright notice and a\n    notice that there is no warranty (or else, saying that you provide\n    a warranty) and that users may redistribute the program under\n    these conditions, and telling the user how to view a copy of this\n    License.  (Exception: if the Program itself is interactive but\n    does not normally print such an announcement, your work based on\n    the Program is not required to print an announcement.)\n\nThese requirements apply to the modified work as a whole.  If\nidentifiable sections of that work are not derived from the Program,\nand can be reasonably considered independent and separate works in\nthemselves, then this License, and its terms, do not apply to those\nsections when you distribute them as separate works.  But when you\ndistribute the same sections as part of a whole which is a work based\non the Program, the distribution of the whole must be on the terms of\nthis License, whose permissions for other licensees extend to the\nentire whole, and thus to each and every part regardless of who wrote it.\n\nThus, it is not the intent of this section to claim rights or contest\nyour rights to work written entirely by you; rather, the intent is to\nexercise the right to control the distribution of derivative or\ncollective works based on the Program.\n\nIn addition, mere aggregation of another work not based on the Program\nwith the Program (or with a work based on the Program) on a volume of\na storage or distribution medium does not bring the other work under\nthe scope of this License.\n\n  3. You may copy and distribute the Program (or a work based on it,\nunder Section 2) in object code or executable form under the terms of\nSections 1 and 2 above provided that you also do one of the following:\n\n    a) Accompany it with the complete corresponding machine-readable\n    source code, which must be distributed under the terms of Sections\n    1 and 2 above on a medium customarily used for software interchange; or,\n\n    b) Accompany it with a written offer, valid for at least three\n    years, to give any third party, for a charge no more than your\n    cost of physically performing source distribution, a complete\n    machine-readable copy of the corresponding source code, to be\n    distributed under the terms of Sections 1 and 2 above on a medium\n    customarily used for software interchange; or,\n\n    c) Accompany it with the information you received as to the offer\n    to distribute corresponding source code.  (This alternative is\n    allowed only for noncommercial distribution and only if you\n    received the program in object code or executable form with such\n    an offer, in accord with Subsection b above.)\n\nThe source code for a work means the preferred form of the work for\nmaking modifications to it.  For an executable work, complete source\ncode means all the source code for all modules it contains, plus any\nassociated interface definition files, plus the scripts used to\ncontrol compilation and installation of the executable.  However, as a\nspecial exception, the source code distributed need not include\nanything that is normally distributed (in either source or binary\nform) with the major components (compiler, kernel, and so on) of the\noperating system on which the executable runs, unless that component\nitself accompanies the executable.\n\nIf distribution of executable or object code is made by offering\naccess to copy from a designated place, then offering equivalent\naccess to copy the source code from the same place counts as\ndistribution of the source code, even though third parties are not\ncompelled to copy the source along with the object code.\n\n  4. You may not copy, modify, sublicense, or distribute the Program\nexcept as expressly provided under this License.  Any attempt\notherwise to copy, modify, sublicense or distribute the Program is\nvoid, and will automatically terminate your rights under this License.\nHowever, parties who have received copies, or rights, from you under\nthis License will not have their licenses terminated so long as such\nparties remain in full compliance.\n\n  5. You are not required to accept this License, since you have not\nsigned it.  However, nothing else grants you permission to modify or\ndistribute the Program or its derivative works.  These actions are\nprohibited by law if you do not accept this License.  Therefore, by\nmodifying or distributing the Program (or any work based on the\nProgram), you indicate your acceptance of this License to do so, and\nall its terms and conditions for copying, distributing or modifying\nthe Program or works based on it.\n\n  6. Each time you redistribute the Program (or any work based on the\nProgram), the recipient automatically receives a license from the\noriginal licensor to copy, distribute or modify the Program subject to\nthese terms and conditions.  You may not impose any further\nrestrictions on the recipients' exercise of the rights granted herein.\nYou are not responsible for enforcing compliance by third parties to\nthis License.\n\n  7. If, as a consequence of a court judgment or allegation of patent\ninfringement or for any other reason (not limited to patent issues),\nconditions are imposed on you (whether by court order, agreement or\notherwise) that contradict the conditions of this License, they do not\nexcuse you from the conditions of this License.  If you cannot\ndistribute so as to satisfy simultaneously your obligations under this\nLicense and any other pertinent obligations, then as a consequence you\nmay not distribute the Program at all.  For example, if a patent\nlicense would not permit royalty-free redistribution of the Program by\nall those who receive copies directly or indirectly through you, then\nthe only way you could satisfy both it and this License would be to\nrefrain entirely from distribution of the Program.\n\nIf any portion of this section is held invalid or unenforceable under\nany particular circumstance, the balance of the section is intended to\napply and the section as a whole is intended to apply in other\ncircumstances.\n\nIt is not the purpose of this section to induce you to infringe any\npatents or other property right claims or to contest validity of any\nsuch claims; this section has the sole purpose of protecting the\nintegrity of the free software distribution system, which is\nimplemented by public license practices.  Many people have made\ngenerous contributions to the wide range of software distributed\nthrough that system in reliance on consistent application of that\nsystem; it is up to the author/donor to decide if he or she is willing\nto distribute software through any other system and a licensee cannot\nimpose that choice.\n\nThis section is intended to make thoroughly clear what is believed to\nbe a consequence of the rest of this License.\n\n  8. If the distribution and/or use of the Program is restricted in\ncertain countries either by patents or by copyrighted interfaces, the\noriginal copyright holder who places the Program under this License\nmay add an explicit geographical distribution limitation excluding\nthose countries, so that distribution is permitted only in or among\ncountries not thus excluded.  In such case, this License incorporates\nthe limitation as if written in the body of this License.\n\n  9. The Free Software Foundation may publish revised and/or new versions\nof the General Public License from time to time.  Such new versions will\nbe similar in spirit to the present version, but may differ in detail to\naddress new problems or concerns.\n\nEach version is given a distinguishing version number.  If the Program\nspecifies a version number of this License which applies to it and \"any\nlater version\", you have the option of following the terms and conditions\neither of that version or of any later version published by the Free\nSoftware Foundation.  If the Program does not specify a version number of\nthis License, you may choose any version ever published by the Free Software\nFoundation.\n\n  10. If you wish to incorporate parts of the Program into other free\nprograms whose distribution conditions are different, write to the author\nto ask for permission.  For software which is copyrighted by the Free\nSoftware Foundation, write to the Free Software Foundation; we sometimes\nmake exceptions for this.  Our decision will be guided by the two goals\nof preserving the free status of all derivatives of our free software and\nof promoting the sharing and reuse of software generally.\n\n                            NO WARRANTY\n\n  11. BECAUSE THE PROGRAM IS LICENSED FREE OF CHARGE, THERE IS NO WARRANTY\nFOR THE PROGRAM, TO THE EXTENT PERMITTED BY APPLICABLE LAW.  EXCEPT WHEN\nOTHERWISE STATED IN WRITING THE COPYRIGHT HOLDERS AND/OR OTHER PARTIES\nPROVIDE THE PROGRAM \"AS IS\" WITHOUT WARRANTY OF ANY KIND, EITHER EXPRESSED\nOR IMPLIED, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF\nMERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.  THE ENTIRE RISK AS\nTO THE QUALITY AND PERFORMANCE OF THE PROGRAM IS WITH YOU.  SHOULD THE\nPROGRAM PROVE DEFECTIVE, YOU ASSUME THE COST OF ALL NECESSARY SERVICING,\nREPAIR OR CORRECTION.\n\n  12. IN NO EVENT UNLESS REQUIRED BY APPLICABLE LAW OR AGREED TO IN WRITING\nWILL ANY COPYRIGHT HOLDER, OR ANY OTHER PARTY WHO MAY MODIFY AND/OR\nREDISTRIBUTE THE PROGRAM AS PERMITTED ABOVE, BE LIABLE TO YOU FOR DAMAGES,\nINCLUDING ANY GENERAL, SPECIAL, INCIDENTAL OR CONSEQUENTIAL DAMAGES ARISING\nOUT OF THE USE OR INABILITY TO USE THE PROGRAM (INCLUDING BUT NOT LIMITED\nTO LOSS OF DATA OR DATA BEING RENDERED INACCURATE OR LOSSES SUSTAINED BY\nYOU OR THIRD PARTIES OR A FAILURE OF THE PROGRAM TO OPERATE WITH ANY OTHER\nPROGRAMS), EVEN IF SUCH HOLDER OR OTHER PARTY HAS BEEN ADVISED OF THE\nPOSSIBILITY OF SUCH DAMAGES.\n\n                     END OF TERMS AND CONDITIONS\n\n            How to Apply These Terms to Your New Programs\n\n  If you develop a new program, and you want it to be of the greatest\npossible use to the public, the best way to achieve this is to make it\nfree software which everyone can redistribute and change under these terms.\n\n  To do so, attach the following notices to the program.  It is safest\nto attach them to the start of each source file to most effectively\nconvey the exclusion of warranty; and each file should have at least\nthe \"copyright\" line and a pointer to where the full notice is found.\n\n    <one line to give the program's name and a brief idea of what it does.>\n    Copyright (C) <year>  <name of author>\n\n    This program is free software; you can redistribute it and/or modify\n    it under the terms of the GNU General Public License as published by\n    the Free Software Foundation; either version 2 of the License, or\n    (at your option) any later version.\n\n    This program is distributed in the hope that it will be useful,\n    but WITHOUT ANY WARRANTY; without even the implied warranty of\n    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the\n    GNU General Public License for more details.\n\n    You should have received a copy of the GNU General Public License along\n    with this program; if not, write to the Free Software Foundation, Inc.,\n    51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.\n\nAlso add information on how to contact you by electronic and paper mail.\n\nIf the program is interactive, make it output a short notice like this\nwhen it starts in an interactive mode:\n\n    Gnomovision version 69, Copyright (C) year name of author\n    Gnomovision comes with ABSOLUTELY NO WARRANTY; for details type `show w'.\n    This is free software, and you are welcome to redistribute it\n    under certain conditions; type `show c' for details.\n\nThe hypothetical commands `show w' and `show c' should show the appropriate\nparts of the General Public License.  Of course, the commands you use may\nbe called something other than `show w' and `show c'; they could even be\nmouse-clicks or menu items--whatever suits your program.\n\nYou should also get your employer (if you work as a programmer) or your\nschool, if any, to sign a \"copyright disclaimer\" for the program, if\nnecessary.  Here is a sample; alter the names:\n\n  Yoyodyne, Inc., hereby disclaims all copyright interest in the program\n  `Gnomovision' (which makes passes at compilers) written by James Hacker.\n\n  <signature of Ty Coon>, 1 April 1989\n  Ty Coon, President of Vice\n\nThis General Public License does not permit incorporating your program into\nproprietary programs.  If your program is a subroutine library, you may\nconsider it more useful to permit linking proprietary applications with the\nlibrary.  If this is what you want to do, use the GNU Lesser General\nPublic License instead of this License.\n"
+      },
+      "source": "https://raw.githubusercontent.com/jiarong/VirSorter2/master/LICENSE",
+      "technique": "file_exploration"
+    }
+  ],
+  "name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "VirSorter2"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "owner": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "User",
+        "value": "jiarong"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "programming_languages": [
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Python",
+        "size": 430285,
+        "type": "Programming_language",
+        "value": "Python"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Shell",
+        "size": 1354,
+        "type": "Programming_language",
+        "value": "Shell"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Singularity",
+        "size": 1206,
+        "type": "Programming_language",
+        "value": "Singularity"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Dockerfile",
+        "size": 256,
+        "type": "Programming_language",
+        "value": "Dockerfile"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "readme_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/jiarong/VirSorter2/master/README.md"
+      },
+      "technique": "file_exploration"
+    }
+  ],
+  "related_documentation": [
+    {
+      "confidence": 1,
+      "result": {
+        "format": "readthedocs",
+        "type": "Url",
+        "value": "https://mamba.readthedocs.io/"
+      },
+      "source": "https://raw.githubusercontent.com/jiarong/VirSorter2/master/README.md",
+      "technique": "regular_expression"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "format": "readthedocs",
+        "type": "Url",
+        "value": "https://snakemake.readthedocs.io/"
+      },
+      "source": "https://raw.githubusercontent.com/jiarong/VirSorter2/master/README.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "releases": [
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "jiarong",
+          "type": "User"
+        },
+        "date_created": "2023-01-18T01:37:38Z",
+        "date_published": "2023-01-18T01:52:39Z",
+        "description": "# [2.2.4] - 2022-01-18\r\n- Fix issues with numpy v1.24 by limiting numpy version <1.24\r\n- Change \"singularity\" to \"apptainer\" in `README`\r\n- Add \"PROVIRUS_MIN_HALLMARK_CNT\" in `template-config-original.yaml` for tuning prophage search in `provirus.py`\r\n- Add new cols: \"final_max_score_group\" and \"final_max_score\" in `final-viral-boundary.tsv` to be consistent with \"max_score_group\" and \"max_score\" in `final-viral-score.tsv`\r\n- Remove records in `final-viral-boundary.tsv` but not in `final-viral-score.tsv`",
+        "html_url": "https://github.com/jiarong/VirSorter2/releases/tag/v2.2.4",
+        "name": "VirSorter2 version 2.2.4",
+        "release_id": 89332202,
+        "tag": "v2.2.4",
+        "tarball_url": "https://api.github.com/repos/jiarong/VirSorter2/tarball/v2.2.4",
+        "type": "Release",
+        "url": "https://api.github.com/repos/jiarong/VirSorter2/releases/89332202",
+        "value": "https://api.github.com/repos/jiarong/VirSorter2/releases/89332202",
+        "zipball_url": "https://api.github.com/repos/jiarong/VirSorter2/zipball/v2.2.4"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "jiarong",
+          "type": "User"
+        },
+        "date_created": "2021-07-18T23:57:28Z",
+        "date_published": "2021-07-21T09:28:43Z",
+        "description": "VirSorter2 version 2.2.3",
+        "html_url": "https://github.com/jiarong/VirSorter2/releases/tag/v2.2.3",
+        "name": "Version 2.2.3",
+        "release_id": 46385859,
+        "tag": "v2.2.3",
+        "tarball_url": "https://api.github.com/repos/jiarong/VirSorter2/tarball/v2.2.3",
+        "type": "Release",
+        "url": "https://api.github.com/repos/jiarong/VirSorter2/releases/46385859",
+        "value": "https://api.github.com/repos/jiarong/VirSorter2/releases/46385859",
+        "zipball_url": "https://api.github.com/repos/jiarong/VirSorter2/zipball/v2.2.3"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "jiarong",
+          "type": "User"
+        },
+        "date_created": "2021-04-21T21:22:52Z",
+        "date_published": "2021-04-21T22:00:59Z",
+        "description": "## [2.2.2] - 2021-04-20\r\n- Fix bug with --seqname-suffix-off causing error with DRAMv",
+        "html_url": "https://github.com/jiarong/VirSorter2/releases/tag/v2.2.2",
+        "name": "Version 2.2.2",
+        "release_id": 41805428,
+        "tag": "v2.2.2",
+        "tarball_url": "https://api.github.com/repos/jiarong/VirSorter2/tarball/v2.2.2",
+        "type": "Release",
+        "url": "https://api.github.com/repos/jiarong/VirSorter2/releases/41805428",
+        "value": "https://api.github.com/repos/jiarong/VirSorter2/releases/41805428",
+        "zipball_url": "https://api.github.com/repos/jiarong/VirSorter2/zipball/v2.2.2"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "jiarong",
+          "type": "User"
+        },
+        "date_created": "2021-04-01T14:28:54Z",
+        "date_published": "2021-04-01T15:31:15Z",
+        "description": "VirSorter version 2.2.1",
+        "html_url": "https://github.com/jiarong/VirSorter2/releases/tag/v2.2.1",
+        "name": "Version 2.2.1",
+        "release_id": 40832677,
+        "tag": "v2.2.1",
+        "tarball_url": "https://api.github.com/repos/jiarong/VirSorter2/tarball/v2.2.1",
+        "type": "Release",
+        "url": "https://api.github.com/repos/jiarong/VirSorter2/releases/40832677",
+        "value": "https://api.github.com/repos/jiarong/VirSorter2/releases/40832677",
+        "zipball_url": "https://api.github.com/repos/jiarong/VirSorter2/zipball/v2.2.1"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "jiarong",
+          "type": "User"
+        },
+        "date_created": "2021-03-30T09:15:34Z",
+        "date_published": "2021-04-01T15:25:26Z",
+        "description": "VirSorter version 2.2\r\n\r\n## [2.2] - 2021-03-30\r\n- Add --viral-gene-enrich-off option\r\n- Add --seqname-suffix-off option\r\n- Change default --include-groups from all groups to dsDNAphage and ssDNA\r\n- Add FAQ, viral identification SOP link in README",
+        "html_url": "https://github.com/jiarong/VirSorter2/releases/tag/v2.2",
+        "name": "Version 2.2",
+        "release_id": 40832332,
+        "tag": "v2.2",
+        "tarball_url": "https://api.github.com/repos/jiarong/VirSorter2/tarball/v2.2",
+        "type": "Release",
+        "url": "https://api.github.com/repos/jiarong/VirSorter2/releases/40832332",
+        "value": "https://api.github.com/repos/jiarong/VirSorter2/releases/40832332",
+        "zipball_url": "https://api.github.com/repos/jiarong/VirSorter2/zipball/v2.2"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "jiarong",
+          "type": "User"
+        },
+        "date_created": "2021-01-15T03:03:02Z",
+        "date_published": "2021-01-15T03:04:47Z",
+        "description": "## [2.1] - 2021-01-15\r\n### Added\r\n- Add --keep-original-seq option\r\n- Add --high-confidence-only\r\n- Add --exclude-lt2gene option\r\n\r\n### Changed\r\n- Remove more itermediate files by default\r\n- Change HMMER3.3.1 to HMMER3.3; HMMER3.3.1 throws seg fault with low complexity\r\nsequences",
+        "html_url": "https://github.com/jiarong/VirSorter2/releases/tag/v2.1",
+        "name": "Version 2.1",
+        "release_id": 36425895,
+        "tag": "v2.1",
+        "tarball_url": "https://api.github.com/repos/jiarong/VirSorter2/tarball/v2.1",
+        "type": "Release",
+        "url": "https://api.github.com/repos/jiarong/VirSorter2/releases/36425895",
+        "value": "https://api.github.com/repos/jiarong/VirSorter2/releases/36425895",
+        "zipball_url": "https://api.github.com/repos/jiarong/VirSorter2/zipball/v2.1"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "jiarong",
+          "type": "User"
+        },
+        "date_created": "2020-12-01T10:52:06Z",
+        "date_published": "2020-12-01T10:54:25Z",
+        "description": "VirSorter version 2.0 - 2020-12-01\r\n### Added\r\n- Add --viral-gene-required\r\n- Add --hallmark-required\r\n- Add --hallmark-required-on-short\r\n- Add --prep-for-dramv\r\n- Add --label in virsorter run to allow adding prefix to output files\r\n- Add shape to boundry file\r\n\r\n### Changed\r\n- Apply length prefilter to provirus.py; skip all seqs length < min(3000, MIN_GENOME_SIZE)\r\n- Limit max file splits to 1000",
+        "html_url": "https://github.com/jiarong/VirSorter2/releases/tag/v2.0",
+        "name": "Version 2.0",
+        "release_id": 34627612,
+        "tag": "v2.0",
+        "tarball_url": "https://api.github.com/repos/jiarong/VirSorter2/tarball/v2.0",
+        "type": "Release",
+        "url": "https://api.github.com/repos/jiarong/VirSorter2/releases/34627612",
+        "value": "https://api.github.com/repos/jiarong/VirSorter2/releases/34627612",
+        "zipball_url": "https://api.github.com/repos/jiarong/VirSorter2/zipball/v2.0"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "jiarong",
+          "type": "User"
+        },
+        "date_created": "2020-06-19T07:58:47Z",
+        "date_published": "2020-06-19T08:23:35Z",
+        "description": "VirSorter version 2.0.beta",
+        "html_url": "https://github.com/jiarong/VirSorter2/releases/tag/v2.0.beta",
+        "name": "Version 2.0.beta",
+        "release_id": 27716247,
+        "tag": "v2.0.beta",
+        "tarball_url": "https://api.github.com/repos/jiarong/VirSorter2/tarball/v2.0.beta",
+        "type": "Release",
+        "url": "https://api.github.com/repos/jiarong/VirSorter2/releases/27716247",
+        "value": "https://api.github.com/repos/jiarong/VirSorter2/releases/27716247",
+        "zipball_url": "https://api.github.com/repos/jiarong/VirSorter2/zipball/v2.0.beta"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "jiarong",
+          "type": "User"
+        },
+        "date_created": "2020-06-13T06:59:33Z",
+        "date_published": "2020-06-13T07:04:00Z",
+        "description": "VirSorter version 2.0.alpha",
+        "html_url": "https://github.com/jiarong/VirSorter2/releases/tag/v2.0.alpha",
+        "name": "Version 2.0.alpha",
+        "release_id": 27516779,
+        "tag": "v2.0.alpha",
+        "tarball_url": "https://api.github.com/repos/jiarong/VirSorter2/tarball/v2.0.alpha",
+        "type": "Release",
+        "url": "https://api.github.com/repos/jiarong/VirSorter2/releases/27516779",
+        "value": "https://api.github.com/repos/jiarong/VirSorter2/releases/27516779",
+        "zipball_url": "https://api.github.com/repos/jiarong/VirSorter2/zipball/v2.0.alpha"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "jiarong",
+          "type": "User"
+        },
+        "date_created": "2020-06-07T15:07:06Z",
+        "date_published": "2020-06-07T12:31:43Z",
+        "description": "first release, version 2.0.alpha",
+        "html_url": "https://github.com/jiarong/VirSorter2/releases/tag/2.0.alpha.test",
+        "name": "Version 2.0.alpha",
+        "release_id": 27301005,
+        "tag": "2.0.alpha.test",
+        "tarball_url": "https://api.github.com/repos/jiarong/VirSorter2/tarball/2.0.alpha.test",
+        "type": "Release",
+        "url": "https://api.github.com/repos/jiarong/VirSorter2/releases/27301005",
+        "value": "https://api.github.com/repos/jiarong/VirSorter2/releases/27301005",
+        "zipball_url": "https://api.github.com/repos/jiarong/VirSorter2/zipball/2.0.alpha.test"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "requirements": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Download database and dependencies",
+        "type": "Text_excerpt",
+        "value": "Before running VirSorter2, users must download all databases and install dependencies (takes 10+ mins, but this only need to be done once). The following command line downloads databases and dependencies to `db` directory, and its location is recorded in the tool configuration as a default, so you do not need to type `--db-dir` for other `virsorter` subcommands.\n\nNote that this step takes ~ 10 mins. If you feel impatient and cancel the process, make sure to **remove the diretory specified by `-d/--db-dir` (`db` in this case) before running again**.\n\n```bash\n# just in case there is a failed attemp before; \n#   remove the whole diretory specified by -d\nrm -rf db\n# run setup\nvirsorter setup -d db -j 4\n```\n\nIf you have issues with setup the database with the above `setup` command (e.g. server firewall setting does not allow `wget`), you can download the database manually at `https://osf.io/v46sc/download`. The name of downloaded file should be `db.tgz` if downloaded from a brower. Next move/upload it to the current diretory and then run the following commands to extract the database and setup configuration:\n```bash\ntar -xzf db.tgz\nvirsorter config --init-source --db-dir=./db\n```\n"
+      },
+      "source": "https://raw.githubusercontent.com/jiarong/VirSorter2/master/README.md",
+      "technique": "header_analysis"
+    }
+  ],
+  "run": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Quick run",
+        "type": "Text_excerpt",
+        "value": "To run viral sequence identification on a test dataset:\n\n```bash\n# fetch testing data\nwget -O test.fa https://raw.githubusercontent.com/jiarong/VirSorter2/master/test/8seq.fa\n# run classification with 4 threads (-j) and test-out as output diretory (-w)\nvirsorter run -w test.out -i test.fa --min-length 1500 -j 4 all\nls test.out\n```\n\nDue to the large HMM database that VirSorter2 uses, this small dataset takes a few mins to finish. In the output directory (test.out), three files are useful:\n\n- `final-viral-combined.fa`:  identified viral sequences\n- `final-viral-score.tsv`:    table with score of each viral sequences across groups and a few more key features, which can be used for further filtering\n- `final-viral-boundary.tsv`: table with boundary information; This is a intermediate file that 1) might have extra records compared to other two files and should be ignored; 2) do not include the viral sequences w/ < 2 gene but have >= 1 hallmark gene; 3) the `group` and `trim_pr` are intermediate results and might not match the `max_group` and `max_score` respectively in `final-viral-score.tsv`\n\nMore details about each of these output files can be found [here](#detailed-description-on-output-files).\n\n---\n**NOTE**\n\nNote that suffix `||full`, `||lt2gene` and `||{i}_partial` (`{i}` can be numbers starting from 0 to max number of viral fragments found in that contig) have been added to original sequence names to differentiate sub-sequences in case of multiple viral subsequences found in one contig. Partial sequences can be treated as proviruses since they are extracted from longer host sequences. **Full sequences, however, can be proviruses or free virus** since it can be a short fragment sequenced from a provirus region. Moreover, \"full\" sequences are just sequences with strong viral signal as a whole (\"nearly full\" is more accurate). They might be trimmed due to partial gene overhang at ends, duplicate segments from circular genomes, and an end trimming step for all identified viral sequences to find the optimal viral segments (longest within 95% of peak score by default). Again, the \"full\" sequences trimmed by the end trimming step should not be interpreted as provirus, since genes that have low impact on score, such as unknown gene or genes shared by host and virus, could be trimmed. If you prefer the full sequences (ending with ||full) not to be trimmed and leave it to specialized tools such as checkV, you can use `--keep-original-seq` option. \n\n---\n"
+      },
+      "source": "https://raw.githubusercontent.com/jiarong/VirSorter2/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "speed up a run (`--provirus-off`)",
+        "parent_header": [
+          "More options"
+        ],
+        "type": "Text_excerpt",
+        "value": "In case you need to have some results quickly, there are two options: 1) turn off provirus step with `--provirus-off`; this reduces sensitivity on sequences that are only partially viral; 2) subsample ORFs from each sequence with `--max-orf-per-seq`; This option subsamples ORFs if a sequence has more ORFs than the number provided. Note that this option is only availale when `--provirus-off` is used. \n\n```bash\nrm -rf test.out\nvirsorter run -w test.out -i test.fa --provirus-off --max-orf-per-seq 20 all\n```\n"
+      },
+      "source": "https://raw.githubusercontent.com/jiarong/VirSorter2/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Q: Why does virsorter work in when running interactively but does not work when submit as batch script (e.g. showing error `No module name screed`)?",
+        "parent_header": [
+          "FAQ"
+        ],
+        "type": "Text_excerpt",
+        "value": "A: This is usually caused by the incompatibility between two different package/environment managing tools: Modules (`module load`) and conda (`conda activate`). There are two solutions: 1) install conda on your own (user level) instead of using the system conda, and thus avoiding `module load`; 2) Sometimes server system admins discourage users to install conda at user level. If so, you can remove the `module load` or `module use` in batch scripts, and instead run them interactively in the terminal to load necessary packages before submitting the batch scripts.\n"
+      },
+      "source": "https://raw.githubusercontent.com/jiarong/VirSorter2/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Q: How can I speed up the run?",
+        "parent_header": [
+          "FAQ"
+        ],
+        "type": "Text_excerpt",
+        "value": "A: Here are a few ways: 1) use more cpu cores (-j); 2) filter your contigs on length (>1500 or >5000) with `--min-length`; 3) reduce the viral groups in `--include-groups`. For most people interestd in phage, only dsDNAphage and ssDNA are needed, which is the default since version 2.2; 4) increase the threads for hmmsearch (the default is 2) by `virsorter config --set HMMSEARCH_THREADS=4`. Usually the IO is the bottleneck, not the CPU though.\n"
+      },
+      "source": "https://raw.githubusercontent.com/jiarong/VirSorter2/master/README.md",
+      "technique": "header_analysis"
+    }
+  ],
+  "somef_missing_categories": [
+    "citation",
+    "contact",
+    "contributors",
+    "documentation",
+    "support",
+    "identifier",
+    "executable_example"
+  ],
+  "somef_provenance": {
+    "date": "2024-10-03 23:13:33",
+    "somef_schema_version": "1.0.0",
+    "somef_version": "0.9.5"
+  },
+  "stargazers_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 217
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "type": [
+    {
+      "confidence": 0.82,
+      "result": {
+        "type": "String",
+        "value": "commandline-application"
+      },
+      "technique": "software_type_heuristics"
+    }
+  ],
+  "usage": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Q: Why does virsorter work in when running interactively but does not work when submit as batch script (e.g. showing error `No module name screed`)?",
+        "parent_header": [
+          "FAQ"
+        ],
+        "type": "Text_excerpt",
+        "value": "A: This is usually caused by the incompatibility between two different package/environment managing tools: Modules (`module load`) and conda (`conda activate`). There are two solutions: 1) install conda on your own (user level) instead of using the system conda, and thus avoiding `module load`; 2) Sometimes server system admins discourage users to install conda at user level. If so, you can remove the `module load` or `module use` in batch scripts, and instead run them interactively in the terminal to load necessary packages before submitting the batch scripts.\n"
+      },
+      "source": "https://raw.githubusercontent.com/jiarong/VirSorter2/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Q: Why am I getting many false positives (non-viral sequences)?",
+        "parent_header": [
+          "FAQ"
+        ],
+        "type": "Text_excerpt",
+        "value": "A: The default score cutoff (0.5) has high sensitivity but also brings in many non-viral sequences. For phages, we recommend using [checkV](https://bitbucket.org/berkeleylab/checkv/src/master) to remove those non-viral sequences following this [protocol](https://www.protocols.io/view/viral-sequence-identification-sop-with-virsorter2-btv8nn9w). See more details in the answer to the [how should I pick a score cutoff](#Q-how-should-i-pick-a-score-cutoff).\n"
+      },
+      "source": "https://raw.githubusercontent.com/jiarong/VirSorter2/master/README.md",
+      "technique": "header_analysis"
+    }
+  ],
+  "workflows": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/jiarong/VirSorter2/master/virsorter/rules/train-model.smk"
+      },
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/jiarong/VirSorter2/master/virsorter/rules/setup-retry.smk"
+      },
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/jiarong/VirSorter2/master/virsorter/rules/train-feature.smk"
+      },
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/jiarong/VirSorter2/master/virsorter/rules/setup.smk"
+      },
+      "technique": "file_exploration"
+    }
+  ]
+}

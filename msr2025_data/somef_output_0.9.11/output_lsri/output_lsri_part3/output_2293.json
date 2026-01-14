@@ -1,0 +1,329 @@
+{
+  "code_repository": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/nch-igm/rna-stability"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_created": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2019-06-28T14:07:03Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_updated": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2022-10-26T09:15:30Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "description": [
+    {
+      "confidence": 0.9911142861896474,
+      "result": {
+        "original_header": "RNA Stability Website",
+        "type": "Text_excerpt",
+        "value": "NOTE: It is highly recommended that you use these pre-built versions to save processing time and compute costs.\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/nch-igm/rna-stability/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.8300913993324203,
+      "result": {
+        "original_header": "Build command",
+        "type": "Text_excerpt",
+        "value": "\n```\n#############################################################\n##### Create a parquet with just the wildtype sequences\n##############################################################\n \n \n[hadoop@ip-10-130-25-226 ~]$ spark-shell\nSetting default log level to \"WARN\".\nTo adjust logging level use sc.setLogLevel(newLevel). For SparkR, use setLogLevel(newLevel).\n19/02/22 15:59:16 WARN yarn.Client: Neither spark.yarn.jars nor spark.yarn.archive is set, falling back to uploading libraries under SPARK_HOME.\nSpark context Web UI available at http://ip-10-130-25-226.columbuschildrens.net:4040\nSpark context available as 'sc' (master = yarn, app id = application_1550790868507_0007).\nSpark session available as 'spark'.\nWelcome to\n      ____              __\n     / __/__  ___ _____/ /__\n    _\\ \\/ _ \\/ _ `/ __/  '_/\n   /___/ .__/\\_,_/_/ /_/\\_\\   version 2.4.0\n      /_/\n          \nUsing Scala version 2.11.12 (OpenJDK 64-Bit Server VM, Java 1.8.0_191)\nType in expressions to have them evaluated.\nType :help for more information.\n \nscala> val df = spark.read.parquet(\"s3://nch-igm-rna-stability/human_all_results_2019-02-22_0.parquet\")\ndf: org.apache.spark.sql.DataFrame = [nm_id: string, transcript_position: int ... 5 more fields]\n \nscala> df.count\nres0: Long = 635443744                                                         \n \nscala> val wildDF = df.where(\"isWildType = true\")\nwildDF: org.apache.spark.sql.Dataset[org.apache.spark.sql.Row] = [nm_id: string, transcript_position: int ... 5 more fields]\n \nscala> wildDF.count\nres1: Long = 158860936                                                         \n \nscala> wildDF.write.parquet(\"s3://nch-igm-rna-stability/human_all_results_wildType_Only_2019-02-22_1.parquet\")\n``` \n\n```\n#############################################################\n##### Generate the wildtype fold data\n##############################################################\n \n \nspark-submit --class org.nationwidechildrens.igm.vienna.RNAFoldRunner ./rna-stability-assembly-2.0.0-DEV.jar s3://nch-igm-rna-stability/human_all_results_wildType_Only_2019-02-22_1.parquet s3://nch-igm-rna-stability/human_all_results_wildType_Only_rnafold_2019-02-22_1.parquet /home/hadoop/vienna 20000\n``` \n\n```\n#############################################################\n##### Scrubbing the alternate data set\n#####    Dropping empty score columns\n#####    Adding isWildType column\n##############################################################\n \n \n[hadoop@ip-10-130-25-226 ~]$ spark-shell\nSetting default log level to \"WARN\".\nTo adjust logging level use sc.setLogLevel(newLevel). For SparkR, use setLogLevel(newLevel).\n19/02/23 01:37:42 WARN yarn.Client: Neither spark.yarn.jars nor spark.yarn.archive is set, falling back to uploading libraries under SPARK_HOME.\nSpark context Web UI available at http://ip-10-130-25-226.columbuschildrens.net:4040\nSpark context available as 'sc' (master = yarn, app id = application_1550790868507_0011).\nSpark session available as 'spark'.\nWelcome to\n      ____              __\n     / __/__  ___ _____/ /__\n    _\\ \\/ _ \\/ _ `/ __/  '_/\n   /___/ .__/\\_,_/_/ /_/\\_\\   version 2.4.0\n      /_/\n          \nUsing Scala version 2.11.12 (OpenJDK 64-Bit Server VM, Java 1.8.0_191)\nType in expressions to have them evaluated.\nType :help for more information.\n \nscala> val df = spark.read.parquet(\"s3://nch-igm-rna-stability/human_all_results_rnafold_2_4_11.parquet\")\ndf: org.apache.spark.sql.DataFrame = [nm_id: string, transcript_position: int ... 26 more fields]\n \nscala> df.printSchema\nroot\n |-- nm_id: string (nullable = true)\n |-- transcript_position: integer (nullable = true)\n |-- ref: string (nullable = true)\n |-- alt: string (nullable = true)\n |-- sequence: string (nullable = true)\n |-- wildSequence: string (nullable = true)\n |-- mfeValue: double (nullable = true)\n |-- efeValue: double (nullable = true)\n |-- meafeValue: double (nullable = true)\n |-- meaValue: double (nullable = true)\n |-- cfeValue: double (nullable = true)\n |-- cdValue: double (nullable = true)\n |-- freqMfeEnsemble: double (nullable = true)\n |-- endValue: double (nullable = true)\n |-- deltaMFE: double (nullable = true)\n |-- deltaEFE: double (nullable = true)\n |-- deltaMEAFE: double (nullable = true)\n |-- deltaCFE: double (nullable = true)\n |-- deltaEND: double (nullable = true)\n |-- deltaCD: double (nullable = true)\n |-- mfeed: integer (nullable = true)\n |-- meaed: integer (nullable = true)\n |-- efeed: double (nullable = true)\n |-- cfeed: integer (nullable = true)\n |-- mfeStructure: string (nullable = true)\n |-- efeStructure: string (nullable = true)\n |-- meafeStructure: string (nullable = true)\n |-- cfeStructure: string (nullable = true)\n \n \nscala> val df2 = df.drop(\"deltaMFE\",\"deltaMEAFE\",\"deltaEFE\",\"deltaCFE\",\"deltaCD\",\"deltaEND\",\"mfeed\",\"meaed\",\n     | \"efeed\",\"cfeed\")\ndf2: org.apache.spark.sql.DataFrame = [nm_id: string, transcript_position: int ... 16 more fields]\n \nscala> df2.printSchema\nroot\n |-- nm_id: string (nullable = true)\n |-- transcript_position: integer (nullable = true)\n |-- ref: string (nullable = true)\n |-- alt: string (nullable = true)\n |-- sequence: string (nullable = true)\n |-- wildSequence: string (nullable = true)\n |-- mfeValue: double (nullable = true)\n |-- efeValue: double (nullable = true)\n |-- meafeValue: double (nullable = true)\n |-- meaValue: double (nullable = true)\n |-- cfeValue: double (nullable = true)\n |-- cdValue: double (nullable = true)\n |-- freqMfeEnsemble: double (nullable = true)\n |-- endValue: double (nullable = true)\n |-- mfeStructure: string (nullable = true)\n |-- efeStructure: string (nullable = true)\n |-- meafeStructure: string (nullable = true)\n |-- cfeStructure: string (nullable = true)\n \nscala> val df3 = df2.withColumn(\"isWildType\", lit(false))\ndf3: org.apache.spark.sql.DataFrame = [nm_id: string, transcript_position: int ... 17 more fields]\n \nscala> df3.printSchema\nroot\n |-- nm_id: string (nullable = true)\n |-- transcript_position: integer (nullable = true)\n |-- ref: string (nullable = true)\n |-- alt: string (nullable = true)\n |-- sequence: string (nullable = true)\n |-- wildSequence: string (nullable = true)\n |-- mfeValue: double (nullable = true)\n |-- efeValue: double (nullable = true)\n |-- meafeValue: double (nullable = true)\n |-- meaValue: double (nullable = true)\n |-- cfeValue: double (nullable = true)\n |-- cdValue: double (nullable = true)\n |-- freqMfeEnsemble: double (nullable = true)\n |-- endValue: double (nullable = true)\n |-- mfeStructure: string (nullable = true)\n |-- efeStructure: string (nullable = true)\n |-- meafeStructure: string (nullable = true)\n |-- cfeStructure: string (nullable = true)\n |-- isWildType: boolean (nullable = false)\n \n \nscala> df3.write.parquet(\"s3://nch-igm-rna-stability/human_all_results_rnafold_2019-02-22.parquet\")\n```\n```\n#############################################################\n##### Combining the alternate and wildtype RNAfold data sets\n##############################################################\n \n \n[hadoop@ip-10-130-26-129 ~]$ spark-shell\nSetting default log level to \"WARN\".\nTo adjust logging level use sc.setLogLevel(newLevel). For SparkR, use setLogLevel(newLevel).\n19/02/24 15:42:22 WARN yarn.Client: Neither spark.yarn.jars nor spark.yarn.archive is set, falling back to uploading libraries under SPARK_HOME.\nSpark context Web UI available at http://ip-10-130-26-129.columbuschildrens.net:4040\nSpark context available as 'sc' (master = yarn, app id = application_1551022773368_0001).\nSpark session available as 'spark'.\nWelcome to\n      ____              __\n     / __/__  ___ _____/ /__\n    _\\ \\/ _ \\/ _ `/ __/  '_/\n   /___/ .__/\\_,_/_/ /_/\\_\\   version 2.4.0\n      /_/\n          \nUsing Scala version 2.11.12 (OpenJDK 64-Bit Server VM, Java 1.8.0_191)\nType in expressions to have them evaluated.\nType :help for more information.\n \nscala> :paste\n// Entering paste mode (ctrl-D to finish)\n \nval altDF = spark.read.parquet(\"s3://nch-igm-rna-stability/human_all_results_rnafold_2019-02-22.parquet\")\nval wtDF = spark.read.parquet(\"s3://nch-igm-rna-stability/human_all_results_wildType_Only_rnafold_2019-02-22_1.parquet\")\n \n    val wtRenamedDF = wtDF.withColumnRenamed(\"mfeValue\", \"wt_mfeValue\")\n      .withColumnRenamed(\"efeValue\", \"wt_efeValue\")\n      .withColumnRenamed(\"meafeValue\", \"wt_meafeValue\")\n      .withColumnRenamed(\"meaValue\", \"wt_meaValue\")\n      .withColumnRenamed(\"cfeValue\", \"wt_cfeValue\")\n      .withColumnRenamed(\"cdValue\", \"wt_cdValue\")\n      .withColumnRenamed(\"freqMfeEnsemble\", \"wt_freqMfeEnsemble\")\n      .withColumnRenamed(\"endValue\", \"wt_endValue\")\n      .withColumnRenamed(\"mfeStructure\", \"wt_mfeStructure\")\n      .withColumnRenamed(\"efeStructure\", \"wt_efeStructure\")\n      .withColumnRenamed(\"meafeStructure\", \"wt_meafeStructure\")\n      .withColumnRenamed(\"cfeStructure\", \"wt_cfeStructure\")\n      .drop(\"ref\",\"alt\",\"sequence\",\"wildSequence\",\"isWildType\")\n \nval joinedDF = altDF.join(wtRenamedDF, Seq(\"nm_id\",\"transcript_position\"))\n \n// Exiting paste mode, now interpreting.\n \naltDF: org.apache.spark.sql.DataFrame = [nm_id: string, transcript_position: int ... 17 more fields]\nwtDF: org.apache.spark.sql.DataFrame = [nm_id: string, transcript_position: int ... 17 more fields]\nwtRenamedDF: org.apache.spark.sql.DataFrame = [nm_id: string, transcript_position: int ... 12 more fields]\njoinedDF: org.apache.spark.sql.DataFrame = [nm_id: string, transcript_position: int ... 29 more fields]\n \nscala> joinedDF.write.parquet(\"s3://nch-igm-rna-stability/human_all_results_rnafold_2019-02-24_1.parquet\")\n```\n```\n###########\n# Run RNADistance\n###########\n \nspark-submit --conf spark.driver.maxResultSize=3g --conf spark.network.timeout=600000 --class org.nationwidechildrens.igm.vienna.RNADistanceRunner ./rna-stability-assembly-2.0.0-DEV.jar s3://nch-igm-rna-stability/human_all_results_rnafold_2019-02-24_1.parquet  s3://nch-igm-rna-stability/human_all_results_rnadistance_2019-02-24_2.parquet  /home/hadoop/vienna \n```\n```\n##############\n# Run RNApdist\n##############\n \nspark-submit --class org.nationwidechildrens.igm.vienna.RNAPDistRunner ./rna-stability-assembly-2.0.0-DEV.jar s3://nch-igm-rna-stability/human_all_results.parquet s3://nch-igm-rna-stability/human_all_results_rnapdist_2019_02_25_1.parquet /home/hadoop/vienna 50000\n```\n \n\n```\n###########\n# Join RNADistance parquet to RNAPdist data frame\n############\n \n \nspark-submit --class org.nationwidechildrens.igm.vienna.DataframeJoiner ./rna-stability-assembly-2.0.0-DEV.jar s3://nch-igm-rna-stability/human_all_results_rnadistance_2019-02-24_2.parquet s3://nch-igm-rna-stability/human_all_results_rnapdist_2019_02_25_1.parquet s3://nch-igm-rna-stability/human_all_results_vienna_2019_02_26_0.parquet\n```\n```\n############\n# Map all transcripts to genomic positions\n############\n \n \nspark-submit --class org.nationwidechildrens.igm.vienna.GenomicPositionMapper ./rna-stability-assembly-2.0.0-DEV.jar s3://nch-igm-rna-stability/human_all_results_vienna_2019_02_26_0.parquet s3://nch-igm-rna-stability/human_all_results_genomic_positioned_2019_02_26_0.parquet s3://nch-igm-rna-stability/GCF_000001405.33_knownrefseq_alignments.gff3 NM\n```\n```\n##############\n# Liftover to HG19\n################\n \n \nspark-submit --class org.nationwidechildrens.igm.vienna.Liftover ./rna-stability-assembly-2.0.0-DEV.jar s3://nch-igm-rna-stability/human_all_results_genomic_positioned_2019_02_26_0.parquet s3://nch-igm-rna-stability/human_all_results_genomic_positioned_liftover_2019_02_26_0.parquet /home/hadoop/hg38ToHg19.over.chain /home/hadoop/hg19.fa\n```\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/nch-igm/rna-stability/master/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "download_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/nch-igm/rna-stability/releases"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "executable_example": [
+    {
+      "confidence": 1,
+      "result": {
+        "format": "jupyter_notebook",
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/nch-igm/rna-stability/master/notebook/rnaStability_10.5.1_Step05_gnomAD_pLI.ipynb"
+      },
+      "source": "https://raw.githubusercontent.com/nch-igm/rna-stability/master/notebook/rnaStability_10.5.1_Step05_gnomAD_pLI.ipynb",
+      "technique": "file_exploration"
+    }
+  ],
+  "forks_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 1
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/nch-igm/rna-stability/forks"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "nch-igm/rna-stability"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_title": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "RNA Stability Website"
+      },
+      "source": "https://raw.githubusercontent.com/nch-igm/rna-stability/master/README.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "has_script_file": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/nch-igm/rna-stability/master/scripts/install_vienna.sh"
+      },
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/nch-igm/rna-stability/master/scripts/Liftover_install.sh"
+      },
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/nch-igm/rna-stability/master/scripts/SnpEff_Install.sh"
+      },
+      "technique": "file_exploration"
+    }
+  ],
+  "installation": [
+    {
+      "confidence": 0.8322931566083551,
+      "result": {
+        "original_header": "RNA Stability Website",
+        "type": "Text_excerpt",
+        "value": "NOTE: It is highly recommended that you use these pre-built versions to save processing time and compute costs.\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/nch-igm/rna-stability/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.8228844468530963,
+      "result": {
+        "original_header": "Prerequisities",
+        "type": "Text_excerpt",
+        "value": "Apache Spark 2.4+\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/nch-igm/rna-stability/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9993671113460756,
+      "result": {
+        "original_header": "Build command",
+        "type": "Text_excerpt",
+        "value": "Below are examples of running the pipeline on AWS EMR. These steps assume that the bootstrap actions scripts/ directory were run when the EMR cluster was started up.\n```\n#############################################################\n##### Create a parquet with both the wildtype and alternate sequences\n##############################################################\n \nspark-submit --class org.nationwidechildrens.igm.vienna.AlternatesGenerator ./rna-stability-assembly-2.0.0-DEV.jar s3://nch-igm-rna-stability/human.all.rna.fna.gz s3://nch-igm-rna-stability/human_all_results_2019-02-22_0.parquet NM 5000\n```\n \n\n```\n#############################################################\n##### Create a parquet with just the wildtype sequences\n##############################################################\n \n \n[hadoop@ip-10-130-25-226 ~]$ spark-shell\nSetting default log level to \"WARN\".\nTo adjust logging level use sc.setLogLevel(newLevel). For SparkR, use setLogLevel(newLevel).\n19/02/22 15:59:16 WARN yarn.Client: Neither spark.yarn.jars nor spark.yarn.archive is set, falling back to uploading libraries under SPARK_HOME.\nSpark context Web UI available at http://ip-10-130-25-226.columbuschildrens.net:4040\nSpark context available as 'sc' (master = yarn, app id = application_1550790868507_0007).\nSpark session available as 'spark'.\nWelcome to\n      ____              __\n     / __/__  ___ _____/ /__\n    _\\ \\/ _ \\/ _ `/ __/  '_/\n   /___/ .__/\\_,_/_/ /_/\\_\\   version 2.4.0\n      /_/\n          \nUsing Scala version 2.11.12 (OpenJDK 64-Bit Server VM, Java 1.8.0_191)\nType in expressions to have them evaluated.\nType :help for more information.\n \nscala> val df = spark.read.parquet(\"s3://nch-igm-rna-stability/human_all_results_2019-02-22_0.parquet\")\ndf: org.apache.spark.sql.DataFrame = [nm_id: string, transcript_position: int ... 5 more fields]\n \nscala> df.count\nres0: Long = 635443744                                                         \n \nscala> val wildDF = df.where(\"isWildType = true\")\nwildDF: org.apache.spark.sql.Dataset[org.apache.spark.sql.Row] = [nm_id: string, transcript_position: int ... 5 more fields]\n \nscala> wildDF.count\nres1: Long = 158860936                                                         \n \nscala> wildDF.write.parquet(\"s3://nch-igm-rna-stability/human_all_results_wildType_Only_2019-02-22_1.parquet\")\n``` \n"
+      },
+      "source": "https://raw.githubusercontent.com/nch-igm/rna-stability/master/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "issue_tracker": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/nch-igm/rna-stability/issues"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "keywords": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": ""
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "license": [
+    {
+      "confidence": 1,
+      "result": {
+        "name": "BSD 3-Clause \"New\" or \"Revised\" License",
+        "spdx_id": "BSD-3-Clause",
+        "type": "License",
+        "url": "https://api.github.com/licenses/bsd-3-clause",
+        "value": "https://api.github.com/licenses/bsd-3-clause"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "File_dump",
+        "value": "BSD 3-Clause License\n\nCopyright (c) 2020, Nationwide Children's Hospital\nAll rights reserved.\n\nRedistribution and use in source and binary forms, with or without\nmodification, are permitted provided that the following conditions are met:\n\n1. Redistributions of source code must retain the above copyright notice, this\n   list of conditions and the following disclaimer.\n\n2. Redistributions in binary form must reproduce the above copyright notice,\n   this list of conditions and the following disclaimer in the documentation\n   and/or other materials provided with the distribution.\n\n3. Neither the name of the copyright holder nor the names of its\n   contributors may be used to endorse or promote products derived from\n   this software without specific prior written permission.\n\nTHIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS \"AS IS\"\nAND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE\nIMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE\nDISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE\nFOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL\nDAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR\nSERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER\nCAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,\nOR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE\nOF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.\n"
+      },
+      "source": "https://raw.githubusercontent.com/nch-igm/rna-stability/master/LICENSE",
+      "technique": "file_exploration"
+    }
+  ],
+  "name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "rna-stability"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "owner": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Organization",
+        "value": "nch-igm"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "programming_languages": [
+    {
+      "confidence": 1,
+      "result": {
+        "name": "HTML",
+        "size": 5787539,
+        "type": "Programming_language",
+        "value": "HTML"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Scala",
+        "size": 108642,
+        "type": "Programming_language",
+        "value": "Scala"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Jupyter Notebook",
+        "size": 59925,
+        "type": "Programming_language",
+        "value": "Jupyter Notebook"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Java",
+        "size": 10516,
+        "type": "Programming_language",
+        "value": "Java"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Shell",
+        "size": 1043,
+        "type": "Programming_language",
+        "value": "Shell"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "readme_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/nch-igm/rna-stability/master/README.md"
+      },
+      "technique": "file_exploration"
+    }
+  ],
+  "somef_missing_categories": [
+    "citation",
+    "acknowledgement",
+    "run",
+    "download",
+    "requirements",
+    "contact",
+    "contributors",
+    "documentation",
+    "usage",
+    "faq",
+    "support",
+    "identifier",
+    "has_build_file"
+  ],
+  "somef_provenance": {
+    "date": "2024-10-06 08:25:53",
+    "somef_schema_version": "1.0.0",
+    "somef_version": "0.9.5"
+  },
+  "stargazers_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 6
+      },
+      "technique": "GitHub_API"
+    }
+  ]
+}

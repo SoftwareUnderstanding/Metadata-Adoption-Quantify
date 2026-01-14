@@ -1,0 +1,511 @@
+{
+  "application_domain": [
+    {
+      "confidence": 9.44,
+      "result": {
+        "type": "String",
+        "value": "Computer Vision"
+      },
+      "technique": "supervised_classification"
+    }
+  ],
+  "code_repository": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/MRCIEU/GLU"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_created": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2018-11-25T10:41:26Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_updated": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2023-04-17T07:57:42Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "description": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "A tool for analysing continuous glucose monitoring (CGM) data in epidemiology. "
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "6. Description of GLU QC",
+        "parent_header": [
+          "GLU: A tool for analysing continuously measured glucose in epidemiology"
+        ],
+        "type": "Text_excerpt",
+        "value": "We remove all rows without either a sensor glucose value or an event (meal/exercise/medication). We resample to 1 minute epochs.\n\n1. Outlier detection\n\nOutlier detection is performed as follows:\n- Calculate the difference of each SG value from the previous and next values in the SG trace.\n- Calculate the SD of the distribution of these differences\n- Identify time points where these differences are > 4SD from the mean difference; these are potential outliers that should be checked.\n\n\n2. Dealing with missing data\n\nThe `freq' argument can be used to specify the epoch frequency (interval between adjacent timepoints) in the CGM data.\n\nA day is included if there are `1440/freq' SG values, as this means that there are no missing SG values.\nThe derived variables below are only calculated using the included days.\n\nThe `impute' argument can be used to impute missing blocks in the CGM data, using an `approximal' imputation approach (see GLU paper for more information).\n\n\n3. Manual review\n\nWe recommend that researchers visually review each participant's data.\nGLU outputs CGM trace plots and Poincare plots to do this, and examples can be found in the `examples` subdirectory.\n\n"
+      },
+      "source": "https://raw.githubusercontent.com/MRCIEU/GLU/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "4. Description of GLU derived variables",
+        "parent_header": [
+          "GLU: A tool for analysing continuously measured glucose in epidemiology"
+        ],
+        "type": "Text_excerpt",
+        "value": "\n1. Median absolute deviation (MAD)\n\nThe median of the absolute difference of each sensor glucose value from the median sensor glucose value.\n\nWe calculate this for each day and then calculate the mean across all days, and across all nighttime and daytime periods, respectively.\n\n\n2. AUC, per minute for each valid day, and mean across all valid days\n - The AUC of the SG values\n - Trapezoid method (linear interpolation between the discrete glucose measurements) as described [here](https://www.boomer.org/c/php/pk0204a.php).\n\n We calculate this for each day and then calculate the mean across all days, and across all nighttime and daytime periods, respectively.\n\n3. Proportion of time spent in low, normal and high SG ranges, per valid day and mean across all valid days\n\nDifferent thresholds are appropriate for pregnant women versus the general population.\n\nPregnancy thresholds: low<3.5 mmol/l, 3.5<=normal<=7.8 mmol/l, high >7.8 mmol/l.\nGeneral population thresholds: hypoglycemia<3.9 mmol/l, 3.9<=normal<10.0 mmol/l, hyperglycemia>= 10.0 mmol/l.\n\nTo calculate these proportions we linearly interpolate between adjacent SG values to calculate the proportion of time within each range.\n\nThe following pseudocode (for pregnancy thresholds) demonstrates the process we use.\n\n ```\n lowT=3.5 # threshold value between low and normal ranges\n highT=7.8 # threshold value between normal and high ranges\n INIT lowTime=0; normalTime=0; highTime=0;\n SGmin=min(SG(i), SG(i+1))\n SGmax=max(SG(i), SG(i+1))\n\n # both SGmin and SGmax are in same range (either low, normal or high)\n IF SGmin<lowT & SGmax<lowT THEN lowTime+=T(i+1)-T(i); # both in low range\n ELSE IF SGmin>=lowT & SGmin<=highT & ISIGmax>=lowT & SGmax<=7.8 THEN normalTime+= T(i+1)-T(i); # both in normal range\n ELSE IF SGmin>highT & SGmax>highT THEN highTime+= T(i+1)-T(i); # both in high range\n\n ELSE IF SGmin<lowT THEN # SGmin value is in low range and SGmax is in either mid or high range\n\tlowTime+=(T(i+1)-T(i))*(lowT-SGmin)/(SGmax-SGmin)\n\tIF SGmax<=highT THEN \n\t\tnormalTime+=(T(i+1)-T(i))*(SGmax-lowT)/(SGmax-SGmin)\n\tELSE\n\t\tnormalTime+=(T(i+1)-T(i))*(highT-lowT)/(SGmax-SGmin)\n\t\thighTime+=(T(i+1)-T(i))*(SGmax-highT)/(SGmax-SGmin)\n\n ELSE IF SGmin<=highT THEN # ISIG values are in normal and high ranges resp.\n\tnormalTime+=(T(i+1)-T(i))*(highT-SGmin)/(SGmax-SGmin)\n\thighTime+=(T(i+1)-T(i))*(SGmax-highT)/(SGmax-SGmin)\n\n RETURN lowTime, normalTime, highTime\n ```\n\n where `i` is the index along the SG sequence, `T(i)` is the actual time at position `i`.\n\n We calculate this for each day and then calculate the mean across all days, and across all night-time and day-time periods, respectively.\n\n\n4. Standardised glycaemic variability percentage (sGVP), per included day and mean across all included days\n\n\nIntuitively, sGVP is based on the length of the line of the glucose trace. \nGVP is the length of the line relative to the length of a completely flat glucose trace. \nA trace with no variability has GVP=0, and the more variability (both in amplitude and undulations) from a flat trace, the higher the GVP value.\nThe sGVP measure is the GVP calculated using a standardised glucose trace, to reflect the degree a trace undulates.\nStandardisation is performed as:\n\n``` \n(SG - median(SG))/MAD\n```\n\n\nWe calculate this for each day and then calculate the mean across all days, and across all night-time and day-time periods, respectively.\n\n\n5. Nocturnal Glucose\n\nThe lowest mean 30 minute consecutive period during the night-time.\n\n\n6. Meal time to peak\n\nThe number of minutes from the meal to the next peak SG.\n\nIn the simple case the peak is the nearest subsequent time t, after the meal where SG(t-1) < SG(t) > SG(t+1).\n\nIn the case where the peak is on a plateau, then (i.e. there are multiple timepoints on the peak with the same peak value) \nthen we define the peak time point as the nearest time point to the meal on this plateau.\n\n\n7. Post-event AUC\n\nAn event is either eating, exercise or medication.\n\nPost-event AUC can be either 1-hour or 2-hour. E.g. 1-hr postprandial AUC, 1-hr post-exercise AUC, 1-hr post-medication AUC etc.\n\nThe `n`-hr post-event AUC is the mean of the SG values during the 15 minute period occuring `n` hrs after the event.\n\n\n\n"
+      },
+      "source": "https://raw.githubusercontent.com/MRCIEU/GLU/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 0.9426319394921082,
+      "result": {
+        "original_header": "GLU: A tool for analysing continuously measured glucose in epidemiology",
+        "type": "Text_excerpt",
+        "value": "GLU is described in the paper:\nL.A.C. Millard et al. GLU: A tool for analysing continuously measured glucose in epidemiology, bioRxiv, 2018 \n"
+      },
+      "source": "https://raw.githubusercontent.com/MRCIEU/GLU/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9017953602868257,
+      "result": {
+        "original_header": "1. Overview",
+        "type": "Text_excerpt",
+        "value": "GLU takes continuous glucose monitoring (CGM) data as input, and derives a set of characteristics describing these data: \n1. Median absolute deviation (MAD)\n2. Area under the curve (AUC)\n3. Proportion of time spent in low, normal and high values\n4. Standardised glycaemic variability percentage (sGVP)\n5. Fasting proxy\n6. Meal statistics:\n    1. Time to peak\n    2. 1-hour postprandial AUC\n    3. 2-hour postprandial AUC\n7. Medication statistics\n    1. 1-hour postprandial AUC\n    2. 2-hour postprandial AUC\n8. Exercise statistics\n    1. 1-hour postprandial AUC\n    2. 2-hour postprandial AUC \n\nGLU supports CGM data from three devices specifically: \n"
+      },
+      "source": "https://raw.githubusercontent.com/MRCIEU/GLU/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9161594156097588,
+      "result": {
+        "original_header": "5. Generic data format",
+        "type": "Text_excerpt",
+        "value": "If using GLU with CGM data from other devices, you can convert your data to a CSV (comma seperated values) file with the following columns, and then specify the device as 'other' using the `device` argument. \n\nNB: If you are using a common format not currently supported by GLU, you can send us some example data and we can add preprocessing for this format to the GLU tool. \n"
+      },
+      "source": "https://raw.githubusercontent.com/MRCIEU/GLU/master/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "download_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/MRCIEU/GLU/releases"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 8
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/MRCIEU/GLU/forks"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "MRCIEU/GLU"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_title": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "GLU: A tool for analysing continuously measured glucose in epidemiology"
+      },
+      "source": "https://raw.githubusercontent.com/MRCIEU/GLU/master/README.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "installation": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "3. Installing GLU",
+        "parent_header": [
+          "GLU: A tool for analysing continuously measured glucose in epidemiology"
+        ],
+        "type": "Text_excerpt",
+        "value": "The package can be installed within R directly from GitHub. \nTo do this you will need `devtools`:\n\n```\ninstall.packages('devtools')\n```\n\nAfter installing `devtools` you will be able to install GLU:\n\n```\nlibrary(devtools)\ninstall_github(\"MRCIEU/GLU\")\n```\n\nTo update GLU to the latest version, rerun the `install_github` command.\n\n"
+      },
+      "source": "https://raw.githubusercontent.com/MRCIEU/GLU/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 0.942097391219086,
+      "result": {
+        "original_header": "1. Overview",
+        "type": "Text_excerpt",
+        "value": "- Medtronic iPro2\n- Abbott Freestyle libre\n- Dexcom G2\n- A device non-specific generic format (see below) \n"
+      },
+      "source": "https://raw.githubusercontent.com/MRCIEU/GLU/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.8742335487831904,
+      "result": {
+        "original_header": "5. Generic data format",
+        "type": "Text_excerpt",
+        "value": "If using GLU with CGM data from other devices, you can convert your data to a CSV (comma seperated values) file with the following columns, and then specify the device as 'other' using the `device` argument. \nRequired columns: \n\nOptional columns: \nColumn | Description\n-------|--------\nmeal         | Optional column, which if not blank indicates a meal timepoint.\nexercise     | Optional column, which if not blank indicates a exercise timepoint.\nmedication   | Optional column, which if not blank indicates a medication timepoint.\nbgReading    | Blood glucose levels. \n"
+      },
+      "source": "https://raw.githubusercontent.com/MRCIEU/GLU/master/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "issue_tracker": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/MRCIEU/GLU/issues"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "keywords": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": ""
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "license": [
+    {
+      "confidence": 1,
+      "result": {
+        "name": "MIT License",
+        "spdx_id": "MIT",
+        "type": "License",
+        "url": "https://api.github.com/licenses/mit",
+        "value": "https://api.github.com/licenses/mit"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "File_dump",
+        "value": "The MIT License (MIT)\n\nCopyright (c) 2018 Louise AC Millard, MRC Integrative Epidemiology Unit, University of Bristol\n\nPermission is hereby granted, free of charge, to any person obtaining a copy of this software and associated \ndocumentation files (the \"Software\"), to deal in the Software without restriction, including without \nlimitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of \nthe Software, and to permit persons to whom the Software is furnished to do so, subject to the following \nconditions:\n\nThe above copyright notice and this permission notice shall be included in all copies or substantial portions \nof the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED \nTO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL \nTHE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF \nCONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER \nDEALINGS IN THE SOFTWARE.\n\n"
+      },
+      "source": "https://raw.githubusercontent.com/MRCIEU/GLU/master/LICENCE",
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "2. License",
+        "parent_header": [
+          "GLU: A tool for analysing continuously measured glucose in epidemiology"
+        ],
+        "type": "Text_excerpt",
+        "value": "This project is licensed under The MIT License.\n"
+      },
+      "source": "https://raw.githubusercontent.com/MRCIEU/GLU/master/README.md",
+      "technique": "header_analysis"
+    }
+  ],
+  "name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "GLU"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "owner": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Organization",
+        "value": "MRCIEU"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "programming_languages": [
+    {
+      "confidence": 1,
+      "result": {
+        "name": "R",
+        "size": 167196,
+        "type": "Programming_language",
+        "value": "R"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Shell",
+        "size": 298,
+        "type": "Programming_language",
+        "value": "Shell"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Makefile",
+        "size": 36,
+        "type": "Programming_language",
+        "value": "Makefile"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "readme_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/MRCIEU/GLU/master/README.md"
+      },
+      "technique": "file_exploration"
+    }
+  ],
+  "run": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "4. Running GLU within R",
+        "parent_header": [
+          "GLU: A tool for analysing continuously measured glucose in epidemiology"
+        ],
+        "type": "Text_excerpt",
+        "value": "There are two main functions in GLU: `runGLUForFiles` and `runGLUForDirectory`, that run GLU for either a specific set of files, or for all files in a particular directory.\nBoth these functions take an `indir` compulsory argument that specifies the directory containing the CGM data files.\nThe `runGLUForFiles` has an additional `files` compulsory argument, for providing the names of files that should be processed.\nThe compulsory and optional arguments are as follows.\n"
+      },
+      "source": "https://raw.githubusercontent.com/MRCIEU/GLU/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Compulsory arguments",
+        "parent_header": [
+          "GLU: A tool for analysing continuously measured glucose in epidemiology",
+          "4. Running GLU within R"
+        ],
+        "type": "Text_excerpt",
+        "value": "Arg | Description\n-------|--------\nindir   | Directory where processed CGM data files (i.e. output from step 1) are stored.\nfiles   |  List of file names to be processed by GLU, where these files reside in the indir directory (required only for the `runGLUForFiles` function).\n\n"
+      },
+      "source": "https://raw.githubusercontent.com/MRCIEU/GLU/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Optional arguments",
+        "parent_header": [
+          "GLU: A tool for analysing continuously measured glucose in epidemiology",
+          "4. Running GLU within R"
+        ],
+        "type": "Text_excerpt",
+        "value": "Arg | Description\n-------|--------\npregnancy       | Set to `TRUE` to use pregnancy thresholds for proportion of time spent in low, normal and high summary variables.\ndiabetes\t| Set to `TRUE` to use diabetes thresholds for proportion of time spent in low, normal and high summary variables.\noutdir  | Directory where derived CGM characteristics data files should be stored. Default is `indir`.\nnightstart      | Time night period starts (HH:MM). Default is 23:00.\ndaystart        | Time day period starts (HH:MM). Default is 06:30.\ndayPeriodStartTime\t| Day period start time (HH:MM). Default is `nightstart`.\nfirstvalid\t| Use hour and minutes of the first valid glucose time points as the day period start time.\nsave    |       Set to `TRUE` to save derived (resampled) CGM data.\nsaveevents\t| Save summary variables of each individual event, rather than just the averages for each day and across days.\nfreq    |       Frequency between time points in CGM data (minutes). Default is 5 minutes.\nimputeApproximal  |       Use approximal imputation method (see paper).\nimputeOther\t| Use other day imputation method (see paper).\nhypothreshold   | Threshold between hypoglycaemia and euglycemia, to overide the defaults\nhyperthreshold  | Threshold between euglycemia and hyperglycaemia, to overide the defaults\ntimeformat      | Time format in CGM data. Default='%d/%m/%y %H:%M:%S' (format for Medtronic ipro2 data).\noutlierthreshold | Value k used for outlier detection threshold `d=k*SD`.\ndevice  | Medtronic iPro2=0; Dexcom G2=1; Abbott Freestyle Libre=2; other(general format as above)=3.\n\n\nFor example, to run GLU for all files in a directory, where the CGM data is from Abbott Freestyle Libre, that records glucose values every 15 minutes, we can you a command like this one:\n\n```\nlibrary('GLU')\nrunGLUForDirectory(indir='/path/to/in/dir/', outdir='/path/to/out/dir', device=2, freq=15)\n```\n\nTo then use approximal imputation rather than the 'complete days' approach, we can add the `impute` argument:\n\n```\nlibrary('GLU')\nrunGLUForDirectory(indir='/path/to/in/dir/', outdir='/path/to/out/dir', device=2, freq=15, impute=TRUE)\n```\n\nIf you would like to run GLU for all files in a directory then use the `runGLUForDirectory`. The arguments are the same as above but without the `files` arguments.\n\nExample commands that run GLU on example data are provided in Section 7 below.\n\n\n"
+      },
+      "source": "https://raw.githubusercontent.com/MRCIEU/GLU/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Medtronic iPro2 data",
+        "parent_header": [
+          "GLU: A tool for analysing continuously measured glucose in epidemiology",
+          "7. Example CGM data",
+          "Running GLU within R"
+        ],
+        "type": "Text_excerpt",
+        "value": "Run GLU for all files in a directory:\n\n```\nlibrary('GLU')\ndatadir=system.file(\"extdata\", package = \"GLU\")\nrunGLUForDirectory(indir=paste0(datadir,'/medtronic-ipro2/original/'), outdir=paste0(datadir,'/medtronic-ipro2/derived/'), save=TRUE, saveevents=TRUE)\n```\n\nRun GLU for a specific file by specifying this file:\n\n```\nlibrary('GLU')\ndatadir=system.file(\"extdata\", package = \"GLU\")\nrunGLUForFiles(files='data_export-999998.csv', indir=paste0(datadir,'/medtronic-ipro2/original/'), outdir=paste0(datadir,'/medtronic-ipro2/derived/'))\n```\n"
+      },
+      "source": "https://raw.githubusercontent.com/MRCIEU/GLU/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Abbott Freestyle Libre",
+        "parent_header": [
+          "GLU: A tool for analysing continuously measured glucose in epidemiology",
+          "7. Example CGM data",
+          "Running GLU within R"
+        ],
+        "type": "Text_excerpt",
+        "value": "```\nlibrary('GLU')\ndatadir=system.file(\"extdata\", package = \"GLU\")\nrunGLUForDirectory(indir=paste0(datadir, '/freestyle-libre/original/'), outdir=paste0(datadir,'/freestyle-libre/derived/'), device=2, imputeApproximal=TRUE, freq=15, nightstart='00:00')\n```\n"
+      },
+      "source": "https://raw.githubusercontent.com/MRCIEU/GLU/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Dexcom g6",
+        "parent_header": [
+          "GLU: A tool for analysing continuously measured glucose in epidemiology",
+          "7. Example CGM data",
+          "Running GLU within R"
+        ],
+        "type": "Text_excerpt",
+        "value": "```\nlibrary('GLU')\ndatadir=system.file(\"extdata\", package = \"GLU\")\nrunGLUForDirectory(indir=paste0(datadir,'/dexcom-g6/original/'), outdir=paste0(datadir,'/dexcom-g6/derived/'), device=1, nightstart='16:00', imputeOther=TRUE)\n```\n\n"
+      },
+      "source": "https://raw.githubusercontent.com/MRCIEU/GLU/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "8. Running GLU on the command line",
+        "parent_header": [
+          "GLU: A tool for analysing continuously measured glucose in epidemiology"
+        ],
+        "type": "Text_excerpt",
+        "value": "GLU can also be directly from the command line, using the run.R script.\n\nFor example, to process both example Medtronic Ipro2 data files:\n```bash\nRscript run.R --indir=\"/path/to/in/dir/\" --outdir=\"/path/to/out/dir/\"\n```\n\nTo process a specific CGM data file, specify the filename argument:\n```bash\nRscript run.R --indir=\"/path/to/in/dir/\"  --outdir=\"/path/to/out/dir/\" --filename=\"infile.csv\"\n```\n\nSee all the arguments available by calling `run.R` with no arguments:\n\n```bash\nRscript run.R\n```\n"
+      },
+      "source": "https://raw.githubusercontent.com/MRCIEU/GLU/master/README.md",
+      "technique": "header_analysis"
+    }
+  ],
+  "somef_missing_categories": [
+    "citation",
+    "acknowledgement",
+    "download",
+    "requirements",
+    "contact",
+    "contributors",
+    "documentation",
+    "faq",
+    "support",
+    "identifier",
+    "has_build_file",
+    "executable_example"
+  ],
+  "somef_provenance": {
+    "date": "2024-10-06 16:36:09",
+    "somef_schema_version": "1.0.0",
+    "somef_version": "0.9.5"
+  },
+  "stargazers_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 10
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "type": [
+    {
+      "confidence": 0.82,
+      "result": {
+        "type": "String",
+        "value": "commandline-application"
+      },
+      "technique": "software_type_heuristics"
+    }
+  ],
+  "usage": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "7. Example CGM data",
+        "parent_header": [
+          "GLU: A tool for analysing continuously measured glucose in epidemiology"
+        ],
+        "type": "Text_excerpt",
+        "value": "To try the tool with example data use the following commands.\n"
+      },
+      "source": "https://raw.githubusercontent.com/MRCIEU/GLU/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Medtronic iPro2 data",
+        "parent_header": [
+          "GLU: A tool for analysing continuously measured glucose in epidemiology",
+          "7. Example CGM data",
+          "Running GLU within R"
+        ],
+        "type": "Text_excerpt",
+        "value": "Run GLU for all files in a directory:\n\n```\nlibrary('GLU')\ndatadir=system.file(\"extdata\", package = \"GLU\")\nrunGLUForDirectory(indir=paste0(datadir,'/medtronic-ipro2/original/'), outdir=paste0(datadir,'/medtronic-ipro2/derived/'), save=TRUE, saveevents=TRUE)\n```\n\nRun GLU for a specific file by specifying this file:\n\n```\nlibrary('GLU')\ndatadir=system.file(\"extdata\", package = \"GLU\")\nrunGLUForFiles(files='data_export-999998.csv', indir=paste0(datadir,'/medtronic-ipro2/original/'), outdir=paste0(datadir,'/medtronic-ipro2/derived/'))\n```\n"
+      },
+      "source": "https://raw.githubusercontent.com/MRCIEU/GLU/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Abbott Freestyle Libre",
+        "parent_header": [
+          "GLU: A tool for analysing continuously measured glucose in epidemiology",
+          "7. Example CGM data",
+          "Running GLU within R"
+        ],
+        "type": "Text_excerpt",
+        "value": "```\nlibrary('GLU')\ndatadir=system.file(\"extdata\", package = \"GLU\")\nrunGLUForDirectory(indir=paste0(datadir, '/freestyle-libre/original/'), outdir=paste0(datadir,'/freestyle-libre/derived/'), device=2, imputeApproximal=TRUE, freq=15, nightstart='00:00')\n```\n"
+      },
+      "source": "https://raw.githubusercontent.com/MRCIEU/GLU/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Dexcom g6",
+        "parent_header": [
+          "GLU: A tool for analysing continuously measured glucose in epidemiology",
+          "7. Example CGM data",
+          "Running GLU within R"
+        ],
+        "type": "Text_excerpt",
+        "value": "```\nlibrary('GLU')\ndatadir=system.file(\"extdata\", package = \"GLU\")\nrunGLUForDirectory(indir=paste0(datadir,'/dexcom-g6/original/'), outdir=paste0(datadir,'/dexcom-g6/derived/'), device=1, nightstart='16:00', imputeOther=TRUE)\n```\n\n"
+      },
+      "source": "https://raw.githubusercontent.com/MRCIEU/GLU/master/README.md",
+      "technique": "header_analysis"
+    }
+  ]
+}

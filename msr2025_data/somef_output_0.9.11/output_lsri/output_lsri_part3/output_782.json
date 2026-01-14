@@ -1,0 +1,474 @@
+{
+  "citation": [
+    {
+      "confidence": 1,
+      "result": {
+        "format": "bibtex",
+        "type": "File_dump",
+        "value": "bibentry(\n    bibtype = \"article\",\n    author = c(\n        person(\"Massimo\", \"Andreatta\"),\n        person(c(\"Ariel\", \"J.\"), \"Berenstein\"),\n        person(c(\"Santiago\", \"J.\"), \"Carmona\")),\n    title=\"scGate: marker-based purification of cell types from heterogeneous single-cell RNA-seq datasets\",\n    journal=\" Bioinformatics\",\n    year=\"2022\",\n    volume=\"38\",\n    pages=\"2642-2644\"\n)"
+      },
+      "source": "https://raw.githubusercontent.com/carmonalab/scGate/master/inst/CITATION",
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "References",
+        "parent_header": [
+          "scGate: marker-based purification of cell types from heterogeneous single-cell RNA-seq datasets"
+        ],
+        "type": "Text_excerpt",
+        "value": "Massimo Andreatta, Ariel J Berenstein, Santiago J Carmona, scGate: marker-based purification of cell types from heterogeneous single-cell RNA-seq datasets, Bioinformatics, Volume 38, Issue 9, 1 May 2022, Pages 2642\u20132644, https://doi.org/10.1093/bioinformatics/btac141\n\n<p align=\"center\">\n  <img height=\"80\" src=\"inst/RSticker_SCGATE.png\">\n</p>\n"
+      },
+      "source": "https://raw.githubusercontent.com/carmonalab/scGate/master/README.md",
+      "technique": "header_analysis"
+    }
+  ],
+  "code_repository": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/carmonalab/scGate"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_created": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2021-08-11T13:32:23Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_updated": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2024-09-07T03:26:26Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "description": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "marker-based purification of cell types from single-cell RNA-seq datasets"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 0.9934536158815557,
+      "result": {
+        "original_header": "scGate: marker-based purification of cell types from heterogeneous single-cell RNA-seq datasets",
+        "type": "Text_excerpt",
+        "value": "**scGate** is an R package that automatizes the typical manual marker-based approach to cell type annotation, to enable accurate and intuitive purification of a cell population of interest from a complex scRNA-seq dataset, **without requiring reference gene expression profiles or training data**. **scGate** works with any scRNA-seq technology and with other single-cell modalities. \n**scGate** builds upon [UCell](https://github.com/carmonalab/UCell) for robust single-cell signature scoring and [Seurat](https://github.com/satijalab/seurat/), a comprehensive and powerful framework for single-cell omics analysis. \nBriefly, **scGate** takes as input: *i)* a gene expression matrix stored in a Seurat object and *ii)* a \u201cgating model\u201d (GM), consisting of a set of marker genes that define the cell population of interest. The GM can be as simple as a single marker gene, or a combination of positive and negative markers. More complex GMs can be constructed in a hierarchical fashion, akin to gating strategies employed in flow cytometry.  \n**scGate** evaluates the strength of signature marker expression in each cell using the rank-based method UCell, and then performs k-nearest neighbor (kNN) smoothing by calculating the mean UCell score across neighboring cells. kNN-smoothing aims at compensating for the large degree of sparsity in scRNA-seq data. Finally, a universal threshold over kNN-smoothed signature scores is applied in binary decision trees generated from the user-provided gating model, to annotate cells as either \u201cpure\u201d or \u201cimpure\u201d, with respect to the cell population of interest. \n"
+      },
+      "source": "https://raw.githubusercontent.com/carmonalab/scGate/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9900833646918183,
+      "result": {
+        "original_header": "Testing the package",
+        "type": "Text_excerpt",
+        "value": "Use **scGate** to purify a cell population of interest using manually defined marker genes\n```r\nlibrary(scGate)\n\n#Get a test scRNA-seq dataset (as a list of Seurat objects)\nsample.data.seurat.list <- scGate::get_testing_data()\n\nseurat_object <- sample.data.seurat.list$Satija\n\n#Manually define a simple scGate gating model to purify eg. Natural Killer (NK) cells, using a positive marker KLRD1 and negative marker CD3D\nmy_scGate_model <- gating_model(name = \"NK\", signature = c(\"KLRD1\",\"CD3D-\"))  \n\n#scGate it!\nseurat_object <- scGate(data = seurat_object, model = my_scGate_model)\n\n#Use Seurat to visualize \"Pure\" and \"Impure\" cells\nDimPlot(seurat_object, group.by = \"is.pure\")\n\n#Use Seurat to subset pure cells\nseurat_object_purified <- subset(seurat_object, subset = `is.pure` == \"Pure\" )\n```\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/carmonalab/scGate/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9612734992920444,
+      "result": {
+        "original_header": "Pre-defined Gating Models",
+        "type": "Text_excerpt",
+        "value": "A database of gating models for scGate is available on [scGate_models](https://github.com/carmonalab/scGate_models) and can be loaded using `get_scGateDB()`\n```r\n#Get scGate database of pre-defined gating models\nscGate_models_DB <- get_scGateDB()\n\n#For example, filter abT cells using one of scGate pre-defined gating models\nseurat_object <- scGate(seurat_object, model = scGate_models_DB$human$generic$Tcell.alphabeta)\n\nDimPlot(seurat_object)\n```\nThe first time you run `get_scGateDB()`  the database will be downloaded from the repository. On successive calls it will load your local version of the DB. \nYou may manually edit the available models (eg in Excel) or create new models for your cell type of interest. You can then load your custom model into R using:\n```r\nmy_scGate_model <- load_scGate_model(\"path_to_my.model\")\n``` \n"
+      },
+      "source": "https://raw.githubusercontent.com/carmonalab/scGate/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9528635212497738,
+      "result": {
+        "original_header": "scGate as a multi-class classifier",
+        "type": "Text_excerpt",
+        "value": "**scGate** can also be used a cell type classifier, to annotate multiple cell types in a dataset. To annotate a dataset with marker-based cell type definitions, simply provide a list of models to **scGate**, e.g.:\n```r\nmodels.list <- scGate_models_DB$human$generic[c(\"Bcell\",\"MoMacDC\",\"CD8T\",\"CD4T\",\"Erythrocyte\")]\nobj <- scGate(obj, model = models.list)\n```\n \nSee examples of **scGate** as a classifier at: [scGate multi-class](https://carmonalab.github.io/scGate.demo/#scgate-as-a-multi-class-classifier) and [scGate on integrated objects](https://carmonalab.github.io/scGate.demo/scGate.integrated.html) \n"
+      },
+      "source": "https://raw.githubusercontent.com/carmonalab/scGate/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.8498611188941653,
+      "result": {
+        "original_header": "Other single-cell modalities",
+        "type": "Text_excerpt",
+        "value": "**scGate** can be applied to modalities other than RNA-seq, such as ATAC-seq ([scATAC-seq demo](https://carmonalab.github.io/scGate.demo/scGate.ATAC-seq.html)) and antibody-derived tags (ADT) ([CITE-seq demo](https://carmonalab.github.io/scGate.demo/scGate.CITE-seq.html)).\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/carmonalab/scGate/master/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "download_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/carmonalab/scGate/releases"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 12
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/carmonalab/scGate/forks"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "carmonalab/scGate"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_title": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "scGate: marker-based purification of cell types from heterogeneous single-cell RNA-seq datasets"
+      },
+      "source": "https://raw.githubusercontent.com/carmonalab/scGate/master/README.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "images": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/carmonalab/scGate/master/inst/RSticker_SCGATE.png"
+      },
+      "source": "https://raw.githubusercontent.com/carmonalab/scGate/master/README.md",
+      "technique": "regular_expression"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/carmonalab/scGate/master/inst/RSticker_SCGATE.png"
+      },
+      "source": "https://raw.githubusercontent.com/carmonalab/scGate/master/README.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "installation": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Installation",
+        "parent_header": [
+          "scGate: marker-based purification of cell types from heterogeneous single-cell RNA-seq datasets"
+        ],
+        "type": "Text_excerpt",
+        "value": "Install **scGate** from [CRAN](https://cran.r-project.org/web/packages/scGate/index.html)\n```r\ninstall.packages(\"scGate\")\n```\n\nFor older versions of **scGate**, download a tagged version from GitHub:\n```r\nlibrary(remotes)\nremotes::install_github(\"carmonalab/scGate\", ref=\"v1.6.2\")\n```\n"
+      },
+      "source": "https://raw.githubusercontent.com/carmonalab/scGate/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 0.9420651159458392,
+      "result": {
+        "original_header": "Pre-defined Gating Models",
+        "type": "Text_excerpt",
+        "value": "You can use the `plot_tree` function to visualize the hierarchical structure of one of the models (requires [ggparty](https://cran.r-project.org/package=ggparty)).\n```r\ninstall.packages(\"ggparty\")\nscGate::plot_tree(scGate_models_DB$human$generic$Tcell.alphabeta)\n```\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/carmonalab/scGate/master/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "issue_tracker": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/carmonalab/scGate/issues"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "keywords": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "filtering, marker-genes, scgate, signatures, single-cell"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "logo": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/carmonalab/scGate.demo/master/docs/scGate_example.png?raw=true"
+      },
+      "source": "https://raw.githubusercontent.com/carmonalab/scGate/master/README.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "scGate"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "owner": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Organization",
+        "value": "carmonalab"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "programming_languages": [
+    {
+      "confidence": 1,
+      "result": {
+        "name": "R",
+        "size": 56406,
+        "type": "Programming_language",
+        "value": "R"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "HTML",
+        "size": 5927,
+        "type": "Programming_language",
+        "value": "HTML"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "readme_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/carmonalab/scGate/master/README.md"
+      },
+      "technique": "file_exploration"
+    }
+  ],
+  "releases": [
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "mass-a",
+          "type": "User"
+        },
+        "date_created": "2024-04-23T08:23:06Z",
+        "date_published": "2024-05-13T07:58:37Z",
+        "description": "New in this version:\r\n* Enable parallelization over a list of scGate models (in multi-classifier mode)\r\n* Fix bug on parallelization when specifying BPPARAM\r\n* Added cell ontology links for controlled cell type dictionary\r\n* Update accessor functions to improve compatibility with Seurat v5\r\n\r\n",
+        "html_url": "https://github.com/carmonalab/scGate/releases/tag/v1.6.2",
+        "name": "scGate version 1.6.2",
+        "release_id": 155453807,
+        "tag": "v1.6.2",
+        "tarball_url": "https://api.github.com/repos/carmonalab/scGate/tarball/v1.6.2",
+        "type": "Release",
+        "url": "https://api.github.com/repos/carmonalab/scGate/releases/155453807",
+        "value": "https://api.github.com/repos/carmonalab/scGate/releases/155453807",
+        "zipball_url": "https://api.github.com/repos/carmonalab/scGate/zipball/v1.6.2"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "mass-a",
+          "type": "User"
+        },
+        "date_created": "2023-11-06T13:35:00Z",
+        "date_published": "2023-11-27T12:01:59Z",
+        "description": "New in this version:\r\n* Addresses compatibility with Assay5 Seurat assays.\r\n* Enables parallelization over a list of models, in multi-classifier mode (see `BPPARAM`)\r\n* Uses new implementation of `UCell::SmoothKNN()` to smooth signature scores between neighboring cells. Neighbor cells are weighted by $(1-smooth.decay)^n$, where n is the n-th neighbor in PCA space, and `smooth.decay` is a parameter between 0 and 1.\r\n",
+        "html_url": "https://github.com/carmonalab/scGate/releases/tag/v1.6.0",
+        "name": "scGate version 1.6",
+        "release_id": 131537695,
+        "tag": "v1.6.0",
+        "tarball_url": "https://api.github.com/repos/carmonalab/scGate/tarball/v1.6.0",
+        "type": "Release",
+        "url": "https://api.github.com/repos/carmonalab/scGate/releases/131537695",
+        "value": "https://api.github.com/repos/carmonalab/scGate/releases/131537695",
+        "zipball_url": "https://api.github.com/repos/carmonalab/scGate/zipball/v1.6.0"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "mass-a",
+          "type": "User"
+        },
+        "date_created": "2022-12-21T09:25:02Z",
+        "date_published": "2022-12-21T09:34:21Z",
+        "description": "New in this version:\r\n* scGate is now on [CRAN](https://cran.r-project.org/web/packages/scGate/index.html)! it can be installed using `install.packages(\"scGate\")`\r\n* The function `get_scGateDB()` now writes to `tempdir()` by default. To recover the behavior of previous versions, set `destination=\"./scGateDB\"` or to some other local directory\r\n* Log out fraction of \"Pure\" cells instead of \"Impure\" cells\r\n* Fixed bug on kNN smoothing with too few remaining cells\r\n* Improved documentation and examples",
+        "html_url": "https://github.com/carmonalab/scGate/releases/tag/v1.4.1",
+        "name": "scGate version 1.4",
+        "release_id": 86761332,
+        "tag": "v1.4.1",
+        "tarball_url": "https://api.github.com/repos/carmonalab/scGate/tarball/v1.4.1",
+        "type": "Release",
+        "url": "https://api.github.com/repos/carmonalab/scGate/releases/86761332",
+        "value": "https://api.github.com/repos/carmonalab/scGate/releases/86761332",
+        "zipball_url": "https://api.github.com/repos/carmonalab/scGate/zipball/v1.4.1"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "mass-a",
+          "type": "User"
+        },
+        "date_created": "2022-07-29T13:15:11Z",
+        "date_published": "2022-07-29T14:05:36Z",
+        "description": "**New features in version 1.2.0**\r\n\r\n* Simultaneously evaluate **multiple gating models**, given as a list to `model` parameter\r\n  - Returns individual gatings as well as a combined cell type annotation from all the models (***scGate_multi*** metadata column)\r\n  - Allows running scGate as a multi-class classifier and annotate cell types in a dataset\r\n* **New `reduction` parameter**\r\n  - Allows nearest-neighbor smoothing on an existing dimensionality reduction (e.g. \"pca\" or \"harmony\")\r\n  - Can significantly speed up computation time and annotation of integrated objects\r\n* Uses Bioconductor version of [UCell](https://bioconductor.org/packages/release/bioc/html/UCell.html)",
+        "html_url": "https://github.com/carmonalab/scGate/releases/tag/v1.2.0",
+        "name": "scGate version 1.2",
+        "release_id": 73170812,
+        "tag": "v1.2.0",
+        "tarball_url": "https://api.github.com/repos/carmonalab/scGate/tarball/v1.2.0",
+        "type": "Release",
+        "url": "https://api.github.com/repos/carmonalab/scGate/releases/73170812",
+        "value": "https://api.github.com/repos/carmonalab/scGate/releases/73170812",
+        "zipball_url": "https://api.github.com/repos/carmonalab/scGate/zipball/v1.2.0"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "sjcarmona",
+          "type": "User"
+        },
+        "date_created": "2022-02-08T16:21:02Z",
+        "date_published": "2022-02-21T12:20:13Z",
+        "html_url": "https://github.com/carmonalab/scGate/releases/tag/v1.0.1",
+        "name": "Zenodo preservation and DOI citation in journal publication",
+        "release_id": 60041320,
+        "tag": "v1.0.1",
+        "tarball_url": "https://api.github.com/repos/carmonalab/scGate/tarball/v1.0.1",
+        "type": "Release",
+        "url": "https://api.github.com/repos/carmonalab/scGate/releases/60041320",
+        "value": "https://api.github.com/repos/carmonalab/scGate/releases/60041320",
+        "zipball_url": "https://api.github.com/repos/carmonalab/scGate/zipball/v1.0.1"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "mass-a",
+          "type": "User"
+        },
+        "date_created": "2021-11-03T14:26:15Z",
+        "date_published": "2021-11-03T14:27:38Z",
+        "description": "First stable release of scGate",
+        "html_url": "https://github.com/carmonalab/scGate/releases/tag/v1.0.0",
+        "name": "v1.0.0",
+        "release_id": 52601776,
+        "tag": "v1.0.0",
+        "tarball_url": "https://api.github.com/repos/carmonalab/scGate/tarball/v1.0.0",
+        "type": "Release",
+        "url": "https://api.github.com/repos/carmonalab/scGate/releases/52601776",
+        "value": "https://api.github.com/repos/carmonalab/scGate/releases/52601776",
+        "zipball_url": "https://api.github.com/repos/carmonalab/scGate/zipball/v1.0.0"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "somef_missing_categories": [
+    "acknowledgement",
+    "run",
+    "download",
+    "requirements",
+    "contact",
+    "contributors",
+    "documentation",
+    "license",
+    "faq",
+    "support",
+    "identifier",
+    "has_build_file",
+    "executable_example"
+  ],
+  "somef_provenance": {
+    "date": "2024-10-06 02:20:52",
+    "somef_schema_version": "1.0.0",
+    "somef_version": "0.9.5"
+  },
+  "stargazers_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 88
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "usage": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Demos and tutorials",
+        "parent_header": [
+          "scGate: marker-based purification of cell types from heterogeneous single-cell RNA-seq datasets"
+        ],
+        "type": "Text_excerpt",
+        "value": "Check out this [scGate demo](https://carmonalab.github.io/scGate.demo) for a reproducible analysis, construction of hierarchical gating models, tools for performance evaluation and other advanced features. More demos for running **scGate** on different single-cell modalities are available at [scGate.demo repository](https://github.com/carmonalab/scGate.demo).\n"
+      },
+      "source": "https://raw.githubusercontent.com/carmonalab/scGate/master/README.md",
+      "technique": "header_analysis"
+    }
+  ]
+}

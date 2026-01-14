@@ -1,0 +1,504 @@
+{
+  "citation": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Reference file",
+        "parent_header": [
+          "Input"
+        ],
+        "type": "Text_excerpt",
+        "value": "To perform the variant calling using GATK HaplotypeCaller requires an indexed reference sequence file ('.fa' and '.fai' format) and '.dict' format. The reference needs to be the **same** reference, which was used to align the reads.\n\n[iGenomes](https://support.illumina.com/sequencing/sequencing_software/igenome.html) provides 'Ready-To-Use' reference sequence file of various species including human, along with their annotation files.\n\nOr, you can create the annotation files by your self using samtools and Picard tools.\n```\nsamtools faidx Homo_sapiens.GRCh38.fa\n```\n```\njava -jar picard.jar CreateSequenceDictionary \\\nR=Homo_sapiens.GRCh38.fa \\\nO=Homo_sapiens.GRCh38.dict\n```\nsee more details at https://gatkforums.broadinstitute.org/gatk/discussion/1601/how-can-i-prepare-a-fasta-file-to-use-as-reference .\n"
+      },
+      "source": "https://raw.githubusercontent.com/heinc1010/BAMixChecker/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Citation",
+        "type": "Text_excerpt",
+        "value": "Chun H, Kim S. BAMixChecker: an automated checkup tool for matched sample pairs in NGS cohort. Bioinformatics. 2019\n"
+      },
+      "source": "https://raw.githubusercontent.com/heinc1010/BAMixChecker/master/README.md",
+      "technique": "header_analysis"
+    }
+  ],
+  "code_repository": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/heinc1010/BAMixChecker"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "contact": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Contact",
+        "type": "Text_excerpt",
+        "value": "If you have any question, contact to license manager (heinc1010@gmail.com) or corresponding author (swkim@yuhs.ac).\n"
+      },
+      "source": "https://raw.githubusercontent.com/heinc1010/BAMixChecker/master/README.md",
+      "technique": "header_analysis"
+    }
+  ],
+  "date_created": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2018-07-20T04:59:05Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_updated": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2024-08-03T03:22:39Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "description": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "BAMixChecker: A fast and efficient tool for sample matching checkup"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 0.9120286148273654,
+      "result": {
+        "original_header": "BAM files",
+        "type": "Text_excerpt",
+        "value": "Typically, there will be one BAM file with single sample ID, but if the input is a multiple-sample BAM file, it needs to contain the \nread group informaiton, which can be added with the Picard AddOrReplaceReadGroups tool.\n(The tool instruction is described at https://software.broadinstitute.org/gatk/documentation/tooldocs/4.0.0.0/picard_sam_AddOrReplaceReadGroups.php)\n```\njava -jar picard.jar AddOrReplaceReadGroups \\\nI=RNA_T_01.bam \\\nO=RNA_T_01.rg_added_sorted.bam \\\nSO=coordinate \\\nRGID=project \\\nRGLB=library \\\nRGPL=platform \\\nRGPU=machine \\\nRGSM=sample\n```\nAdditional recommended processing for accurate variant discovery using GATK is described at https://software.broadinstitute.org/gatk/best-practices/workflow?id=11165.\n \nAdditional proper processing for RNA-Seq data is described on GATK forum: https://gatkforums.broadinstitute.org/gatk/discussion/3891/calling-variants-in-rnaseq. \n\nTo run BAMixChecker, indicating the BAM files directory path with the -d option or a list of BAM files with the -l option is required. \n\nIf the number of files is less than 6 or the file names do not contain common pattern when it is divided by the delimiters, BAMixChecker only matches by genotype, not by file name and skips the creation of the \u2018Mismatched_sample.txt\u2019 file, similarly to what happens using the --OFFFileNameMatching option. \n"
+      },
+      "source": "https://raw.githubusercontent.com/heinc1010/BAMixChecker/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9229988264348076,
+      "result": {
+        "original_header": "SNP list for non-human organism",
+        "type": "Text_excerpt",
+        "value": "To extract only informative region, SNPs observed in a large population is required. \nIt is hard to generalize the method to select informative SNPs because annotation varies across databases. \nHowever, a mandatory annotation is minor allele frequency (MAF) in the population of the species. \nIn addition to MAF, mappability information is useful to select informative loci. \n1. Filter out uncertain variants from a list of SNP observed in the species of interest. It is recommended to filter variants using mapping quality, quality by depth condition, etc. \n3. For SNPs located in high mapping rate regions, select SNP loci with only a higher MAF. For human, we apply a global MAF (GMAF) over 0.45 and below 0.55 and a MAF over 0.35 and below 0.65 within each population. If the database does not have MAF information for the study population of interest, GMAF information can be applied. However, we recommend considering higher GMAF condition if the SNP set is too large to produce expected results. This may happen due to lack of proper annotation filtering at an earlier step. \nFor targeted sequencing dataset, the SNP set should take into consideration not only a higher MAF but also the number of SNPs. \nTo compare sample genotype, a sufficient number of SNP loci is required for samples comparison. \nFor human data, we adjusted MAF condition to contain over 200 SNPs for a dataset within the target region information from the BED file. \nEven though as few as 50 SNPs could be discriminative in RNA-Seq data with 0.45 < MAF < 0.55 and 0.35 < within population < 0.65, we recommend SNPs set to have over 200 loci as the possibility of mutation decreases by decreasing MAF. \nThese steps cannot be automated for non-human organism due to the variability inherent to every annotation database. \nThe command is as follows,\n```\n\tbedtools intersect -a SNP_LIST.BED -b TARGETED.BED | wc -l\n```\n       If the number is too small, we recommend adjusting the MAF conditional selection. \n       To reduce variants calling time, we suggest to save the intersected SNPs using the command: \nBASH2*\nAnother precaution to ensure that the contigs in the generated SNP list are the same as in the reference. \n\nAdditionally, the user can refer http://evodify.com/gatk-in-non-model-organism/ for the BAM file processing of non-human organisms.  \n"
+      },
+      "source": "https://raw.githubusercontent.com/heinc1010/BAMixChecker/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9737824315176583,
+      "result": {
+        "original_header": "Output",
+        "type": "Text_excerpt",
+        "value": "BAMixChecker reports the result of sample matching analysis in  an .html file, as heatmap in .pdf, as well as in .txt. \n"
+      },
+      "source": "https://raw.githubusercontent.com/heinc1010/BAMixChecker/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9759714408199252,
+      "result": {
+        "original_header": "1) Whole genome or Whole Exome data or RNA sequencing data",
+        "type": "Text_excerpt",
+        "value": "BAMixChecker is a fast and easy-to-use sample matching checkup tool for NGS dataset. \nIt is simple and fast but accurately detects pairs of WGS, WES, RNA, targeted sequencing BAM/CRAM files originating from the same individual. \n"
+      },
+      "source": "https://raw.githubusercontent.com/heinc1010/BAMixChecker/master/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "documentation": [
+    {
+      "confidence": 1,
+      "result": {
+        "format": "readthedocs",
+        "type": "Url",
+        "value": "https://bamixchecker.readthedocs.io/"
+      },
+      "source": "https://raw.githubusercontent.com/heinc1010/BAMixChecker/master/README.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "download_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/heinc1010/BAMixChecker/releases"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 6
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/heinc1010/BAMixChecker/forks"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "heinc1010/BAMixChecker"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_title": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": ""
+      },
+      "source": "https://raw.githubusercontent.com/heinc1010/BAMixChecker/master/README.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "has_script_file": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/heinc1010/BAMixChecker/master/tutorialData/script_example.sh"
+      },
+      "technique": "file_exploration"
+    }
+  ],
+  "identifier": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://zenodo.org/badge/latestdoi/141665408"
+      },
+      "source": "https://raw.githubusercontent.com/heinc1010/BAMixChecker/master/README.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "images": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/heinc1010/BAMixChecker/master/./Report_ex.gif"
+      },
+      "source": "https://raw.githubusercontent.com/heinc1010/BAMixChecker/master/README.md",
+      "technique": "regular_expression"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/heinc1010/BAMixChecker/master/./heatmap_ex.gif"
+      },
+      "source": "https://raw.githubusercontent.com/heinc1010/BAMixChecker/master/README.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "installation": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Installation",
+        "type": "Text_excerpt",
+        "value": "First, clone the repository\n\n```$ git clone https://github.com/heinc1010/BAMixChecker```\n\nOr\n\n\nDownload the compressed file.\n\n```$ unzip BAMixChecker-master.zip```\n\nAnd then set the tools PATH on the configuration file, \n\n```$ cd BAMixChecker\n  $ vim BAMixChecker.config\n\n  GATK=/path/of/gatk\n  BEDTOOLS=/path/of/bedtools\n\n  *default (If you added the path in $PATH, you don\u2019t need to modify the configuration file )\n  GATK=gatk\n  BEDTOOLS=bedtools\n  ```\n"
+      },
+      "source": "https://raw.githubusercontent.com/heinc1010/BAMixChecker/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 0.8479142469995061,
+      "result": {
+        "original_header": "Python 2.7",
+        "type": "Text_excerpt",
+        "value": "      \n      - numpy\n      \n      - multiprocessing \n"
+      },
+      "source": "https://raw.githubusercontent.com/heinc1010/BAMixChecker/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9993954035405578,
+      "result": {
+        "original_header": "BAM files",
+        "type": "Text_excerpt",
+        "value": "\nTo run BAMixChecker, indicating the BAM files directory path with the -d option or a list of BAM files with the -l option is required. \n"
+      },
+      "source": "https://raw.githubusercontent.com/heinc1010/BAMixChecker/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9260141835857153,
+      "result": {
+        "original_header": "SNP list for non-human organism",
+        "type": "Text_excerpt",
+        "value": "The recommended SNP loci selection steps are described below: \nThese steps cannot be automated for non-human organism due to the variability inherent to every annotation database. \nThe command is as follows,\n```\n\tbedtools intersect -a SNP_LIST.BED -b TARGETED.BED | wc -l\n```\n       If the number is too small, we recommend adjusting the MAF conditional selection. \n       To reduce variants calling time, we suggest to save the intersected SNPs using the command: \nBASH2*\nAnother precaution to ensure that the contigs in the generated SNP list are the same as in the reference. \n"
+      },
+      "source": "https://raw.githubusercontent.com/heinc1010/BAMixChecker/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9798833454380506,
+      "result": {
+        "original_header": "1) Whole genome or Whole Exome data or RNA sequencing data",
+        "type": "Text_excerpt",
+        "value": "Detailed instruction can be found at https://bamixchecker.readthedocs.io. \n"
+      },
+      "source": "https://raw.githubusercontent.com/heinc1010/BAMixChecker/master/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "invocation": [
+    {
+      "confidence": 0.8566560640334138,
+      "result": {
+        "original_header": "BAM files",
+        "type": "Text_excerpt",
+        "value": "* RNA-Seq BAM file \n"
+      },
+      "source": "https://raw.githubusercontent.com/heinc1010/BAMixChecker/master/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "issue_tracker": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/heinc1010/BAMixChecker/issues"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "keywords": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": ""
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "BAMixChecker"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "owner": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "User",
+        "value": "heinc1010"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "programming_languages": [
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Python",
+        "size": 35485,
+        "type": "Programming_language",
+        "value": "Python"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Shell",
+        "size": 1390,
+        "type": "Programming_language",
+        "value": "Shell"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "R",
+        "size": 192,
+        "type": "Programming_language",
+        "value": "R"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "readme_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/heinc1010/BAMixChecker/master/README.md"
+      },
+      "technique": "file_exploration"
+    }
+  ],
+  "releases": [
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "heinc1010",
+          "type": "User"
+        },
+        "date_created": "2022-06-12T12:55:50Z",
+        "date_published": "2022-06-12T13:16:32Z",
+        "description": "NonHumanSNPlist related bug fixed",
+        "html_url": "https://github.com/heinc1010/BAMixChecker/releases/tag/1.0.1",
+        "name": "1.0.1",
+        "release_id": 69244193,
+        "tag": "1.0.1",
+        "tarball_url": "https://api.github.com/repos/heinc1010/BAMixChecker/tarball/1.0.1",
+        "type": "Release",
+        "url": "https://api.github.com/repos/heinc1010/BAMixChecker/releases/69244193",
+        "value": "https://api.github.com/repos/heinc1010/BAMixChecker/releases/69244193",
+        "zipball_url": "https://api.github.com/repos/heinc1010/BAMixChecker/zipball/1.0.1"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "heinc1010",
+          "type": "User"
+        },
+        "date_created": "2019-07-12T12:13:46Z",
+        "date_published": "2019-07-12T12:16:18Z",
+        "html_url": "https://github.com/heinc1010/BAMixChecker/releases/tag/1.0",
+        "release_id": 18577339,
+        "tag": "1.0",
+        "tarball_url": "https://api.github.com/repos/heinc1010/BAMixChecker/tarball/1.0",
+        "type": "Release",
+        "url": "https://api.github.com/repos/heinc1010/BAMixChecker/releases/18577339",
+        "value": "https://api.github.com/repos/heinc1010/BAMixChecker/releases/18577339",
+        "zipball_url": "https://api.github.com/repos/heinc1010/BAMixChecker/zipball/1.0"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "somef_missing_categories": [
+    "acknowledgement",
+    "run",
+    "download",
+    "requirements",
+    "contributors",
+    "license",
+    "faq",
+    "support",
+    "has_build_file",
+    "executable_example"
+  ],
+  "somef_provenance": {
+    "date": "2024-11-04 05:54:14",
+    "somef_schema_version": "1.0.0",
+    "somef_version": "0.9.5"
+  },
+  "stargazers_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 12
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "usage": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Required arguments",
+        "parent_header": [
+          "Usage"
+        ],
+        "type": "Text_excerpt",
+        "value": "-d --DIR Directory path of the .BAM files \nor\n-l --List A file with the list of files (The format is described above in the 'Input' section)\n\n-r --Ref Reference file\n\nAdditionally for the Targeted sequencing dataset\n-b --BEDfile Targeted bed file for Targeted sequencing data mode.\n```"
+      },
+      "source": "https://raw.githubusercontent.com/heinc1010/BAMixChecker/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Optional arguments",
+        "parent_header": [
+          "Usage"
+        ],
+        "type": "Text_excerpt",
+        "value": "-v --RefVer ['hg38','hg19']. Default is \"hg38\". If the reference is hg19, give this option \u2018-r hg19\u2019.\n-o --OutputDIR Output directory path. BAMixChecker creates the new directory '/BAMixChecker' under the current directory as a default.\n-p --MaxProcess The max number of process. Default = 1.\n--FullPATH Used to report the full path of the file. BAMixChecker otherwise reports only the file name as a default.\n--RemoveVCF Use this option to remove called VCF files after running.\n--OFFFileNameMatching Use this option to compare files only by genotype.\n-nhSNP --NonHumanSNPlist SNP list for non-human organism sample matching check-up in BED format. \n-pld' '--Ploidy' Ploidy of sample. Default = 2 for human.\n```\n"
+      },
+      "source": "https://raw.githubusercontent.com/heinc1010/BAMixChecker/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "1) Whole genome or Whole Exome data or RNA sequencing data",
+        "parent_header": [
+          "Usage"
+        ],
+        "type": "Text_excerpt",
+        "value": "An automated tool for sample matching checkup in NGS cohorts  \n=================================================================================\n[![DOI](https://zenodo.org/badge/141665408.svg)](https://zenodo.org/badge/latestdoi/141665408)\n[![Documentation Status](https://readthedocs.org/projects/bamixchecker/badge/?version=latest)](https://bamixchecker.readthedocs.io/en/latest/?badge=latest)\n\nBAMixChecker is a fast and easy-to-use sample matching checkup tool for NGS dataset.\n\nIt is simple and fast but accurately detects pairs of WGS, WES, RNA, targeted sequencing BAM/CRAM files originating from the same individual.\n\nIt informs the user about matched or mismatched sample at a glance.\n\nDetailed instruction can be found at https://bamixchecker.readthedocs.io.\n\n\n\nRequired tools\n------------------\n\n#### GATK >= 4.0 ( java 8 required )\n\n#### Bedtools\n\n#### Python 2.7 \n      - scipy.stats\n      \n      - numpy\n      \n      - multiprocessing\n#### R \n      - ztable\n      \n      - rmarkdown\n      \n      - corrplot\n\n\nInstallation\n-------------\nFirst, clone the repository\n\n```$ git clone https://github.com/heinc1010/BAMixChecker```\n\nOr\n\n\nDownload the compressed file.\n\n```$ unzip BAMixChecker-master.zip```\n\nAnd then set the tools PATH on the configuration file, \n\n```$ cd BAMixChecker\n  $ vim BAMixChecker.config\n\n  GATK=/path/of/gatk\n  BEDTOOLS=/path/of/bedtools\n\n  *default (If you added the path in $PATH, you don\u2019t need to modify the configuration file )\n  GATK=gatk\n  BEDTOOLS=bedtools\n  ```\n\nInput\n-----------\n#### BAM files\nTo call variants by running GATK HaplotypeCaller, each BAM file should be indexed.\n```\nsamtools index /path/Tumor_01.bam\n```\nBAMixChecker calls variants in GVCF file formats.\n\nTypically, there will be one BAM file with single sample ID, but if the input is a multiple-sample BAM file, it needs to contain the \nread group informaiton, which can be added with the Picard AddOrReplaceReadGroups tool.\n(The tool instruction is described at https://software.broadinstitute.org/gatk/documentation/tooldocs/4.0.0.0/picard_sam_AddOrReplaceReadGroups.php)\n\n```\njava -jar picard.jar AddOrReplaceReadGroups \\\nI=RNA_T_01.bam \\\nO=RNA_T_01.rg_added_sorted.bam \\\nSO=coordinate \\\nRGID=project \\\nRGLB=library \\\nRGPL=platform \\\nRGPU=machine \\\nRGSM=sample\n```\nAdditional recommended processing for accurate variant discovery using GATK is described at https://software.broadinstitute.org/gatk/best-practices/workflow?id=11165.\n\n* RNA-Seq BAM file\n\nAdditional proper processing for RNA-Seq data is described on GATK forum: https://gatkforums.broadinstitute.org/gatk/discussion/3891/calling-variants-in-rnaseq.\n\n\nTo run BAMixChecker, indicating the BAM files directory path with the -d option or a list of BAM files with the -l option is required.\n\nFor the latter, the list can be formatted either as:\n\n* One BAM file on each line. BAMixChecker checks the file names and evaluates whether the files are paired based on the file name.\n If you want to compare files only by genotype, you can use the '--OFFFileNameMatching' option.\n```\n  /path/Tumor_01.bam\n  /path/Normal_01.bam\n  /path/Tumor_02.bam\n  /path/Normal_02.bam\n  /path/Tumor_03.bam\n  /path/Normal_03.bam\n  /path/Tumor_04.bam\n  /path/Normal_04.bam\n```\n*  Tab-separated matched files on each line. \nBAMixChecker matches files based on the pair information instead of file-name-based matching.\n ```\t\n  /path/Tumor_01.bam\t/path/Normal_01.bam\n  /path/Tumor_02.bam\t/path/Normal_02.bam\n  /path/Tumor_03.bam\t/path/Normal_03.bam\n  /path/Tumor_04.bam\t/path/Normal_04.bam\n```\n```\t\n /path/Tumor_01.bam\t/path/Normal_01.bam\t/path/Meta_01.bam\n /path/Tumor_02.bam\t/path/Normal_02.bam\t/path/Meta_02.bam\n /path/Tumor_03.bam\t/path/Normal_03.bam\t/path/Meta_03.bam\n /path/Tumor_04.bam\t/path/Normal_04.bam\t/path/Meta_04.bam\n```\n\n\nIf the number of files is less than 6 or the file names do not contain common pattern when it is divided by the delimiters, BAMixChecker only matches by genotype, not by file name and skips the creation of the \u2018Mismatched_sample.txt\u2019 file, similarly to what happens using the --OFFFileNameMatching option.\n\n\n\n\n\n#### Reference file\n\nTo perform the variant calling using GATK HaplotypeCaller requires an indexed reference sequence file ('.fa' and '.fai' format) and '.dict' format. The reference needs to be the **same** reference, which was used to align the reads.\n\n[iGenomes](https://support.illumina.com/sequencing/sequencing_software/igenome.html) provides 'Ready-To-Use' reference sequence file of various species including human, along with their annotation files.\n\nOr, you can create the annotation files by your self using samtools and Picard tools.\n```\nsamtools faidx Homo_sapiens.GRCh38.fa\n```\n```\njava -jar picard.jar CreateSequenceDictionary \\\nR=Homo_sapiens.GRCh38.fa \\\nO=Homo_sapiens.GRCh38.dict\n```\nsee more details at https://gatkforums.broadinstitute.org/gatk/discussion/1601/how-can-i-prepare-a-fasta-file-to-use-as-reference .\n\n#### SNP list for non-human organism\nBAMixChecker has been implemented for human NGS datasets. However, it, also, can be applied to other species using the option --NonHumanSNPlist to provide a customized SNP list and reference.\n\nTo extract only informative region, SNPs observed in a large population is required.\n\nIt is hard to generalize the method to select informative SNPs because annotation varies across databases.\n\nHowever, a mandatory annotation is minor allele frequency (MAF) in the population of the species.\n\nIn addition to MAF, mappability information is useful to select informative loci.\n\nThe recommended SNP loci selection steps are described below:\n\n1. Filter out uncertain variants from a list of SNP observed in the species of interest. It is recommended to filter variants using mapping quality, quality by depth condition, etc.\n\n2. Remove SNPs in low mapping region such as regions of low complexity, segmentally duplicated regions, simple repeat regions, etc. Such information may be available from the annotation database or you can get these regions information from e.g the UCSC genome browser simple repeat regions track.\n\n3. For SNPs located in high mapping rate regions, select SNP loci with only a higher MAF. For human, we apply a global MAF (GMAF) over 0.45 and below 0.55 and a MAF over 0.35 and below 0.65 within each population. If the database does not have MAF information for the study population of interest, GMAF information can be applied. However, we recommend considering higher GMAF condition if the SNP set is too large to produce expected results. This may happen due to lack of proper annotation filtering at an earlier step.\n\nFor targeted sequencing dataset, the SNP set should take into consideration not only a higher MAF but also the number of SNPs.\n\nTo compare sample genotype, a sufficient number of SNP loci is required for samples comparison.\n\nFor human data, we adjusted MAF condition to contain over 200 SNPs for a dataset within the target region information from the BED file. \nEven though as few as 50 SNPs could be discriminative in RNA-Seq data with 0.45 < MAF < 0.55 and 0.35 < within population < 0.65, we recommend SNPs set to have over 200 loci as the possibility of mutation decreases by decreasing MAF.\n\nThese steps cannot be automated for non-human organism due to the variability inherent to every annotation database.\n\nInstead, users can check the number of SNPs in the targeted region using bedtools.\n\nThe command is as follows,\n```\n\tbedtools intersect -a SNP_LIST.BED -b TARGETED.BED | wc -l\n```\n       If the number is too small, we recommend adjusting the MAF conditional selection. \n       To reduce variants calling time, we suggest to save the intersected SNPs using the command: \n```\n\tbedtools intersect -a SNP_LIST.BED -b TARGETED.BED > snp_list.targeted_only.bed\n```\nAnother precaution to ensure that the contigs in the generated SNP list are the same as in the reference.\n\nex)SNP list contigs : [chr1, chr2,...] , Reference contigs : [chr1, chr2, ... ]              .... Working\n\n   SNP list contigs : [1, 2,...] , Reference contigs : [chr1, chr2, ... ]                    .... ERROR\n   \n   SNP list contigs : [chr1, chr2,...,chrY, hs37d5] , Reference contigs : [chr1, chr2,...,chrY]  .... ERROR\n    \nAlso, they should be the same as the contigs in BAM files. (If the reference is the same with the one used to align the BAM files, they would have the same reference contigs.)\n\n\nAdditionally, the user can refer http://evodify.com/gatk-in-non-model-organism/ for the BAM file processing of non-human organisms. \n\n\nUsage\n------\n#### Required arguments\n```\n-d --DIR Directory path of the .BAM files \nor\n-l --List A file with the list of files (The format is described above in the 'Input' section)\n\n-r --Ref Reference file\n\nAdditionally for the Targeted sequencing dataset\n-b --BEDfile Targeted bed file for Targeted sequencing data mode.\n```\n#### Optional arguments\n```\n-v --RefVer ['hg38','hg19']. Default is \"hg38\". If the reference is hg19, give this option \u2018-r hg19\u2019.\n-o --OutputDIR Output directory path. BAMixChecker creates the new directory '/BAMixChecker' under the current directory as a default.\n-p --MaxProcess The max number of process. Default = 1.\n--FullPATH Used to report the full path of the file. BAMixChecker otherwise reports only the file name as a default.\n--RemoveVCF Use this option to remove called VCF files after running.\n--OFFFileNameMatching Use this option to compare files only by genotype.\n-nhSNP --NonHumanSNPlist SNP list for non-human organism sample matching check-up in BED format. \n-pld' '--Ploidy' Ploidy of sample. Default = 2 for human.\n```\n\n#### BAMixChecker runs a mode for WES and RNA-seq as a default without BED file.  \n#### If a BED file is given using the -b option, it runs as a targeted sequencing mode.\n\n\n#### 1)\tWhole genome or Whole Exome data or RNA sequencing data\n```\n  $ python BAMixChecker.py \\\n  -d /path/aligned/files/ \\\n  -r /path/reference/HG38/genome.fa \\\n  -o /path/new/directory \n  ```\n Or\n  ```\n  $ python BAMixChecker.py \\\n  -l /path/aligned/file_list.txt \\\n  -p 3 \\\n  -r /path/reference/HG38/genome.fa \\\n  -o /path/new/directory\n```\n\n#### 2)\tTargeted sequencing data\n ```\n  $ python BAMixChecker.py \\\n  -d /path/aligned/files/ \\\n  -p 2 \\\n  -r /path/reference/HG19/genome.fa \\\n  -o /path/new/directory \\\n  -v hg19 \\\n  -b /path/targeted.bed\n```\nOr \n```\n  $ python BAMixChecker.py \\\n  -l /path/aligned/file_list.txt \\\n  -r /path/reference/HG19/genome.fa \\\n  -o /path/new/directory \\\n  -v hg19 \n  -b /path/targeted.bed\n```\n#### If the dataset consists of both WES/RNA-Seq and Targeted sequencing data, all using the same reference, run as Targeted sequencing data mode with the targeted bed file for the Targeted sequencing data and give both types of BAM files at once.\n\n\nOutput\n--------\nBAMixChecker reports the result of sample matching analysis in  an .html file, as heatmap in .pdf, as well as in .txt.\n#### \"BAMixChecker_report.html\"\n<img src=\"./Report_ex.gif\" alt=\"BAMixChecker_report.html\" width=\"600\"/>\n\n#### \"BAMixChecker_heatmap.pdf\"\n<img src=\"./heatmap_ex.gif\" alt=\"BAMixChecker_heatmap.pdf\" width=\"400\"/>\n\n#### \"Mismatched_samples.txt\"\n  ```\n  #Matched samples only by genotype or file name but not by both\n  S1254_N.bam\t\tS1254_T.bam\t       0.38\t             Unmatched\n  S1254_N.bam\t\tS1345_T.bam\t       0.97\t             Matched\n  S1345_N.bam\t\tS1254_T.bam\t       0.95\t             Matched\n  S1345_N.bam\t\tS1345_T.bam\t       0.36\t             Unmatched\n  \n  #Samples matched with nothing by genotype\n  S1983_N.bam \n\t  -> pair by name with S1983_T.bam (score : 0.37 )\n  S1983_T.bam \n\t  -> pair by name with S1983_N.bam (score : 0.37 )\n```\n\n#### \"Matched_samples.txt\"\n  ```\n  #Matched pair by genotype and name.\n  S1023_N.bam\t\tS1023_T.bam\t\t0.92\t\t  Matched\n  ```\n  \n#### \"Total_result.txt\"\n  ```\n  S1023_N.bam \t\tS1023_T.bam \t\t0.92\t\tMatched\n  S1023_N.bam\t\tS1254_N.bam    \t        0.37\t\tUnmatched\n  S1023_N.bam\t\tS1254_T.bam \t\t0.34   \t\tUnmatched\n  S1023_N.bam\t\tS1345_N.bam\t\t0.34\t\tUnmatched\n  S1023_N.bam\t\tS1345_T.bam\t\t0.36 \t\tUnmatched\n  S1023_N.bam\t\tS1983_N.bam\t\t0.36\t\tUnmatched\n  S1023_N.bam\t\tS1983_T.bam \t\t0.35\t\tUnmatched\n  S1023_T.bam\t\tS1254_N.bam\t\t0.35\t\tUnmatched\n  .....\n  S1254_N.bam   \tS1254_T.bam \t\t0.38 \t\tUnmatched\n  S1254_N.bam    \tS1345_N.bam\t\t0.37\t\tUnmatched\n  S1254_N.bam    \tS1345_T.bam \t\t0.97\t\tMatched\n  .....\n```\n\nTutorial\n---------\n1. Set the required variables\n\n```\n   $ cd BAMixChecker/tutorialData\n   $ vim script_example.sh\n   \n    BAMixChecker_PATH=/path/to/BAMixChecker\n    OUT_DIR=/output/dir\n    REF=/path/of/reference/hg38/genome.fa\n  \n```\n2. Run the script\n```\n   $ sh script_example.sh\n```\n\nCitation\n------------------\nChun H, Kim S. BAMixChecker: an automated checkup tool for matched sample pairs in NGS cohort. Bioinformatics. 2019\n\nContact\n--------\nIf you have any question, contact to license manager (heinc1010@gmail.com) or corresponding author (swkim@yuhs.ac).\n"
+      },
+      "source": "https://raw.githubusercontent.com/heinc1010/BAMixChecker/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "2) Targeted sequencing data",
+        "parent_header": [
+          "Usage"
+        ],
+        "type": "Text_excerpt",
+        "value": "An automated tool for sample matching checkup in NGS cohorts  \n=================================================================================\n[![DOI](https://zenodo.org/badge/141665408.svg)](https://zenodo.org/badge/latestdoi/141665408)\n[![Documentation Status](https://readthedocs.org/projects/bamixchecker/badge/?version=latest)](https://bamixchecker.readthedocs.io/en/latest/?badge=latest)\n\nBAMixChecker is a fast and easy-to-use sample matching checkup tool for NGS dataset.\n\nIt is simple and fast but accurately detects pairs of WGS, WES, RNA, targeted sequencing BAM/CRAM files originating from the same individual.\n\nIt informs the user about matched or mismatched sample at a glance.\n\nDetailed instruction can be found at https://bamixchecker.readthedocs.io.\n\n\n\nRequired tools\n------------------\n\n#### GATK >= 4.0 ( java 8 required )\n\n#### Bedtools\n\n#### Python 2.7 \n      - scipy.stats\n      \n      - numpy\n      \n      - multiprocessing\n#### R \n      - ztable\n      \n      - rmarkdown\n      \n      - corrplot\n\n\nInstallation\n-------------\nFirst, clone the repository\n\n```$ git clone https://github.com/heinc1010/BAMixChecker```\n\nOr\n\n\nDownload the compressed file.\n\n```$ unzip BAMixChecker-master.zip```\n\nAnd then set the tools PATH on the configuration file, \n\n```$ cd BAMixChecker\n  $ vim BAMixChecker.config\n\n  GATK=/path/of/gatk\n  BEDTOOLS=/path/of/bedtools\n\n  *default (If you added the path in $PATH, you don\u2019t need to modify the configuration file )\n  GATK=gatk\n  BEDTOOLS=bedtools\n  ```\n\nInput\n-----------\n#### BAM files\nTo call variants by running GATK HaplotypeCaller, each BAM file should be indexed.\n```\nsamtools index /path/Tumor_01.bam\n```\nBAMixChecker calls variants in GVCF file formats.\n\nTypically, there will be one BAM file with single sample ID, but if the input is a multiple-sample BAM file, it needs to contain the \nread group informaiton, which can be added with the Picard AddOrReplaceReadGroups tool.\n(The tool instruction is described at https://software.broadinstitute.org/gatk/documentation/tooldocs/4.0.0.0/picard_sam_AddOrReplaceReadGroups.php)\n\n```\njava -jar picard.jar AddOrReplaceReadGroups \\\nI=RNA_T_01.bam \\\nO=RNA_T_01.rg_added_sorted.bam \\\nSO=coordinate \\\nRGID=project \\\nRGLB=library \\\nRGPL=platform \\\nRGPU=machine \\\nRGSM=sample\n```\nAdditional recommended processing for accurate variant discovery using GATK is described at https://software.broadinstitute.org/gatk/best-practices/workflow?id=11165.\n\n* RNA-Seq BAM file\n\nAdditional proper processing for RNA-Seq data is described on GATK forum: https://gatkforums.broadinstitute.org/gatk/discussion/3891/calling-variants-in-rnaseq.\n\n\nTo run BAMixChecker, indicating the BAM files directory path with the -d option or a list of BAM files with the -l option is required.\n\nFor the latter, the list can be formatted either as:\n\n* One BAM file on each line. BAMixChecker checks the file names and evaluates whether the files are paired based on the file name.\n If you want to compare files only by genotype, you can use the '--OFFFileNameMatching' option.\n```\n  /path/Tumor_01.bam\n  /path/Normal_01.bam\n  /path/Tumor_02.bam\n  /path/Normal_02.bam\n  /path/Tumor_03.bam\n  /path/Normal_03.bam\n  /path/Tumor_04.bam\n  /path/Normal_04.bam\n```\n*  Tab-separated matched files on each line. \nBAMixChecker matches files based on the pair information instead of file-name-based matching.\n ```\t\n  /path/Tumor_01.bam\t/path/Normal_01.bam\n  /path/Tumor_02.bam\t/path/Normal_02.bam\n  /path/Tumor_03.bam\t/path/Normal_03.bam\n  /path/Tumor_04.bam\t/path/Normal_04.bam\n```\n```\t\n /path/Tumor_01.bam\t/path/Normal_01.bam\t/path/Meta_01.bam\n /path/Tumor_02.bam\t/path/Normal_02.bam\t/path/Meta_02.bam\n /path/Tumor_03.bam\t/path/Normal_03.bam\t/path/Meta_03.bam\n /path/Tumor_04.bam\t/path/Normal_04.bam\t/path/Meta_04.bam\n```\n\n\nIf the number of files is less than 6 or the file names do not contain common pattern when it is divided by the delimiters, BAMixChecker only matches by genotype, not by file name and skips the creation of the \u2018Mismatched_sample.txt\u2019 file, similarly to what happens using the --OFFFileNameMatching option.\n\n\n\n\n\n#### Reference file\n\nTo perform the variant calling using GATK HaplotypeCaller requires an indexed reference sequence file ('.fa' and '.fai' format) and '.dict' format. The reference needs to be the **same** reference, which was used to align the reads.\n\n[iGenomes](https://support.illumina.com/sequencing/sequencing_software/igenome.html) provides 'Ready-To-Use' reference sequence file of various species including human, along with their annotation files.\n\nOr, you can create the annotation files by your self using samtools and Picard tools.\n```\nsamtools faidx Homo_sapiens.GRCh38.fa\n```\n```\njava -jar picard.jar CreateSequenceDictionary \\\nR=Homo_sapiens.GRCh38.fa \\\nO=Homo_sapiens.GRCh38.dict\n```\nsee more details at https://gatkforums.broadinstitute.org/gatk/discussion/1601/how-can-i-prepare-a-fasta-file-to-use-as-reference .\n\n#### SNP list for non-human organism\nBAMixChecker has been implemented for human NGS datasets. However, it, also, can be applied to other species using the option --NonHumanSNPlist to provide a customized SNP list and reference.\n\nTo extract only informative region, SNPs observed in a large population is required.\n\nIt is hard to generalize the method to select informative SNPs because annotation varies across databases.\n\nHowever, a mandatory annotation is minor allele frequency (MAF) in the population of the species.\n\nIn addition to MAF, mappability information is useful to select informative loci.\n\nThe recommended SNP loci selection steps are described below:\n\n1. Filter out uncertain variants from a list of SNP observed in the species of interest. It is recommended to filter variants using mapping quality, quality by depth condition, etc.\n\n2. Remove SNPs in low mapping region such as regions of low complexity, segmentally duplicated regions, simple repeat regions, etc. Such information may be available from the annotation database or you can get these regions information from e.g the UCSC genome browser simple repeat regions track.\n\n3. For SNPs located in high mapping rate regions, select SNP loci with only a higher MAF. For human, we apply a global MAF (GMAF) over 0.45 and below 0.55 and a MAF over 0.35 and below 0.65 within each population. If the database does not have MAF information for the study population of interest, GMAF information can be applied. However, we recommend considering higher GMAF condition if the SNP set is too large to produce expected results. This may happen due to lack of proper annotation filtering at an earlier step.\n\nFor targeted sequencing dataset, the SNP set should take into consideration not only a higher MAF but also the number of SNPs.\n\nTo compare sample genotype, a sufficient number of SNP loci is required for samples comparison.\n\nFor human data, we adjusted MAF condition to contain over 200 SNPs for a dataset within the target region information from the BED file. \nEven though as few as 50 SNPs could be discriminative in RNA-Seq data with 0.45 < MAF < 0.55 and 0.35 < within population < 0.65, we recommend SNPs set to have over 200 loci as the possibility of mutation decreases by decreasing MAF.\n\nThese steps cannot be automated for non-human organism due to the variability inherent to every annotation database.\n\nInstead, users can check the number of SNPs in the targeted region using bedtools.\n\nThe command is as follows,\n```\n\tbedtools intersect -a SNP_LIST.BED -b TARGETED.BED | wc -l\n```\n       If the number is too small, we recommend adjusting the MAF conditional selection. \n       To reduce variants calling time, we suggest to save the intersected SNPs using the command: \n```\n\tbedtools intersect -a SNP_LIST.BED -b TARGETED.BED > snp_list.targeted_only.bed\n```\nAnother precaution to ensure that the contigs in the generated SNP list are the same as in the reference.\n\nex)SNP list contigs : [chr1, chr2,...] , Reference contigs : [chr1, chr2, ... ]              .... Working\n\n   SNP list contigs : [1, 2,...] , Reference contigs : [chr1, chr2, ... ]                    .... ERROR\n   \n   SNP list contigs : [chr1, chr2,...,chrY, hs37d5] , Reference contigs : [chr1, chr2,...,chrY]  .... ERROR\n    \nAlso, they should be the same as the contigs in BAM files. (If the reference is the same with the one used to align the BAM files, they would have the same reference contigs.)\n\n\nAdditionally, the user can refer http://evodify.com/gatk-in-non-model-organism/ for the BAM file processing of non-human organisms. \n\n\nUsage\n------\n#### Required arguments\n```\n-d --DIR Directory path of the .BAM files \nor\n-l --List A file with the list of files (The format is described above in the 'Input' section)\n\n-r --Ref Reference file\n\nAdditionally for the Targeted sequencing dataset\n-b --BEDfile Targeted bed file for Targeted sequencing data mode.\n```\n#### Optional arguments\n```\n-v --RefVer ['hg38','hg19']. Default is \"hg38\". If the reference is hg19, give this option \u2018-r hg19\u2019.\n-o --OutputDIR Output directory path. BAMixChecker creates the new directory '/BAMixChecker' under the current directory as a default.\n-p --MaxProcess The max number of process. Default = 1.\n--FullPATH Used to report the full path of the file. BAMixChecker otherwise reports only the file name as a default.\n--RemoveVCF Use this option to remove called VCF files after running.\n--OFFFileNameMatching Use this option to compare files only by genotype.\n-nhSNP --NonHumanSNPlist SNP list for non-human organism sample matching check-up in BED format. \n-pld' '--Ploidy' Ploidy of sample. Default = 2 for human.\n```\n\n#### BAMixChecker runs a mode for WES and RNA-seq as a default without BED file.  \n#### If a BED file is given using the -b option, it runs as a targeted sequencing mode.\n\n\n#### 1)\tWhole genome or Whole Exome data or RNA sequencing data\n```\n  $ python BAMixChecker.py \\\n  -d /path/aligned/files/ \\\n  -r /path/reference/HG38/genome.fa \\\n  -o /path/new/directory \n  ```\n Or\n  ```\n  $ python BAMixChecker.py \\\n  -l /path/aligned/file_list.txt \\\n  -p 3 \\\n  -r /path/reference/HG38/genome.fa \\\n  -o /path/new/directory\n```\n\n#### 2)\tTargeted sequencing data\n ```\n  $ python BAMixChecker.py \\\n  -d /path/aligned/files/ \\\n  -p 2 \\\n  -r /path/reference/HG19/genome.fa \\\n  -o /path/new/directory \\\n  -v hg19 \\\n  -b /path/targeted.bed\n```\nOr \n```\n  $ python BAMixChecker.py \\\n  -l /path/aligned/file_list.txt \\\n  -r /path/reference/HG19/genome.fa \\\n  -o /path/new/directory \\\n  -v hg19 \n  -b /path/targeted.bed\n```"
+      },
+      "source": "https://raw.githubusercontent.com/heinc1010/BAMixChecker/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Tutorial",
+        "type": "Text_excerpt",
+        "value": "1. Set the required variables\n\n```\n   $ cd BAMixChecker/tutorialData\n   $ vim script_example.sh\n   \n    BAMixChecker_PATH=/path/to/BAMixChecker\n    OUT_DIR=/output/dir\n    REF=/path/of/reference/hg38/genome.fa\n  \n```\n2. Run the script\n```\n   $ sh script_example.sh\n```\n"
+      },
+      "source": "https://raw.githubusercontent.com/heinc1010/BAMixChecker/master/README.md",
+      "technique": "header_analysis"
+    }
+  ]
+}

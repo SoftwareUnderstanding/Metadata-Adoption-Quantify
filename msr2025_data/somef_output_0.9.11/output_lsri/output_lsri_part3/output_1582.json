@@ -1,0 +1,469 @@
+{
+  "citation": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Citation",
+        "parent_header": [
+          "5. TODO"
+        ],
+        "type": "Text_excerpt",
+        "value": "AromTool: predicting aromatic stacking energy using an atomic neural network model. \nPhys Chem Chem Phys. 2021 Aug 4;23(30):16044-16052.\ndoi: 10.1039/d1cp01954f. \n"
+      },
+      "source": "https://raw.githubusercontent.com/hewg2008/AromTool/main/README.md",
+      "technique": "header_analysis"
+    }
+  ],
+  "code_repository": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/hewg2008/AromTool"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "contact": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Build Contact From Coordinates and Elements",
+        "parent_header": [
+          "3. Usage",
+          "Build Contact"
+        ],
+        "type": "Text_excerpt",
+        "value": "To directly build contact , 2 ring objects needed.  \nAfter building contact, the values of centroid and normal vector can be accessed from attribute. The following codes show how to build contact and then access contacts' information.\n\n```python\nfrom aromtool.contact import Contact\nfrom aromtool.ring import Ring\nfrom aromtool.utils.math.mathutil import MathUtil\nfrom aromtool.calculator import EnergyCalculator\nfrom ase import Atoms\n\n# Define the mol2 ring from ligand\nmol2_symbols = ['C', 'C', 'H', 'C', 'C', 'H', 'C', 'H', 'C']\nmol2_positions = [[106.876,17.424,97.544 ],\n                 [106.793,18.503,98.487 ],\n                 [106.7001,19.5244,98.1359],\n                 [106.833,18.229,99.892 ],\n                 [106.932,16.93,100.366 ],\n                 [106.9508,16.7397,101.433 ],\n                 [107.008,15.86,99.456 ],\n                 [107.0763,14.8482,99.8391],\n                 [106.998,16.065, 98.05  ]]\nmol2_ring = Ring(mol2_symbols, mol2_positions)\n\n# Define the pdb ring from protein\npdb_symbols = ['C', 'C', 'C', 'C', 'C', 'C', 'H', 'H', 'H', 'H', 'H']\npdb_positions = [[113.145,  17.914,  98.484],\n                 [110.935,  17.201,  99.075],\n                 [112.897,  17.569,  97.134],\n                 [110.677,  16.855,  97.747],\n                 [112.17 ,  17.738,  99.455],\n                 [111.669,  17.044,  96.772],\n                 [114.115,  18.324,  98.765],\n                 [110.162,  17.05 ,  99.828],\n                 [113.671,  17.716,  96.381],\n                 [109.709,  16.44 ,  97.468],\n                 [111.473,  16.778,  95.733]]\npdb_ring = Ring(pdb_symbols, pdb_positions)\n\n# Build contact\ncontact = Contact( mol2_ring, pdb_ring)\nprint('Dihedral angle:\\n', contact.angle)\nprint('Distance:\\n', contact.distance)\n\n# Determine whether there is aromatic stacking interaction or not. Output the results if there is aromatic stacking interaction.\niscontact = MathUtil.isContact(mol2_ring.centroid,pdb_ring.centroid)\nif iscontact[1]:\n    print('Dihedral angle:\\n', contact.angle)\n    print('Distance:\\n', contact.distance)\n\t# Combine data from ligand and protein\n    symbols1 = mol2_symbols + pdb_symbols\n    positions1 = mol2_positions + pdb_positions\n    atoms_contact = Atoms(symbols1,positions1)\n\n    # Build Ring\n    atoms_ring = Ring(atoms_contact.symbols, atoms_contact.positions)\n    print('Centroid: \\n', atoms_ring.centroid)\n    print('Normal vector:\\n', atoms_ring.normal_vector)\n\n    # Select predictive model\n    pinn = ('AromNN-PiBPTT.pb')\n\n    # Define the calculator\n    energy_calculator = EnergyCalculator(pinn)\n\n    # Access the energy\n    energy = energy_calculator.get_energy(atoms_contact)\n    print('Energy: ')\n    print(energy)\nelse:\n    print('no aromatic stacking interaction')\n```\n\nResults:\n```python\nDihedral angle:\n 105.10978137419309\nDistance:\n 5.08591544529266\nDihedral angle:\n 105.10978137419309\nDistance:\n 5.08591544529266\nCentroid: \n 109.41108333333335,17.277666666666665,98.5385\nNormal vector:\n -1.3420170999999852,-0.11674599999999846,0.015462900000001917\nEnergy: \n-1.2557073816289344\n\n```\nNoticeably, no information about contact type and PDB code provided.\n"
+      },
+      "source": "https://raw.githubusercontent.com/hewg2008/AromTool/main/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Build Contact From File",
+        "parent_header": [
+          "3. Usage",
+          "Build Contact"
+        ],
+        "type": "Text_excerpt",
+        "value": "To build contact, two ring objects are required. In this way, the ring objects are built from source files. For example, in PDBbind dataset, the source files are mol2 file(ligand) and pdb file(protein) respectively.\nAfter building contact, the values of centroid and normal vector can be accessed. The following codes show how to build and access contact.\n\n```python\nfrom aromtool.contact import Contact\nfrom aromtool.builder import ContactBuilder\nfrom ase.io import write,read\nfrom aromtool.ring import Ring\nfrom aromtool.calculator import EnergyCalculator\n\nmol2path = r'7std_ligand.mol2'\npdbpath = r'7std_protein.pdb'\n\n# Access the list of aromatic stacking interaction\nbuilder=ContactBuilder(mol2path, pdbpath)\ncontacts=builder.get_contacts()\nprint('Aromatic stacking interaction:')\nprint(contacts)\n\n# Access the number of aromatic stacking interaction\ncontact_numbers=len(contacts)\nprint('Number of aromatic stacking interaction:')\nprint(contact_numbers)\n\n# Access the first aromatic stacking interaction, define as contact0\ncontact0=contacts[0]\nprint('the first aromatic stacking interaction:')\nprint(contact0)\n\n# Access the dihedral angle of contact0\nangle=contact0.angle\nprint('Dihedral angle:')\nprint(angle)\n\n# Access the distance of contact0\ndistance=contact0.distance\nprint('Distance: ')\nprint(distance)\n\n# Access the contact type(Ben-Phe, Ben-Tyr or Ben-Trp) of contact0\nprint('Contact type: ')\nprint(contact0.contact_type)\n\n# Access the PDB code of contact0\nprint('PDB code:')\nprint(contact0.pdb_code)\n\n# Export the xyz file\nbuilder.to_xyz('./')\n\n# Get xyz file\nxyz_contact = read('./contact/7std_contact_3.xyz')\n\n# Build ring\nring = Ring(xyz_contact.symbols, xyz_contact.positions)\n\nprint('Centroid:\\n', ring.centroid)\nprint('Normal vector:\\n', ring.normal_vector)\n\n# Select predictive model\npinn = ('AromNN-PiBPTT.pb')\n\n# Define the calculator\nenergy_calculator = EnergyCalculator(pinn)\n\n# Access energy of the aromatic stacking interaction\nenergy = energy_calculator.get_energy(xyz_contact)\nprint('Energy: ')\nprint(energy)\n\n# Separate ligand and protein\nmol2_symbols = xyz_contact.symbols[:12]\npdb_symbols = xyz_contact.symbols[12:]\nmol2_positions = xyz_contact.positions[:12]\npdb_positions = xyz_contact.positions[12:]\n\n# Build ring of ligand and protein respectively\nmol2_ring = Ring(mol2_symbols, mol2_positions)\npdb_ring = Ring(pdb_symbols, pdb_positions)\n\n# Build contact\ncontact = Contact( mol2_ring, pdb_ring)\n\nprint('Dihedral angle:\\n', contact.angle)\nprint('Distance:\\n', contact.distance)\n\n```\n\nResult:\n```python\nAromatic stacking interaction:\n[<aromtool.contact.Contact object at 0x00000000120A1C88>, <aromtool.contact.Contact object at 0x00000000120A1CC8>, <aromtool.contact.Contact object at 0x00000000120A1308>, <aromtool.contact.Contact object at 0x00000000120A1388>, <aromtool.contact.Contact object at 0x00000000120A14C8>]\nNumber of aromatic stacking interaction:\n5\nthe first aromatic stacking interaction:\n<aromtool.contact.Contact object at 0x00000000120A1C88>\nDihedral angle:\n54.85164826612596\nDistance: \n7.937098904608785\nContact type: \nligand-TYR\nPDB code:\n7std\nCentroid:\n 29.014547731366488,8.083097986013163,33.9761719264379\nNormal vector:\n 1.137826539285975,0.5890535484905051,0.2523573790994627\nEnergy: \n-1.402616054196005\nDihedral angle:\n 96.70880737455842\nDistance:\n 5.367289369585858\n\n```\n\n"
+      },
+      "source": "https://raw.githubusercontent.com/hewg2008/AromTool/main/README.md",
+      "technique": "header_analysis"
+    }
+  ],
+  "date_created": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2021-04-27T09:14:33Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_updated": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2022-12-11T11:21:19Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "description": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "Aromatic stacking"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "1. Introduction",
+        "type": "Text_excerpt",
+        "value": "**AromTool** is a Python-based tool for analyzing aromatic interactions between ligands (mostly drugs, or other material monomers) and receptors (mostly proteins, or other material monomers). With the help of the popular open source computational physio-chemistry libraries, such as ASE, OpenBabel, RDKit, Kekule, etc., and the internally integrated aromatic contact energy calculator based on neural network model as the back-end calculation tool, it can:\n  \n1 recognize, filter, transform, extract, construct and manipulate aromatic rings in ligand (mol2 format) and receptor (PDB format) files.\n\n2 determine whether the aromatic ring between ligand and receptor has contact, construct and operate the aromatic contact, and output the contact conformation file in XYZ format.\n\n3 output aromatic contact type, geometry (including contact distance and angle) and energy report (Excel format).   \n\n**AromTool** is mainly designed for pharmaceutical  scientists to implement aromatic stacking analysis, build aromatic contact data sets and generate aromatic stacking analysis reports.\n\nAromTool has the following design objectives:\n\n1 Simple and easy to use. It can be used through command line tools and python scripts. For novice programmers (especially researchers in the field of materialization), python scripts are easy to understand (unlike C + +, Java and other languages with high learning costs), and it is very simple to use various functions of aromtool. All the tasks of aromtool are done through python.\n\n2 Automatic integration of batch processing function. Unlike other physical chemistry programs such as MOE, Schrodinger and RDKit, users need to write batch code again.\n\n3 Open source code is convenient for customization and extension. The code is based on the object-oriented Python style, and the core class is based on the numpy array (ndarray). It is convenient to integrate into all the Python code, and can easily expand the class or module. For example, calculators can customize other energy calculators.\n"
+      },
+      "source": "https://raw.githubusercontent.com/hewg2008/AromTool/main/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 0.8578871780007149,
+      "result": {
+        "original_header": "TODO list",
+        "type": "Text_excerpt",
+        "value": "1 Modify input. Add one more input method. Input one .pdb file of a complex rather than one .mol2 file of a ligand and one .pdb file of a protein.   \n2 Visualization.   \n3 Web server.   \n \n"
+      },
+      "source": "https://raw.githubusercontent.com/hewg2008/AromTool/main/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "download_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/hewg2008/AromTool/releases"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 2
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/hewg2008/AromTool/forks"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "hewg2008/AromTool"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_title": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "1. Introduction"
+      },
+      "source": "https://raw.githubusercontent.com/hewg2008/AromTool/main/README.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "images": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://z3.ax1x.com/2021/04/27/g9TPsg.md.png"
+      },
+      "source": "https://raw.githubusercontent.com/hewg2008/AromTool/main/README.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "installation": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "2. Installation",
+        "type": "Text_excerpt",
+        "value": "  **AromTool** can be installed locally by downloading the entire package. Currently only supports **Windows** system. \n  "
+      },
+      "source": "https://raw.githubusercontent.com/hewg2008/AromTool/main/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 0.9750962710995639,
+      "result": {
+        "original_header": "4. Questions and Issues",
+        "type": "Text_excerpt",
+        "value": "If you have any questions or any issues found, please do not hesitate to send me email directly: hewg3@mail2.sysu.edu.cn / wenganhe@icloud.com. \n"
+      },
+      "source": "https://raw.githubusercontent.com/hewg2008/AromTool/main/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.8317559819798148,
+      "result": {
+        "original_header": "5. TODO",
+        "type": "Text_excerpt",
+        "value": "If you have interest in further developing AromTool, you are warmly welcome to take a look at the **TODO** list below:\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/hewg2008/AromTool/main/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "issue_tracker": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/hewg2008/AromTool/issues"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "keywords": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": ""
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "AromTool"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "owner": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "User",
+        "value": "hewg2008"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "programming_languages": [
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Python",
+        "size": 201813,
+        "type": "Programming_language",
+        "value": "Python"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "JavaScript",
+        "size": 70738,
+        "type": "Programming_language",
+        "value": "JavaScript"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "CSS",
+        "size": 47876,
+        "type": "Programming_language",
+        "value": "CSS"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "readme_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/hewg2008/AromTool/main/README.md"
+      },
+      "technique": "file_exploration"
+    }
+  ],
+  "releases": [
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "hewg2008",
+          "type": "User"
+        },
+        "date_created": "2022-01-25T07:07:40Z",
+        "date_published": "2023-03-24T07:32:10Z",
+        "description": "pre-release",
+        "html_url": "https://github.com/hewg2008/AromTool/releases/tag/v0.0.1-alpha",
+        "release_id": 96759808,
+        "tag": "v0.0.1-alpha",
+        "tarball_url": "https://api.github.com/repos/hewg2008/AromTool/tarball/v0.0.1-alpha",
+        "type": "Release",
+        "url": "https://api.github.com/repos/hewg2008/AromTool/releases/96759808",
+        "value": "https://api.github.com/repos/hewg2008/AromTool/releases/96759808",
+        "zipball_url": "https://api.github.com/repos/hewg2008/AromTool/zipball/v0.0.1-alpha"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "requirements": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Dependencies",
+        "parent_header": [
+          "2. Installation"
+        ],
+        "type": "Text_excerpt",
+        "value": "python                    3.7.6   \ntensorflow                1.13.1  \nscikit-learn              0.23.2  \nscipy                     1.5.4  \nnumpy                     1.18.1    \npandas                    1.1.5   \nxlwt                      1.3.0  \nase                       3.20.0   \nopenbabel                 2.4.1    \nrdkit                     2019.09.3     \npyexecjs                  1.5.1    \nsqlite                    3.30.1     \n"
+      },
+      "source": "https://raw.githubusercontent.com/hewg2008/AromTool/main/README.md",
+      "technique": "header_analysis"
+    }
+  ],
+  "somef_missing_categories": [
+    "acknowledgement",
+    "run",
+    "download",
+    "contributors",
+    "documentation",
+    "license",
+    "faq",
+    "identifier",
+    "has_build_file",
+    "executable_example"
+  ],
+  "somef_provenance": {
+    "date": "2024-10-06 05:31:17",
+    "somef_schema_version": "1.0.0",
+    "somef_version": "0.9.5"
+  },
+  "stargazers_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 3
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "support": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Export Report",
+        "parent_header": [
+          "3. Usage"
+        ],
+        "type": "Text_excerpt",
+        "value": "Information about the name, contact type, contact distance, contact angle and energy are included in the report.\n```python\nfrom aromtool.builder import BatchBuilder\nfrom aromtool.calculator import EnergyCalculator\nfrom aromtool.reporter import ReportManager\n\n# access the stacking interaction from refined set of PDBBind\n# Define the directory of input files.\nsrc_dataset = r'.\\dataset'\n# Define the directory of output xyz files\ndst_dataset = r'.\\dataset\\AS'\n# Define the report's path\nreportPath = r'.\\dataset\\report.xlsx'\n# Define calculator\nenergycalculator = 'AromNN-PiBPTT.pb'\n\n# Put the above variables to BatchBuilder\nbatchbuilder = BatchBuilder.build_dataset(src_dataset, dst_dataset, reportPath, energycalculator)\n\n# Exportation of report\nReportManager.export(reportPath, batchbuilder)\n```\n\nResults(tail of flow shown):\n```python\nParsing file 7std ... 8/8\n2021-04-27 14:53:04,604 BatchBuilder INFO 7std has contact(s). \n-0.04566741800124969\n-0.542801764886686\n-1.402616054196005\n-2.6499349970290718\n-0.4476579656594951\nBatch contact building is completed!\nReport building is completed!\n```\nthe tail of the report that we export is shown here:\n[![g9TPsg.md.png](https://z3.ax1x.com/2021/04/27/g9TPsg.md.png)](https://imgtu.com/i/g9TPsg)\n"
+      },
+      "source": "https://raw.githubusercontent.com/hewg2008/AromTool/main/README.md",
+      "technique": "header_analysis"
+    }
+  ],
+  "type": [
+    {
+      "confidence": 0.82,
+      "result": {
+        "type": "String",
+        "value": "commandline-application"
+      },
+      "technique": "software_type_heuristics"
+    }
+  ],
+  "usage": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "3. Usage",
+        "type": "Text_excerpt",
+        "value": "Description Below  displays how to use AromTool. All related scripts and data files are in director of 'example'.\n"
+      },
+      "source": "https://raw.githubusercontent.com/hewg2008/AromTool/main/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Build Ring",
+        "parent_header": [
+          "3. Usage"
+        ],
+        "type": "Text_excerpt",
+        "value": " \nThe basic object of AromTool is the Ring object. Combined with Atoms object from ASE, the Ring object not only remains the attributes and methods of Atoms object like collection of each atoms, but it also includes the attributes of centroid, normal vector, PDB codes and contact type, as well as methods about conversion of data's structure and so on. \n"
+      },
+      "source": "https://raw.githubusercontent.com/hewg2008/AromTool/main/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Build Ring from Data",
+        "parent_header": [
+          "3. Usage",
+          "Build Ring"
+        ],
+        "type": "Text_excerpt",
+        "value": "Two parameters are needed in order to build ring from data - symbols(atoms' elements) and positions(coordinate of atoms).\n```python\nfrom aromtool.ring import Ring\nsymbols = ['C', 'C', 'H', 'C', 'C', 'H', 'C', 'H', 'C']\npositions = [[106.876,17.424,97.544 ],\n             [106.793,18.503,98.487 ],\n             [106.7001,19.5244,98.1359],\n             [106.833,18.229,99.892 ],\n             [106.932,16.93,100.366 ],\n             [106.9508,16.7397,101.433 ],\n             [107.008,15.86,99.456 ],\n             [107.0763,14.8482,99.8391],\n             [106.998,16.065, 98.05  ]]\nring = Ring(symbols, positions)\n```\n"
+      },
+      "source": "https://raw.githubusercontent.com/hewg2008/AromTool/main/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Build Ring from File",
+        "parent_header": [
+          "3. Usage",
+          "Build Ring"
+        ],
+        "type": "Text_excerpt",
+        "value": "Build ring from file and read ring information.\n"
+      },
+      "source": "https://raw.githubusercontent.com/hewg2008/AromTool/main/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "From mol2 File",
+        "parent_header": [
+          "3. Usage",
+          "Build Ring",
+          "Build Ring from File"
+        ],
+        "type": "Text_excerpt",
+        "value": "```python\nfrom aromtool.builder import Builder\n\nmol2path = r'7std_ligand.mol2'\n\n# Generate the list of ring objects\nrings=Builder.get_mol2_rings(mol2path, only_ch=False)\nprint('the list of ring objects:')\nprint(rings)\n\n# Print the number of rings\nring_numbers=len(rings)\nprint('the number of rings:')\nprint(ring_numbers)\n\n# the first ring\nring=rings[0]\nprint('the first ring:')\nprint(ring)\n\n# the element of the first ring\nelements=ring.elements\nprint('element: ')\nprint(elements)\n\n# coordinate:\npositions=ring.positions\nprint('coordinate: ')\nprint(positions)\n```\n\nResults:\n```python\nthe list of ring objects:\n[<aromtool.ring.Ring object at 0x0000000010F3AAC8>]\nthe number of rings:\n1\nthe first ring:\n<aromtool.ring.Ring object at 0x0000000010F3AAC8>\nelement: \n['C', 'C', 'H', 'C', 'H', 'C', 'C', 'H', 'C', 'H']\ncoordinate: \n[[30.937   8.868  35.491 ]\n [30.985   9.313  34.198 ]\n [31.463   8.7096 33.4348]\n [30.43   10.519  33.868 ]\n [30.4725 10.862  32.8406]\n [29.828  11.292  34.804 ]\n [29.769  10.823  36.093 ]\n [29.27   11.4144 36.8521]\n [30.329   9.622  36.437 ]\n [30.2858  9.2759 37.4634]]\n```"
+      },
+      "source": "https://raw.githubusercontent.com/hewg2008/AromTool/main/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Build Ring from PDB File",
+        "parent_header": [
+          "3. Usage",
+          "Build Ring",
+          "Build Ring from File"
+        ],
+        "type": "Text_excerpt",
+        "value": "```python  \nfrom aromtool.builder import Builder\n\npdbpath = r'7std_protein.pdb'\n\nrings=Builder.get_pdb_rings(pdbpath,filters=['PHE', 'TYR', 'TRP'])\n\nprint('the list of ring objects:')\nprint(rings)\n\n# the number of rings:\nring_numbers=len(rings)\nprint('the number of rings:')\nprint(ring_numbers)\n\n# the first ring\nring=rings[0]\nprint('the first ring:')\nprint(ring)\n\n# the element of the first ring\nelements=ring.elements\nprint('elements: ')\nprint(elements)\n\n# coordinate:\npositions=ring.positions\nprint('coordinate: ')\nprint(positions)\n\n#centroid:\ncentroid=ring.centroid\nprint('centroid: ')\nprint(centroid)\n\n```\n\nResults:\n```python\nthe list of ring objects:\n[<aromtool.ring.Ring object at 0x00000000120A13C8>, <aromtool.ring.Ring object at 0x00000000120A3C48>, <aromtool.ring.Ring object at 0x00000000120A3E08>, <aromtool.ring.Ring object at 0x00000000120A3FC8>, <aromtool.ring.Ring object at 0x00000000120A61C8>, <aromtool.ring.Ring object at 0x00000000120A63C8>, <aromtool.ring.Ring object at 0x00000000120A6588>, <aromtool.ring.Ring object at 0x00000000120A6748>, <aromtool.ring.Ring object at 0x00000000120A6908>, <aromtool.ring.Ring object at 0x00000000120A6388>, <aromtool.ring.Ring object at 0x00000000120A6C48>, <aromtool.ring.Ring object at 0x00000000120A6E08>, <aromtool.ring.Ring object at 0x00000000120A6FC8>, <aromtool.ring.Ring object at 0x00000000120AB1C8>, <aromtool.ring.Ring object at 0x00000000120AB388>, <aromtool.ring.Ring object at 0x00000000120AB548>, <aromtool.ring.Ring object at 0x00000000120AB708>, <aromtool.ring.Ring object at 0x00000000120AB8C8>, <aromtool.ring.Ring object at 0x00000000120ABA88>, <aromtool.ring.Ring object at 0x00000000120ABC48>, <aromtool.ring.Ring object at 0x00000000120ABE08>, <aromtool.ring.Ring object at 0x00000000120ABFC8>, <aromtool.ring.Ring object at 0x00000000120B11C8>, <aromtool.ring.Ring object at 0x00000000120B1388>, <aromtool.ring.Ring object at 0x00000000120B1548>, <aromtool.ring.Ring object at 0x00000000120B1708>, <aromtool.ring.Ring object at 0x00000000120B18C8>, <aromtool.ring.Ring object at 0x00000000120B1A88>, <aromtool.ring.Ring object at 0x00000000120B1C48>, <aromtool.ring.Ring object at 0x00000000120B1E08>, <aromtool.ring.Ring object at 0x00000000120B1FC8>, <aromtool.ring.Ring object at 0x00000000120B61C8>, <aromtool.ring.Ring object at 0x00000000120B6388>, <aromtool.ring.Ring object at 0x00000000120B6548>, <aromtool.ring.Ring object at 0x00000000120B6708>, <aromtool.ring.Ring object at 0x00000000120B68C8>, <aromtool.ring.Ring object at 0x00000000120B6A88>, <aromtool.ring.Ring object at 0x00000000120B6C48>, <aromtool.ring.Ring object at 0x00000000120B6E08>, <aromtool.ring.Ring object at 0x00000000120B6FC8>, <aromtool.ring.Ring object at 0x00000000120BC1C8>, <aromtool.ring.Ring object at 0x00000000120BC388>, <aromtool.ring.Ring object at 0x00000000120BC548>, <aromtool.ring.Ring object at 0x00000000120BC708>, <aromtool.ring.Ring object at 0x00000000120BC8C8>, <aromtool.ring.Ring object at 0x00000000120BCA88>, <aromtool.ring.Ring object at 0x00000000120BCC48>, <aromtool.ring.Ring object at 0x00000000120BCE08>, <aromtool.ring.Ring object at 0x00000000120BCFC8>, <aromtool.ring.Ring object at 0x00000000120C21C8>, <aromtool.ring.Ring object at 0x00000000120C2388>, <aromtool.ring.Ring object at 0x00000000120C2548>, <aromtool.ring.Ring object at 0x00000000120C2708>, <aromtool.ring.Ring object at 0x00000000120C28C8>, <aromtool.ring.Ring object at 0x00000000120C2A88>, <aromtool.ring.Ring object at 0x00000000120C2C48>, <aromtool.ring.Ring object at 0x00000000120C2E08>, <aromtool.ring.Ring object at 0x00000000120C2FC8>, <aromtool.ring.Ring object at 0x00000000120C81C8>, <aromtool.ring.Ring object at 0x00000000120C8388>, <aromtool.ring.Ring object at 0x00000000120C8548>, <aromtool.ring.Ring object at 0x00000000120C8708>, <aromtool.ring.Ring object at 0x00000000120C88C8>, <aromtool.ring.Ring object at 0x00000000120C8A88>, <aromtool.ring.Ring object at 0x00000000120C8C48>, <aromtool.ring.Ring object at 0x00000000120C8E08>, <aromtool.ring.Ring object at 0x00000000120C8FC8>, <aromtool.ring.Ring object at 0x00000000120CD1C8>, <aromtool.ring.Ring object at 0x00000000120CD388>]\nthe number of rings:\n69\nthe first ring:\n<aromtool.ring.Ring object at 0x00000000120A13C8>\nelements: \n['C', 'C', 'C', 'C', 'C', 'C', 'C', 'C', 'H', 'H', 'H', 'H', 'H', 'H', 'N']\ncoordinate: \n[[25.3   19.741 37.075]\n [24.444 19.885 35.014]\n [24.758 18.534 35.275]\n [23.884 20.231 33.774]\n [24.81  20.638 36.186]\n [23.99  17.886 33.129]\n [24.538 17.525 34.342]\n [23.662 19.231 32.839]\n [25.664 19.987 38.073]\n [25.592 17.607 37.017]\n [23.628 21.267 33.55 ]\n [23.806 17.118 32.378]\n [24.79  16.487 34.562]\n [23.23  19.484 31.871]\n [25.272 18.473 36.537]]\ncentroid: \n24.517555555555557,19.127111111111113,34.90788888888889\nnormal vector: \n-2.7468270000000055,-0.4237380000000033,1.1112400000000038\n\n```\n"
+      },
+      "source": "https://raw.githubusercontent.com/hewg2008/AromTool/main/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Energy Calculation",
+        "parent_header": [
+          "3. Usage"
+        ],
+        "type": "Text_excerpt",
+        "value": "Calculate the energy from a contact file via calling a trained model. More models in the director of data\\predictive_model)\n```python\nfrom aromtool.calculator import EnergyCalculator\nfrom ase.io import read\n\n# Access the coordinate data from ring file.\nxyz_contact = read(r'.\\contact\\7std_contact_4.xyz')\n\n# Choose a model(More models in the director of data\\predictive_model)\npinn = ('AromNN-PiBPTT.pb') \n\n# Define a calculator\nenergy_calculator = EnergyCalculator(pinn)\n\n# Access the energy\nenergy = energy_calculator.get_energy(xyz_contact)\nprint('energy: ')\nprint(energy)\n```\n\nResults:\n```python\nenergy: \n-2.6499349970290718\n```\n"
+      },
+      "source": "https://raw.githubusercontent.com/hewg2008/AromTool/main/README.md",
+      "technique": "header_analysis"
+    }
+  ]
+}

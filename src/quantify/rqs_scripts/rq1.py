@@ -4,20 +4,28 @@ import json
 """
 This script is for answering RQ1
 """
-result = {
-    "citation.cff": {"count": 0},
-    "readme_url": {"count": 0},
-    "package": {"count": 0, "files": []},
-    "authors": {"count": 0, "files": []},
-    "contributors": {"count": 0, "files": []},
-    "license": {"count": 0},
-    "codemeta.json": {"count": 0, "files": []},
-    "zenodo.json": {"count": 0, "files": []},
-    "identifier_extract": {"count": 0, "extracted_values": []},
-    "None": {"count": 0}
-}
-
 def rq1(directory, missing_key, output_file, output_directory):
+    result = {
+        "citation.cff": {"count": 0},
+        "readme_url": {"count": 0},
+        "package": {"count": 0, "files": []},
+        "authors": {"count": 0, "files": []},
+        "contributors": {"count": 0, "files": []},
+        "license": {"count": 0},
+        "codemeta.json": {"count": 0, "files": []},
+        "identifier_extract": {"count": 0, "extracted_values": []},
+        "None": {"count": 0}
+    }
+
+    package_files = [
+        "description", 
+        "composer.json", 
+        "package.json", 
+        "pom.xml", 
+        "pyproject.toml", 
+        "requirements.txt", 
+        "setup.py"
+    ]
 
     for file_name in os.listdir(directory):
         if file_name.startswith("output_") and file_name.endswith(".json"):
@@ -48,6 +56,68 @@ def rq1(directory, missing_key, output_file, output_directory):
             if 'license' in data and 'license' not in missing_categories:
                 result['license']['count'] += 1
                 all_keys_missing = False
+
+            # Now we check for codemeta.json across all fields with "source" instead of temp_dir
+            codemeta_found = False
+            for key, value in data.items():
+                if key == missing_key or key in missing_categories:
+                    continue
+                
+                if isinstance(value, list):
+                    for item in value:
+                        if isinstance(item, dict):
+                            source_value = item.get("source", "")
+                            if isinstance(source_value, str) and "codemeta.json" in source_value.lower():
+                                result["codemeta.json"]["count"] += 1
+                                result["codemeta.json"]["files"].append(file_name)
+                                all_keys_missing = False
+                                codemeta_found = True
+                                break
+                
+                if codemeta_found:
+                    break
+            
+            # Same thing here we AUTHORS in different formats
+            authors_file_found = False
+            for key, value in data.items():
+                if key == missing_key or key in missing_categories:
+                    continue
+                
+                if isinstance(value, list):
+                    for item in value:
+                        if isinstance(item, dict):
+                            source_value = item.get("source", "")
+                            if isinstance(source_value, str):
+                                source_lower = source_value.lower()
+                                if "/authors" in source_lower or "/authors." in source_lower:
+                                    if source_lower.endswith("/authors") or "/authors." in source_lower:
+                                        result["authors"]["count"] += 1
+                                        result["authors"]["files"].append(file_name)
+                                        all_keys_missing = False
+                                        authors_file_found = True
+                                        break
+                
+                if authors_file_found:
+                    break
+            
+            # Same thing here for package files
+            package_found = False
+            if 'has_build_file' in data and 'has_build_file' not in missing_categories:
+                for build_file in data["has_build_file"]:
+                    source_value = build_file.get("result", {}).get("value", "").lower()
+                    format_value = build_file.get("result", {}).get("format", "").lower()
+                    
+                    for pkg_file in package_files:
+                        if pkg_file.lower() in source_value or pkg_file.lower() == format_value:
+                            if not package_found: 
+                                result["package"]["count"] += 1
+                                result["package"]["files"].append(file_name)
+                                all_keys_missing = False
+                                package_found = True
+                            break
+                    
+                    if package_found:
+                        break
 
             if 'identifier' in data and 'identifier' not in missing_categories:
                 for identifier in data["identifier"]:

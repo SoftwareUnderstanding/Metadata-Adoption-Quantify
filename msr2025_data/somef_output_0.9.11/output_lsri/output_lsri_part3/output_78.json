@@ -1,0 +1,323 @@
+{
+  "acknowledgement": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Acknowledgements",
+        "type": "Text_excerpt",
+        "value": "The research was supported by the Ministry of Science and Higher Education of the Russian Federation, agreement No. 075-15-2020-808. \nThe authors acknowledge the use of computational resources provided by the \u201cLobachevsky\u201d supercomputer.\n"
+      },
+      "source": "https://raw.githubusercontent.com/GillianGrayson/DNAmClassMeta/main/README.md",
+      "technique": "header_analysis"
+    }
+  ],
+  "code_repository": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/GillianGrayson/DNAmClassMeta"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_created": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2022-05-05T01:32:46Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_updated": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2024-04-27T22:33:12Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "description": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Description",
+        "type": "Text_excerpt",
+        "value": "Repository with source code for paper \"Disease classification for whole blood DNA methylation: meta-analysis, missing values imputation, and XAI\" by A. Kalyakulina, I. Yusipov, M.G. Bacalini, C. Franceschi, M. Vedunova, M. Ivanchenko.\n"
+      },
+      "source": "https://raw.githubusercontent.com/GillianGrayson/DNAmClassMeta/main/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Data description",
+        "type": "Text_excerpt",
+        "value": "The `data` directory contains harmonized and non-harmonized data (methylation M-values for top-1000 best CpGs) for Parkinson disease and Schizophrenia for all considered GSE datasets:\n\n```\n\u2514\u2500\u2500 data                         <- Project data\n    \u251c\u2500\u2500 Parkinson                   <- Data for Parkinson disease\n    \u2502   \u251c\u2500\u2500 non_harmonized             <- Non-harmonized data\n    \u2502   \u2502   \u251c\u2500\u2500 data.xlsx                 <- Dataframe with methylation data and additional subjects info\n    \u2502   \u2502   \u251c\u2500\u2500 features.xlsx             <- Dataframe with features (models input)\n    \u2502   \u2502   \u2514\u2500\u2500 labels.xlsx               <- Dataframe with class labels (models output)\n    \u2502   \u2514\u2500\u2500 harmonized                 <- Harmonized data\n    \u2502       \u251c\u2500\u2500 data.xlsx                 <- Dataframe with methylation data and additional subjects info\n    \u2502       \u251c\u2500\u2500 features.xlsx             <- Dataframe with features (models input)\n    \u2502       \u2514\u2500\u2500 labels.xlsx               <- Dataframe with class labels (models output)\n    \u2514\u2500\u2500 Schizophrenia               <- Data for Schizophrenia\n        \u251c\u2500\u2500 non_harmonized             <- Non-harmonized data\n        \u2502   \u251c\u2500\u2500 data.xlsx                 <- Dataframe with methylation data and additional subjects info\n        \u2502   \u251c\u2500\u2500 features.xlsx             <- Dataframe with features (models input)\n        \u2502   \u2514\u2500\u2500 labels.xlsx               <- Dataframe with class labels (models output)\n        \u2514\u2500\u2500 harmonized                 <- Harmonized data\n            \u251c\u2500\u2500 data.xlsx                 <- Dataframe with methylation data and additional subjects info\n            \u251c\u2500\u2500 features.xlsx             <- Dataframe with features (models input)\n            \u2514\u2500\u2500 labels.xlsx               <- Dataframe with class labels (models output)\n```\n\n> `data.xlsx` is a dataframe, each row corresponds to subject (GSM), each column corresponds to feature. \n> In addition to methylation levels (M-values) there are another features: `Status` (control or case), `Dataset` (original GSE) and `Partition` (Train, Validation or Test).\n\n> `features.xlsx` is a dataframe which contains features (CpGs), which will be used as input features of models. \n> Modifying this file will change the set of features (CpGs),which will be used for building a model.\n\n> `labels.xlsx` is a dataframe which class labels.\n> Modifying this file allows to select the subset of subjects which will participate in model.\n"
+      },
+      "source": "https://raw.githubusercontent.com/GillianGrayson/DNAmClassMeta/main/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 0.9712692625817511,
+      "result": {
+        "original_header": "Configuring experiments",
+        "type": "Text_excerpt",
+        "value": "There are two types of experiments based on type of model:\n- Stand-Alone (SA) models ([Logistic Regression](https://scikit-learn.org/stable/modules/generated/sklearn.linear_model.LogisticRegression.html), [SVM](https://scikit-learn.org/stable/modules/generated/sklearn.svm.SVC.html), [XGBoost](https://github.com/dmlc/xgboost), [CatBoost](https://github.com/catboost/catboost), [LightGBM](https://github.com/microsoft/LightGBM))\n- [PyTorch Lightning](https://www.pytorchlightning.ai) (PL) based models ([TabNet](https://github.com/dreamquark-ai/tabnet), [NODE](https://github.com/Qwicen/node)) \nThere are common parts in these configuration files:\n```yaml\ndisease: Parkinson        # Disease type. Options: [Parkinson, Schizophrenia]\ndata_type: harmonized     # Data type. Options: [non_harmonized, harmonized]\nmodel_type: catboost      # Model type. Options: for SA: [logistic_regression, svm, xgboost, catboost, lightgbm], for PL: [tabnet, node]\noutcome: \"Status\"         # Which column in `data.xlsx` contains class labels\n\noptimized_metric: \"accuracy_weighted\"   # Target metric in optimization process. Options: [accuracy_weighted, f1_weighted, auroc_weighted]\noptimized_mean: \"\"                      # Optimizing mean metric value across all cross-validation splits. Options: [\"\", cv_mean]\noptimized_part: \"val\"                   # Which partition should be optimized? Options: [trn, val, tst]\ndirection: \"max\"                        # Optimization metrics should be minimized or maximized? Options: [max, min]\n\nmax_epochs: 2000  # Maximum number of epochs in training process\npatience: 100     # How many validation epochs of not improving until training stops\n\nis_shap: True                    # SHAP values calculation. Options: [True, False]\nis_shap_save: False               # Save SHAP values to file?\nshap_explainer: Tree              # Explainer type for SHAP values. Options: for SA: [Tree, Kernel], for PL: [Deep, Kernel]\nshap_bkgrd: tree_path_dependent   # Background for calculating SHAP values. Options: [trn, all, tree_path_dependent]. Last option works only for GBDT models\n\ndatamodule:\n  _target_: src.datamodules.dnam.DNAmDataModule   # Instantiated datamodule\n  feat_fn: \"feat.xlsx\"                            # Filename of target features file\n  label_fn: \"label.xlsx\"                          # Filename of target labels file\n  data_fn: \"data.xlsx\"                            # Filename of data file\n  outcome: \"Status\"                               # Which column in `data_fn' contains class labels\n  batch_size: 128                                 # How many samples per batch to load\n  num_workers: 0                                  # How many subprocesses to use for data loading\n  pin_memory: False                               # Data loader will copy Tensors into CUDA pinned memory before returning them\n  seed: 42                                        # Random seed\n  imputation: \"fast_knn\"                          # Imputation method for missing values. Options: [median, mean, fast_knn, random, mice, em, mode]\n  k: 1                                            # k for 'fast_knn' imputation method\n```\nParameters of models can be changed in corresponding blocks of configuration files:\n```yaml\nlogistic_regression:    # Logistic Regression model params\n  ...\n\nsvm:    # SVM params\n  ...\n\nxgboost:    # XGBoost model params\n  ...\n\ncatboost:   # CatBoost model params\n  ...\n\nlightgbm:   # LightGBM model params\n  ...\n\ntabnet:     # TabNet model params\n  ...\n\nnode:       # NODE model params\n  ...\n```\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/GillianGrayson/DNAmClassMeta/main/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "download_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/GillianGrayson/DNAmClassMeta/releases"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 1
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/GillianGrayson/DNAmClassMeta/forks"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "GillianGrayson/DNAmClassMeta"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_title": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": ""
+      },
+      "source": "https://raw.githubusercontent.com/GillianGrayson/DNAmClassMeta/main/README.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "installation": [
+    {
+      "confidence": 0.9996542939301238,
+      "result": {
+        "original_header": "Configuring experiments",
+        "type": "Text_excerpt",
+        "value": "Configuration files for the experiments can be found in the following directory:\n```\n\u2514\u2500\u2500 configs\n    \u2514\u2500\u2500 experiment\n        \u2514\u2500\u2500 classification           \n            \u2514\u2500\u2500 trn_val_tst                 \n                \u251c\u2500\u2500 sa.yaml         <- Configuration file for Stand-Alone (SA) models\n                \u2514\u2500\u2500 pl.yaml         <- Configuration file for PyTorch Lightning (PL) based models\n``` \n"
+      },
+      "source": "https://raw.githubusercontent.com/GillianGrayson/DNAmClassMeta/main/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "invocation": [
+    {
+      "confidence": 0.8707515599956688,
+      "result": {
+        "original_header": "Configuring experiments",
+        "type": "Text_excerpt",
+        "value": "There are common parts in these configuration files:\n```yaml\ndisease: Parkinson        # Disease type. Options: [Parkinson, Schizophrenia]\ndata_type: harmonized     # Data type. Options: [non_harmonized, harmonized]\nmodel_type: catboost      # Model type. Options: for SA: [logistic_regression, svm, xgboost, catboost, lightgbm], for PL: [tabnet, node]\noutcome: \"Status\"         # Which column in `data.xlsx` contains class labels\n\noptimized_metric: \"accuracy_weighted\"   # Target metric in optimization process. Options: [accuracy_weighted, f1_weighted, auroc_weighted]\noptimized_mean: \"\"                      # Optimizing mean metric value across all cross-validation splits. Options: [\"\", cv_mean]\noptimized_part: \"val\"                   # Which partition should be optimized? Options: [trn, val, tst]\ndirection: \"max\"                        # Optimization metrics should be minimized or maximized? Options: [max, min]\n\nmax_epochs: 2000  # Maximum number of epochs in training process\npatience: 100     # How many validation epochs of not improving until training stops\n\nis_shap: True                    # SHAP values calculation. Options: [True, False]\nis_shap_save: False               # Save SHAP values to file?\nshap_explainer: Tree              # Explainer type for SHAP values. Options: for SA: [Tree, Kernel], for PL: [Deep, Kernel]\nshap_bkgrd: tree_path_dependent   # Background for calculating SHAP values. Options: [trn, all, tree_path_dependent]. Last option works only for GBDT models\n\ndatamodule:\n  _target_: src.datamodules.dnam.DNAmDataModule   # Instantiated datamodule\n  feat_fn: \"feat.xlsx\"                            # Filename of target features file\n  label_fn: \"label.xlsx\"                          # Filename of target labels file\n  data_fn: \"data.xlsx\"                            # Filename of data file\n  outcome: \"Status\"                               # Which column in `data_fn' contains class labels\n  batch_size: 128                                 # How many samples per batch to load\n  num_workers: 0                                  # How many subprocesses to use for data loading\n  pin_memory: False                               # Data loader will copy Tensors into CUDA pinned memory before returning them\n  seed: 42                                        # Random seed\n  imputation: \"fast_knn\"                          # Imputation method for missing values. Options: [median, mean, fast_knn, random, mice, em, mode]\n  k: 1                                            # k for 'fast_knn' imputation method\n```\nParameters of models can be changed in corresponding blocks of configuration files:\n```yaml\nlogistic_regression:    # Logistic Regression model params\n  ...\n\nsvm:    # SVM params\n  ...\n\nxgboost:    # XGBoost model params\n  ...\n\ncatboost:   # CatBoost model params\n  ...\n\nlightgbm:   # LightGBM model params\n  ...\n\ntabnet:     # TabNet model params\n  ...\n\nnode:       # NODE model params\n  ...\n```\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/GillianGrayson/DNAmClassMeta/main/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "issue_tracker": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/GillianGrayson/DNAmClassMeta/issues"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "keywords": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": ""
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "license": [
+    {
+      "confidence": 1,
+      "result": {
+        "name": "MIT License",
+        "spdx_id": "MIT",
+        "type": "License",
+        "url": "https://api.github.com/licenses/mit",
+        "value": "https://api.github.com/licenses/mit"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "File_dump",
+        "value": "The MIT License (MIT)\n\nCopyright (c) 2022 Alena Kalyakulina, Igor Yusipov\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE."
+      },
+      "source": "https://raw.githubusercontent.com/GillianGrayson/DNAmClassMeta/main/LICENSE",
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "License",
+        "type": "Text_excerpt",
+        "value": "This project is licensed under the MIT License.\n"
+      },
+      "source": "https://raw.githubusercontent.com/GillianGrayson/DNAmClassMeta/main/README.md",
+      "technique": "header_analysis"
+    }
+  ],
+  "name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "DNAmClassMeta"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "owner": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "User",
+        "value": "GillianGrayson"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "programming_languages": [
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Python",
+        "size": 133546,
+        "type": "Programming_language",
+        "value": "Python"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Shell",
+        "size": 460,
+        "type": "Programming_language",
+        "value": "Shell"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "readme_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/GillianGrayson/DNAmClassMeta/main/README.md"
+      },
+      "technique": "file_exploration"
+    }
+  ],
+  "requirements": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Requirements",
+        "type": "Text_excerpt",
+        "value": "Install dependencies\n\n```bash\n# clone project\ngit clone https://github.com/GillianGrayson/DNAmClassMeta\ncd DNAmClassMeta\n\n# [OPTIONAL] create conda environment\nconda create -n env_name python=3.8\nconda activate env_name\n\n# install pytorch according to instructions\n# https://pytorch.org/get-started/\n\n# install requirements\npip install -r requirements.txt\n```\n"
+      },
+      "source": "https://raw.githubusercontent.com/GillianGrayson/DNAmClassMeta/main/README.md",
+      "technique": "header_analysis"
+    }
+  ],
+  "run": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Single experiment",
+        "parent_header": [
+          "Running experiments"
+        ],
+        "type": "Text_excerpt",
+        "value": "Train SA model with configuration from `sa.yaml` file:\n\n```bash\npython run_classification_trn_val_tst_sa.py experiment=classification/trn_val_tst/sa.yaml\n```\n\nTrain PL model with configuration from `pl.yaml` file:\n\n```bash\npython run_classification_trn_val_tst_pl.py experiment=classification/trn_val_tst/pl.yaml\n```\n\n"
+      },
+      "source": "https://raw.githubusercontent.com/GillianGrayson/DNAmClassMeta/main/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Hyperparameter Search",
+        "parent_header": [
+          "Running experiments"
+        ],
+        "type": "Text_excerpt",
+        "value": "To perform the hyperparametric search for the optimal combination of the parameters on the grid add `--multirun` key and specify the parameters values:\n\n```bash\npython run_classification_trn_val_tst_pl.py experiment=classification/trn_val_tst/pl.yaml --multirun model_tabnet.optimizer_lr=0.001,0.005,0.01\n```\n"
+      },
+      "source": "https://raw.githubusercontent.com/GillianGrayson/DNAmClassMeta/main/README.md",
+      "technique": "header_analysis"
+    }
+  ],
+  "somef_missing_categories": [
+    "citation",
+    "download",
+    "contact",
+    "contributors",
+    "documentation",
+    "usage",
+    "faq",
+    "support",
+    "identifier",
+    "has_build_file",
+    "executable_example"
+  ],
+  "somef_provenance": {
+    "date": "2024-10-05 23:37:06",
+    "somef_schema_version": "1.0.0",
+    "somef_version": "0.9.5"
+  },
+  "stargazers_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 4
+      },
+      "technique": "GitHub_API"
+    }
+  ]
+}

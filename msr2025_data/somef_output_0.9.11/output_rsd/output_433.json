@@ -1,0 +1,414 @@
+{
+  "application_domain": [
+    {
+      "confidence": 38.81,
+      "result": {
+        "type": "String",
+        "value": "Computer Vision"
+      },
+      "technique": "supervised_classification"
+    }
+  ],
+  "code_repository": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/UtrechtUniversity/streetview-segmentation"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_created": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2022-07-21T09:16:11Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_updated": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2024-05-03T13:41:50Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "description": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "Project to perform semantic segmentation on (panoramic) street photo's"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Description",
+        "parent_header": [
+          "Streetview segmentation"
+        ],
+        "type": "Text_excerpt",
+        "value": "This script performs semantic segmentation on images, using models from Facebook's collection of Mask2Former\nmodels. Output consists of a CSV-file detailing, for each input image, the number of pixels in each semantic\nclass in that image. Optionally, it can save a copy of each input image overlaid with the semantic segmentation.\nIf the input images are 360\u00b0 photo's, the script provides the possibility of tranforming them by projecting them\nonto a cube, resulting in six images per input image.\n\nThis script is specifically designed to run on a computer without a GPU. Some of the underlying libraries\nrequire the presence of CUDA-drivers to run, even if the actual device is absent. As it can be problematic to\ninstall such drivers on a computer without an actual GPU, the program is packaged as Docker-container, based on\nan official NVIDIA-image, which comes with pre-installed drivers. Building and running the container requires\nthe presence of [Docker engine](https://docs.docker.com/engine/install/). Note that the container is based on a\nLinux image (Ububtu 18.04); running it on a Windows computer may require extra configuration.\n"
+      },
+      "source": "https://raw.githubusercontent.com/UtrechtUniversity/streetview-segmentation/main/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 0.8401609203647216,
+      "result": {
+        "original_header": "Streetview segmentation",
+        "type": "Text_excerpt",
+        "value": "Semantic image segmentation with Facebook's Mask2Former models.\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/UtrechtUniversity/streetview-segmentation/main/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9667230121382302,
+      "result": {
+        "original_header": "A note on package versions",
+        "type": "Text_excerpt",
+        "value": "Programs that work with CUDA can be sensitive to changes in versions of used packages. Even a change in the minor version of a package can sometimes cause serious problems. To avoid such problems, versions have been explicitly pinned to versions that have proved to work well together. However, after cloning the Mak2Former repository, [its requirements are installed](/UtrechtUniversity/streetview-segmentation/blob/main/Dockerfile#L39), none of which are pinned ([see requirements.txt](https://github.com/facebookresearch/Mask2Former/blob/main/requirements.txt)). If this causes problems in the future, try uninstalling the packages and reinstalling them to the pinned versions listed below.\n+ cython==0.29.30\n+ scipy==1.8.1\n+ shapely==1.8.2\n+ timm==0.6.5\n+ h5py==3.7.0\n+ submitit==1.4.4\n+ scikit-image==0.19.3\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/UtrechtUniversity/streetview-segmentation/main/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "download_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/UtrechtUniversity/streetview-segmentation/releases"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "faq": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Running a job",
+        "parent_header": [
+          "Streetview segmentation"
+        ],
+        "type": "Text_excerpt",
+        "value": "Command to run a job:\n```bash\ndocker run -v /local/path/to/data:/data --rm -it my_tag:latest \\\n\t--config \"/data/model/config.json\" \\\n\t--non-recursive \\\n\t--input \"/data/images/in\" \\\n\t--output \"/data/images/out\" \\\n\t--transform360 \\\n\t--transform360exclude \"5\" \\\n\t--save-segmentation-images \\\n\t--suppress-warnings\n```\nThe parameter `-v` maps a host directory to one inside the container, allowing the container access to files on the host computer. Mappings have the form of `<path on host>:<path in container>`; it's advised to always use '/data' for the second part.\n\nParameters are as follows:\n\n+ **config**: path to a JSON-file containing the model paths (mandatory; [example file](code/config.json.example))\n+ **input**: folder with images, or path to a single file (mandatory). By default, the folder is read recursively.\n+ **output**: root folder to write output to (mandatory).\n+ **non-recursive**: switch to force input folder to be read non-recursively (default: False).\n+ **transform360**: order the program to transform the input photo's from 360\u00b0 to six cube projections (default: False). If images should be processed _as is_, skip this flag. Transformed images are written to a subdirectory for each 360\u00b0 image.\n+ **transform360exclude**: comma-separated list of sides to exclude from the transformation. sides: 0 = left most, 1 = middle left, 2 = middle right, 3 = right most, 4 = top, 5 = bottom. For instance, `--transform360exclude \"4,5\"` outputs four projected images, omitting the cube's top and bottom.\n+ **save-segmentation-images**: whether the program has to save a copy of each image with the segmentation as overlay (default: False). Overlay images can be useful for checking results at a glance. They are saved in a subfolder with segmentations per model. Numerical output is always written to a CSV-file in the input folder.\n+ **suppress-warnings**: suppress some of the warnings generated by the Mask2Former software (default: False).\n"
+      },
+      "source": "https://raw.githubusercontent.com/UtrechtUniversity/streetview-segmentation/main/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Known warnings",
+        "parent_header": [
+          "Streetview segmentation",
+          "Running a job"
+        ],
+        "type": "Text_excerpt",
+        "value": "Even when suppressing warnings, you may be presented with warnings when running a job. These can include\n+ A warning about risks due to unsafe YAML-loading. As the only YAML-files loaded come from the Mask2Former repository, and are loaded inside a virtual environment, these can, under normal circumstances, be safely ignored.\n+ A warning about a changed weight format from the Transformer Decoder. The weights are automatically converted to the correct format.\n"
+      },
+      "source": "https://raw.githubusercontent.com/UtrechtUniversity/streetview-segmentation/main/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Known issues",
+        "parent_header": [
+          "Streetview segmentation",
+          "Running a job"
+        ],
+        "type": "Text_excerpt",
+        "value": "Incidentally, the program has been observed to stop during the prediction phase, without any warnings or error messages. This is usually associated with a sharp increase in memory use, and can be solved by reducing the input images' size, or by using a different prediction model.\n\n"
+      },
+      "source": "https://raw.githubusercontent.com/UtrechtUniversity/streetview-segmentation/main/README.md",
+      "technique": "header_analysis"
+    }
+  ],
+  "forks_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 0
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/UtrechtUniversity/streetview-segmentation/forks"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "UtrechtUniversity/streetview-segmentation"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_title": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "Streetview segmentation"
+      },
+      "source": "https://raw.githubusercontent.com/UtrechtUniversity/streetview-segmentation/main/README.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "has_build_file": [
+    {
+      "confidence": 1,
+      "result": {
+        "format": "dockerfile",
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/UtrechtUniversity/streetview-segmentation/main/Dockerfile"
+      },
+      "source": "https://raw.githubusercontent.com/UtrechtUniversity/streetview-segmentation/main/Dockerfile",
+      "technique": "file_exploration"
+    }
+  ],
+  "installation": [
+    {
+      "confidence": 0.9924854084747559,
+      "result": {
+        "original_header": "Building the docker container",
+        "type": "Text_excerpt",
+        "value": "Check out this repository, and to build, run:\n```bash\ndocker build -t my_tag:latest -f Dockerfile .\n```\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/UtrechtUniversity/streetview-segmentation/main/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.999971424410132,
+      "result": {
+        "original_header": "A note on package versions",
+        "type": "Text_excerpt",
+        "value": "Programs that work with CUDA can be sensitive to changes in versions of used packages. Even a change in the minor version of a package can sometimes cause serious problems. To avoid such problems, versions have been explicitly pinned to versions that have proved to work well together. However, after cloning the Mak2Former repository, [its requirements are installed](/UtrechtUniversity/streetview-segmentation/blob/main/Dockerfile#L39), none of which are pinned ([see requirements.txt](https://github.com/facebookresearch/Mask2Former/blob/main/requirements.txt)). If this causes problems in the future, try uninstalling the packages and reinstalling them to the pinned versions listed below.\n+ cython==0.29.30\n+ scipy==1.8.1\n+ shapely==1.8.2\n+ timm==0.6.5\n+ h5py==3.7.0\n+ submitit==1.4.4\n+ scikit-image==0.19.3\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/UtrechtUniversity/streetview-segmentation/main/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "issue_tracker": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/UtrechtUniversity/streetview-segmentation/issues"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "keywords": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": ""
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "streetview-segmentation"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "owner": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Organization",
+        "value": "UtrechtUniversity"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "programming_languages": [
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Python",
+        "size": 23282,
+        "type": "Programming_language",
+        "value": "Python"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Dockerfile",
+        "size": 1305,
+        "type": "Programming_language",
+        "value": "Dockerfile"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "readme_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/UtrechtUniversity/streetview-segmentation/main/README.md"
+      },
+      "technique": "file_exploration"
+    }
+  ],
+  "run": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Running a job",
+        "parent_header": [
+          "Streetview segmentation"
+        ],
+        "type": "Text_excerpt",
+        "value": "Command to run a job:\n```bash\ndocker run -v /local/path/to/data:/data --rm -it my_tag:latest \\\n\t--config \"/data/model/config.json\" \\\n\t--non-recursive \\\n\t--input \"/data/images/in\" \\\n\t--output \"/data/images/out\" \\\n\t--transform360 \\\n\t--transform360exclude \"5\" \\\n\t--save-segmentation-images \\\n\t--suppress-warnings\n```\nThe parameter `-v` maps a host directory to one inside the container, allowing the container access to files on the host computer. Mappings have the form of `<path on host>:<path in container>`; it's advised to always use '/data' for the second part.\n\nParameters are as follows:\n\n+ **config**: path to a JSON-file containing the model paths (mandatory; [example file](code/config.json.example))\n+ **input**: folder with images, or path to a single file (mandatory). By default, the folder is read recursively.\n+ **output**: root folder to write output to (mandatory).\n+ **non-recursive**: switch to force input folder to be read non-recursively (default: False).\n+ **transform360**: order the program to transform the input photo's from 360\u00b0 to six cube projections (default: False). If images should be processed _as is_, skip this flag. Transformed images are written to a subdirectory for each 360\u00b0 image.\n+ **transform360exclude**: comma-separated list of sides to exclude from the transformation. sides: 0 = left most, 1 = middle left, 2 = middle right, 3 = right most, 4 = top, 5 = bottom. For instance, `--transform360exclude \"4,5\"` outputs four projected images, omitting the cube's top and bottom.\n+ **save-segmentation-images**: whether the program has to save a copy of each image with the segmentation as overlay (default: False). Overlay images can be useful for checking results at a glance. They are saved in a subfolder with segmentations per model. Numerical output is always written to a CSV-file in the input folder.\n+ **suppress-warnings**: suppress some of the warnings generated by the Mask2Former software (default: False).\n"
+      },
+      "source": "https://raw.githubusercontent.com/UtrechtUniversity/streetview-segmentation/main/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Known warnings",
+        "parent_header": [
+          "Streetview segmentation",
+          "Running a job"
+        ],
+        "type": "Text_excerpt",
+        "value": "Even when suppressing warnings, you may be presented with warnings when running a job. These can include\n+ A warning about risks due to unsafe YAML-loading. As the only YAML-files loaded come from the Mask2Former repository, and are loaded inside a virtual environment, these can, under normal circumstances, be safely ignored.\n+ A warning about a changed weight format from the Transformer Decoder. The weights are automatically converted to the correct format.\n"
+      },
+      "source": "https://raw.githubusercontent.com/UtrechtUniversity/streetview-segmentation/main/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Known issues",
+        "parent_header": [
+          "Streetview segmentation",
+          "Running a job"
+        ],
+        "type": "Text_excerpt",
+        "value": "Incidentally, the program has been observed to stop during the prediction phase, without any warnings or error messages. This is usually associated with a sharp increase in memory use, and can be solved by reducing the input images' size, or by using a different prediction model.\n\n"
+      },
+      "source": "https://raw.githubusercontent.com/UtrechtUniversity/streetview-segmentation/main/README.md",
+      "technique": "header_analysis"
+    }
+  ],
+  "somef_missing_categories": [
+    "citation",
+    "acknowledgement",
+    "download",
+    "requirements",
+    "contact",
+    "contributors",
+    "documentation",
+    "license",
+    "support",
+    "identifier",
+    "executable_example"
+  ],
+  "somef_provenance": {
+    "date": "2024-10-04 00:13:44",
+    "somef_schema_version": "1.0.0",
+    "somef_version": "0.9.5"
+  },
+  "stargazers_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 5
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "usage": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Getting model files",
+        "parent_header": [
+          "Streetview segmentation"
+        ],
+        "type": "Text_excerpt",
+        "value": "Models have two parts: configuration files, and a file with weights. The configuration files are located in\nthe Mask2Former repository, which is included in the container at build time. Weights files are not included\nin the container; they must be downloaded and made available to the script in the container.\n\nAfter selecting the appropriate model configuration files and downloading the corresponding file with model weights,\nthe location of both needs to registered in a configuration file. For example:\n\n```json\n{\n    \"path_model_cfg\" : \"/configs/coco/panoptic-segmentation/swin/maskformer2_swin_large_IN21k_384_bs16_100ep.yaml\",\n    \"path_model_weights\" : \"/data/model/maskformer2_swin_large_IN21k_384_bs16_100ep/model_final_f07440.pkl\"\n}\n```\nSee below for more detail on the paths. Save this to a configuration file, which will be passed to the script using\nthe `--config` parameter.\n\nPlease note that the software has been tested with a limited number of models, specifically one from the Mapillary Vistas\nPanoptic Segmentation collection (model_id 49189528_0), one from the COCO Panoptic Segmentation collection (47429163_0),\nand one from the Cityscapes set (48318254_2). Generally, the Swin-L based models seem to work properly.\n"
+      },
+      "source": "https://raw.githubusercontent.com/UtrechtUniversity/streetview-segmentation/main/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Model configuration",
+        "parent_header": [
+          "Streetview segmentation",
+          "Getting model files"
+        ],
+        "type": "Text_excerpt",
+        "value": "Go the [Mask2Model Model Zoo](https://github.com/facebookresearch/Mask2Former/blob/main/MODEL_ZOO.md) and pick\na model to use. Find the path of the model's configuration file by clicking the 'Mask2Former' link for the appropriate\nmodel in the Model Zoo-table. This leads to the corresponding configuration file in the Mask2Former repository.\nTake the path of that file relative to the repository's root, as it would be when the repository were checked out.\n\nExample: the first model from the COCO Model Zoo, Panoptic Segmentation-table (model_id 47430278_4) links to [its configuration\nin the Mask2Former repo](https://github.com/facebookresearch/Mask2Former/blob/main/configs/coco/panoptic-segmentation/maskformer2_R50_bs16_50ep.yaml),\nthe relative path of which, when checked out, would be:\n\n`Mask2Former/configs/coco/panoptic-segmentation/maskformer2_R50_bs16_50ep.yaml`\n\nThis would be entered into the config file as:\n```json\n\"path_model_cfg\" : \"/configs/coco/panoptic-segmentation/maskformer2_R50_bs16_50ep.yaml\",\n```\n"
+      },
+      "source": "https://raw.githubusercontent.com/UtrechtUniversity/streetview-segmentation/main/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "External configuration",
+        "parent_header": [
+          "Streetview segmentation",
+          "Getting model files",
+          "Model configuration"
+        ],
+        "type": "Text_excerpt",
+        "value": "If the configuration of a specific model is not present in the container (for example because it was added to the Model Zoo\nafter the instance of the container was built), it can be made available to the script from a location outside of the container,\nmuch in the same way as a weights file (see next paragraph). Download the configuration file or files, make them available to\nthe container via a volume mapping, and update the value for `path_model_cfg` accordingly. The script will first look for the\nabsolute location as specified in `path_model_cfg`; if it doesn't exist, it will subsequently look in the Mask2Former repository.\nFor example, if `path_model_cfg` is set to\n\n`/data/model/config/my_maskformer2.yaml`\n\nthe script will first look in that literal path, which can be mapped to a folder on the host-machine. If that doesn't exist,\nit will look for\n\n`../Mask2Former/data/model/config/my_maskformer2.yaml`\n\nWhen using a external configuration, make sure to include *all* yaml-files required; model configurations are usually made up of\nseveral files, chained by \\_BASE\\_ statements.\n\n"
+      },
+      "source": "https://raw.githubusercontent.com/UtrechtUniversity/streetview-segmentation/main/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Weights-file",
+        "parent_header": [
+          "Streetview segmentation",
+          "Getting model files"
+        ],
+        "type": "Text_excerpt",
+        "value": "A file with model weights needs to be downloaded and made available in the container. Click the appropriate 'model'-link in the\nModel Zoo-table to download the pickle-file containing the model. In the example above, this is `model_final_94dc52.pkl`.\n\nPlace the file in a folder that will be mapped into the container, and edit the config file accordingly:\n\n```json\n\"path_model_weights\" : \"/data/model/model_final_94dc52.pkl\",\n```\nNote that this should be the path as it is 'seen' from inside the container.\n\n"
+      },
+      "source": "https://raw.githubusercontent.com/UtrechtUniversity/streetview-segmentation/main/README.md",
+      "technique": "header_analysis"
+    }
+  ]
+}

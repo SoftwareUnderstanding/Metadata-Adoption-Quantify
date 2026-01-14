@@ -1,0 +1,454 @@
+{
+  "acknowledgement": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Acknowledgements",
+        "parent_header": [
+          "<img src=\"docs/src/assets/logo.svg\" alt=\"DistributedData.jl logo\" height=\"32px\"> DistributedData.jl"
+        ],
+        "type": "Text_excerpt",
+        "value": "This was originally developed for\n[`GigaSOM.jl`](https://github.com/LCSB-BioCore/GigaSOM.jl);\n`DistributedData.jl` package contains the separated-out lightweight\ndistributed-processing framework that was used in `GigaSOM.jl`.\n\n`DistributedData.jl` was developed at the\nLuxembourg Centre for Systems Biomedicine of the University of Luxembourg ([uni.lu/lcsb](https://www.uni.lu/lcsb)).\nThe development was supported by\nEuropean Union ELIXIR Staff Exchange programme 2020 ([elixir-europe.org](https://elixir-europe.org/)), and\nEuropean Union's Horizon 2020 Programme under PerMedCoE project ([permedcoe.eu](https://www.permedcoe.eu/)) agreement no. 951773.\n\n<img src=\"docs/src/assets/unilu.svg\" alt=\"Uni.lu logo\" height=\"64px\">\u2007\u2007\u2007<img src=\"docs/src/assets/lcsb.svg\" alt=\"LCSB logo\" height=\"64px\">\u2007\u2007\u2007<img src=\"docs/src/assets/elixir.svg\" alt=\"ELIXIR logo\" height=\"64px\">\u2007\u2007\u2007<img src=\"docs/src/assets/permedcoe.svg\" alt=\"PerMedCoE logo\" height=\"64px\">\n"
+      },
+      "source": "https://raw.githubusercontent.com/LCSB-BioCore/DistributedData.jl/master/README.md",
+      "technique": "header_analysis"
+    }
+  ],
+  "application_domain": [
+    {
+      "confidence": 35.43,
+      "result": {
+        "type": "String",
+        "value": "Natural Language Processing"
+      },
+      "technique": "supervised_classification"
+    }
+  ],
+  "code_repository": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/LCSB-BioCore/DistributedData.jl"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_created": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2021-01-20T08:20:40Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_updated": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2024-01-08T17:46:00Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "description": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "Simple distributed data manipulation and processing routines in Julia"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 0.9902677572223549,
+      "result": {
+        "original_header": "<img src=\"docs/src/assets/logo.svg\" alt=\"DistributedData.jl logo\" height=\"32px\"> DistributedData.jl",
+        "type": "Text_excerpt",
+        "value": "Simple distributed data manipulation and processing routines for Julia. \n"
+      },
+      "source": "https://raw.githubusercontent.com/LCSB-BioCore/DistributedData.jl/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9775363119308889,
+      "result": {
+        "original_header": "Why?",
+        "type": "Text_excerpt",
+        "value": "`DistributedData.jl` provides a very simple, imperative and straightforward way\nto move your data around a cluster of Julia processes created by the\n[`Distributed`](https://docs.julialang.org/en/v1/stdlib/Distributed/) package,\nand run computation on the distributed data pieces. The main aim of the package\nis to avoid anything complicated-- the first version used in\n[GigaSOM](https://github.com/LCSB-BioCore/GigaSOM.jl) had just under 500 lines\nof relatively straightforward code (including the doc-comments). \nCompared to plain `Distributed` API, you get more straightforward data\nmanipulation primitives, some extra control over the precise place where code\nis executed, and a few high-level functions. These include a distributed\nversion of `mapreduce`, simpler work-alike of the\n[DistributedArrays](https://github.com/JuliaParallel/DistributedArrays.jl)\nfunctionality, and easy-to-use distributed dataset saving and loading. \nMost importantly, the main motivation behind the package is that the\ndistributed processing should be simple and accessible.\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/LCSB-BioCore/DistributedData.jl/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.8911184774726431,
+      "result": {
+        "original_header": "Brief how-to",
+        "type": "Text_excerpt",
+        "value": "The package provides a few very basic primitives that lightly wrap the\n`Distributed` package functions `remotecall` and `fetch`. The most basic one is\n`save_at`, which takes a worker ID, variable name and variable content, and\nsaves the content to the variable on the selected worker. `get_from` works the\nsame way, but takes the data back from the worker. \nYou can thus send some random array to a few distributed workers:\n```julia\njulia> using Distributed, DistributedData\n\njulia> addprocs(2)\n2-element Array{Int64,1}:\n 2\n 3\n\njulia> @everywhere using DistributedData\n\njulia> save_at(2, :x, randn(10,10))\nFuture(2, 1, 4, nothing)\n```\nThe `Future` returned from `save_at` is the normal Julia future from\n`Distributed`, you can even `fetch` it to wait until the operation is really\ndone on the other side. Fetching the data is done the same way:\n```julia\njulia> get_from(2,:x)\nFuture(2, 1, 15, nothing)\n\njulia> get_val_from(2,:x) # auto-fetch()ing variant\n10\u00d710 Array{Float64,2}:\n -0.850788    0.946637     1.78006   \u2026 \n -0.49596     0.497829    -2.03013\n   \u2026\n```\nAll commands support full quoting, which allows you to easily distinguish\nbetween code parts that are executed locally and remotely:\n```julia\njulia> save_at(3, :x, randn(1000,1000))     # generates a matrix locally and sends it to the remote worker\n\njulia> save_at(3, :x, :(randn(1000,1000)))  # generates a matrix right on the remote worker and saves it there\n\njulia> get_val_from(3, :x)                  # retrieves the generated matrix and fetches it\n\u2026\n\njulia> get_val_from(3, :(randn(1000,1000))) # generates the matrix on the worker and fetches the data\n\u2026\n```\n \nNotably, this is different from the approach taken by `DistributedArrays` and\nsimilar packages -- all data manipulation is explicit, and any data type is\nsupported as long as it can be moved among workers by the `Distributed`\npackage. This helps with various highly non-array-ish data, such as large text\ncorpora and graphs. \nThere are various goodies for easy work with matrix-style data, namely\nscattering, gathering and running distributed algorithms:\n```julia\njulia> x = randn(1000,3)\n1000\u00d73 Array{Float64,2}:\n -0.992481   0.551064     1.67424\n -0.751304  -0.845055     0.105311\n -0.712687   0.165619    -0.469055\n  \u22ee\n\njulia> dataset = scatter_array(:myDataset, x, workers())  # sends slices of the array to workers\nDinfo(:myDataset, [2, 3])   # a helper for holding the variable name and the used workers together\n\njulia> get_val_from(3, :(size(myDataset)))\n(500, 3)    # there's really only half of the data\n\njulia> dmapreduce(dataset, sum, +) # MapReduce-style sum of all data\n-51.64369103751014\n\njulia> dstat(dataset, [1,2,3]) # get means and sdevs in individual columns\n([-0.030724038974465212, 0.007300925745200863, -0.028220577808245786],\n [0.9917470012495775, 0.9975120525455358, 1.000243845434252])\n\njulia> dmedian(dataset, [1,2,3]) # distributed iterative median in columns\n3-element Array{Float64,1}:\n  0.004742259615849834\n  0.039043266340824986\n -0.05367799062404967\n\njulia> dtransform(dataset, x -> 2 .^ x) # exponentiate all data (medians should now be around 1)\nDinfo(:myDataset, [2, 3])\n\njulia> gather_array(dataset) # download the data from workers to a sing\n1000\u00d73 Array{Float64,2}:\n 0.502613  1.46517   3.1915\n 0.594066  0.55669   1.07573\n 0.610183  1.12165   0.722438\n  \u22ee\n```\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/LCSB-BioCore/DistributedData.jl/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9874754313947838,
+      "result": {
+        "original_header": "Using `DistributedData.jl` in HPC environments",
+        "type": "Text_excerpt",
+        "value": "You can use\n[`ClusterManagers`](https://github.com/JuliaParallel/ClusterManagers.jl)\npackage to add distributed workers from many different workload managers and\ntask scheduling environments, such as Slurm, PBS, LSF, and others. \n"
+      },
+      "source": "https://raw.githubusercontent.com/LCSB-BioCore/DistributedData.jl/master/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "download_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/LCSB-BioCore/DistributedData.jl/releases"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 0
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/LCSB-BioCore/DistributedData.jl/forks"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "LCSB-BioCore/DistributedData.jl"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_title": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": " DistributedData.jl"
+      },
+      "source": "https://raw.githubusercontent.com/LCSB-BioCore/DistributedData.jl/master/README.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "images": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/LCSB-BioCore/DistributedData.jl/master/docs/src/assets/unilu.svg"
+      },
+      "source": "https://raw.githubusercontent.com/LCSB-BioCore/DistributedData.jl/master/README.md",
+      "technique": "regular_expression"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/LCSB-BioCore/DistributedData.jl/master/docs/src/assets/lcsb.svg"
+      },
+      "source": "https://raw.githubusercontent.com/LCSB-BioCore/DistributedData.jl/master/README.md",
+      "technique": "regular_expression"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/LCSB-BioCore/DistributedData.jl/master/docs/src/assets/elixir.svg"
+      },
+      "source": "https://raw.githubusercontent.com/LCSB-BioCore/DistributedData.jl/master/README.md",
+      "technique": "regular_expression"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/LCSB-BioCore/DistributedData.jl/master/docs/src/assets/permedcoe.svg"
+      },
+      "source": "https://raw.githubusercontent.com/LCSB-BioCore/DistributedData.jl/master/README.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "installation": [
+    {
+      "confidence": 0.9518292330969151,
+      "result": {
+        "original_header": "<img src=\"docs/src/assets/logo.svg\" alt=\"DistributedData.jl logo\" height=\"32px\"> DistributedData.jl",
+        "type": "Text_excerpt",
+        "value": "\n| Build status | Documentation |\n|:---:|:---:|\n| ![CI](https://github.com/LCSB-BioCore/DistributedData.jl/workflows/CI/badge.svg?branch=develop) | [![doc](https://img.shields.io/badge/docs-stable-blue)](https://lcsb-biocore.github.io/DistributedData.jl/stable/) [![doc](https://img.shields.io/badge/docs-dev-blue)](https://lcsb-biocore.github.io/DistributedData.jl/dev/) | \n"
+      },
+      "source": "https://raw.githubusercontent.com/LCSB-BioCore/DistributedData.jl/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9984679679672951,
+      "result": {
+        "original_header": "Using `DistributedData.jl` in HPC environments",
+        "type": "Text_excerpt",
+        "value": "See the documentation for an [example of using Slurm to run\nDistributedData](https://lcsb-biocore.github.io/DistributedData.jl/stable/slurm/).\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/LCSB-BioCore/DistributedData.jl/master/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "issue_tracker": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/LCSB-BioCore/DistributedData.jl/issues"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "keywords": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "data, distributed, julia"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "license": [
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Apache License 2.0",
+        "spdx_id": "Apache-2.0",
+        "type": "License",
+        "url": "https://api.github.com/licenses/apache-2.0",
+        "value": "https://api.github.com/licenses/apache-2.0"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "File_dump",
+        "value": "                                 Apache License\n                           Version 2.0, January 2004\n                        http://www.apache.org/licenses/\n\n   TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION\n\n   1. Definitions.\n\n      \"License\" shall mean the terms and conditions for use, reproduction,\n      and distribution as defined by Sections 1 through 9 of this document.\n\n      \"Licensor\" shall mean the copyright owner or entity authorized by\n      the copyright owner that is granting the License.\n\n      \"Legal Entity\" shall mean the union of the acting entity and all\n      other entities that control, are controlled by, or are under common\n      control with that entity. For the purposes of this definition,\n      \"control\" means (i) the power, direct or indirect, to cause the\n      direction or management of such entity, whether by contract or\n      otherwise, or (ii) ownership of fifty percent (50%) or more of the\n      outstanding shares, or (iii) beneficial ownership of such entity.\n\n      \"You\" (or \"Your\") shall mean an individual or Legal Entity\n      exercising permissions granted by this License.\n\n      \"Source\" form shall mean the preferred form for making modifications,\n      including but not limited to software source code, documentation\n      source, and configuration files.\n\n      \"Object\" form shall mean any form resulting from mechanical\n      transformation or translation of a Source form, including but\n      not limited to compiled object code, generated documentation,\n      and conversions to other media types.\n\n      \"Work\" shall mean the work of authorship, whether in Source or\n      Object form, made available under the License, as indicated by a\n      copyright notice that is included in or attached to the work\n      (an example is provided in the Appendix below).\n\n      \"Derivative Works\" shall mean any work, whether in Source or Object\n      form, that is based on (or derived from) the Work and for which the\n      editorial revisions, annotations, elaborations, or other modifications\n      represent, as a whole, an original work of authorship. For the purposes\n      of this License, Derivative Works shall not include works that remain\n      separable from, or merely link (or bind by name) to the interfaces of,\n      the Work and Derivative Works thereof.\n\n      \"Contribution\" shall mean any work of authorship, including\n      the original version of the Work and any modifications or additions\n      to that Work or Derivative Works thereof, that is intentionally\n      submitted to Licensor for inclusion in the Work by the copyright owner\n      or by an individual or Legal Entity authorized to submit on behalf of\n      the copyright owner. For the purposes of this definition, \"submitted\"\n      means any form of electronic, verbal, or written communication sent\n      to the Licensor or its representatives, including but not limited to\n      communication on electronic mailing lists, source code control systems,\n      and issue tracking systems that are managed by, or on behalf of, the\n      Licensor for the purpose of discussing and improving the Work, but\n      excluding communication that is conspicuously marked or otherwise\n      designated in writing by the copyright owner as \"Not a Contribution.\"\n\n      \"Contributor\" shall mean Licensor and any individual or Legal Entity\n      on behalf of whom a Contribution has been received by Licensor and\n      subsequently incorporated within the Work.\n\n   2. Grant of Copyright License. Subject to the terms and conditions of\n      this License, each Contributor hereby grants to You a perpetual,\n      worldwide, non-exclusive, no-charge, royalty-free, irrevocable\n      copyright license to reproduce, prepare Derivative Works of,\n      publicly display, publicly perform, sublicense, and distribute the\n      Work and such Derivative Works in Source or Object form.\n\n   3. Grant of Patent License. Subject to the terms and conditions of\n      this License, each Contributor hereby grants to You a perpetual,\n      worldwide, non-exclusive, no-charge, royalty-free, irrevocable\n      (except as stated in this section) patent license to make, have made,\n      use, offer to sell, sell, import, and otherwise transfer the Work,\n      where such license applies only to those patent claims licensable\n      by such Contributor that are necessarily infringed by their\n      Contribution(s) alone or by combination of their Contribution(s)\n      with the Work to which such Contribution(s) was submitted. If You\n      institute patent litigation against any entity (including a\n      cross-claim or counterclaim in a lawsuit) alleging that the Work\n      or a Contribution incorporated within the Work constitutes direct\n      or contributory patent infringement, then any patent licenses\n      granted to You under this License for that Work shall terminate\n      as of the date such litigation is filed.\n\n   4. Redistribution. You may reproduce and distribute copies of the\n      Work or Derivative Works thereof in any medium, with or without\n      modifications, and in Source or Object form, provided that You\n      meet the following conditions:\n\n      (a) You must give any other recipients of the Work or\n          Derivative Works a copy of this License; and\n\n      (b) You must cause any modified files to carry prominent notices\n          stating that You changed the files; and\n\n      (c) You must retain, in the Source form of any Derivative Works\n          that You distribute, all copyright, patent, trademark, and\n          attribution notices from the Source form of the Work,\n          excluding those notices that do not pertain to any part of\n          the Derivative Works; and\n\n      (d) If the Work includes a \"NOTICE\" text file as part of its\n          distribution, then any Derivative Works that You distribute must\n          include a readable copy of the attribution notices contained\n          within such NOTICE file, excluding those notices that do not\n          pertain to any part of the Derivative Works, in at least one\n          of the following places: within a NOTICE text file distributed\n          as part of the Derivative Works; within the Source form or\n          documentation, if provided along with the Derivative Works; or,\n          within a display generated by the Derivative Works, if and\n          wherever such third-party notices normally appear. The contents\n          of the NOTICE file are for informational purposes only and\n          do not modify the License. You may add Your own attribution\n          notices within Derivative Works that You distribute, alongside\n          or as an addendum to the NOTICE text from the Work, provided\n          that such additional attribution notices cannot be construed\n          as modifying the License.\n\n      You may add Your own copyright statement to Your modifications and\n      may provide additional or different license terms and conditions\n      for use, reproduction, or distribution of Your modifications, or\n      for any such Derivative Works as a whole, provided Your use,\n      reproduction, and distribution of the Work otherwise complies with\n      the conditions stated in this License.\n\n   5. Submission of Contributions. Unless You explicitly state otherwise,\n      any Contribution intentionally submitted for inclusion in the Work\n      by You to the Licensor shall be under the terms and conditions of\n      this License, without any additional terms or conditions.\n      Notwithstanding the above, nothing herein shall supersede or modify\n      the terms of any separate license agreement you may have executed\n      with Licensor regarding such Contributions.\n\n   6. Trademarks. This License does not grant permission to use the trade\n      names, trademarks, service marks, or product names of the Licensor,\n      except as required for reasonable and customary use in describing the\n      origin of the Work and reproducing the content of the NOTICE file.\n\n   7. Disclaimer of Warranty. Unless required by applicable law or\n      agreed to in writing, Licensor provides the Work (and each\n      Contributor provides its Contributions) on an \"AS IS\" BASIS,\n      WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or\n      implied, including, without limitation, any warranties or conditions\n      of TITLE, NON-INFRINGEMENT, MERCHANTABILITY, or FITNESS FOR A\n      PARTICULAR PURPOSE. You are solely responsible for determining the\n      appropriateness of using or redistributing the Work and assume any\n      risks associated with Your exercise of permissions under this License.\n\n   8. Limitation of Liability. In no event and under no legal theory,\n      whether in tort (including negligence), contract, or otherwise,\n      unless required by applicable law (such as deliberate and grossly\n      negligent acts) or agreed to in writing, shall any Contributor be\n      liable to You for damages, including any direct, indirect, special,\n      incidental, or consequential damages of any character arising as a\n      result of this License or out of the use or inability to use the\n      Work (including but not limited to damages for loss of goodwill,\n      work stoppage, computer failure or malfunction, or any and all\n      other commercial damages or losses), even if such Contributor\n      has been advised of the possibility of such damages.\n\n   9. Accepting Warranty or Additional Liability. While redistributing\n      the Work or Derivative Works thereof, You may choose to offer,\n      and charge a fee for, acceptance of support, warranty, indemnity,\n      or other liability obligations and/or rights consistent with this\n      License. However, in accepting such obligations, You may act only\n      on Your own behalf and on Your sole responsibility, not on behalf\n      of any other Contributor, and only if You agree to indemnify,\n      defend, and hold each Contributor harmless for any liability\n      incurred by, or claims asserted against, such Contributor by reason\n      of your accepting any such warranty or additional liability.\n\n   END OF TERMS AND CONDITIONS\n\n   APPENDIX: How to apply the Apache License to your work.\n\n      To apply the Apache License to your work, attach the following\n      boilerplate notice, with the fields enclosed by brackets \"[]\"\n      replaced with your own identifying information. (Don't include\n      the brackets!)  The text should be enclosed in the appropriate\n      comment syntax for the file format. We also recommend that a\n      file or class name and description of purpose be included on the\n      same \"printed page\" as the copyright notice for easier\n      identification within third-party archives.\n\n   Copyright [yyyy] [name of copyright owner]\n\n   Licensed under the Apache License, Version 2.0 (the \"License\");\n   you may not use this file except in compliance with the License.\n   You may obtain a copy of the License at\n\n       http://www.apache.org/licenses/LICENSE-2.0\n\n   Unless required by applicable law or agreed to in writing, software\n   distributed under the License is distributed on an \"AS IS\" BASIS,\n   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n   See the License for the specific language governing permissions and\n   limitations under the License.\n"
+      },
+      "source": "https://raw.githubusercontent.com/LCSB-BioCore/DistributedData.jl/master/LICENSE",
+      "technique": "file_exploration"
+    }
+  ],
+  "logo": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/LCSB-BioCore/DistributedData.jl/master/docs/src/assets/logo.svg"
+      },
+      "source": "https://raw.githubusercontent.com/LCSB-BioCore/DistributedData.jl/master/README.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "DistributedData.jl"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "owner": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Organization",
+        "value": "LCSB-BioCore"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "programming_languages": [
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Julia",
+        "size": 34710,
+        "type": "Programming_language",
+        "value": "Julia"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "readme_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/LCSB-BioCore/DistributedData.jl/master/README.md"
+      },
+      "technique": "file_exploration"
+    }
+  ],
+  "releases": [
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "github-actions[bot]",
+          "type": "Bot"
+        },
+        "date_created": "2021-09-08T09:36:25Z",
+        "date_published": "2021-09-08T09:36:26Z",
+        "description": "## DistributedData v0.1.4\n\n[Diff since v0.1.3](https://github.com/LCSB-BioCore/DistributedData.jl/compare/v0.1.3...v0.1.4)\n\n\n**Closed issues:**\n- bump version v0.1.3 (#31)\n\n**Merged pull requests:**\n- fix CI in r3 gitlab (#34) (@exaexa)\n- Fix parallelism of dmap (#35) (@exaexa)\n- retry remote macro PR again (#38) (@exaexa)\n- bemp version to 0.1.4 (#39) (@exaexa)",
+        "html_url": "https://github.com/LCSB-BioCore/DistributedData.jl/releases/tag/v0.1.4",
+        "name": "v0.1.4",
+        "release_id": 49184607,
+        "tag": "v0.1.4",
+        "tarball_url": "https://api.github.com/repos/LCSB-BioCore/DistributedData.jl/tarball/v0.1.4",
+        "type": "Release",
+        "url": "https://api.github.com/repos/LCSB-BioCore/DistributedData.jl/releases/49184607",
+        "value": "https://api.github.com/repos/LCSB-BioCore/DistributedData.jl/releases/49184607",
+        "zipball_url": "https://api.github.com/repos/LCSB-BioCore/DistributedData.jl/zipball/v0.1.4"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "github-actions[bot]",
+          "type": "Bot"
+        },
+        "date_created": "2021-02-24T09:38:16Z",
+        "date_published": "2021-02-24T09:38:19Z",
+        "description": "## DistributedData v0.1.3\n\n[Diff since v0.1.2](https://github.com/LCSB-BioCore/DistributedData.jl/compare/v0.1.2...v0.1.3)\n\n\n**Closed issues:**\n- bump version v0.1.2 (#28)\n\n**Merged pull requests:**\n- add funding acknowledgement (#29) (@exaexa)\n- add distributed pool map (#30) (@exaexa)",
+        "html_url": "https://github.com/LCSB-BioCore/DistributedData.jl/releases/tag/v0.1.3",
+        "name": "v0.1.3",
+        "release_id": 38636786,
+        "tag": "v0.1.3",
+        "tarball_url": "https://api.github.com/repos/LCSB-BioCore/DistributedData.jl/tarball/v0.1.3",
+        "type": "Release",
+        "url": "https://api.github.com/repos/LCSB-BioCore/DistributedData.jl/releases/38636786",
+        "value": "https://api.github.com/repos/LCSB-BioCore/DistributedData.jl/releases/38636786",
+        "zipball_url": "https://api.github.com/repos/LCSB-BioCore/DistributedData.jl/zipball/v0.1.3"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "github-actions[bot]",
+          "type": "Bot"
+        },
+        "date_created": "2021-02-09T12:16:48Z",
+        "date_published": "2021-02-09T12:16:51Z",
+        "description": "## DistributedData v0.1.2\n\n[Diff since v0.1.1](https://github.com/LCSB-BioCore/DistributedData.jl/compare/v0.1.1...v0.1.2)\n\n\n**Closed issues:**\n- add MWE for running on HPC with slurm scheduler (#18)\n- Bump version v0.1.1 (#23)\n\n**Merged pull requests:**\n- Minimal working example for usage in slurm (#25) (@exaexa)\n- Develop (#26) (@laurentheirendt)\n- bump version (#27) (@laurentheirendt)",
+        "html_url": "https://github.com/LCSB-BioCore/DistributedData.jl/releases/tag/v0.1.2",
+        "name": "v0.1.2",
+        "release_id": 37796307,
+        "tag": "v0.1.2",
+        "tarball_url": "https://api.github.com/repos/LCSB-BioCore/DistributedData.jl/tarball/v0.1.2",
+        "type": "Release",
+        "url": "https://api.github.com/repos/LCSB-BioCore/DistributedData.jl/releases/37796307",
+        "value": "https://api.github.com/repos/LCSB-BioCore/DistributedData.jl/releases/37796307",
+        "zipball_url": "https://api.github.com/repos/LCSB-BioCore/DistributedData.jl/zipball/v0.1.2"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "github-actions[bot]",
+          "type": "Bot"
+        },
+        "date_created": "2021-02-01T07:44:07Z",
+        "date_published": "2021-02-01T07:44:10Z",
+        "description": "## DistributedData v0.1.1\n\n[Diff since v0.1.0](https://github.com/LCSB-BioCore/DistributedData.jl/compare/v0.1.0...v0.1.1)\n\n\n**Closed issues:**\n- Register package (#9)\n\n**Merged pull requests:**\n- add tagbot for julia pkg (#19) (@laurentheirendt)\n- Fix docs (#20) (@laurentheirendt)\n- Develop (#21) (@laurentheirendt)\n- bump version (#22) (@laurentheirendt)",
+        "html_url": "https://github.com/LCSB-BioCore/DistributedData.jl/releases/tag/v0.1.1",
+        "name": "v0.1.1",
+        "release_id": 37161691,
+        "tag": "v0.1.1",
+        "tarball_url": "https://api.github.com/repos/LCSB-BioCore/DistributedData.jl/tarball/v0.1.1",
+        "type": "Release",
+        "url": "https://api.github.com/repos/LCSB-BioCore/DistributedData.jl/releases/37161691",
+        "value": "https://api.github.com/repos/LCSB-BioCore/DistributedData.jl/releases/37161691",
+        "zipball_url": "https://api.github.com/repos/LCSB-BioCore/DistributedData.jl/zipball/v0.1.1"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "laurentheirendt",
+          "type": "User"
+        },
+        "date_created": "2021-02-01T06:43:00Z",
+        "date_published": "2021-02-01T06:44:48Z",
+        "html_url": "https://github.com/LCSB-BioCore/DistributedData.jl/releases/tag/v0.1.0",
+        "name": "Initial release of DistributedData.jl package",
+        "release_id": 37160033,
+        "tag": "v0.1.0",
+        "tarball_url": "https://api.github.com/repos/LCSB-BioCore/DistributedData.jl/tarball/v0.1.0",
+        "type": "Release",
+        "url": "https://api.github.com/repos/LCSB-BioCore/DistributedData.jl/releases/37160033",
+        "value": "https://api.github.com/repos/LCSB-BioCore/DistributedData.jl/releases/37160033",
+        "zipball_url": "https://api.github.com/repos/LCSB-BioCore/DistributedData.jl/zipball/v0.1.0"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "somef_missing_categories": [
+    "citation",
+    "run",
+    "download",
+    "requirements",
+    "contact",
+    "contributors",
+    "documentation",
+    "usage",
+    "faq",
+    "support",
+    "identifier",
+    "has_build_file",
+    "executable_example"
+  ],
+  "somef_provenance": {
+    "date": "2024-10-05 23:30:55",
+    "somef_schema_version": "1.0.0",
+    "somef_version": "0.9.5"
+  },
+  "stargazers_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 17
+      },
+      "technique": "GitHub_API"
+    }
+  ]
+}

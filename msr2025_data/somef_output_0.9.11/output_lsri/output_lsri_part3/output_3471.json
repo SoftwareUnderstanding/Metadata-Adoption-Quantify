@@ -1,0 +1,507 @@
+{
+  "application_domain": [
+    {
+      "confidence": 22.63,
+      "result": {
+        "type": "String",
+        "value": "Computer Vision"
+      },
+      "technique": "supervised_classification"
+    }
+  ],
+  "citation": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "References",
+        "parent_header": [
+          "Specter: A novel tool for clustering large-scale single cell RNA-seq and multi-modal data"
+        ],
+        "type": "Text_excerpt",
+        "value": "-----\nStoeckius, M. et al. (2017). Simultaneous epitope and transcriptome\nmeasurement in single cells. Nature Methods, 14(9), 865\u2013868. <br>\nMimitou, E.P. et al. (2019). Multiplexed detection of proteins, transcriptomes, \nclonotypes and CRISPR perturbations in single cells. Nature Methods, 16(5), 409\u2013412.\n\n"
+      },
+      "source": "https://raw.githubusercontent.com/canzarlab/Specter/master/README.md",
+      "technique": "header_analysis"
+    }
+  ],
+  "code_repository": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/canzarlab/Specter"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_created": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2020-01-16T22:55:53Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_updated": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2022-09-30T06:40:33Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "description": [
+    {
+      "confidence": 0.9994222827050434,
+      "result": {
+        "original_header": "Overview",
+        "type": "Text_excerpt",
+        "value": "Specter is a novel computational method for clustering large-scale single cell RNA-seq data. In addition, Specter can combine the data from different measurements such as RNA measurements and the antibody-derived tags (collected on the same set of cells). Specter runs in linear time with respect to number of cells, thus it is very suitable for analyzing very big single cell RNA-seq data. On a data set comprising 2 million cells from mouse embryos, Specter requires only 26 minutes to compute the clusters. For details you can find in our manuscript here: https://www.biorxiv.org/content/10.1101/2020.06.15.151910v1.full. \n \n"
+      },
+      "source": "https://raw.githubusercontent.com/canzarlab/Specter/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9931035566565393,
+      "result": {
+        "original_header": "Specter enhances cell type identification",
+        "type": "Text_excerpt",
+        "value": "Numerous methods have been proposed for clustering scRNA-seq data sets, with Seurat and its underlying Louvain clustering algorithm being arguably the most widely used one. We showed that Specter outperforms Seurat in term of accurary and speed on a large number of real scRNA-seq datasets. Moreover, Specter can highlight rare cell types in which Seurat might not find.\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/canzarlab/Specter/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9869685701293713,
+      "result": {
+        "original_header": "Using Specter with multi-modal data",
+        "type": "Text_excerpt",
+        "value": "On multi-modal dataset of 8,617 cord blood mononuclear cells (CBMCs), produced by CITE-seq (Stoeckius et al. (2017)). The authors measure the single cell transcriptomes alongside the expression of 11 surface proteins, whose levels are quantified with DNA-barcoded antibodie. When we combine transtriptomic counts (mRNA) and antibody-derived tags (ADT), Specter is able to utilize multimodal omics measurements to resolve subtle transcriptomic differences between subpopulations of cells. \n"
+      },
+      "source": "https://raw.githubusercontent.com/canzarlab/Specter/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9980891222858586,
+      "result": {
+        "original_header": "Analyze multimodal clustering from Specter",
+        "type": "Text_excerpt",
+        "value": "This tutorial will demonstrate the annotation of cell types using the results produced by Specter. We analyze a CITE-seq data from healthy human PBMCs (Mimitou et al., 2019). We use Seurat R package for data preprocessing and visualization. The analysis of Citefuse and CBMC data set can be found in directory multimodal_analysis.\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/canzarlab/Specter/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9266799386977851,
+      "result": {
+        "original_header": "Load library and data",
+        "type": "Text_excerpt",
+        "value": "Next we load two count matrices : one for the RNA measurements, and one\nfor the antibody-derived tags\n(ADT). \nFirst you need to extract the data 'pbmc.zip' in the directory /data/ and put all data in this folder to your current R working directory.\n``` r\n# First we load the selected cells by CiteFuse doublet removal. \nselected_cells <- read.csv(file = \"data/pbmc_nodoublet_minPts50_selectedcells.csv\", sep = \",\", \nheader = TRUE, row.names = 1)\n# Read data\npbmc.rna <- as.sparse(read.csv(file = \"data/pbmc_rna.csv\", sep = \",\", \n                               header = TRUE, row.names = 1))\npbmc.rna <- pbmc.rna[, rownames(selected_cells)] # remove doublet\n\n# Load in the ADT UMI matrix\nadt <- read.csv(file = \"data/pbmc_adt.csv\", sep = \",\", \n                header = TRUE, row.names = 1)\npbmc.adt <- as.sparse(adt[1:49, ])\npbmc.adt <- pbmc.adt[ ,rownames(selected_cells)]\n```\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/canzarlab/Specter/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.994134099894477,
+      "result": {
+        "original_header": "Preprocessing ADT",
+        "type": "Text_excerpt",
+        "value": "Run dimentionality reduction\n``` r\n# Set ADT data as default. \nDefaultAssay(pbmc) <- \"ADT\"\npbmc <- RunPCA(pbmc, features = rownames(pbmc), reduction.name = \"pca_adt\", reduction.key = \"pca_adt_\", \n               verbose = FALSE)\n#DimPlot(pbmc, reduction = \"pca_adt\")\n# Compute a standard euclidean distance matrix, which is used for visualization and clustering ADT count\nadt.data <- GetAssayData(pbmc, slot = \"data\")\nadt.dist <- dist(t(adt.data))\n\n# Compute tSNE using our distance matrix defined only on ADT (protein) levels.\npbmc[[\"tsne_adt\"]] <- RunTSNE(adt.dist, assay = \"ADT\", reduction.key = \"adtTSNE_\")\n\n#DimPlot(pbmc, reduction = \"tsne_adt\") + NoLegend()\n```\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/canzarlab/Specter/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9362647110431875,
+      "result": {
+        "original_header": "Validation",
+        "type": "Text_excerpt",
+        "value": "Confirm CD27+ vs CD27- subtypes (based on CD27)\n``` r\nRidgePlot(pbmc, assay = \"ADT\", features = c(\"CD27\"), ncol = 2)\n```\n \nConfirm DR+ DR- subtype based on genes \u201cNKG7\u201d, \u201cGZMA\u201d \n``` r\nall_markers <- c(\"NKG7\", \"GZMA\")\nRidgePlot(pbmc, assay = \"RNA\", features = paste(\"hg19-\", all_markers, sep=\"\"), ncol = 2)\n```\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/canzarlab/Specter/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9683538145563968,
+      "result": {
+        "original_header": "Preprocessing",
+        "type": "Text_excerpt",
+        "value": "The scripts for preprocessing of real and simulated datasets (stored as a SCE object) are provided in Rscipts/preprocessing. The similar Matlab-based preprocessing script is provided in 'preprocessing_benchmarks.m'.\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/canzarlab/Specter/master/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "download_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/canzarlab/Specter/releases"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 2
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/canzarlab/Specter/forks"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "canzarlab/Specter"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_title": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "Specter: A novel tool for clustering large-scale single cell RNA-seq and multi-modal data"
+      },
+      "source": "https://raw.githubusercontent.com/canzarlab/Specter/master/README.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "images": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/canzarlab/Specter/master/img/multimodal.png"
+      },
+      "source": "https://raw.githubusercontent.com/canzarlab/Specter/master/README.md",
+      "technique": "regular_expression"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/canzarlab/Specter/master/analysis_specter_minPts_50_markdown_files/figure-gfm/fig26-1.svg"
+      },
+      "source": "https://raw.githubusercontent.com/canzarlab/Specter/master/README.md",
+      "technique": "regular_expression"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/canzarlab/Specter/master/analysis_specter_minPts_50_markdown_files/figure-gfm/fig2-1.svg"
+      },
+      "source": "https://raw.githubusercontent.com/canzarlab/Specter/master/README.md",
+      "technique": "regular_expression"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/canzarlab/Specter/master/analysis_specter_minPts_50_markdown_files/figure-gfm/fig1b-1.svg"
+      },
+      "source": "https://raw.githubusercontent.com/canzarlab/Specter/master/README.md",
+      "technique": "regular_expression"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/canzarlab/Specter/master/analysis_specter_minPts_50_markdown_files/figure-gfm/fig1bc-1.svg"
+      },
+      "source": "https://raw.githubusercontent.com/canzarlab/Specter/master/README.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "installation": [
+    {
+      "confidence": 0.9201337820483283,
+      "result": {
+        "original_header": "Preprocessing mRNA",
+        "type": "Text_excerpt",
+        "value": "``` r\npbmc <- CreateSeuratObject(counts = pbmc.rna)\n# standard log-normalization\npbmc <- NormalizeData(pbmc)\n# choose variable features\npbmc <- FindVariableFeatures(pbmc)\n# standard scaling\npbmc <- ScaleData(pbmc)\n``` \n"
+      },
+      "source": "https://raw.githubusercontent.com/canzarlab/Specter/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9613672017000707,
+      "result": {
+        "original_header": "Rare cell experiments",
+        "type": "Text_excerpt",
+        "value": "The scripts for reproducing rare cell experiments are provided in the directory 'Rscripts/rare_cell_experiments'.\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/canzarlab/Specter/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.8434797257464856,
+      "result": {
+        "original_header": "Multi-modal analysis",
+        "type": "Text_excerpt",
+        "value": "Provided above. \n"
+      },
+      "source": "https://raw.githubusercontent.com/canzarlab/Specter/master/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "invocation": [
+    {
+      "confidence": 0.9487076185261718,
+      "result": {
+        "original_header": "Load library and data",
+        "type": "Text_excerpt",
+        "value": "First you need to extract the data 'pbmc.zip' in the directory /data/ and put all data in this folder to your current R working directory.\n``` r\n# First we load the selected cells by CiteFuse doublet removal. \nselected_cells <- read.csv(file = \"data/pbmc_nodoublet_minPts50_selectedcells.csv\", sep = \",\", \nheader = TRUE, row.names = 1)\n# Read data\npbmc.rna <- as.sparse(read.csv(file = \"data/pbmc_rna.csv\", sep = \",\", \n                               header = TRUE, row.names = 1))\npbmc.rna <- pbmc.rna[, rownames(selected_cells)] # remove doublet\n\n# Load in the ADT UMI matrix\nadt <- read.csv(file = \"data/pbmc_adt.csv\", sep = \",\", \n                header = TRUE, row.names = 1)\npbmc.adt <- as.sparse(adt[1:49, ])\npbmc.adt <- pbmc.adt[ ,rownames(selected_cells)]\n```\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/canzarlab/Specter/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.8806485281931454,
+      "result": {
+        "original_header": "Read and visualize clusters from Specter",
+        "type": "Text_excerpt",
+        "value": "``` r\n# Load the results from Specter. Run the file 'run_multimodal_Specter.m' to get the results We also store the output in directory output and you can load it directly without running the script.\nsce_labels <- read.csv(\"output/pbmc_specter_clustering.csv\", header = F)\nsce_labels <- as.factor(sce_labels$V1)\nnames(sce_labels) <- pbmc.adt@Dimnames[[2]]\n\npbmc[[\"sceClusterID\"]] <- sce_labels\nDefaultAssay(pbmc) <- \"RNA\"\nIdents(pbmc) <- sce_labels\n```\n``` r\n#Plot clusters on RNA and ADT t-SNE. \ntsne_rnaClusters <- DimPlot(pbmc, reduction = \"tsne\", group.by = \"sceClusterID\") + NoLegend()\ntsne_rnaClusters <- tsne_rnaClusters + ggtitle(\"Specter's clusters on RNA\") + theme(plot.title = element_text(hjust = 0.5))\ntsne_rnaClusters <- LabelClusters(plot = tsne_rnaClusters, id = \"sceClusterID\", size = 4)\n\ntsne_adtClusters <- DimPlot(pbmc, reduction = \"tsne_adt\", group.by = \"sceClusterID\", pt.size = 0.5) + NoLegend()\ntsne_adtClusters <- tsne_adtClusters + ggtitle(\"Specter's clusters on ADT\") + theme(plot.title = element_text(hjust = 0.5))\ntsne_adtClusters <- LabelClusters(plot = tsne_adtClusters, id = \"sceClusterID\", size = 4)\nCombinePlots(plots = list(tsne_rnaClusters, tsne_adtClusters), ncol = 2)\n```\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/canzarlab/Specter/master/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "issue_tracker": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/canzarlab/Specter/issues"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "keywords": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": ""
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "Specter"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "owner": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "User",
+        "value": "canzarlab"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "programming_languages": [
+    {
+      "confidence": 1,
+      "result": {
+        "name": "HTML",
+        "size": 9370699,
+        "type": "Programming_language",
+        "value": "HTML"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "MATLAB",
+        "size": 115476,
+        "type": "Programming_language",
+        "value": "MATLAB"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "R",
+        "size": 40871,
+        "type": "Programming_language",
+        "value": "R"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "readme_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/canzarlab/Specter/master/README.md"
+      },
+      "technique": "file_exploration"
+    }
+  ],
+  "requirements": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Systems Requirements",
+        "parent_header": [
+          "Specter: A novel tool for clustering large-scale single cell RNA-seq and multi-modal data"
+        ],
+        "type": "Text_excerpt",
+        "value": "--------------------\n\nSpecter is independent of operating systems because it is written in Matlab. Basic requirement for running Specter includes MATLAB and the Statistics and Machine Learning Toolbox. \n\nThis Package has been tested using MATLAB 2018a on Linux.  \n\n"
+      },
+      "source": "https://raw.githubusercontent.com/canzarlab/Specter/master/README.md",
+      "technique": "header_analysis"
+    }
+  ],
+  "run": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "DE test on RNA",
+        "parent_header": [
+          "Specter: A novel tool for clustering large-scale single cell RNA-seq and multi-modal data",
+          "Analyze multimodal clustering from Specter",
+          "Running DE test to assign cell type identity to clusters"
+        ],
+        "type": "Text_excerpt",
+        "value": "**Note that gene name starts with a prefix \u201chg19\u201d.**\n\n``` r\n# We need to switch to RNA\nDefaultAssay(pbmc) <- \"RNA\"\nspecter.rna.markers <- FindAllMarkers(pbmc, max.cells.per.ident = 100, min.diff.pct = 0.3, only.pos = TRUE)\n# Extract top 10 marker genes for each cluster\nrna.top10 <- specter.rna.markers %>% group_by(cluster) %>% top_n(n = 10, wt = avg_logFC)\n# head(rna.top10, n = 15)\n```\n\nYou can plot heatmap on top markers genes\n\n``` r\n# Plot heatmap on top marker ADTs\n# DoHeatmap(pbmc, features = unique(rna.top10$gene), assay = \"RNA\", angle = 0) \n```\n"
+      },
+      "source": "https://raw.githubusercontent.com/canzarlab/Specter/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "DE test on ADT",
+        "parent_header": [
+          "Specter: A novel tool for clustering large-scale single cell RNA-seq and multi-modal data",
+          "Analyze multimodal clustering from Specter",
+          "Running DE test to assign cell type identity to clusters"
+        ],
+        "type": "Text_excerpt",
+        "value": "``` r\n# Find protein markers for all clusters, and draw a heatmap\nDefaultAssay(pbmc) <- \"ADT\"\nadt.markers <- FindAllMarkers(pbmc, assay = \"ADT\", only.pos = TRUE)\n# Extract ADT top 10 markers\nadt.top10 <- adt.markers %>% group_by(cluster) %>% top_n(n = 10, wt = avg_logFC)\n#head(adt.top10, n = 15)\n```\n\nPlot heatmap on 10 markers ADT, but it is not very informative.\n\n``` r\n# Plot heatmap on top marker ADTs\n#DoHeatmap(pbmc, features = unique(adt.top10$gene), assay = \"ADT\", angle = 0) \n```\n\nFor PBMCs cells we have canonical markers to match the unbiased\nclustering to known cell types:\n\n| Cell Type    | Marker genes       |\n| ------------ | ------------------ |\n| Naive CD4+ T | IL7R, CCR7, SELL   |\n| Memory CD4+  | IL7R, S100A4, CD27 |\n| CD14+ Mono   | CD14, LYZ          |\n| B            | MS4A1              |\n| CD8+ T       | CD8A               |\n| FCGR3A+ Mono | FCGR3A, MS4A7      |\n| NK           | GNLY, NKG7         |\n| DC           | FCER1A, CST3       |\n"
+      },
+      "source": "https://raw.githubusercontent.com/canzarlab/Specter/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Visualize on cluster IDs",
+        "parent_header": [
+          "Specter: A novel tool for clustering large-scale single cell RNA-seq and multi-modal data",
+          "Analyze multimodal clustering from Specter",
+          "Running DE test to assign cell type identity to clusters"
+        ],
+        "type": "Text_excerpt",
+        "value": "``` r\nsce_labels <- mapvalues(sce_labels, from = levels(sce_labels), to = new.cluster.ids)\npbmc[[\"sceClusterID\"]] <- sce_labels\nIdents(pbmc) <- sce_labels\n```\n\n``` r\n#Plot clusters on RNA and ADT t-SNE. \ntsne_rnaClusters <- DimPlot(pbmc, reduction = \"tsne\", group.by = \"sceClusterID\") + NoLegend()\ntsne_rnaClusters <- tsne_rnaClusters + ggtitle(\"Specter's clusters on RNA\") + theme(plot.title = element_text(hjust = 0.5))\ntsne_rnaClusters <- LabelClusters(plot = tsne_rnaClusters, id = \"sceClusterID\", size = 4)\n\ntsne_adtClusters <- DimPlot(pbmc, reduction = \"tsne_adt\", group.by = \"sceClusterID\", pt.size = 0.5) + NoLegend()\ntsne_adtClusters <- tsne_adtClusters + ggtitle(\"Specter's clusters on ADT\") + theme(plot.title = element_text(hjust = 0.5))\ntsne_adtClusters <- LabelClusters(plot = tsne_adtClusters, id = \"sceClusterID\", size = 4)\nCombinePlots(plots = list(tsne_rnaClusters, tsne_adtClusters), ncol = 2)\n```\n\n![](analysis_specter_minPts_50_markdown_files/figure-gfm/fig2-1.svg)\n"
+      },
+      "source": "https://raw.githubusercontent.com/canzarlab/Specter/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Running Specter",
+        "parent_header": [
+          "Specter: A novel tool for clustering large-scale single cell RNA-seq and multi-modal data",
+          "Reproducibility"
+        ],
+        "type": "Text_excerpt",
+        "value": "Modify 'Specter_demo.m' for a query dataset.\n"
+      },
+      "source": "https://raw.githubusercontent.com/canzarlab/Specter/master/README.md",
+      "technique": "header_analysis"
+    }
+  ],
+  "somef_missing_categories": [
+    "acknowledgement",
+    "download",
+    "contact",
+    "contributors",
+    "documentation",
+    "license",
+    "faq",
+    "support",
+    "identifier",
+    "has_build_file",
+    "executable_example"
+  ],
+  "somef_provenance": {
+    "date": "2024-10-06 12:52:31",
+    "somef_schema_version": "1.0.0",
+    "somef_version": "0.9.5"
+  },
+  "stargazers_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 6
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "usage": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Usage",
+        "parent_header": [
+          "Specter: A novel tool for clustering large-scale single cell RNA-seq and multi-modal data"
+        ],
+        "type": "Text_excerpt",
+        "value": "-----\n\nUnzip the package. Change the current directory in Matlab to the folder containing the scripts.\n\nThis directory includes the following main scripts:\n1) Specter_demo.m -- an example run of Specter on a specific dataset\n2) eval_exact_Specter.m -- run exact Specter algorithm (time complexity: O(n^2)) \n3) eval_fast_Specter.m -- run fast Specter algorithm (time complexity: O(n))\n---------------------------\n4) run_multimodal_Specter.m -- an example of running Specter on multi-modal data (PBMCs).\n\n\nPlease refer to Specter_demo.m for instructions on how to use this code.\nInput Data are gene expression data matrix (columns are genes (PCs) and rows are cells). \n"
+      },
+      "source": "https://raw.githubusercontent.com/canzarlab/Specter/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Look at the top marker genes and ADT, we get the following cluster IDs.",
+        "parent_header": [
+          "Specter: A novel tool for clustering large-scale single cell RNA-seq and multi-modal data",
+          "Analyze multimodal clustering from Specter",
+          "Running DE test to assign cell type identity to clusters"
+        ],
+        "type": "Text_excerpt",
+        "value": "``` r\nnew.cluster.ids <- c(\"CD4+CD27+ T\",\"Naive CD4+ T\",\"FCGR3A+ Mono\",\"CD14+ Mono\",\"CD4+CD27-DR+ T\",\"CD8+CD27+ T\",\"CD8+CD27- T\",\"CD8+CD27- T\", \"CD8+CD27- T\",\"CD8+CD27+ T\",\"CD8+CD27- T\",\"CD4+CD27-DR- T\",\"B\",\"MK\",\"Effector CD8+ T\",\"NK\")\n```\n"
+      },
+      "source": "https://raw.githubusercontent.com/canzarlab/Specter/master/README.md",
+      "technique": "header_analysis"
+    }
+  ]
+}

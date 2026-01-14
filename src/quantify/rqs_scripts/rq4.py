@@ -2,21 +2,20 @@ import os
 import json
 import re
 
-result = {
-    "description": {"count_short": 0, "count_long": 0},
-    "no_description": {"count":0},
-    "license": {
-        "spdx": {"count": 0, "licenses": []},
-        "no_spdx": {"count": 0, "licenses": []},
-        "no_license":{"count": 0, "files": []}
-    },
-    "installation": {"count": 0},
-    "requirements": {"count": 0},
-    "download": {"count": 0},
-    "documentation": {"count": 0}
-}
-
 def rq4(json_files_directory, missing_key, output_file, output_directory):
+    result = {
+        "description": {"count_short": 0, "count_long": 0},
+        "no_description": {"count":0},
+        "license": {
+            "spdx": {"count": 0, "licenses": []},
+            "no_spdx": {"count": 0, "licenses": []},
+            "no_license":{"count": 0, "files": []}
+        },
+        "installation": {"count": 0},
+        "requirements": {"count": 0},
+        "download": {"count": 0},
+        "documentation": {"count": 0}
+    }
     for root, dirs, files in os.walk(json_files_directory):
         for file_name in files:
             if file_name.startswith("output_") and file_name.endswith(".json"):

@@ -1,0 +1,533 @@
+{
+  "code_repository": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/alubbock/microbench"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_created": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2018-08-02T22:30:46Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_updated": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2024-08-17T16:39:24Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "description": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "Benchmarking and metadata tracking for Python. Extensible, with distributed/cluster support."
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 0.993728254325447,
+      "result": {
+        "original_header": "Microbench",
+        "type": "Text_excerpt",
+        "value": "Microbench is a small Python package for benchmarking Python functions, and\noptionally capturing extra runtime/environment information. It is most useful in\nclustered/distributed environments, where the same function runs under different\nenvironments, and is designed to be extensible with new\nfunctionality. In addition to benchmarking, this can help reproducibility by\ne.g. logging the versions of key Python packages, or even all packages loaded\ninto the global environment. Other captured metadata can include CPU and RAM\nusage, environment variables, and hardware specifications.\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/alubbock/microbench/main/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9398541199822681,
+      "result": {
+        "original_header": "Examine results",
+        "type": "Text_excerpt",
+        "value": "Start and finish times are given as timestamps in ISO-8601 format, in the UTC\ntimezone by default (see Timezones section of this README). \nRun_durations are given in seconds, captured using the `time.perf_counter`\nfunction by default, but this can be overridden (see Duration timings section\nof this README). \n"
+      },
+      "source": "https://raw.githubusercontent.com/alubbock/microbench/main/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.8806175502524543,
+      "result": {
+        "original_header": "Extending microbench",
+        "type": "Text_excerpt",
+        "value": "You can also add functions to your benchmark suite to capture\nextra information at runtime. These functions must be prefixed with `capture_`\nfor them to run automatically before the function starts, or `capturepost_`\nfor them to run automatically when the function completes. They take\na single argument, `bm_data`, a dictionary to be extended with extra data.\nCare should be taken to avoid overwriting existing key names. \n"
+      },
+      "source": "https://raw.githubusercontent.com/alubbock/microbench/main/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.923169087107956,
+      "result": {
+        "original_header": "Extending JSONEncoder",
+        "type": "Text_excerpt",
+        "value": "Microbench encodes data in JSON, but sometimes Microbench will\nencounter data types (like custom objects or classes)\nthat are not encodable as JSON by default (usually meaning they\ndon't have a way to be represented as a string, list, or\ndictionary). For example, when using the `MBFunctionCall` and\n`MBReturnValue`, a warning will be shown if any argument or\nreturn value (respectively) is not encodable as JSON, and the\nvalue will be replaced with a placeholder to allow the metadata\ncapture to continue, and a warning will be shown. \nIf you wish to actually capture those values, you will need to\nspecify a way to convert the object to JSON. This is done using\nby extending `microbench.JSONEncoder` with a test for the object\ntype and implementing a conversion to a string, list, or dict. \nFor example, to capture a `Graph` object from the `igraph`\npackage using `str(graph)` as the representation, we could\ndo the following (note that we could use any representation\nwe want, e.g. if we wanted to capture the object in a more\nor less detailed way):\n```\nimport microbench as mb\nfrom igraph import Graph\n\n# Extend the JSONEncoder to encode Graph objects\nclass CustomJSONEncoder(mb.JSONEncoder):\n    def default(self, o):\n        # Encode igraph.Graph objects as strings\n        if isinstance(o, Graph):\n            return str(o)\n\n        # Add further isinstance(o, ...) cases here\n        # if needed\n\n        # Make sure to call super() to handle\n        # default cases\n        return super().default(o)\n\n# Define your benchmark class as normal\nclass Bench(mb.MicroBench, mb.MBReturnValue):\n    pass\n\n# Create a benchmark suite with the custom JSON\n# encoder from above\nbench = Bench(json_encoder=CustomJSONEncoder)\n\n# Attach the benchmark suite to our function\n@bench\ndef return_a_graph():\n    return Graph(2, ((0, 1), (0, 2)))\n\n# This should now work without warnings or errors\nreturn_a_graph()\n```\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/alubbock/microbench/main/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9525700310826231,
+      "result": {
+        "original_header": "Runtime impact considerations",
+        "type": "Text_excerpt",
+        "value": "The runtime impact varies depending on what information is captured and by platform.\nBroadly, capturing environment variables, Python package versions, and timing\ninformation for a function has a negligible impact. Capturing telemetry and\ninvoking external programs (like `nvidia-smi` for GPU information) has a larger impact,\nalthough the latter is a one-off per invocation and typically less than one second.\nTelemetry capture intervals should be kept relatively infrequent (e.g., every minute\nor two, rather than every second) to avoid significant runtime impacts.\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/alubbock/microbench/main/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9873411677567645,
+      "result": {
+        "original_header": "Duration timings",
+        "type": "Text_excerpt",
+        "value": "By default, `run_durations` are given in seconds using the `time.perf_counter` function,\nwhich should be sufficient for most use cases. You can use any function that\nreturns a float or integer number for time. Some examples would be `time.perf_counter_ns`\nif you want time in nanoseconds, or `time.monotonic` for a monotonic clock impervious\nto clock adjustments (ideal for very long-running code). Use the `duration_counter=...`\nargument when creating a benchmark suite object, as seen in the Extended examples\nsection of this README, above.\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/alubbock/microbench/main/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9356232651639631,
+      "result": {
+        "original_header": "Timezones",
+        "type": "Text_excerpt",
+        "value": "Microbench captures `start_time` and `finish_time` in the UTC timezone by default.\nThis can be overriden by passing a `tz=...` argument when creating a benchmark\nclass, where the value is a timezone object (e.g. created using the `pytz` library).\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/alubbock/microbench/main/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9560920581414497,
+      "result": {
+        "original_header": "Feedback",
+        "type": "Text_excerpt",
+        "value": "Please note this is a recently created, experimental package. Please let me know\nyour feedback or feature requests in Github issues.\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/alubbock/microbench/main/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "download_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/alubbock/microbench/releases"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 0
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/alubbock/microbench/forks"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "alubbock/microbench"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_title": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "Microbench"
+      },
+      "source": "https://raw.githubusercontent.com/alubbock/microbench/main/README.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "installation": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Installation",
+        "parent_header": [
+          "Microbench"
+        ],
+        "type": "Text_excerpt",
+        "value": "To install using `pip`:\n\n```\npip install microbench\n```\n"
+      },
+      "source": "https://raw.githubusercontent.com/alubbock/microbench/main/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 0.9967864559226844,
+      "result": {
+        "original_header": "Extending microbench",
+        "type": "Text_excerpt",
+        "value": "You can also add functions to your benchmark suite to capture\nextra information at runtime. These functions must be prefixed with `capture_`\nfor them to run automatically before the function starts, or `capturepost_`\nfor them to run automatically when the function completes. They take\na single argument, `bm_data`, a dictionary to be extended with extra data.\nCare should be taken to avoid overwriting existing key names. \n"
+      },
+      "source": "https://raw.githubusercontent.com/alubbock/microbench/main/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9986423914491931,
+      "result": {
+        "original_header": "Feedback",
+        "type": "Text_excerpt",
+        "value": "Please note this is a recently created, experimental package. Please let me know\nyour feedback or feature requests in Github issues.\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/alubbock/microbench/main/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "invocation": [
+    {
+      "confidence": 0.8222056820086452,
+      "result": {
+        "original_header": "Examine results",
+        "type": "Text_excerpt",
+        "value": "The simplest way to examine results in detail is to load them into a\n[pandas](https://pandas.pydata.org/) dataframe:\n```python\n# Read results directly from active benchmark suite\nbenchmark.get_results()\n\n# Or, equivalently when using a file, read it using pandas directly\nimport pandas\nresults = pandas.read_json('/home/user/my-benchmarks', lines=True)\n```\nPandas has powerful data manipulation capabilities. For example, to calculate\nthe average runtime by Python version:\n```python\n# Calculate overall runtime\nresults['runtime'] = results['finish_time'] - results['start_time']\n\n# Average overall runtime by Python version\nresults.groupby('python_version')['runtime'].mean()\n```\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/alubbock/microbench/main/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.8261694807632507,
+      "result": {
+        "original_header": "Extending microbench",
+        "type": "Text_excerpt",
+        "value": "Here's an example to capture the machine type (`i386`, `x86_64` etc.):\n```python\nfrom microbench import MicroBench\nimport platform\n\nclass Bench(MicroBench):\n    outfile = '/home/user/my-benchmarks'\n\n    def capture_machine_platform(self, bm_data):\n        bm_data['platform'] = platform.machine()\n\nbenchmark = Bench()\n```\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/alubbock/microbench/main/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "issue_tracker": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/alubbock/microbench/issues"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "keywords": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "benchmarking, python"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "license": [
+    {
+      "confidence": 1,
+      "result": {
+        "name": "MIT License",
+        "spdx_id": "MIT",
+        "type": "License",
+        "url": "https://api.github.com/licenses/mit",
+        "value": "https://api.github.com/licenses/mit"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "File_dump",
+        "value": "MIT License\n\nCopyright (c) 2018 Alex Lubbock <code@alexlubbock.com>\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.\n"
+      },
+      "source": "https://raw.githubusercontent.com/alubbock/microbench/main/LICENSE",
+      "technique": "file_exploration"
+    }
+  ],
+  "logo": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/alubbock/microbench/master/microbench.png"
+      },
+      "source": "https://raw.githubusercontent.com/alubbock/microbench/main/README.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "microbench"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "owner": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "User",
+        "value": "alubbock"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "programming_languages": [
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Python",
+        "size": 140479,
+        "type": "Programming_language",
+        "value": "Python"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "readme_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/alubbock/microbench/main/README.md"
+      },
+      "technique": "file_exploration"
+    }
+  ],
+  "related_documentation": [
+    {
+      "confidence": 1,
+      "result": {
+        "format": "readthedocs",
+        "type": "Url",
+        "value": "https://psutil.readthedocs.io/"
+      },
+      "source": "https://raw.githubusercontent.com/alubbock/microbench/main/README.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "releases": [
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "alubbock",
+          "type": "User"
+        },
+        "date_created": "2024-08-17T16:39:20Z",
+        "date_published": "2024-08-17T16:40:51Z",
+        "description": "This release should fix installation of microbench from pypi with python 3.12.\r\n\r\n## What's Changed\r\n* chore: Configure Renovate by @renovate in https://github.com/alubbock/microbench/pull/11\r\n* chore(deps): update actions/checkout action to v4 by @renovate in https://github.com/alubbock/microbench/pull/12\r\n* chore(deps): update actions/setup-python action to v5 by @renovate in https://github.com/alubbock/microbench/pull/13\r\n* chore: upgrade versioneer to support python 3.12 by @alubbock in https://github.com/alubbock/microbench/pull/16\r\n\r\n## New Contributors\r\n* @renovate made their first contribution in https://github.com/alubbock/microbench/pull/11\r\n\r\n**Full Changelog**: https://github.com/alubbock/microbench/compare/v0.9...v0.9.1",
+        "html_url": "https://github.com/alubbock/microbench/releases/tag/v0.9.1",
+        "name": "v0.9.1",
+        "release_id": 170723620,
+        "tag": "v0.9.1",
+        "tarball_url": "https://api.github.com/repos/alubbock/microbench/tarball/v0.9.1",
+        "type": "Release",
+        "url": "https://api.github.com/repos/alubbock/microbench/releases/170723620",
+        "value": "https://api.github.com/repos/alubbock/microbench/releases/170723620",
+        "zipball_url": "https://api.github.com/repos/alubbock/microbench/zipball/v0.9.1"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "alubbock",
+          "type": "User"
+        },
+        "date_created": "2024-08-17T02:04:23Z",
+        "date_published": "2024-08-17T02:09:45Z",
+        "description": "## What's Changed\r\n\r\n\r\n* feat: multiple iterations of functions by @alubbock in https://github.com/alubbock/microbench/pull/7\r\n  the wrapped function can now be evaluated multiple times, with timings given in a new `run_durations` field.\r\n* feat: customisable duration timer functions by @alubbock in https://github.com/alubbock/microbench/pull/10\r\n  the new `run_durations` field uses `time.perf_counter` by default, but the function used is customisable.\r\n* feat: use importlib instead of pkg_resources by @alubbock in https://github.com/alubbock/microbench/pull/6\r\n  pkg_resources is deprecated, so use importlib instead.\r\n* fix: calls to deprecated conda api by @alubbock in https://github.com/alubbock/microbench/pull/5\r\n* fix: line_profiler hook by @alubbock in https://github.com/alubbock/microbench/pull/8\r\n  this was not storing timings properly.\r\n* fix: update pandas.read_json syntax by @alubbock in https://github.com/alubbock/microbench/pull/9\r\n  another deprecation fix.\r\n\r\n\r\nFor further details on how to use these new features, see the [README](https://github.com/alubbock/microbench).\r\n\r\n\r\n**Full Changelog**: https://github.com/alubbock/microbench/compare/v0.8...v0.9",
+        "html_url": "https://github.com/alubbock/microbench/releases/tag/v0.9",
+        "name": "v0.9",
+        "release_id": 170693001,
+        "tag": "v0.9",
+        "tarball_url": "https://api.github.com/repos/alubbock/microbench/tarball/v0.9",
+        "type": "Release",
+        "url": "https://api.github.com/repos/alubbock/microbench/releases/170693001",
+        "value": "https://api.github.com/repos/alubbock/microbench/releases/170693001",
+        "zipball_url": "https://api.github.com/repos/alubbock/microbench/zipball/v0.9"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "requirements": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Requirements",
+        "parent_header": [
+          "Microbench"
+        ],
+        "type": "Text_excerpt",
+        "value": "Microbench by default has no dependencies outside of the Python standard\nlibrary, although [pandas](https://pandas.pydata.org/) is recommended to\nexamine results. However, some mixins (extensions) have specific requirements:\n\n* The [line_profiler](https://github.com/rkern/line_profiler)\n  package needs to be installed for line-by-line code benchmarking.\n* `MBInstalledPackages` requires `setuptools`, which is not a part of the\n  standard library, but is usually available.\n* The CPU cores, total RAM, and telemetry extensions require\n  [psutil](https://pypi.org/project/psutil/).\n* The NVIDIA GPU plugin requires the\n  [nvidia-smi](https://developer.nvidia.com/nvidia-system-management-interface)\n  utility, which usually ships with the NVIDIA graphics card drivers. It needs\n  to be on your `PATH`.\n"
+      },
+      "source": "https://raw.githubusercontent.com/alubbock/microbench/main/README.md",
+      "technique": "header_analysis"
+    }
+  ],
+  "somef_missing_categories": [
+    "citation",
+    "acknowledgement",
+    "run",
+    "download",
+    "contact",
+    "contributors",
+    "documentation",
+    "faq",
+    "identifier",
+    "has_build_file",
+    "executable_example"
+  ],
+  "somef_provenance": {
+    "date": "2024-10-06 03:03:42",
+    "somef_schema_version": "1.0.0",
+    "somef_version": "0.9.5"
+  },
+  "stargazers_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 16
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "support": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Line profiler support",
+        "parent_header": [
+          "Microbench"
+        ],
+        "type": "Text_excerpt",
+        "value": "Microbench also has support for [line_profiler](https://github.com/rkern/line_profiler), which shows the execution time\nof each line of Python code. Note that this will slow down your code, so only use it if needed, but it's useful for\ndiscovering bottlenecks within a function. Requires the `line_profiler` package to be installed\n(e.g. `pip install line_profiler`).\n\n```python\nfrom microbench import MicroBench, MBLineProfiler\nimport pandas\n\n# Create our benchmark suite using the MBLineProfiler mixin\nclass LineProfilerBench(MicroBench, MBLineProfiler):\n    pass\n\nlpbench = LineProfilerBench()\n\n# Decorate our function with the benchmark suite\n@lpbench\ndef my_function():\n    \"\"\" Inefficient function for line profiler \"\"\"\n    acc = 0\n    for i in range(1000000):\n        acc += i\n\n    return acc\n\n# Call the function as normal\nmy_function()\n\n# Read the results into a Pandas DataFrame\nresults = lpbench.get_results()\n\n# Get the line profiler report as an object\nlp = MBLineProfiler.decode_line_profile(results['line_profiler'][0])\n\n# Print the line profiler report\nMBLineProfiler.print_line_profile(results['line_profiler'][0])\n```\n\nThe last line of the previous example will print the line profiler report, showing the execution time of each line of\ncode. Example:\n\n```\nTimer unit: 1e-06 s\n\nTotal time: 0.476723 s\nFile: /home/user/my_test.py\nFunction: my_function at line 12\n\nLine #      Hits         Time  Per Hit   % Time  Line Contents\n==============================================================\n    12                                               @lpbench\n    13                                               def my_function():\n    14                                                   \"\"\" Inefficient function for line profiler \"\"\"\n    15         1          2.0      2.0      0.0          acc = 0\n    16   1000001     217874.0      0.2     45.7          for i in range(1000000):\n    17   1000000     258846.0      0.3     54.3              acc += i\n    18\n    19         1          1.0      1.0      0.0          return acc\n```\n"
+      },
+      "source": "https://raw.githubusercontent.com/alubbock/microbench/main/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "NVIDIA GPU support",
+        "parent_header": [
+          "Microbench"
+        ],
+        "type": "Text_excerpt",
+        "value": "Attributes about NVIDIA GPUs can be captured using the `MBNvidiaSmi` plugin.\nThis requires the `nvidia-smi` utility to be available in the current `PATH`.\n\nBy default, the `gpu_name` (model number) and `memory.total` attributes are\ncaptured. Extra attributes can be specified using the class or object-level\nvariable `nvidia_attributes`. To see which attributes are available, run\n`nvidia-smi --help-query-gpu`.\n\nBy default, all installed GPUs will be polled. To limit to a specific GPU,\nspecify the `nvidia_gpus` attribute as a tuple of GPU IDs, which can be\nzero-based GPU indexes (can change between reboots, not recommended),\nGPU UUIDs, or PCI bus IDs. You can find out GPU UUIDs by running\n`nvidia-smi -L`.\n\nHere's an example specifying the optional `nvidia_attributes` and\n`nvidia_gpus` fields:\n\n```python\nfrom microbench import MicroBench, MBNvidiaSmi\n\nclass GpuBench(MicroBench, MBNvidiaSmi):\n    outfile = '/home/user/gpu-benchmarks'\n    nvidia_attributes = ('gpu_name', 'memory.total', 'pcie.link.width.max')\n    nvidia_gpus = (0, )  # Usually better to specify GPU UUIDs here instead\n\ngpu_bench = GpuBench()\n```\n"
+      },
+      "source": "https://raw.githubusercontent.com/alubbock/microbench/main/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Telemetry support",
+        "parent_header": [
+          "Microbench"
+        ],
+        "type": "Text_excerpt",
+        "value": "We use the term \"telemetry\" to refer to metadata which is captured periodically\nduring the execution of a function by a thread which runs in parallel. For\nexample, this may be useful to see how memory usage changes over time.\n\nTelemetry support requires the `psutil` library.\n\nMicrobench launches and cleans up the monitoring thread automatically.\nThe end user only needs to define a `telemetry` static method, which accepts\na [psutil.Process](https://psutil.readthedocs.io/en/latest/#psutil.Process)\nobject and returns the telemetry data as a dictionary.\n\nThe default telemetry collection interval is every 60 seconds, which can be\ncustomized if needed using the `telemetry_interval` class variable.\n\nA minimal example to capture memory usage every 90 seconds is shown below:\n\n```python\nfrom microbench import MicroBench\n\nclass TelemBench(MicroBench):\n    telemetry_interval = 90\n\n    @staticmethod\n    def telemetry(process):\n        return process.memory_full_info()._asdict()\n\ntelem_bench = TelemBench()\n```\n"
+      },
+      "source": "https://raw.githubusercontent.com/alubbock/microbench/main/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Redis support",
+        "parent_header": [
+          "Microbench"
+        ],
+        "type": "Text_excerpt",
+        "value": "By default, microbench appends output to a file, but output can be directed\nelsewhere, e.g. [redis](https://redis.io) - an in-memory, networked data source.\nThis option is useful when a shared filesystem is not available.\n\nRedis support requires [redis-py](https://github.com/andymccurdy/redis-py).\n\nTo use this feature, inherit from `MicroBenchRedis` instead of `MicroBench`,\nand specify the redis connection and key name as in the following example:\n\n```python\nfrom microbench import MicroBenchRedis\n\nclass RedisBench(MicroBenchRedis):\n    # redis_connection contains arguments for redis.StrictClient()\n    redis_connection = {'host': 'localhost', 'port': 6379}\n    redis_key = 'microbench:mykey'\n\nbenchmark = RedisBench()\n```\n\nTo retrieve results, the `redis` package can be used directly:\n\n```python\nimport redis\nimport pandas\n\n# Establish the connection to redis\nrconn = redis.StrictRedis(host=..., port=...)\n\n# Read the redis data from 'myrediskey' into a list of byte arrays\nredis_data = redis.lrange('myrediskey', 0, -1)\n\n# Convert the list into a single string\njson_data = '\\n'.join(r.decode('utf8') for r in redis_data)\n\n# Read the string into a pandas dataframe\nresults = pandas.read_json(json_data, lines=True)\n```\n"
+      },
+      "source": "https://raw.githubusercontent.com/alubbock/microbench/main/README.md",
+      "technique": "header_analysis"
+    }
+  ],
+  "type": [
+    {
+      "confidence": 0.82,
+      "result": {
+        "type": "String",
+        "value": "commandline-application"
+      },
+      "technique": "software_type_heuristics"
+    }
+  ],
+  "usage": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Usage",
+        "parent_header": [
+          "Microbench"
+        ],
+        "type": "Text_excerpt",
+        "value": "Microbench is designed for benchmarking Python functions. These examples will\nassume you have already defined a Python function `myfunction` that you wish to\nbenchmark:\n\n```python\ndef myfunction(arg1, arg2, ...):\n    ...\n```\n"
+      },
+      "source": "https://raw.githubusercontent.com/alubbock/microbench/main/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Minimal example",
+        "parent_header": [
+          "Microbench",
+          "Usage"
+        ],
+        "type": "Text_excerpt",
+        "value": "First, create a benchmark suite, which specifies the configuration and\ninformation to capture.\n\nHere's a minimal, complete example:\n\n```python\nfrom microbench import MicroBench\n\nbasic_bench = MicroBench()\n```\n\nTo attach the benchmark to your function, simply use `basic_bench` as a\ndecorator, like this:\n\n```python\n@basic_bench\ndef myfunction(arg1, arg2, ...):\n    ...\n```\n\nThat's it! When `myfunction()` is called, metadata will be captured\ninto a `io.StringIO()` buffer, which can be read as follows\n(using the `pandas` library):\n\n```python\nimport pandas as pd\nresults = pd.read_json(basic_bench.outfile, lines=True)\n```\n\nThe above example captures the fields `start_time`, `finish_time`,\n`run_durations` (of each function call, in seconds by default), `function_name`,\n`timestamp_tz` (timezone name, see Timezones section of this README), and\n`duration_counter` (the name of the function used to calculate\ndurations, see Duration timings section of this README).\n\nMicrobench can capture many\nother types of metadata from the environment, resource usage, and\nhardware, which are covered below.\n"
+      },
+      "source": "https://raw.githubusercontent.com/alubbock/microbench/main/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Extended examples",
+        "parent_header": [
+          "Microbench",
+          "Usage"
+        ],
+        "type": "Text_excerpt",
+        "value": "Here's a more complete example using mixins (the `MB` prefixed class\nnames) to extend functionality. Note that keyword arguments can be supplied\nto the constructor (in this case `some_info=123`) to specify additional\ninformation to capture. We also specify `iterations=3`, which means that the\ncalled function with be executed 3 times (the returned result will always\nbe from the final run) with timings captured for each run. We specify a custom\nduration counter, `time.monotonic` instead of the default `time.perf_counter`\n(see Duration timings section later in this README for explanation).\nThis example also specifies the `outfile` option,\nwhich appends metadata to a file on disk.\n\n```python\nfrom microbench import *\nimport numpy, pandas, time\n\nclass MyBench(MicroBench, MBFunctionCall, MBPythonVersion, MBHostInfo):\n    outfile = '/home/user/my-benchmarks'\n    capture_versions = (numpy, pandas)  # Or use MBGlobalPackages/MBInstalledPackages\n    env_vars = ('SLURM_ARRAY_TASK_ID', )\n\nbenchmark = MyBench(some_info=123, iterations=3, duration_counter=time.monotonic)\n```\n\nThe `env_vars` option from the example above specifies a list of environment\nvariables to capture as `env_<variable name>`. In this example,\nthe [slurm](https://slurm.schedmd.com) array task ID will be stored as\n`env_SLURM_ARRAY_TASK_ID`. Where the environment variable is not set, the\nvalue will be `null`.\n\nTo capture package versions, you can either specify them individually (as\nabove), or you can capture the versions of every package in the global\nenvironment. In the following example, we would capture the versions of\n`microbench`, `numpy`, and `pandas` automatically.\n\n```python\nfrom microbench import *\nimport numpy, pandas\n\nclass Bench2(MicroBench, MBGlobalPackages):\n    outfile = '/home/user/bench2'\n\nbench2 = Bench2()\n```\n\nIf you want to go even further, and capture the version of every package\navailable for import, there's a mixin for that:\n\n```python\nfrom microbench import *\n\nclass Bench3(MicroBench, MBInstalledPackages):\n    pass\n\nbench3 = Bench3()\n```\n\n Mixin                 | Fields captured\n-----------------------|----------------\n*(default)*            | `start_time`<br>`finish_time`<br>`function_name`\nMBGlobalPackages       | `package_versions`, with entry for every package in the global environment\nMBInstalledPackages    | `package_versions`, with entry for every package available for import\nMBCondaPackages        | `conda_versions`, with entry for every conda package in the environment\nMBFunctionCall         | `args` (positional arguments)<br>`kwargs` (keyword arguments)\nMBReturnValue          | Wrapped function's return value\nMBPythonVersion        | `python_version` (e.g. 3.6.0) and `python_executable` (e.g. `/usr/bin/python`, which should indicate any active virtual environment)\nMBHostInfo             | `hostname`<br>`operating_system`\nMBHostCpuCores         | `cpu_cores_logical` (number of cores, requires `psutil`)\nMBHostRamTotal         | `ram_total` (total RAM in bytes, requires `psutil`)\nMBNvidiaSmi            | Various NVIDIA GPU fields, detailed in a later section\nMBLineProfiler         | `line_profiler` containing line-by-line profile (see section below)\n"
+      },
+      "source": "https://raw.githubusercontent.com/alubbock/microbench/main/README.md",
+      "technique": "header_analysis"
+    }
+  ]
+}

@@ -1,0 +1,610 @@
+{
+  "citation": [
+    {
+      "confidence": 1,
+      "result": {
+        "format": "cff",
+        "type": "File_dump",
+        "value": "cff-version: 1.1.0\nmessage: \"If you use this software, please cite it as below.\"\nauthors:\n  - family-names: Furstenau\n    given-names: Tara\n  - family-names: Schneider\n    given-names: Tsosie\n  - family-names: Perry\n    given-names: Adam\n  - family-names: Fofanov\n    given-names: Viacheslav\ntitle: mtsv_tools-v2.0.2\nversion: 2.0.2\ndate-released: 2017-7-25\n"
+      },
+      "source": "https://raw.githubusercontent.com/FofanovLab/mtsv_tools/master/CITATION.cff",
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Reference Sequence Data",
+        "parent_header": [
+          "mtsv-tools"
+        ],
+        "type": "Text_excerpt",
+        "value": "MTSv implements a custom metagenomic index (MG-index) based on the FM-index data structure.\nReference indices must be built prior to performing taxonomic classification.\n"
+      },
+      "source": "https://raw.githubusercontent.com/FofanovLab/mtsv_tools/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Reference file format",
+        "parent_header": [
+          "mtsv-tools",
+          "Reference Sequence Data"
+        ],
+        "type": "Text_excerpt",
+        "value": "To construct the MG-indices, you'll need a multi-FASTA file of all reference sequences, with headers in the format `SEQID-TAXID`. So a sequence has a unique integer ID 12345, and belongs to the NCBI taxonomic ID 987, the header for that sequence should read `12345-987`. The reference sequences can be sourced from any DNA sequence collection (i.e., GenBank, RefSeq, etc.) and customized to fit your project. \n\n"
+      },
+      "source": "https://raw.githubusercontent.com/FofanovLab/mtsv_tools/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Chunking reference database",
+        "parent_header": [
+          "mtsv-tools",
+          "Reference Sequence Data"
+        ],
+        "type": "Text_excerpt",
+        "value": "Because MTSv was designed to be highly parallelizable, we recommend building multiple indices from smaller chunks of the reference sequences. This helps reduce the memory requirements and allows for faster processing for both index building and assignment. \n\n```\n$ mtsv-chunk -i PATH_TO_FASTA -o PATH_TO_CHUNK_FOLDER -g NUM_GBS_PER_CHUNK\n```\n\nThis will break up the reference fasta into a series of smaller files and place them into the directory specified. See the help message for further information.\n\n```\nmtsv-chunk 2.0.0\nAdam Perry <adam.n.perry@gmail.com>:Tara Furstenau <tara.furstenau@gmail.com>\nSplit a FASTA reference database into chunks for index generation.\n\nUSAGE:\n    mtsv-chunk [FLAGS] --input <INPUT> --output <OUTPUT> --gb <SIZE_GB>\n\nFLAGS:\n    -v               Include this flag to trigger debug-level logging.\n    -h, --help       Prints help information\n    -V, --version    Prints version information\n\nOPTIONS:\n    -i, --input <INPUT>      Path(s) to vedro results files to collapse\n    -o, --output <OUTPUT>    Folder path to write split outupt files to.\n    -g, --gb <SIZE_GB>       Chunk size (in gigabytes). [default: 1.0]\n```\n"
+      },
+      "source": "https://raw.githubusercontent.com/FofanovLab/mtsv_tools/master/README.md",
+      "technique": "header_analysis"
+    }
+  ],
+  "code_repository": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/FofanovLab/mtsv_tools"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_created": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2019-10-01T22:13:05Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_updated": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2024-02-27T04:01:28Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "description": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "Core metagenomic binning tools for mtsv"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 0.989819239636433,
+      "result": {
+        "original_header": "mtsv-tools",
+        "type": "Text_excerpt",
+        "value": "MTSv Tools is a suite of core tools for taxonomic classification of metagenomic sequencing reads. MTSv performs a full-alignment using an FM-index assisted q-gram filter followed by SIMD accelerated Smith-Waterman alignment.  \n"
+      },
+      "source": "https://raw.githubusercontent.com/FofanovLab/mtsv_tools/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.8770200926229421,
+      "result": {
+        "original_header": "Metagenomic index build (MG-index)",
+        "type": "Text_excerpt",
+        "value": "Now that you have N chunks of your FASTA database, they need to be processed into indices which MTSv can use for querying. During the index build, the sequences in the chunked FASTA file are concatenated while recording the location of sequence boundaries and the TaxID associated with each sequence. A suffix array, Burrows-Wheeler Transform (BWT), and FM-index are built from the concatenated sequences using the Rust-Bio v0.39.1 package. The FM-index and the associated sequence metadata constitutes the MG-index. One MG-index is created per FASTA file, and new indices can be added as the reference collection grows without needing to rebuild any of the existing indices.\n```\n$ mtsv-build --fasta /path/to/chunkN.fasta --index /path/to/write/chunkN.index\n```\n \nUsing default settings, indices will be ~3.6x the size of the reference file and require about that much RAM to run the binning step. The default sampling interval is 64 for the BWT occurance array and 32 for the suffix array. This can be overridden by passing `--sample-interval <FM_SAMPLE_INTERVAL>` for the occurance array or `--sa-sample <SA_SAMPLE_RATE>` for the suffix array. Lower values will increase the size of the index and can provide a reduction in query time. Increasing the flag will decrease the size of the index up to a point while accepting a slower query time. \n"
+      },
+      "source": "https://raw.githubusercontent.com/FofanovLab/mtsv_tools/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.959004885209997,
+      "result": {
+        "original_header": "Binning Reads",
+        "type": "Text_excerpt",
+        "value": "The `mtsv-binner` command assignes the reads to reference sequences in the provided MG-index (a separate binning command should be run for each of the desired MG-Indices). It will begin by extracting overlapping substrings (seeds) of the same size (`--seed-size`) with certain offsets (`--seed-interval`) from each query sequence and its reverse complement. It then uses the MG-index to search for exact, ungapped matches for each seed. The seed matches are sorted by location and grouped into candidate regions using specified windows. The number of hits per candidate is tallied and any candidate that does not meet the minimum number of seed hits is filtered out. The remaining candidate positions are sorted in descending order by the number of seed hits so that the most promising regions are evaluated first.  \nFor each candidate region, MTSv extracts the corresponding range from the reference sequence and looks up the TaxID associated with the region in the MG-index. If the current query has already been sucessfully aligned to the TaxID associated with the candidate region, no additional alignment is attempted, and the next candidate region is checked. Otherwise an SIMD-accelerated Smith-Waterman alignment is performed between the extracted reference sequence and the query sequence (using a scoring of 1 for matches and -1 for mismatches, gap opening, and gap extension). If the alignment score is sufficiently high, there is one final check to determine if the edit distance is less than or equal to the user-specified edit distance cutoff (`--edit-rate`). If the alignment is considered successful, then no further alignments are attempted for that query against the same TaxID. Skipping all additional alignments to a TaxID avoids many expensive operations and reduces computation time. \n"
+      },
+      "source": "https://raw.githubusercontent.com/FofanovLab/mtsv_tools/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9957567117115487,
+      "result": {
+        "original_header": "Parameters",
+        "type": "Text_excerpt",
+        "value": "The candidate filtering step is based on a q-gram filtering algorithm which defines the minimum number of exact k-mer matches (from all ***n-k+1*** overlapping ***k***-mers that can be expected between an ***n***-length read and a reference sequence with at most e mismatches. In the worst case where all mismatches are evenly spaced across the alignment, the minimum number of matching ***k***-mers is: ***m = (n+1) - k(e+1)*** and ***m*** is positive when ***n/(e+1) > k***. If only every ***l***th overlapping ***k***-mer is used, the minimum number of matching ***k***-mers is expected to be ***m/l***. The user provides the seed ***k***-mer size (`--seed-size`) and the interval ***l*** (`--seed-interval`) which establishes the number of seeds as ***n_seeds = ceil((n - k + 1)/l)*** and because this varies based on read size, the minimum number of reads required to make an assignment (`--min-seed`) is provided as a percentage of these seeds ***floor(min-seed * n_seeds)***. Similarly, the edit distance threshold is calculated as the product of the `--edit-rate` (float between 0 and 1) and the length of the read, *n*. \n"
+      },
+      "source": "https://raw.githubusercontent.com/FofanovLab/mtsv_tools/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9285874675810837,
+      "result": {
+        "original_header": "Output",
+        "type": "Text_excerpt",
+        "value": "`mtsv-binner` writes results for a single read per line. For example, if a read with the header `R1_123` maps to taxon IDs `562`, `9062`, and `100` with edit distances `5`, `10`, and `11`:\n```\nR1_123:562=5,9062=10,100=11\n```\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/FofanovLab/mtsv_tools/master/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "documentation": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Documentation",
+        "parent_header": [
+          "mtsv-tools"
+        ],
+        "type": "Text_excerpt",
+        "value": "To generate the internal documentation:\n\n```\n$ cargo doc [--open]\n```\n\n(pass the `--open` flag if you want to immediately open the docs in your browser)\n"
+      },
+      "source": "https://raw.githubusercontent.com/FofanovLab/mtsv_tools/master/README.md",
+      "technique": "header_analysis"
+    }
+  ],
+  "download_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/FofanovLab/mtsv_tools/releases"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 2
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/FofanovLab/mtsv_tools/forks"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "FofanovLab/mtsv_tools"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_title": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "mtsv-tools"
+      },
+      "source": "https://raw.githubusercontent.com/FofanovLab/mtsv_tools/master/README.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "has_script_file": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/FofanovLab/mtsv_tools/master/conda-recipe/build.sh"
+      },
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/FofanovLab/mtsv_tools/master/conda-recipe/conda_build.sh"
+      },
+      "technique": "file_exploration"
+    }
+  ],
+  "installation": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Installation",
+        "parent_header": [
+          "mtsv-tools"
+        ],
+        "type": "Text_excerpt",
+        "value": "conda install mtsv-tools -c bioconda \n\n"
+      },
+      "source": "https://raw.githubusercontent.com/FofanovLab/mtsv_tools/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 0.926206029036774,
+      "result": {
+        "original_header": "Tests",
+        "type": "Text_excerpt",
+        "value": "To run tests:\n```\n$ cargo test\n```\nTo generate a code coverage report, make sure [kcov >= 26](https://simonkagstrom.github.io/kcov/) is installed on your `PATH`, then install `cargo-kcov`:\n```\n$ cargo install cargo-kcov\n```\nTo run coverage:\n```\n$ cargo kcov -- --exclude-pattern=\"/.cargo,vendor/,tests/,bench/,include/,bin/,ssw/\"\n```\n \nThis will place a code coverage report under `target/kcov/index.html`.\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/FofanovLab/mtsv_tools/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9997305826277099,
+      "result": {
+        "original_header": "Building Package",
+        "type": "Text_excerpt",
+        "value": "To build the MTSv binaries:\n```\n$ cargo build --release\n```\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/FofanovLab/mtsv_tools/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9998987190813791,
+      "result": {
+        "original_header": "Metagenomic index build (MG-index)",
+        "type": "Text_excerpt",
+        "value": "See the help message for other options.\n```\n$ mtsv-build --help\nmtsv-build 2.0.0\nAdam Perry <adam.n.perry@gmail.com>:Tara Furstenau <tara.furstenau@gmail.com>\nIndex construction for mtsv metagenomics binning tool.\n\nUSAGE:\n    mtsv-build [FLAGS] [OPTIONS] --fasta <FASTA> --index <INDEX>\n\nFLAGS:\n    -v               Include this flag to trigger debug-level logging.\n    -h, --help       Prints help information\n    -V, --version    Prints version information\n\nOPTIONS:\n    -f, --fasta <FASTA>                           Path to FASTA database file.\n        --sample-interval <FM_SAMPLE_INTERVAL>\n            BWT occurance sampling rate. If sample interval is k, every k-th entry will be kept. [default: 64]\n\n    -i, --index <INDEX>                           Absolute path to mtsv index file.\n        --sa-sample <SA_SAMPLE_RATE>\n            Suffix array sampling rate. If sampling rate is k, every k-th entry will be kept. [default: 32]\n``` \n"
+      },
+      "source": "https://raw.githubusercontent.com/FofanovLab/mtsv_tools/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.910620386756478,
+      "result": {
+        "original_header": "Parameters",
+        "type": "Text_excerpt",
+        "value": "See the help message for other options.\n```\n$ mtsv-binner --help\nmtsv 2.0.0\nAdam Perry <adam.n.perry@gmail.com>:Tara Furstenau <tara.furstenau@gmail.com>\nMetagenomics binning tool.\n\nUSAGE:\n    mtsv-binner [FLAGS] [OPTIONS] --fasta <FASTA> --fastq <FASTQ> --index <INDEX>\n\nFLAGS:\n    -v               Include this flag to trigger debug-level logging.\n    -h, --help       Prints help information\n    -V, --version    Prints version information\n\nOPTIONS:\n    -e, --edit-rate <EDIT_TOLERANCE>       The maximum proportion of edits allowed for alignment. [default: 0.13]\n    -f, --fasta <FASTA>                    Path to FASTA reads.\n    -f, --fastq <FASTQ>                    Path to FASTQ reads.\n    -i, --index <INDEX>                    Path to MG-index file.\n        --max-hits <MAX_HITS>              Skip seeds with more than MAX_HITS hits. [default: 20000]\n        --min-seed <MIN_SEED>              Set the minimum percentage of seeds required to perform an alignment.\n                                           [default: 0.015]\n    -t, --threads <NUM_THREADS>            Number of worker threads to spawn. [default: 4]\n    -m, --results <RESULTS_PATH>           Path to write results file.\n        --seed-interval <SEED_INTERVAL>    Set the interval between seeds used for initial exact match. [default: 2]\n        --seed-size <SEED_SIZE>            Set seed size. [default: 18]\n```\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/FofanovLab/mtsv_tools/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9072628031913439,
+      "result": {
+        "original_header": "Collapsing Results",
+        "type": "Text_excerpt",
+        "value": "Since each output file from the `mtsv-binner` command will only represent assignments to references within a single MG-index, the results from all MG-indices must be combined into a single results file for further analysis. \n```\n$ mtsv-collapse /path/to/chunk1_results.txt /path/to/chunk2_results.txt ... \\\n    --output /path/to/collapsed_results.txt\n```\n \nSee the help message for other options.\n```\n$ mtsv-collapse --help\nmtsv-collapse 2.0.0\nAdam Perry <adam.n.perry@gmail.com>:Tara Furstenau <tara.furstenau@gmail.com>\nTool for combining the output of multiple separate mtsv runs.\n\nUSAGE:\n    mtsv-collapse [FLAGS] <FILES>... --output <OUTPUT>\n\nFLAGS:\n    -v               Include this flag to trigger debug-level logging.\n    -h, --help       Prints help information\n    -V, --version    Prints version information\n\nOPTIONS:\n    -o, --output <OUTPUT>    Path to write combined outupt file to.\n\nARGS:\n    <FILES>...    Path(s) to mtsv results files to collapse\n```\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/FofanovLab/mtsv_tools/master/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "issue_tracker": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/FofanovLab/mtsv_tools/issues"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "keywords": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": ""
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "license": [
+    {
+      "confidence": 1,
+      "result": {
+        "name": "MIT License",
+        "spdx_id": "MIT",
+        "type": "License",
+        "url": "https://api.github.com/licenses/mit",
+        "value": "https://api.github.com/licenses/mit"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "File_dump",
+        "value": "MIT License\n\nCopyright (c) 2019 FofanovLab\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.\n"
+      },
+      "source": "https://raw.githubusercontent.com/FofanovLab/mtsv_tools/master/LICENSE",
+      "technique": "file_exploration"
+    }
+  ],
+  "name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "mtsv_tools"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "owner": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Organization",
+        "value": "FofanovLab"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "programming_languages": [
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Rust",
+        "size": 138397,
+        "type": "Programming_language",
+        "value": "Rust"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "C",
+        "size": 34875,
+        "type": "Programming_language",
+        "value": "C"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Shell",
+        "size": 364,
+        "type": "Programming_language",
+        "value": "Shell"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "readme_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/FofanovLab/mtsv_tools/master/README.md"
+      },
+      "technique": "file_exploration"
+    }
+  ],
+  "releases": [
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "tfursten",
+          "type": "User"
+        },
+        "date_created": "2022-04-15T22:03:52Z",
+        "date_published": "2022-07-25T06:34:34Z",
+        "description": "# Version 2.0.2\r\nIntroduces the `--tune-max-hits` parameter. Having too many seed hits can cause inefficient runtimes by increasing the number of reverse lookups and position searches. While the `--max-hits` parameter just skips seeds that have a very high number of hits, the `--tune-max-hits` parameter doubles the seed interval to reduce the total number of seed lookups per read. This may reduce sensitivity for some reads with many seed hits but it does not have a large impact.\r\n\r\nDefault parameters have been adjusted to better balance speed and accuracy. \r\n",
+        "html_url": "https://github.com/FofanovLab/mtsv_tools/releases/tag/2.0.2",
+        "name": "v2.0.2",
+        "release_id": 72723752,
+        "tag": "2.0.2",
+        "tarball_url": "https://api.github.com/repos/FofanovLab/mtsv_tools/tarball/2.0.2",
+        "type": "Release",
+        "url": "https://api.github.com/repos/FofanovLab/mtsv_tools/releases/72723752",
+        "value": "https://api.github.com/repos/FofanovLab/mtsv_tools/releases/72723752",
+        "zipball_url": "https://api.github.com/repos/FofanovLab/mtsv_tools/zipball/2.0.2"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "tfursten",
+          "type": "User"
+        },
+        "date_created": "2022-03-18T22:56:17Z",
+        "date_published": "2022-03-18T23:07:21Z",
+        "description": "# Second Major Version:\r\n1. Updated Rust-Bio data structures. \r\n    - This includes a sampled suffix array which reduces the size of the MG-Indices.\r\n    - Indices built with different major versions will not be compatible. \r\n2. New output format. \r\n    -  The binning output now reports the alignment edit distance for hits.\r\n    -  The collapse command works with this new output and will not be compatible with previous output format\r\n3. New inputs allowed.\r\n    - The binning command now accepts either FASTA or FASTQ format inputs.\r\n    - The queries no longer need to be the same size.\r\n4. Parameter changes\r\n    - To account for different size queries, the binning parameters have been modified.\r\n    - The edit distance is now a proportion (--edit-rate) based on the length of the read.\r\n    - The --seed-gap parameter was renamed --seed-interval to be more consistent with other tools.\r\n    - The minimum seed threshold (--min-seed) is now a percentage of the number of seeds to allow different size reads.\r\n\r\n\r\n## What's Changed\r\n* Dev by @tfursten in https://github.com/FofanovLab/mtsv_tools/pull/1\r\n* build FM-index from ssa references by @tfursten in https://github.com/FofanovLab/mtsv_tools/pull/2\r\n* Dev by @tfursten in https://github.com/FofanovLab/mtsv_tools/pull/3\r\n* Dev by @tfursten in https://github.com/FofanovLab/mtsv_tools/pull/4\r\n* Update tests by @tfursten in https://github.com/FofanovLab/mtsv_tools/pull/5\r\n* update stopwatch by @tfursten in https://github.com/FofanovLab/mtsv_tools/pull/6\r\n\r\n\r\n**Full Changelog**: https://github.com/FofanovLab/mtsv_tools/compare/1.0.2...2.0.0",
+        "html_url": "https://github.com/FofanovLab/mtsv_tools/releases/tag/2.0.1",
+        "name": "v2.0.1",
+        "release_id": 62233148,
+        "tag": "2.0.1",
+        "tarball_url": "https://api.github.com/repos/FofanovLab/mtsv_tools/tarball/2.0.1",
+        "type": "Release",
+        "url": "https://api.github.com/repos/FofanovLab/mtsv_tools/releases/62233148",
+        "value": "https://api.github.com/repos/FofanovLab/mtsv_tools/releases/62233148",
+        "zipball_url": "https://api.github.com/repos/FofanovLab/mtsv_tools/zipball/2.0.1"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "tfursten",
+          "type": "User"
+        },
+        "date_created": "2022-02-24T23:59:41Z",
+        "date_published": "2022-02-25T00:22:48Z",
+        "description": "# Second Major Version:\r\n1. Updated Rust-Bio data structures. \r\n    - This includes a sampled suffix array which reduces the size of the MG-Indices.\r\n    - Indices built with different major versions will not be compatible. \r\n2. New output format. \r\n    -  The binning output now reports the alignment edit distance for hits.\r\n    -  The collapse command works with this new output and will not be compatible with previous output format\r\n3. New inputs allowed.\r\n    - The binning command now accepts either FASTA or FASTQ format inputs.\r\n    - The queries no longer need to be the same size.\r\n4. Parameter changes\r\n    - To account for different size queries, the binning parameters have been modified.\r\n    - The edit distance is now a proportion (--edit-rate) based on the length of the read.\r\n    - The --seed-gap parameter was renamed --seed-interval to be more consistent with other tools.\r\n    - The minimum seed threshold (--min-seed) is now a percentage of the number of seeds to allow different size reads.\r\n\r\n\r\n## What's Changed\r\n* Dev by @tfursten in https://github.com/FofanovLab/mtsv_tools/pull/1\r\n* build FM-index from ssa references by @tfursten in https://github.com/FofanovLab/mtsv_tools/pull/2\r\n* Dev by @tfursten in https://github.com/FofanovLab/mtsv_tools/pull/3\r\n* Dev by @tfursten in https://github.com/FofanovLab/mtsv_tools/pull/4\r\n* Update tests by @tfursten in https://github.com/FofanovLab/mtsv_tools/pull/5\r\n* update stopwatch by @tfursten in https://github.com/FofanovLab/mtsv_tools/pull/6\r\n\r\n\r\n**Full Changelog**: https://github.com/FofanovLab/mtsv_tools/compare/1.0.2...2.0.0",
+        "html_url": "https://github.com/FofanovLab/mtsv_tools/releases/tag/2.0.0",
+        "name": "v2.0.0",
+        "release_id": 60437114,
+        "tag": "2.0.0",
+        "tarball_url": "https://api.github.com/repos/FofanovLab/mtsv_tools/tarball/2.0.0",
+        "type": "Release",
+        "url": "https://api.github.com/repos/FofanovLab/mtsv_tools/releases/60437114",
+        "value": "https://api.github.com/repos/FofanovLab/mtsv_tools/releases/60437114",
+        "zipball_url": "https://api.github.com/repos/FofanovLab/mtsv_tools/zipball/2.0.0"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "tfursten",
+          "type": "User"
+        },
+        "date_created": "2021-04-14T04:07:25Z",
+        "date_published": "2021-04-14T04:15:26Z",
+        "description": "# Bug Fixes\r\nFixed `coalescing_seed_hits` function which combines seed hits into candidate regions in `index.rs`\r\n1. Off by one comparing reference boundary and seedhit boundary.\r\n2. No longer loses previous seed hit when a reference boundary is hit.\r\n3. Final candidate from last seed hit is now checked.\r\n# Fixed deprecated code\r\n1. Updated trim_right with trim_end in vendor/rust-bio/src/io/fasta.rs and vendor/rust-bio/src/io/fastq.rs",
+        "html_url": "https://github.com/FofanovLab/mtsv_tools/releases/tag/1.0.2",
+        "name": "v1.0.2",
+        "release_id": 41391598,
+        "tag": "1.0.2",
+        "tarball_url": "https://api.github.com/repos/FofanovLab/mtsv_tools/tarball/1.0.2",
+        "type": "Release",
+        "url": "https://api.github.com/repos/FofanovLab/mtsv_tools/releases/41391598",
+        "value": "https://api.github.com/repos/FofanovLab/mtsv_tools/releases/41391598",
+        "zipball_url": "https://api.github.com/repos/FofanovLab/mtsv_tools/zipball/1.0.2"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "tfursten",
+          "type": "User"
+        },
+        "date_created": "2021-04-14T04:07:25Z",
+        "date_published": "2021-10-07T18:51:42Z",
+        "html_url": "https://github.com/FofanovLab/mtsv_tools/releases/tag/Pub",
+        "name": "v1.0.2",
+        "release_id": 50987417,
+        "tag": "Pub",
+        "tarball_url": "https://api.github.com/repos/FofanovLab/mtsv_tools/tarball/Pub",
+        "type": "Release",
+        "url": "https://api.github.com/repos/FofanovLab/mtsv_tools/releases/50987417",
+        "value": "https://api.github.com/repos/FofanovLab/mtsv_tools/releases/50987417",
+        "zipball_url": "https://api.github.com/repos/FofanovLab/mtsv_tools/zipball/Pub"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "tfursten",
+          "type": "User"
+        },
+        "date_created": "2020-05-12T04:37:54Z",
+        "date_published": "2020-05-12T04:45:40Z",
+        "description": "This release adds an additional max_hits parameter to mtsv-binner which allows the cutoff for seed hits to be modified. Any seed that has over max_hits will be ignored. This was previously hard coded at 100,000 but other seed based aligners allow this to be modified and often have a default much lower than 100,000. The default is now 20,000 which runs much faster while having a small impact on the binning results.  ",
+        "html_url": "https://github.com/FofanovLab/mtsv_tools/releases/tag/1.0.1",
+        "name": "v1.0.1",
+        "release_id": 26408118,
+        "tag": "1.0.1",
+        "tarball_url": "https://api.github.com/repos/FofanovLab/mtsv_tools/tarball/1.0.1",
+        "type": "Release",
+        "url": "https://api.github.com/repos/FofanovLab/mtsv_tools/releases/26408118",
+        "value": "https://api.github.com/repos/FofanovLab/mtsv_tools/releases/26408118",
+        "zipball_url": "https://api.github.com/repos/FofanovLab/mtsv_tools/zipball/1.0.1"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "tfursten",
+          "type": "User"
+        },
+        "date_created": "2019-10-30T23:36:54Z",
+        "date_published": "2019-10-30T23:39:07Z",
+        "description": "First release of core alignment based metagenomic binning tools. ",
+        "html_url": "https://github.com/FofanovLab/mtsv_tools/releases/tag/1.0.0",
+        "name": "First Release",
+        "release_id": 21104636,
+        "tag": "1.0.0",
+        "tarball_url": "https://api.github.com/repos/FofanovLab/mtsv_tools/tarball/1.0.0",
+        "type": "Release",
+        "url": "https://api.github.com/repos/FofanovLab/mtsv_tools/releases/21104636",
+        "value": "https://api.github.com/repos/FofanovLab/mtsv_tools/releases/21104636",
+        "zipball_url": "https://api.github.com/repos/FofanovLab/mtsv_tools/zipball/1.0.0"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "requirements": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Requirements",
+        "parent_header": [
+          "mtsv-tools"
+        ],
+        "type": "Text_excerpt",
+        "value": "mtsv is built in Rust. You'll need:\n\n* `rustc` and `cargo` >= 1.29.0 ([rustup.rs](https://rustup.rs) is the easiest installation method)\n* a C compiler (tested with GCC and clang)\n"
+      },
+      "source": "https://raw.githubusercontent.com/FofanovLab/mtsv_tools/master/README.md",
+      "technique": "header_analysis"
+    }
+  ],
+  "somef_missing_categories": [
+    "acknowledgement",
+    "run",
+    "download",
+    "contact",
+    "contributors",
+    "faq",
+    "support",
+    "identifier",
+    "has_build_file",
+    "executable_example"
+  ],
+  "somef_provenance": {
+    "date": "2024-10-04 11:26:02",
+    "somef_schema_version": "1.0.0",
+    "somef_version": "0.9.5"
+  },
+  "stargazers_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 6
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "usage": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Usage",
+        "parent_header": [
+          "mtsv-tools"
+        ],
+        "type": "Text_excerpt",
+        "value": "mtsv builds several binaries:\n\n* `mtsv-chunk`\n* `mtsv-binner`\n* `mtsv-build`\n* `mtsv-collapse`\n\nAll of these accept the `--help` flag to print a help message on their usage. See below for specific use instructions.\n\n"
+      },
+      "source": "https://raw.githubusercontent.com/FofanovLab/mtsv_tools/master/README.md",
+      "technique": "header_analysis"
+    }
+  ]
+}

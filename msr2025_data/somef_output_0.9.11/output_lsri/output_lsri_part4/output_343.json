@@ -1,0 +1,301 @@
+{
+  "code_repository": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/ngphubinh/iProDNA-CapsNet"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "contact": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Contact",
+        "parent_header": [
+          "iProDNA-CapsNet: Identifying Protein-DNA Binding Residues using Capsule Neural Networks"
+        ],
+        "type": "Text_excerpt",
+        "value": "[Go to contact information](http://homepages.ecs.vuw.ac.nz/~nguyenb5/contact.html)\n\n"
+      },
+      "source": "https://raw.githubusercontent.com/ngphubinh/iProDNA-CapsNet/master/README.md",
+      "technique": "header_analysis"
+    }
+  ],
+  "date_created": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2019-08-24T06:42:07Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_updated": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2019-08-24T06:57:36Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "description": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "Identifying Protein-DNA Binding Residues using Capsule Neural Networks"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 0.9628479575834686,
+      "result": {
+        "original_header": "iProDNA-CapsNet: Identifying Protein-DNA Binding Residues using Capsule Neural Networks",
+        "type": "Text_excerpt",
+        "value": "Binh P. Nguyen, Quang H. Nguyen, Giang-Nam Doan-Ngoc, Thanh-Hoang Nguyen-Vo and Susanto Rahardja \n"
+      },
+      "source": "https://raw.githubusercontent.com/ngphubinh/iProDNA-CapsNet/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9956132954938344,
+      "result": {
+        "original_header": "Background",
+        "type": "Text_excerpt",
+        "value": "Since protein-DNA interactions are highly essential to diverse biological events, accurately positioning the location of the DNA-binding residues is necessary. This biological issue, however, is currently a challenging task in the age of post-genomic where data on protein sequences have expanded very fast. In this study, we propose iProDNA-CapsNet -- a new prediction model identifying protein-DNA binding residues using an ensemble of Capsule Neural Networks (CapsNets) on position specific scoring matrix (PSMM) profiles. The use of CapsNets promises an innovative approach to determine the location of DNA-binding residues. In this study, the benchmark datasets introduced by Hu et al. (2017), i.e., PDNA-543 and PDNA-TEST, were used to train and evaluate the model, respectively. To fairly assess the model performance, comparative analysis between iProDNA-CapsNet and existing state-of-the-art methods was done. \n \n"
+      },
+      "source": "https://raw.githubusercontent.com/ngphubinh/iProDNA-CapsNet/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9835228622937201,
+      "result": {
+        "original_header": "Model Architecture",
+        "type": "Text_excerpt",
+        "value": "The architecture of our proposed CapsNet model, as shown below, consists of two 2-dimensional convolutional layers (CNN and PrimaryCaps) and one fully connected layer (BindCaps).\n<img src=\"capsnet.svg?sanitize=true\" width=\"800\"> \nThe first layer, CNN, detects basic features of the input PSSM corresponding to a protein sequence. The $21 \\times 20$ PSSM is convolved with $256$ filters of size $7 \\times 7$ at stride $1$ with ReLU activation function to produce a $15 \\times 14 \\times 256$ tensor. For improving the training speed, performance, and stability of the CapsNet model and preventing overfitting, we added a batch normalization sub-laye and a dropout sub-layer with the neuron dropping rate of $0.7$ at the end of the first layer.\n \nThe second layer, PrimaryCaps, consists of $32$ primary capsules which combines the basic features detected in the first layer. This is done by the use of $8$ filters with the size of $7 \\times 7 \\times 256$ with stride $2$ in each capsule that takes the $15 \\times 14 \\times 256$ tensor from the CNN layer as input and produces a $5 \\times 4 \\times 8$ output tensor. Here, $8$ is the dimension of the capsule vectors in PrimaryCaps which is similar to that in the original CapsNet architecture. Since there are 32 capsules, the shape of the output of this layer is $5 \\times 4 \\times 8 \\times 32$. A batch normalization sub-layer is included with a dropout sub-layer with the neuron dropping rate of $0.2$ at the end of PrimaryCaps. A non-linear *squashing* function is used to scale the length of the output vector of each capsule to [0, 1] since it is the probability that the current input represents the encoded entity:\n$$\n{\\rm v}_j  = \\frac{{\\left\\| {{\\rm s}_j } \\right\\|^2 }}{{1 + \\left\\| {{\\rm s}_j } \\right\\|^2 }}\\frac{{{\\rm s}_j }}{{\\left\\| {{\\rm s}_j } \\right\\|}},\n$$\nwhere ${\\rm v}_j$ is the vector output of capsule $j$ and ${\\rm s}_j$ is its input. \nThe next layer, BindCaps, has two 16-dimensional *binding* capsules corresponding to 2 possible labels of the input protein sequence: positive and negative (indicating whether protein-DNA binding exists at the centered amino acid or not). The input of each capsule in this layer is a $5 \\times 4 \\times 8 \\times 32$ tensor. In other words, they are $5 \\times 4 \\times 32$ 8-dimensional vectors, each is assigned with an $8 \\times 16$ weight matrix which then multiplies with an 8-dimensional input vector to produce a 16-dimensional vector. These 16-dimensional vectors are weighted (the weights are determined by the dynamic routing algorithm) and summed over, and the results are then passed through the squashing function to produce two 16-dimensional vectors as the output.\nThere are 640 8-dimensional capsules (each $u_i$ is an 8-D vector) in PrimaryCaps. Each is produced by multiplying $u_i$ by a weight matrix $W_{i, j}$ (size of $8 \\times 16$). Capsule vector $V_j$ ($j$ = 1 or 2) in BindCaps is a 16-dimensional vector which is computed by passing the weighted sum over all output $\\hat u_{j\\left| i \\right.} $ from PrimaryCaps through the squashing function. Parameter $c_{i, j}$ is determined by the iterative dynamic routing process.\nSimilar to the previous two layers, a batch normalization sub-layer and a dropout sub-layer with the neuron dropping rate of $0.1$ are included at the end of BindCaps. The L2-norms of the two 16-dimensional vectors are then computed to obtain the final output of the CapsNet model as a 2-dimensional vector.  \nThe loss function for training our CapsNet model is the sum of two separate margin losses, $L_k$ for each *binding* capsule, $k$:\n$$\nL_k  = T_k \\max (0,0.9 - \\left\\| {{\\rm v}_k } \\right\\|)^2  + 0.5(1 - T_k )\\max (0,\\left\\| {{\\rm v}_k } \\right\\| - 0.1)^2,\n$$\nwhere ${\\rm v}_k$ is the output of *binding* capsule $k$ and $T_k = 1$ if protein-DNA binding exists. \nThe architecture of our CapsNet model is relatively similar to the encoder in the original Capsule Neural Network. In addition to the differences in the number filters in each layer, we decreased the filter size in the first two layers from $9 \\times 9$ to $7 \\times 7$ and included batch normalization and dropout in all the layers. Our preliminary experimental results confirmed that reducing filter size and including dropout helped the model to be less prone to overfitting and integrating batch normalization improved validation performance.\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/ngphubinh/iProDNA-CapsNet/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.8869976795805966,
+      "result": {
+        "original_header": "Model Training and Testing",
+        "type": "Text_excerpt",
+        "value": "The diagram of training and testing our model is described below. First, PSSM features are extracted from both the training set (PDNA-543) and the test set (PDNA-TEST) to form the training feature set and the test feature set, respectively. The training feature set is then divided into 10 mutually exclusive stratified folds, and they are combined to form 10 combinations of 9 training folds and 1 validation fold. For each of the combinations, a CapsNet model was trained using a balanced training subset created from the 9 training folds using random under-sampling (RUS), and the model was optimized and validated on the validation fold. Adam optimization algorithm was used along with each minibatch of 256 samples. Under the learning rate of 0.0001, the model was trained with a maximum of 300 epochs. During the training iteration, the early stopping strategy was used in such the way that if no improvement in validation loss after 20 consecutive epochs, the training process would be automatically terminated. The learning rate would be halved whenever the validation loss did not improve after 10 consecutive epochs. The number of iterations used in the routing algorithm was set to 3 (by default) and the margin loss function was employed. The best model was saved at the end of the training process. During testing, these 10 trained CapsNet models were fed with the test feature set and then the final testing results were calculated by averaging the predictions from all the models and compared with the truth labels. \n"
+      },
+      "source": "https://raw.githubusercontent.com/ngphubinh/iProDNA-CapsNet/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9776444201979451,
+      "result": {
+        "original_header": "Model Evaluation",
+        "type": "Text_excerpt",
+        "value": "The table also shows the performance of other state-of-the-art methods (data excerpted from Hu et al, 2017) including BindN, ProteDNA, MetaDBSite, DP-Bind, DNABind, BindN+ and TargetDNA. All the methods were tested on the same test dataset (PDNA-TEST), and among those methods, only BindN+ and TargetDNA provided performance information with two settings corresponding to FPR $\\approx$ 5\\% and FPR $\\approx$ 15\\%. \nUnder the threshold corresponding to FPR $\\approx$ 5\\%, the accuracy, sensitivity, precision, and MCC of our model increases by about 2.0\\%, 2.0\\%, 14.0\\%, and 5.0\\% with respect to TargetDNA and 1.0\\%, 75.0\\%, 45.0\\%, and 77.0\\% with respect to BindN+, respectively. In comparison with BindN+, our model come up with a significant improvement in precision (45.0\\%) and MCC (about 77.0\\%) and these surges are very meaningful to indicate the small variation among different-run values as well as high stability of our model. In comparison with TargetDNA, our model's precision remarkably rises by 14.0\\% and this outgrowth reflects the considerable decline in variation among the different-run values. Besides, the specificity among methods in comparison is not significantly different. Therefore, under the threshold corresponding to FPR $\\approx$ 5\\%, our proposed method seems to cover the weaknesses of both TargetDNA and BindN+. On the other hand, under the threshold corresponding to FPR $\\approx$ 15\\%, the accuracy in our model, TargetDNA, and BindN+ all decrease by about 10.0\\%, 7.5\\%, and 9.5\\% and these declines are not far different from each other. Additionally, the specificity of the three models also drops in the range from 9.0\\% to 12.0\\%. In terms of precision, the fall in this metric decreases from our model (64.0\\%), followed by BindN+ (33.0\\%) and TargetDNA (27.0\\%). With regards to MCC, our method and TargetDNA share a common pattern of downward change, while upward change is observed in BindN+. When changing the threshold corresponding to FPR $\\approx$ 5\\% to that corresponding to FPR $\\approx$ 15\\%, the sensitivity of our model, TargetDNA, and BindN+ all demonstrates with a remarkable growth by about 65.0\\%, 80.0\\%, and 100.0\\%, respectively, as a result of a trade-off between sensitivity and specificity. \nAmong the methods with unknown threshold settings, ProteDNA is the only one having higher accuracy and precision compared to our model. However, our model's MCC is twice as high as ProteDNA's MCC. Given the crucial role of MCC over other metrics, we can therefore take that our model remains its competitive role with high stability. For the rest of the other approaches including MetaDBSite, DP-Bind, and DNABind, our proposed method also shows a significant improvement in accuracy, precision, and MCC. The sensitivity of our model under the threshold corresponding to FPR $\\approx$ 5\\% is about 900.0\\% and 125.0\\% higher than ProteDNA and MetaDBSite respectively while this metric under the threshold corresponding to FPR $\\approx$ 15\\% notably grown by about 150.0\\%, $>$1,300.0\\%, 200.0\\%, and 6.0\\% compared to BindN, ProteDNA, MetaDBSite, and DP-Bind. The precisions of our model under the threshold corresponding to FPR $\\approx$ 5\\% and the threshold corresponding to FPR $\\approx$ 15\\% are remarkably higher than those of other methods. The improvement in precision fluctuated from roughly 140.0\\% (compared to MetaDBSite) to 270.0\\% (compared to BindN). Although ProteDNA has been reported to have an accuracy of 95.11\\%, a specificity of 99.84\\%, and a precision of 60.30\\%. Among the three reported metrics of ProteDNA, only its precision is far higher than that of our model but its very low MCC has weakened the trust-ability of this model. Among all the methods, our model obtained a meaningfully higher MCC which are boosted from about 8.0\\% (compared to DNABind) to 220.0\\% (compared to ProteDNA). \nOur method, iProDNA-CapsNet, achieves very good values for MCC, which is an important metric whose crucial role has been far confirmed. Among the common evaluation metrics, MCC is the only one that uses up all information of the confusion matrix. Moreover, with respect to imbalanced datasets, MCC is the most important and informative metric that correctly assesses whether a prediction model is stable and robust while a single accuracy metric would not be sufficient to determine that status. With this dataset, MCC is therefore the most important metric. Eventually, under the threshold corresponding to FPR $\\approx$ 5\\% and FPR $\\approx$ 15\\%, our model shows its superior performance and high stability compared to other methods.\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/ngphubinh/iProDNA-CapsNet/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9611370864312919,
+      "result": {
+        "original_header": "Web Server",
+        "type": "Text_excerpt",
+        "value": "For academic purposes, we have deployed our model to an user-friendly and freely accessible web server for iProDNA-Capsnet at http://45.117.83.253/problem-iProDNA-CapsNet\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/ngphubinh/iProDNA-CapsNet/master/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "download_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/ngphubinh/iProDNA-CapsNet/releases"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 0
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/ngphubinh/iProDNA-CapsNet/forks"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "ngphubinh/iProDNA-CapsNet"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_title": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "iProDNA-CapsNet: Identifying Protein-DNA Binding Residues using Capsule Neural Networks"
+      },
+      "source": "https://raw.githubusercontent.com/ngphubinh/iProDNA-CapsNet/master/README.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "images": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/ngphubinh/iProDNA-CapsNet/master/capsnet.svg?sanitize=true"
+      },
+      "source": "https://raw.githubusercontent.com/ngphubinh/iProDNA-CapsNet/master/README.md",
+      "technique": "regular_expression"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/ngphubinh/iProDNA-CapsNet/master/modeling.svg?sanitize=true"
+      },
+      "source": "https://raw.githubusercontent.com/ngphubinh/iProDNA-CapsNet/master/README.md",
+      "technique": "regular_expression"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/ngphubinh/iProDNA-CapsNet/master/table4.png?sanitize=true"
+      },
+      "source": "https://raw.githubusercontent.com/ngphubinh/iProDNA-CapsNet/master/README.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "invocation": [
+    {
+      "confidence": 0.8819098103464835,
+      "result": {
+        "original_header": "Model Evaluation",
+        "type": "Text_excerpt",
+        "value": "<img src=\"table4.png?sanitize=true\" width=\"800\"> \n"
+      },
+      "source": "https://raw.githubusercontent.com/ngphubinh/iProDNA-CapsNet/master/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "issue_tracker": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/ngphubinh/iProDNA-CapsNet/issues"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "keywords": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": ""
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "iProDNA-CapsNet"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "owner": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "User",
+        "value": "ngphubinh"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "readme_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/ngphubinh/iProDNA-CapsNet/master/README.md"
+      },
+      "technique": "file_exploration"
+    }
+  ],
+  "somef_missing_categories": [
+    "installation",
+    "citation",
+    "acknowledgement",
+    "run",
+    "download",
+    "requirements",
+    "contributors",
+    "documentation",
+    "license",
+    "usage",
+    "faq",
+    "support",
+    "identifier",
+    "has_build_file",
+    "executable_example"
+  ],
+  "somef_provenance": {
+    "date": "2024-11-04 02:58:27",
+    "somef_schema_version": "1.0.0",
+    "somef_version": "0.9.5"
+  },
+  "stargazers_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 0
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "type": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "non-software"
+      },
+      "technique": "software_type_heuristics"
+    }
+  ]
+}

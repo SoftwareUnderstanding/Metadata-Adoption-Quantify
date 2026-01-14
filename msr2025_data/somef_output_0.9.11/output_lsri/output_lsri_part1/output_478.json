@@ -1,0 +1,602 @@
+{
+  "code_repository": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/cchauve/PlasBin-flow"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_created": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2023-03-23T14:58:51Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_updated": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2024-08-25T22:13:20Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "description": [
+    {
+      "confidence": 0.9930022552801735,
+      "result": {
+        "original_header": "PlasBin-flow: A flow-based MILP algorithm for plasmid contigs binning",
+        "type": "Text_excerpt",
+        "value": "\r\nPlasBin-flow is a tool aimed at extracting from the **assembly graph**\r\n(in <a href=\"http://gfa-spec.github.io/GFA-spec/\">GFA format</a>) of a\r\nbacterial isolate, groups of contigs (called **plasmid bins**), each\r\ngroups being assumed to originate from one of a plasmid of the\r\nanalyzed isolate. \r\n\r\nPlasBin-flow is based on a Mixed-Integer Linear Programming (MILP)\r\nformulation that is described in the paper <a\r\nhref=\"https://doi.org/10.1093/bioinformatics/btad250\">PlasBin-flow: a\r\nflow-based MILP algorithm for plasmid contigs binning</a>.\r\n\r \n"
+      },
+      "source": "https://raw.githubusercontent.com/cchauve/PlasBin-flow/main/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9946143363458672,
+      "result": {
+        "original_header": "Preprocessing and tuning",
+        "type": "Text_excerpt",
+        "value": "\r\nGiven the set of assembly graphs of a set of samples, the script\r\n[plasbin_utils.py](code/plasbin_utils.py) can be used to preprocess\r\nthem in order to generate the plasmid scores ad GC content\r\nprobabilities files for each sample.\r\n\r\nAlso, PlasBin-flow requires parameters (for example the thresholds\r\ndefining seed contigs) and auxiliary files (such as GC intervals),\r\nthat can be generated using a *tuning dataset* of samples for which\r\ntrue plasmids are known, using\r\n[plasbin_utils.py](code/plasbin_utils.py).\r\n\r\nWe describe below the relevant commands of \r\n[plasbin_utils.py](code/plasbin_utils.py).\r\nExamples are provided in [example/tuning](example/tuning),\r\n[example/preprocessing](example/preprocessing) and\r\n[example/plasbin-flow](example/plasbin-flow).\r\n\r \n"
+      },
+      "source": "https://raw.githubusercontent.com/cchauve/PlasBin-flow/main/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.8486198050209777,
+      "result": {
+        "original_header": "Dataset input file",
+        "type": "Text_excerpt",
+        "value": "\r\nThe script [plasbin_utils.py](code/plasbin_utils.py) takes as main\r\ninput a CSV file describing a set of samples, either to be\r\npreprocessed prior to be analyzed with\r\n[plasbin_flow.py](code/plasbin_flow.py) or to be used to tune\r\nPlasBin-flow parameters.\r\n\r\nThis file must contain a header and, depending on the command used,\r\ncan include the following fields:\r\n- `sample`: sample name;\r\n- `gfa`: path to the gzipped GFA file of the sample;\r\n- `pls_fasta`: path to a gzipped FASTA file containing the true\r\n  plasmids of the sample, one per FASTA entry;\r\n- `chr_fasta`: path to a gzipped FASTA file containing the\r\n  chromosome(s) of the sample, one per FASTA entry;\r\n- `pls_score`: path to a plasmid score file (as described above) for\r\n  the sample;\r\n- `gc_probabilities`: path to a GC probability file (as described\r\n  above) for the sample;\r\n- `genes2ctgs_mappings`: path to a BLAST format 6 containing the\r\n  result of mapping a set of reference plasmid genes (see Section\r\n  \"Reference plasmid genes database\" below) onto the assembly graph\r\n  contigs;\r\n- `ground_truth`: path to a file describing the ground truth for a\r\n  sample, in TSV format with two fields (true plasmid name, contig\r\n  name).\r\n\r\nAdditionally, all commands of\r\n[plasbin_utils.py](code/plasbin_utils.py) take three additional\r\nrequird parameters:\r\n- `out_dir`: directory where final results files are written;\r\n- `tmp_dir`: directory where temporary files are written (deleted\r\n  unless the paramater `--keep_tmp_dir` is used);\r\n- `log_file`: optional file containing detailed log information.\r\n\r \n"
+      },
+      "source": "https://raw.githubusercontent.com/cchauve/PlasBin-flow/main/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.8401056954760615,
+      "result": {
+        "original_header": "Preprocessing: Computing GC probabilities files",
+        "type": "Text_excerpt",
+        "value": "\r\nThe command to create the GC content probabilities files for\r\npreprocessing a set of samples is\r\n\r\n```\r\npython plasbin_utils.py gc_probabilities\r\n       --input_file input_file\r\n       --out_dir out_dir\r\n       --tmp_dir tmp_dir\r\n       [--log_file log file]\r\n       [--gc_intervals gc_intervals_file]\r\n       [--out_file out_file]\r\n```\r\n\r\nThe input file `input_file` must contain the fields `sample` and `gfa`.\r\n\r\nThe optional file `gc_intervals_file` is a file that describes the GC\r\nintervals, with one interval boundary per line (so its first line must\r\nbe 0, its last line must be 1 and in between the values must be\r\nincreasing, an example is provided in\r\n[gc_intervals.txt](example/default/gc_intervals.txt).  If it is not\r\npovided, the default intervals defined by boundaries\r\n`[0, 0.4, 0.45, 0.5, 0.55, 0.6, 1]` are used.\r\n\r\nThe file created for a sample that contains the GC content\r\nprobabilities is the file `<out_dir>/<sample name>.gc.tsv`.\r\n\r\nThe parameter `out_file` is optional; if provided, a new CSV file\r\n`out_file` is created from `input_file` by adding a column\r\n`gc_probabilities` that contains the path to the computed GC\r\nprobabilities file.\r\n\r \n"
+      },
+      "source": "https://raw.githubusercontent.com/cchauve/PlasBin-flow/main/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9783332202861432,
+      "result": {
+        "original_header": "Tuning PlasBin-flow parameters",
+        "type": "Text_excerpt",
+        "value": "\r\nPlasBin-flow requires auxiliary data files and parameters in order to process samples:\r\n- reference plasmid genes database used to compute the mapping file and the gene density,\r\n- GC content intervals used to compute the GC content probabilities file,\r\n- parameters defining seed contigs.\r\n\r\nPlasBin-flow comes with default files/values for these (see the\r\nPlasBin-flow paper for a description of how these were obtained):\r\n- reference plasmid genes database: [genes.fasta](database/genes.fasta)\r\n- GC content intervals:     [gc_intervals.txt](example/default/gc_intervals.txt)\r\n- seed contigs parameters:  default value, length=2650, plasmid score=0.58.\r\n\r\nAlternatively, given a *reference set of samples* for which the true\r\nplasmids are known, the script\r\n[plasbin_utils.py](code/plasbin_utils.py) can be used to compute these\r\nparameters and auxiliary files.\r\n\r \n"
+      },
+      "source": "https://raw.githubusercontent.com/cchauve/PlasBin-flow/main/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.8771470685424192,
+      "result": {
+        "original_header": "Tuning: Computing GC content intervals",
+        "type": "Text_excerpt",
+        "value": "\r\nThe command\r\n```\r\npython plasbin_utils.py gc_intervals\r\n       --input_file input_file\r\n       --out_dir out_dir\r\n       --tmp_dir tmp_dir\r\n       [--log_file log file]\r\n       [--n_gcints n_gcints]\r\n```\r\ncomputes a GC content intervals file `out_dir/gc.txt`.\r\n\r\nThe file `input_file` must contain the fields `sample`, `pls_fasta`\r\nand `chr_fasta`.\r\n\r\nThe optional parameter `n_gcints` (default value 6) is the number of\r\nintervals.\r\n\r\nThe command generates three files:\r\n- `out_dir/gc.csv`: details of the GC content of all plasmids and chromosomes;\r\n- `out_dir/gc.png`: violin plot of `out_dir/gc.csv`\r\n- `out_dir/gc.txt`: GC content `n_gcints` intervals boundaries,\r\n  obtained by splitting into equal range intervals the GC content\r\n  observed in the plasmids of the reference samples.\r\n\r\nWe encourage a user too look at the provided files `out_dir/gc.csv`\r\nand `out_dir/gc.png` to assess the GC intervals file and modify it if\r\ndeemed relevant.\r\n\r \n"
+      },
+      "source": "https://raw.githubusercontent.com/cchauve/PlasBin-flow/main/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.8168269856163128,
+      "result": {
+        "original_header": "Tuning: Computing ground truth",
+        "type": "Text_excerpt",
+        "value": "\r\nFor a set of samples for which true plasmids are known, the command\r\n```\r\npython plasbin_utils.py ground_truth\r\n       --input_file input_file\r\n       --out_dir out_dir\r\n       --tmp_dir tmp_dir\r\n       [--log_file log file]\r\n       [--out_file out_file]\r\n       [--pid_threshold p]\r\n       [--cov_threshold c]\r\n```\r\ncomputes, for each sample, a TSV file `out_dir/<sample\r\nname>.ground_truth.tsv` that records true plasmid bins. \r\n\r\nTrue plasmid bins for a sample are defined by mapping the sample\r\ncontigs to the true plasmids, and discarding any mapping with identity\r\nbelow `pid_threshold p` (default value = 0.95) and contig coverage below\r\n`--cov_threshold c` (default value = 0.8).\r\n\r\nThe file `input_file` must contain the fields `sample`, `gfa`, and `pls_fasta`.\r\n\r\nThe resulting ground truth file `out_dir/<sample\r\nname>.ground_truth.tsv` lists contigs mapped to plasmids associated\r\nwith the sample. A line in the ground truth TSV file should contain\r\nthe name of the plasmid in the first column and a contig that\r\nhas been mapped to the plasmid in the second column. The file can\r\ncontain other information as long as the first two columns contain the\r\nplasmid and contig names respectively.\r\nBASH2*\r\n\r\nIf the optional parameter `out_file` is provided it contains the path\r\nto a new CSV file obtained from `input_file` augmented by a column\r\n`ground_truth` that contains the path to the ground truth file\r\nfor each sample.\r\n\r \n"
+      },
+      "source": "https://raw.githubusercontent.com/cchauve/PlasBin-flow/main/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.9689108348590866,
+      "result": {
+        "original_header": "Tuning: Computing seed contigs parameters",
+        "type": "Text_excerpt",
+        "value": "\r\nPlasBin-flow takes two parameters as input as the contig length and\r\nplasmid score thresholds to decide which contig from a given sample can\r\nbe designated as seeds. Each plasmid bin output by PlasBin-flow should\r\ncontain at least one seed contig. Seed parameters are decided by\r\nobserving the length and plasmid score of contigs from the set of\r\ntuning samples, based on their mappings to the true plasmids.\r\n\r\nThe command\r\n```\r\npython plasbin_utils.py seeds\r\n       --input_file input_file\r\n       --out_dir out_dir\r\n       --tmp_dir tmp_dir\r\n       [--log_file log file]\r\n```\r\ncomputes a file `out_dir/seeds.tsv` that contains the optimal seed\r\ncontigs parameters.\r\n\r\nEach line of the `out_dir/seeds.tsv` file contains 6 tab-separated fields\r\n(plasmid score, length, seed score, number of plasmids with seeds, \r\nnumber of false seeds, number of plasmid without seed):\r\n- plasmid score and length are the thresholds values,\r\n- seed score defined as the difference of the next 2 fields described below,\r\n- number of reference plasmids with seeds is the number of true plasmids \r\n  with at least one contig identified as a seed based on the thresholds,\r\n- number of false seeds is the number of contigs that meets the thresholds \r\n  but are not assigned to a reference plasmid in their sample,\r\n- number of plasmid with no seed.\r\n\r\nA file `out_dir/seeds_all.tsv` in the same format contains the sam results \r\nbut for all thresholds combinations, not only the ones with the best seed score.\r\n\r\nThe file `input_file` must contain the fields `sample`, `gfa`,\r\n`ground_truth` and `pls_score`.\r\n\r \n"
+      },
+      "source": "https://raw.githubusercontent.com/cchauve/PlasBin-flow/main/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "download_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/cchauve/PlasBin-flow/releases"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 2
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/cchauve/PlasBin-flow/forks"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "cchauve/PlasBin-flow"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_title": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "PlasBin-flow: A flow-based MILP algorithm for plasmid contigs binning"
+      },
+      "source": "https://raw.githubusercontent.com/cchauve/PlasBin-flow/main/README.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "has_script_file": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/cchauve/PlasBin-flow/main/example/tuning/run.sh"
+      },
+      "technique": "file_exploration"
+    }
+  ],
+  "installation": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Installation",
+        "parent_header": [
+          "PlasBin-flow: A flow-based MILP algorithm for plasmid contigs binning"
+        ],
+        "type": "Text_excerpt",
+        "value": "\r\nPlasBin-flow can be installed from this repository\r\n```git clone https://github.com/cchauve/PlasBin-flow.git```\r\n\r\nPlasBin-flow is composed of two main scripts:\r\n- [plasbin_flow.py](code/plasbin_flow.py) is the main script used to\r\n  process an assembly graph.\r\n- [plasbin_utils.py](code/plasbin_utils.py) is a script used to tune\r\n  PlasBin-flow parameters given a reference dataset and preprocess\r\n  a set of samples prior to processing them with PlasBin-flow.\r\n\r"
+      },
+      "source": "https://raw.githubusercontent.com/cchauve/PlasBin-flow/main/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 0.9784263713845617,
+      "result": {
+        "original_header": "Full tuning",
+        "type": "Text_excerpt",
+        "value": "\r\nFinally, all tuning steps (but building the reference plasmid genes\r\ndatabase) can be done at once with the command\r\n```\r\npython plasbin_utils.py tuning\r\n       --input_file input_file\r\n       --out_dir out_dir\r\n       --tmp_dir tmp_dir\r\n       [--log_file log file]\r\n       --db_file pls_db_file\r\n       [--out_file out_file]\r\n       [--pid_threshold p]\r\n       [--cov_threshold c]\r\n       [--n_gcints n_gcints]\r\n``` \r\n\r\nThe file `input_file` must contain the fields `sample`, `gfa`, `pls_fasta` and `chr_fasta`.\r\n\r\nThe parameters `pid_threshold,cov_threshold,n_gcints` are as described above.\r\n\r\nThe file `pls_db_file` is the FASTA file containing the reference\r\nplasmid genes database.\r\n\r\nThis command creates the files `out_dir/gc.[txt,png,csv]`,\r\n`out_dir/gc_intervals.txt`, `out_dir/seeds.tsv`,\r\n`out_dir/pls.genes.fasta`, and for each sample `out_dir/<sample\r\nname>.genes_mappings.txt` and `out_dir/<sample\r\nname>.ground_truth.tsv`.\r\n\r\nIf the optional paramater `out_file` is provided it contains the path\r\nto a new CSV file obtained from `input_file` augmented by columns\r\n`ground_truth`, `pls_score` and `genes2ctgs_mappings`.\r\n\r\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/cchauve/PlasBin-flow/main/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "invocation": [
+    {
+      "confidence": 0.8691948082499885,
+      "result": {
+        "original_header": "Full preprocessing",
+        "type": "Text_excerpt",
+        "value": "\r\nFinally, both preprocessing steps (computing GC content probabilities\r\nand gene density) can be done at once using\r\n```\r\npython plasbin_utils.py preprocessing\r\n       --input_file input_file\r\n       --out_dir out_dir\r\n       --tmp_dir tmp_dir\r\n       [--log_file log file]\r\n       --out_file out_file \r\n       --db_file pls_db_file\r\n       [--gc_intervals gc_intervals_file]\r\n       [--pid_threshold p]\r\n       [--cov_threshold c]\r\n```\r\nwhere\r\n- `input_file` must contain the fields `sample` and `gfa`;\r\n- other parameters are as described above;\r\n- `out_file` is a new CSV file created from `input_file` by adding\r\n  columns `gc_probabilities` and `pls_score`.\r\n\r \n"
+      },
+      "source": "https://raw.githubusercontent.com/cchauve/PlasBin-flow/main/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.88097328761316,
+      "result": {
+        "original_header": "Tuning: Creating a plasmid gene database",
+        "type": "Text_excerpt",
+        "value": "The command\r\n```\r\npython plasbin_utils.py pls_genes_db\r\n       --input_file input_file\r\n       --out_dir out_dir\r\n       --tmp_dir tmp_dir\r\n       [--log_file log file]\r\n```\r\ncreates a reference plasmid genes database `out_dir/pls.genes.fasta`. \r\n\r\nThe file `input_file` must contain the fields `sample`, `gfa` (so\r\ntuning samples need to be re-assembled from reads data) and\r\n`pls_fasta` **where each plasmid entry must be named using the plasmid\r\nGenBank or RefSeq accession**.\r\n\r \n"
+      },
+      "source": "https://raw.githubusercontent.com/cchauve/PlasBin-flow/main/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.8654343594311493,
+      "result": {
+        "original_header": "Full tuning",
+        "type": "Text_excerpt",
+        "value": "\r\nFinally, all tuning steps (but building the reference plasmid genes\r\ndatabase) can be done at once with the command\r\n```\r\npython plasbin_utils.py tuning\r\n       --input_file input_file\r\n       --out_dir out_dir\r\n       --tmp_dir tmp_dir\r\n       [--log_file log file]\r\n       --db_file pls_db_file\r\n       [--out_file out_file]\r\n       [--pid_threshold p]\r\n       [--cov_threshold c]\r\n       [--n_gcints n_gcints]\r\n``` \r\n\r\nThe file `input_file` must contain the fields `sample`, `gfa`, `pls_fasta` and `chr_fasta`.\r\n\r\nThe parameters `pid_threshold,cov_threshold,n_gcints` are as described above.\r\n\r\nThe file `pls_db_file` is the FASTA file containing the reference\r\nplasmid genes database.\r\n\r\nThis command creates the files `out_dir/gc.[txt,png,csv]`,\r\n`out_dir/gc_intervals.txt`, `out_dir/seeds.tsv`,\r\n`out_dir/pls.genes.fasta`, and for each sample `out_dir/<sample\r\nname>.genes_mappings.txt` and `out_dir/<sample\r\nname>.ground_truth.tsv`.\r\n\r\nIf the optional paramater `out_file` is provided it contains the path\r\nto a new CSV file obtained from `input_file` augmented by columns\r\n`ground_truth`, `pls_score` and `genes2ctgs_mappings`.\r\n\r\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/cchauve/PlasBin-flow/main/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "issue_tracker": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/cchauve/PlasBin-flow/issues"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "keywords": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": ""
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "license": [
+    {
+      "confidence": 1,
+      "result": {
+        "name": "MIT License",
+        "spdx_id": "MIT",
+        "type": "License",
+        "url": "https://api.github.com/licenses/mit",
+        "value": "https://api.github.com/licenses/mit"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "File_dump",
+        "value": "MIT License\n\nCopyright (c) 2023, Aniket Mane, Mahsa Faizrahnemoon, Tomas Vinar, Brona Brejova and Cedric Chauve\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.\n"
+      },
+      "source": "https://raw.githubusercontent.com/cchauve/PlasBin-flow/main/LICENSE",
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Obtaining Gurobi license",
+        "parent_header": [
+          "PlasBin-flow: A flow-based MILP algorithm for plasmid contigs binning",
+          "Installation"
+        ],
+        "type": "Text_excerpt",
+        "value": "PlasBin-flow uses the <a href=\"https://www.gurobi.com/\">Gurobi Solver</a>.\r\nTo use PlasBin-flow, a Gurobi license is needed, which is free for academics.  \r\n\r\nIf you plan to use PlasBin-flow on an institutional High-Performance\r\nComputing system (such as a university cluster or a cluster of the <a\r\nhref=\"https://alliancecan.ca/en\">Digital Research Alliance of\r\nCanada</a>), we recommend that you contact a system administrator as\r\nit is lilely that such a license is already available.\r\n\r\nAlternatively, to be used on a local system or on a local computer\r\n(all experiments in the paper *PlasBin-flow: A flow-based MILP\r\nalgorithm for plasmid contigs binning* were ran on a laptop computer),\r\nyou can obtain and install a free academic license following the\r\ninstructions provided at <a\r\nhref=\"https://www.gurobi.com/academia/academic-program-and-licenses/\">Gurobi:\r\nAlways Free for Academics</a>.\r\n\r"
+      },
+      "source": "https://raw.githubusercontent.com/cchauve/PlasBin-flow/main/README.md",
+      "technique": "header_analysis"
+    }
+  ],
+  "name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "PlasBin-flow"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "owner": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "User",
+        "value": "cchauve"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "programming_languages": [
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Python",
+        "size": 152361,
+        "type": "Programming_language",
+        "value": "Python"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Shell",
+        "size": 959,
+        "type": "Programming_language",
+        "value": "Shell"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "readme_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/cchauve/PlasBin-flow/main/README.md"
+      },
+      "technique": "file_exploration"
+    }
+  ],
+  "releases": [
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "cchauve",
+          "type": "User"
+        },
+        "date_created": "2024-01-07T18:30:02Z",
+        "date_published": "2024-01-07T18:30:39Z",
+        "description": "Removing double tab in output files",
+        "html_url": "https://github.com/cchauve/PlasBin-flow/releases/tag/v1.0.2.2",
+        "name": "version 1.0.2.2",
+        "release_id": 136106025,
+        "tag": "v1.0.2.2",
+        "tarball_url": "https://api.github.com/repos/cchauve/PlasBin-flow/tarball/v1.0.2.2",
+        "type": "Release",
+        "url": "https://api.github.com/repos/cchauve/PlasBin-flow/releases/136106025",
+        "value": "https://api.github.com/repos/cchauve/PlasBin-flow/releases/136106025",
+        "zipball_url": "https://api.github.com/repos/cchauve/PlasBin-flow/zipball/v1.0.2.2"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "cchauve",
+          "type": "User"
+        },
+        "date_created": "2024-01-06T18:52:01Z",
+        "date_published": "2024-01-06T18:53:22Z",
+        "description": "Fix minor bug",
+        "html_url": "https://github.com/cchauve/PlasBin-flow/releases/tag/v1.0.2.1",
+        "name": "version 1.0.2.1",
+        "release_id": 136071427,
+        "tag": "v1.0.2.1",
+        "tarball_url": "https://api.github.com/repos/cchauve/PlasBin-flow/tarball/v1.0.2.1",
+        "type": "Release",
+        "url": "https://api.github.com/repos/cchauve/PlasBin-flow/releases/136071427",
+        "value": "https://api.github.com/repos/cchauve/PlasBin-flow/releases/136071427",
+        "zipball_url": "https://api.github.com/repos/cchauve/PlasBin-flow/zipball/v1.0.2.1"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "cchauve",
+          "type": "User"
+        },
+        "date_created": "2023-09-29T03:54:06Z",
+        "date_published": "2023-09-29T03:56:16Z",
+        "description": "Improved seeds parameters computation",
+        "html_url": "https://github.com/cchauve/PlasBin-flow/releases/tag/v1.0.2",
+        "name": "version 1.0.2",
+        "release_id": 123062409,
+        "tag": "v1.0.2",
+        "tarball_url": "https://api.github.com/repos/cchauve/PlasBin-flow/tarball/v1.0.2",
+        "type": "Release",
+        "url": "https://api.github.com/repos/cchauve/PlasBin-flow/releases/123062409",
+        "value": "https://api.github.com/repos/cchauve/PlasBin-flow/releases/123062409",
+        "zipball_url": "https://api.github.com/repos/cchauve/PlasBin-flow/zipball/v1.0.2"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "cchauve",
+          "type": "User"
+        },
+        "date_created": "2023-09-19T00:26:07Z",
+        "date_published": "2023-09-19T00:26:50Z",
+        "description": "Documentation typo fixed",
+        "html_url": "https://github.com/cchauve/PlasBin-flow/releases/tag/v1.0.1",
+        "name": "version 1.0.1",
+        "release_id": 121613235,
+        "tag": "v1.0.1",
+        "tarball_url": "https://api.github.com/repos/cchauve/PlasBin-flow/tarball/v1.0.1",
+        "type": "Release",
+        "url": "https://api.github.com/repos/cchauve/PlasBin-flow/releases/121613235",
+        "value": "https://api.github.com/repos/cchauve/PlasBin-flow/releases/121613235",
+        "zipball_url": "https://api.github.com/repos/cchauve/PlasBin-flow/zipball/v1.0.1"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": {
+          "name": "cchauve",
+          "type": "User"
+        },
+        "date_created": "2023-09-18T22:51:17Z",
+        "date_published": "2023-09-18T22:55:43Z",
+        "description": "First release",
+        "html_url": "https://github.com/cchauve/PlasBin-flow/releases/tag/v1.0.0",
+        "name": "version 1.0.0",
+        "release_id": 121607446,
+        "tag": "v1.0.0",
+        "tarball_url": "https://api.github.com/repos/cchauve/PlasBin-flow/tarball/v1.0.0",
+        "type": "Release",
+        "url": "https://api.github.com/repos/cchauve/PlasBin-flow/releases/121607446",
+        "value": "https://api.github.com/repos/cchauve/PlasBin-flow/releases/121607446",
+        "zipball_url": "https://api.github.com/repos/cchauve/PlasBin-flow/zipball/v1.0.0"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "requirements": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Prerequisites",
+        "parent_header": [
+          "PlasBin-flow: A flow-based MILP algorithm for plasmid contigs binning",
+          "Installation"
+        ],
+        "type": "Text_excerpt",
+        "value": "PlasBin-flow is written in python (version 3.9.11+);\r\n- [plasbin_flow.py](code/plasbin_flow.py) requires\r\n  - the python module <a href=\"https://networkx.org/\">networkX (version 2.7+)<a/>,\r\n  - the ILP solver <a href=\"https://www.gurobi.com/\">gurobi (version 9.1.2+)</a>.\r\n- [plasbin_utils.py](code/plasbin_utils.py) requires the python modules\r\n  - <a href=\"https://pandas.pydata.org/\">pandas (version 2.0.0+)</a>,\r\n  - <a href=\"https://matplotlib.org/\">matplotlib (version 3.7.0+)</a>,\r\n  - <a href=\"https://seaborn.pydata.org/\">seaborn (version 0.12.2+)</a>,\r\n  - <a href=\"https://biopython.org/\">Biopython (version 1.81+)</a>,\r\n  - <a href=\"https://scipy.org/\">scipy (version 1.10.1+)</a>,\r\n  - <a href=\"https://numpy.org/\">numpy (version 1.24.2+)</a>.\r\n\r\n[plasbin_utils.py](code/plasbin_utils.py) also requires <a\r\nhref=\"https://blast.ncbi.nlm.nih.gov/doc/blast-help/downloadblastdata.html\">BLAST+\r\nv2.6.0</a> (commands makeblastdb and blastn).\r\n\r\nWe strongly recommand to run PlasBin-flow using a dedicated python\r\nvirtual environment (see\r\nhttps://docs.python.org/3.9/library/venv.html).\r\n\r"
+      },
+      "source": "https://raw.githubusercontent.com/cchauve/PlasBin-flow/main/README.md",
+      "technique": "header_analysis"
+    }
+  ],
+  "run": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Input files",
+        "parent_header": [
+          "PlasBin-flow: A flow-based MILP algorithm for plasmid contigs binning",
+          "Running PlasBin-flow"
+        ],
+        "type": "Text_excerpt",
+        "value": "\r\nPlasBin-flow requires the following input files (described in details\r\nbelow) to process a bacterial isolate:\r\n- assembly graph file,\r\n- contigs plasmid score file,\r\n- GC content probabilities file.\r\n\r\nIt also requires two numerical parameters defining the *seed contigs*,\r\nthat are contigs that are more likely to belong to a plasmid (see\r\nsection 2.4 of the PlasBin-flow paper).\r\n\r"
+      },
+      "source": "https://raw.githubusercontent.com/cchauve/PlasBin-flow/main/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Assembly graph",
+        "parent_header": [
+          "PlasBin-flow: A flow-based MILP algorithm for plasmid contigs binning",
+          "Running PlasBin-flow",
+          "Input files"
+        ],
+        "type": "Text_excerpt",
+        "value": "\r\nThe *assembly graph* of a bacterial sample must be the provided as a\r\nfile in <a href=\"http://gfa-spec.github.io/GFA-spec/GFA1.html\">GFA1\r\nformat</a> similar to the GFA files generated by the assembler <a\r\nhref=\"https://github.com/rrwick/Unicycler\">Unicycler</a> (file\r\n`assembly.gfa`) with a tag `dp` encoding the normalized coverage,\r\nof contigs or to the GFA files generated by the \r\n<a href=\"https://github.com/ncbi/SKESA#gfa-connector---create-gfa-graph-starting-from-a-set-of-contigs\">gfa-connector</a> \r\ncommand from the assembler <a href=\"https://github.com/ncbi/SKESA\">SKESA</a> \r\nwith a tag `KC` encoding K-mer counts that is used to compute the \r\nnormalized coverage of contigs.\r\n\r\nPlasBin-flow scripts require input GFA files to be gzipped.\r\n\r"
+      },
+      "source": "https://raw.githubusercontent.com/cchauve/PlasBin-flow/main/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Contigs plasmid score file",
+        "parent_header": [
+          "PlasBin-flow: A flow-based MILP algorithm for plasmid contigs binning",
+          "Running PlasBin-flow",
+          "Input files"
+        ],
+        "type": "Text_excerpt",
+        "value": "\r\nThis file is a TSV file with at least two fields, the first one being\r\nthe names of contigs of the assembly graph and the second a floating\r\nnumber between 0 and 1 that is used as an a priori measure of\r\n*plasmidness* of the assembly contigs. Additional fields can be\r\npresent but are not used.\r\n\r\nThe plasmid score of a contig can be obtained using a plasmid contig\r\nclassifier, such as <a\r\nhref=\"https://github.com/cchauve/plASgraph2\">plASgraph2</a>.\r\n\r\nAs some plasmid contigs classifiers do not provide a score, or provide\r\nan unreliable score, for short contigs, PlasBin-flow handles such cases\r\nas follow:\r\n- contigs present in the GFA file but not in the plasmid scores\r\n  file: such contigs receive a default plasmid score (optional parameter\r\n  `default_pls_score`, default value: 0.5).;\r\n- for short contigs (defined as contigs of length strictly below the\r\n  optional parameter `min_ctg_len` (default value 0)) receive the default\r\n  plasmid score (as above).\r\n\r\nAlternatively, PlasBin-flow can compute this plasmid score using\r\nthe notion of *plasmid gene density*, described in the PlasBin-flow\r\npaper (See section Preprocessing below).\r\n\r"
+      },
+      "source": "https://raw.githubusercontent.com/cchauve/PlasBin-flow/main/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "GC content probabilities file",
+        "parent_header": [
+          "PlasBin-flow: A flow-based MILP algorithm for plasmid contigs binning",
+          "Running PlasBin-flow",
+          "Input files"
+        ],
+        "type": "Text_excerpt",
+        "value": "\r\nAs described in section 2.5 of the PlasBin-flow paper, GC content\r\nplays an important tole in the PlasBin-flow optimization model.\r\nPlasBin-flow relies on a set of relative GC content intervals (a\r\npartition of [0,1] into intervals, each defining a range of relative\r\nGC content, called a *GC interval*) and requires that each contig *c* is\r\ngiven, for each GC interval *I* a *probability* that *c* originates\r\nfrom a molecule of relative GC content in the range defined by *I*.  \r\n\r\nBy default the considered GC intervals of PlasBin-flow are *[0,0.4],\r\n[0.4,0.45], [0.45,0.5], [0.5,0.55], [0.55,0.6], [0.6,1]* but customs\r\nintervals can be used.\r\nGiven a GC intervals file and an assembly graph, the GC content\r\nprobabilities file can be generated by the preprocessing commands of\r\n[plasbin_utils.py](code/plasbin_utils.py).\r\n\r"
+      },
+      "source": "https://raw.githubusercontent.com/cchauve/PlasBin-flow/main/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Seeds parameters",
+        "parent_header": [
+          "PlasBin-flow: A flow-based MILP algorithm for plasmid contigs binning",
+          "Running PlasBin-flow",
+          "Input files"
+        ],
+        "type": "Text_excerpt",
+        "value": "\r\nThe seed parameters are the minimum length *l* and the minimum plasmid\r\nscore *ps*: any contig of length at least *l* (default value = 2650) and\r\nplasmid score at least *ps* (default value = 0.58) is a seed contig.\r\n\r"
+      },
+      "source": "https://raw.githubusercontent.com/cchauve/PlasBin-flow/main/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Advanced options",
+        "parent_header": [
+          "PlasBin-flow: A flow-based MILP algorithm for plasmid contigs binning",
+          "Running PlasBin-flow"
+        ],
+        "type": "Text_excerpt",
+        "value": "\r\nAdditional optional parameters can be passed to the script\r\n[plasbin_flow.py](code/plasbin_flow.py) that allows to modify the\r\noptimization model of PlasBin-flow:\r\n```\r\n-rmiter_max        Maximum number of iterations to remove circular components. (integer, default: 50)\r\n-alpha1            Weight of flow term of the objective function. (float, default: 1)                              \r\n-alpha2            Weight of GC content term of the objective function. (float, default: 1)\r\n-alpha3            Weight of plasmid score term of the objective function. (float, default: 1)\r\n-p                 Plasmid score offset (float in [0,1], default: 0.5)\r\n-min_pls_len       Minimum plasmid length (integer, default: 1500); plasmid bins of smaller length are not reported\r\n-default_pls_score Default plasmid score for short contigs or contigs not present in the the plasmid score file (float, default: 0.5)\r\n-min_ctg_len       Contigs of length below min_ctg_len receive plasmid score default_pls_score (int, default: 0)\r\n-gurobi_mip_gap    MIPGap parameter of Gurobi (optimality gap, float, default value: 0.05)\r\n-gurobi_time_limit Time limit after which Gurobi stops (integer, default: 2400)\r\n```\r\n\r\nThe default values are the values used in the experiments described in\r\nthe PlasBin-flow paper.\r\n\r"
+      },
+      "source": "https://raw.githubusercontent.com/cchauve/PlasBin-flow/main/README.md",
+      "technique": "header_analysis"
+    }
+  ],
+  "somef_missing_categories": [
+    "citation",
+    "acknowledgement",
+    "download",
+    "contact",
+    "contributors",
+    "documentation",
+    "faq",
+    "support",
+    "identifier",
+    "has_build_file",
+    "executable_example"
+  ],
+  "somef_provenance": {
+    "date": "2024-10-04 00:54:11",
+    "somef_schema_version": "1.0.0",
+    "somef_version": "0.9.5"
+  },
+  "stargazers_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 4
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "usage": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Usage",
+        "parent_header": [
+          "PlasBin-flow: A flow-based MILP algorithm for plasmid contigs binning",
+          "Running PlasBin-flow"
+        ],
+        "type": "Text_excerpt",
+        "value": "\r\nTo process a sample, given the input files described above, the\r\ncommand [plasbin_flow.py](code/plasbin_flow.py) can be used as\r\nfollows:\r\n\r\n```\r\npython code/plasbin_flow.py\r\n       -ag assembly graph\r\n       -gc contigs gc_content_file\r\n       -ps contigs plasmid scores file\r\n       -outdir output_dir\r\n       -outfile output_file\r\n       -log_file\r\n       [-seed_len seeds length threshold]\r\n       [-seed_score seeds plasmid score threshold]\r\n       [-assembler assembler used to create the GFA file]\r\n       [-gc_intervals GC content intervals file]\r\n```\r\nwhere\r\n- `assembly graph` is the gzipped GFA1 format assembly graph file,\r\n- `contigs gc content file` is the GC content probability file described above\r\n- `contigs plasmid score file` is the contigs plasmid scores file described above,\r\n- `output_dir` and `output_file` are the directory and file name for the output file,\r\n- `log_file` is the path to a file containing detailed log information and warnings,\r\n- [optional] `assembler` can be either `unicycler` (default value, for GFA files with a `dp` tag encoding normalized depth coverage) or `skesa` (for GFA files with a `KC` tag encoding k-mer count used to infer the normalized depth coverage),\r\n- [optional] `seeds length threshold` and `seeds plasmid score threshold` are the length and plasmid score thresholds defining seeds (default values, used in the PlasBin-flow paper experiments, `2650` and `0.58`),\r\n- [optional] `GC content intervals file` describes the GC content intervals used to compute GC content probability scores for contigs (defaut intervals, used in the PlasBin-flow paper experiments, are the ones in the file [gc_intervals.txt](example/default/gc_intervals.txt).\r\n\r\nThe output of PlasBin-flow is a TSV file with each line containing the following information:\r\n```\r\nPlasmid bin\t\t\tNumber (ID) associated with the plasmid bin\r\nFlow value\t\t\tFlow value associated with the plasmid bin (used as a proxy for the plasmid bin copy number)\r\nGC bin\t\t\t\tIndex of GC content interval associated with the plasmid bin\r\nContigs\t\t\t\tComma-separated list of contigs associated with plasmid bin along with their multiplicities\r\n```\r\nThus a line in an output file from PlasBin-flow is as follows:\r\n```\r\n#Pls_ID\tFlow\tGC_bin\t\tContigs\r\nP1\t2.5\t0.4-0.45\ta:2,b:3,c:2,d:1\r\n```\r\n\r"
+      },
+      "source": "https://raw.githubusercontent.com/cchauve/PlasBin-flow/main/README.md",
+      "technique": "header_analysis"
+    }
+  ]
+}

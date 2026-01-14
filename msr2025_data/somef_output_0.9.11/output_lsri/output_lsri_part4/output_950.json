@@ -1,0 +1,424 @@
+{
+  "citation": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Citation",
+        "parent_header": [
+          "Batch balanced KNN"
+        ],
+        "type": "Text_excerpt",
+        "value": "If you use BBKNN in your work, please cite the [paper](https://doi.org/10.1093/bioinformatics/btz625):\n\n\t@article{polanski2019bbknn,\n\t  title={BBKNN: Fast Batch Alignment of Single Cell Transcriptomes},\n\t  author={Pola{\\'n}ski, Krzysztof and Young, Matthew D and Miao, Zhichao and Meyer, Kerstin B and Teichmann, Sarah A and Park, Jong-Eun},\n\t  doi={10.1093/bioinformatics/btz625},\n\t  journal={Bioinformatics},\n\t  year={2019}\n\t}\n"
+      },
+      "source": "https://raw.githubusercontent.com/Teichlab/bbknn/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "author": "Pola{\\'n}ski, Krzysztof and Young, Matthew D and Miao, Zhichao and Meyer, Kerstin B and Teichmann, Sarah A and Park, Jong-Eun",
+        "doi": "10.1093/bioinformatics/btz625",
+        "format": "bibtex",
+        "title": "BBKNN: Fast Batch Alignment of Single Cell Transcriptomes",
+        "type": "Text_excerpt",
+        "value": "@article{polanski2019bbknn,\n    year = {2019},\n    journal = {Bioinformatics},\n    doi = {10.1093/bioinformatics/btz625},\n    author = {Pola{\\'n}ski, Krzysztof and Young, Matthew D and Miao, Zhichao and Meyer, Kerstin B and Teichmann, Sarah A and Park, Jong-Eun},\n    title = {BBKNN: Fast Batch Alignment of Single Cell Transcriptomes},\n}"
+      },
+      "source": "https://raw.githubusercontent.com/Teichlab/bbknn/master/README.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "code_repository": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/Teichlab/bbknn"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_created": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2018-06-18T15:56:04Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "date_updated": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Date",
+        "value": "2024-11-01T15:57:10Z"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "description": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "Batch balanced KNN"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 0.9897891695912213,
+      "result": {
+        "original_header": "Batch balanced KNN",
+        "type": "Text_excerpt",
+        "value": "BBKNN is a fast and intuitive batch effect removal tool that can be directly used in the [scanpy](https://scanpy.readthedocs.io/en/latest/) workflow. It serves as an alternative to `scanpy.pp.neighbors()`, with both functions creating a neighbour graph for subsequent use in clustering, pseudotime and UMAP visualisation. The standard approach begins by identifying the k nearest neighbours for each individual cell across the entire data structure, with the candidates being subsequently transformed to exponentially related connectivities before serving as the basis for further analyses. If technical artifacts (be they because of differing data acquisition technologies, protocol alterations or even particularly severe operator effects) are present in the data, they will make it challenging to link corresponding cell types across different batches. \nAs such, BBKNN actively combats this effect by taking each cell and identifying a (smaller) k nearest neighbours in each batch separately, rather than the dataset as a whole. These nearest neighbours for each batch are then merged into a final neighbour list for the cell. This helps create connections between analogous cells in different batches without altering the counts or PCA space. \n"
+      },
+      "source": "https://raw.githubusercontent.com/Teichlab/bbknn/master/README.md",
+      "technique": "supervised_classification"
+    },
+    {
+      "confidence": 0.995926253394198,
+      "result": {
+        "original_header": "BBKNN in R",
+        "type": "Text_excerpt",
+        "value": "At this point, there is no plan to create a BBKNN R package. However, it can be ran quite easily via reticulate. Using the base functions is the same as in python. If you're in possession of a PCA matrix and a batch assignment vector and want to get UMAP coordinates out of it, you can use the following code snippet to do so. The weird PCA computation part and replacing it with your original values is unfortunately necessary due to how AnnData innards operate from a reticulate level. Provide your python path in `use_python()`\n```R\nlibrary(reticulate)\nuse_python(\"/usr/bin/python3\")\n\nanndata = import(\"anndata\",convert=FALSE)\nbbknn = import(\"bbknn\", convert=FALSE)\nsc = import(\"scanpy\",convert=FALSE)\n\nadata = anndata$AnnData(X=pca, obs=batch)\nsc$tl$pca(adata)\nadata$obsm$X_pca = pca\nbbknn$bbknn(adata,batch_key=0)\nsc$tl$umap(adata)\numap = py_to_r(adata$obsm[[\"X_umap\"]])\n```\n \n"
+      },
+      "source": "https://raw.githubusercontent.com/Teichlab/bbknn/master/README.md",
+      "technique": "supervised_classification"
+    }
+  ],
+  "documentation": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Usage and Documentation",
+        "parent_header": [
+          "Batch balanced KNN"
+        ],
+        "type": "Text_excerpt",
+        "value": "BBKNN has the option to immediately slot into the spot occupied by `scanpy.neighbors()` in the [Seurat-inspired scanpy workflow](https://nbviewer.jupyter.org/github/theislab/scanpy_usage/blob/master/170505_seurat/seurat.ipynb). It computes a batch aligned variant of the neighbourhood graph, with its uses within scanpy including clustering, diffusion map pseudotime inference and UMAP visualisation. The basic syntax to run BBKNN on scanpy's AnnData object (with PCA computed via `scanpy.tl.pca()`) is as follows:\n\n```python3\nimport bbknn\n\nbbknn.bbknn(adata)\n```\n\nYou can provide which `adata.obs` column to use for batch discrimination via the `batch_key` parameter. This defaults to `'batch'`, which is created by scanpy when you merge multiple AnnData objects (e.g. if you were to import multiple samples separately and then concatenate them).\n\nIntegration can be improved by using ridge regression on both a technical effect and a biological grouping prior to BBKNN, following a workflow from [Park _et al._, 2020](https://science.sciencemag.org/content/367/6480/eaay3224.abstract). In the event of not having a biological grouping at hand, a coarse clustering obtained from a BBKNN-corrected graph can be used in its place. This creates the following basic workflow syntax:\n\n```python3\nimport bbknn\nimport scanpy\n\nbbknn.bbknn(adata)\nscanpy.tl.leiden(adata)\nbbknn.ridge_regression(adata, batch_key=['batch'], confounder_key=['leiden'])\nscanpy.tl.pca(adata)\nbbknn.bbknn(adata)\n```\n\nAlternately, you can just provide a PCA matrix with cells as rows and a matching vector of batch assignments for each of the cells and call BBKNN as follows (with `connectivities` being the primary graph output of interest):\n\n```python3\nimport bbknn.matrix\n\ndistances, connectivities, parameters = bbknn.matrix.bbknn(pca_matrix, batch_list)\n```\n\nAn HTML render of the BBKNN function docstring, detailing all the parameters, can be accessed at [ReadTheDocs](https://bbknn.readthedocs.io/en/latest/). BBKNN use, along with using ridge regression to improve the integration, is shown in a [demonstration notebook](https://nbviewer.jupyter.org/github/Teichlab/bbknn/blob/master/examples/demo.ipynb).\n"
+      },
+      "source": "https://raw.githubusercontent.com/Teichlab/bbknn/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "format": "readthedocs",
+        "type": "Url",
+        "value": "https://bbknn.readthedocs.io/"
+      },
+      "source": "https://raw.githubusercontent.com/Teichlab/bbknn/master/README.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "download_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://github.com/Teichlab/bbknn/releases"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "executable_example": [
+    {
+      "confidence": 1,
+      "result": {
+        "format": "jupyter_notebook",
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/Teichlab/bbknn/master/examples/mouse.ipynb"
+      },
+      "source": "https://raw.githubusercontent.com/Teichlab/bbknn/master/examples/mouse.ipynb",
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "format": "jupyter_notebook",
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/Teichlab/bbknn/master/examples/demo.ipynb"
+      },
+      "source": "https://raw.githubusercontent.com/Teichlab/bbknn/master/examples/demo.ipynb",
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "format": "jupyter_notebook",
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/Teichlab/bbknn/master/examples/mouse-harmony.ipynb"
+      },
+      "source": "https://raw.githubusercontent.com/Teichlab/bbknn/master/examples/mouse-harmony.ipynb",
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "format": "jupyter_notebook",
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/Teichlab/bbknn/master/examples/benchmark3-new-R-methods.ipynb"
+      },
+      "source": "https://raw.githubusercontent.com/Teichlab/bbknn/master/examples/benchmark3-new-R-methods.ipynb",
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "format": "jupyter_notebook",
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/Teichlab/bbknn/master/examples/benchmark.ipynb"
+      },
+      "source": "https://raw.githubusercontent.com/Teichlab/bbknn/master/examples/benchmark.ipynb",
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "format": "jupyter_notebook",
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/Teichlab/bbknn/master/examples/benchmark2.ipynb"
+      },
+      "source": "https://raw.githubusercontent.com/Teichlab/bbknn/master/examples/benchmark2.ipynb",
+      "technique": "file_exploration"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "format": "jupyter_notebook",
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/Teichlab/bbknn/master/examples/simulation.ipynb"
+      },
+      "source": "https://raw.githubusercontent.com/Teichlab/bbknn/master/examples/simulation.ipynb",
+      "technique": "file_exploration"
+    }
+  ],
+  "forks_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 23
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "forks_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/Teichlab/bbknn/forks"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "Teichlab/bbknn"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "full_title": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "Batch balanced KNN"
+      },
+      "source": "https://raw.githubusercontent.com/Teichlab/bbknn/master/README.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "images": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/Teichlab/bbknn/master/figures/batch1.png"
+      },
+      "source": "https://raw.githubusercontent.com/Teichlab/bbknn/master/README.md",
+      "technique": "regular_expression"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/Teichlab/bbknn/master/figures/batch2.png"
+      },
+      "source": "https://raw.githubusercontent.com/Teichlab/bbknn/master/README.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "installation": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Installation",
+        "parent_header": [
+          "Batch balanced KNN"
+        ],
+        "type": "Text_excerpt",
+        "value": "BBKNN depends on Cython, numpy, scipy, annoy, pynndescent, umap-learn and scikit-learn. The package is available on pip and conda, and can be easily installed as follows:\n\n```bash\npip3 install bbknn\n```\n\nor\n\n```bash\nconda install -c bioconda bbknn\n```\n\nBBKNN can also make use of faiss. Consult the [official installation instructions](https://github.com/facebookresearch/faiss/blob/master/INSTALL.md), the easiest way to get it is via conda.\n"
+      },
+      "source": "https://raw.githubusercontent.com/Teichlab/bbknn/master/README.md",
+      "technique": "header_analysis"
+    }
+  ],
+  "issue_tracker": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://api.github.com/repos/Teichlab/bbknn/issues"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "keywords": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": ""
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "license": [
+    {
+      "confidence": 1,
+      "result": {
+        "name": "MIT License",
+        "spdx_id": "MIT",
+        "type": "License",
+        "url": "https://api.github.com/licenses/mit",
+        "value": "https://api.github.com/licenses/mit"
+      },
+      "technique": "GitHub_API"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "type": "File_dump",
+        "value": "Copyright (c) 2018 The Python Packaging Authority\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE."
+      },
+      "source": "https://raw.githubusercontent.com/Teichlab/bbknn/master/LICENSE",
+      "technique": "file_exploration"
+    }
+  ],
+  "name": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "String",
+        "value": "bbknn"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "owner": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Organization",
+        "value": "Teichlab"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "programming_languages": [
+    {
+      "confidence": 1,
+      "result": {
+        "name": "Python",
+        "size": 27194,
+        "type": "Programming_language",
+        "value": "Python"
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "readme_url": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Url",
+        "value": "https://raw.githubusercontent.com/Teichlab/bbknn/master/README.md"
+      },
+      "technique": "file_exploration"
+    }
+  ],
+  "related_documentation": [
+    {
+      "confidence": 1,
+      "result": {
+        "format": "readthedocs",
+        "type": "Url",
+        "value": "https://scanpy.readthedocs.io/"
+      },
+      "source": "https://raw.githubusercontent.com/Teichlab/bbknn/master/README.md",
+      "technique": "regular_expression"
+    }
+  ],
+  "somef_missing_categories": [
+    "acknowledgement",
+    "run",
+    "download",
+    "requirements",
+    "contact",
+    "contributors",
+    "faq",
+    "support",
+    "identifier",
+    "has_build_file"
+  ],
+  "somef_provenance": {
+    "date": "2024-11-04 05:24:23",
+    "somef_schema_version": "1.0.0",
+    "somef_version": "0.9.5"
+  },
+  "stargazers_count": [
+    {
+      "confidence": 1,
+      "result": {
+        "type": "Number",
+        "value": 149
+      },
+      "technique": "GitHub_API"
+    }
+  ],
+  "usage": [
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Usage and Documentation",
+        "parent_header": [
+          "Batch balanced KNN"
+        ],
+        "type": "Text_excerpt",
+        "value": "BBKNN has the option to immediately slot into the spot occupied by `scanpy.neighbors()` in the [Seurat-inspired scanpy workflow](https://nbviewer.jupyter.org/github/theislab/scanpy_usage/blob/master/170505_seurat/seurat.ipynb). It computes a batch aligned variant of the neighbourhood graph, with its uses within scanpy including clustering, diffusion map pseudotime inference and UMAP visualisation. The basic syntax to run BBKNN on scanpy's AnnData object (with PCA computed via `scanpy.tl.pca()`) is as follows:\n\n```python3\nimport bbknn\n\nbbknn.bbknn(adata)\n```\n\nYou can provide which `adata.obs` column to use for batch discrimination via the `batch_key` parameter. This defaults to `'batch'`, which is created by scanpy when you merge multiple AnnData objects (e.g. if you were to import multiple samples separately and then concatenate them).\n\nIntegration can be improved by using ridge regression on both a technical effect and a biological grouping prior to BBKNN, following a workflow from [Park _et al._, 2020](https://science.sciencemag.org/content/367/6480/eaay3224.abstract). In the event of not having a biological grouping at hand, a coarse clustering obtained from a BBKNN-corrected graph can be used in its place. This creates the following basic workflow syntax:\n\n```python3\nimport bbknn\nimport scanpy\n\nbbknn.bbknn(adata)\nscanpy.tl.leiden(adata)\nbbknn.ridge_regression(adata, batch_key=['batch'], confounder_key=['leiden'])\nscanpy.tl.pca(adata)\nbbknn.bbknn(adata)\n```\n\nAlternately, you can just provide a PCA matrix with cells as rows and a matching vector of batch assignments for each of the cells and call BBKNN as follows (with `connectivities` being the primary graph output of interest):\n\n```python3\nimport bbknn.matrix\n\ndistances, connectivities, parameters = bbknn.matrix.bbknn(pca_matrix, batch_list)\n```\n\nAn HTML render of the BBKNN function docstring, detailing all the parameters, can be accessed at [ReadTheDocs](https://bbknn.readthedocs.io/en/latest/). BBKNN use, along with using ridge regression to improve the integration, is shown in a [demonstration notebook](https://nbviewer.jupyter.org/github/Teichlab/bbknn/blob/master/examples/demo.ipynb).\n"
+      },
+      "source": "https://raw.githubusercontent.com/Teichlab/bbknn/master/README.md",
+      "technique": "header_analysis"
+    },
+    {
+      "confidence": 1,
+      "result": {
+        "original_header": "Example Notebooks",
+        "parent_header": [
+          "Batch balanced KNN"
+        ],
+        "type": "Text_excerpt",
+        "value": "**[demo.ipynb](https://nbviewer.jupyter.org/github/Teichlab/bbknn/blob/master/examples/demo.ipynb) is the main demonstration, applying BBKNN to some pancreas data with a batch effect. The notebook also uses ridge regression to improve the integration.** \n\nThe [BBKNN paper](https://doi.org/10.1093/bioinformatics/btz625) makes use of the following analyses:\n- [simulation.ipynb](https://nbviewer.jupyter.org/github/Teichlab/bbknn/blob/master/examples/simulation.ipynb) applies BBKNN to simulated data with a known ground truth, and demonstrates the utility of graph trimming by introducing an unrelated cell population. This simulated data is then used to benchmark BBKNN against mnnCorrect, CCA, Scanorama and Harmony in [benchmark.ipynb](https://nbviewer.jupyter.org/github/Teichlab/bbknn/blob/master/examples/benchmark.ipynb), and then finish off with a benchmarking of a BBKNN variant reluctant to work within R/reticulate and visualise the findings in  [benchmark2.ipynb](https://nbviewer.jupyter.org/github/Teichlab/bbknn/blob/master/examples/benchmark2.ipynb). [benchmark3-new-R-methods.ipynb](https://nbviewer.jupyter.org/github/Teichlab/bbknn/blob/master/examples/benchmark3-new-R-methods.ipynb) adds some newer R approaches to the benchmark.\n- [mouse.ipynb](https://nbviewer.jupyter.org/github/Teichlab/bbknn/blob/master/examples/mouse.ipynb) runs a collection of murine atlases through BBKNN. [mouse-harmony.ipynb](https://nbviewer.jupyter.org/github/Teichlab/bbknn/blob/master/examples/mouse-harmony.ipynb) applies Harmony to the same data.\n\nThe [BBKNN preprint](https://www.biorxiv.org/content/early/2018/08/22/397042) performed some additional analyses that got left out of the final manuscript. Archival notebooks are stored in a [separate repository](https://github.com/Teichlab/bbknn_preprint)."
+      },
+      "source": "https://raw.githubusercontent.com/Teichlab/bbknn/master/README.md",
+      "technique": "header_analysis"
+    }
+  ]
+}
